@@ -11,11 +11,11 @@ import xarray as xr
 import dask.array
 import h5py
 
-from .download_GPM import find_GPM_files
-from .download_GPM import GPM_IMERG_available
-from .download_GPM import GPM_products_available
-from .utils_HDF5 import hdf5_file_attrs
-from .utils_string import str_remove
+from .io import find_GPM_files
+from .io import GPM_IMERG_available
+from .io import GPM_products_available
+from .utils.utils_HDF5 import hdf5_file_attrs
+from .utils.utils_string import str_remove
 
 def subset_dict(x, keys):
     return dict((k, x[k]) for k in keys)

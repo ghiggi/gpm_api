@@ -14,11 +14,11 @@ import os
 import numpy as np 
 import datetime
 from datetime import timedelta
-from .utils_string import str_extract
-from .utils_string import str_subset
-from .utils_string import str_sub 
-from .utils_string import str_pad 
-from .utils_string import subset_list_by_boolean
+from .utils.utils_string import str_extract
+from .utils.utils_string import str_subset
+from .utils.utils_string import str_sub 
+from .utils.utils_string import str_pad 
+from .utils.utils_string import subset_list_by_boolean
 #----------------------------------------------------------------------------.
 def curl_download(server, filepath, DIR, username, password):
     """Download data using curl."""

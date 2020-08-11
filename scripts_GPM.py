@@ -19,10 +19,10 @@ from datetime import timedelta
 from datetime import time
 from dask.diagnostics import ProgressBar
 
-os.chdir('/home/ghiggi/SatScripts') # change to the 'scripts_GPM.py' directory
+os.chdir('/home/ghiggi/gpm_api') # change to the 'scripts_GPM.py' directory
 ### GPM Scripts ####
-from gpm_api.download_GPM import download_GPM_data
-from gpm_api.gpm_parser import GPM_Dataset, GPM_variables
+from gpm_api.io import download_GPM_data
+from gpm_api.dataset import GPM_Dataset, GPM_variables
 
 ##----------------------------------------------------------------------------.
 ### Donwload data 
@@ -71,7 +71,7 @@ with ProgressBar():
 
 ##-----------------------------------------------------------------------------. 
 # Some others utils functions
-from gpm_api.gpm_parser import GPM_variables_dict, GPM_variables
+from gpm_api.dataset import GPM_variables_dict, GPM_variables
 # Product variables infos 
 GPM_variables(product)
 GPM_variables_dict(product)
@@ -79,7 +79,7 @@ GPM_variables_dict(product)
 ##-----------------------------------------------------------------------------. 
 
 # Products infos 
-from gpm_api.download_GPM import GPM_IMERG_available, GPM_NRT_available, GPM_RS_available, GPM_products_available
+from gpm_api.io import GPM_IMERG_available, GPM_NRT_available, GPM_RS_available, GPM_products_available
 GPM_products_available()
 GPM_IMERG_available()
 GPM_NRT_available()
