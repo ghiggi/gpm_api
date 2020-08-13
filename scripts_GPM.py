@@ -23,7 +23,9 @@ from dask.diagnostics import ProgressBar
 os.chdir('/home/ghiggi/gpm_api') # change to the 'scripts_GPM.py' directory
 ### GPM Scripts ####
 from gpm_api.io import download_GPM_data
-from gpm_api.dataset import GPM_Dataset, GPM_variables, read_GPM
+from gpm_api.dataset import read_GPM
+from gpm_api.dataset import GPM_Dataset, GPM_variables # read_GPM (importing here do)
+
 ##----------------------------------------------------------------------------.
 ### Donwload data 
 base_DIR = '/home/ghiggi/tmp'
@@ -93,6 +95,8 @@ GPM_NRT_available()
 GPM_RS_available()
 ##-----------------------------------------------------------------------------. 
 
+base_DIR = '/home/ghiggi/tmp'
+username = "gionata.ghiggi@epfl.ch"
 start_time = datetime.datetime.strptime("2017-01-01 00:40:30", '%Y-%m-%d %H:%M:%S')
 end_time = datetime.datetime.strptime("2017-01-01 02:00:30", '%Y-%m-%d %H:%M:%S')
 
@@ -113,12 +117,13 @@ DPR = read_GPM(base_DIR = base_DIR,
 DPR.NS
 DPR.HS
 DPR.MS
-DPR.retrieve_ENV()
+DPR.retrieve_ENV() # need to debug the import in DPR/DPR.py
 DPR.NS
 
 
 
-
+##----------------------------------------------------------------------------.
+# To improve retrieve_ENV()
 product = '2A-ENV-DPR'
 ENV = read_GPM(base_DIR = base_DIR,
                product = product, 
