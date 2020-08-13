@@ -12,8 +12,16 @@ import dask.array
 import h5py
 
 from .io import find_GPM_files
+from .io import GPM_RS_DPR_available
+from .io import GPM_RS_ENV_available
 from .io import GPM_IMERG_available
 from .io import GPM_products_available
+
+from .DPR.DPR import create_DPR
+from .GMI.GMI import create_GMI
+from .ENV.ENV import create_ENV
+from .IMERG.IMERG import create_IMERG
+
 from .utils.utils_HDF5 import hdf5_file_attrs
 from .utils.utils_string import str_remove
 
@@ -1012,6 +1020,44 @@ def GPM_variables(product):
     return list(GPM_variables_dict(product).keys())
 
 #-----------------------------------------------------------------------------.
+################
+### Classes ####
+################
+def create_GPM_class(base_DIR, product, bbox=None, start_time=None, end_time=None):
+    # TODO add for ENV and SLH
+    if (product in ['1B-Ka','1B-Ku','2A-Ku','2A-Ka','2A-DPR','2A-SLH']):
+        x = create_DPR(base_DIR=base_DIR, product=product,
+                       bbox=bbox, start_time=start_time, end_time=end_time)
+    elif (product in ['IMERG-FR','IMERG-ER','IMERG-LR']):
+        x = create_IMERG(base_DIR=base_DIR, product=product,
+                         bbox=bbox, start_time=start_time, end_time=end_time)
+    elif (product in ['TODO list GMI products']):
+        x = create_GMI(base_DIR=base_DIR, product=product,
+                       bbox=bbox, start_time=start_time, end_time=end_time)
+    elif (product in GPM_RS_ENV_available()):
+        x = create_ENV(base_DIR=base_DIR, product=product,
+                       bbox=bbox, start_time=start_time, end_time=end_time)
+    else:
+        raise ValueError("Class method for such product not yet implemented")
+    return(x)
+
+def initialize_scan_modes(product): 
+    if (product in ['1B-Ku', '2A-Ku','2A-ENV-Ku']):
+        scan_modes = ['NS']
+    elif (product in ['1B-Ka', '2A-Ka','2A-ENV-Ka']):    
+        scan_modes = ['MS','HS']
+    elif (product in ['2A-DPR']):
+        scan_modes = ['NS','MS','HS']
+    elif product in ['2A-ENV-DPR']:
+        scan_modes = ['NS','HS']
+    elif (product == "2A-SLH"):
+        scan_modes = ['Swath']    
+    elif (product in ['IMERG-FR','IMERG-ER','IMERG-LR']):
+        scan_modes = ['Grid']
+    else:
+        raise ValueError("Retrievals for", product,"not yet implemented")
+    return(scan_modes)
+    
 ###############
 ### Checks ####
 ###############
@@ -1019,7 +1065,7 @@ def check_product(product):
     """Checks the validity of product."""
     if not isinstance(product, str):
         raise ValueError('Ask for a single product at time') 
-    if not (product in GPM_products_available()):
+    if (product not in GPM_products_available()):
         raise ValueError('Retrieval for such product not available') 
     return 
 
@@ -1045,7 +1091,7 @@ def check_scan_mode(scan_mode, product):
             raise ValueError("For '2A-ENV-DPR' products, specify scan_mode either 'NS' or 'HS'") 
     # Specify HDF group name for 2A-SLH and IMERG products
     if (product == "2A-SLH"):
-        scan_mode = 'Swath'    
+        scan_mode = 'Swath'   
     if (product in ['IMERG-FR','IMERG-ER','IMERG-LR']):
         scan_mode = 'Grid'
     if (scan_mode is None):
@@ -1403,7 +1449,7 @@ def GPM_Dataset(base_DIR,
                                      enable_dask=enable_dask, chunks='auto')
             if ds is not None:
                 l_Datasets.append(ds)
-    #-------------------------------------------------------------------------.
+    ##-------------------------------------------------------------------------.
     # Concat all Datasets
     if (len(l_Datasets) >= 1):
         if (product in GPM_IMERG_available()):
@@ -1414,6 +1460,95 @@ def GPM_Dataset(base_DIR,
     else:
         print("No data available for current request. Try for example to modify the bbox.")
         return 
-    #-------------------------------------------------------------------------.
+    ##------------------------------------------------------------------------.
     # Return Dataset
     return ds
+##----------------------------------------------------------------------------.
+
+def read_GPM(base_DIR,
+             product, 
+             start_time, 
+             end_time,
+             variables=None, 
+             scan_modes=None, 
+             bbox=None, 
+             enable_dask=True,
+             chunks='auto'):
+    """
+    Construct a GPM object (DPR,GMI, IMERG) depending on the product specified.
+    Map HDF5 data on disk lazily into dask arrays with relevant data and attributes. 
+   
+    Parameters
+    ----------
+    base_DIR : str
+       The base directory where GPM data are stored.
+    product : str
+        GPM product acronym.                           
+    variables : str, list, optional
+         Datasets names to extract from the HDF5 file.
+         By default all variables available.
+         Hint: GPM_variables(product) to see available variables.
+    start_time : datetime
+        Start time.
+    end_time : datetime
+        End time.
+    scan_modes : str,list optional
+        None --> Default to all the available for the specific GPM product
+        'NS' = Normal Scan --> For Ku band and DPR 
+        'MS' = Matched Scans --> For Ka band and DPR 
+        'HS' = High-sensitivity Scans --> For Ka band and DPR
+        For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'NS'.
+        For products '1B-Ka', '2A-Ka' and '2A-ENV-Ka', specify 'MS' or 'HS'.
+        For product '2A-DPR', specify 'NS', 'MS' or 'HS'.
+        For product '2A-ENV-DPR', specify either 'NS' or 'HS'.
+    bbox : list, optional 
+         Spatial bounding box. Format: [lon_0, lon_1, lat_0, lat_1]  
+    dask : bool, optional
+         Wheter to lazy load data (in parallel) with dask. The default is True.
+         Hint: xarray’s lazy loading of remote or on-disk datasets is often but not always desirable.
+         Before performing computationally intense operations, load the Dataset
+         entirely into memory by invoking the Dataset.load() 
+    chunks : str, list, optional
+        Chunck size for dask. The default is 'auto'.
+        Alternatively provide a list (with length equal to 'variables') specifying
+        the chunk size option for each variable.
+
+    Returns
+    -------
+    xarray.Dataset
+
+    """
+    ##------------------------------------------------------------------------.
+    ## Check product is valid
+    check_product(product)
+    # Initialize variables if not provided
+    if (variables is None):
+        variables = GPM_variables(product)
+    ## Initialize or check the scan_modes  
+    if (scan_modes is not None):
+        if isinstance(scan_modes, str):
+            scan_modes = [scan_modes]
+        scan_modes = [check_scan_mode(scan_mode, product) for scan_mode in scan_modes]  
+    else: 
+        scan_modes = initialize_scan_modes(product) 
+    ##------------------------------------------------------------------------.
+    # Initialize GPM class
+    x = create_GPM_class(base_DIR=base_DIR, product=product,
+                         bbox=bbox, start_time=start_time, end_time=end_time)
+    # Add the requested scan_mode to the GPM DPR class object
+    for scan_mode in scan_modes:
+        print("Retrieving", product,scan_mode,"data")
+        x.__dict__[scan_mode] = GPM_Dataset(base_DIR = base_DIR,
+                                            product = product, 
+                                            variables = variables, 
+                                            scan_mode = scan_mode, 
+                                            start_time = start_time, 
+                                            end_time = end_time,
+                                            bbox = bbox, 
+                                            enable_dask = enable_dask,
+                                            chunks = chunks)
+    ##------------------------------------------------------------------------.
+    # Return the GPM class object with the requested  GPM data 
+    return(x)
+    
+    

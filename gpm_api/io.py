@@ -76,12 +76,29 @@ def GPM_RS_1B_available():
                     '1B-Ku']
                     #'1B-GMI']
     return product_list 
+
 def GPM_RS_2A_available():
     """Provide a list of available RS GPM 2A-level data for download."""
     product_list = ['2A-ENV-DPR',
                     '2A-ENV-Ka',
                     '2A-ENV-Ku',
                     '2A-SLH',
+                    '2A-DPR',
+                    '2A-Ka',
+                    '2A-Ku']
+    return product_list  
+
+def GPM_RS_ENV_available():
+    """Provide a list of available RS GPM ENV data for download."""
+    product_list = ['2A-ENV-DPR',
+                    '2A-ENV-Ka',
+                    '2A-ENV-Ku']
+    return product_list  
+
+def GPM_RS_DPR_available():
+    """Provide a list of available RS GPM DPR data for download."""
+    product_list = ['1B-Ka',
+                    '1B-Ku',
                     '2A-DPR',
                     '2A-Ka',
                     '2A-Ku']

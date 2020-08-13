@@ -23,15 +23,15 @@ from dask.diagnostics import ProgressBar
 os.chdir('/home/ghiggi/gpm_api') # change to the 'scripts_GPM.py' directory
 ### GPM Scripts ####
 from gpm_api.io import download_GPM_data
-from gpm_api.dataset import GPM_Dataset, GPM_variables
-
+from gpm_api.dataset import GPM_Dataset, GPM_variables, read_GPM
 ##----------------------------------------------------------------------------.
 ### Donwload data 
 base_DIR = '/home/ghiggi/tmp'
 username = "gionata.ghiggi@epfl.ch"
 start_time = datetime.datetime.strptime("2020-08-09 15:00:00", '%Y-%m-%d %H:%M:%S')
 end_time = datetime.datetime.strptime("2020-08-01 16:00:00", '%Y-%m-%d %H:%M:%S')
-
+start_time = datetime.datetime.strptime("2017-01-01 01:02:30", '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime("2017-01-01 04:02:30", '%Y-%m-%d %H:%M:%S')
  
 product = '2A-Ka'
 product = '2A-Ku'
@@ -50,10 +50,8 @@ download_GPM_data(base_DIR = base_DIR,
 ##-----------------------------------------------------------------------------. 
 ###  Load GPM dataset  
 base_DIR = '/home/ghiggi/tmp'
-product = '2A-Ku'
+product = '2A-DPR'
 scan_mode = 'MS'
-start_time = datetime.datetime.strptime("2017-01-01 01:02:30", '%Y-%m-%d %H:%M:%S')
-end_time = datetime.datetime.strptime("2017-01-01 04:02:30", '%Y-%m-%d %H:%M:%S')
 variables = GPM_variables(product)   
 print(variables)
 
@@ -93,14 +91,59 @@ GPM_products_available()
 GPM_IMERG_available()
 GPM_NRT_available()
 GPM_RS_available()
+##-----------------------------------------------------------------------------. 
 
- 
+start_time = datetime.datetime.strptime("2017-01-01 00:40:30", '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime("2017-01-01 02:00:30", '%Y-%m-%d %H:%M:%S')
 
-def filter_daily_GPM_file_list(file_list,
-                               product,
-                               start_HHMMSS=None,
-                               end_HHMMSS=None):
-    
-    
-    
-    
+product = '2A-SL'
+product = '2A-Ku'
+product = '1B-Ku'
+product = 'IMERG-FR'
+product = '2A-DPR'
+DPR = read_GPM(base_DIR = base_DIR,
+               product = product, 
+               start_time = start_time,
+               end_time = end_time)
+               # scan_mode = scan_mode,  # by default all 
+               # variables = variables,  # by default all available
+               # bbox = bbox, 
+               # enable_dask = True, 
+               # chunks = 'auto') 
+DPR.NS
+DPR.HS
+DPR.MS
+DPR.retrieve_ENV()
+DPR.NS
+
+
+
+
+product = '2A-ENV-DPR'
+ENV = read_GPM(base_DIR = base_DIR,
+               product = product, 
+               start_time = start_time,
+               end_time = end_time)
+ENV.NS
+ENV.HS
+
+DPR.NS
+ENV.NS
+
+import xarray as xr
+# Check for coordinates, where not same
+# - Discard missing scan , add NaN to missing scan 
+xr.merge([ENV.NS,DPR.NS])
+xr.merge([ENV.HS,DPR.HS])
+DPR.NS.combine_first(ENV.NS)
+DPR.NS.combine_first(ENV.NS)
+
+# 2A-ENV MS ... not present...need to subset
+
+# SLH --> DPR.Swath 
+# start_time, end_time correspond to request, not actual retrieved...
+
+
+  
+         
+         
