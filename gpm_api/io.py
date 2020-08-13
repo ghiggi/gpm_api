@@ -46,7 +46,7 @@ def get_GPM_file_dict():
                 '2A-ENV-Ka': '2A-ENV.GPM.Ka.V*',
                 '2A-ENV-Ku': '2A-ENV.GPM.Ku.V*',
                 '2A-SLH': '2A.GPM.DPR.GPM-SLH*',
-                '2A-DPR': '2A.GPM.DPR.V*',
+                '2A-DPR': '2A.GPM.DPR.V\d-*',
                 '2A-Ka': '2A.GPM.Ka.V*',
                 '2A-Ku': '2A.GPM.Ku.V*',
                 'IMERG-ER': '3B-HHR-*',  # '3B-HHR-L.MS.MRG.3IMERG*'
@@ -189,11 +189,11 @@ def filter_daily_GPM_file_list(file_list,
 ##----------------------------------------------------------------------------.
 # Download of GPM data from NASA servers 
 def download_daily_GPM_data(base_DIR,
+                            username,
                             product,
                             Date, 
                             start_HHMMSS=None,
                             end_HHMMSS=None,
-                            username = "gionata.ghiggi@epfl.ch",
                             n_parallel = 10,
                             force_download=False,
                             verbose=True):
@@ -204,6 +204,8 @@ def download_daily_GPM_data(base_DIR,
     ----------
     base_DIR : str
         The base directory where to store GPM data.
+    username: str
+        Email address with which you registered on on NASA PPS
     product : str
         GPM product name. See: GPM_products_available()
     Date : datetime
@@ -332,7 +334,8 @@ def download_daily_GPM_data(base_DIR,
     return 0
 
 ##-----------------------------------------------------------------------------.
-def find_daily_GPM_filepaths(base_DIR, product, Date, start_HHMMSS=None, end_HHMMSS=None):
+def find_daily_GPM_filepaths(base_DIR, product, Date, 
+                             start_HHMMSS=None, end_HHMMSS=None):
     """
     Retrieve GPM data filepaths for a specific day and product on user disk.
     
@@ -366,6 +369,7 @@ def find_daily_GPM_filepaths(base_DIR, product, Date, start_HHMMSS=None, end_HHM
     return(filepaths)
 #-----------------------------------------------------------------------------. 
 def download_GPM_data(base_DIR,
+                      username,
                       product,
                       start_time,
                       end_time):
@@ -376,6 +380,8 @@ def download_GPM_data(base_DIR,
     ----------
     base_DIR : str
         The base directory where to store GPM data.
+    username: str
+        Email address with which you registered on NASA PPS
     product : str
         GPM product acronym. See GPM_products_available()
     start_time : datetime
@@ -403,6 +409,7 @@ def download_GPM_data(base_DIR,
     # Case 1: Retrieve just 1 day of data 
     if (len(Dates)==1):
         download_daily_GPM_data(base_DIR = base_DIR,
+                                username = username,
                                 product = product,
                                 Date = Dates[0],  
                                 start_HHMMSS = start_HHMMSS,
@@ -411,6 +418,7 @@ def download_GPM_data(base_DIR,
     # Case 2: Retrieve multiple days of data
     if (len(Dates) > 1):
         download_daily_GPM_data(base_DIR = base_DIR, 
+                                username = username,
                                 product = product,
                                 Date = Dates[0],
                                 start_HHMMSS = start_HHMMSS,
@@ -418,11 +426,13 @@ def download_GPM_data(base_DIR,
         if (len(Dates) > 2):
             for Date in Dates[1:-1]:
                 download_daily_GPM_data(base_DIR=base_DIR, 
+                                        username = username,
                                         product=product,
                                         Date=Date, 
                                         start_HHMMSS='000000',
                                         end_HHMMSS='240000')
         download_daily_GPM_data(base_DIR=base_DIR, 
+                                username = username,
                                 product=product,
                                 Date=Dates[-1], 
                                 start_HHMMSS='000000',

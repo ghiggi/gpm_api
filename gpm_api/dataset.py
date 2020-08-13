@@ -1076,13 +1076,20 @@ def check_variables(variables, product, scan_mode):
             print('flagAnvil available only for Ku-band and DPR NS.\n Silent removal from the request done.')
             variables = str_remove(variables, 'flagAnvil')
     if ('binDFRmMLBottom' in variables):         
-        if (product in ['2A-Ka','2A-Ku']):  
+        if ((product in ['2A-Ka','2A-Ku']) or (product == '2A-DPR' and scan_mode == 'NS')):  
             print('binDFRmMLBottom available only for 2A-DPR.\n Silent removal from the request done.')
             variables = str_remove(variables, 'binDFRmMLBottom')
     if ('binDFRmMLTop' in variables):         
-        if (product in ['2A-Ka','2A-Ku']):  
+        if ((product in ['2A-Ka','2A-Ku']) or (product == '2A-DPR' and scan_mode == 'NS')):  
             print('binDFRmMLTop available only for 2A-DPR.\n Silent removal from the request done.')
             variables = str_remove(variables, 'binDFRmMLTop') 
+    if (product == '2A-DPR' and scan_mode == 'MS'): 
+        variables = str_remove(variables, 'precipRate') 
+        variables = str_remove(variables, 'paramDSD') 
+        variables = str_remove(variables, 'phase') 
+        
+    # Only DPR MS Experimental: flagSurfaceSnowfall, surfaceSnowfallIndex,   
+    # Only DPR MS SLV : qualitySLV, flagSLV
     ##------------------------------------------------------------------------.  
     # Check that there are still some variables to retrieve
     if (len(variables) == 0):
@@ -1274,11 +1281,11 @@ def GPM_granule_Dataset(hdf, product, variables,
             # Modify attributes 
             ds['DSD_m'].attrs['units'] = 'mm' 
         if (var == 'flagBB' and product == '2A-DPR'):
-            ds['DSD_m'].attrs['description'] = ''' Flag for Bright Band: 
-                                                0 : BB not detected
-                                                1 : Bright Band detected by Ku and DFRm
-                                                2 : Bright Band detected by Ku only
-                                                3 : Bright Band detected by DFRm only
+            ds['flagBB'].attrs['description'] = ''' Flag for Bright Band: 
+                                                    0 : BB not detected
+                                                    1 : Bright Band detected by Ku and DFRm
+                                                    2 : Bright Band detected by Ku only
+                                                    3 : Bright Band detected by DFRm only
                                                '''
         # TODO     ???                                 
         # if (var == 'cloudLiquidWater'):
