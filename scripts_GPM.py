@@ -49,6 +49,13 @@ download_GPM_data(base_DIR = base_DIR,
                   start_time = start_time,
                   end_time = end_time)
 
+download_GPM_data(base_DIR = base_DIR, 
+                  GPM_version = 5, 
+                  username = username,
+                  product = product, 
+                  start_time = start_time,
+                  end_time = end_time)
+
 ##-----------------------------------------------------------------------------. 
 ###  Load GPM dataset  
 base_DIR = '/home/ghiggi/tmp'
@@ -94,13 +101,16 @@ GPM_IMERG_available()
 GPM_NRT_available()
 GPM_RS_available()
 ##-----------------------------------------------------------------------------. 
+from gpm_api.dataset import read_GPM
+from gpm_api.dataset import GPM_Dataset, GPM_variables # read_GPM (importing here do)
 
+##-------------
 base_DIR = '/home/ghiggi/tmp'
 username = "gionata.ghiggi@epfl.ch"
 start_time = datetime.datetime.strptime("2017-01-01 00:40:30", '%Y-%m-%d %H:%M:%S')
 end_time = datetime.datetime.strptime("2017-01-01 02:00:30", '%Y-%m-%d %H:%M:%S')
 
-product = '2A-SL'
+product = '2A-SLH'
 product = '2A-Ku'
 product = '1B-Ku'
 product = 'IMERG-FR'
@@ -148,7 +158,24 @@ DPR.NS.combine_first(ENV.NS)
 # SLH --> DPR.Swath 
 # start_time, end_time correspond to request, not actual retrieved...
 
-
+product = '2A-DPR'
   
-         
-         
+
+import yaml 
+from gpm_api.dataset import GPM_variables_dict
+from gpm_api.io import GPM_products_available
+from gpm_api.dataset import initialize_scan_modes
+
+
+
+product =  "IMERG-LR"
+scan_mode = "Grid"
+d = GPM_variables_dict(product, scan_mode)
+print(d['PMWprecipSource']['description'])
+
+# Xradar folder? 
+    
+    
+    
+    
+    

@@ -1,0 +1,89 @@
+climFreezLayerHeight:
+  _FillValue: -9999
+  description: Climatological height of the freezing layer.
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: climFreezLevel
+  standard_name: climFreezLevel
+  units: m
+climMeltLayerHeight:
+  _FillValue: -9999
+  description: Climatological height of the melting layer.
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: climMeltLevel
+  standard_name: climMeltLevel
+  units: m
+latentHeating:
+  _FillValue: -9999.9
+  description: Latent Heating. Values range from -400 to 400 K/hr.
+  dims:
+  - along_track
+  - cross_track
+  - layer
+  ndims: 3
+  offset_scale: []
+  path: latentHeating
+  standard_name: latentHeating
+  units: K/hr
+meltLayerHeight:
+  _FillValue: -9999
+  description: Height of melting layer. Values range from 0 to 32000 m.
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: meltLayerHeight
+  standard_name: meltLayerHeight
+  units: m
+nearSurfHeight:
+  _FillValue: -9999
+  description: Height of the near surface level.
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: nearSurfLevel
+  standard_name: nearSurfLevel
+  units: m
+rainTypeSLH:
+  _FillValue: -9999
+  description: Rain type of SLH. See GPM ATBD.
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: rainTypeSLH
+  standard_name: latentHeating
+  units: ''
+stormTopHeight:
+  _FillValue: -9999
+  description: Height of storm top. Values range from 0 to 32000 m.
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: stormTopHeight
+  standard_name: stormTopHeight
+  units: m
+topoHeight:
+  _FillValue: -9999
+  description: Height of the topography
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: topoLevel
+  standard_name: topoLevel
+  units: m

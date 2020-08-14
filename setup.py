@@ -14,5 +14,5 @@ setup(name='gpm_api',
       packages=['gpm_api'],
       long_description = long_description,
       license = 'MIT',
-      requires = ['h5py', 'xarray']
+      requires = ['h5py', 'xarray','yaml','numpy']
      )

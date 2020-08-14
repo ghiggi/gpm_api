@@ -52,11 +52,12 @@ def get_GPM_file_dict():
                 'IMERG-ER': '3B-HHR-*',  # '3B-HHR-L.MS.MRG.3IMERG*'
                 'IMERG-LR': '3B-HHR-*',
                 'IMERG-FR': '3B-HHR-*'}
-    return GPM_dict 
+    return GPM_dict  
 
-def get_GPM_directory(base_DIR, product, Date):
+def get_GPM_directory(base_DIR, product, Date, GPM_version=6):
     """Retrieve directory path where to save GPM data."""
-    DIR = os.path.join(base_DIR, product, Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d'))
+    GPM_folder_name = "GPM_V" + str(GPM_version)
+    DIR = os.path.join(base_DIR, GPM_folder_name, product, Date.strftime('%Y'), Date.strftime('%m'), Date.strftime('%d'))
     return(DIR)
   
 #----------------------------------------------------------------------------. 
@@ -209,8 +210,9 @@ def download_daily_GPM_data(base_DIR,
                             username,
                             product,
                             Date, 
-                            start_HHMMSS=None,
-                            end_HHMMSS=None,
+                            start_HHMMSS = None,
+                            end_HHMMSS = None,
+                            GPM_version = 6,
                             n_parallel = 10,
                             force_download=False,
                             verbose=True):
@@ -287,8 +289,13 @@ def download_daily_GPM_data(base_DIR,
     # Retrieve NASA server url   
     if flag == 'NRT':
         url = server_text + '/' + folder_name + '/'+ datetime.datetime.strftime(Date, '%Y%m') + '/'
-    else:    
-        url = server_text + '/gpmdata/' + datetime.datetime.strftime(Date, '%Y/%m/%d') + '/' + folder_name + "/"
+    else: 
+        # Current versions
+        if (GPM_version == 6): 
+            url = server_text + '/gpmdata/' + datetime.datetime.strftime(Date, '%Y/%m/%d') + '/' + folder_name + "/"
+        else:
+            GPM_version_str = "V0" + str(int(GPM_version)) 
+            url = server_text + '/gpmallversions/' + GPM_version_str + '/'+ datetime.datetime.strftime(Date, '%Y/%m/%d') + '/' + folder_name + "/"       
     #-------------------------------------------------------------------------.
     # Retrieve available filepaths in NASA servers
     # curl -u username:password
@@ -313,7 +320,10 @@ def download_daily_GPM_data(base_DIR,
                                            end_HHMMSS=end_HHMMSS)
     #-------------------------------------------------------------------------.
     # Define directory where to story the data 
-    DIR = get_GPM_directory(base_DIR, product, Date)
+    DIR = get_GPM_directory(base_DIR = base_DIR, 
+                            product = product, 
+                            Date = Date,
+                            GPM_version = GPM_version)
     # Create directory if does not exist
     if not os.path.exists(DIR):
         os.makedirs(DIR)
@@ -352,7 +362,9 @@ def download_daily_GPM_data(base_DIR,
 
 ##-----------------------------------------------------------------------------.
 def find_daily_GPM_filepaths(base_DIR, product, Date, 
-                             start_HHMMSS=None, end_HHMMSS=None):
+                             start_HHMMSS = None, 
+                             end_HHMMSS = None,
+                             GPM_version = 6):
     """
     Retrieve GPM data filepaths for a specific day and product on user disk.
     
@@ -376,8 +388,10 @@ def find_daily_GPM_filepaths(base_DIR, product, Date,
     list 
         List of GPM data filepaths.
     """
-
-    DIR = get_GPM_directory(base_DIR, product, Date)
+    DIR = get_GPM_directory(base_DIR = base_DIR, 
+                            product = product, 
+                            Date = Date,
+                            GPM_version = GPM_version)
     filenames = sorted(os.listdir(DIR))
     filenames = filter_daily_GPM_file_list(filenames, product=product,
                                            start_HHMMSS=start_HHMMSS, 
@@ -389,7 +403,8 @@ def download_GPM_data(base_DIR,
                       username,
                       product,
                       start_time,
-                      end_time):
+                      end_time,
+                      GPM_version = 6):
     """
     Download GPM data from NASA servers.
     
@@ -426,6 +441,7 @@ def download_GPM_data(base_DIR,
     # Case 1: Retrieve just 1 day of data 
     if (len(Dates)==1):
         download_daily_GPM_data(base_DIR = base_DIR,
+                                GPM_version =  GPM_version,
                                 username = username,
                                 product = product,
                                 Date = Dates[0],  
@@ -435,6 +451,7 @@ def download_GPM_data(base_DIR,
     # Case 2: Retrieve multiple days of data
     if (len(Dates) > 1):
         download_daily_GPM_data(base_DIR = base_DIR, 
+                                GPM_version =  GPM_version,
                                 username = username,
                                 product = product,
                                 Date = Dates[0],
@@ -442,13 +459,15 @@ def download_GPM_data(base_DIR,
                                 end_HHMMSS = '240000')
         if (len(Dates) > 2):
             for Date in Dates[1:-1]:
-                download_daily_GPM_data(base_DIR=base_DIR, 
+                download_daily_GPM_data(base_DIR=base_DIR,
+                                        GPM_version =  GPM_version,
                                         username = username,
                                         product=product,
                                         Date=Date, 
                                         start_HHMMSS='000000',
                                         end_HHMMSS='240000')
         download_daily_GPM_data(base_DIR=base_DIR, 
+                                GPM_version =  GPM_version,
                                 username = username,
                                 product=product,
                                 Date=Dates[-1], 
@@ -461,7 +480,8 @@ def download_GPM_data(base_DIR,
 def find_GPM_files(base_DIR, 
                    product, 
                    start_time,
-                   end_time):
+                   end_time,
+                   GPM_version = 6):
     """
     Retrieve filepath of GPM data on user disk.
     
@@ -495,6 +515,7 @@ def find_GPM_files(base_DIR,
     # Case 1: Retrieve just 1 day of data 
     if (len(Dates)==1):
         filepaths = find_daily_GPM_filepaths(base_DIR = base_DIR, 
+                                             GPM_version = GPM_version,
                                              product = product,
                                              Date = Dates[0], 
                                              start_HHMMSS = start_HHMMSS,
@@ -503,23 +524,26 @@ def find_GPM_files(base_DIR,
     # Case 2: Retrieve multiple days of data
     if (len(Dates) > 1):
         filepaths = find_daily_GPM_filepaths(base_DIR = base_DIR, 
-                                            product = product,
-                                            Date = Dates[0], 
-                                            start_HHMMSS = start_HHMMSS,
-                                            end_HHMMSS = '240000')
+                                             GPM_version = GPM_version,
+                                             product = product,
+                                             Date = Dates[0], 
+                                             start_HHMMSS = start_HHMMSS,
+                                             end_HHMMSS = '240000')
         if (len(Dates) > 2):
             for Date in Dates[1:-1]:
-                filepaths.extend(find_daily_GPM_filepaths(base_DIR=base_DIR, 
-                                                         product=product,
-                                                         Date=Date, 
-                                                         start_HHMMSS='000000',
-                                                         end_HHMMSS='240000')
+                filepaths.extend(find_daily_GPM_filepaths(base_DIR=base_DIR,
+                                                          GPM_version = GPM_version,
+                                                          product=product,
+                                                          Date=Date, 
+                                                          start_HHMMSS='000000',
+                                                          end_HHMMSS='240000')
                                  )
-        filepaths.extend(find_daily_GPM_filepaths(base_DIR = base_DIR, 
-                                                 product = product,
-                                                 Date = Dates[-1], 
-                                                 start_HHMMSS='000000',
-                                                 end_HHMMSS=end_HHMMSS)
+        filepaths.extend(find_daily_GPM_filepaths(base_DIR = base_DIR,
+                                                  GPM_version = GPM_version,
+                                                  product = product,
+                                                  Date = Dates[-1], 
+                                                  start_HHMMSS='000000',
+                                                  end_HHMMSS=end_HHMMSS)
                          )
     #-------------------------------------------------------------------------. 
     return(filepaths)

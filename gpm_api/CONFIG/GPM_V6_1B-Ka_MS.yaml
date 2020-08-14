@@ -1,0 +1,206 @@
+DEMHmean:
+  _FillValue: -9999
+  description: " Averaged DEM (SRTM-30) height.   \n                           "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/DEMHmean
+  standard_name: DEMHmean
+  units: m
+alongTrackBeamWidth:
+  _FillValue: []
+  description: " Radar beamwidth (degrees) at the point transmitted power \n     \
+    \                          reaches one half of peak power in the along-track direction.\n\
+    \                           "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/alongTrackBeamWidth
+  standard_name: alongTrackBeamWidth
+  units: ''
+binDEM:
+  _FillValue: -9999
+  description: " The range bin number of the average DEM elevation.  \n          \
+    \                     in a 5x5 km box centered on the IFOV.\n                \
+    \           "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/binDEM
+  standard_name: binDEM
+  units: ''
+binDEMHbottom:
+  _FillValue: -9999
+  description: " The range bin number of the minimum DEM elevation \n            \
+    \                  in a 5x5 km box centered on the IFOV.\n                   \
+    \        "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/binDEMHbottom
+  standard_name: binDEMHbottom
+  units: ''
+binDEMHtop:
+  _FillValue: -9999
+  description: " The range bin number of the maximum DEM elevation \n            \
+    \                   in a 5x5 km box centered on the IFOV.\n                  \
+    \         "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/binDEMHtop
+  standard_name: binDEMHtop
+  units: ''
+binDiffPeakDEM:
+  _FillValue: -9999
+  description: " The number of range bins between binEchoPeak and binDEM.\n      \
+    \                         It is used to ensure that the VPRF is switched in \n\
+    \                               accordance with the GPM satellite altitude.\n\
+    \                               Values range from -260 to 260 range bin number\
+    \ at NS and MS \n                               Values range from -130 to 130\
+    \ range bin number at HS.\n                           "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: HouseKeeping/binDiffPeakDEM
+  standard_name: binDiffPeakDEM
+  units: ''
+binEchoPeak:
+  _FillValue: -9999
+  description: " The range bin number which has maximum echoPower.  \n           \
+    \                    Values range from 1 to 260 range bin number.\n          \
+    \                 "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/binEchoPeak
+  standard_name: binEchoPeak
+  units: ''
+crossTrackBeamWidth:
+  _FillValue: []
+  description: " Radar beamwidth (degrees) at the point transmitted power \n     \
+    \                          reaches one half of peak power in the cross-track direction.\n\
+    \                           "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/crossTrackBeamWidth
+  standard_name: crossTrackBeamWidth
+  units: ''
+echoPower:
+  _FillValue:
+  - -29999
+  - -30000
+  description: " The total signal power that includes both echo and noise power.\n\
+    \                              The range is -120 dBm to -20 dBm\n            \
+    \              "
+  dims:
+  - along_track
+  - cross_track
+  - range
+  ndims: 3
+  offset_scale:
+  - 0
+  - 100
+  path: Receiver/echoPower
+  standard_name: echoPower
+  units: ''
+landOceanFlag:
+  _FillValue: -9999
+  description: "Land or ocean information.\n                              0=Water,\
+    \ 1=Land, 2=Coast, 3=Inland Water\n                           "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/landOceanFlag
+  standard_name: landOceanFlag
+  units: ''
+localZenithAngle:
+  _FillValue: -9999.9
+  description: " Angle (degrees) between the local zenith and\n                  \
+    \                the beam\u2019s center line.\n                              \
+    \    Values range from 0 to 90 degrees\n                              "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/scLocalZenith
+  standard_name: scLocalZenith
+  units: ''
+mainlobeEdge:
+  _FillValue: []
+  description: " Absolute value of the difference in Range Bin Numbers\n         \
+    \                      between the detected surface and the edge of the clutter\n\
+    \                               from the mainlobe.\n                         \
+    \  "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/mainlobeEdge
+  standard_name: mainlobeEdge
+  units: ''
+noisePower:
+  _FillValue: -30000
+  description: "An average of the received noise power for each ray\n            \
+    \                  The range is -120 dBm to -20 dBm.\n                       \
+    \    "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale:
+  - 0
+  - 100
+  path: Receiver/noisePower
+  standard_name: noisePower
+  units: ''
+scanAngle:
+  _FillValue: -9999.9
+  description: " Angle (degrees) of the ray from nominal nadir offset \n         \
+    \                     about the mechanical x axis.\n                         \
+    \     The angle is positive to the right of the direction of travel\n        \
+    \                      Values range from -18 to 18 degrees\n                 \
+    \         "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: rayPointing/scanAngle
+  standard_name: scanAngle
+  units: ''
+sidelobeRange:
+  _FillValue: []
+  description: " Absolute value of the difference in Range Bin Numbers\n         \
+    \                      between the detected surface and the clutter position \n\
+    \                               from the sidelobe of the clutter.\n          \
+    \                     A zero means no clutter. \n                           "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: VertLocate/sidelobeRange
+  standard_name: sidelobeRange
+  units: ''
