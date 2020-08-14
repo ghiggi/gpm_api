@@ -87,7 +87,7 @@ def GPM_variables_dict(product,
     filename = "GPM_V" + str(GPM_version) + "_" + product + "_" + scan_mode
     filepath = dict_path + filename + '.yaml'
     with open(filepath) as file:
-        d = yaml.full_load(file)
+        d = yaml.safe_load(file)
     return(d)
 
 def GPM_variables(product, scan_modes=None, GPM_version = 6):
