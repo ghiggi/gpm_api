@@ -14,10 +14,10 @@ import yaml
 import os 
 
 from .io import find_GPM_files
-from .io import GPM_RS_DPR_available
-from .io import GPM_RS_ENV_available
-from .io import GPM_IMERG_available
-from .io import GPM_products_available
+from .io import GPM_DPR_RS_products
+from .io import GPM_DPR_2A_ENV_RS_products
+from .io import GPM_IMERG_products
+from .io import GPM_products
 
 from .DPR.DPR import create_DPR
 from .GMI.GMI import create_GMI
@@ -79,7 +79,7 @@ def GPM_variables_dict(product,
     dict
 
     """
-    if (product not in GPM_products_available()):
+    if (product not in GPM_products()):
         raise ValueError('Retrievals not yet implemented for product', product)
     if (GPM_version != 6):     
         raise ValueError('Retrievals currently implemented only for GPM V06.')
@@ -141,7 +141,7 @@ def create_GPM_class(base_DIR, product, bbox=None, start_time=None, end_time=Non
     elif (product in ['TODO list GMI products']):
         x = create_GMI(base_DIR=base_DIR, product=product,
                        bbox=bbox, start_time=start_time, end_time=end_time)
-    elif (product in GPM_RS_ENV_available()):
+    elif (product in GPM_DPR_2A_ENV_RS_products()):
         x = create_ENV(base_DIR=base_DIR, product=product,
                        bbox=bbox, start_time=start_time, end_time=end_time)
     else:
@@ -176,7 +176,7 @@ def check_product(product):
     """Checks the validity of product."""
     if not isinstance(product, str):
         raise ValueError('Ask for a single product at time') 
-    if (product not in GPM_products_available()):
+    if (product not in GPM_products()):
         raise ValueError('Retrieval for such product not available') 
     return 
 
@@ -216,7 +216,9 @@ def check_variables(variables, product, scan_mode, GPM_version=6):
     if (isinstance(variables, str)):
         variables = [variables]
     # Check variables are valid 
-    valid_variables = GPM_variables(product=product,scan_modes=scan_mode,GPM_version=GPM_version) 
+    valid_variables = GPM_variables(product=product,
+                                    scan_modes=scan_mode,
+                                    GPM_version=GPM_version) 
     idx_valid = [var in valid_variables for var in variables]
     if not all(idx_valid): 
         idx_not_valid = np.logical_not(idx_valid)
@@ -351,7 +353,7 @@ def GPM_granule_Dataset(hdf, product, variables,
     ##------------------------------------------------------------------------.     
     ## Retrieve basic coordinates 
     # - For GPM radar products
-    if (product not in GPM_IMERG_available()):
+    if (product not in GPM_IMERG_products()):
         lon = hdf[scan_mode]['Longitude'][:]
         lat = hdf[scan_mode]['Latitude'][:]
         tt = parse_GPM_ScanTime(hdf[scan_mode]['ScanTime'])
@@ -371,7 +373,7 @@ def GPM_granule_Dataset(hdf, product, variables,
     ## Check if there is some data in the bounding box
     if (bbox is not None):
         # - For GPM radar products
-        if (product not in GPM_IMERG_available()):
+        if (product not in GPM_IMERG_products()):
             idx_row, idx_col = np.where((lon >= bbox[0]) & (lon <= bbox[1]) & (lat >= bbox[2]) & (lat <= bbox[3]))              
         # - For IMERG products
         else:   
@@ -408,7 +410,7 @@ def GPM_granule_Dataset(hdf, product, variables,
         if bbox is not None:
             # - For GPM radar products
             # --> Subset only along_track to allow concat on cross_track  
-            if (product not in GPM_IMERG_available()):
+            if (product not in GPM_IMERG_products()):
                 da = da.isel(along_track = slice((min(idx_row)),(max(idx_row)+1))) 
             # - For IMERG products
             else: 
@@ -477,6 +479,7 @@ def GPM_Dataset(base_DIR,
                 end_time,
                 scan_mode=None, 
                 GPM_version = 6,
+                product_type = 'RS',
                 bbox=None, enable_dask=False, chunks='auto'):
     """
     Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes. 
@@ -502,8 +505,11 @@ def GPM_Dataset(base_DIR,
         For products '1B-Ka', '2A-Ka' and '2A-ENV-Ka', specify either 'MS' or 'HS'.
         For product '2A-DPR', specify either 'NS', 'MS' or 'HS'.
         For product '2A-ENV-DPR', specify either 'NS' or 'HS'.
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).    
     GPM_version : int, optional
-        GPM version of the data to retrieve. Only GPM V06 currently implemented.
+        GPM version of the data to retrieve if product_type = 'RS'. 
+        GPM data readers are currently implemented only for GPM V06.
     bbox : list, optional 
          Spatial bounding box. Format: [lon_0, lon_1, lat_0, lat_1]  
     dask : bool, optional
@@ -542,6 +548,7 @@ def GPM_Dataset(base_DIR,
     filepaths = find_GPM_files(base_DIR = base_DIR,
                                GPM_version =  GPM_version,
                                product = product, 
+                               product_type = product_type,
                                start_time = start_time,
                                end_time = end_time)
     ##------------------------------------------------------------------------.
@@ -562,7 +569,7 @@ def GPM_Dataset(base_DIR,
         # --------------------------------------------------------------------.
         ## Decide if retrieve data based on JAXA quality flags 
         # Do not retrieve data if TotalQualityCode not ... 
-        if (product not in GPM_IMERG_available()):
+        if (product not in GPM_IMERG_products()):
             DataQualityFiltering = {'TotalQualityCode': ['Good']} # TODO future fun args
             if (hdf_attr['JAXAInfo']['TotalQualityCode'] not in DataQualityFiltering['TotalQualityCode']):
                 continue
@@ -583,7 +590,7 @@ def GPM_Dataset(base_DIR,
     ##-------------------------------------------------------------------------.
     # Concat all Datasets
     if (len(l_Datasets) >= 1):
-        if (product in GPM_IMERG_available()):
+        if (product in GPM_IMERG_products()):
             ds = xr.concat(l_Datasets, dim="time")
         else:
             ds = xr.concat(l_Datasets, dim="along_track")
@@ -603,6 +610,7 @@ def read_GPM(base_DIR,
              variables = None, 
              scan_modes = None, 
              GPM_version = 6,
+             product_type = 'RS',
              bbox = None, 
              enable_dask = True,
              chunks = 'auto'):
@@ -633,8 +641,11 @@ def read_GPM(base_DIR,
         For products '1B-Ka', '2A-Ka' and '2A-ENV-Ka', specify 'MS' or 'HS'.
         For product '2A-DPR', specify 'NS', 'MS' or 'HS'.
         For product '2A-ENV-DPR', specify either 'NS' or 'HS'.
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).    
     GPM_version : int, optional
-        GPM version of the data to retrieve. Only GPM V06 currently implemented.
+        GPM version of the data to retrieve if product_type = 'RS'. 
+        GPM data readers are currently implemented only for GPM V06.
     bbox : list, optional 
          Spatial bounding box. Format: [lon_0, lon_1, lat_0, lat_1]  
     dask : bool, optional
@@ -675,8 +686,9 @@ def read_GPM(base_DIR,
     for scan_mode in scan_modes:
         print("Retrieving", product,scan_mode,"data")
         x.__dict__[scan_mode] = GPM_Dataset(base_DIR = base_DIR,
-                                            GPM_version =  GPM_version,
+                                            GPM_version = GPM_version,
                                             product = product, 
+                                            product_type = product_type,
                                             variables = variables, 
                                             scan_mode = scan_mode, 
                                             start_time = start_time, 

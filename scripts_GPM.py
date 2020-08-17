@@ -34,7 +34,10 @@ start_time = datetime.datetime.strptime("2020-08-09 15:00:00", '%Y-%m-%d %H:%M:%
 end_time = datetime.datetime.strptime("2020-08-01 16:00:00", '%Y-%m-%d %H:%M:%S')
 start_time = datetime.datetime.strptime("2017-01-01 01:02:30", '%Y-%m-%d %H:%M:%S')
 end_time = datetime.datetime.strptime("2017-01-01 04:02:30", '%Y-%m-%d %H:%M:%S')
- 
+
+start_time = datetime.datetime.strptime("2014-08-09 00:00:00", '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime("2014-08-09 03:00:00", '%Y-%m-%d %H:%M:%S')
+
 product = '2A-Ka'
 product = '2A-Ku'
 product = '2A-DPR'
@@ -75,9 +78,27 @@ ds = GPM_Dataset(base_DIR = base_DIR,
                  end_time = end_time,
                  bbox = bbox, enable_dask = True, chunks = 'auto') 
 print(ds)
-# Not present
-# DPR MS SLV : precipRate, paramDSD 
-# DPR MS DSD : phase  
+
+## Test NRT 
+start_time = datetime.datetime.strptime("2020-08-17 00:00:00", '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime("2020-08-17 17:00:00", '%Y-%m-%d %H:%M:%S')
+product = '2A-DPR'
+scan_mode = 'MS'
+ds = GPM_Dataset(base_DIR = base_DIR,
+                 product = product, 
+                 product_type = 'NRT',
+                 scan_mode = scan_mode,  # only necessary for 1B and 2A Ku/Ka/DPR
+                 variables = variables,
+                 start_time = start_time,
+                 end_time = end_time,
+                 bbox = bbox, enable_dask = True, chunks = 'auto') 
+print(ds)
+
+
+
+
+
+
 
 
 
@@ -95,11 +116,11 @@ GPM_variables_dict(product)
 ##-----------------------------------------------------------------------------. 
 
 # Products infos 
-from gpm_api.io import GPM_IMERG_available, GPM_NRT_available, GPM_RS_available, GPM_products_available
-GPM_products_available()
-GPM_IMERG_available()
-GPM_NRT_available()
-GPM_RS_available()
+from gpm_api.io import GPM_IMERG_products, GPM_NRT_products, GPM_RS_products, GPM_products_products
+GPM_products_products()
+GPM_IMERG_products()
+GPM_NRT_products()
+GPM_RS_products()
 ##-----------------------------------------------------------------------------. 
 from gpm_api.dataset import read_GPM
 from gpm_api.dataset import GPM_Dataset, GPM_variables # read_GPM (importing here do)
@@ -109,6 +130,8 @@ base_DIR = '/home/ghiggi/tmp'
 username = "gionata.ghiggi@epfl.ch"
 start_time = datetime.datetime.strptime("2017-01-01 00:40:30", '%Y-%m-%d %H:%M:%S')
 end_time = datetime.datetime.strptime("2017-01-01 02:00:30", '%Y-%m-%d %H:%M:%S')
+start_time = datetime.datetime.strptime("2014-08-09 00:00:00", '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime("2014-08-09 03:00:00", '%Y-%m-%d %H:%M:%S')
 
 product = '2A-SLH'
 product = '2A-Ku'
@@ -120,7 +143,7 @@ DPR = read_GPM(base_DIR = base_DIR,
                start_time = start_time,
                end_time = end_time)
                # scan_mode = scan_mode,  # by default all 
-               # variables = variables,  # by default all available
+               # variables = variables,  # by default all products
                # bbox = bbox, 
                # enable_dask = True, 
                # chunks = 'auto') 
@@ -163,7 +186,7 @@ product = '2A-DPR'
 
 import yaml 
 from gpm_api.dataset import GPM_variables_dict
-from gpm_api.io import GPM_products_available
+from gpm_api.io import GPM_products_products
 from gpm_api.dataset import initialize_scan_modes
 
 
