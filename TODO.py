@@ -17,3 +17,6 @@ Created on Mon Aug 17 17:41:14 2020
 # - wrapper with NRT set to TRUE 
 
 ## Remove NRT product older than X days 
+
+## GOES-R
+https://colab.research.google.com/drive/1RkS4HpbVUtNZ6UQm4-bvEQpp7jXXB3lJ?usp=sharing#scrollTo=u0kc-GmGRUIl

@@ -523,7 +523,7 @@ widthBB:
 zFactorCorrected:
   _FillValue: -9999.9
   description: " Vertical profile of reflectivity with \n                        \
-    \            attenuation correctionattenuation correction.\n                 \
+    \            attenuation correction.\n                 \
     \               "
   dims:
   - along_track

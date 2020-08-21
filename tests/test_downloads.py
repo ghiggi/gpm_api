@@ -41,12 +41,14 @@ for product in products:
                       end_time = end_time)
 ##-----------------------------------------------------------------------------.
 ## Retrieve NRT data 
-GPM_version   = 6
+GPM_version = 6
 product_type = 'NRT'
 products  = GPM_NRT_products()  # GPM_products(product_type)
 
+Date = datetime.date.fromisoformat("2020-08-17")
+
 start_time = datetime.datetime.strptime("2020-08-17 00:00:00", '%Y-%m-%d %H:%M:%S')
-end_time = datetime.datetime.strptime("2020-08-17 17:00:00", '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime("2020-08-17 04:00:00", '%Y-%m-%d %H:%M:%S')
 
 for product in products:
     print("Product:", product)
@@ -56,3 +58,5 @@ for product in products:
                       product_type = product_type,
                       start_time = start_time,
                       end_time = end_time)
+    
+    

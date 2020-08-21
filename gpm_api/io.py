@@ -5,7 +5,8 @@ Created on Tue Jul 14 18:31:08 2020
 
 @author: ghiggi
 """
-#----------------------------------------------------------------------------.
+import pdb
+##----------------------------------------------------------------------------.
 import subprocess
 import os
 import numpy as np 
@@ -15,19 +16,22 @@ from .utils.utils_string import str_extract
 from .utils.utils_string import str_subset
 from .utils.utils_string import str_sub 
 from .utils.utils_string import str_pad 
+from .utils.utils_string import str_detect
 from .utils.utils_string import subset_list_by_boolean
-#----------------------------------------------------------------------------.
-def curl_download(server, filepath, DIR, username, password):
+##----------------------------------------------------------------------------.
+def curl_download(server_path, disk_path, username, password):
     """Download data using curl."""
-    # Check DIR exists 
-    if not os.path.exists(DIR):
-        os.mkdirs(DIR)
-    # Define url  from which to retrieve data
-    url = server + filepath
-    # Define command to execute
+    #-------------------------------------------------------------------------.
+    # Check disk directory exists (if not, create)
+    disk_dir = os.path.dirname(disk_path)
+    if not os.path.exists(disk_dir):
+        os.mkdir(disk_dir)
+    #-------------------------------------------------------------------------.
+    ## Define command to run
     # curl -4 --ftp-ssl --user [user name]:[password] -n [url]
-    cmd = 'curl -u ' + username + ':' + password + ' -n ' + url + ' -o ' + DIR + "/" + os.path.basename(filepath)
+    cmd = 'curl -u ' + username + ':' + password + ' -n ' + server_path + ' -o ' + disk_path
     args = cmd.split()
+    #-------------------------------------------------------------------------.
     # Execute the command  
     process = subprocess.Popen(args,
                                stdout=subprocess.PIPE,
@@ -475,15 +479,181 @@ def GPM_products(product_type=None):
         else:
             raise ValueError("Please specify 'product_type' either 'RS' or 'NRT'")
 #-----------------------------------------------------------------------------.
-###############################
-### Code for data download ####
-###############################
+
+#################################
+### Infos from granules name ####
+#################################
+def granules_time_info(filepaths):
+    """
+    Retrieve the Date, start_HHMMSS and end_HHMMSS of GPM granules.
+
+    Parameters
+    ----------
+    filepaths : list, str
+        Filepath or filename of a GPM HDF5 file.
+
+    Returns
+    -------
+    Date: list
+        List with the Date of each granule.
+    start_time : list
+        List with the start_HHMMSS of each granule.
+    end_time : list
+        List with the end_HHMMSS of each granule.
+
+    """
+    # Extract filename from filepath (and be sure is a list)
+    if isinstance(filepaths,str):
+        filepaths = [filepaths]
+    filenames = [os.path.basename(filepath) for filepath in filepaths]
+    # Check is not 1B DPR product (because different data format)
+    is_1B_DPR = str_detect(filenames, "GPMCOR")
+    # - Retrieve start_HHMMSS and endtime of JAXA 1B DPR reflectivities
+    if (all(is_1B_DPR)):  
+        # 'GPMCOR_KAR*','GPMCOR_KUR*' # if product not in ['1B-Ka', '1B-Ku']:
+        l_YYMMDD = str_sub(str_extract(filenames,"[0-9]{10}"),end=6) 
+        Dates = [datetime.datetime.strptime(YYMMDD, "%y%m%d").strftime("%Y%m%d") for YYMMDD in l_YYMMDD]
+        l_start_HHMMSS = str_sub(str_extract(filenames,"[0-9]{10}"),6) 
+        l_end_HHMMSS = str_sub(str_extract(filenames,"_[0-9]{4}_"),1,5) 
+        l_start_HHMMSS = str_pad(l_start_HHMMSS, width=6, side="right",pad="0")
+        l_end_HHMMSS = str_pad(l_end_HHMMSS, width=6, side="right",pad="0")
+    elif (all(list(np.logical_not(is_1B_DPR)))):
+        Dates = str_sub(str_extract(filenames,"[0-9]{8}-S"), end=-2)
+        l_start_HHMMSS = str_sub(str_extract(filenames,"S[0-9]{6}"), 1)
+        l_end_HHMMSS = str_sub(str_extract(filenames,"E[0-9]{6}"), 1)  
+    else:
+        raise ValueError("BUG... mix of products in filepaths ?")     
+    return (Dates, l_start_HHMMSS, l_end_HHMMSS)
+
+def granules_start_HHMMSS(filepaths): 
+    _, start_HHMMSS,_ = granules_time_info(filepaths)
+    return(start_HHMMSS)
+
+def granules_end_HHMMSS(filepaths): 
+    _, _, end_HHMMSS = granules_time_info(filepaths)
+    return(end_HHMMSS)
+
+def granules_Dates(filepaths): 
+    Dates, _, _ = granules_time_info(filepaths)
+    return(Dates)
+
+def get_name_first_daily_granule(filepaths):
+    """Retrieve the name of first daily granule in the daily folder."""
+    filenames = [os.path.basename(filepath) for filepath in filepaths]
+    _, l_start_HHMMSS, _ = granules_time_info(filenames)
+    first_filename = filenames[np.argmin(l_start_HHMMSS)]
+    return(first_filename)
+
+def get_time_first_daily_granule(filepaths):
+    """Retrieve the start_time and end_time of first daily granule in the daily folder."""
+    filename = get_name_first_daily_granule(filepaths)
+    _, start_HHMMSS, end_HHMMSS = granules_time_info(filename)
+    return (start_HHMMSS[0], end_HHMMSS[0])
+
+#----------------------------------------------------------------------------.
+############### 
+### Checks ####
+############### 
+def check_GPM_version(GPM_version):
+    if not isinstance(GPM_version, int): 
+        raise ValueError("Please specify the GPM version with an integer between 4 and 6")
+    if (GPM_version not in [4,5,6]):
+        raise ValueError("Download has been implemented only for GPM versions 4,5 and 6")
+              
+def check_product(product, product_type):
+    if not (isinstance(product, str)):
+        raise ValueError("'product' must be a single string")   
+    if (product not in GPM_products(product_type = product_type)):
+        raise ValueError("Please provide a valid GPM product --> GPM_products()")  
+        
+def check_product_type(product_type):
+    if not isinstance(product_type, str): 
+        raise ValueError("Please specify the product_type as 'RS' or 'NRT'")
+    if (product_type not in ['RS','NRT']):
+        raise ValueError("Please specify the product_type as 'RS' or 'NRT'")
+
+def check_time(start_time, end_time):
+    if not isinstance(start_time, datetime.datetime):
+        raise ValueError("start_time must be a datetime object")
+    if not isinstance(end_time, datetime.datetime):
+        raise ValueError("end_time must be a datetime object")
+    # Check start_time and end_time are chronological  
+    if (start_time > end_time):
+        raise ValueError('Provide start_time occuring before of end_time')   
+    return (start_time, end_time)
+            
+def check_Date(Date):
+    if not isinstance(Date, (datetime.date, datetime.datetime)):
+        raise ValueError("Date must be a datetime object")
+    return(Date)
+    
+def check_HHMMSS(start_HHMMSS, end_HHMMSS):
+    # Check start_HHMMSS 
+    if start_HHMMSS is None:
+        start_HHMMSS = '000000' 
+    elif isinstance(start_HHMMSS, datetime.time):
+        start_HHMMSS = datetime.time.strftime(start_HHMMSS, '%H%M%S')    
+    elif isinstance(start_HHMMSS, datetime.datetime):
+        start_HHMMSS = datetime.datetime.strftime(start_HHMMSS, '%H%M%S')
+    elif isinstance(start_HHMMSS, str):   
+        if len(start_HHMMSS) != 6:
+            raise ValueError("Please provide start_HHMMSS as HHMMSS string or as datetime.time")
+        start_HHMMSS = start_HHMMSS
+    else: 
+        raise ValueError("Please provide start_HHMMSS as HHMMSS string or as datetime.time")
+    #-------------------------------------------------------------------------.
+    # Check end time 
+    if end_HHMMSS is None:
+        end_HHMMSS = '240000'
+    elif isinstance(end_HHMMSS, datetime.time):
+        end_HHMMSS = datetime.time.strftime(end_HHMMSS, '%H%M%S')  
+    elif isinstance(end_HHMMSS, datetime.datetime):
+        end_HHMMSS = datetime.datetime.strftime(end_HHMMSS, '%H%M%S')
+    elif isinstance(end_HHMMSS, str): 
+        if len(end_HHMMSS) != 6:
+            raise ValueError("Please provide end_HHMMSS as HHMMSS string or as datetime.time")
+        end_HHMMSS = end_HHMMSS
+    else: 
+        raise ValueError("Please provide end_HHMMSS as HHMMSS string or as datetime.time") 
+    return (start_HHMMSS, end_HHMMSS)
+
+def is_not_empty(x):
+    return(not not x)
+
+def is_empty(x):
+    return( not x)
+    
+#-----------------------------------------------------------------------------.
+#######################################  
+### Data download and disk queries ####
+#######################################
 def get_GPM_disk_directory(base_DIR,
                            product,
                            product_type, 
                            Date, 
                            GPM_version=6):
-    """Retrieve directory path where to save GPM data."""
+    """
+    Provide the disk repository path where the requested GPM data are stored/need to be saved.
+    
+    Parameters
+    ----------
+    base_DIR : str
+        The base directory where to store GPM data.
+    product : str
+        GPM product name. See: GPM_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time). 
+    Date : datetime
+        Single date for which to retrieve the data.
+    GPM_version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'. 
+        GPM data readers are currently implemented only for GPM V06.
+
+    Returns
+    -------
+    None.
+
+    """
     GPM_folder_name = "GPM_V" + str(GPM_version)
     if (product_type == 'RS'):
         if product in GPM_PMW_RS_products():
@@ -517,15 +687,38 @@ def get_GPM_PPS_directory(product,
                           product_type, 
                           Date, 
                           GPM_version=6):
-    # return (server_data, url)
+    """
+    Provide the NASA PPS server directory path where the requested GPM data are stored.
+
+    Parameters
+    ----------
+    product : str
+        GPM product name. See: GPM_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time). 
+    Date : datetime
+        Single date for which to retrieve the data.
+    GPM_version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'. 
+        GPM data readers are currently implemented only for GPM V06.
+
+    Returns
+    -------
+    url_data_server : str 
+        url of the NASA PPS server from which to retrieve the data .
+    url_file_list: list
+        url of the NASA PPS server from which to retrieve the list of daily files.
+        
+    """
     ##------------------------------------------------------------------------.
     ### NRT data 
     if (product_type == 'NRT'):
         if (product not in GPM_NRT_products()):
             raise ValueError("Please specify a valid NRT product: GPM_NRT_products()")
         ## Specify servers 
-        server_text = 'https://jsimpsonhttps.pps.eosdis.nasa.gov/text'
-        server_data = 'ftp://jsimpsonftps.pps.eosdis.nasa.gov'
+        url_server_text = 'https://jsimpsonhttps.pps.eosdis.nasa.gov/text'
+        url_data_server = 'https://jsimpsonhttps.pps.eosdis.nasa.gov' 
+        # url_data_server = 'ftp://jsimpsonftps.pps.eosdis.nasa.gov'
         ## Retrieve NASA server folder name for NRT
         # GPM PMW 1B
         if (product in GPM_PMW_1B_NRT_products()):
@@ -533,15 +726,15 @@ def get_GPM_PPS_directory(product,
         # GPM PMW 1C
         elif (product in GPM_1C_NRT_products()):
             if (product == '1C-GMI'):
-                folder_name = '/1C/GMI'
+                folder_name = '1C/GMI'
             elif (product in ['1C-SSMI-F16','1C-SSMI-F17','1C-SSMI-F18']):
-                folder_name = '/1C/SSMIS'
+                folder_name = '1C/SSMIS'
             elif (product == '1C-ASMR2-GCOMW1'): 
-                folder_name = '/1C/AMSR2'
+                folder_name = '1C/AMSR2'
             elif (product == '1C-SAPHIR-MT1'): 
-                folder_name = '/1C/SAPHIR'     
+                folder_name = '1C/SAPHIR'     
             elif (product in ['1C-MHS-METOPB', '1C-MHS-METOPC','1C-MHS-NOAA19']):
-                folder_name = '/1C/MHS'
+                folder_name = '1C/MHS'
             elif (product in ['1C-ATMS-NOAA20', '1C-ATMS-NPP']): 
                 folder_name = '1C/ATMS'
             else: 
@@ -549,13 +742,13 @@ def get_GPM_PPS_directory(product,
         # GPM PMW 2A GPROF
         elif (product in GPM_PMW_2A_GPROF_NRT_products()):
            if (product == '2A-GMI'):
-               folder_name = '/GPROF/GMI'
+               folder_name = 'GPROF/GMI'
            elif (product in ['2A-SSMI-F16','2A-SSMI-F17','2A-SSMI-F18']):
-               folder_name = '/GPROF/SSMIS'
+               folder_name = 'GPROF/SSMIS'
            elif (product == '2A-ASMR2-GCOMW1'): 
-               folder_name = '/GPROF/AMSR2'
+               folder_name = 'GPROF/AMSR2'
            elif (product in ['2A-MHS-METOPB', '2A-MHS-METOPC','2A-MHS-NOAA19']):
-               folder_name = '/GPROF/MHS'
+               folder_name = 'GPROF/MHS'
            elif (product in ['2A-ATMS-NOAA20', '2A-ATMS-NPP']): 
                folder_name = 'GPROF/ATMS'
            else: 
@@ -566,11 +759,11 @@ def get_GPM_PPS_directory(product,
         # GPM DPR 2A  
         elif (product in GPM_DPR_2A_NRT_products()):
             if (product == '2A-Ku'):
-                folder_name = '/radar/KuL2'
+                folder_name = 'radar/KuL2'
             elif (product == '2A-Ka'):
-                folder_name = '/radar/KaL2'
+                folder_name = 'radar/KaL2'
             elif (product == '2A-DPR'): 
-                folder_name = '/radar/DprL2'
+                folder_name = 'radar/DprL2'
             else:
                 raise ValueError('BUG - Some product option is missing.') 
         # GPM IMERG NRT   
@@ -581,21 +774,21 @@ def get_GPM_PPS_directory(product,
                 folder_name = 'imerg/late'
             else: 
                 raise ValueError('BUG - Some product option is missing.') 
-            # Specify the special url for IMERG NRT products
-            url = server_text + '/' + folder_name + '/'+ datetime.datetime.strftime(Date, '%Y%m') + '/'
-            return (server_data, url)
+            # Specify the url to retrieve the daily list of IMERG NRT products
+            url_file_list = url_server_text + '/' + folder_name + '/'+ datetime.datetime.strftime(Date, '%Y%m') + '/'
+            return (url_data_server, url)
         else:
             raise ValueError('BUG - Some product option is missing.') 
-        # Specify server url for NRT data
-        url = server_text + '/' + folder_name + '/'   
+         # Specify the url to retrieve the daily list of NRT data
+        url_file_list = url_server_text + '/' + folder_name + '/'   
     ##------------------------------------------------------------------------.
     ### RS data      
     elif (product_type == 'RS'):    
         if (product not in GPM_RS_products()):
             raise ValueError("Please specify a valid NRT product: GPM_RS_products()")
         ## Specify servers 
-        server_text = 'https://arthurhouhttps.pps.eosdis.nasa.gov/text'
-        server_data = 'ftp://arthurhou.pps.eosdis.nasa.gov'
+        url_server_text = 'https://arthurhouhttps.pps.eosdis.nasa.gov/text'
+        url_data_server = 'ftp://arthurhou.pps.eosdis.nasa.gov'
         ## Retrieve NASA server folder name for RS
         # GPM DPR 1B (and GMI)
         if product in GPM_1B_RS_products():
@@ -617,21 +810,23 @@ def get_GPM_PPS_directory(product,
             folder_name = 'imerg' 
         else: 
             raise ValueError('BUG - Some product is missing.')
-         # Specify server url for RS data (based on GPM version)
+         # Specify the url where to retrieve the daily list of GPM RS data  
         if (GPM_version == 6): 
-            url = server_text + '/gpmdata/' + datetime.datetime.strftime(Date, '%Y/%m/%d') + '/' + folder_name + "/"
-        elif (GPM_version >= 4 & GPM_version <= 5):
+            url_file_list = url_server_text + '/gpmdata/' + datetime.datetime.strftime(Date, '%Y/%m/%d') + '/' + folder_name + "/"
+        elif (GPM_version in [4,5]):
             GPM_version_str = "V0" + str(int(GPM_version)) 
-            url = server_text + '/gpmallversions/' + GPM_version_str + '/'+ datetime.datetime.strftime(Date, '%Y/%m/%d') + '/' + folder_name + "/"     
+            url_file_list = url_server_text + '/gpmallversions/' + GPM_version_str + '/'+ datetime.datetime.strftime(Date, '%Y/%m/%d') + '/' + folder_name + "/"     
         else: 
             raise ValueError('Please specify either GPM_version 4, 5 or 6.')
     ##------------------------------------------------------------------------.   
-    return (server_data, url)
+    return (url_data_server, url_file_list)
 
-    
-#-----------------------------------------------------------------------------.  
-def filter_daily_GPM_files(file_list,
+##-----------------------------------------------------------------------------.
+
+def filter_daily_GPM_files(filepaths,
                            product,
+                           product_type = 'RS',
+                           Date = None,  
                            start_HHMMSS=None,
                            end_HHMMSS=None):
     """
@@ -639,10 +834,14 @@ def filter_daily_GPM_files(file_list,
 
     Parameters
     ----------
-    file_list : list
-        List of filenames for a specific day.
+    filepaths : list
+        List of filepaths or filenames for a specific day.
     product : str
         GPM product name. See: GPM_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).  
+    Date : datetime
+        Single date for which to retrieve the data.
     start_HHMMSS : str or datetime, optional
         Start time. A datetime object or a string in HHMMSS format.
         The default is None (retrieving from 000000)
@@ -652,71 +851,97 @@ def filter_daily_GPM_files(file_list,
 
     Returns
     -------
-    Returns a subset of file_list
+    Returns a subset of filepaths
 
     """
     #-------------------------------------------------------------------------.
-    # Check valid product 
-    if product not in GPM_products():
-        raise ValueError("Please provide a valid GPM product --> GPM_products()")   
+    # Checks file paths 
+    if isinstance(filepaths,str):
+        filepaths = [filepaths]
+    # filenames = [os.path.basename(filepath) for filepath in filepaths]
     #-------------------------------------------------------------------------.
-    # Check start_HHMMSS 
-    if start_HHMMSS is None:
-        start_HHMMSS = 0  
-    elif isinstance(start_HHMMSS, datetime.datetime):
-        start_HHMMSS = int(datetime.datetime.strftime(start_HHMMSS, '%H%M%S'))
-    elif isinstance(start_HHMMSS, str):   
-        if len(start_HHMMSS) != 6:
-            raise ValueError("Please provide start_HHMMSS as HHMMSS format")
-        start_HHMMSS = int(start_HHMMSS)
-    else: 
-        raise ValueError("Please provide start_HHMMSS as HHMMSS string format or as datetime")    
-    #-------------------------------------------------------------------------.
-    # Check end time 
-    if end_HHMMSS is None:
-        end_HHMMSS = 240000  
-    elif isinstance(end_HHMMSS, datetime.datetime):
-        end_HHMMSS = int(datetime.datetime.strftime(end_HHMMSS, '%H%M%S'))
-    elif isinstance(end_HHMMSS, str): 
-        if len(end_HHMMSS) != 6:
-            raise ValueError("Please provide end_HHMMSS as HHMMSS format")
-        end_HHMMSS = int(end_HHMMSS)
-    else: 
-        raise ValueError("Please provide end_HHMMSS as HHMMSS string format or as datetime")    
+    # Check product validity 
+    check_product(product = product, 
+                  product_type = product_type)
+    # Check time format 
+    start_HHMMSS, end_HHMMSS = check_HHMMSS(start_HHMMSS = start_HHMMSS, 
+                                          end_HHMMSS = end_HHMMSS)
     #-------------------------------------------------------------------------.
     # Retrieve GPM filename dictionary 
     GPM_dict = GPM_products_pattern_dict()       
     #-------------------------------------------------------------------------. 
     # Subset specific product 
-    l_files = str_subset(file_list, GPM_dict[product])
+    filepaths = str_subset(filepaths, GPM_dict[product])
     #-------------------------------------------------------------------------. 
-    # Subset specific time period     
     # - Retrieve start_HHMMSS and endtime of GPM granules products (execept JAXA 1B reflectivities)
-    if product not in ['1B-Ka', '1B-Ku']:
-        l_s_HHMMSS = str_sub(str_extract(l_files,"S[0-9]{6}"), 1)
-        l_e_HHMMSS = str_sub(str_extract(l_files,"E[0-9]{6}"), 1)
-    # - Retrieve start_HHMMSS and endtime of JAXA 1B reflectivities
-    else: 
-        # Retrieve start_HHMMSS of granules   
-        l_s_HHMM = str_sub(str_extract(l_files,"[0-9]{10}"),6) 
-        l_e_HHMM = str_sub(str_extract(l_files,"_[0-9]{4}_"),1,5) 
-        l_s_HHMMSS = str_pad(l_s_HHMM, width=6, side="right",pad="0")
-        l_e_HHMMSS = str_pad(l_e_HHMM, width=6, side="right",pad="0")
-    # Subset granules files based on start time and end time 
+    l_Date, l_s_HHMMSS,l_e_HHMMSS = granules_time_info(filepaths)
+     #-------------------------------------------------------------------------. 
+    # Subset granules by date (required for NRT data)
+    if (Date is not None):
+        idx_valid_Date = np.array(l_Date) == Date.strftime("%Y%m%d")
+        filepaths = np.array(filepaths)[idx_valid_Date]
+        l_s_HHMMSS = np.array(l_s_HHMMSS)[idx_valid_Date]
+        l_e_HHMMSS = np.array(l_e_HHMMSS)[idx_valid_Date]
+    #-------------------------------------------------------------------------. 
+    # Convert HHMMSS to integer 
+    start_HHMMSS = int(start_HHMMSS)
+    end_HHMMSS = int(end_HHMMSS)
     l_s_HHMMSS = np.array(l_s_HHMMSS).astype(np.int64)  # to integer 
     l_e_HHMMSS = np.array(l_e_HHMMSS).astype(np.int64)  # to integer 
+    # Take care for include in subsetting the last day granule 
+    idx_next_day_granule = l_e_HHMMSS < l_s_HHMMSS
+    l_e_HHMMSS[idx_next_day_granule] = 240001
+    # Subset granules files based on start time and end time
     idx_select1 = np.logical_and(l_s_HHMMSS <= start_HHMMSS, l_e_HHMMSS > start_HHMMSS)
     idx_select2 = np.logical_and(l_s_HHMMSS >= start_HHMMSS, l_s_HHMMSS < end_HHMMSS)
     idx_select = np.logical_or(idx_select1, idx_select2)
-    l_files = np.array(l_files)[idx_select]
-    l_files = l_files.tolist()
-    return(l_files)
+    filepaths = list(np.array(filepaths)[idx_select])
+    return(filepaths)
 
-def find_daily_GPM_disk_filepaths(base_DIR, product, Date, 
+##----------------------------------------------------------------------------.
+
+def filter_GPM_query(server_paths, disk_paths, force_download=False):
+    """
+    Removes filepaths of GPM file already existing on disk.
+
+    Parameters
+    ----------
+    DIR : str
+        GPM directory on disk for a specific product and date.
+    PPS_filepaths : str
+        Filepaths on which GPM data are stored on PPS servers.
+    force_download : boolean, optional
+        Whether to redownload data if already existing on disk. The default is False.
+
+    Returns
+    -------
+    server_paths: list 
+        List of filepaths on the NASA PPS server  
+    disk_paths: list
+        List of filepaths on disk u 
+
+    """
+    #-------------------------------------------------------------------------.    
+    # Check if data already exists 
+    if force_download is False: 
+        # Get index which do not exist
+        idx_not_existing = [not os.path.exists(disk_path) for disk_path in disk_paths]
+        # Select filepath not existing on disk
+        disk_paths = subset_list_by_boolean(disk_paths, idx_not_existing)
+        server_paths = subset_list_by_boolean(server_paths, idx_not_existing)
+    return (server_paths, disk_paths)
+
+##----------------------------------------------------------------------------.
+
+def find_daily_GPM_disk_filepaths(base_DIR, 
+                                  product, 
+                                  Date, 
                                   start_HHMMSS = None, 
                                   end_HHMMSS = None,
                                   product_type = 'RS',
-                                  GPM_version = 6):
+                                  GPM_version = 6,
+                                  provide_only_last_granule = False,
+                                  flag_first_Date = False):
     """
     Retrieve GPM data filepaths for a specific day and product on user disk.
     
@@ -726,6 +951,8 @@ def find_daily_GPM_disk_filepaths(base_DIR, product, Date,
         The base directory where to store GPM data.
     product : str
         GPM product acronym. See GPM_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     Date : datetime
         Single date for which to retrieve the data.
     start_HHMMSS : str or datetime, optional
@@ -733,18 +960,25 @@ def find_daily_GPM_disk_filepaths(base_DIR, product, Date,
         The default is None (retrieving from 000000)
     end_HHMMSS : str or datetime, optional
         End time. A datetime object or a string in HHMMSS format.
-        The default is None (retrieving to 240000)
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).    
+        The default is None (retrieving to 240000)    
     GPM_version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'. 
         GPM data readers are currently implemented only for GPM V06.
-
+    provide_only_last_granule : bool, optional
+        Used to retrieve only the last granule of the day.
+    flag_first_Date : bool, optional 
+        Used to search granules near time 000000 stored in the previous day folder.
+        
     Returns
     -------
     list 
         List of GPM data filepaths.
     """
+    ##------------------------------------------------------------------------.
+    # Check time format 
+    start_HHMMSS, end_HHMMSS = check_HHMMSS(start_HHMMSS, end_HHMMSS)
+    if (end_HHMMSS == "000000"):
+        return([])
     ##------------------------------------------------------------------------.
     # Retrieve the directory on disk where the data are stored
     DIR = get_GPM_disk_directory(base_DIR = base_DIR, 
@@ -753,30 +987,88 @@ def find_daily_GPM_disk_filepaths(base_DIR, product, Date,
                                  Date = Date,
                                  GPM_version = GPM_version)
     ##------------------------------------------------------------------------.
-    # Retrieve the file names in the directoy
+    # Check if the folder exists   
+    if (not os.path.exists(DIR)):
+       print("Data for product", product, "on date", Date, "have not been downloaded !")
+       return([])
+    # Retrieve the file names in the directory
     filenames = sorted(os.listdir(DIR))
     ##------------------------------------------------------------------------.
     # Filter the GPM daily file list (for product, start_time & end time)
     filenames = filter_daily_GPM_files(filenames, product=product,
+                                       Date = Date, # not necessary in reality
                                        start_HHMMSS=start_HHMMSS, 
                                        end_HHMMSS=end_HHMMSS)
     ##------------------------------------------------------------------------.
     # Create the filepath 
     filepaths = [os.path.join(DIR,filename) for filename in filenames]
+    ##-------------------------------------------------------------------------.
+    # Options 1 to deal with data near time 0000000 stored in previous day folder
+    # - Return the filepath of the last granule in the daily folder 
+    if ((provide_only_last_granule is True) and (not not filepaths)): #and filepaths not empty:
+        # Retrieve the start_time of each granules 
+        filenames = [os.path.basename(filepath) for filepath in filepaths]
+        _, l_start_HHMMSS, _ = granules_time_info(filenames)
+        # Select filepath with latest start_time
+        last_filepath = filepaths[np.argmax(l_start_HHMMSS)]
+        return(last_filepath)
+    ##-------------------------------------------------------------------------.
+    # Options 2 to deal with data near time 0000000 stored in previous day folder
+    # - Check if need to retrieve the granule near time 000000 stored in previous day folder
+    # - Only needed when asking data for the first Date. 
+    if (flag_first_Date is True):
+         # Retrieve start_time of first daily granule
+        if (not filepaths):  # if empty list (no data in current day)
+            first_start_HHMMSS = "000001"
+        else:
+            first_start_HHMMSS, _ = get_time_first_daily_granule(filepaths)
+        # To be sure that this is used only to search data on previous day folder  
+        if  (int(first_start_HHMMSS) > 10000): # 1 am
+            first_start_HHMMSS = "010000"
+        # Retrieve last granules filepath of previous day  
+        if (start_HHMMSS < first_start_HHMMSS):
+            last_filepath = find_daily_GPM_disk_filepaths(base_DIR = base_DIR, 
+                                                          product = product, 
+                                                          Date = Date - datetime.timedelta(days=1), 
+                                                          start_HHMMSS = "210000", 
+                                                          end_HHMMSS = "240000",
+                                                          product_type = product_type,
+                                                          GPM_version = GPM_version,
+                                                          provide_only_last_granule = True,
+                                                          flag_first_Date = False) 
+            if is_not_empty(last_filepath):
+                # Retrieve last granules end time  
+                last_end_HHMMSS = granules_end_HHMMSS(last_filepath)[0]
+                # Append path to filepaths to retrieve if last_end_HHMMSS > start_HHMMSSS
+                if (last_end_HHMMSS >= start_HHMMSS):
+                    filepaths.append(last_filepath)
+    ##------------------------------------------------------------------------.
+    # If filepaths still empty, return (None,None)
+    if is_empty(filepaths):
+        return([])
+    ##------------------------------------------------------------------------.
     return(filepaths)
 
 def find_daily_GPM_PPS_filepaths(username,
+                                 base_DIR, 
                                  product, 
                                  Date, 
                                  start_HHMMSS = None, 
                                  end_HHMMSS = None,
                                  product_type = 'RS',
-                                 GPM_version = 6):
+                                 GPM_version = 6, 
+                                 provide_only_last_granule = False,
+                                 flag_first_Date = False,
+                                 verbose = False):
     """
     Retrieve GPM data filepaths for NASA PPS server for a specific day and product.
     
     Parameters
     ----------
+    base_DIR : str
+        The base directory where to store GPM data.
+    username: str
+        Email address with which you registered on on NASA PPS    
     product : str
         GPM product acronym. See GPM_products()
     Date : datetime
@@ -792,20 +1084,37 @@ def find_daily_GPM_PPS_filepaths(username,
     GPM_version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'. 
         GPM data readers are currently implemented only for GPM V06.
-
+    provide_only_last_granule : bool, optional
+        Used to retrieve only the last granule of the day.
+    flag_first_Date : bool, optional 
+        Used to search granules near time 000000 stored in the previous day folder.
+    verbose : bool, optional   
+        Default is False. Wheter to specify when data are not available for a specific Date.
+    
     Returns
     -------
-    (url_data_server, file_list) 
-        (URL of the server from which to retrieve data, list of GPM filepaths)
+    server_paths: list 
+        List of filepaths on the NASA PPS server  
+    disk_paths: list
+        List of filepaths on disk u 
+
     """
+    # Check product validity 
+    check_product(product = product, product_type = product_type)
+    ##------------------------------------------------------------------------.
+    # Check time format 
+    start_HHMMSS, end_HHMMSS = check_HHMMSS(start_HHMMSS = start_HHMMSS, 
+                                          end_HHMMSS = end_HHMMSS)
+    if (end_HHMMSS == "000000"):
+        return (None, None)
     ##------------------------------------------------------------------------.
     # Retrieve server url of NASA PPS
     (url_data_server, url_file_list) = get_GPM_PPS_directory(product = product, 
                                                              product_type = product_type, 
                                                              Date = Date,
                                                              GPM_version = GPM_version)
-    #-------------------------------------------------------------------------.
-    # Retrieve the name of available file on NASA PPS servers
+    ##------------------------------------------------------------------------.
+    ## Retrieve the name of available file on NASA PPS servers
     # curl -u username:password
     cmd = 'curl -u ' + username + ':' + username + ' -n ' + url_file_list
     args = cmd.split()
@@ -813,21 +1122,88 @@ def find_daily_GPM_PPS_filepaths(username,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
     stdout = process.communicate()[0].decode()
-    if stdout[0] == '<':
+    # Check if server is available
+    if (stdout == ''):
+        print("The PPS server is currently unavailable. Data download for product", 
+              product, "at Date", Date,"has been interrupted.")
+        raise ValueError("Sorry for the incovenience.")
+    # Check if data are available
+    if (stdout[0] == '<'):
         if verbose is True:
             print('No data available the', datetime.datetime.strftime(Date, "%Y/%m/%d"))
-        return []
+        return([])
     else:
-        # Retrieve file list 
-        file_list = stdout.split() 
-    #-------------------------------------------------------------------------.
+        # Retrieve filepaths
+        filepaths = stdout.split() 
+    ##------------------------------------------------------------------------.
     # Filter the GPM daily file list (for product, start_time & end time)
-    file_list = filter_daily_GPM_files(file_list,
-                                       product=product,
-                                       start_HHMMSS=start_HHMMSS,
-                                       end_HHMMSS=end_HHMMSS)
-
-    return (url_data_server, file_list)
+    filepaths = filter_daily_GPM_files(filepaths,
+                                       product = product,
+                                       Date = Date, 
+                                       product_type = product_type,
+                                       start_HHMMSS = start_HHMMSS,
+                                       end_HHMMSS = end_HHMMSS)
+    ##------------------------------------------------------------------------.
+    ## Generate server and disk file paths 
+    # Generate server file paths 
+    server_paths = [url_data_server + filepath for filepath in filepaths]
+    # Generate disk file paths 
+    disk_dir = get_GPM_disk_directory(base_DIR = base_DIR, 
+                                      product = product, 
+                                      product_type = product_type,
+                                      Date = Date,
+                                      GPM_version = GPM_version)
+    disk_paths = [disk_dir + "/" + os.path.basename(filepath) for filepath in filepaths]
+    ##------------------------------------------------------------------------.
+    # Options 1 to deal with data near time 0000000 stored in previous day folder
+    # - Return the filepath of the last granule in the daily folder 
+    if ((provide_only_last_granule is True) and (is_not_empty(filepaths))): 
+        # Retrieve the start_time of each granules 
+        _, l_start_HHMMSS, _ = granules_time_info(filepaths)
+        # Select filepath with latest start_time
+        last_disk_path = disk_paths[np.argmax(l_start_HHMMSS)]
+        last_server_path = server_paths[np.argmax(l_start_HHMMSS)]
+        return (last_server_path, last_disk_path)
+    ##------------------------------------------------------------------------.
+    # Options 2 to deal with data near time 0000000 stored in previous day folder
+    # - Check if need to retrieve the granule near time 000000 stored in previous day folder
+    # - Only needed when asking data for the first Date. 
+    if (flag_first_Date is True):
+        # Retrieve start_time of first daily granule
+        if not filepaths:  # if empty list (no data in current day)
+            first_start_HHMMSS = "000001"
+        else:
+            first_start_HHMMSS, _ = get_time_first_daily_granule(filepaths)
+        # The be sure that this is used only to search data on previous day folder  
+        if  (int(first_start_HHMMSS) > 10000): # 1 am
+            first_start_HHMMSS = "010000"
+        # Retrieve if necessary data from last granule of previous day
+        if (start_HHMMSS < first_start_HHMMSS):
+             # Retrieve last granules filepath of previous day 
+             last_server_path, last_disk_path = find_daily_GPM_PPS_filepaths(username = username,
+                                                                               base_DIR = base_DIR, 
+                                                                               product = product, 
+                                                                               Date = Date - datetime.timedelta(days=1), 
+                                                                               start_HHMMSS = "210000", 
+                                                                               end_HHMMSS = "240000",
+                                                                               product_type = product_type,
+                                                                               GPM_version = GPM_version,
+                                                                               provide_only_last_granule = True,
+                                                                               flag_first_Date = False) 
+             if (last_server_path is not None):
+                 # Retrieve last granules end time  
+                 last_end_HHMMSS = granules_end_HHMMSS(last_server_path)[0]
+                 # Append path to filepaths to retrieve if last_end_HHMMSS > start_HHMMSSS
+                 if (last_end_HHMMSS >= start_HHMMSS):
+                     server_paths.append(last_server_path)
+                     disk_paths.append(last_disk_path)
+    ##------------------------------------------------------------------------. 
+    # If server_paths still empty, return (None,None)
+    if is_empty(server_paths):
+        return (None, None)
+    #--------------------------------------------------------------------------. 
+    # Return server paths and disk paths 
+    return (server_paths, disk_paths)
 
 ##-----------------------------------------------------------------------------.
 def find_GPM_files(base_DIR, 
@@ -837,7 +1213,7 @@ def find_GPM_files(base_DIR,
                    product_type = 'RS',
                    GPM_version = 6):
     """
-    Retrieve filepath of GPM data on user disk.
+    Retrieve filepaths of GPM data on user disk.
     
     Parameters
     ----------
@@ -860,16 +1236,16 @@ def find_GPM_files(base_DIR,
     List of filepaths of GPM data.
 
     """
-    # Check start_time and end_time are chronological
-    if (start_time > end_time):
-        raise ValueError('Provide start_time occuring before of end_time')
+    ## Checks input arguments
+    check_product_type(product_type = product_type) 
+    check_product(product = product, product_type = product_type)
+    check_GPM_version(GPM_version = GPM_version) 
+    start_time, end_time = check_time(start_time, end_time) 
     # Retrieve sequence of Dates 
     Dates = [start_time + timedelta(days=x) for x in range(0, (end_time-start_time).days + 1)]
     # Retrieve start and end HHMMSS
     start_HHMMSS = datetime.datetime.strftime(start_time,"%H%M%S")
     end_HHMMSS = datetime.datetime.strftime(end_time,"%H%M%S")
-    if (end_HHMMSS == '000000'):
-        end_HHMMSS == '240000'
     #-------------------------------------------------------------------------.
     # Case 1: Retrieve just 1 day of data 
     if (len(Dates)==1):
@@ -879,7 +1255,8 @@ def find_GPM_files(base_DIR,
                                                   product_type = product_type,
                                                   Date = Dates[0], 
                                                   start_HHMMSS = start_HHMMSS,
-                                                  end_HHMMSS = end_HHMMSS)
+                                                  end_HHMMSS = end_HHMMSS,
+                                                  flag_first_Date = True)
     #-------------------------------------------------------------------------.
     # Case 2: Retrieve multiple days of data
     if (len(Dates) > 1):
@@ -889,7 +1266,8 @@ def find_GPM_files(base_DIR,
                                                   product_type = product_type,
                                                   Date = Dates[0], 
                                                   start_HHMMSS = start_HHMMSS,
-                                                  end_HHMMSS = '240000')
+                                                  end_HHMMSS = '240000',
+                                                  flag_first_Date = True)
         if (len(Dates) > 2):
             for Date in Dates[1:-1]:
                 filepaths.extend(find_daily_GPM_disk_filepaths(base_DIR=base_DIR,
@@ -909,51 +1287,10 @@ def find_GPM_files(base_DIR,
                                                        end_HHMMSS=end_HHMMSS)
                          )
     #-------------------------------------------------------------------------. 
-    return(filepaths)
-##-----------------------------------------------------------------------------.
-
-
-
-
-
-
-#-----------------------------------------------------------------------------.
-def check_which_GPM_file_exist(DIR, PPS_filepaths, force_download=False):
-    """
-    Check if the file to be retrieve from NASA PPS server already exists on disk.
-
-    Parameters
-    ----------
-    DIR : str
-        GPM directory on disk for a specific product and date.
-    PPS_filepaths : str
-        Filepaths on which GPM data are stored on PPS servers.
-    force_download : boolean, optional
-        Whether to redownload data if already existing on disk. The default is False.
-
-    Returns
-    -------
-    PPS_filepaths.
-        Filepaths of the files to download from PPS servers
-
-    """
-    # Create directory if does not exist
-    if not os.path.exists(DIR):
-        os.makedirs(DIR)
-    #-------------------------------------------------------------------------.    
-    # Check if data already exists 
-    if force_download is False: 
-        # Retrieve filepath on user disk 
-        filepaths = [os.path.join(DIR, os.path.basename(file)) for file in PPS_filepaths]
-        # Get index which do not exist
-        idx_not_existing = [not os.path.exists(filepath) for filepath in filepaths]
-        # Select filepath not existing on disk
-        PPS_filepaths = subset_list_by_boolean(PPS_filepaths, idx_not_existing)
-    return(PPS_filepaths)
-     
+    return(filepaths)   
     
-#----------------------------------------------------------------------------.
-# Download of GPM data from NASA servers 
+##------------------------------------------------------------------------------.
+## Download of GPM data from NASA servers 
 def download_daily_GPM_data(base_DIR,
                             username,
                             product,
@@ -963,7 +1300,8 @@ def download_daily_GPM_data(base_DIR,
                             product_type = 'RS',
                             GPM_version = 6,
                             n_parallel = 10,
-                            force_download=False,
+                            force_download = False,
+                            flag_first_Date = False, 
                             verbose=True):
     """
     Download GPM data from NASA servers using curl.
@@ -1007,52 +1345,40 @@ def download_daily_GPM_data(base_DIR,
     """
     #-------------------------------------------------------------------------.
     ## Check input arguments
-    # Check Date is datetime 
-    if not isinstance(Date, (datetime.date, datetime.datetime)):
-        raise ValueError("Date must be a datetime object")
-    # Check just a single product is provided 
-    if not (isinstance(product, str)):
-        raise ValueError("'product' must be a single string")   
-    # Check product type 
-    if (product_type not in ['RS','NRT']):
-        raise ValueError("'product_type' must be either 'RS' or 'NRT'") 
+    Date = check_Date(Date)
+    check_product_type(product_type = product_type)
+    check_product(product = product, product_type = product_type)
     #-------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
-    (server_url, filepaths) = find_daily_GPM_PPS_filepaths(username = username,
-                                                           product = product, 
-                                                           product_type = product_type,
-                                                           GPM_version = GPM_version,
-                                                           Date = Date, 
-                                                           start_HHMMSS = start_HHMMSS, 
-                                                           end_HHMMSS = end_HHMMSS)
+    (server_paths, disk_paths) = find_daily_GPM_PPS_filepaths(username = username,
+                                                              base_DIR = base_DIR, 
+                                                              product = product, 
+                                                              product_type = product_type,
+                                                              GPM_version = GPM_version,
+                                                              Date = Date, 
+                                                              start_HHMMSS = start_HHMMSS, 
+                                                              end_HHMMSS = end_HHMMSS,
+                                                              flag_first_Date = flag_first_Date,
+                                                              verbose = verbose)
     #-------------------------------------------------------------------------.
-    ## If no file to retrieve on NASA PPS, return 0
-    if (len(filepaths) == 0):
-        return 0 
-    #-------------------------------------------------------------------------.   
-    ## Define disk directory where to story the data 
-    DIR = get_GPM_disk_directory(base_DIR = base_DIR, 
-                                 product = product, 
-                                 product_type = product_type,
-                                 Date = Date,
-                                 GPM_version = GPM_version)
+    ## If no file to retrieve on NASA PPS, return None
+    if is_empty(server_paths):
+        return None
     #-------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk 
-    # - Here also create DIR if does not exist already
-    filepaths = check_which_GPM_file_exist(DIR = DIR, 
-                                           PPS_filepaths = filepaths, 
-                                           force_download = force_download)
+    (server_paths, disk_paths) = filter_GPM_query(disk_paths = disk_paths, 
+                                                  server_paths = server_paths,  
+                                                  force_download = force_download)
     #-------------------------------------------------------------------------.
     ## Download the data (in parallel)
     # - Wait all n_parallel jobs ended before restarting download
     # - TODO: change to max synchronous n_jobs with multiprocessing
     process_list = []
     process_idx = 0
-    if (len(filepaths) >= 1):
-        for filepath in filepaths:
-            process = curl_download(server = server_url,
-                                    filepath = filepath, 
-                                    DIR = DIR,
+    if (len(server_paths) >= 1):
+        for server_path, disk_path in zip(server_paths, disk_paths):
+            process = curl_download(server_path = server_path,
+                                    disk_path = disk_path,
                                     username = username,
                                     password = username)
             process_list.append(process)
@@ -1066,14 +1392,15 @@ def download_daily_GPM_data(base_DIR,
         [process.wait() for process in process_list]
     return 0
 
-#-----------------------------------------------------------------------------. 
+##-----------------------------------------------------------------------------. 
 def download_GPM_data(base_DIR,
                       username,
                       product,
                       start_time,
                       end_time,
                       product_type = 'RS',
-                      GPM_version = 6):
+                      GPM_version = 6,
+                      verbose = False):
     """
     Download GPM data from NASA servers.
     
@@ -1094,23 +1421,26 @@ def download_GPM_data(base_DIR,
     GPM_version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'. 
         GPM data readers are currently implemented only for GPM V06.
-        
+    verbose : bool, optional
+        Whether to print processing details. The default is False.    
     Returns
     -------
     int 
         0 if everything went fine.
 
     """  
-    # Check start_time and end_time are chronological
-    if (start_time > end_time):
-        raise ValueError('Provide start_time occuring before of end_time')
+    #-------------------------------------------------------------------------.
+    ## Checks input arguments
+    check_product_type(product_type = product_type) 
+    check_product(product = product, product_type = product_type)
+    check_GPM_version(GPM_version = GPM_version) 
+    start_time, end_time = check_time(start_time, end_time)    
+    #-------------------------------------------------------------------------.
     # Retrieve sequence of Dates 
     Dates = [start_time + timedelta(days=x) for x in range(0, (end_time-start_time).days + 1)]
     # Retrieve start and end HHMMSS
     start_HHMMSS = datetime.datetime.strftime(start_time,"%H%M%S")
     end_HHMMSS = datetime.datetime.strftime(end_time,"%H%M%S")
-    if (end_HHMMSS == '000000'):
-        end_HHMMSS == '240000'
     #-------------------------------------------------------------------------.
     # Case 1: Retrieve just 1 day of data 
     if (len(Dates)==1):
@@ -1121,7 +1451,9 @@ def download_GPM_data(base_DIR,
                                 product_type = product_type,
                                 Date = Dates[0],  
                                 start_HHMMSS = start_HHMMSS,
-                                end_HHMMSS = end_HHMMSS)
+                                end_HHMMSS = end_HHMMSS,
+                                flag_first_Date = True,
+                                verbose = verbose)
     #-------------------------------------------------------------------------.
     # Case 2: Retrieve multiple days of data
     if (len(Dates) > 1):
@@ -1132,7 +1464,9 @@ def download_GPM_data(base_DIR,
                                 product_type = product_type,
                                 Date = Dates[0],
                                 start_HHMMSS = start_HHMMSS,
-                                end_HHMMSS = '240000')
+                                end_HHMMSS = '240000',
+                                flag_first_Date = True,
+                                verbose = verbose)
         if (len(Dates) > 2):
             for Date in Dates[1:-1]:
                 download_daily_GPM_data(base_DIR = base_DIR,
@@ -1142,20 +1476,20 @@ def download_GPM_data(base_DIR,
                                         product_type = product_type,
                                         Date = Date, 
                                         start_HHMMSS = '000000',
-                                        end_HHMMSS = '240000')
-        download_daily_GPM_data(base_DIR=base_DIR, 
+                                        end_HHMMSS = '240000',
+                                        verbose = verbose)
+        download_daily_GPM_data(base_DIR = base_DIR, 
                                 GPM_version =  GPM_version,
                                 username = username,
                                 product = product,
                                 product_type = product_type,
                                 Date = Dates[-1], 
                                 start_HHMMSS ='000000',
-                                end_HHMMSS = end_HHMMSS)
+                                end_HHMMSS = end_HHMMSS,
+                                verbose = verbose)
     #-------------------------------------------------------------------------. 
     print('Download of GPM', product, 'completed')
     return 0
-#-----------------------------------------------------------------------------.
-#########################################
-### Code for querying data from disk ####
-#########################################
+
+##-----------------------------------------------------------------------------.
 

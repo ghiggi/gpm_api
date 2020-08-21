@@ -11,8 +11,7 @@ PIA:
   units: dB
 PIA_Final:
   _FillValue: -9999.9
-  description: " The final estimates of path integrated attenuation \n           \
-    \             caused by precipitation particles.\n                    "
+  description: The final estimates of path integrated attenuation caused by precipitation particles.              
   dims:
   - along_track
   - cross_track
@@ -23,7 +22,7 @@ PIA_Final:
   units: dB
 PIA_HB:
   _FillValue: -9999.9
-  description: The  2-way path integrated attenuation of HB.
+  description: The 2-way path integrated attenuation of HB.
   dims:
   - along_track
   - cross_track
@@ -34,7 +33,7 @@ PIA_HB:
   units: dB
 PIA_Hybrid:
   _FillValue: -9999.9
-  description: ' The 2-way PIA from a weighted combination of HB and SRT'
+  description: The 2-way PIA from a weighted combination of HB and SRT.
   dims:
   - along_track
   - cross_track
@@ -61,8 +60,7 @@ binBBBottom:
   _FillValue:
   - -1111
   - -9999
-  description: " Range bin number for the bottom of the bright band\n            \
-    \          "
+  description: Range bin number for the bottom of the bright band.
   dims:
   - along_track
   - cross_track
@@ -75,8 +73,7 @@ binBBPeak:
   _FillValue:
   - -1111
   - -9999
-  description: " Range bin number for the peak of the bright band\n              \
-    \        "
+  description: Range bin number for the peak of the bright band.
   dims:
   - along_track
   - cross_track
@@ -89,8 +86,7 @@ binBBTop:
   _FillValue:
   - -1111
   - -9999
-  description: " Range bin number for the top of the bright band\n               \
-    \       "
+  description: Range bin number for the top of the bright band.
   dims:
   - along_track
   - cross_track
@@ -101,8 +97,7 @@ binBBTop:
   units: ''
 binClutterFreeBottom:
   _FillValue: -9999
-  description: " Range bin number for clutter free bottom\n                      \
-    \        "
+  description: Range bin number for clutter free bottom.
   dims:
   - along_track
   - cross_track
@@ -116,7 +111,7 @@ binDFRmMLBottom:
   - 0
   - -1111
   - -9999
-  description: ' Range bin number for the for melting layer bottom'
+  description: Range bin number for the for melting layer bottom.
   dims:
   - along_track
   - cross_track
@@ -130,7 +125,7 @@ binDFRmMLTop:
   - 0
   - -1111
   - -9999
-  description: ' Range bin number for the for melting layer top'
+  description: Range bin number for the for melting layer top.
   dims:
   - along_track
   - cross_track
@@ -141,7 +136,7 @@ binDFRmMLTop:
   units: ''
 binEchoBottom:
   _FillValue: -9999
-  description: " Range bin number for ... (TODO)\n                          "
+  description: Range bin number for ... (TODO)
   dims:
   - along_track
   - cross_track
@@ -152,7 +147,7 @@ binEchoBottom:
   units: ''
 binRealSurface:
   _FillValue: -9999
-  description: " Range bin number for real surface.\n                          "
+  description: Range bin number for real surface.
   dims:
   - along_track
   - cross_track
@@ -163,7 +158,7 @@ binRealSurface:
   units: ''
 binStormTop:
   _FillValue: -9999
-  description: " Range bin number for the storm top.\n                      "
+  description: Range bin number for the storm top.
   dims:
   - along_track
   - cross_track
@@ -187,8 +182,7 @@ binZeroDeg:
   units: ''
 elevation:
   _FillValue: -9999.9
-  description: " Elevation of the measurement point. \n                          \
-    \    It is a copy of DEMHmean of level 1B product.\n                          "
+  description: Elevation of the measurement point. It is a copy of DEMHmean of level 1B product.
   dims:
   - along_track
   - cross_track
@@ -271,7 +265,7 @@ heightBB:
   _FillValue:
   - -1111.1
   - -9999.9
-  description: ' Height of the bright band. '
+  description: Height of the bright band.
   dims:
   - along_track
   - cross_track
@@ -282,7 +276,7 @@ heightBB:
   units: m
 heightStormTop:
   _FillValue: -9999.9
-  description: ' Height of storm top. '
+  description: Height of storm top. 
   dims:
   - along_track
   - cross_track
@@ -293,7 +287,7 @@ heightStormTop:
   units: m
 heightZeroDeg:
   _FillValue: -9999.9
-  description: ' Height of freezing level (0 degrees C level).'
+  description: Height of freezing level (0 degrees C level).
   dims:
   - along_track
   - cross_track
@@ -304,8 +298,7 @@ heightZeroDeg:
   units: m
 localZenithAngle:
   _FillValue: -9999.9
-  description: " Local zenith angle of each ray (scLocalZenith)\n                \
-    \          "
+  description: Local zenith angle of each ray (scLocalZenith).
   dims:
   - along_track
   - cross_track
@@ -316,7 +309,7 @@ localZenithAngle:
   units: degree
 paramDSD:
   _FillValue: -9999.9
-  description: ' Parameters of the drop size distribution.'
+  description: Parameters of the drop size distribution.
   dims:
   - along_track
   - cross_track
@@ -329,8 +322,7 @@ paramDSD:
   units: ''
 phase:
   _FillValue: 255
-  description: " Phase state of the precipitation. \n                            To\
-    \ be decoded following GPM ATBD.\n                      "
+  description: Phase state of the precipitation. To be decoded following GPM ATBD.                     "
   dims:
   - along_track
   - cross_track
@@ -354,8 +346,7 @@ precipRate:
   units: mm/hr
 precipRateAve24:
   _FillValue: -9999.9
-  description: " Average of precipitation rate between 2 and 4km height.\n       \
-    \                   "
+  description: Average of precipitation rate between 2 and 4km height.             
   dims:
   - along_track
   - cross_track
@@ -366,8 +357,7 @@ precipRateAve24:
   units: mm/hr
 precipRateESurface:
   _FillValue: -9999.9
-  description: " Precipitation rate at the estimated surface.\n                  \
-    \        "
+  description: Precipitation rate at the estimated surface.
   dims:
   - along_track
   - cross_track
@@ -378,8 +368,7 @@ precipRateESurface:
   units: mm/hr
 precipRateESurface2:
   _FillValue: -9999.9
-  description: " Estimates Surface Precipitation using alternate method.\n       \
-    \                   "
+  description: Estimates Surface Precipitation using alternate method.            
   dims:
   - along_track
   - cross_track
@@ -390,8 +379,7 @@ precipRateESurface2:
   units: mm/hr
 precipRateNearSurface:
   _FillValue: -9999.9
-  description: " Precipitation rate at the near surface.\n                       \
-    \   "
+  description: Precipitation rate at the near surface.
   dims:
   - along_track
   - cross_track
@@ -402,7 +390,7 @@ precipRateNearSurface:
   units: mm/hr
 precipWaterIntegrated:
   _FillValue: -9999.9
-  description: " Precipitation water vertically integrated.\n                     "
+  description: Precipitation water vertically integrated.    
   dims:
   - along_track
   - cross_track
@@ -462,8 +450,7 @@ qualityPIA:
   units: dB
 seaIceConcentration:
   _FillValue: -9999.9
-  description: " Sea ice concentration estimated by Ku.\n                        \
-    \      Values range from 30 to 100 percent.\n                          "
+  description: Sea ice concentration estimated by Ku. Values range from 30 to 100 percent. 
   dims:
   - along_track
   - cross_track
@@ -474,8 +461,7 @@ seaIceConcentration:
   units: '%'
 sigmaZeroCorrected:
   _FillValue: -9999.9
-  description: " Surface backscattering cross section with\n                     \
-    \     attenuation correction \n                          "
+  description: Surface backscattering cross section with attenuation correction.
   dims:
   - along_track
   - cross_track
@@ -486,8 +472,7 @@ sigmaZeroCorrected:
   units: dB
 sigmaZeroMeasured:
   _FillValue: -9999.9
-  description: " Surface backscattering cross section without attenuation correction.\n\
-    \                          "
+  description: Surface backscattering cross section without attenuation correction.
   dims:
   - along_track
   - cross_track
@@ -511,8 +496,7 @@ sigmaZeroNPCorrected:
   units: dB
 snRatioAtRealSurface:
   _FillValue: -9999
-  description: " Signal/Noise ratio at real surface range bin\n                  \
-    \        "
+  description: Signal/Noise ratio at real surface range bin.
   dims:
   - along_track
   - cross_track
@@ -525,8 +509,7 @@ typePrecip:
   _FillValue:
   - -1111
   - -9999
-  description: " Precipitation type. \n                          8 digits to be decoded\
-    \ following GPM ATBD \n                          "
+  description: Precipitation type. 8 digits to be decoded following GPM ATBD.                         "
   dims:
   - along_track
   - cross_track
@@ -539,7 +522,7 @@ widthBB:
   _FillValue:
   - -1111.1
   - -9999.9
-  description: ' Width of the bright band. '
+  description: Width of the bright band.
   dims:
   - along_track
   - cross_track
@@ -550,9 +533,7 @@ widthBB:
   units: m
 zFactorCorrected:
   _FillValue: -9999.9
-  description: " Vertical profile of reflectivity with \n                        \
-    \            attenuation correctionattenuation correction.\n                 \
-    \               "
+  description: Vertical profile of reflectivity with attenuation correction.
   dims:
   - along_track
   - cross_track
@@ -564,8 +545,7 @@ zFactorCorrected:
   units: dBZ
 zFactorCorrectedESurface:
   _FillValue: -9999.9
-  description: " Reflectivity factor with attenuation correction \n              \
-    \                at the estimated surface\n                          "
+  description: Reflectivity factor with attenuation correction at the estimated surface.                          
   dims:
   - along_track
   - cross_track
@@ -576,8 +556,7 @@ zFactorCorrectedESurface:
   units: dBZ
 zFactorCorrectedNearSurface:
   _FillValue: -9999.9
-  description: " Reflectivity factor with attenuation correction \n              \
-    \                at the near surface\n                          "
+  description: Reflectivity factor with attenuation correction at the near surface.                         
   dims:
   - along_track
   - cross_track
@@ -588,8 +567,7 @@ zFactorCorrectedNearSurface:
   units: dBZ
 zFactorMeasured:
   _FillValue: -9999.9
-  description: " Vertical profile of reflectivity \n                             \
-    \       without attenuation correction.\n                                "
+  description: Vertical profile of reflectivity without attenuation correction.                             
   dims:
   - along_track
   - cross_track

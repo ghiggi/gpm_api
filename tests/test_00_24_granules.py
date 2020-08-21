@@ -10,61 +10,96 @@ import datetime
 os.chdir('/home/ghiggi/gpm_api') # change to the 'scripts_GPM.py' directory
  
 from gpm_api.io import find_daily_GPM_PPS_filepaths
+from gpm_api.io import find_daily_GPM_disk_filepaths
+from gpm_api.io import find_GPM_files
 from gpm_api.utils.utils_string import str_extract
 from gpm_api.utils.utils_string import str_subset
 from gpm_api.utils.utils_string import str_sub 
 from gpm_api.utils.utils_string import str_pad 
 
-### Donwload data 
 base_DIR = '/home/ghiggi/tmp'
 username = "gionata.ghiggi@epfl.ch"
-product = "2A-Ka"
-Date = datetime.date.fromisoformat("2014-08-09")
-
+product = "2A-DPR"
 start_HHMMSS = "000000"
-end_HHMMSS = "240000"
- 
+end_HHMMSS = "020000"
+GPM_version = 6
 
+## Still BUGGY for the following case
+# - Need to take only the previous day 
+start_HHMMSS = "000000"
+end_HHMMSS = "001000"
+# - Need to take only a single granule in current day 
+start_HHMMSS = "020028"
+end_HHMMSS = "020030"
+# - Need to take last granule 
+start_HHMMSS = "235000"
+end_HHMMSS = "240000"
+
+
+# start_HHMMSS and end_HHMMSS in datetime.time format
 start_HHMMSS = datetime.time.fromisoformat("00:00:00")
 end_HHMMSS = datetime.time.fromisoformat("23:59:00")
+##----------------------------------------------------------------------------.
+### Retrieve RS filepaths 
+Date = datetime.date.fromisoformat("2014-08-09") 
+product_type = 'RS'
 
-file_list = find_daily_GPM_PPS_filepaths(username=username,
-                                         product = product,
-                                         Date = Date,
-                                         start_HHMMSS = start_HHMMSS, 
-                                         end_HHMMSS = end_HHMMSS,
-                                         product_type = 'RS',
-                                         GPM_version = 6)
+(server_paths, disk_paths) = find_daily_GPM_PPS_filepaths(username = username,
+                                                          base_DIR = base_DIR,
+                                                          product = product,
+                                                          Date = Date,
+                                                          start_HHMMSS = start_HHMMSS, 
+                                                          end_HHMMSS = end_HHMMSS,
+                                                          product_type = product_type,
+                                                          GPM_version = GPM_version,
+                                                          flag_first_Date = True)
+print(server_paths)
+print(disk_paths)
 
-l_files = file_list
-l_s_HHMMSS = str_sub(str_extract(l_files,"S[0-9]{6}"), 1)
-l_e_HHMMSS = str_sub(str_extract(l_files,"E[0-9]{6}"), 1)
-# Subset specific time period     
-# - Retrieve start_HHMMSS and endtime of GPM granules products (execept JAXA 1B reflectivities)
-if product not in GPM_DPR_1B_RS_products():
-    l_s_HHMMSS = str_sub(str_extract(l_files,"S[0-9]{6}"), 1)
-    l_e_HHMMSS = str_sub(str_extract(l_files,"E[0-9]{6}"), 1)
-# - Retrieve start_HHMMSS and endtime of JAXA 1B reflectivities
-else: 
-    # Retrieve start_HHMMSS of granules   
-    l_s_HHMM = str_sub(str_extract(l_files,"[0-9]{10}"),6) 
-    l_e_HHMM = str_sub(str_extract(l_files,"_[0-9]{4}_"),1,5) 
-    l_s_HHMMSS = str_pad(l_s_HHMM, width=6, side="right",pad="0")
-    l_e_HHMMSS = str_pad(l_e_HHMM, width=6, side="right",pad="0")
-        
-        
-        
-get_time_start_first_granule 
-get_time_start_last_granule 
-get_time_end_first_granule 
-get_time_end_last_granule 
-get_previous_day(Date)
-get_next_day(Date)
+find_daily_GPM_disk_filepaths( base_DIR = base_DIR,
+                               product = product,
+                               Date = Date,
+                               start_HHMMSS = start_HHMMSS, 
+                               end_HHMMSS = end_HHMMSS,
+                               product_type = product_type,
+                               GPM_version = GPM_version,
+                               flag_first_Date = True)
+##----------------------------------------------------------------------------.
+### Retrieve NRT filepaths 
+Date = datetime.date.fromisoformat("2020-08-16")
+product_type = 'NRT'
+ 
+(server_paths, disk_paths) = find_daily_GPM_PPS_filepaths(username = username,
+                                                          base_DIR = base_DIR,
+                                                          product = product, 
+                                                          product_type = product_type,
+                                                          GPM_version = GPM_version,
+                                                          Date = Date, 
+                                                          start_HHMMSS = start_HHMMSS, 
+                                                          end_HHMMSS = end_HHMMSS,
+                                                          flag_first_Date = True)
+print(server_paths)
+print(disk_paths)
 
-            find_daily_GPM_PPS_filepaths(username=username,
-                                        product = product,
-                                        Date = get_previous_day(Date)
-                                        start_HHMMSS = start_HHMMSS, 
-                                        end_HHMMSS = end_HHMMSS,
-                                        product_type = 'RS',
-                                        GPM_version = 6)
+find_daily_GPM_disk_filepaths( base_DIR = base_DIR,
+                               product = product,
+                               Date = Date,
+                               start_HHMMSS = start_HHMMSS, 
+                               end_HHMMSS = end_HHMMSS,
+                               product_type = product_type,
+                               GPM_version = GPM_version,
+                               flag_first_Date = True)
+         
+### find_GPM_files()                                  
+start_time = datetime.datetime.fromisoformat("2020-08-15 00:00:00")
+end_time = datetime.datetime.fromisoformat("2020-08-17 00:00:00")
+find_GPM_files(base_DIR = base_DIR, 
+               product = product,
+               start_time = start_time,
+               end_time = end_time,
+               product_type = product_type,
+               GPM_version = GPM_version)
+ 
+
+
+ 

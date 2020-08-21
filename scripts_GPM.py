@@ -23,6 +23,8 @@ from dask.diagnostics import ProgressBar
 os.chdir('/home/ghiggi/gpm_api') # change to the 'scripts_GPM.py' directory
 ### GPM Scripts ####
 from gpm_api.io import download_GPM_data
+
+from gpm_api.DPR.DPR_ENV import create_DPR_ENV
 from gpm_api.dataset import read_GPM
 from gpm_api.dataset import GPM_Dataset, GPM_variables # read_GPM (importing here do)
 
@@ -150,6 +152,7 @@ DPR = read_GPM(base_DIR = base_DIR,
 DPR.NS
 DPR.HS
 DPR.MS
+
 DPR.retrieve_ENV() # need to debug the import in DPR/DPR.py
 DPR.NS
 

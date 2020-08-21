@@ -6,7 +6,7 @@ Created on Thu Aug 13 19:05:10 2020
 @author: ghiggi
 """
 
-class create_ENV():
+class create_DPR_ENV():
     "Define methods for 2A-ENV data."
     def __init__(self, base_DIR, product, bbox=None, start_time=None, end_time=None):
         self.name = product

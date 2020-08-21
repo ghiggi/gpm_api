@@ -19,14 +19,16 @@ from .io import GPM_DPR_2A_ENV_RS_products
 from .io import GPM_IMERG_products
 from .io import GPM_products
 
+# For create_GPM_Class
 from .DPR.DPR import create_DPR
-from .GMI.GMI import create_GMI
-from .ENV.ENV import create_ENV
+from .DPR.DPR_ENV import create_DPR_ENV
+from .PMW.GMI import create_GMI
 from .IMERG.IMERG import create_IMERG
 
 from .utils.utils_HDF5 import hdf5_file_attrs
 from .utils.utils_string import str_remove
 
+##----------------------------------------------------------------------------.
 def subset_dict(x, keys):
     return dict((k, x[k]) for k in keys)
 
@@ -130,24 +132,6 @@ def GPM_variables(product, scan_modes=None, GPM_version = 6):
 ################
 ### Classes ####
 ################
-def create_GPM_class(base_DIR, product, bbox=None, start_time=None, end_time=None):
-    # TODO add for ENV and SLH
-    if (product in ['1B-Ka','1B-Ku','2A-Ku','2A-Ka','2A-DPR','2A-SLH']):
-        x = create_DPR(base_DIR=base_DIR, product=product,
-                       bbox=bbox, start_time=start_time, end_time=end_time)
-    elif (product in ['IMERG-FR','IMERG-ER','IMERG-LR']):
-        x = create_IMERG(base_DIR=base_DIR, product=product,
-                         bbox=bbox, start_time=start_time, end_time=end_time)
-    elif (product in ['TODO list GMI products']):
-        x = create_GMI(base_DIR=base_DIR, product=product,
-                       bbox=bbox, start_time=start_time, end_time=end_time)
-    elif (product in GPM_DPR_2A_ENV_RS_products()):
-        x = create_ENV(base_DIR=base_DIR, product=product,
-                       bbox=bbox, start_time=start_time, end_time=end_time)
-    else:
-        raise ValueError("Class method for such product not yet implemented")
-    return(x)
-
 def initialize_scan_modes(product): 
     if (product in ['1B-Ku', '2A-Ku','2A-ENV-Ku']):
         scan_modes = ['NS']
@@ -164,10 +148,35 @@ def initialize_scan_modes(product):
     else:
         raise ValueError("Retrievals for", product,"not yet implemented")
     return(scan_modes)
+
+def create_GPM_class(base_DIR, product, bbox=None, start_time=None, end_time=None):
+    # TODO add for ENV and SLH
+    if (product in ['1B-Ka','1B-Ku','2A-Ku','2A-Ka','2A-DPR','2A-SLH']):
+        x = create_DPR(base_DIR=base_DIR, product=product,
+                       bbox=bbox, start_time=start_time, end_time=end_time)
+    elif (product in ['IMERG-FR','IMERG-ER','IMERG-LR']):
+        x = create_IMERG(base_DIR=base_DIR, product=product,
+                         bbox=bbox, start_time=start_time, end_time=end_time)
+    elif (product in ['TODO list GMI products']):
+        x = create_GMI(base_DIR=base_DIR, product=product,
+                       bbox=bbox, start_time=start_time, end_time=end_time)
+    elif (product in GPM_DPR_2A_ENV_RS_products()):
+        x = create_DPR_ENV(base_DIR=base_DIR, product=product,
+                           bbox=bbox, start_time=start_time, end_time=end_time)
+    else:
+        raise ValueError("Class method for such product not yet implemented")
+    return(x)
+
 ##----------------------------------------------------------------------------.
 ###############
 ### Checks ####
 ###############
+def is_not_empty(x):
+    return(not not x)
+
+def is_empty(x):
+    return( not x)
+
 def check_GPM_version(GPM_version):
     if (GPM_version != 6): 
         raise ValueError("Only GPM V06 data are currently read correctly")
@@ -553,7 +562,7 @@ def GPM_Dataset(base_DIR,
                                end_time = end_time)
     ##------------------------------------------------------------------------.
     # Check that files have been downloaded  on disk 
-    if (len(filepaths) == 0):
+    if is_empty(filepaths):
         raise ValueError('Requested files are not found on disk. Please download them before')
     ##------------------------------------------------------------------------.
     # Initialize list (to store Dataset of each granule )
