@@ -25,7 +25,7 @@ def curl_download(server_path, disk_path, username, password):
     # Check disk directory exists (if not, create)
     disk_dir = os.path.dirname(disk_path)
     if not os.path.exists(disk_dir):
-        os.mkdir(disk_dir)
+        os.makedirs(disk_dir)
     #-------------------------------------------------------------------------.
     ## Define command to run
     # curl -4 --ftp-ssl --user [user name]:[password] -n [url]
