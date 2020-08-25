@@ -585,6 +585,8 @@ def check_time(start_time, end_time):
 def check_Date(Date):
     if not isinstance(Date, (datetime.date, datetime.datetime)):
         raise ValueError("Date must be a datetime object")
+    if isinstance(Date, datetime.datetime):
+        Date = Date.date()
     return(Date)
     
 def check_HHMMSS(start_HHMMSS, end_HHMMSS):
@@ -975,7 +977,8 @@ def find_daily_GPM_disk_filepaths(base_DIR,
         List of GPM data filepaths.
     """
     ##------------------------------------------------------------------------.
-    # Check time format 
+    # Check Date and time formats 
+    Date = check_Date(Date)
     start_HHMMSS, end_HHMMSS = check_HHMMSS(start_HHMMSS, end_HHMMSS)
     if (end_HHMMSS == "000000"):
         return([])

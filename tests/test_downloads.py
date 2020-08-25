@@ -9,7 +9,7 @@ import os
 import datetime
 os.chdir('/home/ghiggi/gpm_api') # change to the 'scripts_GPM.py' directory
 ### GPM Scripts ####
-from gpm_api.io import download_GPM_data
+from gpm_api.io import download_GPM_data, download_daily_GPM_data
 from gpm_api.io import GPM_RS_products, GPM_NRT_products, GPM_products
 ##----------------------------------------------------------------------------.
 ### Donwload data 
@@ -59,4 +59,29 @@ for product in products:
                       start_time = start_time,
                       end_time = end_time)
     
-    
+##-----------------------------------------------------------------------------.
+## Download data for a specific day
+Date = np.datetime64('2017-01-01').astype(datetime.datetime)
+GPM_version = 6
+product_type = 'RS'
+product = '2A-Ku'
+base_DIR = '/home/ghiggi/tmp'
+start_HHMMSS = datetime.datetime.strptime("01:00:00","%H:%M:%S")
+end_HHMMSS =  datetime.datetime.strptime("03:00:00","%H:%M:%S")
+
+download_daily_GPM_data(base_DIR=base_DIR, 
+                        username = username,
+                        GPM_version = GPM_version,
+                        product=product,
+                        product_type = product_type,
+                        Date=Date, 
+                        start_HHMMSS=start_HHMMSS,
+                        end_HHMMSS=end_HHMMSS)
+#-----------------------------------------------------------------------------.
+
+
+
+
+
+
+

@@ -16,6 +16,8 @@ import os
 from .io import find_GPM_files
 from .io import GPM_DPR_RS_products
 from .io import GPM_DPR_2A_ENV_RS_products
+from .io import GPM_PMW_2A_GPROF_RS_products
+from .io import GPM_PMW_2A_PRPS_RS_products
 from .io import GPM_IMERG_products
 from .io import GPM_products
 
@@ -143,8 +145,12 @@ def initialize_scan_modes(product):
         scan_modes = ['NS','HS']
     elif (product == "2A-SLH"):
         scan_modes = ['Swath']    
-    elif (product in ['IMERG-FR','IMERG-ER','IMERG-LR']):
+    elif (product in GPM_IMERG_products()):
         scan_modes = ['Grid']
+    elif (product in GPM_PMW_2A_GPROF_RS_products()):
+        scan_modes = ['S1']
+    elif (product in GPM_PMW_2A_PRPS_RS_products()):      
+        scan_modes = ['S1']
     else:
         raise ValueError("Retrievals for", product,"not yet implemented")
     return(scan_modes)
@@ -154,10 +160,13 @@ def create_GPM_class(base_DIR, product, bbox=None, start_time=None, end_time=Non
     if (product in ['1B-Ka','1B-Ku','2A-Ku','2A-Ka','2A-DPR','2A-SLH']):
         x = create_DPR(base_DIR=base_DIR, product=product,
                        bbox=bbox, start_time=start_time, end_time=end_time)
-    elif (product in ['IMERG-FR','IMERG-ER','IMERG-LR']):
+    elif (product in GPM_IMERG_products()):
         x = create_IMERG(base_DIR=base_DIR, product=product,
                          bbox=bbox, start_time=start_time, end_time=end_time)
-    elif (product in ['TODO list GMI products']):
+    elif (product in GPM_PMW_2A_GPROF_RS_products()):
+        x = create_GMI(base_DIR=base_DIR, product=product,
+                       bbox=bbox, start_time=start_time, end_time=end_time)
+    elif (product in GPM_PMW_2A_PRPS_RS_products()):
         x = create_GMI(base_DIR=base_DIR, product=product,
                        bbox=bbox, start_time=start_time, end_time=end_time)
     elif (product in GPM_DPR_2A_ENV_RS_products()):
@@ -212,8 +221,12 @@ def check_scan_mode(scan_mode, product):
     # Specify HDF group name for 2A-SLH and IMERG products
     if (product == "2A-SLH"):
         scan_mode = 'Swath'   
-    if (product in ['IMERG-FR','IMERG-ER','IMERG-LR']):
+    if (product in GPM_IMERG_products()):
         scan_mode = 'Grid'
+    if (product in GPM_PMW_2A_GPROF_RS_products()):
+        scan_mode = 'S1'
+    if (product in GPM_PMW_2A_PRPS_RS_products()):
+        scan_mode = 'S1'
     if (scan_mode is None):
         raise ValueError('scan_mode is still None. This should not occur!')
     return(scan_mode)  
@@ -578,7 +591,7 @@ def GPM_Dataset(base_DIR,
         # --------------------------------------------------------------------.
         ## Decide if retrieve data based on JAXA quality flags 
         # Do not retrieve data if TotalQualityCode not ... 
-        if (product not in GPM_IMERG_products()):
+        if (product in GPM_DPR_RS_products()):
             DataQualityFiltering = {'TotalQualityCode': ['Good']} # TODO future fun args
             if (hdf_attr['JAXAInfo']['TotalQualityCode'] not in DataQualityFiltering['TotalQualityCode']):
                 continue

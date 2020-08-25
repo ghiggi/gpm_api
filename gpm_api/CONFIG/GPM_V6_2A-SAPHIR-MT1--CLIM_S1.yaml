@@ -1,0 +1,24 @@
+qualityFlag:
+  _FillValue: -999
+  description: "Generalized quality of the retrieved pixel:\n                    \
+    \    0 : All is OK\n                        1 : Bad Tcs\n                    \
+    \    2 : Altitude too high "
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: qualityFlag
+  standard_name: qualityFlag
+  units: '-'
+surfacePrecipitation:
+  _FillValue: -9999.9
+  description: The instantaneous precipitation rate at the surface
+  dims:
+  - along_track
+  - cross_track
+  ndims: 2
+  offset_scale: []
+  path: surfacePrecipitation
+  standard_name: surfacePrecipitation
+  units: mm/hr
