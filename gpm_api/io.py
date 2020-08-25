@@ -1107,7 +1107,7 @@ def find_daily_GPM_PPS_filepaths(username,
     ##------------------------------------------------------------------------.
     # Check time format 
     start_HHMMSS, end_HHMMSS = check_HHMMSS(start_HHMMSS = start_HHMMSS, 
-                                          end_HHMMSS = end_HHMMSS)
+                                            end_HHMMSS = end_HHMMSS)
     if (end_HHMMSS == "000000"):
         return (None, None)
     ##------------------------------------------------------------------------.
@@ -1133,8 +1133,8 @@ def find_daily_GPM_PPS_filepaths(username,
     # Check if data are available
     if (stdout[0] == '<'):
         if verbose is True:
-            print('No data available the', datetime.datetime.strftime(Date, "%Y/%m/%d"))
-        return([])
+            print("No data found on PPS on Date", Date, "for product", product)
+        return (None,None)
     else:
         # Retrieve filepaths
         filepaths = stdout.split() 
@@ -1366,6 +1366,7 @@ def download_daily_GPM_data(base_DIR,
     #-------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
     if is_empty(server_paths):
+        # print("No data found on PPS on Date", Date, "for product", product)
         return None
     #-------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk 
@@ -1403,7 +1404,7 @@ def download_GPM_data(base_DIR,
                       end_time,
                       product_type = 'RS',
                       GPM_version = 6,
-                      verbose = False):
+                      verbose = True):
     """
     Download GPM data from NASA servers.
     

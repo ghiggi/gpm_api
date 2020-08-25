@@ -38,7 +38,8 @@ for product in products:
                       product_type = product_type,
                       GPM_version = GPM_version,
                       start_time = start_time,
-                      end_time = end_time)
+                      end_time = end_time,
+                      verbose = True)
 ##-----------------------------------------------------------------------------.
 ## Retrieve NRT data 
 GPM_version = 6
@@ -78,6 +79,9 @@ download_daily_GPM_data(base_DIR=base_DIR,
                         start_HHMMSS=start_HHMMSS,
                         end_HHMMSS=end_HHMMSS)
 #-----------------------------------------------------------------------------.
+
+
+
 
 
 
