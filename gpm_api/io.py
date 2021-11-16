@@ -1229,7 +1229,8 @@ def find_daily_GPM_PPS_filepaths(username,
     ##------------------------------------------------------------------------.
     ## Retrieve the name of available file on NASA PPS servers
     # curl -u username:password
-    cmd = 'curl -u ' + username + ':' + username + ' -n ' + url_file_list
+    cmd = 'curl -4 --ftp-ssl --user ' + username + ':' + username + ' -n ' + url_file_list
+    print(cmd)
     args = cmd.split()
     process = subprocess.Popen(args,
                                stdout=subprocess.PIPE,
