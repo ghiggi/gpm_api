@@ -19,8 +19,8 @@ from dask.diagnostics import ProgressBar
 # import dask.array  
 # from datetime import timedelta
 # from datetime import time
-
 os.chdir('/home/ghiggi/Python_Packages/gpm_api') # change to the 'scripts_GPM.py' directory
+os.chdir('/ltenas3/0_Projects/gpm_api')
 ### GPM Scripts ####
 from gpm_api.io import download_GPM_data
 
@@ -28,17 +28,28 @@ from gpm_api.DPR.DPR_ENV import create_DPR_ENV
 from gpm_api.dataset import read_GPM
 from gpm_api.dataset import GPM_Dataset, GPM_variables # read_GPM (importing here do)
 
+
+# allows access to all ports in the range of 64000-65000 for the DNS names of: 
+#  ‘arthurhou.pps.eosdis.nasa.gov’ and ‘arthurhouftps.pps.eosdis.nasa.gov’.
+# open/allow access to all ports in the range of 64000-65000 for the system
+# ‘arthurhouftps.pps.eosdis.nasa.gov’  (ftps)
+# ‘arthurhou.pps.eosdis.nasa.gov’ (ftps)
+# Python 3 ftplib 
+# curl ftps
+# Explicit FTPS
+
 ##----------------------------------------------------------------------------.
 ### Donwload data 
 base_DIR = '/home/ghiggi/Data'
+base_DIR = '/ltenas3/0_Data'
 username = "gionata.ghiggi@epfl.ch"
-start_time = datetime.datetime.strptime("2020-08-09 15:00:00", '%Y-%m-%d %H:%M:%S')
-end_time = datetime.datetime.strptime("2020-08-11 16:00:00", '%Y-%m-%d %H:%M:%S')
-start_time = datetime.datetime.strptime("2017-01-01 01:02:30", '%Y-%m-%d %H:%M:%S')
-end_time = datetime.datetime.strptime("2017-01-01 04:02:30", '%Y-%m-%d %H:%M:%S')
+start_time = datetime.datetime.strptime("2020-07-01 00:00:00", '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime("2020-09-01 00:00:00", '%Y-%m-%d %H:%M:%S')
+# start_time = datetime.datetime.strptime("2017-01-01 01:02:30", '%Y-%m-%d %H:%M:%S')
+# end_time = datetime.datetime.strptime("2017-01-01 04:02:30", '%Y-%m-%d %H:%M:%S')
 
-start_time = datetime.datetime.strptime("2014-08-09 00:00:00", '%Y-%m-%d %H:%M:%S')
-end_time = datetime.datetime.strptime("2014-08-09 03:00:00", '%Y-%m-%d %H:%M:%S')
+# start_time = datetime.datetime.strptime("2014-08-09 00:00:00", '%Y-%m-%d %H:%M:%S')
+# end_time = datetime.datetime.strptime("2014-08-09 03:00:00", '%Y-%m-%d %H:%M:%S')
 
 product = '2A-Ka'
 product = '2A-Ku'
@@ -48,11 +59,15 @@ product = '1B-GMI'
 product = 'IMERG-FR'
 product = '2A-SLH'
 
+product = '2A-DPR'
 download_GPM_data(base_DIR = base_DIR, 
                   username = username,
                   product = product, 
                   start_time = start_time,
-                  end_time = end_time)
+                  end_time = end_time,
+                  progress_bar = True,
+                  n_threads = 8,
+                  transfer_tool = "curl")
 
 download_GPM_data(base_DIR = base_DIR, 
                   GPM_version = 5, 

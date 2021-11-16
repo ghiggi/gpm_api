@@ -9,6 +9,9 @@ import pdb
 ##----------------------------------------------------------------------------.
 import subprocess
 import os
+import concurrent.futures
+from tqdm import tqdm
+from itertools import chain
 import numpy as np 
 import datetime
 from datetime import timedelta
@@ -19,7 +22,13 @@ from .utils.utils_string import str_pad
 from .utils.utils_string import str_detect
 from .utils.utils_string import subset_list_by_boolean
 ##----------------------------------------------------------------------------.
-def curl_download(server_path, disk_path, username, password):
+## TODO: homogenize as possible to laads api 
+# - https://github.com/ghiggi/laads_api/blob/main/laads_api/io.py 
+# - wget do not work 
+# - pbar (progress bar does not work)
+# products list? 
+
+def curl_cmd(server_path, disk_path, username, password):
     """Download data using curl."""
     #-------------------------------------------------------------------------.
     # Check disk directory exists (if not, create)
@@ -28,15 +37,116 @@ def curl_download(server_path, disk_path, username, password):
         os.makedirs(disk_dir)
     #-------------------------------------------------------------------------.
     ## Define command to run
-    # curl -4 --ftp-ssl --user [user name]:[password] -n [url]
-    cmd = 'curl -u ' + username + ':' + password + ' -n ' + server_path + ' -o ' + disk_path
-    args = cmd.split()
+    # Base command: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
+    # - -4: handle IPV6 connections
+    # - v : verbose
+    # --fail : fail silently on server errors. Allow to deal better with failed attemps
+    #           Return error > 0 when the request fails
+    # --silent: hides the progress and error
+    # --retry 10: retry 10 times 
+    # --retry-delay 5: with 5 secs delays 
+    # --retry-max-time 60*10: total time before it's considered failed
+    # --connect-timeout 20: limits time curl spend trying to connect ot the host to 20 secs
+    # --get url: specify the url 
+    # -o : write to file instead of stdout 
+    cmd = "".join(["curl ",
+                   "-v ",
+                   "-4 ",
+                   "--ftp-ssl ",
+                   "--user ", username, ':', password, " ", 
+                   "--connect-timeout 20 ",
+                   "--retry 5 ", 
+                   "--retry-delay 10 ",
+                   '-n ', server_path, " ",
+                   "-o ", disk_path])
+    return cmd 
+    # args = cmd.split()
+    # #-------------------------------------------------------------------------.
+    # # Execute the command  
+    # process = subprocess.Popen(args,
+    #                            stdout=subprocess.PIPE,
+    #                            stderr=subprocess.PIPE)
+    # return process 
+
+def wget_cmd(server_path, disk_path, username, password):
+    """Create wget command to download data."""
     #-------------------------------------------------------------------------.
-    # Execute the command  
-    process = subprocess.Popen(args,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-    return process 
+    # Check disk directory exists (if not, create)
+    disk_dir = os.path.dirname(disk_path)
+    if not os.path.exists(disk_dir):
+        os.makedirs(disk_dir)
+    #-------------------------------------------------------------------------.
+    # Base command: wget -4 --ftp-user=[user name] –-ftp-password=[password] -O
+    ## Define command to run
+    cmd = "".join(["wget ",
+                   "-4 ",
+                   "--ftp-user=", username, " ",
+                   "--ftp-password=", password, " ",
+                   "-e robots=off ", # allow wget to work ignoring robots.txt file 
+                   "-np ",           # prevents files from parent directories from being downloaded
+                   "-R .html,.tmp ", # comma-separated list of rejected extensions
+                   "-nH ",           # don't create host directories
+ 
+                   "-c ",               # continue from where it left 
+                   "--read-timeout=", "10", " ", # if no data arriving for 10 seconds, retry
+                   "--tries=", "5", " ",         # retry 5 times (0 forever)
+                   "-O ", disk_path," ",
+                   server_path.replace("ftp:", "ftps:")])
+    #-------------------------------------------------------------------------.
+    return cmd  
+
+def run(commands, n_threads = 10, progress_bar=True, verbose=True):
+    """
+    Run bash commands in parallel using multithreading.
+    Parameters
+    ----------
+    commands : list
+        list of commands to execute in the terminal.
+    n_threads : int, optional
+        Number of parallel download. The default is 10.
+        
+    Returns
+    -------
+    List of commands which didn't complete. 
+    """
+    if (n_threads < 1):
+        n_threads = 1 
+    n_threads = min(n_threads, 10) 
+    n_cmds = len(commands)
+    ##------------------------------------------------------------------------.
+    # Run with progress bar
+    if progress_bar is True:
+        with tqdm(total=n_cmds) as pbar: 
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n_threads) as executor:
+                dict_futures = {executor.submit(subprocess.check_call, cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL): cmd for cmd in commands}
+                # List cmds that didn't work 
+                l_cmd_error = []
+                for future in concurrent.futures.as_completed(dict_futures.keys()):
+                    pbar.update(1) # Update the progress bar 
+                    # Collect all commands that caused problems 
+                    if future.exception() is not None:
+                        l_cmd_error.append(dict_futures[future])
+    ##------------------------------------------------------------------------.
+    # Run without progress bar 
+    else: 
+        if (n_threads == 1) and (verbose is True): 
+            print("Here")
+            print(commands)
+            _ = [subprocess.run(cmd, shell=True) for cmd in commands]
+            l_cmd_error = []
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n_threads) as executor:
+                # Run commands and list those didn't work 
+                dict_futures = {executor.submit(subprocess.check_call, cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL): cmd for cmd in commands}
+                # List cmds that didn't work 
+                l_cmd_error = []
+                for future in concurrent.futures.as_completed(dict_futures.keys()):
+                    # Collect all commands that caused problems 
+                    if future.exception() is not None:
+                        l_cmd_error.append(dict_futures[future])                    
+
+    return l_cmd_error 
+
 #----------------------------------------------------------------------------.
 ################################# 
 ### File Pattern dictionary  ####
@@ -720,7 +830,7 @@ def get_GPM_PPS_directory(product,
         ## Specify servers 
         url_server_text = 'https://jsimpsonhttps.pps.eosdis.nasa.gov/text'
         url_data_server = 'https://jsimpsonhttps.pps.eosdis.nasa.gov' 
-        # url_data_server = 'ftp://jsimpsonftps.pps.eosdis.nasa.gov'
+        # url_data_server = 'ftps://jsimpsonftps.pps.eosdis.nasa.gov'
         ## Retrieve NASA server folder name for NRT
         # GPM PMW 1B
         if (product in GPM_PMW_1B_NRT_products()):
@@ -778,7 +888,7 @@ def get_GPM_PPS_directory(product,
                 raise ValueError('BUG - Some product option is missing.') 
             # Specify the url to retrieve the daily list of IMERG NRT products
             url_file_list = url_server_text + '/' + folder_name + '/'+ datetime.datetime.strftime(Date, '%Y%m') + '/'
-            return (url_data_server, url)
+            return url_file_list
         else:
             raise ValueError('BUG - Some product option is missing.') 
          # Specify the url to retrieve the daily list of NRT data
@@ -790,7 +900,7 @@ def get_GPM_PPS_directory(product,
             raise ValueError("Please specify a valid NRT product: GPM_RS_products()")
         ## Specify servers 
         url_server_text = 'https://arthurhouhttps.pps.eosdis.nasa.gov/text'
-        url_data_server = 'ftp://arthurhou.pps.eosdis.nasa.gov'
+        url_data_server = 'ftp://arthurhouftps.pps.eosdis.nasa.gov'
         ## Retrieve NASA server folder name for RS
         # GPM DPR 1B (and GMI)
         if product in GPM_1B_RS_products():
@@ -812,7 +922,7 @@ def get_GPM_PPS_directory(product,
             folder_name = 'imerg' 
         else: 
             raise ValueError('BUG - Some product is missing.')
-         # Specify the url where to retrieve the daily list of GPM RS data  
+        # Specify the url where to retrieve the daily list of GPM RS data  
         if (GPM_version == 6): 
             url_file_list = url_server_text + '/gpmdata/' + datetime.datetime.strftime(Date, '%Y/%m/%d') + '/' + folder_name + "/"
         elif (GPM_version in [4,5]):
@@ -1291,7 +1401,7 @@ def find_GPM_files(base_DIR,
                          )
     #-------------------------------------------------------------------------. 
     return(filepaths)   
-    
+
 ##------------------------------------------------------------------------------.
 ## Download of GPM data from NASA servers 
 def download_daily_GPM_data(base_DIR,
@@ -1302,7 +1412,9 @@ def download_daily_GPM_data(base_DIR,
                             end_HHMMSS = None,
                             product_type = 'RS',
                             GPM_version = 6,
-                            n_parallel = 10,
+                            n_threads = 10,
+                            transfer_tool = "curl",
+                            progress_bar=True, 
                             force_download = False,
                             flag_first_Date = False, 
                             verbose=True):
@@ -1333,8 +1445,12 @@ def download_daily_GPM_data(base_DIR,
     username : str, optional
         Provide your email for login on GPM NASA servers. 
         Temporary default is "gionata.ghiggi@epfl.ch".
-    n_parallel : int, optional
+    n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
+    progress_bar : bool, optional
+        Wheter to display progress. The default is True.
+    transfer_tool : str, optional 
+        Wheter to use curl or wget for data download. The default is "curl".  
     force_download : boolean, optional
         Whether to redownload data if already existing on disk. The default is False.
     verbose : bool, optional
@@ -1374,27 +1490,37 @@ def download_daily_GPM_data(base_DIR,
                                                   server_paths = server_paths,  
                                                   force_download = force_download)
     #-------------------------------------------------------------------------.
+    # Retrieve commands
+    if (transfer_tool == "curl"):
+        list_cmd = [curl_cmd(server_path, disk_path, username, username) for server_path, disk_path in zip(server_paths, disk_paths)]
+    else:    
+        list_cmd = [wget_cmd(server_path, disk_path, username, username) for server_path, disk_path in zip(server_paths, disk_paths)]
+        
+    #-------------------------------------------------------------------------.    
     ## Download the data (in parallel)
-    # - Wait all n_parallel jobs ended before restarting download
+    bad_cmds = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
+    return bad_cmds
+    
+    # - Wait all n_threads jobs ended before restarting download
     # - TODO: change to max synchronous n_jobs with multiprocessing
-    process_list = []
-    process_idx = 0
-    if (len(server_paths) >= 1):
-        for server_path, disk_path in zip(server_paths, disk_paths):
-            process = curl_download(server_path = server_path,
-                                    disk_path = disk_path,
-                                    username = username,
-                                    password = username)
-            process_list.append(process)
-            process_idx = process_idx + 1
-            # Wait that all n_parallel job ended before restarting downloading 
-            if (process_idx == n_parallel):
-                [process.wait() for process in process_list]
-                process_list = []
-                process_idx = 0
-        # Before exiting, be sure that download have finished
-        [process.wait() for process in process_list]
-    return 0
+    # process_list = []
+    # process_idx = 0
+    # if (len(server_paths) >= 1):
+    #     for server_path, disk_path in zip(server_paths, disk_paths):
+    #         process = curl_download(server_path = server_path,
+    #                                 disk_path = disk_path,
+    #                                 username = username,
+    #                                 password = username)
+    #         process_list.append(process)
+    #         process_idx = process_idx + 1
+    #         # Wait that all n_threads job ended before restarting downloading 
+    #         if (process_idx == n_threads):
+    #             [process.wait() for process in process_list]
+    #             process_list = []
+    #             process_idx = 0
+    #     # Before exiting, be sure that download have finished
+    #     [process.wait() for process in process_list]
+    # return 0
 
 ##-----------------------------------------------------------------------------. 
 def download_GPM_data(base_DIR,
@@ -1404,6 +1530,10 @@ def download_GPM_data(base_DIR,
                       end_time,
                       product_type = 'RS',
                       GPM_version = 6,
+                      n_threads = 10,
+                      transfer_tool = "curl",
+                      progress_bar = False, 
+                      force_download = False,
                       verbose = True):
     """
     Download GPM data from NASA servers.
@@ -1425,6 +1555,14 @@ def download_GPM_data(base_DIR,
     GPM_version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'. 
         GPM data readers are currently implemented only for GPM V06.
+    n_threads : int, optional
+        Number of parallel downloads. The default is set to 10.
+    progress_bar : bool, optional
+        Wheter to display progress. The default is True.
+    transfer_tool : str, optional 
+        Wheter to use curl or wget for data download. The default is "curl".  
+    force_download : boolean, optional
+        Whether to redownload data if already existing on disk. The default is False.
     verbose : bool, optional
         Whether to print processing details. The default is False.    
     Returns
@@ -1457,7 +1595,12 @@ def download_GPM_data(base_DIR,
                                 start_HHMMSS = start_HHMMSS,
                                 end_HHMMSS = end_HHMMSS,
                                 flag_first_Date = True,
+                                n_threads = n_threads,
+                                transfer_tool = transfer_tool,
+                                progress_bar = progress_bar, 
+                                force_download = force_download,
                                 verbose = verbose)
+        
     #-------------------------------------------------------------------------.
     # Case 2: Retrieve multiple days of data
     if (len(Dates) > 1):
@@ -1470,6 +1613,10 @@ def download_GPM_data(base_DIR,
                                 start_HHMMSS = start_HHMMSS,
                                 end_HHMMSS = '240000',
                                 flag_first_Date = True,
+                                n_threads = n_threads,
+                                transfer_tool = transfer_tool,
+                                progress_bar = False, 
+                                force_download = force_download,
                                 verbose = verbose)
         if (len(Dates) > 2):
             for Date in Dates[1:-1]:
@@ -1481,6 +1628,10 @@ def download_GPM_data(base_DIR,
                                         Date = Date, 
                                         start_HHMMSS = '000000',
                                         end_HHMMSS = '240000',
+                                        n_threads = n_threads,
+                                        transfer_tool = transfer_tool,
+                                        progress_bar = progress_bar, 
+                                        force_download = force_download,
                                         verbose = verbose)
         download_daily_GPM_data(base_DIR = base_DIR, 
                                 GPM_version =  GPM_version,
@@ -1490,6 +1641,10 @@ def download_GPM_data(base_DIR,
                                 Date = Dates[-1], 
                                 start_HHMMSS ='000000',
                                 end_HHMMSS = end_HHMMSS,
+                                n_threads = n_threads,
+                                transfer_tool = transfer_tool,
+                                progress_bar = False, 
+                                force_download = force_download,
                                 verbose = verbose)
     #-------------------------------------------------------------------------. 
     print('Download of GPM', product, 'completed')
