@@ -20,7 +20,7 @@ from dask.diagnostics import ProgressBar
 # from datetime import timedelta
 # from datetime import time
 
-os.chdir('/home/ghiggi/gpm_api') # change to the 'scripts_GPM.py' directory
+os.chdir('/home/ghiggi/Python_Packages/gpm_api') # change to the 'scripts_GPM.py' directory
 ### GPM Scripts ####
 from gpm_api.io import download_GPM_data
 
@@ -30,10 +30,10 @@ from gpm_api.dataset import GPM_Dataset, GPM_variables # read_GPM (importing her
 
 ##----------------------------------------------------------------------------.
 ### Donwload data 
-base_DIR = '/home/ghiggi/tmp'
+base_DIR = '/home/ghiggi/Data'
 username = "gionata.ghiggi@epfl.ch"
 start_time = datetime.datetime.strptime("2020-08-09 15:00:00", '%Y-%m-%d %H:%M:%S')
-end_time = datetime.datetime.strptime("2020-08-01 16:00:00", '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime("2020-08-11 16:00:00", '%Y-%m-%d %H:%M:%S')
 start_time = datetime.datetime.strptime("2017-01-01 01:02:30", '%Y-%m-%d %H:%M:%S')
 end_time = datetime.datetime.strptime("2017-01-01 04:02:30", '%Y-%m-%d %H:%M:%S')
 
@@ -171,6 +171,100 @@ ENV.HS
 DPR.NS
 ENV.NS
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Searching for maximum value and return bbox
+
+da = DPR.NS.zFactorCorrectedNearSurface
+da = da.compute()
+
+da.
+da.argmax()
+da.idxmax()
+
+
+
+
+
+import matplotlib.pyplot as plt
+
+import cartopy
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.ticker as mticker
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+import matplotlib.patheffects as PathEffects
+import cartopy.io.shapereader as shpreader
+from cartopy.io.shapereader import Reader
+from cartopy.mpl.geoaxes import GeoAxes
+from mpl_toolkits.axes_grid1 import AxesGrid
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+import matplotlib.colors as colors
+import matplotlib.patheffects as PathEffects
+
+ds = DPR.NS
+#make figure
+f_size = 10
+fig = plt.figure(figsize=(1.6*f_size, 0.9*f_size))
+#add the map
+ax = fig.add_subplot(1, 1, 1,projection=ccrs.PlateCarree())
+
+ax.add_feature(cartopy.feature.OCEAN.with_scale('50m'))
+ax.add_feature(cartopy.feature.LAND.with_scale('50m'), edgecolor='black',lw=0.5,facecolor=[0.95,0.95,0.95])
+pm = ax.scatter(ds.lon,ds.lat,c=ds.zFactorCorrectedNearSurface,vmin=12,vmax=50,s=0.1,zorder=2)
+plt.colorbar(pm,ax=ax,shrink=0.33)
+
+def add_shape(filepath, projection):
+    return cfeature.ShapelyFeature(Reader(filepath).geometries(),
+                                   projection, facecolor='none')
+
+def add_grid(ax, projection,
+            west, east, south, north, lon_d, lat_d,
+            xlabels_bottom=True, xlabels_top=False,
+            ylabels_left=True, ylabels_right=False,
+            xlabel_size=None, ylabel_size=None,
+            xlabel_color=None, ylabel_color=None,
+            linewidth=0.5, grid_color='k', zorder=3):
+    
+    ax.set_extent([west, east, south, north], crs=projection)
+    gl = ax.gridlines(crs=projection, draw_labels=True,
+                      linewidth=linewidth, color=grid_color, linestyle='--', zorder=zorder)
+
+    gl.xlabels_bottom = xlabels_bottom; gl.xlabels_top  = xlabels_top
+    gl.ylabels_left   = ylabels_left;  gl.ylabels_right = ylabels_right
+    gl.xformatter     = LONGITUDE_FORMATTER
+    gl.yformatter     = LATITUDE_FORMATTER
+    gl.xlocator       = mticker.FixedLocator(np.arange(west-lon_d, east+lon_d, lon_d))
+    gl.ylocator       = mticker.FixedLocator(np.arange(south-lon_d, north+lon_d, lon_d))
+    
+    if xlabel_size:
+        gl.xlabel_style = {'size': xlabel_size}
+    if ylabel_size:
+        gl.ylabel_style = {'size': ylabel_size}
+    if xlabel_color:
+        gl.xlabel_color = {'color': xlabel_color}
+    if ylabel_color:
+        gl.ylabel_color = {'color': ylabel_color}
+
+
 import xarray as xr
 # Check for coordinates, where not same
 # - Discard missing scan , add NaN to missing scan 
@@ -199,9 +293,17 @@ scan_mode = "Grid"
 d = GPM_variables_dict(product, scan_mode)
 print(d['PMWprecipSource']['description'])
 
-# Xradar folder? 
+# Xradar folder????
     
-    
+p = da.plot.pcolormesh(x="lon", y="lat",
+                       infer_intervals=True, # plot at the pixel center 
+                       subplot_kws=dict(projection=ccrs.PlateCarree()))
+# p.axes.scatter(lons, lats, 
+#                transform=ccrs.PlateCarree())
+p.axes.coastlines()
+p.axes.gridlines(draw_labels=True)
+plt.show()
+
     
     
     
