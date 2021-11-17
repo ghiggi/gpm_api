@@ -24,8 +24,6 @@ from .utils.utils_string import subset_list_by_boolean
 ##----------------------------------------------------------------------------.
 ## TODO: homogenize as possible to laads api 
 # - https://github.com/ghiggi/laads_api/blob/main/laads_api/io.py 
-# - wget do not work 
-# - pbar (progress bar does not work)
 # products list? 
 
 def curl_cmd(server_path, disk_path, username, password):
@@ -52,6 +50,7 @@ def curl_cmd(server_path, disk_path, username, password):
     cmd = "".join(["curl ",
                    "-v ",
                    "-4 ",
+                   "-H 'Connection: close' ",
                    "--ftp-ssl ",
                    "--user ", username, ':', password, " ", 
                    "--connect-timeout 20 ",
@@ -1229,8 +1228,8 @@ def find_daily_GPM_PPS_filepaths(username,
     ##------------------------------------------------------------------------.
     ## Retrieve the name of available file on NASA PPS servers
     # curl -u username:password
-    cmd = 'curl -4 --ftp-ssl --user ' + username + ':' + username + ' -n ' + url_file_list
-    print(cmd)
+    cmd = 'curl -4 -H "Connection: close" --ftp-ssl --user ' + username + ':' + username + ' -n ' + url_file_list
+    # print(cmd) # TODO CURL BUG WHEN CURL > 7.71 (i.e. 7.80)
     args = cmd.split()
     process = subprocess.Popen(args,
                                stdout=subprocess.PIPE,

@@ -5,6 +5,12 @@ Created on Tue Jul 21 17:27:52 2020
 
 @author: ghiggi
 """
+# conda env export > environment.yaml
+# conda create --name myenv python=3.6
+# conda env create -f environment.yaml  # Create
+# git push
+# in enacit1, 
+# gdownload
 
 import os
 import datetime 
