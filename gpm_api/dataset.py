@@ -5,14 +5,15 @@ Created on Mon Aug  3 14:50:39 2020
 
 @author: ghiggi
 """
+import os 
+import h5py
+import yaml 
 import pandas as pd
 import numpy as np 
 import xarray as xr
 import dask.array
-import h5py
-import yaml 
-import os 
 
+from .io import check_product
 from .io import find_GPM_files
 from .io import GPM_DPR_RS_products
 from .io import GPM_DPR_2A_ENV_RS_products
@@ -189,14 +190,6 @@ def is_empty(x):
 def check_GPM_version(GPM_version):
     if (GPM_version != 6): 
         raise ValueError("Only GPM V06 data are currently read correctly")
-##----------------------------------------------------------------------------.
-def check_product(product):
-    """Checks the validity of product."""
-    if not isinstance(product, str):
-        raise ValueError('Ask for a single product at time') 
-    if (product not in GPM_products()):
-        raise ValueError('Retrieval for such product not available') 
-    return 
 
 ##----------------------------------------------------------------------------.
 def check_scan_mode(scan_mode, product):
@@ -357,7 +350,7 @@ def GPM_granule_Dataset(hdf, product, variables,
     ## Arguments checks are usually done in GPM _Dataset()       
     if variables_dict is None:
         ## Check valid product 
-        check_product(product)
+        check_product(product, product_type=None)
         ## Check scan_mode 
         scan_mode = check_scan_mode(scan_mode=scan_mode, product=product)      
         ## Check variables 
@@ -551,7 +544,7 @@ def GPM_Dataset(base_DIR,
     """
     ##------------------------------------------------------------------------.
     ## Check valid product 
-    check_product(product)
+    check_product(product, product_type=product_type)
     ## Check scan_mode 
     scan_mode = check_scan_mode(scan_mode, product)      
     ## Check variables 
@@ -586,7 +579,16 @@ def GPM_Dataset(base_DIR,
                                         GPM_version = GPM_version)   
     for filepath in filepaths:  
         # Load hdf granule file  
-        hdf = h5py.File(filepath,'r') # h5py._hl.files.File
+        try: 
+            hdf = h5py.File(filepath,'r') # h5py._hl.files.File
+        except OSError:
+            if not os.path.exists(filepath):
+                raise ValueError("This is a gpm_api bug. This filepath should not have been included in filepaths.")
+            else:
+                print("The following file is corrupted and is being removed: {}".format(filepath))
+                print("Redownload the file !!!")
+                os.remove(filepath)
+                continue 
         hdf_attr = hdf5_file_attrs(hdf)
         # --------------------------------------------------------------------.
         ## Decide if retrieve data based on JAXA quality flags 

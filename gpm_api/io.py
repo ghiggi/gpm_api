@@ -5,22 +5,20 @@ Created on Tue Jul 14 18:31:08 2020
 
 @author: ghiggi
 """
-import pdb
 ##----------------------------------------------------------------------------.
 import subprocess
 import os
 import concurrent.futures
 from tqdm import tqdm
-from itertools import chain
 import numpy as np 
 import datetime
 from datetime import timedelta
-from .utils.utils_string import str_extract
-from .utils.utils_string import str_subset
-from .utils.utils_string import str_sub 
-from .utils.utils_string import str_pad 
-from .utils.utils_string import str_detect
-from .utils.utils_string import subset_list_by_boolean
+from gpm_api.utils.utils_string import str_extract
+from gpm_api.utils.utils_string import str_subset
+from gpm_api.utils.utils_string import str_sub 
+from gpm_api.utils.utils_string import str_pad 
+from gpm_api.utils.utils_string import str_detect
+from gpm_api.utils.utils_string import subset_list_by_boolean
 ##----------------------------------------------------------------------------.
 ## TODO: homogenize as possible to laads api 
 # - https://github.com/ghiggi/laads_api/blob/main/laads_api/io.py 
@@ -671,7 +669,7 @@ def check_GPM_version(GPM_version):
               
 def check_product(product, product_type):
     if not (isinstance(product, str)):
-        raise ValueError("'product' must be a single string")   
+        raise ValueError("'Ask for a single product at time.'product' must be a single string.")   
     if (product not in GPM_products(product_type = product_type)):
         raise ValueError("Please provide a valid GPM product --> GPM_products()")  
         
@@ -1228,8 +1226,10 @@ def find_daily_GPM_PPS_filepaths(username,
     ##------------------------------------------------------------------------.
     ## Retrieve the name of available file on NASA PPS servers
     # curl -u username:password
-    cmd = 'curl -4 -H "Connection: close" --ftp-ssl --user ' + username + ':' + username + ' -n ' + url_file_list
-    # print(cmd) # TODO CURL BUG WHEN CURL > 7.71 (i.e. 7.80)
+    # -k is required with curl > 7.71 otherwise unauthorized access
+    cmd = 'curl -k --user ' + username + ':' + username + ' ' + url_file_list
+    # cmd = 'curl -k -4 -H "Connection: close" --ftp-ssl --user ' + username + ':' + username + ' -n ' + url_file_list
+    # print(cmd)
     args = cmd.split()
     process = subprocess.Popen(args,
                                stdout=subprocess.PIPE,
