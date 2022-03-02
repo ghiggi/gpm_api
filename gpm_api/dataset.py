@@ -367,14 +367,19 @@ def GPM_granule_Dataset(hdf, product, variables,
                                             GPM_version = GPM_version)  
     ##------------------------------------------------------------------------.     
     ## Retrieve basic coordinates 
+    hdf_attr = hdf5_file_attrs(hdf)
     # - For GPM radar products
     if (product not in GPM_IMERG_products()):
+        granule_id = hdf_attr['FileHeader']["GranuleNumber"]
         lon = hdf[scan_mode]['Longitude'][:]
         lat = hdf[scan_mode]['Latitude'][:]
         tt = parse_GPM_ScanTime(hdf[scan_mode]['ScanTime'])
         coords = {'lon': (['along_track','cross_track'],lon),
                   'lat': (['along_track','cross_track'],lat),
-                  'time': (['along_track'], tt)}
+                  'time': (['along_track'], tt),
+                  'granule_id': (['along_track'], np.repeat(granule_id, len(tt))),
+                 }
+      
     # - For IMERG products
     else:
         lon = hdf[scan_mode]['lon'][:]
@@ -383,7 +388,9 @@ def GPM_granule_Dataset(hdf, product, variables,
         tt = np.array(np.datetime64(tt) + np.timedelta64(30, 'm'), ndmin=1)
         coords = {'time': tt,
                   'lon': lon,
-                  'lat': lat}
+                  'lat': lat
+                  }
+    
     ##------------------------------------------------------------------------.
     ## Check if there is some data in the bounding box
     if (bbox is not None):

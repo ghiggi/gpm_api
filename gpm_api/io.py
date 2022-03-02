@@ -1400,7 +1400,8 @@ def find_GPM_files(base_DIR,
                                                        end_HHMMSS=end_HHMMSS)
                          )
     #-------------------------------------------------------------------------. 
-    return(filepaths)   
+    filepaths = sorted(filepaths)
+    return filepaths   
 
 ##------------------------------------------------------------------------------.
 ## Download of GPM data from NASA servers 

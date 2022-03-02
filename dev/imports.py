@@ -53,6 +53,6 @@ transfer_tool = "curl"
 progress_bar = False
 force_download = False
 verbose = True
-
-Date = Dates[0]
+bbox = None
+# Date = Dates[0]
 flag_first_Date = True

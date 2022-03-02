@@ -322,9 +322,10 @@ def _dynamic_formatting_floats(float_array, colorscale="pysteps"):
 # get colormap and color levels
 colorscale = "STEPS-BE"
 colorscale = "BOM-RF3"
-colorscale = "pysteps"
 colorscale= "GPM_liquid"
 colorscale= "GPM_solid"
+colorscale = "pysteps"
+
 
 units="mm/h"
 ptype="intensity"
