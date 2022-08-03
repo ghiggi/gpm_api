@@ -44,6 +44,7 @@ def get_colormap(ptype, units="mm/h", colorscale="pysteps", bad_color="gray"):
         List of precipitation values defining the color limits (with correct
         number of decimals).
     """
+    bad_alpha = 0 # 0.5 # NB_ 0 is required to avoid cartopy bug # : https://stackoverflow.com/questions/60324497/specify-non-transparent-color-for-missing-data-in-cartopy-map
     if ptype in ["intensity", "depth"]:
         # Get list of colors
         color_list, clevs, clevs_str = _get_colorlist(units, colorscale)
@@ -65,14 +66,14 @@ def get_colormap(ptype, units="mm/h", colorscale="pysteps", bad_color="gray"):
             
         norm = colors.BoundaryNorm(clevs, cmap.N)
 
-        cmap.set_bad(bad_color, alpha=0.5)
+        cmap.set_bad(bad_color, alpha=bad_alpha)
         cmap.set_under("none")
 
         return cmap, norm, clevs, clevs_str
 
     if ptype == "prob":
         cmap = copy.copy(plt.get_cmap("OrRd", 10))
-        cmap.set_bad(bad_color, alpha=0.5)
+        cmap.set_bad(bad_color, alpha=bad_alpha)
         cmap.set_under("none")
         
         clevs = np.linspace(0, 1, 11)

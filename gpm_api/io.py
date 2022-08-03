@@ -45,12 +45,19 @@ def curl_cmd(server_path, disk_path, username, password):
     # --connect-timeout 20: limits time curl spend trying to connect ot the host to 20 secs
     # --get url: specify the url 
     # -o : write to file instead of stdout 
+    # Important note 
+    # - -k (or --insecure) is required with curl > 7.71 otherwise unauthorized access
+    #   
     cmd = "".join(["curl ",
-                   "-v ",
-                   "-4 ",
-                   "-H 'Connection: close' ",
-                   "--ftp-ssl ",
+                   "--verbose ",
+                   "--ipv4 ",
+                   "--insecure ", 
                    "--user ", username, ':', password, " ", 
+                   "--ftp-ssl ",
+                   # TODO: hack to make it temporary work 
+                   "--header 'Authorization: Basic Z2lvbmF0YS5naGlnZ2lAZXBmbC5jaDpnaW9uYXRhLmdoaWdnaUBlcGZsLmNo' "
+                   # Custom settings
+                   "--header 'Connection: close' ",
                    "--connect-timeout 20 ",
                    "--retry 5 ", 
                    "--retry-delay 10 ",
@@ -67,6 +74,7 @@ def curl_cmd(server_path, disk_path, username, password):
 
 def wget_cmd(server_path, disk_path, username, password):
     """Create wget command to download data."""
+    server_path = server_path.replace("ftp:", "ftps:")
     #-------------------------------------------------------------------------.
     # Check disk directory exists (if not, create)
     disk_dir = os.path.dirname(disk_path)
@@ -88,7 +96,7 @@ def wget_cmd(server_path, disk_path, username, password):
                    "--read-timeout=", "10", " ", # if no data arriving for 10 seconds, retry
                    "--tries=", "5", " ",         # retry 5 times (0 forever)
                    "-O ", disk_path," ",
-                   server_path.replace("ftp:", "ftps:")])
+                   server_path])
     #-------------------------------------------------------------------------.
     return cmd  
 
@@ -247,27 +255,27 @@ def GPM_PMW_1C_NRT_pattern_dict():
 def GPM_PMW_2A_GPROF_RS_pattern_dict(): 
    """Return the filename pattern* associated to GPM PMW GPROF 2A products."""
    GPM_dict = { # Using ERA-I as environment ancillary data
-                '2A-GMI-CLIM':  '2A-CLIM.GPM.GMI.*',
-                '2A-TMI-CLIM': '2A-CLIM.TMI.TRMM.*',
-                '2A-SSMI-F11-CLIM': '2A-CLIM.F11.SSMIS.*',
-                '2A-SSMI-F13-CLIM': '2A-CLIM.F13.SSMIS.*',
-                '2A-SSMI-F14-CLIM': '2A-CLIM.F14.SSMIS.*',
-                '2A-SSMI-F15-CLIM': '2A-CLIM.F15.SSMIS.*',
-                '2A-SSMI-F16-CLIM': '2A-CLIM.F16.SSMIS.*',
-                '2A-SSMI-F17-CLIM': '2A-CLIM.F17.SSMIS.*',
-                '2A-SSMI-F18-CLIM': '2A-CLIM.F18.SSMIS.*',
-                '2A-ASMR2-GCOMW1-CLIM': '2A-CLIM.GCOMW1.ASMR2.*',
-                '2A-AMSRE-AQUA-CLIM': '2A-CLIM.AQUA.AMSRE.*',
-                '2A-AMSUB-NOAA15-CLIM': '2A-CLIM.AMSUB.NOAA15.*',
-                '2A-AMSUB-NOAA16-CLIM': '2A-CLIM.AMSUB.NOAA16.*',   
-                '2A-SAPHIR-MT1' : '2A-CLIM.SAPHIR.MT1.*',  
-                '2A-MHS-METOPA-CLIM': '2A-CLIM.METOPA.MHS.*',
-                '2A-MHS-METOPB-CLIM': '2A-CLIM.METOPB.MHS.*',
-                '2A-MHS-METOPC-CLIM': '2A-CLIM.METOPC.MHS.*',
-                '2A-MHS-NOAA18-CLIM': '2A-CLIM.NOAA18.MHS.*',   
-                '2A-MHS-NOAA19-CLIM': '2A-CLIM.NOAA19.MHS.*',   
-                '2A-ATMS-NOAA20-CLIM': '2A-CLIM.NOAA20.ATMS.*',    
-                '2A-ATMS-NPP-CLIM': '2A-CLIM.NPP.ATMS.*',
+                # '2A-GMI-CLIM':  '2A-CLIM.GPM.GMI.*',
+                # '2A-TMI-CLIM': '2A-CLIM.TMI.TRMM.*',
+                # '2A-SSMI-F11-CLIM': '2A-CLIM.F11.SSMIS.*',
+                # '2A-SSMI-F13-CLIM': '2A-CLIM.F13.SSMIS.*',
+                # '2A-SSMI-F14-CLIM': '2A-CLIM.F14.SSMIS.*',
+                # '2A-SSMI-F15-CLIM': '2A-CLIM.F15.SSMIS.*',
+                # '2A-SSMI-F16-CLIM': '2A-CLIM.F16.SSMIS.*',
+                # '2A-SSMI-F17-CLIM': '2A-CLIM.F17.SSMIS.*',
+                # '2A-SSMI-F18-CLIM': '2A-CLIM.F18.SSMIS.*',
+                # '2A-ASMR2-GCOMW1-CLIM': '2A-CLIM.GCOMW1.ASMR2.*',
+                # '2A-AMSRE-AQUA-CLIM': '2A-CLIM.AQUA.AMSRE.*',
+                # '2A-AMSUB-NOAA15-CLIM': '2A-CLIM.AMSUB.NOAA15.*',
+                # '2A-AMSUB-NOAA16-CLIM': '2A-CLIM.AMSUB.NOAA16.*',   
+                # '2A-SAPHIR-MT1-CLIM' : '2A-CLIM.SAPHIR.MT1.*',  
+                # '2A-MHS-METOPA-CLIM': '2A-CLIM.METOPA.MHS.*',
+                # '2A-MHS-METOPB-CLIM': '2A-CLIM.METOPB.MHS.*',
+                # '2A-MHS-METOPC-CLIM': '2A-CLIM.METOPC.MHS.*',
+                # '2A-MHS-NOAA18-CLIM': '2A-CLIM.NOAA18.MHS.*',   
+                # '2A-MHS-NOAA19-CLIM': '2A-CLIM.NOAA19.MHS.*',   
+                # '2A-ATMS-NOAA20-CLIM': '2A-CLIM.NOAA20.ATMS.*',    
+                # '2A-ATMS-NPP-CLIM': '2A-CLIM.NPP.ATMS.*',
                 # Using JMA's GANAL as environment ancillary data 
                 '2A-GMI': '2A.GPM.GMI.*',
                 '2A-TMI': '2A.TMI.TRMM.*',
@@ -310,7 +318,7 @@ def GPM_PMW_2A_GPROF_NRT_pattern_dict():
 def GPM_PMW_2A_PRPS_RS_pattern_dict(): 
    """Return the filename pattern* associated to GPM PMW PRPS 2A products."""
    GPM_dict = { # Using ERA-I as environment ancillary data
-                '2A-SAPHIR-MT1--CLIM' : '2A-CLIM.SAPHIR.MT1.*',  
+                '2A-SAPHIR-MT1-CLIM' : '2A-CLIM.SAPHIR.MT1.*',  
                 # Using JMA's GANAL as environment ancillary data 
                 '2A-SAPHIR-MT1' : '2A.SAPHIR.MT1.*'}                 
    return GPM_dict 
@@ -828,6 +836,7 @@ def get_GPM_PPS_directory(product,
         url_server_text = 'https://jsimpsonhttps.pps.eosdis.nasa.gov/text'
         url_data_server = 'https://jsimpsonhttps.pps.eosdis.nasa.gov' 
         # url_data_server = 'ftps://jsimpsonftps.pps.eosdis.nasa.gov'
+        
         ## Retrieve NASA server folder name for NRT
         # GPM PMW 1B
         if (product in GPM_PMW_1B_NRT_products()):
@@ -850,16 +859,20 @@ def get_GPM_PPS_directory(product,
                 raise ValueError('BUG - Some product option is missing.')  
         # GPM PMW 2A GPROF
         elif (product in GPM_PMW_2A_GPROF_NRT_products()):
-           if (product == '2A-GMI'):
+           if product in ['2A-GMI']:
                folder_name = 'GPROF/GMI'
-           elif (product in ['2A-SSMI-F16','2A-SSMI-F17','2A-SSMI-F18']):
+           elif product in ['2A-TMI']: 
+               folder_name = 'GPROF/TMI'     
+           elif product in ['2A-SSMI-F16','2A-SSMI-F17','2A-SSMI-F18']:
                folder_name = 'GPROF/SSMIS'
-           elif (product == '2A-ASMR2-GCOMW1'): 
+           elif product in ['2A-ASMR2-GCOMW1']: 
                folder_name = 'GPROF/AMSR2'
-           elif (product in ['2A-MHS-METOPB', '2A-MHS-METOPC','2A-MHS-NOAA19']):
+           elif product in ['2A-MHS-METOPB', '2A-MHS-METOPC', '2A-MHS-NOAA19']:
                folder_name = 'GPROF/MHS'
-           elif (product in ['2A-ATMS-NOAA20', '2A-ATMS-NPP']): 
+           elif product in ['2A-ATMS-NOAA20', '2A-ATMS-NPP']: 
                folder_name = 'GPROF/ATMS'
+           elif product in ['2A-SAPHIR-MT1']: 
+               folder_name = 'GPROF/SAPHIR'
            else: 
                raise ValueError('BUG - Some product option is missing.') 
         # GPM PMW 2A PPRS
@@ -897,7 +910,8 @@ def get_GPM_PPS_directory(product,
             raise ValueError("Please specify a valid NRT product: GPM_RS_products()")
         ## Specify servers 
         url_server_text = 'https://arthurhouhttps.pps.eosdis.nasa.gov/text'
-        url_data_server = 'ftp://arthurhouftps.pps.eosdis.nasa.gov'
+        url_data_server = 'https://arthurhouhttps.pps.eosdis.nasa.gov'
+        #  url_data_server = 'ftp://arthurhouftps.pps.eosdis.nasa.gov'
         ## Retrieve NASA server folder name for RS
         # GPM DPR 1B (and GMI)
         if product in GPM_1B_RS_products():
@@ -984,7 +998,11 @@ def filter_daily_GPM_files(filepaths,
     #-------------------------------------------------------------------------. 
     # - Retrieve start_HHMMSS and endtime of GPM granules products (execept JAXA 1B reflectivities)
     l_Date, l_s_HHMMSS,l_e_HHMMSS = granules_time_info(filepaths)
-     #-------------------------------------------------------------------------. 
+    #-------------------------------------------------------------------------. 
+    # Check file are available 
+    if len(l_Date) == 0: 
+        return []
+    #-------------------------------------------------------------------------. 
     # Subset granules by date (required for NRT data)
     if (Date is not None):
         idx_valid_Date = np.array(l_Date) == Date.strftime("%Y%m%d")
@@ -1099,7 +1117,7 @@ def find_daily_GPM_disk_filepaths(base_DIR,
     ##------------------------------------------------------------------------.
     # Check if the folder exists   
     if (not os.path.exists(DIR)):
-       print("Data for product", product, "on date", Date, "have not been downloaded !")
+       print("The GPM product", product, "on date", Date, "is unavailable or has not been downloaded !")
        return([])
     # Retrieve the file names in the directory
     filenames = sorted(os.listdir(DIR))
@@ -1648,7 +1666,7 @@ def download_GPM_data(base_DIR,
                                 force_download = force_download,
                                 verbose = verbose)
     #-------------------------------------------------------------------------. 
-    print('Download of GPM', product, 'completed')
+    print('Download of available GPM', product, 'product completed')
     return 0
 
 ##-----------------------------------------------------------------------------.

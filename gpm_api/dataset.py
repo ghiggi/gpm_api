@@ -560,9 +560,7 @@ def GPM_granule_Dataset(
         if var == "precipWaterIntegrated":
             ds["precipWaterIntegrated_Liquid"] = ds["precipWaterIntegrated"][:, :, 0]
             ds["precipWaterIntegrated_Solid"] = ds["precipWaterIntegrated"][:, :, 1]
-            ds["precipWaterIntegrated"] = (
-                ds["precipWaterIntegrated_Liquid"] + ds["precipWaterIntegrated_Solid"]
-            )
+            ds["precipWaterIntegrated"] = ds["precipWaterIntegrated_Liquid"] + ds["precipWaterIntegrated_Solid"]
         if var == "paramDSD":
             ds["DSD_dBNw"] = ds["paramDSD"][:, :, :, 0]
             ds["DSD_m"] = ds["paramDSD"][:, :, :, 1]
@@ -570,9 +568,7 @@ def GPM_granule_Dataset(
             # Modify attributes
             ds["DSD_m"].attrs["units"] = "mm"
         if var == "flagBB" and product == "2A-DPR":
-            ds["flagBB"].attrs[
-                "description"
-            ] = """ Flag for Bright Band: 
+            ds["flagBB"].attrs["description"] = """Flag for Bright Band: 
                                                     0 : BB not detected
                                                     1 : Bright Band detected by Ku and DFRm
                                                     2 : Bright Band detected by Ku only
@@ -751,7 +747,7 @@ def GPM_Dataset(
             ds = xr.concat(l_Datasets, dim="time")
         else:
             ds = xr.concat(l_Datasets, dim="along_track")
-        print("GPM Dataset loaded successfully !")
+        print(f"GPM {product} has been loaded successfully !")
     else:
         print(
             "No data available for current request. Try for example to modify the bbox."

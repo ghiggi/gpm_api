@@ -5,9 +5,39 @@ Created on Wed Nov 17 18:04:16 2021
 
 @author: ghiggi
 """
-### default to n_threads as ltenas3 (5) ? 
-### try remapping with NN
-### time access to GOES data: local vs. ffspec s3 vs. zarr workaround
+# Explicit FTPS - Port 21
+# Encryption onto an FTP connection produces a noticeable lag
+# Limited range of ports (64000-65000) for data connections
+# A firewall rule that allows access to all ports in the range of 64000-
+#   65000 for the DNS names of: ‘arthurhou.pps.eosdis.nasa.gov’ and ‘arthurhouftps.pps.eosdis.nasa.gov’. 
+
+ 
+# File list 
+# https://arthurhouhttps.pps.eosdis.nasa.gov/text/gpmdata/
+# --> helpdesk@pps-mail.nascom.nasa.gov
+
+#### gpmallversions
+# V06 - gprof folder not present 
+# --> https://arthurhouhttps.pps.eosdis.nasa.gov/text/gpmallversions/V05/2019/07/01/gprof/
+# --> https://arthurhouhttps.pps.eosdis.nasa.gov/text/gpmallversions/V07/2019/07/01/gprof/
+# V06 - only data till end of 2021 
+# V07 - prps not available ... only V06 
+# --> https://arthurhouhttps.pps.eosdis.nasa.gov/text/gpmallversions/V06/2019/07/01/prps/
+# Only V07: precipFeature directory
+
+#### gpmdata
+# Since 2021/10/01 no imerg in gpmdata
+# - https://arthurhouhttps.pps.eosdis.nasa.gov/text/gpmdata/2021/10/02/
+
+#-----------------------------------------------------------------------------
+
+# curl version below      #  curl 7.71.1 works 
+# curl version above      do not works # 7.83.1
+
+# curl n command
+# -n, --netrc         Must read .netrc for user name and password
+
+# wget -q -N --user="$email" --password="$email" "${URLprefix}${file}"
 
 
 from ftplib import FTP_TLS
@@ -62,4 +92,4 @@ wget --load-cookies ~/.urs_cookies --save-cookies ~/.urs_cookies --keep-session-
 ## pyDAP: access to OPENDAP
 
 ## requests & urlib
-https://wiki.earthdata.nasa.gov/display/EL/How+To+Access+Data+With+Python
+# https://wiki.earthdata.nasa.gov/display/EL/How+To+Access+Data+With+Python
