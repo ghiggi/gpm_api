@@ -25,18 +25,22 @@ from gpm_api.io.filter import (
     get_time_first_daily_granule, 
     granules_end_hhmmss, 
 )
-from gpm_api.io.directories import get_GPM_PPS_directory, get_GPM_disk_directory 
+from gpm_api.io.directories import get_pps_directory, get_disk_directory 
 
-#----------------------------------------------------------------------------------------------.
+#-----------------------------------------------------------------------------.
 ### TODO: code could be simplified 
 # -- return only pps_filepaths 
 
 # -- requires the definition of a function translating pps_filepaths to disk_fpaths 
 # --> from a list of filepaths, need special care to identify year/day/month folder around 00
-#----------------------------------------------------------------------------------------------.
+#-----------------------------------------------------------------------------.
 
 
-def _get_pps_file_list(username, url_data_list, product, date, verbose=True):
+####--------------------------------------------------------------------------.
+######################
+#### Find utility ####
+######################
+def _get_pps_file_list(username, url_file_list, product, date, version, verbose=True):
     """
     Retrieve the filepaths of the files available on the NASA PPS server for a specific day and product.
     
@@ -44,7 +48,6 @@ def _get_pps_file_list(username, url_data_list, product, date, verbose=True):
     
     Parameters
     ----------
-    
     username: str
         Email address with which you registered on on NASA PPS.
     product : str
@@ -54,13 +57,17 @@ def _get_pps_file_list(username, url_data_list, product, date, verbose=True):
     verbose : bool, optional   
         Default is False. Wheter to specify when data are not available for a specific date.
     """
+    # Ensure url_file_list ends with "/"
+    if url_file_list[-1] != "/":
+        url_file_list = url_file_list + "/"
+        
     # Define curl command 
     # -k is required with curl > 7.71 otherwise results in "unauthorized access".
-    cmd = 'curl -k --user ' + username + ':' + username + ' ' + url_data_list
+    cmd = 'curl -k --user ' + username + ':' + username + ' ' + url_file_list
     # cmd = 'curl -k -4 -H "Connection: close" --ftp-ssl --user ' + username + ':' + username + ' -n ' + url_file_list
     # print(cmd)
    
-    # RUn command
+    # Run command
     args = cmd.split()
     process = subprocess.Popen(args,
                                stdout=subprocess.PIPE,
@@ -75,8 +82,9 @@ def _get_pps_file_list(username, url_data_list, product, date, verbose=True):
    
     # Check if data are available
     if stdout[0] == '<':
-        if verbose is True:
-            print("No data found on PPS on date", date, "for product", product)
+        if verbose:
+            version_str = str(int(version))
+            print("No data found on PPS on date", date, "for product", product, "(V0" + version_str + ")")
         return []
     else:
         # Retrieve filepaths
@@ -113,16 +121,17 @@ def _get_pps_daily_filepaths(username,
         The default is True. 
     """
     # Retrieve server urls of NASA PPS
-    (url_data_server, url_file_list) = get_GPM_PPS_directory(product = product, 
-                                                             product_type = product_type, 
-                                                             date = date,
-                                                             version = version)
+    (url_data_server, url_file_list) = get_pps_directory(product=product, 
+                                                         product_type=product_type, 
+                                                         date=date,
+                                                         version=version)
     # Retrieve filepaths 
     # - If empty: return []
     filepaths = _get_pps_file_list(username=username,
-                                   url_data_list=url_file_list, 
+                                   url_file_list=url_file_list, 
                                    product=product, 
                                    date=date, 
+                                   version=version, 
                                    verbose=verbose)    
             
     # Define the complete url of pps filepaths 
@@ -183,7 +192,7 @@ def find_pps_daily_filepaths(username,
 
     """
     # Check product validity 
-    check_product(product = product, product_type = product_type)
+    check_product(product=product, product_type=product_type)
     ##------------------------------------------------------------------------.
     # Check time format 
     start_hhmmss, end_hhmmss = check_hhmmss(start_hhmmss = start_hhmmss, 
@@ -194,13 +203,11 @@ def find_pps_daily_filepaths(username,
     ##------------------------------------------------------------------------.
     # Retrieve list of available files on pps
     filepaths = _get_pps_daily_filepaths(username=username,
-                                             product=product, 
-                                             product_type=product_type, 
-                                             date=date,
-                                             version=version, 
-                                             verbose=verbose)
-    
-           
+                                         product=product, 
+                                         product_type=product_type, 
+                                         date=date,
+                                         version=version, 
+                                         verbose=verbose)          
     if is_empty(filepaths): 
         return (None, None)
     
@@ -215,15 +222,18 @@ def find_pps_daily_filepaths(username,
                                        end_hhmmss = end_hhmmss)
     
     ##------------------------------------------------------------------------.
-    ## Define server file paths 
-    # pps_fpaths = [url_data_server + filepath for filepath in filepaths]
-   
+    # Print an optional message if data are not available
+    if not provide_only_last_granule and is_empty(filepaths) and verbose: 
+        version_str = str(int(version))
+        print("No data found on PPS on date", date, "for product", product, "(V0" + version_str + ")")
+        
+    ##------------------------------------------------------------------------.
     # Define disk file paths 
-    disk_dir = get_GPM_disk_directory(base_dir = base_dir, 
-                                      product = product, 
-                                      product_type = product_type,
-                                      date = date,
-                                      version = version)
+    disk_dir = get_disk_directory(base_dir = base_dir, 
+                                  product = product, 
+                                  product_type = product_type,
+                                  date = date,
+                                  version = version)
     disk_fpaths = [disk_dir + "/" + os.path.basename(filepath) for filepath in filepaths]
     
     ##------------------------------------------------------------------------.
@@ -260,9 +270,9 @@ def find_pps_daily_filepaths(username,
                                                                         start_hhmmss = "210000", 
                                                                         end_hhmmss = "240000",
                                                                         product_type = product_type,
-                                                                        version = version,
-                                                                        provide_only_last_granule = True,
-                                                                        flag_first_date = False) 
+                                                                        version=version,
+                                                                        provide_only_last_granule=True,
+                                                                        flag_first_date=False) 
              if is_not_empty(last_pps_fpath):
                  # Retrieve last granules end time  
                  last_end_hhmmss = granules_end_hhmmss(last_pps_fpath)[0]

@@ -26,9 +26,12 @@ from gpm_api.io.filter import (
     granules_end_hhmmss, 
 )
 
-from gpm_api.io.directories import get_GPM_PPS_directory, get_GPM_disk_directory 
+from gpm_api.io.directories import get_disk_directory 
 
-
+####--------------------------------------------------------------------------.
+######################
+#### Find utility ####
+######################
 def _get_disk_daily_filepaths(base_dir, 
                              product, 
                              product_type,
@@ -51,11 +54,11 @@ def _get_disk_daily_filepaths(base_dir,
         GPM version of the data to retrieve if product_type = 'RS'. 
     """
     # Retrieve the directory on disk where the data are stored
-    dir_path = get_GPM_disk_directory(base_dir = base_dir, 
-                                 product = product, 
-                                 product_type = product_type,
-                                 date = date,
-                                 version = version)
+    dir_path = get_disk_directory(base_dir = base_dir, 
+                                  product = product, 
+                                  product_type = product_type,
+                                  date = date,
+                                  version = version)
         
     # Check if the folder exists   
     if not os.path.exists(dir_path):
@@ -79,7 +82,8 @@ def find_daily_filepaths(base_dir,
                          product_type = 'RS',
                          version = 7,
                          provide_only_last_granule = False,
-                         flag_first_date = False):
+                         flag_first_date = False,
+                         verbose=True):
     """
     Retrieve GPM data filepaths on local disk for a specific day and product on user disk.
     
@@ -133,7 +137,13 @@ def find_daily_filepaths(base_dir,
                                        date = date,  
                                        start_hhmmss=start_hhmmss, 
                                        end_hhmmss=end_hhmmss)
-       
+    
+    ##-------------------------------------------------------------------------.
+    # Print an optional message if daily data are not available
+    if not provide_only_last_granule and is_empty(filepaths) and verbose: 
+        version_str = str(int(version))        
+        print("No data found on disk on date", date, "for product", product, "(V0" + version_str + ")")
+        
     ##-------------------------------------------------------------------------.
     # Options 1 to deal with data near time 0000000 stored in previous day folder
     # - Return the filepath of the last granule in the daily folder 

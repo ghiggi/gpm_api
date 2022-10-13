@@ -12,6 +12,7 @@ import subprocess
 import xarray
 import h5py
 import trollsift  
+import gpm_api
  
 from gpm_api.utils.utils_string import (
     str_extract,
@@ -88,8 +89,8 @@ from gpm_api.io.checks import (
 )
 
 from gpm_api.io.directories import (
-    get_GPM_PPS_directory,
-    get_GPM_disk_directory,
+    get_pps_directory,
+    get_disk_directory,
 )
 
 from gpm_api.io.filter import (

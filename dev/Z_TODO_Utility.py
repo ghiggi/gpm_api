@@ -16,16 +16,7 @@ fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)
 lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist+50000) # dist in m
 
 ##----------------------------------------------------------------------------.
-
-
-### After download, implement loop to check if file is corrupted (open with h5py) 
-
-### Implement function that check no missing timesteps
-
-### Filter files by version 
-
-##----------------------------------------------------------------------------.
-### Set dimensions y, x
+#### Set dimensions y, x
 # ds.transpose('cross_track', 'along_track', ...) # TODO in gpm_api
 
 ##----------------------------------------------------------------------------.
@@ -47,7 +38,6 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist+50000) # dist in m
 # --> pyresample bucket resampler 
 # --> https://pyresample.readthedocs.io/en/latest/api/pyresample.bucket.html
 
-
 ##----------------------------------------------------------------------------.
 #### Plotting 
 # - Retrieve outer coordinates instead of centroid 
@@ -67,7 +57,7 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist+50000) # dist in m
 # https://github.com/dopplerchase/DRpy/blob/7d4246d977e926d02b19059de0a0c3793711e2f1/drpy/graph/graph.py#L638
 
 #----------------------------------------------------------------------------.
-### Download 
+#### Download 
 # Solve curl/wget issue 
 
 # Document: 

@@ -45,14 +45,18 @@ from gpm_api.io.patterns import (
     GPM_IMERG_NRT_pattern_dict,
     
     GPM_IMERG_pattern_dict,
-
 )
-#----------------------------------------------------------------------------. 
+
+####--------------------------------------------------------------------------. 
+# TODO 
+# - GPM_DPR --> GPM_RADAR
+
+####--------------------------------------------------------------------------. 
 ###########################
 ### Available products ####
 ###########################
 ##----------------------------------------------------------------------------. 
-### DPR 
+#### RADAR 
 def GPM_DPR_1B_RS_products():
     """Provide a list of available GPM DPR 1B-level RS data for download."""
     product_list = list(GPM_DPR_1B_RS_pattern_dict().keys())
@@ -101,8 +105,8 @@ def GPM_DPR_NRT_products():
     return product_list  
 
 
-##----------------------------------------------------------------------------.
-### PMW   
+####--------------------------------------------------------------------------.
+#### PMW   
 def GPM_PMW_1A_RS_products():
     """Provide a list of available GPM PMW 1A-level RS data for download."""
     product_list = list(GPM_PMW_1A_RS_pattern_dict().keys())
@@ -169,8 +173,8 @@ def GPM_PMW_NRT_products():
     return product_list 
 
 
-##----------------------------------------------------------------------------.
-#### Combined products 
+####--------------------------------------------------------------------------. 
+#### CMB 
 def GPM_CMB_2B_RS_products():
     """Provide a list of available GPM CMB 2B-level RS data for download."""
     product_list = list(GPM_CMB_2B_RS_pattern_dict().keys())
@@ -195,8 +199,8 @@ def GPM_CMB_NRT_products():
     return product_list 
 
 
-##----------------------------------------------------------------------------.
-### IMERG
+####--------------------------------------------------------------------------. 
+#### IMERG
 def GPM_IMERG_NRT_products():
     """Provide a list of available GPM IMERG NRT data for download."""
     product_list = list(GPM_IMERG_NRT_pattern_dict().keys())
@@ -214,8 +218,8 @@ def GPM_IMERG_products():
     product_list = list(GPM_IMERG_pattern_dict().keys())
     return product_list
 
-
-##----------------------------------------------------------------------------.
+####--------------------------------------------------------------------------.
+#### LEVELS
 ### 1B, 1C, 2A, 2B levels
 def GPM_1B_RS_products():
     """Provide a list of available GPM 1B-level RS data for download."""
@@ -265,8 +269,8 @@ def GPM_2B_NRT_products():
     return product_list 
 
 
-##----------------------------------------------------------------------------.
-### RS vs. NRT   
+####---------------------------------------------------------------------------.
+#### RS vs. NRT   
 def GPM_RS_products():   
     """Provide a list of available GPM RS data for download."""
     return GPM_DPR_RS_products() + GPM_PMW_RS_products() + GPM_CMB_RS_products() + GPM_IMERG_RS_products() 
@@ -277,8 +281,8 @@ def GPM_NRT_products():
     return GPM_DPR_NRT_products() + GPM_PMW_NRT_products() + GPM_CMB_NRT_products() + GPM_IMERG_NRT_products() 
 
 
-##----------------------------------------------------------------------------.
-### ALL       
+####--------------------------------------------------------------------------.
+#### PRODUCTS       
 def GPM_products(product_type=None):
     """
     Provide a list of all/NRT/RS GPM data for download.
@@ -305,3 +309,6 @@ def GPM_products(product_type=None):
         else:
             raise ValueError("Please specify 'product_type' either 'RS' or 'NRT'")
     return None
+
+
+####--------------------------------------------------------------------------.

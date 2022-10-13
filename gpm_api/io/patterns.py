@@ -17,6 +17,7 @@ def GPM_DPR_1B_RS_pattern_dict():
                  '1B-Ku': 'GPMCOR_KUR*'}
      return GPM_dict 
  
+    
 def GPM_DPR_2A_RS_pattern_dict(): 
     """Return the filename pattern* associated to GPM DPR 2A RS products."""
     GPM_dict = {'2A-PR': '2A.TRMM.PR.V\d-*',   # to distinguish from SLH
@@ -33,6 +34,7 @@ def GPM_DPR_2A_RS_pattern_dict():
                 '2A-TRMM-SLH': '2A.TRMM.PR.TRMM-SLH*'}
     return GPM_dict  
 
+
 def GPM_DPR_2A_NRT_pattern_dict(): 
     """Return the filename pattern* associated to GPM DPR 2A NRT products."""
     GPM_dict = {'2A-DPR': '2A.GPM.DPR.V\d-*', # to distinguish from SLH
@@ -40,11 +42,13 @@ def GPM_DPR_2A_NRT_pattern_dict():
                 '2A-Ku': '2A.GPM.Ku.V*'}
     return GPM_dict  
 
+
 def GPM_DPR_RS_pattern_dict(): 
     """Return the filename pattern* associated to GPM DPR RS products."""
     GPM_dict = GPM_DPR_1B_RS_pattern_dict()    
     GPM_dict.update(GPM_DPR_2A_RS_pattern_dict())                   
     return GPM_dict  
+
 
 def GPM_DPR_NRT_pattern_dict(): 
     """Return the filename pattern* associated to GPM DPR NRT products."""
@@ -327,6 +331,7 @@ def GPM_RS_products_pattern_dict():
     GPM_dict.update(GPM_CMB_RS_pattern_dict())              
     return GPM_dict  
 
+
 def GPM_NRT_products_pattern_dict():
     """Return the filename pattern* associated to all GPM NRT products."""
     GPM_dict = GPM_IMERG_NRT_pattern_dict()    
@@ -334,6 +339,7 @@ def GPM_NRT_products_pattern_dict():
     GPM_dict.update(GPM_PMW_NRT_pattern_dict()) 
     GPM_dict.update(GPM_CMB_NRT_pattern_dict())                      
     return GPM_dict  
+
 
 def GPM_products_pattern_dict():
     """Return the filename pattern* associated to all GPM products."""
