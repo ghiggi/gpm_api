@@ -12,9 +12,10 @@ import h5py
 import numpy as np
 import pandas as pd 
 import xarray as xr
+
+from gpm_api.io.disk import find_filepaths
 from gpm_api.io.checks import check_variables, check_groups, check_scan_mode, check_product
 from gpm_api.io.info import get_version_from_filepath, get_product_from_filepath
-from gpm_api.io.find import find_GPM_files
 from gpm_api.io.decoding import apply_custom_decoding, decode_dataset
 from gpm_api.utils.utils_HDF5 import hdf5_datasets, hdf5_groups, hdf5_file_attrs
 ####--------------------------------------------------------------------------.
@@ -455,7 +456,7 @@ def open_dataset(
     # chunks = check_chunks(chunks)
     ##------------------------------------------------------------------------.
     # Find filepaths
-    filepaths = find_GPM_files(
+    filepaths = find_filepaths(
         base_dir=base_dir,
         version=version,
         product=product,

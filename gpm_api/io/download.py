@@ -11,9 +11,8 @@ import datetime
 import subprocess
 import concurrent.futures
 from tqdm import tqdm
- 
-from gpm_api.io.find import find_daily_GPM_PPS_filepaths
-from gpm_api.io.filter import filter_GPM_query
+from gpm_api.io.pps import find_pps_daily_filepaths
+from gpm_api.utils.utils_string import subset_list_by_boolean
 from gpm_api.io.checks import (
     check_version,
     check_product,
@@ -22,6 +21,7 @@ from gpm_api.io.checks import (
     check_date,
     is_empty,
 )
+
 
 ##----------------------------------------------------------------------------.
 def curl_cmd(server_path, disk_path, username, password):
@@ -152,8 +152,50 @@ def run(commands, n_threads = 10, progress_bar=True, verbose=True):
 
     return l_cmd_error 
 
-##----------------------------------------------------------------------------.
-## Download of GPM data from NASA servers 
+####--------------------------------------------------------------------------.
+############################
+#### Filtering routines ####
+############################
+
+
+def filter_download_list(server_paths, disk_paths, force_download=False):
+    """
+    Removes filepaths of GPM file already existing on disk.
+
+    Parameters
+    ----------
+    server_paths : str
+        GPM directory on disk for a specific product and date.
+    PPS_filepaths : str
+        Filepaths on which GPM data are stored on PPS servers.
+    force_download : boolean, optional
+        Whether to redownload data if already existing on disk. The default is False.
+
+    Returns
+    -------
+    server_paths: list 
+        List of filepaths on the NASA PPS server.
+    disk_paths: list
+        List of filepaths on the local disk.
+
+    """
+    #-------------------------------------------------------------------------.    
+    # Check if data already exists 
+    if force_download is False: 
+        # Get index which do not exist
+        idx_not_existing = [not os.path.exists(disk_path) for disk_path in disk_paths]
+        # Select filepath not existing on disk
+        disk_paths = subset_list_by_boolean(disk_paths, idx_not_existing)
+        server_paths = subset_list_by_boolean(server_paths, idx_not_existing)
+    return (server_paths, disk_paths)
+
+
+####--------------------------------------------------------------------------.
+###########################
+#### Download routines ####
+###########################
+
+
 def download_daily_data(base_dir,
                             username,
                             product,
@@ -219,16 +261,16 @@ def download_daily_data(base_dir,
     check_product(product = product, product_type = product_type)
     #-------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
-    (server_paths, disk_paths) = find_daily_GPM_PPS_filepaths(username = username,
-                                                              base_dir = base_dir, 
-                                                              product = product, 
-                                                              product_type = product_type,
-                                                              version = version,
-                                                              date = date, 
-                                                              start_hhmmss = start_hhmmss, 
-                                                              end_hhmmss = end_hhmmss,
-                                                              flag_first_date = flag_first_date,
-                                                              verbose = verbose)
+    (server_paths, disk_paths) = find_pps_daily_filepaths(username = username,
+                                                          base_dir = base_dir, 
+                                                          product = product, 
+                                                          product_type = product_type,
+                                                          version = version,
+                                                          date = date, 
+                                                          start_hhmmss = start_hhmmss, 
+                                                          end_hhmmss = end_hhmmss,
+                                                          flag_first_date = flag_first_date,
+                                                          verbose = verbose)
     #-------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
     if is_empty(server_paths):
@@ -236,9 +278,9 @@ def download_daily_data(base_dir,
         return None
     #-------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk 
-    (server_paths, disk_paths) = filter_GPM_query(disk_paths = disk_paths, 
-                                                  server_paths = server_paths,  
-                                                  force_download = force_download)
+    (server_paths, disk_paths) = filter_download_list(disk_paths = disk_paths, 
+                                                      server_paths = server_paths,  
+                                                      force_download = force_download)
     #-------------------------------------------------------------------------.
     # Retrieve commands
     if (transfer_tool == "curl"):
@@ -286,7 +328,7 @@ def download_data(base_dir,
                   force_download = False,
                   verbose = True):
     """
-    Download GPM data from NASA servers.
+    Download GPM data from NASA servers (day by day).
     
     Parameters
     ----------
@@ -317,7 +359,8 @@ def download_data(base_dir,
         Whether to print processing details. The default is False.    
     Returns
     -------
-    int 
+   
+    boolean: int  
         0 if everything went fine.
 
     """  
@@ -400,4 +443,4 @@ def download_data(base_dir,
     print('Download of available GPM', product, 'product completed.')
     return 0
 
-##-----------------------------------------------------------------------------.
+####--------------------------------------------------------------------------.

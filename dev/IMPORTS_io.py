@@ -82,6 +82,7 @@ from gpm_api.io.checks import (
     check_hhmmss,
     check_scan_mode, 
     check_bbox,
+    check_filepaths,
     is_not_empty,
     is_empty,
 )
@@ -92,8 +93,7 @@ from gpm_api.io.directories import (
 )
 
 from gpm_api.io.filter import (
-    filter_daily_GPM_files,
-    filter_GPM_query,
+    filter_daily_filepaths,
     granules_time_info, 
     granules_start_hhmmss,
     granules_end_hhmmss,
@@ -103,16 +103,20 @@ from gpm_api.io.filter import (
     granules_end_hhmmss, 
 )
 
-from gpm_api.io.find import (
-    find_daily_GPM_disk_filepaths,
-    find_daily_GPM_PPS_filepaths,
-    find_GPM_files
+from gpm_api.io.disk import (
+    find_daily_filepaths,
+    find_filepaths,
+)
+from gpm_api.io.pps import (
+    find_pps_daily_filepaths,
+    # find_pps_filepaths, # TODO 
 )
 
 from gpm_api.io.download import (
     wget_cmd,
     curl_cmd,
     run,
+    filter_download_list, 
     download_daily_data,
     download_data,
 )

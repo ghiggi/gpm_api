@@ -11,5 +11,7 @@ from gpm_api.io.dataset import (
     open_granule,
     open_dataset,
 )
+from gpm_api.io.find import find_filepaths as find_files 
+ 
 
 

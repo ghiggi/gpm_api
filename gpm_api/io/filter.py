@@ -10,7 +10,8 @@ import datetime
 import numpy as np 
 from gpm_api.io.checks import (
     check_hhmmss, 
-    check_product
+    check_product,
+    check_filepaths,
 )
 from gpm_api.utils.utils_string import (
     str_extract,
@@ -18,7 +19,6 @@ from gpm_api.utils.utils_string import (
     str_sub,
     str_pad,
     str_detect,
-    subset_list_by_boolean
 )
 from gpm_api.io.patterns import GPM_products_pattern_dict
  
@@ -99,17 +99,144 @@ def get_time_first_daily_granule(filepaths):
     _, start_hhmmss, end_hhmmss = granules_time_info(filename)
     return (start_hhmmss[0], end_hhmmss[0])
 
-#-----------------------------------------------------------------------------.
-#### Filter filepaths 
 
-def filter_daily_GPM_files(filepaths,
+####--------------------------------------------------------------------------.
+##########################
+#### Filter filepaths ####
+##########################
+
+
+def filter_by_product(filepaths, product, product_type="RS"): 
+    """
+    Filter filepaths by product.
+    
+    Parameters
+    ----------
+    filepaths : list
+        List of filepaths or filenames for a specific day.
+    product : str
+        GPM product name. See: GPM_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).  
+        
+    Returns 
+    ----------
+    filepaths : list 
+        List of valid filepaths.
+        If no valid filepaths, returns an empty list ! 
+    
+    """
+    #-------------------------------------------------------------------------.
+    # Check filepaths 
+    if isinstance(filepaths, type(None)):
+        return [] 
+    filepaths = check_filepaths(filepaths)
+    if len(filepaths) == 0: 
+        return []
+
+    #-------------------------------------------------------------------------.
+    # Check product validity 
+    check_product(product = product, 
+                  product_type = product_type)
+    
+    #-------------------------------------------------------------------------.
+    # Retrieve GPM filename dictionary 
+    GPM_dict = GPM_products_pattern_dict()       
+    
+    #-------------------------------------------------------------------------. 
+    # Subset by specific product 
+    filepaths = str_subset(filepaths, GPM_dict[product])
+    
+    #-------------------------------------------------------------------------. 
+    # Return valid filepaths 
+    return filepaths
+         
+
+def filter_by_time(filepaths, 
+                   date = None,  
+                   start_hhmmss=None,
+                   end_hhmmss=None):
+    """
+    Filter filepaths by time.
+    
+    Parameters
+    ----------
+    filepaths : list
+        List of filepaths or filenames for a specific day.
+     date : datetime
+         Single date for which to retrieve the data.
+     start_hhmmss : str or datetime, optional
+         Start time. A datetime object or a string in hhmmss format.
+         The default is None (retrieving from 000000)
+     end_hhmmss : str or datetime, optional
+         End time. A datetime object or a string in hhmmss format.
+         The default is None (retrieving to 240000)
+    
+    Returns 
+    ----------
+    
+    filepaths : list 
+        List of valid filepaths.
+        If no valid filepaths, returns an empty list ! 
+    """
+    #-------------------------------------------------------------------------.
+    # Check filepaths 
+    if isinstance(filepaths, type(None)):
+        return [] 
+    filepaths = check_filepaths(filepaths)
+    if len(filepaths) == 0: 
+        return []
+    
+    #-------------------------------------------------------------------------.
+    # Check time format 
+    start_hhmmss, end_hhmmss = check_hhmmss(start_hhmmss = start_hhmmss, 
+                                            end_hhmmss = end_hhmmss)
+       
+    #-------------------------------------------------------------------------. 
+    # - Retrieve start_hhmmss and endtime of GPM granules products (execept JAXA 1B reflectivities)
+    l_date, l_s_hhmmss,l_e_hhmmss = granules_time_info(filepaths)
+    
+    #-------------------------------------------------------------------------. 
+    # Check file are available 
+    if len(l_date) == 0: 
+        return []
+   
+    #-------------------------------------------------------------------------. 
+    # Subset granules by date (required for NRT data)
+    if (date is not None):
+        idx_valid_date = np.array(l_date) == date.strftime("%Y%m%d")
+        filepaths = np.array(filepaths)[idx_valid_date]
+        l_s_hhmmss = np.array(l_s_hhmmss)[idx_valid_date]
+        l_e_hhmmss = np.array(l_e_hhmmss)[idx_valid_date]
+    
+    #-------------------------------------------------------------------------. 
+    # Convert hhmmss to integer 
+    start_hhmmss = int(start_hhmmss)
+    end_hhmmss = int(end_hhmmss)
+    l_s_hhmmss = np.array(l_s_hhmmss).astype(np.int64)  # to integer 
+    l_e_hhmmss = np.array(l_e_hhmmss).astype(np.int64)  # to integer 
+    
+    # Take care for include in subsetting the last day granule 
+    idx_next_day_granule = l_e_hhmmss < l_s_hhmmss
+    l_e_hhmmss[idx_next_day_granule] = 240001
+    
+    # Subset granules files based on start time and end time
+    idx_select1 = np.logical_and(l_s_hhmmss <= start_hhmmss, l_e_hhmmss > start_hhmmss)
+    idx_select2 = np.logical_and(l_s_hhmmss >= start_hhmmss, l_s_hhmmss < end_hhmmss)
+    idx_select = np.logical_or(idx_select1, idx_select2)
+    filepaths = list(np.array(filepaths)[idx_select])
+    
+    return filepaths 
+    
+    
+def filter_daily_filepaths(filepaths,
                            product,
                            product_type = 'RS',
                            date = None,  
                            start_hhmmss=None,
                            end_hhmmss=None):
     """
-    Filter the daily GPM file list for specific product and daytime period.
+    Filter the daily GPM filepaths for specific product and daytime period.
 
     Parameters
     ----------
@@ -130,88 +257,30 @@ def filter_daily_GPM_files(filepaths,
 
     Returns
     -------
-    Returns a subset of filepaths
+    
+    filepaths : list 
+        Returns the filepaths subset.
+        If no valid filepaths, return an empty list. 
 
     """
     #-------------------------------------------------------------------------.
     # Checks file paths 
     if isinstance(filepaths,str):
         filepaths = [filepaths]
+        
     # filenames = [os.path.basename(filepath) for filepath in filepaths]
+   
+    filepaths = filter_by_product(filepaths=filepaths, 
+                                  product=product, 
+                                  product_type=product_type)
+    
+    filepaths = filter_by_time(filepaths, 
+                               date=date,  
+                               start_hhmmss=start_hhmmss,
+                               end_hhmmss=end_hhmmss)
+    
     #-------------------------------------------------------------------------.
-    # Check product validity 
-    check_product(product = product, 
-                  product_type = product_type)
-    # Check time format 
-    start_hhmmss, end_hhmmss = check_hhmmss(start_hhmmss = start_hhmmss, 
-                                            end_hhmmss = end_hhmmss)
-    #-------------------------------------------------------------------------.
-    # Retrieve GPM filename dictionary 
-    GPM_dict = GPM_products_pattern_dict()       
-    #-------------------------------------------------------------------------. 
-    # Subset specific product 
-    filepaths = str_subset(filepaths, GPM_dict[product])
-    #-------------------------------------------------------------------------. 
-    # - Retrieve start_hhmmss and endtime of GPM granules products (execept JAXA 1B reflectivities)
-    l_date, l_s_hhmmss,l_e_hhmmss = granules_time_info(filepaths)
-    #-------------------------------------------------------------------------. 
-    # Check file are available 
-    if len(l_date) == 0: 
-        return []
-    #-------------------------------------------------------------------------. 
-    # Subset granules by date (required for NRT data)
-    if (date is not None):
-        idx_valid_date = np.array(l_date) == date.strftime("%Y%m%d")
-        filepaths = np.array(filepaths)[idx_valid_date]
-        l_s_hhmmss = np.array(l_s_hhmmss)[idx_valid_date]
-        l_e_hhmmss = np.array(l_e_hhmmss)[idx_valid_date]
-    #-------------------------------------------------------------------------. 
-    # Convert hhmmss to integer 
-    start_hhmmss = int(start_hhmmss)
-    end_hhmmss = int(end_hhmmss)
-    l_s_hhmmss = np.array(l_s_hhmmss).astype(np.int64)  # to integer 
-    l_e_hhmmss = np.array(l_e_hhmmss).astype(np.int64)  # to integer 
-    # Take care for include in subsetting the last day granule 
-    idx_next_day_granule = l_e_hhmmss < l_s_hhmmss
-    l_e_hhmmss[idx_next_day_granule] = 240001
-    # Subset granules files based on start time and end time
-    idx_select1 = np.logical_and(l_s_hhmmss <= start_hhmmss, l_e_hhmmss > start_hhmmss)
-    idx_select2 = np.logical_and(l_s_hhmmss >= start_hhmmss, l_s_hhmmss < end_hhmmss)
-    idx_select = np.logical_or(idx_select1, idx_select2)
-    filepaths = list(np.array(filepaths)[idx_select])
-    return(filepaths)
+    # Return filepaths 
+    return filepaths
 
-##----------------------------------------------------------------------------.
-
-def filter_GPM_query(server_paths, disk_paths, force_download=False):
-    """
-    Removes filepaths of GPM file already existing on disk.
-
-    Parameters
-    ----------
-    DIR : str
-        GPM directory on disk for a specific product and date.
-    PPS_filepaths : str
-        Filepaths on which GPM data are stored on PPS servers.
-    force_download : boolean, optional
-        Whether to redownload data if already existing on disk. The default is False.
-
-    Returns
-    -------
-    server_paths: list 
-        List of filepaths on the NASA PPS server  
-    disk_paths: list
-        List of filepaths on disk u 
-
-    """
-    #-------------------------------------------------------------------------.    
-    # Check if data already exists 
-    if force_download is False: 
-        # Get index which do not exist
-        idx_not_existing = [not os.path.exists(disk_path) for disk_path in disk_paths]
-        # Select filepath not existing on disk
-        disk_paths = subset_list_by_boolean(disk_paths, idx_not_existing)
-        server_paths = subset_list_by_boolean(server_paths, idx_not_existing)
-    return (server_paths, disk_paths)
-
-##----------------------------------------------------------------------------.
+####--------------------------------------------------------------------------.
