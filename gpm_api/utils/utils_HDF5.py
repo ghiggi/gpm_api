@@ -9,14 +9,16 @@ import numpy
 import ast 
 import h5py 
 #-----------------------------------------------------------------------------.
-from .utils_string import str_replace
-from .utils_string import str_islist
-from .utils_string import str_detect
-from .utils_string import str_isinteger
-from .utils_string import str_isfloat
-from .utils_string import str_remove
-from .utils_string import str_collapse
-from .utils_string import str_remove_empty
+from gpm_api.utils.utils_string import (
+    str_replace,
+    str_islist,
+    str_detect,
+    str_isinteger,
+    str_isfloat,
+    str_remove,
+    str_collapse,
+    str_remove_empty,
+)
 #-----------------------------------------------------------------------------.
 def initialize_dict_with(keys):
     # dict(zip(keys, [None]*len(keys))) 
@@ -35,7 +37,7 @@ def parse_attr_string(s):
         s = s.split(",")
     # If the character can be a number, convert it
     if isinstance(s, str) and str_isinteger(s):  
-        s = int(s)
+        s = int(float(s)) # prior float because '0.0000' otherwise crash
     elif isinstance(s, str) and str_isfloat(s):
         s = float(s)
     else: 
@@ -78,7 +80,7 @@ def parse_HDF5_GPM_attributes(x, parser=parse_attr_string):
                     continue
                 # If = is present in each list element --> Return a subdictionary
                 else:  
-                    tmp_dict = dict((k.strip(), v.strip()) for k, v in (s.split('=') for s in attr_str))
+                    tmp_dict = dict((k.strip(), v.strip()) for k, v in (s.split('=',1) for s in attr_str))
                     # Process dictionary values 
                     for k, v in tmp_dict.items():
                         tmp_dict[k] = parser(v)
@@ -168,7 +170,9 @@ def h5dump(filepath, group='/', dataset_attrs=True, group_attrs=True):
 
     """
     with h5py.File(filepath,'r') as hdf:
-        print_hdf5(hdf[group], dataset_attrs=dataset_attrs, group_attrs=group_attrs) 
+        print_hdf5(hdf[group], dataset_attrs=dataset_attrs, group_attrs=group_attrs)
+        
+        
 #-----------------------------------------------------------------------------.    
 # def print_hdf5_keys(x):
 #     if (isinstance(x, h5py.highlevel.Group)):
@@ -196,6 +200,7 @@ def h5dump(filepath, group='/', dataset_attrs=True, group_attrs=True):
 #         if hasattr(x, 'keys'):
 #             for item in x.keys():
 #                 print_hdf5_shape(x[item])
+
 #-----------------------------------------------------------------------------. 
 def hdf5_objects_names(hdf):
     l_objs =[]
@@ -224,6 +229,17 @@ def hdf5_datasets(hdf):
     datasets_names = hdf5_datasets_names(hdf)
     return {dataset_name : hdf[dataset_name] for dataset_name in datasets_names} 
 
+# Shape 
+def hdf5_datasets_shape(hdf):
+    datasets_names = hdf5_datasets_names(hdf)
+    return {dataset_name : hdf[dataset_name].shape for dataset_name in datasets_names} 
+
+# Dtype 
+def hdf5_datasets_dtype(hdf):
+    datasets_names = hdf5_datasets_names(hdf)
+    return {dataset_name : hdf[dataset_name].dtype for dataset_name in datasets_names} 
+
+# Attributes 
 def hdf5_objects_attrs(hdf, parser=parse_attr_string): 
     dict_hdf = hdf5_objects(hdf)
     return{k : parse_HDF5_GPM_attributes(v, parser=parser) for k, v in dict_hdf.items()}
@@ -239,11 +255,6 @@ def hdf5_datasets_attrs(hdf ,parser=parse_attr_string):
 def hdf5_file_attrs(hdf, parser=parse_attr_string): 
     return parse_HDF5_GPM_attributes(hdf, parser=parser) 
 
-def hdf5_datasets_shape(hdf):
-    datasets_names = hdf5_datasets_names(hdf)
-    return {dataset_name : hdf[dataset_name].shape for dataset_name in datasets_names} 
+ 
 
-def hdf5_datasets_dtype(hdf):
-    datasets_names = hdf5_datasets_names(hdf)
-    return {dataset_name : hdf[dataset_name].dtype for dataset_name in datasets_names} 
     
