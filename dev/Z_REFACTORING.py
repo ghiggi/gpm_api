@@ -10,6 +10,14 @@ Created on Mon Aug 15 23:02:04 2022
 # imerg
 # pmw
 
+# gpm = gpm_api.GPM(...)
+
+# PR 
+# DPR
+# PMW 
+# CMB
+# IMERG
+
 #-----------------------------------------------------------------------------.
 #### GPM High-Level Classes
 # Swath CLASS 
