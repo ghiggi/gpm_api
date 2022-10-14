@@ -49,7 +49,11 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist+50000) # dist in m
 # - Add world map inset 
 #    --> https://github.com/dopplerchase/DRpy/blob/master/drpy/graph/graph.py#L147 
 #    --> https://stackoverflow.com/questions/45527584/how-to-easily-add-a-sub-axes-with-proper-position-and-size-in-matplotlib-and-car
+
 # - Reimplement plotter drpy 
+# - Randy DRPy plots 
+
+# - DPR vs GMI 
 
 # - Plot with pcolormesh when crossing the antimeridan
 
