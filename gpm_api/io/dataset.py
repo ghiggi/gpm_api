@@ -14,7 +14,13 @@ import pandas as pd
 import xarray as xr
 
 from gpm_api.io.disk import find_filepaths
-from gpm_api.io.checks import check_variables, check_groups, check_scan_mode, check_product
+from gpm_api.io.checks import (
+    check_variables, 
+    check_groups, 
+    check_scan_mode, 
+    check_product, 
+    check_base_dir,
+)
 from gpm_api.io.info import get_version_from_filepath, get_product_from_filepath
 from gpm_api.io.decoding import apply_custom_decoding, decode_dataset
 from gpm_api.utils.utils_HDF5 import hdf5_datasets, hdf5_groups, hdf5_file_attrs
@@ -102,25 +108,25 @@ def _parse_hdf_gpm_scantime(h):
 
 
 def get_orbit_coords(hdf, scan_mode):
-    # Get Granule Number 
     hdf_attr = hdf5_file_attrs(hdf)
     granule_id = hdf_attr["FileHeader"]["GranuleNumber"]
-    
     lon = hdf[scan_mode]["Longitude"][:]
     lat = hdf[scan_mode]["Latitude"][:]
     time = _parse_hdf_gpm_scantime(hdf[scan_mode]["ScanTime"])
     n_along_track, n_cross_track = lon.shape
     granule_id = np.repeat(granule_id, n_along_track)
-    scan_id = np.arange(n_along_track)
-    gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, scan_id)]
+    along_track_id = np.arange(n_along_track)
+    cross_track_id = np.arange(n_cross_track)
+    gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, along_track_id)]
     coords = {
         "lon": (["along_track", "cross_track"], lon),
         "lat": (["along_track", "cross_track"], lat),
         "time": (["along_track"], time),
-        "granule_id": (["along_track"], granule_id),
-        "scan_id": (["along_track"], scan_id),
         "gpm_id": (["along_track"], gpm_id),
-    }
+        "gpm_granule_id": (["along_track"], granule_id),
+        "gpm_cross_track_id": (["cross_track"], cross_track_id),
+        "gpm_along_track_id": (["along_track"], along_track_id),
+    } 
     return coords
 
 
@@ -443,6 +449,8 @@ def open_dataset(
 
     """
     ##------------------------------------------------------------------------.
+    # Check base_dir 
+    base_dir = check_base_dir(base_dir)
     ## Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version=version)
     ## Check valid product
@@ -454,6 +462,7 @@ def open_dataset(
     # - check works in open_dataset 
     # - smart_autochunk per variable (based on dim...)
     # chunks = check_chunks(chunks)
+    
     ##------------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
@@ -480,6 +489,7 @@ def open_dataset(
     
     ##------------------------------------------------------------------------.
     # Initialize list (to store Dataset of each granule )
+    # TODO: open in parallel !!!
     l_Datasets = []
     for filepath in filepaths:
         # Load hdf granule file
@@ -517,15 +527,18 @@ def open_dataset(
             ds = xr.concat(l_Datasets, dim="time")
         else:
             ds = xr.concat(l_Datasets, dim="along_track")
+            # Tranpose to have (y,x) = (cross_track, along_track)
+            # --> To work nicely with pyresample ...
+            ds = ds.transpose("cross_track", "along_track", ...)
         print(f"GPM {product} has been loaded successfully !")
     else:
         print("No data available for current request. Try for example to modify the bbox.")
-        return
+        return None
     
     # Decode dataset
     if decode_cf:
         ds = decode_dataset(ds)
-        
+              
     ##------------------------------------------------------------------------.
     # Return Dataset
     return ds

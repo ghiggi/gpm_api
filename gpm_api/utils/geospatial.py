@@ -48,3 +48,45 @@ def crop_dataset(ds, bbox):
         raise ValueError(f"Dataset not recognized. Expecting dimensions {orbit_dims} or {grid_dims}.")
     
     return ds_subset
+
+
+def is_orbit(ds): 
+    if "along_track" in list(ds.dims): 
+        return True 
+    else:
+        return False 
+
+
+def is_grid(ds): 
+    if "longitude" in list(ds.dims): 
+        return True 
+    else:
+        return False 
+    
+    
+def get_pyresample_area(ds): 
+    from pyresample import SwathDefinition, AreaDefinition
+    # If Orbit Granule --> Swath Definition
+    if is_orbit(ds): 
+        # Define SwathDefinition with xr.DataArray lat/lons
+        # - Otherwise fails https://github.com/pytroll/satpy/issues/1434
+        lons = ds["lon"].values
+        lats = ds["lat"].values
+        
+        # TODO: this might be needed 
+        # - otherwise ValueError 'ndarray is not C-contiguous' when resampling
+        # lons = np.ascontiguousarray(lons) 
+        # lats = np.ascontiguousarray(lats)
+        
+        lons = xr.DataArray(lons, dims=["y", "x"])
+        lats = xr.DataArray(lats, dims=["y", "x"])
+        swath_def = SwathDefinition(lons, lats)
+        return swath_def
+    # If Grid Granule --> AreaDefinition
+    elif is_grid(ds): 
+         # Define AreaDefinition 
+         raise NotImplementedError()
+    # Unknown 
+    else: 
+        raise NotImplementedError()
+      

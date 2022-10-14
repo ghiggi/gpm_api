@@ -145,8 +145,14 @@ def apply_custom_decoding(ds, product):
     if "cross_track" in list(ds.dims):
         ds = ensure_valid_coords(ds, raise_error=False)
     
+    # Add range_id coordinate
+    if "range" in list(ds.dims):
+        range_id = np.arange(ds.dims['range'])
+        ds = ds.assign_coords({'gpm_range_id': ('range', range_id)})    
+    
     # Clean attributes 
     ds = clean_dataarrays_attrs(ds, product)
+    
     # Add coordinates 
     if product == '2A-DPR': 
         if 'frequency' in list(ds.dims): 

@@ -6,9 +6,13 @@ Created on Wed Aug 17 09:31:39 2022
 @author: ghiggi
 """
 import xarray as xr 
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
-from gpm_api.utils.geospatial import crop_dataset 
+from gpm_api.utils.geospatial import (
+    crop_dataset, 
+    is_orbit, 
+    is_grid, 
+    get_pyresample_area,
+)
+    
 from gpm_api.utils.visualization import (
     get_dataset_title,
     _plot_map,
@@ -39,12 +43,29 @@ class GPM_Dataset_Accessor:
 
 
     def plot_transect_line(self, ax, color="black"):
-        plot_transect_line(self._obj, ax=ax, color=color)
+        p = plot_transect_line(self._obj, ax=ax, color=color)
+        return p
 
 
     def plot_swath_lines(self, ax, **kwargs):
-        _plot_swath_lines(self._obj, ax=ax, **kwargs)
-        
+        p = _plot_swath_lines(self._obj, ax=ax, **kwargs)
+        return p
+    
+    
+    @property
+    def pyresample_area(self):
+        return get_pyresample_area(self._obj)
+    
+    
+    @property
+    def is_orbit(self):
+        return is_orbit(self._obj)
+    
+    
+    @property
+    def is_grid(self):
+        return is_grid(self._obj)
+    
         
 @xr.register_dataarray_accessor("gpm_api")
 class GPM_DataArray_Accessor:
@@ -76,8 +97,25 @@ class GPM_DataArray_Accessor:
     
     
     def plot_swath_lines(self, ax, **kwargs):
-        _plot_swath_lines(self._obj, ax=ax, **kwargs)
+        p = _plot_swath_lines(self._obj, ax=ax, **kwargs)
+        return p 
     
     
     def plot_transect_line(self, ax, color="black"):
-        plot_transect_line(self._obj, ax=ax, color=color)
+        p = plot_transect_line(self._obj, ax=ax, color=color)
+        return p 
+    
+    
+    @property
+    def pyresample_area(self):
+        return get_pyresample_area(self._obj)
+    
+    
+    @property
+    def is_orbit(self):
+        return is_orbit(self._obj)
+    
+    
+    @property
+    def is_grid(self):
+        return is_grid(self._obj)

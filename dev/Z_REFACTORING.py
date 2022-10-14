@@ -5,6 +5,10 @@ Created on Mon Aug 15 23:02:04 2022
 
 @author: ghiggi
 """
+# - SwathDefinition(ds_template['lons'], ds_template['lats']).plot()
+# gpm_api lon, lat --> longitude-latitude? 
+# ds_gpm.gpm_api.pyresample_area.plot()
+
 #-----------------------------------------------------------------------------.
 # dpr 
 # imerg
@@ -36,10 +40,8 @@ Created on Mon Aug 15 23:02:04 2022
 # Ka--> KA , Ku --> KU ?
 
 #-----------------------------------------------------------------------------.
-# Add cross_track_id for GPM !!!!
-# Add range_id 
 
-### Add granule_id coord (time) to xr.Dataset
+
 
 #-----------------------------------------------------------------------------.
 ### After download, implement loop to check if file is corrupted (open with h5py) 

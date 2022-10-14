@@ -14,6 +14,7 @@ from tqdm import tqdm
 from gpm_api.io.pps import find_pps_daily_filepaths
 from gpm_api.utils.utils_string import subset_list_by_boolean
 from gpm_api.io.checks import (
+    check_base_dir,
     check_version,
     check_product,
     check_product_type,
@@ -197,19 +198,19 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
 
 
 def download_daily_data(base_dir,
-                            username,
-                            product,
-                            date,    
-                            start_hhmmss = None,
-                            end_hhmmss = None,
-                            product_type = 'RS',
-                            version = 7,
-                            n_threads = 10,
-                            transfer_tool = "curl",
-                            progress_bar=True, 
-                            force_download = False,
-                            flag_first_date = False, 
-                            verbose=True):
+                        username,
+                        product,
+                        date,    
+                        start_hhmmss = None,
+                        end_hhmmss = None,
+                        product_type = 'RS',
+                        version = 7,
+                        n_threads = 10,
+                        transfer_tool = "curl",
+                        progress_bar=True, 
+                        force_download = False,
+                        flag_first_date = False, 
+                        verbose=True):
     """
     Download GPM data from NASA servers using curl or wget.
 
@@ -369,6 +370,7 @@ def download_data(base_dir,
     check_product_type(product_type = product_type) 
     check_product(product = product, product_type = product_type)
     check_version(version = version) 
+    base_dir = check_base_dir(base_dir)
     start_time, end_time = check_time(start_time, end_time)    
     #-------------------------------------------------------------------------.
     # Retrieve sequence of Dates 

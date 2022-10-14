@@ -16,6 +16,7 @@ from gpm_api.io.checks import (
     check_product,
     check_product_type,
     check_version,
+    check_base_dir,
     is_empty,
     is_not_empty,
 )
@@ -227,7 +228,8 @@ def find_filepaths(base_dir,
     ## Checks input arguments
     check_product_type(product_type=product_type) 
     check_product(product=product, product_type=product_type)
-    check_version(version=version) 
+    check_version(version=version)
+    base_dir = check_base_dir(base_dir)
     start_time, end_time = check_time(start_time, end_time) 
     
     # Retrieve sequence of dates 

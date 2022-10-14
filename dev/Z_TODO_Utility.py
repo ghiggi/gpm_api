@@ -16,10 +16,6 @@ fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)
 lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist+50000) # dist in m
 
 ##----------------------------------------------------------------------------.
-#### Set dimensions y, x
-# ds.transpose('cross_track', 'along_track', ...) # TODO in gpm_api
-
-##----------------------------------------------------------------------------.
 #### Scan Filtering  
 # ScanStatus/dataQuality 
 # ScanStatus/geoError 
@@ -30,6 +26,7 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist+50000) # dist in m
 
 ##----------------------------------------------------------------------------.
 #### Patch 
+# - get patch from gpm_geo and yasser code !!! 
 # - get_patch_around_max 
 # - get_patch_from_center(lon, lat) 
 
@@ -82,11 +79,11 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist+50000) # dist in m
 #----------------------------------------------------------------------------.
 #### Subset by country 
 #### Subset by lat/lon coord (nearest neighbor over x km)
-gpm.DPR.plot(timestep, bbox, product)
-gpm.ZoomMax(bbox, product, n_scan).plot()
-gpm.ZoomMin(bbox.product, n_scan).plot()
-gpm.ZoomRandom(min_val, max_val, bbox, product, n_scan).plot()
-gpm.isel(), sel() 
+# gpm.DPR.plot(timestep, bbox, product)
+# gpm.ZoomMax(bbox, product, n_scan).plot()
+# gpm.ZoomMin(bbox.product, n_scan).plot()
+# gpm.ZoomRandom(min_val, max_val, bbox, product, n_scan).plot()
+# gpm.isel(), sel() 
 
 #----------------------------------------------------------------------------.
 #### Compute height 

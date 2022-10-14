@@ -5,6 +5,7 @@ Created on Sun Aug 14 20:02:18 2022
 
 @author: ghiggi
 """
+import os 
 import datetime
 import numpy as np 
 
@@ -16,6 +17,33 @@ def is_not_empty(x):
 def is_empty(x):
     return not x
 
+
+def check_base_dir(base_dir):
+    """Check base directory path. 
+    
+    If base_dir ends with "GPM" directory, it removes it from the base_dir path. 
+    If base_dir does not end with "GPM", the GPM directory will be created.
+
+    Parameters
+    ----------
+    base_dir : str
+        Base directory where the GPM directory is located.
+
+    Returns
+    -------
+    base_dir: str 
+        Base directory where the GPM directory is located.
+
+    """
+    # Check base_dir does not end with / 
+    if base_dir[-1] == "/":
+        base_dir = base_dir[0:-1]
+    # Retrieve last folder name 
+    dir_name = os.path.basename(base_dir)
+    # If ends with GPM, take the parent directory path 
+    if dir_name == "GPM": 
+        base_dir = os.path.dirname(base_dir)
+    return base_dir 
 
 def check_filepaths(filepaths):
     if isinstance(filepaths, str):
