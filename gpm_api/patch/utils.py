@@ -1,175 +1,75 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Aug 17 10:57:11 2022
+Created on Wed Oct 19 16:51:11 2022
 
 @author: ghiggi
 """
 import pandas as pd
 import numpy as np 
-import xarray as xr
-import dask 
 import itertools
-# from dask_image.ndmeasure import as dask_label_image
-from skimage.measure import label as label_image
-from skimage.morphology import binary_dilation
+
 from scipy.ndimage import find_objects     
-from scipy.ndimage.measurements import center_of_mass 
+from scipy.ndimage.measurements import center_of_mass
+
+from gpm_api.patch.labels import get_areas_labels
 ####--------------------------------------------------------------------------.
 #### Notes   
 ## Patchify
 # - https://github.com/dovahcrow/patchify.py
 # - https://pypi.org/project/patchify/
 
-# TODO: Update GPM-GEO to use this code 
-# TODO: This code is also copied in lte_mch_toolbox
+# Patch extraction 
+# - https://github.com/scikit-learn/scikit-learn/blob/baf828ca1/sklearn/feature_extraction/image.py#L453
 
-# TODO: add generator of patches 
-# --> https://github.com/ghiggi/GPM_GEO/blob/main/gpm_geo/utils_GPM.py#L157 
 
 ####--------------------------------------------------------------------------.
-
-
 #####################
-#### Area labels ####
+#### Slice Tools ####
 #####################
-
-def _vec_translate(arr, my_dict):   
-    """Remap array <value> based on the dictionary key-value pairs.
-    
-    This function is used to redefine label array integer values based on the
-    label area_size/max_intensity value.
-    
-    """
-    return np.vectorize(my_dict.__getitem__)(arr)
-
-def get_areas_labels(arr, 
-                     min_intensity_threshold=-np.inf, 
-                     max_intensity_threshold= np.inf, 
-                     min_area_threshold=1, 
-                     max_area_threshold=np.inf,
-                     footprint_buffer=None):
-    # footprint_buffer: The neighborhood expressed as a 2-D array of 1’s and 0’s. 
-    #---------------------------------.
-    # TODO: this could be extended to work with dask >2D array 
-    # - dask_image.ndmeasure.label  https://image.dask.org/en/latest/dask_image.ndmeasure.html
-    # - dask_image.ndmorph.binary_dilation https://image.dask.org/en/latest/dask_image.ndmorph.html#dask_image.ndmorph.binary_dilation
-    #---------------------------------.
-    # Check input validity 
-    shape = arr.shape 
-    if len(shape) != 2: 
-        raise ValueError("Expecting a 2D array.")
-    if np.any(np.array(shape) == 0):
-        raise ValueError("Expecting non-zero dimensions.")
-    
-    if not isinstance(arr, np.ndarray):
-        arr = arr.compute()
-        
-    # Define nan mask 
-    # nan_mask = np.isnan(arr) 
-    
-    #---------------------------------.
-    # Define binary mask 
-    mask_native = np.logical_and(arr >= min_intensity_threshold,
-                                 arr <= max_intensity_threshold)
-    
-    #---------------------------------.
-    # Apply optional buffering
-    if footprint_buffer is not None: 
-       mask = binary_dilation(mask_native, footprint_buffer)
-    else: 
-       mask = mask_native
-    #---------------------------------.
-    # Get area labels
-    # - 0 represent the outer area
-    labels = label_image(mask)           # 0.977-1.37 ms
-   
-    # mask = mask.astype(int)
-    # labels, num_features = dask_label_image(mask) # THIS WORK in ND dimensions
-    # %time labels = labels.compute()    # 5-6.5 ms 
-    
-    #---------------------------------.
-    # Set to label value 0 the areas outside the native mask 
-    labels[~mask_native] = 0
-
-    #---------------------------------.
-    # Count label occurence 
-    unique_unordered, counts = np.unique(labels, return_counts=True)
-    if len(unique_unordered) == 1: # only 0 label
-        labels = np.zeros(shape)
-        n_labels = 0
-        counts = []
-        return labels, n_labels, counts
-    
-    #---------------------------------.
-    # Remove 0 label and associate pixel count
-    unique = unique_unordered[1:]
-    counts = counts[1:]
-    
-    #---------------------------------.
-    # Filter by area 
-    idx_valid_area = np.where(np.logical_and(counts >= min_area_threshold,
-                                             counts <= max_area_threshold))[0]
-    if len(idx_valid_area) > 0:
-        unique = unique[idx_valid_area]
-        counts = counts[idx_valid_area]
-    else: 
-        labels = np.zeros(shape)
-        n_labels = 0
-        counts = []
-        return labels, n_labels, counts
-    
-    #---------------------------------.
-    #### Sort labels by decreasing area, max, sum, sd 
-    # TODO: IMPROVE THIS 
-    # sort_by = "area, "max", "sum", "sd" 
-    # --> https://github.com/ghiggi/GPM_GEO/blob/main/gpm_geo/utils_GPM.py#L60 
-    
-    
-    # Sort decreasing count order
-    n_labels = len(unique)
-    sort_index = np.argsort(counts)[::-1] 
-    counts = counts[sort_index]
-    unique = unique[sort_index]
-    
-    #---------------------------------.
-    # Relabel by decreasing area
-    val_dict = {k: 0 for k in unique_unordered} 
-    for k, v in zip(unique.tolist(), np.arange(1, n_labels+1).tolist()):
-        val_dict[k] = v
-    labels = _vec_translate(labels, val_dict)
-    
-    #---------------------------------.
-    # Return infos         
-    return labels, n_labels, counts
+def labels_bbox(arr):
+    rows = np.any(arr, axis=1)
+    cols = np.any(arr, axis=0)
+    rmin, rmax = np.where(rows)[0][[0, -1]]
+    cmin, cmax = np.where(cols)[0][[0, -1]]
+    return rmin, rmax, cmin, cmax
 
 
-def xr_get_areas_labels(data_array,
-                        min_intensity_threshold=-np.inf, 
-                        max_intensity_threshold= np.inf, 
-                        min_area_threshold=1, 
-                        max_area_threshold=np.inf,
-                        footprint_buffer=None,
-                        ): # Extract data from DataArray
-    if not isinstance(data_array, xr.DataArray): 
-        raise TypeError("Expecting xr.DataArray.")
-    # Get labels 
-    labels, n_labels, counts = get_areas_labels(data_array.data, 
-                                                min_intensity_threshold=min_intensity_threshold, 
-                                                max_intensity_threshold=max_intensity_threshold, 
-                                                min_area_threshold=min_area_threshold, 
-                                                max_area_threshold=max_area_threshold,
-                                                footprint_buffer=footprint_buffer)  
+def labels_bbox_slices(arr):
+    rmin, rmax, cmin, cmax = labels_bbox(arr)
+    return slice(rmin, rmax+1), slice(cmin, cmax+1)
+
+
+def get_slice_idx_bounds(slice): 
+    idx_start = slice.start 
+    idx_end = slice.stop - 1 
+    return idx_start, idx_end
+
+
+def extend_row_col_bounds(rmin, rmax, cmin, cmax, shape, margin = None):
+    if margin is None: 
+        margin = (0, 0)
+    rmin = max(0, rmin - margin[0])
+    rmax = min(shape[0]-1, rmax + margin[0])
+    cmin = max(0, cmin - margin[1])
+    cmax = min(shape[1]-1, cmax + margin[1])
+    return rmin, rmax, cmin, cmax
+
+
+def extend_row_col_slices(row_slice, col_slice, shape, margin = None):
+    rmin, rmax = get_slice_idx_bounds(row_slice)
+    cmin, cmax = get_slice_idx_bounds(col_slice)
+    rmin, rmax, cmin, cmax = extend_row_col_bounds(rmin, rmax, cmin, cmax, shape, margin = margin)
+    return slice(rmin, rmax+1), slice(cmin, cmax+1)
+
      
-    # Conversion to DataArray if needed
-    da_labels = data_array.copy() 
-    da_labels.data = labels 
-    da_labels.name = "labels_area"
-    return da_labels, n_labels, counts
+# Shapely bounds: (minx, miny, maxx, maxy) 
+# Matlotlib extent: (xmin, xmax, ymin, ymax)
 
-
-####--------------------------------------------------------------------------.
-
+# rmin, rmax, cmin, cmax = labels_bbox(arr == label_id)
+# rmin, rmax, cmin, cmax = extend_row_col_bounds(rmin, rmax, cmin, cmax, shape, patch_margin)
+# row_slices, col_slices = labels_bbox_slices(arr)
+# extend_row_col_slices(row_slices, col_slices, shape, margin=patch_margin)
 
 def get_row_col_slice_centroid(row_slice, col_slice): 
     row = int((row_slice.start + row_slice.stop-1)/2)
@@ -221,7 +121,7 @@ def split_large_objects_slices(objects_slices, patch_size):
     return l_object_slices
 
 
-####--------------------------------------------------------------------------.
+####-------------------------------------------------------------------------.
 ##########################
 #### Patch Extraction ####
 ##########################
@@ -436,8 +336,8 @@ def get_upper_left_idx_from_str(idx_str):
 
 
 def get_patch_info(arr,
-                   min_intensity_threshold=-np.inf, 
-                   max_intensity_threshold= np.inf, 
+                   min_value_threshold=-np.inf, 
+                   max_value_threshold= np.inf, 
                    min_area_threshold=1, 
                    max_area_threshold=np.inf,
                    footprint_buffer=None,
@@ -448,8 +348,8 @@ def get_patch_info(arr,
                   ):
      # Label area 
      labels, n_labels, counts = get_areas_labels(arr,  
-                                                 min_intensity_threshold=min_intensity_threshold, 
-                                                 max_intensity_threshold=max_intensity_threshold, 
+                                                 min_value_threshold=min_value_threshold, 
+                                                 max_value_threshold=max_value_threshold, 
                                                  min_area_threshold=min_area_threshold, 
                                                  max_area_threshold=max_area_threshold, 
                                                  footprint_buffer=footprint_buffer) 
@@ -474,3 +374,30 @@ def get_patch_info(arr,
      # Hack to return df
      out_str = df.to_json()
      return np.array([out_str], dtype="object")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

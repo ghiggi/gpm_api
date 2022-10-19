@@ -305,11 +305,10 @@ def plot_transect_line(ds, ax, color="black"):
 def _plot_swath_lines(ds, ax=None, **kwargs): 
     # - 0.0485 to account for 2.5 km from pixel center 
     # TODO: adapt based on bin length (changing for each sensor) --> FUNCTION 
-    
-    ax.plot(ds['lon'][:, 0] + 0.0485, ds['lat'][:,0],  **kwargs)
-    ax.plot(ds['lon'][:,-1] - 0.0485, ds['lat'][:,-1], **kwargs)
-    
-    
+    lon = ds['lon'].transpose("cross_track","along_track").data
+    lat = ds['lat'].transpose("cross_track","along_track").data
+    ax.plot(lon[0 , :] + 0.0485, lat[0 , :],  **kwargs)
+    ax.plot(lon[-1, :] - 0.0485, lat[-1, :], **kwargs)  
     
     
 # def plot_swath(ds, ax=None):
@@ -363,6 +362,45 @@ def _plot_map_orbit(da, ax=None, add_colorbar=True):
       
     # Return mappable
     return p
+
+
+def plot_image(da, ax=None, add_colorbar=True, interpolation="nearest"):
+    # Initialize figure 
+    if ax is None: 
+        fig, ax = plt.subplots(figsize=(12,10), dpi=100)    
+        
+    # TODO: check is 2D only 
+       
+    # Get colorbar settings 
+    # TODO: to customize as function of da.name 
+    plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")     
+               
+    # Add variable field with matplotlib 
+    p = da.plot.imshow(x="along_track", y="cross_track", 
+                        ax=ax, interpolation=interpolation, 
+                        add_colorbar=add_colorbar, 
+                        cbar_kwargs=cbar_kwargs,
+                        **plot_kwargs)
+    
+    # - Add variable field with matplotlib 
+    # arr = da.transpose("cross_track", "along_track").data.compute()
+    # p  = ax.imshow(arr,
+    #                **plot_kwargs)    
+                   
+    # Add colorbar
+    if add_colorbar:
+        p.colorbar.ax.set_yticklabels(ticklabels)
+        # divider = make_axes_locatable(ax)
+        # cax = divider.new_horizontal(size="5%", pad=0.1, axes_class=plt.Axes)
+        # p.figure.add_axes(cax)
+        # cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)  
+        # _ = cbar.ax.set_yticklabels(ticklabels)
+      
+        
+    # Return mappable
+    return p
+
+
 
 
 def _plot_map(da, ax=None, add_colorbar=True): 

@@ -5,6 +5,7 @@ Created on Wed Aug 17 09:31:39 2022
 
 @author: ghiggi
 """
+import numpy as np 
 import xarray as xr 
 from gpm_api.utils.geospatial import (
     crop_dataset, 
@@ -16,10 +17,10 @@ from gpm_api.utils.geospatial import (
 from gpm_api.utils.visualization import (
     get_dataset_title,
     _plot_map,
+    plot_image,
     plot_transect_line,
     _plot_swath_lines,
 )
-
 
 @xr.register_dataset_accessor("gpm_api")
 class GPM_Dataset_Accessor:
@@ -66,6 +67,36 @@ class GPM_Dataset_Accessor:
     def is_grid(self):
         return is_grid(self._obj)
     
+    
+    def patch_generator(self,
+                        variable, 
+                        min_value_threshold=0.1, 
+                        max_value_threshold= np.inf, 
+                        min_area_threshold=10, 
+                        max_area_threshold=np.inf,
+                        footprint_buffer=None,
+                        sort_by="max",
+                        sort_decreasing=True,
+                        label_name="label",
+                        n_patches=None,
+                        patch_margin=(48,20),
+                        ):
+        from gpm_api.patch.generator import get_ds_patch_generator
+        gen = get_ds_patch_generator(self._obj,
+                                     variable=variable, 
+                                     # Labels options 
+                                     min_value_threshold=min_value_threshold, 
+                                     max_value_threshold=max_value_threshold, 
+                                     min_area_threshold=min_area_threshold, 
+                                     max_area_threshold=max_area_threshold,
+                                     footprint_buffer=footprint_buffer,
+                                     sort_by=sort_by,
+                                     sort_decreasing=sort_decreasing,
+                                     # Patch options 
+                                     n_patches=n_patches,
+                                     patch_margin=patch_margin)
+        return gen   
+                                     
         
 @xr.register_dataarray_accessor("gpm_api")
 class GPM_DataArray_Accessor:
@@ -96,6 +127,12 @@ class GPM_DataArray_Accessor:
         return p 
     
     
+    def plot_image(self, ax=None, add_colorbar=True, interpolation="nearest"):
+        da = self._obj
+        p = plot_image(da, ax=ax, add_colorbar=add_colorbar, interpolation=interpolation)
+        return p 
+        
+    
     def plot_swath_lines(self, ax, **kwargs):
         p = _plot_swath_lines(self._obj, ax=ax, **kwargs)
         return p 
@@ -119,3 +156,33 @@ class GPM_DataArray_Accessor:
     @property
     def is_grid(self):
         return is_grid(self._obj)
+    
+    
+    
+    def patch_generator(self,
+                        min_value_threshold=0.1, 
+                        max_value_threshold= np.inf, 
+                        min_area_threshold=10, 
+                        max_area_threshold=np.inf,
+                        footprint_buffer=None,
+                        sort_by="max",
+                        sort_decreasing=True,
+                        label_name="label",
+                        n_patches=None,
+                        patch_margin=(48,20),
+                        ):      
+        from gpm_api.patch.generator import get_da_patch_generator
+        gen = get_da_patch_generator(self._obj,
+                                     # Labels options 
+                                     min_value_threshold=min_value_threshold, 
+                                     max_value_threshold=max_value_threshold, 
+                                     min_area_threshold=min_area_threshold, 
+                                     max_area_threshold=max_area_threshold,
+                                     footprint_buffer=footprint_buffer,
+                                     sort_by=sort_by,
+                                     sort_decreasing=sort_decreasing,
+                                     # Patch options 
+                                     n_patches=n_patches,
+                                     patch_margin=patch_margin)
+        return gen 
+    

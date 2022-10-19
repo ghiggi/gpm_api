@@ -96,14 +96,38 @@ def check_product_type(product_type):
         raise ValueError("Please specify the product_type as 'RS' or 'NRT'.")
 
 
-def check_time(start_time, end_time):
-    if not isinstance(start_time, datetime.datetime):
-        raise ValueError("start_time must be a datetime object.")
-    if not isinstance(end_time, datetime.datetime):
-        raise ValueError("end_time must be a datetime object.")
+def check_time(time):
+    """Check time validity."""
+    if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, str)):
+        raise TypeError(
+            "Specify time with datetime.datetime objects or a "
+            "string of format 'YYYY-MM-DD hh:mm:ss'."
+        )
+    # If np.datetime, convert to datetime.datetime
+    if isinstance(time, np.datetime64):
+        time = time.astype('datetime64[s]').tolist()
+    # If datetime.date, convert to datetime.datetime
+    if not isinstance(time, (datetime.datetime, str)):
+        time = datetime.datetime(time.year, time.month, time.day, 0, 0, 0)
+    if isinstance(time, str):
+        try:
+            time = datetime.datetime.fromisoformat(time)
+        except ValueError:
+            raise ValueError("The time string must have format 'YYYY-MM-DD hh:mm:ss'")
+    return time
+
+
+def check_start_end_time(start_time, end_time):
+    start_time = check_time(start_time)
+    end_time = check_time(end_time)
     # Check start_time and end_time are chronological  
     if (start_time > end_time):
         raise ValueError('Provide start_time occuring before of end_time.')   
+    # Check start_time and end_time are in the past
+    if start_time > datetime.datetime.utcnow():
+        raise ValueError("Provide a start_time occuring in the past.")
+    if end_time > datetime.datetime.utcnow():
+        raise ValueError("Provide a end_time occuring in the past.")
     return (start_time, end_time)
            
  

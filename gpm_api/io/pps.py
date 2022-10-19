@@ -11,7 +11,7 @@ import numpy as np
 import subprocess
 from gpm_api.io.checks import (
     check_date,
-    check_time,
+    check_start_end_time,
     check_hhmmss, 
     check_product,
     check_product_type,
@@ -327,7 +327,7 @@ def find_pps_daily_filepaths(username,
 #     check_product_type(product_type=product_type) 
 #     check_product(product=product, product_type=product_type)
 #     check_version(version=version) 
-#     start_time, end_time = check_time(start_time, end_time) 
+#     start_time, end_time = check_start_end_time(start_time, end_time) 
     
 #     # Retrieve sequence of dates 
 #     dates = [start_time + datetime.timedelta(days=x) for x in range(0, (end_time-start_time).days + 1)]
