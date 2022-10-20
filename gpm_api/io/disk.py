@@ -8,6 +8,7 @@ Created on Mon Aug 15 00:18:13 2022
 import os 
 import datetime 
 import numpy as np
+import pandas as pd
 import subprocess
 from gpm_api.io.checks import (
     check_date,
@@ -233,8 +234,11 @@ def find_filepaths(base_dir,
     start_time, end_time = check_start_end_time(start_time, end_time) 
     
     # Retrieve sequence of dates 
-    dates = [start_time + datetime.timedelta(days=x) for x in range(0, (end_time-start_time).days + 1)]
-   
+    start_date = datetime.datetime(start_time.year,start_time.month, start_time.day)
+    end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
+    date_range = pd.date_range(start=start_date, end=end_date, freq="D")
+    dates = list(date_range.to_pydatetime())
+
     # Retrieve start and end hhmmss
     start_hhmmss = datetime.datetime.strftime(start_time,"%H%M%S")
     end_hhmmss = datetime.datetime.strftime(end_time,"%H%M%S")

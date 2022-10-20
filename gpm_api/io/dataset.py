@@ -538,7 +538,11 @@ def open_dataset(
     # Decode dataset
     if decode_cf:
         ds = decode_dataset(ds)
-              
+        
+    ##-------------------------------------------------------------------------.
+    # Subset dataset for start_time and end_time 
+    # TODO: ds = ds.sel(time=slice(start_time, end_time)) # non-dimension coordinate
+    
     ##------------------------------------------------------------------------.
     # Return Dataset
     return ds

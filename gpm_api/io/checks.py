@@ -45,12 +45,14 @@ def check_base_dir(base_dir):
         base_dir = os.path.dirname(base_dir)
     return base_dir 
 
+
 def check_filepaths(filepaths):
     if isinstance(filepaths, str):
         filepaths = [filepaths]
     if not isinstance(filepaths, list):
         raise TypeError("Expecting a list of filepaths.")
     return filepaths 
+
 
 def check_variables(variables):
     if not isinstance(variables, (str, list, np.ndarray, type(None))):
