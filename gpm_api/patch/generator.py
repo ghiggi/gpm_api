@@ -59,7 +59,7 @@ def get_ds_patch_generator(ds,
                            sort_decreasing=True,
                            label_name="label",
                            n_patches=None,
-                           patch_margin=(48,20)):
+                           patch_margin=None):
     # Check valid variable 
     if variable not in ds.data_vars:
         raise ValueError(f"'{variable}' is not a variable of the GPM xr.Dataset.")
@@ -79,6 +79,8 @@ def get_ds_patch_generator(ds,
     ds = ds.assign_coords({label_name: da_labels})
      
     # Build a generator returning patches around rainy areas  
+    if patch_margin is None:
+        patch_margin = (48,20)
     ds_patch_gen = get_dataset_labels_patches(ds, 
                                               label=label_name,
                                               n_patches=n_patches, 

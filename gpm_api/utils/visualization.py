@@ -15,8 +15,7 @@ import cartopy.feature as cfeature
 from pyproj import Geod
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from gpm_api.utils.utils_cmap import get_colormap_setting
-
-
+from gpm_api.utils.geospatial import is_spatial_2D_field
     
 def get_dataset_title(ds, time_idx=None, resolution="m", timezone="UTC", 
                       prefix_product=True, add_timestep = True): 
@@ -45,6 +44,11 @@ def get_dataset_title(ds, time_idx=None, resolution="m", timezone="UTC",
         title_str = title_str + " (" + time_str + ")"
     return title_str 
 
+
+def check_is_spatial_2D_field(da):
+    if not is_spatial_2D_field(da):
+        raise ValueError("Expecting a 2D GPM field.")
+        
 
 #-----------------------------------------------------------------------------.
 #################
@@ -316,12 +320,12 @@ def _plot_swath_lines(ds, ax=None, **kwargs):
     
 
 def _plot_map_orbit(da, ax=None, add_colorbar=True):
+    # Check inputs 
+    check_is_spatial_2D_field(da)
     # Initialize figure 
     if ax is None: 
         fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()}, figsize=(12,10), dpi=100)    
-        
-    # TODO: check is 2D only 
-    
+            
     # Get colorbar settings 
     # TODO: to customize as function of da.name 
     plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")     
@@ -365,38 +369,41 @@ def _plot_map_orbit(da, ax=None, add_colorbar=True):
 
 
 def plot_image(da, ax=None, add_colorbar=True, interpolation="nearest"):
+    # Check inputs 
+    check_is_spatial_2D_field(da)
+    
     # Initialize figure 
     if ax is None: 
         fig, ax = plt.subplots(figsize=(12,10), dpi=100)    
-        
-    # TODO: check is 2D only 
-       
+           
     # Get colorbar settings 
     # TODO: to customize as function of da.name 
     plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")     
-               
+    ##------------------------------------------------------------------------.
+    ### Plot with xarray 
+    # --> BUG with colorbar: https://github.com/pydata/xarray/issues/7014      
     # Add variable field with matplotlib 
     p = da.plot.imshow(x="along_track", y="cross_track", 
                         ax=ax, interpolation=interpolation, 
                         add_colorbar=add_colorbar, 
                         cbar_kwargs=cbar_kwargs,
                         **plot_kwargs)
-    
-    # - Add variable field with matplotlib 
-    # arr = da.transpose("cross_track", "along_track").data.compute()
-    # p  = ax.imshow(arr,
-    #                **plot_kwargs)    
-                   
-    # Add colorbar
     if add_colorbar:
         p.colorbar.ax.set_yticklabels(ticklabels)
-        # divider = make_axes_locatable(ax)
-        # cax = divider.new_horizontal(size="5%", pad=0.1, axes_class=plt.Axes)
-        # p.figure.add_axes(cax)
-        # cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)  
-        # _ = cbar.ax.set_yticklabels(ticklabels)
+    ##------------------------------------------------------------------------.
+    ### Plot with matplotlib
+    # --> TODO: set axis proportion in a meaningful way ... 
+    # arr = da.transpose("cross_track", "along_track").data.compute()
+    # p  = ax.imshow(arr,
+    #                 **plot_kwargs)    
+    # # Add colorbar
+    # if add_colorbar:
+    #     divider = make_axes_locatable(ax)
+    #     cax = divider.new_horizontal(size="5%", pad=0.1, axes_class=plt.Axes)
+    #     p.figure.add_axes(cax)
+    #     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)  
+    #     _ = cbar.ax.set_yticklabels(ticklabels)
       
-        
     # Return mappable
     return p
 
@@ -411,3 +418,58 @@ def _plot_map(da, ax=None, add_colorbar=True):
     else: 
         raise NotImplementedError
     return p 
+
+
+####--------------------------------------------------------------------------.
+#################
+#### Patches ####
+#################
+def check_is_xarray(x):
+    if not isinstance(x, (xr.DataArray, xr.Dataset)):
+        raise TypeError("Expecting a xr.Dataset or xr.DataArray.")
+
+
+def check_is_xarray_dataarray(x):
+    if not isinstance(x, xr.DataArray):
+        raise TypeError("Expecting a xr.DataArray.")
+        
+        
+def check_is_xarray_dataset(x):
+    if not isinstance(x, xr.Dataset):
+        raise TypeError("Expecting a xr.Dataset.")
+        
+
+def plot_patches(data_array, 
+                 min_value_threshold=-np.inf, 
+                 max_value_threshold= np.inf, 
+                 min_area_threshold=1, 
+                 max_area_threshold=np.inf,
+                 footprint_buffer=None,
+                 sort_by="area",
+                 sort_decreasing=True,
+                 label_name="label",
+                 n_patches=None,
+                 patch_margin=None, 
+                 interpolation="nearest"):
+    
+    from gpm_api.patch.generator import get_da_patch_generator
+    check_is_xarray_dataarray(data_array)
+
+    # Define generator 
+    gpm_da_patch_gen = get_da_patch_generator(data_array=data_array, 
+                                              min_value_threshold=min_value_threshold, 
+                                              max_value_threshold=max_value_threshold, 
+                                              min_area_threshold=min_area_threshold, 
+                                              max_area_threshold=max_area_threshold,
+                                              footprint_buffer=footprint_buffer,
+                                              sort_by=sort_by,
+                                              sort_decreasing=sort_decreasing,
+                                              label_name=label_name,     
+                                              n_patches=n_patches, 
+                                              patch_margin=patch_margin)
+    # Plot patches 
+    for da in gpm_da_patch_gen:
+        plot_image(da, interpolation=interpolation, add_colorbar=True)
+        plt.show() 
+    
+    return None

@@ -63,6 +63,17 @@ def is_grid(ds):
     else:
         return False 
     
+
+def is_spatial_2D_field(xr_obj):
+    if set(xr_obj.dims) == set(('cross_track', 'along_track')):
+       return True
+    elif set(xr_obj.dims) == set(('y', 'x')):
+       return True
+    elif set(xr_obj.dims) == set(('latitude', 'longitude')):
+      return True
+    else: 
+       return False 
+   
     
 def get_pyresample_area(ds): 
     from pyresample import SwathDefinition, AreaDefinition
