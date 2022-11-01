@@ -9,6 +9,20 @@ Created on Mon Aug 15 23:02:04 2022
 # gpm_api lon, lat --> longitude-latitude? 
 # ds_gpm.gpm_api.pyresample_area.plot()  # property !!!
 
+
+### get_disk_fpaths_from_pps_fpaths
+
+#-----------------------------------------------------------------------------.
+#### Investigate chunking of a granule  
+
+#-----------------------------------------------------------------------------.
+# Download yearly / monthly block of data 
+
+## Download GPM data after May 21 2018
+
+# TODO: download monthly data  
+# TODO: download GPM V7 on servers
+
 #-----------------------------------------------------------------------------.
 # If data alread download, print a better message than: 
 # --> Now: Download of available GPM 2A-DPR product completed.
@@ -25,6 +39,9 @@ Created on Mon Aug 15 23:02:04 2022
 #                  force_download=False, 
 #                  verbose=True)
 
+#-----------------------------------------------------------------------------.
+# Improve decoding and DataArray attributes 
+# --> Decode before or after each Dataset 
 
 #-----------------------------------------------------------------------------.
 # dpr 
@@ -58,20 +75,5 @@ Created on Mon Aug 15 23:02:04 2022
 
 #-----------------------------------------------------------------------------.
 
-
-
-#-----------------------------------------------------------------------------.
-### After download, implement loop to check if file is corrupted (open with h5py) 
-
-### Implement function that check no missing timesteps
-
-
-### Filter files by version 
-
-### get_disk_fpaths_from_pps_fpaths
-#-----------------------------------------------------------------------------.
-
-# Improve decoding and DataArray attributes 
-# --> Decode before or after each Dataset 
 
 

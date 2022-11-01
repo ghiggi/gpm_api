@@ -27,6 +27,10 @@ Created on Wed Nov 17 18:04:16 2021
 # wget -q -N --user="$email" --password="$email" "${URLprefix}${file}"
 
 
+# curl --user gionata.ghiggi@epfl.ch:gionata.ghiggi@epfl.ch -n https://arthurhouhttps.pps.eosdis.nasa.gov/text/gpmdata/2015/04/05/*/*GMI*S08* -o /home/ghiggi/test.txt
+ 
+ 
+
 from ftplib import FTP_TLS
 import ssl
 ftp_site = "arthurhouftps.pps.eosdis.nasa.gov"

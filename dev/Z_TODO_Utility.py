@@ -24,11 +24,22 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist+50000) # dist in m
 # ScanStatus/operationalMode
 # DataQualityFiltering = {'TotalQualityCode' : ['Good'],  # ”Fair” or ”EG”
 
+#### Check non-missing scan 
+# - Footprint distance ... 
+
+##----------------------------------------------------------------------------.
+#### Masking functions
+# - Masking when NA on other variable  
+# - Drop scan with FLG/qualityFlag low or bad
+
+
 ##----------------------------------------------------------------------------.
 #### Patch 
 # - get patch from gpm_geo and yasser code !!! 
 # - get_patch_around_max 
 # - get_patch_from_center(lon, lat) 
+
+#### Iterate through patches and plot 
 
 ##----------------------------------------------------------------------------.
 #### GridBucket - Collect overpass values onto grid cell --> Parquet optmized 

@@ -20,10 +20,13 @@ from gpm_api.io.checks import (
     check_scan_mode, 
     check_product, 
     check_base_dir,
+    check_start_end_time,
 )
 from gpm_api.io.info import get_version_from_filepath, get_product_from_filepath
 from gpm_api.io.decoding import apply_custom_decoding, decode_dataset
 from gpm_api.utils.utils_HDF5 import hdf5_datasets, hdf5_groups, hdf5_file_attrs
+from gpm_api.utils.time import subset_by_time, ensure_time_validity, has_regular_timesteps
+
 ####--------------------------------------------------------------------------.
 ### Define GPM_API Dataset Dimensions 
 DIM_DICT = {
@@ -135,7 +138,7 @@ def get_grid_coords(hdf, scan_mode):
     lon = hdf[scan_mode]["lon"][:]
     lat = hdf[scan_mode]["lat"][:]
     time = hdf_attr["FileHeader"]["StartGranuleDateTime"][:-1]
-    time = np.array(np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1) # TODO: why plus 30 
+    time = np.array(np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1) # TODO: document why + 30 m
     coords = {"time": time, "lon": lon, "lat": lat}
     return coords
 
@@ -338,6 +341,8 @@ def open_granule(filepath, scan_mode=None, groups=None, variables=None,
     coords = get_coords(hdf, scan_mode)
     
     # Get attributes(hdf)
+    # TODO Add FileHader Group attributes (see metadata doc)
+    # TODO Select all possible attributes? 
     attrs = get_attrs(hdf)
     attrs['ScanMode'] = scan_mode
     
@@ -367,14 +372,32 @@ def open_granule(filepath, scan_mode=None, groups=None, variables=None,
     ds.attrs = attrs
        
     #------------------------------------------------------.
-    ### Clean attritubes, decode variables and clarify dimensions
+    ### Clean attritubes, decode variables 
     # Apply custom processing  
     ds = apply_custom_decoding(ds, product) 
     
     # Apply cf decoding 
     if decode_cf: 
         ds = decode_dataset(ds)
-        
+    
+    #------------------------------------------------------.
+    #### Check time coordinate  
+    
+    # Ensure validity of the time dimension 
+    # - Infill up to 10 consecutive NaT
+    # - Do not check for regular time dimension ! 
+    ds = ensure_time_validity(ds, limit=10)
+    
+    # Check regular timesteps within the granule
+    if not has_regular_timesteps(ds):
+        raise ValueError("The GPM granule {fpath} has non-regular timesteps.")
+    
+    #------------------------------------------------------.
+    #### Check geolocation latitude/longitude coordinates
+    # TODO: check_valid_geolocation
+    # TODO: ensure_valid_geolocation (1 spurious pixel)
+    # TODO: ds_gpm.gpm_api.valid_geolocation
+    
     #------------------------------------------------------.
     # Remove list xr.Dataset to close connections
     del list_ds 
@@ -388,6 +411,27 @@ def open_granule(filepath, scan_mode=None, groups=None, variables=None,
 ##############################
 #### gpm_api.open_dataset ####
 ##############################
+
+
+def is_valid_granule(filepath):
+    # Load hdf granule file
+    try:
+        hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
+        hdf_attr = hdf5_file_attrs(hdf)
+        hdf.close()
+    except OSError:
+        if not os.path.exists(filepath):
+            raise ValueError("This is a gpm_api bug. `find_GPM_files` should not have returned this filepath.")
+        else:
+            print(f"The following file is corrupted and is being removed: {filepath}")
+            print("Redownload the file !!!")
+            os.remove(filepath)
+            return False 
+        
+    if hdf_attr["FileHeader"]["EmptyGranule"] == "NOT_EMPTY":
+        return True 
+    else:
+        return False 
 
 
 def open_dataset(
@@ -407,6 +451,9 @@ def open_dataset(
 ):
     """
     Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
+    
+    Note: 
+    It does not load GPM granules with flag 'EmptyGranule' != "NOT_EMPTY" 
 
     Parameters
     ----------
@@ -417,9 +464,9 @@ def open_dataset(
     variables : list, str
          Datasets names to extract from the HDF5 file.
          Hint: GPM_variables(product) to see available variables.
-    start_time : datetime
+    start_time : datetime.datetime
         Start time.
-    end_time : datetime
+    end_time : datetime.datetime
         End time.
     scan_mode : str, optional
         'NS' = Normal Scan --> For Ku band and DPR
@@ -453,10 +500,11 @@ def open_dataset(
     base_dir = check_base_dir(base_dir)
     ## Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version=version)
-    ## Check valid product
+    ## Check valid product and variables
     check_product(product, product_type=product_type)
     variables = check_variables(variables)
-   
+    # Check valid start/end time 
+    start_time, end_time = check_start_end_time(start_time, end_time) 
     ##------------------------------------------------------------------------.
     ## TODO: Check for chunks
     # - check works in open_dataset 
@@ -492,22 +540,8 @@ def open_dataset(
     # TODO: open in parallel !!!
     l_Datasets = []
     for filepath in filepaths:
-        # Load hdf granule file
-        try:
-            hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
-        except OSError:
-            if not os.path.exists(filepath):
-                raise ValueError("This is a gpm_api bug. `find_GPM_files` should not have returned this filepath.")
-            else:
-                print(f"The following file is corrupted and is being removed: {filepath}")
-                print("Redownload the file !!!")
-                os.remove(filepath)
-                continue
-        hdf_attr = hdf5_file_attrs(hdf)
-        hdf.close()
-        # ---------------------------------------------------------------------.
         # Retrieve data if granule is not empty
-        if hdf_attr["FileHeader"]["EmptyGranule"] == "NOT_EMPTY":
+        if is_valid_granule(filepath): 
             ds = open_granule(filepath, 
                               scan_mode=scan_mode,
                               variables=variables,
@@ -519,7 +553,18 @@ def open_dataset(
             #------------------------------------------------------------------.
             if ds is not None:
                 l_Datasets.append(ds)
-                
+    
+    # TODO 
+    # - Extract attributes and summarize it 
+    # - MissingData in FileHeaderGroup: The number of missing scans.
+    # - TotalQualityCode in JAXAInfo Group
+    # - NumberOfRainPixels (FS/HS) in JAXAInfo Group
+    # - ProcessingSubSystem in JAXAInfo Group
+    # - ProcessingMode in JAXAInfo Group
+    # - DielectricFactorKa in JAXAInfo Group
+    # - DielectricFactorKu in JAXAInfo Group
+    
+    # - ScanType: SwathHeader Group (”CROSSTRACK”, ”CONICAL”)
     ##-------------------------------------------------------------------------.
     # Concat all Datasets
     if len(l_Datasets) >= 1:
@@ -532,17 +577,20 @@ def open_dataset(
             ds = ds.transpose("cross_track", "along_track", ...)
         print(f"GPM {product} has been loaded successfully !")
     else:
-        print("No data available for current request. Try for example to modify the bbox.")
+        print("No valid GPM granule available for current request.")
         return None
     
     # Decode dataset
     if decode_cf:
         ds = decode_dataset(ds)
         
-    ##-------------------------------------------------------------------------.
+    ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time 
-    # TODO: ds = ds.sel(time=slice(start_time, end_time)) # non-dimension coordinate
-    
+    ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
+
     ##------------------------------------------------------------------------.
     # Return Dataset
     return ds
+
+
+####--------------------------------------------------------------------------.

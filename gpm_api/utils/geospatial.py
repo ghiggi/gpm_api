@@ -9,6 +9,11 @@ import numpy as np
 import xarray as xr
 
 
+def check_valid_geolocation(xr_obj, verbose=True): 
+    # TODO implement
+    pass 
+
+
 def unwrap_longitude_degree(x, period=360):
     """Unwrap longitude array."""
     x = np.asarray(x)

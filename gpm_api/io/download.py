@@ -13,6 +13,7 @@ import concurrent.futures
 from tqdm import tqdm
 from gpm_api.io.pps import find_pps_daily_filepaths
 from gpm_api.utils.utils_string import subset_list_by_boolean
+from gpm_api.utils.archive import check_file_integrity
 from gpm_api.io.checks import (
     check_base_dir,
     check_version,
@@ -327,6 +328,8 @@ def download_data(base_dir,
                   transfer_tool = "curl",
                   progress_bar = False, 
                   force_download = False,
+                  check_integrity = True, 
+                  remove_corrupted = True, 
                   verbose = True):
     """
     Download GPM data from NASA servers (day by day).
@@ -357,7 +360,14 @@ def download_data(base_dir,
     force_download : boolean, optional
         Whether to redownload data if already existing on disk. The default is False.
     verbose : bool, optional
-        Whether to print processing details. The default is False.    
+        Whether to print processing details. The default is False. 
+    check_integrity: bool, optional 
+        Check integrity of the downloaded files.
+        By default is True.
+    remove_corrupted: bool, optional 
+        Whether to remove the corrupted files.
+        By default is True.
+        
     Returns
     -------
    
@@ -443,6 +453,17 @@ def download_data(base_dir,
                             verbose = verbose)
     #-------------------------------------------------------------------------. 
     print('Download of available GPM', product, 'product completed.')
-    return 0
+    if check_integrity: 
+        l_corrupted = check_file_integrity(base_dir=base_dir, 
+                                           product=product, 
+                                           start_time=start_time, 
+                                           end_time=end_time, 
+                                           version=version,
+                                           product_type=product_type,  
+                                           remove_corrupted=remove_corrupted,
+                                           verbose=verbose)
+        print('Checking integrity of GPM files completed.')
+        return l_corrupted
+    return None
 
 ####--------------------------------------------------------------------------.

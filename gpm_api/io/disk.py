@@ -38,7 +38,8 @@ def _get_disk_daily_filepaths(base_dir,
                              product, 
                              product_type,
                              date,
-                             version):
+                             version,
+                             verbose=True):
     """
     Retrieve GPM data filepaths on the local disk directory of a specific day and product.
     
@@ -54,6 +55,8 @@ def _get_disk_daily_filepaths(base_dir,
         Single date for which to retrieve the data.
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'. 
+    verbose : bool, optional
+        Whether to print processing details. The default is True.
     """
     # Retrieve the directory on disk where the data are stored
     dir_path = get_disk_directory(base_dir = base_dir, 
@@ -64,7 +67,8 @@ def _get_disk_daily_filepaths(base_dir,
         
     # Check if the folder exists   
     if not os.path.exists(dir_path):
-       print("The GPM product", product, "on date", date, "is unavailable or has not been downloaded !")
+       if verbose: 
+           print("The GPM product", product, "on date", date, "is unavailable or has not been downloaded !")
        return []
    
     # Retrieve the file names in the directory
@@ -111,6 +115,8 @@ def find_daily_filepaths(base_dir,
         Used to retrieve only the last granule of the day.
     flag_first_date : bool, optional 
         Used to search granules near time 000000 stored in the previous day folder.
+    verbose : bool, optional
+        Whether to print processing details. The default is True.
         
     Returns
     -------
@@ -131,7 +137,8 @@ def find_daily_filepaths(base_dir,
                                           product=product, 
                                           product_type=product_type,
                                           date=date,
-                                          version=version)
+                                          version=version,
+                                          verbose=verbose)
     
     ##------------------------------------------------------------------------.
     # Filter the GPM daily file list (for product, start_time & end time)
@@ -179,7 +186,8 @@ def find_daily_filepaths(base_dir,
                                                  product_type = product_type,
                                                  version = version,
                                                  provide_only_last_granule = True,
-                                                 flag_first_date = False) 
+                                                 flag_first_date = False,
+                                                 verbose=verbose) 
             if is_not_empty(last_filepath):
                 # Retrieve last granules end time  
                 last_end_hhmmss = granules_end_hhmmss(last_filepath)[0]
@@ -201,7 +209,8 @@ def find_filepaths(base_dir,
                    start_time,
                    end_time,
                    product_type = 'RS',
-                   version = 7): 
+                   version = 7,
+                   verbose = True): 
     """
     Retrieve GPM data filepaths on local disk for a specific time period and product.
         
@@ -219,6 +228,8 @@ def find_filepaths(base_dir,
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).    
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'. 
+    verbose : bool, optional
+        Whether to print processing details. The default is True.
         
     Returns
     -------
@@ -253,7 +264,8 @@ def find_filepaths(base_dir,
                                          date=dates[0], 
                                          start_hhmmss=start_hhmmss,
                                          end_hhmmss=end_hhmmss,
-                                         flag_first_date=True)
+                                         flag_first_date=True,
+                                         verbose=verbose)
     #-------------------------------------------------------------------------.
     # Case 2: Retrieve multiple days of data
     if len(dates) > 1:
@@ -264,7 +276,8 @@ def find_filepaths(base_dir,
                                          date=dates[0], 
                                          start_hhmmss=start_hhmmss,
                                          end_hhmmss='240000',
-                                         flag_first_date=True)
+                                         flag_first_date=True,
+                                         verbose=verbose)
         if len(dates) > 2:
             for date in dates[1:-1]:
                 filepaths.extend(find_daily_filepaths(base_dir=base_dir,
@@ -273,7 +286,8 @@ def find_filepaths(base_dir,
                                                       product_type=product_type,
                                                       date=date, 
                                                       start_hhmmss='000000',
-                                                      end_hhmmss='240000')
+                                                      end_hhmmss='240000',
+                                                      verbose=verbose)
                                  )
         filepaths.extend(find_daily_filepaths(base_dir=base_dir,
                                               version=version,
@@ -281,7 +295,8 @@ def find_filepaths(base_dir,
                                               product_type=product_type,
                                               date=dates[-1], 
                                               start_hhmmss='000000',
-                                              end_hhmmss=end_hhmmss)
+                                              end_hhmmss=end_hhmmss,
+                                              verbose=verbose)
                          )
     #-------------------------------------------------------------------------. 
     filepaths = sorted(filepaths)
