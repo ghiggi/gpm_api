@@ -124,7 +124,7 @@ def get_key_from_filepaths(fpaths, key):
 #########################################
 #### Product and version information ####
 #########################################
-def _get_product_from_filepath(filepath): 
+def get_product_from_filepath(filepath): 
     GPM_dict = GPM_products_pattern_dict() 
     for product, pattern in GPM_dict.items(): 
         if re.search(pattern, filepath):
@@ -136,11 +136,11 @@ def _get_product_from_filepath(filepath):
 def get_product_from_filepaths(filepaths): 
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-    list_product = [_get_product_from_filepath(fpath) for fpath in filepaths]
+    list_product = [get_product_from_filepath(fpath) for fpath in filepaths]
     return list_product 
 
 
-def _get_version_from_filepath(filepath, integer=True): 
+def get_version_from_filepath(filepath, integer=True): 
     version = _get_key_from_filepath(filepath, key="version")
     if integer: 
         version = int(re.findall('\d+', version)[0])        
@@ -150,7 +150,7 @@ def _get_version_from_filepath(filepath, integer=True):
 def get_version_from_filepaths(filepaths, integer=True): 
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-    list_version = [_get_version_from_filepath(fpath, integer=integer) for fpath in filepaths]
+    list_version = [get_version_from_filepath(fpath, integer=integer) for fpath in filepaths]
     return list_version 
 
 
