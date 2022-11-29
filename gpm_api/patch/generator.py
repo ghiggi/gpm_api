@@ -73,8 +73,11 @@ def get_ds_patch_generator(ds,
                                                       sort_by=sort_by,
                                                       sort_decreasing=sort_decreasing,
                                                       )     
-    da_labels = da_labels.where(da_labels > 0)
+    if n_labels == 0: 
+        raise ValueError("No patch available. You might want to change the patch parameters.")
     
+    da_labels = da_labels.where(da_labels > 0)
+        
     # Assign label to xr.DataArray  coordinate 
     ds = ds.assign_coords({label_name: da_labels})
      
