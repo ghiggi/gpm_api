@@ -142,7 +142,8 @@ def find_daily_filepaths(base_dir,
     
     ##------------------------------------------------------------------------.
     # Filter the GPM daily file list (for product, start_time & end time)
-    filepaths = filter_daily_filepaths(filepaths, product=product,
+    filepaths = filter_daily_filepaths(filepaths,
+                                       product=product,
                                        date = date,  
                                        start_hhmmss=start_hhmmss, 
                                        end_hhmmss=end_hhmmss)
