@@ -25,8 +25,10 @@ from gpm_api.io.directories import get_pps_directory
 def _get_pps_file_list(username, url_file_list, product, date, version, verbose=True):
     """
     Retrieve the filepaths of the files available on the NASA PPS server for a specific day and product.
-
-    Note: This function does not return the complete url !
+    
+    The query is done using https ! 
+    The function does not return the full PPS server url, but the filepath 
+    from the server root: i.e: '/gpmdata/2020/07/05/radar/<...>.HDF5'
 
     Parameters
     ----------
@@ -46,8 +48,6 @@ def _get_pps_file_list(username, url_file_list, product, date, version, verbose=
     # Define curl command
     # -k is required with curl > 7.71 otherwise results in "unauthorized access".
     cmd = "curl -k --user " + username + ":" + username + " " + url_file_list
-    # cmd = 'curl -k -4 -H "Connection: close" --ftp-ssl --user ' + username + ':' + username + ' -n ' + url_file_list
-    # print(cmd)
 
     # Run command
     args = cmd.split()
@@ -76,7 +76,7 @@ def _get_pps_file_list(username, url_file_list, product, date, version, verbose=
     else:
         # Retrieve filepaths
         filepaths = stdout.split()
-
+    
     # Return file paths
     return filepaths
 
@@ -132,12 +132,12 @@ def _get_pps_daily_filepaths(
 
 def _find_pps_daily_filepaths(
     username,
-    product,
     date,
+    product,
+    product_type,
+    version,
     start_time=None,
     end_time=None,
-    product_type="RS",
-    version=7,
     verbose=False,
 ):
     """
@@ -185,7 +185,10 @@ def _find_pps_daily_filepaths(
         verbose=verbose,
     )
     if is_empty(filepaths):
-        return (None, None)
+        if verbose: 
+            version_str = str(int(version))
+            print(f"No data found on PPS on date {date} for product {product} (V0{version_str})")
+        return []
 
     ##------------------------------------------------------------------------.
     # Filter the GPM daily file list (for product, start_time & end time)
@@ -196,16 +199,7 @@ def _find_pps_daily_filepaths(
         version=version,
         start_time=start_time,
         end_time=end_time,
-    )
-
-    ##------------------------------------------------------------------------.
-    # Print an optional message if data are not available
-    if is_empty(filepaths) and verbose:
-        version_str = str(int(version))
-        print(
-            f"No data found on PPS on date {date} for product {product} (V0{version_str})"
-        )
-
+    )     
     return filepaths
 
 

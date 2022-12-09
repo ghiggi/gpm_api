@@ -7,6 +7,7 @@ Created on Mon Aug 15 00:18:33 2022
 """
 
 import os
+import ftplib
 import datetime
 import subprocess
 import pandas as pd
@@ -32,14 +33,26 @@ from gpm_api.io.directories import get_disk_directory
 ### We might want to launch wget in parallel directly
 ### - And then loop by day or month to display progress
 
+## For https connection, it requires Authorization header: <type><credentials>
+# - type: "Basic"
+# - credientials: <...>
+# --> "--header='Authorization: Basic Z2lvbmF0YS5naGlnZ2lAZXBmbC5jaDpnaW9uYXRhLmdoaWdnaUBlcGZsLmNo' "
+
 ##----------------------------------------------------------------------------.
+#############################
+#### Single file command ####
+#############################
 def curl_cmd(server_path, disk_path, username, password):
-    """Download data using curl."""
+    """Download data using curl via ftps."""
     # -------------------------------------------------------------------------.
     # Check disk directory exists (if not, create)
     disk_dir = os.path.dirname(disk_path)
     if not os.path.exists(disk_dir):
         os.makedirs(disk_dir)
+    # -------------------------------------------------------------------------.
+    # Replace ftps with ftp to make curl work !!!
+    # - curl expects ftp:// and not ftps://
+    server_path = server_path.replace("ftps", "ftp", 1)
     # -------------------------------------------------------------------------.
     ## Define command to run
     # Base command: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
@@ -69,8 +82,6 @@ def curl_cmd(server_path, disk_path, username, password):
             password,
             " ",
             "--ftp-ssl ",
-            # TODO: hack to make it temporary work
-            "--header 'Authorization: Basic Z2lvbmF0YS5naGlnZ2lAZXBmbC5jaDpnaW9uYXRhLmdoaWdnaUBlcGZsLmNo' "
             # Custom settings
             "--header 'Connection: close' ",
             "--connect-timeout 20 ",
@@ -84,18 +95,10 @@ def curl_cmd(server_path, disk_path, username, password):
         ]
     )
     return cmd
-    # args = cmd.split()
-    # #-------------------------------------------------------------------------.
-    # # Execute the command
-    # process = subprocess.Popen(args,
-    #                            stdout=subprocess.PIPE,
-    #                            stderr=subprocess.PIPE)
-    # return process
-
+ 
 
 def wget_cmd(server_path, disk_path, username, password):
-    """Create wget command to download data."""
-    server_path = server_path.replace("ftp:", "ftps:")
+    """Create wget command to download data via ftps."""
     # -------------------------------------------------------------------------.
     # Check disk directory exists (if not, create)
     disk_dir = os.path.dirname(disk_path)
@@ -210,6 +213,51 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
     return l_cmd_error
 
 
+def _download_with_ftlib(server_path, disk_path, username, password):
+    # Infer hostname 
+    hostname = server_path.split("/", 3)[2] # remove ftps:// and select host 
+    
+    # Remove hostname from server_path
+    server_path = server_path.split("/", 3)[3]  
+           
+    # Connect to the FTP server using FTPS
+    ftps = ftplib.FTP_TLS(hostname)
+    
+    # Login to the FTP server using the provided username and password
+    ftps.login(username, password) # /gpmdata base directory
+    
+    # Download the file from the FTP server
+    try:     
+        with open(disk_path, "wb") as file:
+            ftps.retrbinary(f"RETR {server_path}", file.write)
+    except EOFError: 
+        return f"Impossible to download {server_path}"
+    
+    # Close the FTP connection
+    ftps.close()
+        
+    
+def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
+    # Download file concurrently 
+    n_files = len(server_paths)
+    with tqdm(total=n_files) as pbar:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=n_threads) as executor:
+            dict_futures = {
+                executor.submit(
+                    _download_with_ftlib,
+                    server_path=server_path,
+                    disk_path=disk_path,
+                    username=username, 
+                    password=password, 
+                ): server_path for server_path, disk_path in zip(server_paths, disk_paths)
+            }
+            # List cmds that didn't work
+            l_cmd_error = []
+            for future in concurrent.futures.as_completed(dict_futures.keys()):
+                pbar.update(1)  # Update the progress bar
+                # Collect all commands that caused problems
+                if future.exception() is not None:
+                    l_cmd_error.append(dict_futures[future])
 ####--------------------------------------------------------------------------.
 ############################
 #### Filtering routines ####
@@ -300,10 +348,10 @@ def _download_daily_data(
     username,
     product,
     date,
+    product_type,
+    version,
     start_time=None,
     end_time=None,
-    product_type="RS",
-    version=7,
     n_threads=10,
     transfer_tool="curl",
     progress_bar=True,
@@ -369,6 +417,7 @@ def _download_daily_data(
         end_time=date + datetime.timedelta(days=1),  # TODO CHANGE
         verbose=verbose,
     )
+    
     disk_filepaths = convert_pps_to_disk_filepaths(
         pps_filepaths=pps_filepaths,
         base_dir=base_dir,
@@ -384,7 +433,7 @@ def _download_daily_data(
 
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
-    (pps_filepaths, disk_filepaths) = filter_download_list(
+    pps_filepaths, disk_filepaths = filter_download_list(
         disk_paths=disk_filepaths,
         server_paths=pps_filepaths,
         force_download=force_download,

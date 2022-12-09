@@ -10,12 +10,8 @@ Created on Mon Aug 15 23:02:04 2022
 # ds_gpm.gpm_api.pyresample_area.plot()  # property !!!
 
 
-### Refactor patterns.py and products.py
 
-# -----------------------------------------------------------------------------.
-#### Investigate chunking of a granule
-
-# Solves TODO for dataset.py
+ 
 # -----------------------------------------------------------------------------.
 # Download yearly / monthly block of data
 
@@ -23,6 +19,28 @@ Created on Mon Aug 15 23:02:04 2022
 
 # TODO: download monthly data
 # TODO: download GPM V7 on servers
+
+# -----------------------------------------------------------------------------.
+# clean google colab tutorials
+
+# -----------------------------------------------------------------------------.
+# parallel pps file list 
+
+# -----------------------------------------------------------------------------.
+# list: start_time end_time per satellite 
+
+# -----------------------------------------------------------------------------.
+#### Investigate chunking of a granule
+
+# Solves TODO for dataset.py
+
+
+# -----------------------------------------------------------------------------.
+
+
+# TODO: utils/archive: from corrupted fpath, extract product, start_time, end_time, version, and redownload
+
+
 
 # Text file with wished download src and dest, parallel
 
@@ -70,7 +88,7 @@ def check_consecutive_granules(filepaths, verbose=True):
 # TODO: ensure_valid_geolocation (1 spurious pixel)
 # TODO: ds_gpm.gpm_api.has_valid_geolocation
 
-
+### Refactor patterns.py and products.py
 # -----------------------------------------------------------------------------.
 # If data alread download, print a better message than:
 # --> Now: Download of available GPM 2A-DPR product completed.

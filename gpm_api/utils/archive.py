@@ -7,9 +7,7 @@ Created on Tue Nov  1 11:24:29 2022
 """
 import os
 import h5py
-import numpy as np
-import pandas as pd
-import xarray as xr
+import gpm_api
 from gpm_api.io.disk import find_filepaths
 from gpm_api.io.checks import (
     check_product,
@@ -78,7 +76,7 @@ def check_file_integrity(
         product_type=product_type,
         start_time=start_time,
         end_time=end_time,
-        verbose=verbose,
+        verbose=False,
     )
     ##---------------------------------------------------------------------.
     # Check that files have been downloaded  on disk
@@ -96,17 +94,54 @@ def check_file_integrity(
             hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
             hdf.close()
         except OSError:
-            if not os.path.exists(filepath):
-                raise ValueError(
-                    "This is a gpm_api bug. `find_GPM_files` should not have returned this filepath."
-                )
-            else:
-                l_corrupted.append(filepath)
-                if remove_corrupted and verbose:
-                    print(
-                        f"The following file is corrupted and is being removed: {filepath}."
-                    )
-                    os.remove(filepath)
+            l_corrupted.append(filepath)
+            
+    ##---------------------------------------------------------------------.            
+    # Report corrupted and remove if asked
+    for filepath in l_corrupted:
+        if verbose and remove_corrupted:
+            print(f"{filepath} is corrupted and is being removed.")
+        else: 
+            print(f"{filepath} is corrupted.")
+        if remove_corrupted:
+            os.remove(filepath)
+    ##---------------------------------------------------------------------.  
+    return l_corrupted
+
+
+def download_monthly_data(
+    base_dir,
+    username,
+    product,
+    year, 
+    month,
+    product_type="RS",
+    version=7,
+    n_threads=10,
+    transfer_tool="curl",
+    progress_bar=False,
+    force_download=False,
+    check_integrity=True,
+    remove_corrupted=True,
+    verbose=True,
+):
+    import datetime
+    start_time = datetime.datetime(year, month, 0, 0, 0, 0)
+    end_time = datetime.datetime(year, month, 0, 0, 0, 0)
+    l_corrupted = gpm_api.download(base_dir=base_dir, 
+                                   username=username, 
+                                   product=product, 
+                                   start_time=start_time,
+                                   end_time=end_time,
+                                   product_type=product_type,
+                                   version=version,
+                                   n_threads=n_threads,
+                                   transfer_tool=transfer_tool,
+                                   progress_bar=progress_bar, 
+                                   force_download=force_download,
+                                   check_integrity=check_integrity, 
+                                   remove_corrupted=remove_corrupted, 
+                                   verbose=verbose)
     return l_corrupted
 
 

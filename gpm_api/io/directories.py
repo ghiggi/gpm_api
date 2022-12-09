@@ -340,7 +340,10 @@ def get_pps_rs_product_dir(product, date, version):
 def get_pps_directory(product, product_type, date, version):
     """
     Retrieve the NASA PPS server directory paths where the GPM data are listed and stored.
-
+    
+    The data list is retrieved using https.
+    The data stored are retrieved using ftps.
+    
     Parameters
     ----------
     product : str
@@ -365,7 +368,7 @@ def get_pps_directory(product, product_type, date, version):
     if product_type == "NRT":
         #### Specify servers
         url_server_text = "https://jsimpsonhttps.pps.eosdis.nasa.gov/text"
-        url_data_server = "https://jsimpsonhttps.pps.eosdis.nasa.gov"
+        url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov"
         # url_data_server = 'ftps://jsimpsonftps.pps.eosdis.nasa.gov'
 
         # Retrieve directory structure
@@ -380,8 +383,7 @@ def get_pps_directory(product, product_type, date, version):
 
         ## Specify servers
         url_server_text = "https://arthurhouhttps.pps.eosdis.nasa.gov/text"
-        url_data_server = "https://arthurhouhttps.pps.eosdis.nasa.gov"
-        #  url_data_server = 'ftp://arthurhouftps.pps.eosdis.nasa.gov'
+        url_data_server = "ftps://arthurhouftps.pps.eosdis.nasa.gov"
 
         # Retrieve directory structure
         dir_structure = get_pps_rs_product_dir(product, date, version)
