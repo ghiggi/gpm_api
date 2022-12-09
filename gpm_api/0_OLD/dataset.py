@@ -54,8 +54,8 @@ def flip_boolean(x):
 
 
 # ----------------------------------------------------------------------------.
-#### Variables 
-# --> TO BE DEPRECATED 
+#### Variables
+# --> TO BE DEPRECATED
 def GPM_variables_dict(product, scan_mode, version=6):
     """
     Return a dictionary with variables information for a specific GPM product.
@@ -63,26 +63,26 @@ def GPM_variables_dict(product, scan_mode, version=6):
     product : str
         GPM product acronym.
     scan_mode : str
-        Radar products have the following scan modes 
+        Radar products have the following scan modes
         - 'FS' = Full Scan --> For Ku, Ka and DPR      (since version 7 products)
         - 'NS' = Normal Scan --> For Ku band and DPR   (till version 6  products)
         - 'MS' = Matched Scans --> For Ka band and DPR  (till version 6 for L2 products)
         - 'HS' = High-sensitivity Scans --> For Ka band and DPR
-        - For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'FS'  
+        - For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'FS'
         - For products '1B-Ka' specify either 'MS' or 'HS'.
         - For products '2A-Ka' and '2A-ENV-Ka' specify 'FS' or 'HS'.
-        - For products '2A-DPR' and '2A-ENV-DPR' specify either 'FS' or 'HS' 
-        
+        - For products '2A-DPR' and '2A-ENV-DPR' specify either 'FS' or 'HS'
+
         For product '2A-SLH', specify scan_mode = 'Swath'
         For product '2A-<PMW>', specify scan_mode = 'S1'
         For product '2B-GPM-CSH', specify scan_mode = 'Swath'.
-        For product '2B-GPM-CORRA', specify either 'KuKaGMI' or 'KuGMI'.        
+        For product '2B-GPM-CORRA', specify either 'KuKaGMI' or 'KuGMI'.
         For product 'IMERG-ER','IMERG-LR' and 'IMERG-FR', specify scan_mode = 'Grid'.
-        
+
         The above guidelines related to product version 7. For lower product version:
         - NS must be used instead of FS in Ku product.
         - MS is available in DPR L2 products till version 6.
-        
+
     version : int, optional
         GPM version of the data to retrieve. Only GPM V06 currently implemented.
 
@@ -119,6 +119,7 @@ def GPM_variables(product, scan_modes=None, version=6):
 
     """
     from gpm_api.checks import initialize_scan_modes
+
     if scan_modes is None:
         # Retrieve scan modes
         scan_modes = initialize_scan_modes(product, version=version)
@@ -128,9 +129,11 @@ def GPM_variables(product, scan_modes=None, version=6):
     if len(scan_modes) > 1:
         l_vars = []
         for scan_mode in scan_modes:
-            GPM_vars = list(GPM_variables_dict(product=product, 
-                                               scan_mode=scan_mode, 
-                                               version=version))            
+            GPM_vars = list(
+                GPM_variables_dict(
+                    product=product, scan_mode=scan_mode, version=version
+                )
+            )
             l_vars = l_vars + GPM_vars
         GPM_vars = list(np.unique(np.array(l_vars)))
     else:
@@ -188,8 +191,8 @@ def check_variables(variables, product, scan_mode, version=6):
     return variables
 
 
-#-----------------------------------------------------------------------------.
-#### HDF parsers 
+# -----------------------------------------------------------------------------.
+#### HDF parsers
 def _parse_hdf_gpm_scantime(h):
     df = pd.DataFrame(
         {
@@ -209,10 +212,10 @@ def _parse_hdf_gpm_scantime(h):
 #### Coordinates ####
 #####################
 def get_orbit_coords(hdf, scan_mode):
-    # Get Granule Number 
+    # Get Granule Number
     hdf_attr = hdf5_file_attrs(hdf)
     granule_id = hdf_attr["FileHeader"]["GranuleNumber"]
-    
+
     lon = hdf[scan_mode]["Longitude"][:]
     lat = hdf[scan_mode]["Latitude"][:]
     time = _parse_hdf_gpm_scantime(hdf[scan_mode]["ScanTime"])
@@ -236,16 +239,20 @@ def get_grid_coords(hdf, scan_mode):
     lon = hdf[scan_mode]["lon"][:]
     lat = hdf[scan_mode]["lat"][:]
     time = hdf_attr["FileHeader"]["StartGranuleDateTime"][:-1]
-    time = np.array(np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1) # TODO: why plus 30 
+    time = np.array(
+        np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1
+    )  # TODO: why plus 30
     coords = {"time": time, "lon": lon, "lat": lat}
     return coords
 
-def get_coords(hdf, scan_mode): 
-    if scan_mode == "Grid": 
+
+def get_coords(hdf, scan_mode):
+    if scan_mode == "Grid":
         coords = get_grid_coords(hdf, scan_mode)
-    else: 
+    else:
         coords = get_orbit_coords(hdf, scan_mode)
-    return coords 
+    return coords
+
 
 ####--------------------------------------------------------------------------.
 #####################
@@ -254,20 +261,33 @@ def get_coords(hdf, scan_mode):
 def get_attrs(hdf):
     attrs = {}
     hdf_attr = hdf5_file_attrs(hdf)
-    # FileHeader attributes 
-    fileheader_keys = ["ProcessingSystem", "ProductVersion", "EmptyGranule", "DOI",
-                       "MissingData", "SatelliteName", "InstrumentName", "AlgorithmID"]
+    # FileHeader attributes
+    fileheader_keys = [
+        "ProcessingSystem",
+        "ProductVersion",
+        "EmptyGranule",
+        "DOI",
+        "MissingData",
+        "SatelliteName",
+        "InstrumentName",
+        "AlgorithmID",
+    ]
     #
-    fileheader_attrs =  hdf_attr.get("FileHeader", None)
+    fileheader_attrs = hdf_attr.get("FileHeader", None)
     if fileheader_attrs:
-        attrs.update({k:  fileheader_attrs[k] for k in fileheader_attrs.keys() & set(fileheader_keys)}) 
-    
-    # JAXAInfo attributes 
-    # - In DPR products 
+        attrs.update(
+            {
+                k: fileheader_attrs[k]
+                for k in fileheader_attrs.keys() & set(fileheader_keys)
+            }
+        )
+
+    # JAXAInfo attributes
+    # - In DPR products
     jaxa_keys = ["TotalQualityCode"]
-    jaxa_attrs =  hdf_attr.get("JAXA_Info", None)
+    jaxa_attrs = hdf_attr.get("JAXA_Info", None)
     if jaxa_attrs:
-        attrs.update({k:  jaxa_attrs[k] for k in jaxa_attrs.keys() & set(jaxa_keys)}) 
+        attrs.update({k: jaxa_attrs[k] for k in jaxa_attrs.keys() & set(jaxa_keys)})
     return attrs
 
 
@@ -374,7 +394,7 @@ def get_attrs(hdf):
 #                 & (lat >= bbox[2])
 #                 & (lat <= bbox[3])
 #             )
-#         # - For IMERG products 
+#         # - For IMERG products
 #         else:
 #             idx_row = np.where((lon >= bbox[0]) & (lon <= bbox[1]))[0]
 #             idx_col = np.where((lat >= bbox[2]) & (lat <= bbox[3]))[0]
@@ -408,9 +428,9 @@ def get_attrs(hdf):
 #             hdf_obj, dims=variables_dict[var]["dims"], coords=coords, attrs=dict_attr
 #         )
 #         da.name = var
-        
+
 #         ## -------------------------------------------------------------------.
-#         #### Decode variables 
+#         #### Decode variables
 #         ## Convert to float explicitly (needed?)
 #         # hdf_obj.dtype  ## int16
 #         # da = da.astype(np.float)
@@ -419,12 +439,12 @@ def get_attrs(hdf):
 #         da = xr.where(da.isin(variables_dict[var]["_FillValue"]), np.nan, da)
 #         # for value in dict_attr['_FillValue']:
 #         #     da = xr.where(da == value, np.nan, da)
-        
+
 #         ## -------------------------------------------------------------------.
 #         ## Add scale and offset
 #         if len(variables_dict[var]["offset_scale"]) == 2:
 #             da = (da / variables_dict[var]["offset_scale"][1] - variables_dict[var]["offset_scale"][0])
-            
+
 #         ## --------------------------------------------------------------------.
 #         ## Create/Add to Dataset
 #         if flag_first is True:
@@ -433,10 +453,10 @@ def get_attrs(hdf):
 #         else:
 #             ds[var] = da
 #         ##--------------------------------------------------------------------.
-               
+
 #     ##------------------------------------------------------------------------.
 #     ## Subsetting based on bbox (lazy with dask)
-#     # --> TODO: outside the loop 
+#     # --> TODO: outside the loop
 #     if bbox is not None:
 #         # - For GPM radar products
 #         # --> Subset only along_track to allow concat on cross_track
@@ -445,10 +465,10 @@ def get_attrs(hdf):
 #         # - For IMERG products
 #         else:
 #             ds = ds.isel(lon=idx_row, lat=idx_col)
-     
+
 #     ##------------------------------------------------------------------------.
 #     ## Special processing for specific fields
-#     ds = apply_custom_decoding(ds, product) 
+#     ds = apply_custom_decoding(ds, product)
 
 #     ##------------------------------------------------------------------------.
 #     # Add other stuffs to dataset
@@ -593,7 +613,7 @@ def get_attrs(hdf):
 #             )
 #             if ds is not None:
 #                 l_Datasets.append(ds)
-                
+
 #     ##-------------------------------------------------------------------------.
 #     # Concat all Datasets
 #     if len(l_Datasets) >= 1:

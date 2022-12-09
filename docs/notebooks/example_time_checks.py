@@ -5,26 +5,26 @@ Created on Tue Nov  1 14:15:34 2022
 
 @author: ghiggi
 """
-import gpm_api 
-import datetime 
+import gpm_api
+import datetime
 
 base_dir = "/ltenas3/0_Data/GPM"
 base_dir = "/home/ghiggi/GPM"
 
-start_time = datetime.datetime.strptime("2020-07-05 00:00:00", '%Y-%m-%d %H:%M:%S')
-end_time = datetime.datetime.strptime("2020-09-01 00:00:00", '%Y-%m-%d %H:%M:%S')
+start_time = datetime.datetime.strptime("2020-07-05 00:00:00", "%Y-%m-%d %H:%M:%S")
+end_time = datetime.datetime.strptime("2020-09-01 00:00:00", "%Y-%m-%d %H:%M:%S")
 
-# Load GPM 
+# Load GPM
 
 
 # Create non-regular timesteps
-timesteps = ds_gpm['time'].values
+timesteps = ds_gpm["time"].values
 timesteps[5:10] = timesteps[100:105]
 
 # Check if regular timesteps
 ds_gpm.gpm_api.has_regular_timesteps
- 
-# Retrieve slices of regular timesteps 
+
+# Retrieve slices of regular timesteps
 list_slices = ds_gpm.gpm_api.get_regular_time_slices()
 print(list_slices)
 

@@ -134,6 +134,7 @@ def read_GPM(
 
     """
     from gpm_api.checks import initialize_scan_modes, check_version, check_product
+
     ##------------------------------------------------------------------------.
     ## Check GPM version
     check_version(GPM_version)

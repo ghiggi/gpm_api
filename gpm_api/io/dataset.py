@@ -5,33 +5,37 @@ Created on Mon Aug 15 14:35:55 2022
 
 @author: ghiggi
 """
-#------------------------------------------------.
+# ------------------------------------------------.
 import os
 import re
 import h5py
 import numpy as np
-import pandas as pd 
+import pandas as pd
 import xarray as xr
 
 from gpm_api.io.disk import find_filepaths
 from gpm_api.io.checks import (
-    check_variables, 
-    check_groups, 
-    check_scan_mode, 
-    check_product, 
+    check_variables,
+    check_groups,
+    check_scan_mode,
+    check_product,
     check_base_dir,
     check_start_end_time,
 )
 from gpm_api.io.info import get_version_from_filepath, get_product_from_filepath
 from gpm_api.io.decoding import apply_custom_decoding, decode_dataset
 from gpm_api.utils.utils_HDF5 import hdf5_datasets, hdf5_groups, hdf5_file_attrs
-from gpm_api.utils.time import subset_by_time, ensure_time_validity, has_regular_timesteps
+from gpm_api.utils.time import (
+    subset_by_time,
+    ensure_time_validity,
+    has_regular_timesteps,
+)
 
 ####--------------------------------------------------------------------------.
-### Define GPM_API Dataset Dimensions 
+### Define GPM_API Dataset Dimensions
 DIM_DICT = {
     "nscan": "along_track",
-    "nray":  "cross_track", 
+    "nray": "cross_track",
     "npixel": "cross_track",
     "nrayMS": "cross_track",
     "nrayHS": "cross_track",
@@ -41,13 +45,13 @@ DIM_DICT = {
     "nbinMS": "range",
     "nbinHS": "range",
     "nbinFS": "range",
-    "nfreq" : "frequency", 
+    "nfreq": "frequency",
     "nDSD": "DSD_params",
-    # nBnPSD --> "range" in CORRA --> 88, 250 M interval 
-    # "nfreqHI": 
+    # nBnPSD --> "range" in CORRA --> 88, 250 M interval
+    # "nfreqHI":
     # nlayer --> in CSH, SLH --> converted to height in decoding
 }
-    
+
 
 def _decode_dimensions(ds):
     dataset_dims = list(ds.dims)
@@ -55,42 +59,42 @@ def _decode_dimensions(ds):
     rename_dim_dict = {}
     for var in dataset_vars:
         da = ds[var]
-        dim_names_str = da.attrs.get('DimensionNames', None)
-        if dim_names_str is not None: 
-            dim_names = dim_names_str.split(',')
+        dim_names_str = da.attrs.get("DimensionNames", None)
+        if dim_names_str is not None:
+            dim_names = dim_names_str.split(",")
             for dim, new_dim in zip(list(da.dims), dim_names):
-                if dim not in rename_dim_dict: 
+                if dim not in rename_dim_dict:
                     rename_dim_dict[dim] = new_dim
                 else:
-                   if rename_dim_dict[dim] == new_dim: 
-                       pass
-                   else: # when more variable share same dimension length (and same phony_dim_<n>)
-                       ds[var] = ds[var].rename({dim: new_dim})
-    if len(rename_dim_dict) > 0: 
+                    if rename_dim_dict[dim] == new_dim:
+                        pass
+                    else:  # when more variable share same dimension length (and same phony_dim_<n>)
+                        ds[var] = ds[var].rename({dim: new_dim})
+    if len(rename_dim_dict) > 0:
         ds = ds.rename_dims(rename_dim_dict)
-    return ds 
+    return ds
 
 
 def assign_dataset_dimensions(ds):
     dataset_dims = list(ds.dims)
 
     # Do not assign dimension name if already exists (i.e. IMERG)
-    if not re.match("phony_dim",  dataset_dims[0]):
-       return ds 
-   
+    if not re.match("phony_dim", dataset_dims[0]):
+        return ds
+
     # Get dimension name from DimensionNames attribute
     ds = _decode_dimensions(ds)
 
     # Switch dimensions to gpm_api standard dimension names
     ds_dims = list(ds.dims)
-    rename_dim_dict = {} 
-    for dim in ds_dims: 
+    rename_dim_dict = {}
+    for dim in ds_dims:
         new_dim = DIM_DICT.get(dim, None)
         if new_dim:
-            rename_dim_dict[dim] = new_dim   
+            rename_dim_dict[dim] = new_dim
     ds = ds.rename_dims(rename_dim_dict)
-    return ds 
-      
+    return ds
+
 
 ####--------------------------------------------------------------------------.
 #####################
@@ -129,7 +133,7 @@ def get_orbit_coords(hdf, scan_mode):
         "gpm_granule_id": (["along_track"], granule_id),
         "gpm_cross_track_id": (["cross_track"], cross_track_id),
         "gpm_along_track_id": (["along_track"], along_track_id),
-    } 
+    }
     return coords
 
 
@@ -138,17 +142,19 @@ def get_grid_coords(hdf, scan_mode):
     lon = hdf[scan_mode]["lon"][:]
     lat = hdf[scan_mode]["lat"][:]
     time = hdf_attr["FileHeader"]["StartGranuleDateTime"][:-1]
-    time = np.array(np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1) # TODO: document why + 30 m
+    time = np.array(
+        np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1
+    )  # TODO: document why + 30 m
     coords = {"time": time, "lon": lon, "lat": lat}
     return coords
 
 
-def get_coords(hdf, scan_mode): 
-    if scan_mode == "Grid": 
+def get_coords(hdf, scan_mode):
+    if scan_mode == "Grid":
         coords = get_grid_coords(hdf, scan_mode)
-    else: 
+    else:
         coords = get_orbit_coords(hdf, scan_mode)
-    return coords 
+    return coords
 
 
 ####--------------------------------------------------------------------------.
@@ -158,20 +164,33 @@ def get_coords(hdf, scan_mode):
 def get_attrs(hdf):
     attrs = {}
     hdf_attr = hdf5_file_attrs(hdf)
-    # FileHeader attributes 
-    fileheader_keys = ["ProcessingSystem", "ProductVersion", "EmptyGranule", "DOI",
-                       "MissingData", "SatelliteName", "InstrumentName", "AlgorithmID"]
+    # FileHeader attributes
+    fileheader_keys = [
+        "ProcessingSystem",
+        "ProductVersion",
+        "EmptyGranule",
+        "DOI",
+        "MissingData",
+        "SatelliteName",
+        "InstrumentName",
+        "AlgorithmID",
+    ]
     #
-    fileheader_attrs =  hdf_attr.get("FileHeader", None)
+    fileheader_attrs = hdf_attr.get("FileHeader", None)
     if fileheader_attrs:
-        attrs.update({k:  fileheader_attrs[k] for k in fileheader_attrs.keys() & set(fileheader_keys)}) 
-    
-    # JAXAInfo attributes 
-    # - In DPR products 
+        attrs.update(
+            {
+                k: fileheader_attrs[k]
+                for k in fileheader_attrs.keys() & set(fileheader_keys)
+            }
+        )
+
+    # JAXAInfo attributes
+    # - In DPR products
     jaxa_keys = ["TotalQualityCode"]
-    jaxa_attrs =  hdf_attr.get("JAXA_Info", None)
+    jaxa_attrs = hdf_attr.get("JAXA_Info", None)
     if jaxa_attrs:
-        attrs.update({k:  jaxa_attrs[k] for k in jaxa_attrs.keys() & set(jaxa_keys)}) 
+        attrs.update({k: jaxa_attrs[k] for k in jaxa_attrs.keys() & set(jaxa_keys)})
     return attrs
 
 
@@ -179,11 +198,11 @@ def get_attrs(hdf):
 ###################
 #### HDF TOOLS ####
 ###################
-def _get_hdf_groups(hdf, scan_mode, variables=None, groups=None):    
-    # Select only groups containing the specified variables 
-    if variables is not None: 
-        # Get dataset variables 
-        # - scan_mode 
+def _get_hdf_groups(hdf, scan_mode, variables=None, groups=None):
+    # Select only groups containing the specified variables
+    if variables is not None:
+        # Get dataset variables
+        # - scan_mode
         dataset_dict = hdf5_datasets(hdf)
         var_group_dict = {}
         for k in dataset_dict.keys():
@@ -191,79 +210,98 @@ def _get_hdf_groups(hdf, scan_mode, variables=None, groups=None):
                 list_split = k.split("/")
                 if len(list_split) == 3:  # scan_mode/group/var
                     var_group_dict[list_split[2]] = list_split[1]
-                if len(list_split) == 2:  # scan_mode/var 
-                    var_group_dict[list_split[1]] = '' # to get variables from scan_mode group
-               
-        dataset_variables = list(var_group_dict)   
-        # Include 'height' variable if available (for radar) 
+                if len(list_split) == 2:  # scan_mode/var
+                    var_group_dict[
+                        list_split[1]
+                    ] = ""  # to get variables from scan_mode group
+
+        dataset_variables = list(var_group_dict)
+        # Include 'height' variable if available (for radar)
         if "height" in dataset_variables:
-            variables = np.unique(np.append(variables,["height"]))     
-        # Check variables validity 
+            variables = np.unique(np.append(variables, ["height"]))
+        # Check variables validity
         idx_subset = np.where(np.isin(variables, dataset_variables, invert=True))[0]
         if len(idx_subset) > 0:
             wrong_variables = variables[idx_subset]
-            raise ValueError(f"The following variables are not available: {wrong_variables}.")
-        # Get groups subset 
+            raise ValueError(
+                f"The following variables are not available: {wrong_variables}."
+            )
+        # Get groups subset
         groups = np.unique([var_group_dict[var] for var in variables])
-    elif groups is not None: 
-        # Check group validity 
-        dataset_groups = np.unique(list(hdf5_groups(hdf[scan_mode])) + ['']) 
+    elif groups is not None:
+        # Check group validity
+        dataset_groups = np.unique(list(hdf5_groups(hdf[scan_mode])) + [""])
         idx_subset = np.where(np.isin(groups, dataset_groups, invert=True))[0]
         if len(idx_subset) > 0:
             wrong_groups = groups[idx_subset]
             raise ValueError(f"The following groups are not available: {wrong_groups}.")
-        
-    # Select all groups 
-    else: 
-        groups = np.unique(list(hdf5_groups(hdf[scan_mode]))+[''])
+
+    # Select all groups
+    else:
+        groups = np.unique(list(hdf5_groups(hdf[scan_mode])) + [""])
     # ----------------------------------------------------.
-    # Remove "ScanTime" from groups 
+    # Remove "ScanTime" from groups
     groups = np.setdiff1d(groups, ["ScanTime"])
     # ----------------------------------------------------.
-    # Return groups 
+    # Return groups
     return groups, variables
 
 
-def _open_hdf_group(filepath, scan_mode, group, 
-                    variables=None, 
-                    prefix_group=True,
-                    decode_cf=False, 
-                    chunks=None,
-                    ):
-    # Define hdf group 
-    # - group == '' to retrieve variables attached to scan_mode group 
+def _open_hdf_group(
+    filepath,
+    scan_mode,
+    group,
+    variables=None,
+    prefix_group=True,
+    decode_cf=False,
+    chunks=None,
+):
+    # Define hdf group
+    # - group == '' to retrieve variables attached to scan_mode group
     hdf_group = scan_mode + "/" + group
-    ds = xr.open_dataset(filepath, engine="netcdf4",
-                         group=hdf_group,
-                         decode_cf=decode_cf, chunks=chunks)
-    # Assign dimensions 
+    ds = xr.open_dataset(
+        filepath, engine="netcdf4", group=hdf_group, decode_cf=decode_cf, chunks=chunks
+    )
+    # Assign dimensions
     ds = assign_dataset_dimensions(ds)
 
-    # Subset variables 
-    if variables is not None: 
+    # Subset variables
+    if variables is not None:
         variables_subset = variables[np.isin(variables, list(ds.data_vars))]
         ds = ds[variables_subset]
-    # Remove unuseful variables 
-    dummy_variables = ["Latitude", "Longitude",
-                       # IMERG bnds
-                       "time_bnds", "lat_bnds", "lon_bnds"]
+    # Remove unuseful variables
+    dummy_variables = [
+        "Latitude",
+        "Longitude",
+        # IMERG bnds
+        "time_bnds",
+        "lat_bnds",
+        "lon_bnds",
+    ]
     dummy_variables = np.array(dummy_variables)
     variables_to_drop = dummy_variables[np.isin(dummy_variables, list(ds.data_vars))]
-    ds = ds.drop_vars(variables_to_drop)   
+    ds = ds.drop_vars(variables_to_drop)
     # Prefix variables with group name
     if prefix_group:
         if len(group) > 0:
             rename_var_dict = {var: group + "/" + var for var in ds.data_vars}
             ds = ds.rename_vars(rename_var_dict)
-    return ds 
-    
+    return ds
+
 
 ####--------------------------------------------------------------------------.
 ##############################
 #### gpm_api.open_granule ####
 ##############################
-def open_granule(filepath, scan_mode=None, groups=None, variables=None, 
-                 decode_cf=False, chunks="auto", prefix_group=True):
+def open_granule(
+    filepath,
+    scan_mode=None,
+    groups=None,
+    variables=None,
+    decode_cf=False,
+    chunks="auto",
+    prefix_group=True,
+):
     """
     Create a lazy xarray.Dataset with relevant GPM data and attributes
     for a specific granule.
@@ -271,44 +309,44 @@ def open_granule(filepath, scan_mode=None, groups=None, variables=None,
     Parameters
     ----------
     fpath : str
-        Filepath of GPM granule dataset 
+        Filepath of GPM granule dataset
     scan_mode : str
-        The radar products have the following scan modes 
+        The radar products have the following scan modes
         - 'FS' = Full Scan --> For Ku, Ka and DPR      (since version 7 products)
         - 'NS' = Normal Scan --> For Ku band and DPR   (till version 6  products)
         - 'MS' = Matched Scans --> For Ka band and DPR  (till version 6 for L2 products)
         - 'HS' = High-sensitivity Scans --> For Ka band and DPR
-        For version 7: 
-        - For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'FS'  
+        For version 7:
+        - For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'FS'
         - For products '1B-Ka' specify either 'MS' or 'HS'.
         - For products '2A-Ka' and '2A-ENV-Ka' specify 'FS' or 'HS'.
-        - For products '2A-DPR' and '2A-ENV-DPR' specify either 'FS' or 'HS' 
+        - For products '2A-DPR' and '2A-ENV-DPR' specify either 'FS' or 'HS'
         For version < 7:
         - NS must be used instead of FS in Ku product.
         - MS is available in DPR L2 products till version 6.
-        
+
         For product '2A-SLH', specify scan_mode = 'Swath'
         For product '2A-<PMW>', specify scan_mode = 'S1'
         For product '2B-GPM-CSH', specify scan_mode = 'Swath'.
-        For product '2B-GPM-CORRA', specify either 'KuKaGMI' or 'KuGMI'.        
+        For product '2B-GPM-CORRA', specify either 'KuKaGMI' or 'KuGMI'.
         For product 'IMERG-ER','IMERG-LR' and 'IMERG-FR', specify scan_mode = 'Grid'.
-        
-        The above guidelines related to product version 7. 
-            
+
+        The above guidelines related to product version 7.
+
     variables : list, str
          Datasets names to extract from the HDF5 file.
          Hint: utils_HDF5.hdf5_datasets_names() to see available datasets.
     groups
-        TODO 
+        TODO
     chunks : str, list, optional
         Chunk size for dask array. The default is 'auto'.
         If you want to load data in memory directly, specify chunks=None.
-        
+
         Hint: xarray’s lazy loading of remote or on-disk datasets is often but not always desirable.
         Before performing computationally intense operations, load the Dataset
         entirely into memory by invoking ds.compute().
-        
-        Custom chunks can be specified by: TODO 
+
+        Custom chunks can be specified by: TODO
         - Provide a list (with length equal to 'variables') specifying
           the chunk size option for each variable.
     decode_cf: bool, optional
@@ -316,97 +354,101 @@ def open_granule(filepath, scan_mode=None, groups=None, variables=None,
     prefix_group: bool, optional
         Whether to add the group as a prefix to the variable names.
         THe default is True.
-        
+
     Returns
     -------
-    
+
     ds:  xarray.Dataset
 
     """
-    # Get product 
+    # Get product
     product = get_product_from_filepath(filepath)
     version = get_version_from_filepath(filepath)
-    
-    # Check variables and groups 
+
+    # Check variables and groups
     variables = check_variables(variables)
     groups = check_groups(groups)
-    
-    # Check scan_mode 
+
+    # Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version)
-        
-    # Open HDF5 file 
-    hdf = h5py.File(filepath, "r")  
-    
+
+    # Open HDF5 file
+    hdf = h5py.File(filepath, "r")
+
     # Get coordinates
     coords = get_coords(hdf, scan_mode)
-    
+
     # Get attributes(hdf)
     # TODO Add FileHader Group attributes (see metadata doc)
-    # TODO Select all possible attributes? 
+    # TODO Select all possible attributes?
     attrs = get_attrs(hdf)
-    attrs['ScanMode'] = scan_mode
-    
+    attrs["ScanMode"] = scan_mode
+
     # Get groups to process (filtering out groups without any `variables`)
-    groups, variables = _get_hdf_groups(hdf, scan_mode=scan_mode, variables=variables, groups=groups)
+    groups, variables = _get_hdf_groups(
+        hdf, scan_mode=scan_mode, variables=variables, groups=groups
+    )
     hdf.close()
-    
+
     # Iterate over groups and create xr.Datasets
     list_ds = []
-    for group in groups: 
-       ds =  _open_hdf_group(filepath, 
-                             scan_mode=scan_mode,
-                             group=group, 
-                             variables=variables,
-                             prefix_group=prefix_group,
-                             decode_cf=False,
-                             chunks=chunks)
-       list_ds.append(ds)
-       
+    for group in groups:
+        ds = _open_hdf_group(
+            filepath,
+            scan_mode=scan_mode,
+            group=group,
+            variables=variables,
+            prefix_group=prefix_group,
+            decode_cf=False,
+            chunks=chunks,
+        )
+        list_ds.append(ds)
+
     # Create single xr.Dataset
     ds = xr.merge(list_ds)
-    
-    # Assign coords 
+
+    # Assign coords
     ds = ds.assign_coords(coords)
-    
-    # Assign attributes 
+
+    # Assign attributes
     ds.attrs = attrs
-       
-    #------------------------------------------------------.
-    ### Clean attritubes, decode variables 
-    # Apply custom processing  
-    ds = apply_custom_decoding(ds, product) 
-    
-    # Apply cf decoding 
-    if decode_cf: 
+
+    # ------------------------------------------------------.
+    ### Clean attritubes, decode variables
+    # Apply custom processing
+    ds = apply_custom_decoding(ds, product)
+
+    # Apply cf decoding
+    if decode_cf:
         ds = decode_dataset(ds)
-    
-    #------------------------------------------------------.
-    #### Check time coordinate  
-    
-    # Ensure validity of the time dimension 
+
+    # ------------------------------------------------------.
+    #### Check time coordinate
+
+    # Ensure validity of the time dimension
     # - Infill up to 10 consecutive NaT
-    # - Do not check for regular time dimension ! 
+    # - Do not check for regular time dimension !
     ds = ensure_time_validity(ds, limit=10)
-    
+
     # Check regular timesteps within the granule
     if not has_regular_timesteps(ds):
         raise ValueError("The GPM granule {fpath} has non-regular timesteps.")
-    
-    #------------------------------------------------------.
+
+    # ------------------------------------------------------.
     #### Check geolocation latitude/longitude coordinates
     # TODO: check_valid_geolocation
     # TODO: ensure_valid_geolocation (1 spurious pixel)
     # TODO: ds_gpm.gpm_api.valid_geolocation
-    
-    #------------------------------------------------------.
-    # Remove list xr.Dataset to close connections
-    del list_ds 
-    
-    #------------------------------------------------------.
-    # Return xr.Dataset
-    return ds 
 
- 
+    # ------------------------------------------------------.
+    # Remove list xr.Dataset to close connections
+    del list_ds
+
+    # ------------------------------------------------------.
+    # Return xr.Dataset
+    return ds
+
+
 ####---------------------------------------------------------------------------.
 ##############################
 #### gpm_api.open_dataset ####
@@ -421,17 +463,19 @@ def is_valid_granule(filepath):
         hdf.close()
     except OSError:
         if not os.path.exists(filepath):
-            raise ValueError("This is a gpm_api bug. `find_GPM_files` should not have returned this filepath.")
+            raise ValueError(
+                "This is a gpm_api bug. `find_GPM_files` should not have returned this filepath."
+            )
         else:
             print(f"The following file is corrupted and is being removed: {filepath}")
             print("Redownload the file !!!")
             os.remove(filepath)
-            return False 
-        
+            return False
+
     if hdf_attr["FileHeader"]["EmptyGranule"] == "NOT_EMPTY":
-        return True 
+        return True
     else:
-        return False 
+        return False
 
 
 def open_dataset(
@@ -439,21 +483,20 @@ def open_dataset(
     product,
     start_time,
     end_time,
-    variables=None, 
-    groups=None, # TODO implement 
+    variables=None,
+    groups=None,  # TODO implement
     scan_mode=None,
     version=7,
     product_type="RS",
     chunks="auto",
-    decode_cf = True, 
-    prefix_group = True, 
-    
+    decode_cf=True,
+    prefix_group=True,
 ):
     """
     Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
-    
-    Note: 
-    It does not load GPM granules with flag 'EmptyGranule' != "NOT_EMPTY" 
+
+    Note:
+    It does not load GPM granules with flag 'EmptyGranule' != "NOT_EMPTY"
 
     Parameters
     ----------
@@ -496,21 +539,21 @@ def open_dataset(
 
     """
     ##------------------------------------------------------------------------.
-    # Check base_dir 
+    # Check base_dir
     base_dir = check_base_dir(base_dir)
     ## Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version=version)
     ## Check valid product and variables
     check_product(product, product_type=product_type)
     variables = check_variables(variables)
-    # Check valid start/end time 
-    start_time, end_time = check_start_end_time(start_time, end_time) 
+    # Check valid start/end time
+    start_time, end_time = check_start_end_time(start_time, end_time)
     ##------------------------------------------------------------------------.
     ## TODO: Check for chunks
-    # - check works in open_dataset 
+    # - check works in open_dataset
     # - smart_autochunk per variable (based on dim...)
     # chunks = check_chunks(chunks)
-    
+
     ##------------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
@@ -524,38 +567,41 @@ def open_dataset(
     ##------------------------------------------------------------------------.
     # Check that files have been downloaded  on disk
     if len(filepaths) == 0:
-        raise ValueError("Requested files are not found on disk. Please download them before.")
-    
-    # Filter by version 
-    # TODO 
-    
-    # Check same version 
+        raise ValueError(
+            "Requested files are not found on disk. Please download them before."
+        )
+
+    # Filter by version
     # TODO
-    
-    # Check consecutive granules 
-    # TODO 
-    
+
+    # Check same version
+    # TODO
+
+    # Check consecutive granules
+    # TODO
+
     ##------------------------------------------------------------------------.
     # Initialize list (to store Dataset of each granule )
     # TODO: open in parallel !!!
     l_Datasets = []
     for filepath in filepaths:
         # Retrieve data if granule is not empty
-        if is_valid_granule(filepath): 
-            ds = open_granule(filepath, 
-                              scan_mode=scan_mode,
-                              variables=variables,
-                              # groups=groups, # TODO 
-                              decode_cf = False, 
-                              prefix_group=prefix_group,
-                              chunks=chunks,
+        if is_valid_granule(filepath):
+            ds = open_granule(
+                filepath,
+                scan_mode=scan_mode,
+                variables=variables,
+                # groups=groups, # TODO
+                decode_cf=False,
+                prefix_group=prefix_group,
+                chunks=chunks,
             )
-            #------------------------------------------------------------------.
+            # ------------------------------------------------------------------.
             if ds is not None:
                 l_Datasets.append(ds)
-    
-    # TODO 
-    # - Extract attributes and summarize it 
+
+    # TODO
+    # - Extract attributes and summarize it
     # - MissingData in FileHeaderGroup: The number of missing scans.
     # - TotalQualityCode in JAXAInfo Group
     # - NumberOfRainPixels (FS/HS) in JAXAInfo Group
@@ -563,7 +609,7 @@ def open_dataset(
     # - ProcessingMode in JAXAInfo Group
     # - DielectricFactorKa in JAXAInfo Group
     # - DielectricFactorKu in JAXAInfo Group
-    
+
     # - ScanType: SwathHeader Group (”CROSSTRACK”, ”CONICAL”)
     ##-------------------------------------------------------------------------.
     # Concat all Datasets
@@ -579,13 +625,13 @@ def open_dataset(
     else:
         print("No valid GPM granule available for current request.")
         return None
-    
+
     # Decode dataset
     if decode_cf:
         ds = decode_dataset(ds)
-        
+
     ##------------------------------------------------------------------------.
-    # Subset dataset for start_time and end_time 
+    # Subset dataset for start_time and end_time
     ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
 
     ##------------------------------------------------------------------------.
