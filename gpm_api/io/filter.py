@@ -5,105 +5,177 @@ Created on Thu Oct 13 11:30:46 2022
 
 @author: ghiggi
 """
-import os
+import re
 import datetime
 import numpy as np 
 from gpm_api.io.checks import (
-    check_hhmmss, 
     check_product,
     check_filepaths,
+    check_start_end_time,
+    check_version, 
 )
-from gpm_api.utils.utils_string import (
-    str_extract,
-    str_subset,
-    str_sub,
-    str_pad,
-    str_detect,
-)
+from gpm_api.utils.utils_string import str_subset
 from gpm_api.io.patterns import GPM_products_pattern_dict
- 
-
-#-----------------------------------------------------------------------------.
-##################################
-#### Infos from granules name ####
-##################################
-def granules_time_info(filepaths):
-    """
-    Retrieve the date, start_hhmmss and end_hhmmss of GPM granules.
-
-    Parameters
-    ----------
-    filepaths : list, str
-        Filepath or filename of a GPM HDF5 file.
-
-    Returns
-    -------
-    date: list
-        List with the date of each granule.
-    start_time : list
-        List with the start_hhmmss of each granule.
-    end_time : list
-        List with the end_hhmmss of each granule.
-
-    """
-    # Extract filename from filepath (and be sure is a list)
-    if isinstance(filepaths,str):
-        filepaths = [filepaths]
-    filenames = [os.path.basename(filepath) for filepath in filepaths]
-    # Check is not 1B DPR product (because different data format)
-    is_1B_DPR = str_detect(filenames, "GPMCOR")
-    # - Retrieve start_hhmmss and endtime of JAXA 1B DPR reflectivities
-    if (all(is_1B_DPR)):  
-        # 'GPMCOR_KAR*','GPMCOR_KUR*' # if product not in ['1B-Ka', '1B-Ku']:
-        l_YYMMDD = str_sub(str_extract(filenames,"[0-9]{10}"),end=6) 
-        dates = [datetime.datetime.strptime(YYMMDD, "%y%m%d").strftime("%Y%m%d") for YYMMDD in l_YYMMDD]
-        l_start_hhmmss = str_sub(str_extract(filenames,"[0-9]{10}"),6) 
-        l_end_hhmmss = str_sub(str_extract(filenames,"_[0-9]{4}_"),1,5) 
-        l_start_hhmmss = str_pad(l_start_hhmmss, width=6, side="right",pad="0")
-        l_end_hhmmss = str_pad(l_end_hhmmss, width=6, side="right",pad="0")
-    elif (all(list(np.logical_not(is_1B_DPR)))):
-        dates = str_sub(str_extract(filenames,"[0-9]{8}-S"), end=-2)
-        l_start_hhmmss = str_sub(str_extract(filenames,"S[0-9]{6}"), 1)
-        l_end_hhmmss = str_sub(str_extract(filenames,"E[0-9]{6}"), 1)  
-    else:
-        raise ValueError("BUG... mix of products in filepaths ?")     
-    return (dates, l_start_hhmmss, l_end_hhmmss)
+from gpm_api.io.info import (
+    get_start_end_time_from_filepaths,
+    get_version_from_filepaths,
+    get_info_from_filepath,
+)
 
 
-def granules_start_hhmmss(filepaths): 
-    _, start_hhmmss,_ = granules_time_info(filepaths)
-    return(start_hhmmss)
-
-
-def granules_end_hhmmss(filepaths): 
-    _, _, end_hhmmss = granules_time_info(filepaths)
-    return(end_hhmmss)
-
-
-def granules_dates(filepaths): 
-    dates, _, _ = granules_time_info(filepaths)
-    return(dates)
-
-
-def get_name_first_daily_granule(filepaths):
-    """Retrieve the name of first daily granule in the daily folder."""
-    filenames = [os.path.basename(filepath) for filepath in filepaths]
-    _, l_start_hhmmss, _ = granules_time_info(filenames)
-    first_filename = filenames[np.argmin(l_start_hhmmss)]
-    return(first_filename)
-
-
-def get_time_first_daily_granule(filepaths):
-    """Retrieve the start_time and end_time of first daily granule in the daily folder."""
-    filename = get_name_first_daily_granule(filepaths)
-    _, start_hhmmss, end_hhmmss = granules_time_info(filename)
-    return (start_hhmmss[0], end_hhmmss[0])
+def is_granule_within_time(start_time, end_time, file_start_time, file_end_time):
+    """Check if a granule is within start_time and end_time."""
+    # - Case 1
+    #     s               e
+    #     |               |
+    #   ---------> (-------->)
+    is_case1 = file_start_time <= start_time and file_end_time > start_time
+    # - Case 2
+    #     s               e
+    #     |               |
+    #          -------- 
+    is_case2 = file_start_time >= start_time and file_end_time < end_time
+    # - Case 3
+    #     s               e
+    #     |               |
+    #                ------------->
+    is_case3 = file_start_time < end_time and file_end_time > end_time
+    # - Check if one of the conditions occurs 
+    is_within = is_case1 or is_case2 or is_case3
+    # - Return boolean 
+    return is_within
 
 
 ####--------------------------------------------------------------------------.
 ##########################
 #### Filter filepaths ####
 ##########################
+
+
+def _filter_filepath(filepath,
+                     product=None,
+                     version=None,
+                     start_time=None, 
+                     end_time=None):
+    """
+    Check if a single filepath pass the filtering parameters.
+    
+    If do not match the filtering criteria, it returns None.
+
+    Parameters
+    ----------
+    filepath : str
+        Filepath string.
+    product : str
+        GPM product name. See: gpm_api.available_products()
+        The default is None.
+    start_time : datetime.datetime 
+        Start time
+        The default is None.
+    end_time : datetime.datetime
+        End time.  
+        The default is None.
+    version: int 
+        GPM product version.
+        The default is None.
+
+    Returns
+    -------
+    
+    filepaths : list 
+        Returns the filepaths subset.
+        If no valid filepaths, return an empty list. 
+
+    """
+    
+    info_dict = get_info_from_filepath(filepath)
+ 
+    # Filter by version
+    if version is not None: 
+        file_version = info_dict['version']
+        file_version = int(re.findall('\d+', file_version)[0])   
+        if file_version != version: 
+            return None 
+    
+    # Filter by product 
+    # - TODO with info_dict once we have dictionary mapping patterns to filepath product acronyms 
+    if product is not None: 
+        gpm_pattern_dict = GPM_products_pattern_dict()       
+        filepath = str_subset(filepath, gpm_pattern_dict[product])
+        if filepath is None: 
+            return None 
+    
+    # Filter by start_time and end_time
+    if start_time is not None and end_time is not None: 
+        file_start_time = info_dict['start_time']
+        file_end_time = info_dict['end_time']
+        if not is_granule_within_time(start_time, end_time, 
+                                  file_start_time, file_end_time): 
+            return None 
+   
+    return filepath
+
+
+def filter_filepaths(filepaths, 
+                     product=None,
+                     product_type=None, 
+                     version=None,
+                     start_time=None, 
+                     end_time=None):
+    """
+    Filter the GPM filepaths based on specific parameters.
+
+    Parameters
+    ----------
+    filepaths : list
+        List of filepaths.
+    product : str
+        GPM product name. See: gpm_api.available_products()
+        The default is None.
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).  
+    start_time : datetime.datetime 
+        Start time
+        The default is None.
+    end_time : datetime.datetime
+        End time.  
+        The default is None.
+    version: int 
+        GPM product version.
+        The default is None.
+
+    Returns
+    -------
+    
+    filepaths : list 
+        Returns the filepaths subset.
+        If no valid filepaths, return an empty list. 
+
+    """
+    # Check filepaths 
+    if isinstance(filepaths, type(None)):
+        return [] 
+    filepaths = check_filepaths(filepaths)
+    if len(filepaths) == 0: 
+        return []
+    # Check product validity 
+    check_product(product = product, product_type = product_type)
+    # Check start_time and end_time
+    if start_time is not None or end_time is not None: 
+        if start_time is None: 
+            start_time = datetime.datetime(1998,1,1,0,0,0) # GPM start mission
+        if end_time is None: 
+            end_time = datetime.datetime.now()             # Current time
+    # Filter filepaths 
+    filepaths = [_filter_filepath(fpath, 
+                                  product=product,
+                                  version=version, 
+                                  start_time=start_time, 
+                                  end_time=end_time)                         
+                                  for fpath in filepaths]
+    # Remove None from the list 
+    filepaths = [fpath for fpath in filepaths if fpath is not None]
+    return filepaths
 
 
 def filter_by_product(filepaths, product, product_type="RS"): 
@@ -113,9 +185,9 @@ def filter_by_product(filepaths, product, product_type="RS"):
     Parameters
     ----------
     filepaths : list
-        List of filepaths or filenames for a specific day.
+        List of filepaths.
     product : str
-        GPM product name. See: GPM_products()
+        GPM product name. See: gpm_api.available_products()
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).  
         
@@ -126,6 +198,7 @@ def filter_by_product(filepaths, product, product_type="RS"):
         If no valid filepaths, returns an empty list ! 
     
     """
+    # return filter_filepaths(filepaths, product=product, product_type=product_type)
     #-------------------------------------------------------------------------.
     # Check filepaths 
     if isinstance(filepaths, type(None)):
@@ -136,8 +209,7 @@ def filter_by_product(filepaths, product, product_type="RS"):
 
     #-------------------------------------------------------------------------.
     # Check product validity 
-    check_product(product = product, 
-                  product_type = product_type)
+    check_product(product = product, product_type = product_type)
     
     #-------------------------------------------------------------------------.
     # Retrieve GPM filename dictionary 
@@ -153,32 +225,28 @@ def filter_by_product(filepaths, product, product_type="RS"):
          
 
 def filter_by_time(filepaths, 
-                   date = None,  
-                   start_hhmmss=None,
-                   end_hhmmss=None):
+                   start_time,
+                   end_time):
     """
-    Filter filepaths by time.
+    Filter filepaths by start_time and end_time.
     
     Parameters
     ----------
     filepaths : list
-        List of filepaths or filenames for a specific day.
-     date : datetime
-         Single date for which to retrieve the data.
-     start_hhmmss : str or datetime, optional
-         Start time. A datetime object or a string in hhmmss format.
-         The default is None (retrieving from 000000)
-     end_hhmmss : str or datetime, optional
-         End time. A datetime object or a string in hhmmss format.
-         The default is None (retrieving to 240000)
+        List of filepaths.
+
+    start_time : datetime.datetime 
+        Start time
+    end_time : datetime.datetime
+        End time.  
     
     Returns 
     ----------
-    
     filepaths : list 
         List of valid filepaths.
         If no valid filepaths, returns an empty list ! 
     """
+    # return filter_filepaths(filepaths, start_time=start_time, end_time=end_time)
     #-------------------------------------------------------------------------.
     # Check filepaths 
     if isinstance(filepaths, type(None)):
@@ -188,99 +256,86 @@ def filter_by_time(filepaths,
         return []
     
     #-------------------------------------------------------------------------.
-    # Check time format 
-    start_hhmmss, end_hhmmss = check_hhmmss(start_hhmmss = start_hhmmss, 
-                                            end_hhmmss = end_hhmmss)
-       
+    # Check start_time and end_time 
+    if start_time is None: 
+        start_time = datetime.datetime(1998,1,1,0,0,0) # GPM start mission
+    if end_time is None: 
+        end_time = datetime.datetime.now()             # Current time 
+    start_time, end_time = check_start_end_time(start_time, end_time) 
+    
     #-------------------------------------------------------------------------. 
-    # - Retrieve start_hhmmss and endtime of GPM granules products (execept JAXA 1B reflectivities)
-    l_date, l_s_hhmmss,l_e_hhmmss = granules_time_info(filepaths)
+    # - Retrieve start_time and end_time of GPM granules
+    l_start_time, l_end_time = get_start_end_time_from_filepaths(filepaths)
     
     #-------------------------------------------------------------------------. 
     # Check file are available 
-    if len(l_date) == 0: 
+    if len(l_start_time) == 0: 
         return []
    
     #-------------------------------------------------------------------------. 
-    # Subset granules by date (required for NRT data)
-    if (date is not None):
-        idx_valid_date = np.array(l_date) == date.strftime("%Y%m%d")
-        filepaths = np.array(filepaths)[idx_valid_date]
-        l_s_hhmmss = np.array(l_s_hhmmss)[idx_valid_date]
-        l_e_hhmmss = np.array(l_e_hhmmss)[idx_valid_date]
-    
-    #-------------------------------------------------------------------------. 
-    # Convert hhmmss to integer 
-    start_hhmmss = int(start_hhmmss)
-    end_hhmmss = int(end_hhmmss)
-    l_s_hhmmss = np.array(l_s_hhmmss).astype(np.int64)  # to integer 
-    l_e_hhmmss = np.array(l_e_hhmmss).astype(np.int64)  # to integer 
-    
-    # Take care for include in subsetting the last day granule 
-    idx_next_day_granule = l_e_hhmmss < l_s_hhmmss
-    l_e_hhmmss[idx_next_day_granule] = 240001
-    
-    # Subset granules files based on start time and end time
-    idx_select1 = np.logical_and(l_s_hhmmss <= start_hhmmss, l_e_hhmmss > start_hhmmss)
-    idx_select2 = np.logical_and(l_s_hhmmss >= start_hhmmss, l_s_hhmmss < end_hhmmss)
-    idx_select = np.logical_or(idx_select1, idx_select2)
+    # Select granules with data within the start and end time 
+    # - Case 1
+    #     s               e
+    #     |               |
+    #   ---------> (-------->)
+    idx_select1 = np.logical_and(l_start_time <= start_time, l_end_time > start_time)
+    # - Case 2
+    #     s               e
+    #     |               |
+    #          -------- 
+    idx_select2 = np.logical_and(l_start_time >= start_time, l_end_time < end_time)
+    # - Case 3
+    #     s               e
+    #     |               |
+    #                -------------
+    idx_select3 = np.logical_and(l_start_time < end_time, l_end_time > end_time)
+    # - Get idx where one of the cases occur 
+    idx_select = np.logical_or(idx_select1, idx_select2, idx_select3)
+    # - Select filepaths 
     filepaths = list(np.array(filepaths)[idx_select])
-    
-    return filepaths 
-    
-    
-def filter_daily_filepaths(filepaths,
-                           product,
-                           product_type = 'RS',
-                           date = None,  
-                           start_hhmmss=None,
-                           end_hhmmss=None):
-    """
-    Filter the daily GPM filepaths for specific product and daytime period.
+    #-------------------------------------------------------------------------. 
+    return filepaths
 
+
+def filter_by_version(filepaths, 
+                      version):
+    """
+    Filter filepaths by GPM product version.
+    
     Parameters
     ----------
     filepaths : list
-        List of filepaths or filenames for a specific day.
-    product : str
-        GPM product name. See: GPM_products()
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).  
-    date : datetime
-        Single date for which to retrieve the data.
-    start_hhmmss : str or datetime, optional
-        Start time. A datetime object or a string in hhmmss format.
-        The default is None (retrieving from 000000)
-    end_hhmmss : str or datetime, optional
-        End time. A datetime object or a string in hhmmss format.
-        The default is None (retrieving to 240000)
-
-    Returns
-    -------
+        List of filepaths or filenames.
+    version: int 
+        GPM product version.
     
+    Returns 
+    ----------
     filepaths : list 
-        Returns the filepaths subset.
-        If no valid filepaths, return an empty list. 
-
+        List of valid filepaths.
+        If no valid filepaths, returns an empty list ! 
     """
+    # return filter_filepaths(filepaths, version=version)
     #-------------------------------------------------------------------------.
-    # Checks file paths 
-    if isinstance(filepaths,str):
-        filepaths = [filepaths]
+    # Check filepaths 
+    if isinstance(filepaths, type(None)):
+        return [] 
+    filepaths = check_filepaths(filepaths)
+    if len(filepaths) == 0: 
+        return []
+    
+    #-------------------------------------------------------------------------.
+    # Check version validity 
+    check_version(version) 
         
-    # filenames = [os.path.basename(filepath) for filepath in filepaths]
-   
-    filepaths = filter_by_product(filepaths=filepaths, 
-                                  product=product, 
-                                  product_type=product_type)
+    #-------------------------------------------------------------------------. 
+    # Retrieve GPM granules version
+    l_version = get_version_from_filepaths(filepaths)
     
-    filepaths = filter_by_time(filepaths, 
-                               date=date,  
-                               start_hhmmss=start_hhmmss,
-                               end_hhmmss=end_hhmmss)
-    
-    #-------------------------------------------------------------------------.
-    # Return filepaths 
+    #-------------------------------------------------------------------------. 
+    # Select valid filepaths 
+    idx_select = np.array(l_version) == version
+    filepaths = list(np.array(filepaths)[idx_select])
+    #-------------------------------------------------------------------------. 
     return filepaths
 
-####--------------------------------------------------------------------------.

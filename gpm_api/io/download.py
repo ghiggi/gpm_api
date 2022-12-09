@@ -9,9 +9,10 @@ Created on Mon Aug 15 00:18:33 2022
 import os
 import datetime
 import subprocess
+import pandas as pd 
 import concurrent.futures
 from tqdm import tqdm
-from gpm_api.io.pps import find_pps_daily_filepaths
+from gpm_api.io.pps import find_pps_filepaths
 from gpm_api.utils.utils_string import subset_list_by_boolean
 from gpm_api.utils.archive import check_file_integrity
 from gpm_api.io.checks import (
@@ -23,7 +24,13 @@ from gpm_api.io.checks import (
     check_date,
     is_empty,
 )
+from gpm_api.io.info import get_start_time_from_filepaths
+from gpm_api.io.directories import get_disk_directory 
 
+
+### Currently we open a connection for every file
+### We might want to launch wget in parallel directly 
+### - And then loop by day or month to display progress
 
 ##----------------------------------------------------------------------------.
 def curl_cmd(server_path, disk_path, username, password):
@@ -137,8 +144,8 @@ def run(commands, n_threads = 10, progress_bar=True, verbose=True):
     # Run without progress bar 
     else: 
         if (n_threads == 1) and (verbose is True): 
-            print("Here")
-            print(commands)
+            # print("Here")
+            # print(commands)
             _ = [subprocess.run(cmd, shell=True) for cmd in commands]
             l_cmd_error = []
         else:
@@ -198,19 +205,59 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
 ###########################
 
 
-def download_daily_data(base_dir,
+def convert_pps_to_disk_filepaths(pps_filepaths, 
+                                  base_dir, 
+                                  product,
+                                  product_type, 
+                                  version):
+    """
+    Convert PPS filepaths to local disk filepaths.
+
+    Parameters
+    ----------
+    pps_filepaths : list
+        File paths on the PPS server.
+    base_dir : str
+        The base directory where to store GPM data.
+    product : str
+        GPM product acronym. See GPM_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).    
+    version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'. 
+
+    Returns
+    -------
+    disk_filepaths : list
+        List of filepaths on local disk.
+
+    """
+    l_start_time = get_start_time_from_filepaths(pps_filepaths)
+    l_dates = [start_time.date() for start_time in l_start_time]
+    disk_filepaths = [] 
+    for date, pps_filepath in zip(l_dates, pps_filepaths):
+        disk_dir = get_disk_directory(base_dir = base_dir, 
+                                      product = product, 
+                                      product_type = product_type,
+                                      date = date,
+                                      version = version)
+        disk_filepath = disk_dir + "/" + os.path.basename(pps_filepath)
+        disk_filepaths.append(disk_filepath)           
+    return disk_filepaths
+
+
+def _download_daily_data(base_dir,
                         username,
                         product,
                         date,    
-                        start_hhmmss = None,
-                        end_hhmmss = None,
+                        start_time = None,
+                        end_time = None,
                         product_type = 'RS',
                         version = 7,
                         n_threads = 10,
                         transfer_tool = "curl",
                         progress_bar=True, 
                         force_download = False,
-                        flag_first_date = False, 
                         verbose=True):
     """
     Download GPM data from NASA servers using curl or wget.
@@ -225,12 +272,10 @@ def download_daily_data(base_dir,
         GPM product name. See: GPM_products()
     date : datetime
         Single date for which to retrieve the data.
-    start_hhmmss : str or datetime, optional
-        Start time. A datetime object or a string in hhmmss format.
-        The default is None (retrieving from 000000)
-    end_hhmmss : str or datetime, optional
-        End time. A datetime object or a string in hhmmss format.
-        The default is None (retrieving to 240000)
+    start_time : datetime.datetime
+        Filtering start time.
+    end_time : datetime.datetime
+        Filtering end time.
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).    
     version : int, optional
@@ -261,60 +306,44 @@ def download_daily_data(base_dir,
     date = check_date(date)
     check_product_type(product_type = product_type)
     check_product(product = product, product_type = product_type)
+    
     #-------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
-    (server_paths, disk_paths) = find_pps_daily_filepaths(username = username,
-                                                          base_dir = base_dir, 
-                                                          product = product, 
-                                                          product_type = product_type,
-                                                          version = version,
-                                                          date = date, 
-                                                          start_hhmmss = start_hhmmss, 
-                                                          end_hhmmss = end_hhmmss,
-                                                          flag_first_date = flag_first_date,
-                                                          verbose = verbose)
+    pps_filepaths = find_pps_filepaths(username = username,
+                                       product = product, 
+                                       product_type = product_type,
+                                       version = version,          
+                                       start_time = date, 
+                                       end_time = date + datetime.timedelta(days=1), # TODO CHANGE
+                                       verbose = verbose)
+    disk_filepaths = convert_pps_to_disk_filepaths(pps_filepaths=pps_filepaths, 
+                                                   base_dir=base_dir,
+                                                   product=product,
+                                                   product_type=product_type, 
+                                                   version=version)
     #-------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
-    if is_empty(server_paths):
+    if is_empty(pps_filepaths):
         # print("No data found on PPS on Date", Date, "for product", product)
         return None
+    
     #-------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk 
-    (server_paths, disk_paths) = filter_download_list(disk_paths = disk_paths, 
-                                                      server_paths = server_paths,  
-                                                      force_download = force_download)
+    (pps_filepaths, disk_filepaths) = filter_download_list(disk_paths = disk_filepaths, 
+                                                           server_paths = pps_filepaths,  
+                                                           force_download = force_download)
     #-------------------------------------------------------------------------.
     # Retrieve commands
     if (transfer_tool == "curl"):
-        list_cmd = [curl_cmd(server_path, disk_path, username, username) for server_path, disk_path in zip(server_paths, disk_paths)]
+        list_cmd = [curl_cmd(pps_path, disk_path, username, username) for pps_path, disk_path in zip(pps_filepaths, disk_filepaths)]
     else:    
-        list_cmd = [wget_cmd(server_path, disk_path, username, username) for server_path, disk_path in zip(server_paths, disk_paths)]
+        list_cmd = [wget_cmd(pps_path, disk_path, username, username) for pps_path, disk_path in zip(pps_filepaths, disk_filepaths)]
         
     #-------------------------------------------------------------------------.    
     ## Download the data (in parallel)
     bad_cmds = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
     return bad_cmds
-    
-    # - Wait all n_threads jobs ended before restarting download
-    # - TODO: change to max synchronous n_jobs with multiprocessing
-    # process_list = []
-    # process_idx = 0
-    # if (len(server_paths) >= 1):
-    #     for server_path, disk_path in zip(server_paths, disk_paths):
-    #         process = curl_download(server_path = server_path,
-    #                                 disk_path = disk_path,
-    #                                 username = username,
-    #                                 password = username)
-    #         process_list.append(process)
-    #         process_idx = process_idx + 1
-    #         # Wait that all n_threads job ended before restarting downloading 
-    #         if (process_idx == n_threads):
-    #             [process.wait() for process in process_list]
-    #             process_list = []
-    #             process_idx = 0
-    #     # Before exiting, be sure that download have finished
-    #     [process.wait() for process in process_list]
-    # return 0
+
 
 ##-----------------------------------------------------------------------------. 
 def download_data(base_dir,
@@ -383,76 +412,33 @@ def download_data(base_dir,
     base_dir = check_base_dir(base_dir)
     start_time, end_time = check_start_end_time(start_time, end_time)    
     #-------------------------------------------------------------------------.
-    # Retrieve sequence of Dates 
-    dates = [start_time + datetime.timedelta(days=x) for x in range(0, (end_time-start_time).days + 1)]
-    # Retrieve start and end hhmmss
-    start_hhmmss = datetime.datetime.strftime(start_time,"%H%M%S")
-    end_hhmmss = datetime.datetime.strftime(end_time,"%H%M%S")
+    # Retrieve sequence of dates
+    # - Specify start_date - 1 day to include data potentially on previous day directory 
+    # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
+    start_date = datetime.datetime(start_time.year,start_time.month, start_time.day)
+    end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
+    date_range = pd.date_range(start=start_date, end=end_date, freq="D")
+    dates = list(date_range.to_pydatetime())
+    
     #-------------------------------------------------------------------------.
-    # Case 1: Retrieve just 1 day of data 
-    if (len(dates)==1):
-        download_daily_data(base_dir = base_dir,
-                                version =  version,
-                                username = username,
-                                product = product,
-                                product_type = product_type,
-                                date = dates[0],  
-                                start_hhmmss = start_hhmmss,
-                                end_hhmmss = end_hhmmss,
-                                flag_first_date = True,
-                                n_threads = n_threads,
-                                transfer_tool = transfer_tool,
-                                progress_bar = progress_bar, 
-                                force_download = force_download,
-                                verbose = verbose)
+    # Loop over dates and download the files 
+    for date in dates:
+        _download_daily_data(base_dir = base_dir,
+                             version =  version,
+                             username = username,
+                             product = product,
+                             product_type = product_type,
+                             date = date,  
+                             start_time = start_time,
+                             end_time = end_time,
+                             n_threads = n_threads,
+                             transfer_tool = transfer_tool,
+                             progress_bar = progress_bar, 
+                             force_download = force_download,
+                             verbose = verbose)
         
-    #-------------------------------------------------------------------------.
-    # Case 2: Retrieve multiple days of data
-    if (len(dates) > 1):
-        download_daily_data(base_dir = base_dir, 
-                            version =  version,
-                            username = username,
-                            product = product,
-                            product_type = product_type,
-                            date = dates[0],
-                            start_hhmmss = start_hhmmss,
-                            end_hhmmss = '240000',
-                            flag_first_date = True,
-                            n_threads = n_threads,
-                            transfer_tool = transfer_tool,
-                            progress_bar = False, 
-                            force_download = force_download,
-                            verbose = verbose)
-        if (len(dates) > 2):
-            for date in dates[1:-1]:
-                download_daily_data(base_dir = base_dir,
-                                    version =  version,
-                                    username = username,
-                                    product = product,
-                                    product_type = product_type,
-                                    date = date, 
-                                    start_hhmmss = '000000',
-                                    end_hhmmss = '240000',
-                                    n_threads = n_threads,
-                                    transfer_tool = transfer_tool,
-                                    progress_bar = progress_bar, 
-                                    force_download = force_download,
-                                    verbose = verbose)
-        download_daily_data(base_dir = base_dir, 
-                            version =  version,
-                            username = username,
-                            product = product,
-                            product_type = product_type,
-                            date = dates[-1], 
-                            start_hhmmss ='000000',
-                            end_hhmmss = end_hhmmss,
-                            n_threads = n_threads,
-                            transfer_tool = transfer_tool,
-                            progress_bar = False, 
-                            force_download = force_download,
-                            verbose = verbose)
     #-------------------------------------------------------------------------. 
-    print('Download of available GPM', product, 'product completed.')
+    print(f'Download of available GPM {product} product completed.')
     if check_integrity: 
         l_corrupted = check_file_integrity(base_dir=base_dir, 
                                            product=product, 

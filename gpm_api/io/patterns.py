@@ -9,8 +9,8 @@ Created on Thu Oct 13 11:12:31 2022
 ################################# 
 ### File Pattern dictionary  ####
 ################################# 
-### DPR
-def GPM_DPR_1B_RS_pattern_dict():
+### RADAR
+def GPM_RADAR_1B_RS_pattern_dict():
      """Return the filename pattern* associated to GPM DPR 1B products."""
      GPM_dict = {'1B-PR': '1B.TRMM.PR*',
                  '1B-Ka': 'GPMCOR_KAR*',
@@ -18,7 +18,7 @@ def GPM_DPR_1B_RS_pattern_dict():
      return GPM_dict 
  
     
-def GPM_DPR_2A_RS_pattern_dict(): 
+def GPM_RADAR_2A_RS_pattern_dict(): 
     """Return the filename pattern* associated to GPM DPR 2A RS products."""
     GPM_dict = {'2A-PR': '2A.TRMM.PR.V\d-*',   # to distinguish from SLH
                 '2A-DPR': '2A.GPM.DPR.V\d-*', # to distinguish from SLH
@@ -35,7 +35,7 @@ def GPM_DPR_2A_RS_pattern_dict():
     return GPM_dict  
 
 
-def GPM_DPR_2A_NRT_pattern_dict(): 
+def GPM_RADAR_2A_NRT_pattern_dict(): 
     """Return the filename pattern* associated to GPM DPR 2A NRT products."""
     GPM_dict = {'2A-DPR': '2A.GPM.DPR.V\d-*', # to distinguish from SLH
                 '2A-Ka': '2A.GPM.Ka.V*',
@@ -43,16 +43,16 @@ def GPM_DPR_2A_NRT_pattern_dict():
     return GPM_dict  
 
 
-def GPM_DPR_RS_pattern_dict(): 
+def GPM_RADAR_RS_pattern_dict(): 
     """Return the filename pattern* associated to GPM DPR RS products."""
-    GPM_dict = GPM_DPR_1B_RS_pattern_dict()    
-    GPM_dict.update(GPM_DPR_2A_RS_pattern_dict())                   
+    GPM_dict = GPM_RADAR_1B_RS_pattern_dict()    
+    GPM_dict.update(GPM_RADAR_2A_RS_pattern_dict())                   
     return GPM_dict  
 
 
-def GPM_DPR_NRT_pattern_dict(): 
+def GPM_RADAR_NRT_pattern_dict(): 
     """Return the filename pattern* associated to GPM DPR NRT products."""
-    GPM_dict = GPM_DPR_2A_NRT_pattern_dict()                 
+    GPM_dict = GPM_RADAR_2A_NRT_pattern_dict()                 
     return GPM_dict  
 
 
@@ -282,20 +282,20 @@ def GPM_IMERG_pattern_dict():
 #### GPM Product Levels     
 def GPM_1B_RS_pattern_dict():
     """Return the filename pattern* associated to GPM 1B RS products."""
-    GPM_dict = GPM_DPR_1B_RS_pattern_dict()    
+    GPM_dict = GPM_RADAR_1B_RS_pattern_dict()    
     GPM_dict.update(GPM_PMW_1B_RS_pattern_dict())              
     return GPM_dict  
 
 
 def GPM_1B_NRT_pattern_dict():
     """Return the filename pattern* associated to GPM 1B NRT products."""
-    GPM_dict = GPM_PMW_1B_NRT_pattern_dict() # GPM_DPR_1B_NRT_pattern_dict()               
+    GPM_dict = GPM_PMW_1B_NRT_pattern_dict() # GPM_RADAR_1B_NRT_pattern_dict()               
     return GPM_dict  
 
 
 def GPM_2A_RS_pattern_dict():
     """Return the filename pattern* associated to GPM 2A RS products."""
-    GPM_dict = GPM_DPR_2A_RS_pattern_dict()   
+    GPM_dict = GPM_RADAR_2A_RS_pattern_dict()   
     GPM_dict.update(GPM_PMW_2A_GPROF_RS_pattern_dict())
     GPM_dict.update(GPM_PMW_2A_PRPS_RS_pattern_dict())                
     return GPM_dict  
@@ -303,7 +303,7 @@ def GPM_2A_RS_pattern_dict():
 
 def GPM_2A_NRT_pattern_dict():
     """Return the filename pattern* associated to GPM 2A NRT products."""
-    GPM_dict = GPM_DPR_2A_NRT_pattern_dict()    
+    GPM_dict = GPM_RADAR_2A_NRT_pattern_dict()    
     GPM_dict.update(GPM_PMW_2A_GPROF_NRT_pattern_dict())
     GPM_dict.update(GPM_PMW_2A_PRPS_NRT_pattern_dict())                
     return GPM_dict  
@@ -326,7 +326,7 @@ def GPM_2B_NRT_pattern_dict():
 def GPM_RS_products_pattern_dict():
     """Return the filename pattern* associated to all GPM RS products."""
     GPM_dict = GPM_IMERG_RS_pattern_dict()    
-    GPM_dict.update(GPM_DPR_RS_pattern_dict())
+    GPM_dict.update(GPM_RADAR_RS_pattern_dict())
     GPM_dict.update(GPM_PMW_RS_pattern_dict())     
     GPM_dict.update(GPM_CMB_RS_pattern_dict())              
     return GPM_dict  
@@ -335,7 +335,7 @@ def GPM_RS_products_pattern_dict():
 def GPM_NRT_products_pattern_dict():
     """Return the filename pattern* associated to all GPM NRT products."""
     GPM_dict = GPM_IMERG_NRT_pattern_dict()    
-    GPM_dict.update(GPM_DPR_NRT_pattern_dict())
+    GPM_dict.update(GPM_RADAR_NRT_pattern_dict())
     GPM_dict.update(GPM_PMW_NRT_pattern_dict()) 
     GPM_dict.update(GPM_CMB_NRT_pattern_dict())                      
     return GPM_dict  

@@ -9,29 +9,30 @@ Created on Thu Oct 13 16:48:22 2022
 ##----------------------------------------------------------------------------.
 import os
 import datetime 
+from gpm_api.io.checks import check_base_dir
 from gpm_api.io.products import (
     GPM_NRT_products,
     GPM_RS_products, 
     
-    GPM_DPR_NRT_products,
+    GPM_RADAR_NRT_products,
     GPM_PMW_NRT_products,
     # CMB NRT?
     
-    GPM_DPR_RS_products,
+    GPM_RADAR_RS_products,
     GPM_PMW_RS_products,
     GPM_CMB_RS_products,
  
     GPM_1B_RS_products,
     GPM_1C_NRT_products,
-    # GPM_DPR_1B_NRT_products,
-    GPM_DPR_2A_NRT_products,
+    # GPM_RADAR_1B_NRT_products,
+    GPM_RADAR_2A_NRT_products,
     GPM_PMW_1B_NRT_products,
     GPM_PMW_2A_GPROF_NRT_products,
     GPM_PMW_2A_PRPS_NRT_products,
     # CMB NRT?
     GPM_IMERG_NRT_products,   
 
-    GPM_DPR_2A_RS_products, 
+    GPM_RADAR_2A_RS_products, 
     GPM_PMW_1A_RS_products, 
     GPM_PMW_1C_RS_products, 
     GPM_PMW_2A_PRPS_RS_products, 
@@ -56,7 +57,7 @@ def get_disk_dir_pattern(product,
     Parameters
     ----------
     product : str
-        GPM product name. See: GPM_products()
+        GPM product name. See: gpm_api.available_products()
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time). 
     date : datetime.date
@@ -80,7 +81,7 @@ def get_disk_dir_pattern(product,
             product_category = 'PMW'
         elif product in GPM_IMERG_RS_products():
             product_category = 'IMERG'
-        elif product in GPM_DPR_RS_products():
+        elif product in GPM_RADAR_RS_products():
             product_category = 'RADAR'
         elif product in GPM_CMB_RS_products():
             product_category = 'CMB'
@@ -91,7 +92,7 @@ def get_disk_dir_pattern(product,
             product_category = 'PMW'
         elif product in GPM_IMERG_NRT_products():
             product_category = 'IMERG'
-        elif product in GPM_DPR_NRT_products():
+        elif product in GPM_RADAR_NRT_products():
             product_category = 'RADAR'
         elif product in GPM_CMB_RS_products():
             product_category = 'CMB'
@@ -129,7 +130,7 @@ def get_disk_directory(base_dir,
     base_dir : str
         The base directory where to store GPM data.
     product : str
-        GPM product name. See: GPM_products()
+        GPM product name. See: gpm_api.available_products()
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time). 
     date : datetime.date
@@ -147,6 +148,7 @@ def get_disk_directory(base_dir,
         <product_category> are: RADAR, PMW, CMB, IMERG.
         
     """
+    base_dir = check_base_dir(base_dir)
     dir_structure = get_disk_dir_pattern(product,
                                          product_type, 
                                          version)
@@ -172,7 +174,7 @@ def get_pps_nrt_product_dir(product,
     Parameters
     ----------
     product : str
-        GPM product name. See: GPM_products() .
+        GPM product name. See: gpm_api.available_products() .
     date : datetime.date
         Single date for which to retrieve the data.
         Note: this is currently only needed when retrieving IMERG data.
@@ -229,7 +231,7 @@ def get_pps_nrt_product_dir(product,
         folder_name = 'PRPS'
     # ------------------------------------------------------------------------.
     #### - GPM DPR 2A  
-    elif product in GPM_DPR_2A_NRT_products():
+    elif product in GPM_RADAR_2A_NRT_products():
         if product == '2A-Ku':
             folder_name = 'radar/KuL2'
         elif product == '2A-Ka':
@@ -240,7 +242,7 @@ def get_pps_nrt_product_dir(product,
             raise ValueError('BUG - Some product option is missing.') 
     # ------------------------------------------------------------------------.
     #### - GPM CMB 2B 
-    elif product in GPM_DPR_2A_NRT_products():
+    elif product in GPM_RADAR_2A_NRT_products():
         if product == '2B-GPM-CMB':
             folder_name = 'combine'
         else: 
@@ -281,7 +283,7 @@ def get_pps_rs_product_dir(product,
     Parameters
     ----------
     product : str
-        GPM product name. See: GPM_products() .
+        GPM product name. See: gpm_api.available_products() .
  
     date : datetime.date
         Single date for which to retrieve the data.
@@ -301,7 +303,7 @@ def get_pps_rs_product_dir(product,
         folder_name = '1B'
     # ------------------------------------------------------------------------.
     #### - GPM DPR 2A
-    elif product in GPM_DPR_2A_RS_products():
+    elif product in GPM_RADAR_2A_RS_products():
         folder_name = 'radar'
     # ------------------------------------------------------------------------.
     #### - GPM PMW 1A
@@ -361,7 +363,7 @@ def get_pps_directory(product,
     Parameters
     ----------
     product : str
-        GPM product name. See: GPM_products() .
+        GPM product name. See: gpm_api.available_products() .
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time). 
     date : datetime.date

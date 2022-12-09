@@ -8,6 +8,7 @@ Created on Sun Aug 14 20:49:06 2022
 import re
 import os 
 import datetime
+import numpy as np 
 from trollsift import Parser
 from gpm_api.io.patterns import GPM_products_pattern_dict
 
@@ -99,7 +100,7 @@ def _get_info_from_filename(fname):
     return info_dict
 
 
-def _get_info_from_filepath(fpath):
+def get_info_from_filepath(fpath):
     """Retrieve file information dictionary from filepath."""
     if not isinstance(fpath, str):
         raise TypeError("'fpath' must be a string.")
@@ -107,9 +108,9 @@ def _get_info_from_filepath(fpath):
     return _get_info_from_filename(fname)
 
 
-def _get_key_from_filepath(fpath, key):
+def get_key_from_filepath(fpath, key):
     """Extract specific key information from a list of filepaths."""
-    value = _get_info_from_filepath(fpath)[key]
+    value = get_info_from_filepath(fpath)[key]
     return value 
 
   
@@ -117,7 +118,7 @@ def get_key_from_filepaths(fpaths, key):
     """Extract specific key information from a list of filepaths."""
     if isinstance(fpaths, str):
         fpaths = [fpaths]
-    return [_get_key_from_filepath(fpath, key=key) for fpath in fpaths]
+    return [get_key_from_filepath(fpath, key=key) for fpath in fpaths]
 
 
 ####--------------------------------------------------------------------------.
@@ -141,7 +142,7 @@ def get_product_from_filepaths(filepaths):
 
 
 def get_version_from_filepath(filepath, integer=True): 
-    version = _get_key_from_filepath(filepath, key="version")
+    version = get_key_from_filepath(filepath, key="version")
     if integer: 
         version = int(re.findall('\d+', version)[0])        
     return version 
@@ -156,7 +157,19 @@ def get_version_from_filepaths(filepaths, integer=True):
 
 def get_granule_from_filepaths(filepaths): 
     list_id = get_key_from_filepaths(filepaths, key="granule_id")
-    return list_id 
+    return list_id
+ 
+
+def get_start_time_from_filepaths(filepaths): 
+    list_start_time = get_key_from_filepaths(filepaths, key="start_time")
+    return list_start_time
+    
+
+def get_start_end_time_from_filepaths(filepaths): 
+    list_start_time = get_key_from_filepaths(filepaths, key="start_time")
+    list_end_time = get_key_from_filepaths(filepaths, key="end_time")
+    return np.array(list_start_time), np.array(list_end_time)
+
 
 
 ####--------------------------------------------------------------------------.

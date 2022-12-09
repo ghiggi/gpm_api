@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Aug 14 20:02:18 2022
-
 @author: ghiggi
 """
 import os 
@@ -23,17 +22,14 @@ def check_base_dir(base_dir):
     
     If base_dir ends with "GPM" directory, it removes it from the base_dir path. 
     If base_dir does not end with "GPM", the GPM directory will be created.
-
     Parameters
     ----------
     base_dir : str
         Base directory where the GPM directory is located.
-
     Returns
     -------
     base_dir: str 
         Base directory where the GPM directory is located.
-
     """
     # Check base_dir does not end with / 
     if base_dir[-1] == "/":
@@ -84,11 +80,11 @@ def check_version(version):
               
         
 def check_product(product, product_type):
-    from gpm_api.io.products import GPM_products
+    from gpm_api.io.products import available_products
     if not isinstance(product, str):
         raise ValueError("'Ask for a single product at time.'product' must be a single string.")   
-    if product not in GPM_products(product_type = product_type):
-        raise ValueError("Please provide a valid GPM product --> GPM_products().")  
+    if product not in available_products(product_type = product_type):
+        raise ValueError("Please provide a valid GPM product --> gpm_api.available_products().")  
         
         
 def check_product_type(product_type):
@@ -99,7 +95,23 @@ def check_product_type(product_type):
 
 
 def check_time(time):
-    """Check time validity."""
+    """Check time validity. 
+    
+    It returns a datetime.datetime object.
+    
+    Parameters
+    ----------
+    time : (datetime.datetime, datetime.date, np.datetime64, str)
+        Time object.
+        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
+        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+
+    Returns
+    -------
+    time : datetime.datetime
+        datetime.datetime object.
+
+    """
     if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, str)):
         raise TypeError(
             "Specify time with datetime.datetime objects or a "
@@ -142,6 +154,33 @@ def check_date(date):
     
 
 def check_hhmmss(start_hhmmss, end_hhmmss):
+    """Check HHMMSS start and end time. 
+    
+    It returns a HHMMSS strei.datetime object.
+    
+    Parameters
+    ----------
+    start_hhmmss : (datetime.time, datetime.datetime, str)
+        Start time:  hour:minute:second  
+        Accepted types: datetime.datetime, datetime.time, str, None
+        If string type, it expects the format 'hhmmss'.
+        If None, it returns '000000'.
+        
+    end_hhmmss : (datetime.time, datetime.datetime, str)
+        End time:  hour:minute:second  
+        Accepted types: datetime.datetime, datetime.time, str, None
+        If string type, it expects the format 'hhmmss'.
+        If None, it returns '240000'.
+            
+    Returns
+    -------
+    start_hhmmss : str
+        Start time:  hour:minute:second  
+    
+    end_hhmmss : str
+        End time:  hour:minute:second  
+    """
+    
     # Check start_hhmmss 
     if start_hhmmss is None:
         start_hhmmss = '000000' 
@@ -211,7 +250,6 @@ def check_scan_mode(scan_mode, product, version):
 def check_bbox(bbox):
     """
     Check correctnes of bounding box.
-
     bbox format: [lon_0, lon_1, lat_0, lat_1]
     bbox should be provided with longitude between -180 and 180, and latitude
     between -90 and 90.

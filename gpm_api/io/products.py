@@ -16,9 +16,9 @@ from gpm_api.io.patterns import (
     GPM_2A_RS_pattern_dict,
     GPM_2B_RS_pattern_dict,
         
-    GPM_DPR_1B_RS_pattern_dict,
-    GPM_DPR_2A_RS_pattern_dict, 
-    GPM_DPR_2A_NRT_pattern_dict,
+    GPM_RADAR_1B_RS_pattern_dict,
+    GPM_RADAR_2A_RS_pattern_dict, 
+    GPM_RADAR_2A_NRT_pattern_dict,
 
     GPM_PMW_1A_RS_pattern_dict, 
     GPM_PMW_1B_RS_pattern_dict, 
@@ -34,12 +34,12 @@ from gpm_api.io.patterns import (
     GPM_CMB_2B_NRT_pattern_dict,
     GPM_CMB_2B_RS_pattern_dict, 
 
-    GPM_DPR_RS_pattern_dict, 
+    GPM_RADAR_RS_pattern_dict, 
     GPM_PMW_RS_pattern_dict, 
     GPM_CMB_RS_pattern_dict, 
     GPM_IMERG_RS_pattern_dict, 
  
-    GPM_DPR_NRT_pattern_dict,
+    GPM_RADAR_NRT_pattern_dict,
     GPM_CMB_NRT_pattern_dict, 
     GPM_PMW_NRT_pattern_dict, 
     GPM_IMERG_NRT_pattern_dict,
@@ -48,39 +48,35 @@ from gpm_api.io.patterns import (
 )
 
 ####--------------------------------------------------------------------------. 
-# TODO 
-# - GPM_DPR --> GPM_RADAR
-
-####--------------------------------------------------------------------------. 
 ###########################
 ### Available products ####
 ###########################
 ##----------------------------------------------------------------------------. 
 #### RADAR 
-def GPM_DPR_1B_RS_products():
+def GPM_RADAR_1B_RS_products():
     """Provide a list of available GPM DPR 1B-level RS data for download."""
-    product_list = list(GPM_DPR_1B_RS_pattern_dict().keys())
+    product_list = list(GPM_RADAR_1B_RS_pattern_dict().keys())
     return product_list  
 
 
-def GPM_DPR_1B_NRT_products():
+def GPM_RADAR_1B_NRT_products():
     """Provide a list of available GPM DPR 1B-level NRT data for download."""
     raise ValueError("NRT data for GPM DPR 1B not available !")
 
 
-def GPM_DPR_2A_RS_products():
+def GPM_RADAR_2A_RS_products():
     """Provide a list of available GPM DPR 2A-level RS data for download."""
-    product_list = list(GPM_DPR_2A_RS_pattern_dict().keys())
+    product_list = list(GPM_RADAR_2A_RS_pattern_dict().keys())
     return product_list  
 
 
-def GPM_DPR_2A_NRT_products():
+def GPM_RADAR_2A_NRT_products():
     """Provide a list of available GPM DPR 2A-level NRT data for download."""
-    product_list = list(GPM_DPR_2A_NRT_pattern_dict().keys())
+    product_list = list(GPM_RADAR_2A_NRT_pattern_dict().keys())
     return product_list  
 
 
-def GPM_DPR_2A_ENV_RS_products():
+def GPM_RADAR_2A_ENV_RS_products():
     """Provide a list of available GPM DPR 2A-level ENV RS data for download."""
     product_list = ['2A-ENV-DPR',
                     '2A-ENV-Ka',
@@ -88,20 +84,20 @@ def GPM_DPR_2A_ENV_RS_products():
     return product_list  
 
 
-def GPM_DPR_2A_ENV_NRT_products():
+def GPM_RADAR_2A_ENV_NRT_products():
     """Provide a list of available GPM DPR 2A-level ENV NRT data for download."""
     raise ValueError("NRT data for GPM DPR 2A-ENV not available !")
 
 
-def GPM_DPR_RS_products():
+def GPM_RADAR_RS_products():
     """Provide a list of available GPM DPR RS data for download."""
-    product_list = list(GPM_DPR_RS_pattern_dict().keys())
+    product_list = list(GPM_RADAR_RS_pattern_dict().keys())
     return product_list  
 
 
-def GPM_DPR_NRT_products():
+def GPM_RADAR_NRT_products():
     """Provide a list of available GPM DPR NRT data for download."""
-    product_list = list(GPM_DPR_NRT_pattern_dict().keys())
+    product_list = list(GPM_RADAR_NRT_pattern_dict().keys())
     return product_list  
 
 
@@ -271,19 +267,23 @@ def GPM_2B_NRT_products():
 
 ####---------------------------------------------------------------------------.
 #### RS vs. NRT   
+
+
 def GPM_RS_products():   
     """Provide a list of available GPM RS data for download."""
-    return GPM_DPR_RS_products() + GPM_PMW_RS_products() + GPM_CMB_RS_products() + GPM_IMERG_RS_products() 
+    return GPM_RADAR_RS_products() + GPM_PMW_RS_products() + GPM_CMB_RS_products() + GPM_IMERG_RS_products() 
 
 
 def GPM_NRT_products():
     """Provide a list of available GPM NRT data for download."""
-    return GPM_DPR_NRT_products() + GPM_PMW_NRT_products() + GPM_CMB_NRT_products() + GPM_IMERG_NRT_products() 
+    return GPM_RADAR_NRT_products() + GPM_PMW_NRT_products() + GPM_CMB_NRT_products() + GPM_IMERG_NRT_products() 
 
 
 ####--------------------------------------------------------------------------.
 #### PRODUCTS       
-def GPM_products(product_type=None):
+
+
+def available_products(product_type=None):
     """
     Provide a list of all/NRT/RS GPM data for download.
 
@@ -309,6 +309,5 @@ def GPM_products(product_type=None):
         else:
             raise ValueError("Please specify 'product_type' either 'RS' or 'NRT'")
     return None
-
 
 ####--------------------------------------------------------------------------.
