@@ -173,6 +173,11 @@ def get_start_time_from_filepaths(filepaths):
     return list_start_time
 
 
+def get_end_time_from_filepaths(filepaths):
+    list_end_time = get_key_from_filepaths(filepaths, key="end_time")
+    return list_end_time
+
+
 def get_start_end_time_from_filepaths(filepaths):
     list_start_time = get_key_from_filepaths(filepaths, key="start_time")
     list_end_time = get_key_from_filepaths(filepaths, key="end_time")

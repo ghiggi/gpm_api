@@ -17,24 +17,6 @@ fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)
 lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
 
 ##----------------------------------------------------------------------------.
-#### Scan Filtering
-# ScanStatus/dataQuality
-# ScanStatus/geoError
-# ScanStatus/modeStatus
-# ScanStatus/dataWarning
-# ScanStatus/operationalMode
-# DataQualityFiltering = {'TotalQualityCode' : ['Good'],  # ”Fair” or ”EG”
-
-#### Check non-missing scan
-# - Footprint distance ...
-
-##----------------------------------------------------------------------------.
-#### Masking functions
-# - Masking when NA on other variable
-# - Drop scan with FLG/qualityFlag low or bad
-
-
-##----------------------------------------------------------------------------.
 #### Patch
 # - get patch from gpm_geo and yasser code !!!
 # - get_patch_around_max
@@ -68,20 +50,6 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
 
 # - Add temperate, pressure contours ....
 # https://github.com/dopplerchase/DRpy/blob/7d4246d977e926d02b19059de0a0c3793711e2f1/drpy/graph/graph.py#L638
-
-# ----------------------------------------------------------------------------.
-#### Download
-# Solve curl/wget issue
-
-# Document:
-# allows access to all ports in the range of 64000-65000 for the DNS names of:
-#  ‘arthurhou.pps.eosdis.nasa.gov’ and ‘arthurhouftps.pps.eosdis.nasa.gov’.
-# open/allow access to all ports in the range of 64000-65000 for the system
-# ‘arthurhouftps.pps.eosdis.nasa.gov’  (ftps)
-# ‘arthurhou.pps.eosdis.nasa.gov’ (ftps)
-# Python 3 ftplib
-# curl ftps
-# Explicit FTPS
 
 # ----------------------------------------------------------------------------.
 #### xrimage

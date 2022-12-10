@@ -6,6 +6,7 @@ Created on Thu Oct 13 17:45:37 2022
 @author: ghiggi
 """
 import os
+import dask
 import datetime
 import subprocess
 import pandas as pd
@@ -56,13 +57,9 @@ def _get_pps_file_list(username, url_file_list, product, date, version, verbose=
 
     # Check if server is available
     if stdout == "":
-        print(
-            "The PPS server is currently unavailable. Data download for product",
-            product,
-            "at date",
-            date,
-            "has been interrupted.",
-        )
+        version_str = str(int(version))
+        print("The PPS server is currently unavailable.")
+        print(f"This occured when searching for product {product} (V0{version_str}) at date {date}.")
         raise ValueError("Sorry for the incovenience.")
 
     # Check if data are available
@@ -150,7 +147,7 @@ def _find_pps_daily_filepaths(
     date : datetime.date
         Single date for which to retrieve the data.
     product : str
-        GPM product acronym. See GPM_products()
+        GPM product acronym. See gpm_api.available_products()
     start_time : datetime.datetime
         Filtering start time.
     end_time : datetime.datetime
@@ -160,7 +157,7 @@ def _find_pps_daily_filepaths(
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
     verbose : bool, optional
-        Default is False. Wheter to specify when data are not available for a specific date.
+        Default is False. 
 
     Returns
     -------
@@ -185,9 +182,6 @@ def _find_pps_daily_filepaths(
         verbose=verbose,
     )
     if is_empty(filepaths):
-        if verbose: 
-            version_str = str(int(version))
-            print(f"No data found on PPS on date {date} for product {product} (V0{version_str})")
         return []
 
     ##------------------------------------------------------------------------.
@@ -207,7 +201,10 @@ def _find_pps_daily_filepaths(
 
 
 def find_pps_filepaths(
-    username, product, start_time, end_time, product_type="RS", version=7, verbose=True
+    username, product, start_time, end_time, product_type="RS",
+    version=7, 
+    verbose=True, 
+    parallel=True, 
 ):
     """
     Retrieve GPM data filepaths on NASA PPS server a specific time period and product.
@@ -226,6 +223,9 @@ def find_pps_filepaths(
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
+    parellel : bool, optional 
+        Whether to loop over dates in parallel. 
+        The default is True. 
 
     Returns
     -------
@@ -250,26 +250,44 @@ def find_pps_filepaths(
 
     # -------------------------------------------------------------------------.
     # Loop over dates and retrieve available filepaths
-    # TODO LIST
-    # - start_time and end_time filtering could be done only on first and last iteration
-    # - misleading error message can occur on last iteration if end_time is close to 00:00:00
-    #   and the searched granule is in previous day directory
-    # - this can be done in parallel !!!
-    list_filepaths = []
-    for date in dates:
-        filepaths = _find_pps_daily_filepaths(
-            username=username,
-            version=version,
-            product=product,
-            product_type=product_type,
-            date=date,
-            start_time=start_time,
-            end_time=end_time,
-            verbose=verbose,
-        )
-        list_filepaths += filepaths
-
+    if parallel: 
+        list_delayed = []
+        for date in dates:
+            del_op = dask.delayed(_find_pps_daily_filepaths)(
+                username=username,
+                version=version,
+                product=product,
+                product_type=product_type,
+                date=date,
+                start_time=start_time,
+                end_time=end_time,
+                verbose=verbose,
+            )
+            list_delayed.append(del_op)
+        # Get filepaths list for each date
+        list_filepaths = dask.compute(*list_delayed)
+        # Flat the list 
+        filepaths = [item for sublist in list_filepaths for item in sublist]
+    else: 
+        # TODO list 
+        # - start_time and end_time filtering could be done only on first and last iteration 
+        # - misleading error message can occur on last iteration if end_time is close to 00:00:00
+        #   and the searched granule is in previous day directory
+        list_filepaths = []
+        for date in dates:
+            filepaths = _find_pps_daily_filepaths(
+                username=username,
+                version=version,
+                product=product,
+                product_type=product_type,
+                date=date,
+                start_time=start_time,
+                end_time=end_time,
+                verbose=verbose,
+            )
+            list_filepaths += filepaths
+        filepaths = list_filepaths
     # -------------------------------------------------------------------------.
     # Return filepaths
-    filepaths = sorted(list_filepaths)
+    filepaths = sorted(filepaths)
     return filepaths

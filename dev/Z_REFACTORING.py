@@ -9,48 +9,30 @@ Created on Mon Aug 15 23:02:04 2022
 # gpm_api lon, lat --> longitude-latitude?
 # ds_gpm.gpm_api.pyresample_area.plot()  # property !!!
 
-
-
- 
-# -----------------------------------------------------------------------------.
-# Download yearly / monthly block of data
-
-## Download GPM data after May 21 2018
-
-# TODO: download monthly data
-# TODO: download GPM V7 on servers
-
-# -----------------------------------------------------------------------------.
-# clean google colab tutorials
-
-# -----------------------------------------------------------------------------.
-# parallel pps file list 
-
 # -----------------------------------------------------------------------------.
 # list: start_time end_time per satellite 
 
 # -----------------------------------------------------------------------------.
+# TODO: download GPM V7 on servers
+## Download GPM data after May 21 2018
+
+# -----------------------------------------------------------------------------.
+# clean out google colab tutorials
+
+# -----------------------------------------------------------------------------.
 #### Investigate chunking of a granule
 
+# -----------------------------------------------------------------------------.
 # Solves TODO for dataset.py
 
 
 # -----------------------------------------------------------------------------.
-
-
 # TODO: utils/archive: from corrupted fpath, extract product, start_time, end_time, version, and redownload
 
-
-
-# Text file with wished download src and dest, parallel
-
-
 import numpy as np
-
 granule_ids = [1, 2, 5, 6, 10, 11]
 
 # check_not_duplicate_granules(filepaths)
-
 
 def check_consecutive_granules(filepaths, verbose=True):
     from gpm_api.io.info import get_granule_from_filepaths
@@ -80,7 +62,6 @@ def check_consecutive_granules(filepaths, verbose=True):
         raise ValueError(
             f"There are non-regular timesteps starting from granule_id {first_non_consecutive}"
         )
-
 
 ###--------------------------------------------------------------------------.
 # TODO for geospatial.py
@@ -112,12 +93,22 @@ def check_consecutive_granules(filepaths, verbose=True):
 
 ###--------------------------------------------------------------------------.
 ### Orbit quality flags
+# --> Add as coordinate? 
 # ScanStatus/dataQuality
 # ScanStatus/geoError
 # ScanStatus/modeStatus
 # ScanStatus/dataWarning
 # ScanStatus/operationalMode
 # DataQualityFiltering = {'TotalQualityCode' : ['Good'],  # ”Fair” or ”EG”
+
+#### Check non-missing scan
+# - Footprint distance ...
+
+
+##----------------------------------------------------------------------------.
+#### Masking functions
+# - Masking when NA on other variable
+# - Drop scan with FLG/qualityFlag low or bad
 
 # -----------------------------------------------------------------------------.
 # dpr
