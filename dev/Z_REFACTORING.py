@@ -12,6 +12,12 @@ Created on Mon Aug 15 23:02:04 2022
 # -----------------------------------------------------------------------------.
 # list: start_time end_time per satellite 
 
+# download from filename 
+
+
+# pyresample accessor 
+# pyresample.area 
+
 # -----------------------------------------------------------------------------.
 # TODO: download GPM V7 on servers
 ## Download GPM data after May 21 2018

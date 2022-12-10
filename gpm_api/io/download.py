@@ -13,7 +13,7 @@ import subprocess
 import pandas as pd
 import concurrent.futures
 from tqdm import tqdm
-from gpm_api.io.pps import find_pps_filepaths
+from gpm_api.io.pps import find_pps_filepaths, _find_pps_daily_filepaths
 from gpm_api.utils.utils_string import subset_list_by_boolean
 from gpm_api.utils.archive import check_file_integrity
 from gpm_api.io.checks import (
@@ -315,7 +315,7 @@ def convert_pps_to_disk_filepaths(
     base_dir : str
         The base directory where to store GPM data.
     product : str
-        GPM product acronym. See GPM_products()
+        GPM product acronym. See gpm_api.available_products()
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     version : int, optional
@@ -346,10 +346,10 @@ def convert_pps_to_disk_filepaths(
 def _download_daily_data(
     base_dir,
     username,
-    product,
     date,
-    product_type,
     version,
+    product,
+    product_type,
     start_time=None,
     end_time=None,
     n_threads=10,
@@ -368,7 +368,7 @@ def _download_daily_data(
     username: str
         Email address with which you registered on on NASA PPS
     product : str
-        GPM product name. See: GPM_products()
+        GPM product name. See: gpm_api.available_products()
     date : datetime
         Single date for which to retrieve the data.
     start_time : datetime.datetime
@@ -408,13 +408,14 @@ def _download_daily_data(
 
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
-    pps_filepaths = find_pps_filepaths(
+    pps_filepaths = _find_pps_daily_filepaths(
         username=username,
         product=product,
         product_type=product_type,
         version=version,
-        start_time=date,
-        end_time=date + datetime.timedelta(days=1),  # TODO CHANGE
+        date=date, 
+        start_time=start_time,
+        end_time=end_time, 
         verbose=verbose,
     )
     
@@ -486,7 +487,7 @@ def download_data(
     username: str
         Email address with which you registered on NASA PPS
     product : str
-        GPM product acronym. See GPM_products()
+        GPM product acronym. See gpm_api.available_products()
     start_time : datetime
         Start time.
     end_time : datetime
@@ -527,25 +528,27 @@ def download_data(
     check_version(version=version)
     base_dir = check_base_dir(base_dir)
     start_time, end_time = check_start_end_time(start_time, end_time)
+    
     # -------------------------------------------------------------------------.
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
     start_date = datetime.datetime(start_time.year, start_time.month, start_time.day)
+    start_date = start_date - datetime.timedelta(days=1)
     end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
     date_range = pd.date_range(start=start_date, end=end_date, freq="D")
     dates = list(date_range.to_pydatetime())
-
+    
     # -------------------------------------------------------------------------.
     # Loop over dates and download the files
     for date in dates:
         _download_daily_data(
             base_dir=base_dir,
-            version=version,
             username=username,
+            date=date,
+            version=version,
             product=product,
             product_type=product_type,
-            date=date,
             start_time=start_time,
             end_time=end_time,
             n_threads=n_threads,

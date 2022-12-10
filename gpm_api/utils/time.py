@@ -256,6 +256,10 @@ def _has_regular_grid(xr_obj):
     """Check if GPM grid object has regular timesteps."""
     # Retrieve timesteps
     timesteps = xr_obj["time"].values
+    # Deal special case when only 1 timestep
+    if len(timesteps) == 1:
+        return True 
+    # Otherwise, check if regular timesteps
     if len(np.unique(np.diff(timesteps))) != 1:
         return False
     else:
@@ -311,6 +315,10 @@ def ensure_time_validity(xr_obj, limit=10):
 
     """
     timesteps = xr_obj["time"].values
+    # In case only 1 timestep, return the object (also Grid case)
+    if len(timesteps) == 1: 
+        return xr_obj 
+    
     # Interpolate if maximum 10 timesteps are missing
     timesteps = interpolate_nat(
         timesteps, method="linear", limit=limit, limit_area="inside"

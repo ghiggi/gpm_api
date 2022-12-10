@@ -140,6 +140,14 @@ def check_time(time):
     return time
 
 
+def check_date(date):
+    if not isinstance(date, (datetime.date, datetime.datetime)):
+        raise ValueError("date must be a datetime object")
+    if isinstance(date, datetime.datetime):
+        date = date.date()
+    return date
+
+
 def check_start_end_time(start_time, end_time):
     start_time = check_time(start_time)
     end_time = check_time(end_time)
@@ -152,86 +160,6 @@ def check_start_end_time(start_time, end_time):
     if end_time > datetime.datetime.utcnow():
         raise ValueError("Provide a end_time occuring in the past.")
     return (start_time, end_time)
-
-
-def check_date(date):
-    if not isinstance(date, (datetime.date, datetime.datetime)):
-        raise ValueError("date must be a datetime object")
-    if isinstance(date, datetime.datetime):
-        date = date.date()
-    return date
-
-
-def check_hhmmss(start_hhmmss, end_hhmmss):
-    """Check HHMMSS start and end time.
-
-    It returns a HHMMSS strei.datetime object.
-
-    Parameters
-    ----------
-    start_hhmmss : (datetime.time, datetime.datetime, str)
-        Start time:  hour:minute:second
-        Accepted types: datetime.datetime, datetime.time, str, None
-        If string type, it expects the format 'hhmmss'.
-        If None, it returns '000000'.
-
-    end_hhmmss : (datetime.time, datetime.datetime, str)
-        End time:  hour:minute:second
-        Accepted types: datetime.datetime, datetime.time, str, None
-        If string type, it expects the format 'hhmmss'.
-        If None, it returns '240000'.
-
-    Returns
-    -------
-    start_hhmmss : str
-        Start time:  hour:minute:second
-
-    end_hhmmss : str
-        End time:  hour:minute:second
-    """
-
-    # Check start_hhmmss
-    if start_hhmmss is None:
-        start_hhmmss = "000000"
-    elif isinstance(start_hhmmss, datetime.time):
-        start_hhmmss = datetime.time.strftime(start_hhmmss, "%H%M%S")
-    elif isinstance(start_hhmmss, datetime.datetime):
-        start_hhmmss = datetime.datetime.strftime(start_hhmmss, "%H%M%S")
-    elif isinstance(start_hhmmss, str):
-        if len(start_hhmmss) != 6:
-            raise ValueError(
-                "Please provide start_hhmmss as HHMMSS string or as datetime.time"
-            )
-        start_hhmmss = start_hhmmss
-    else:
-        raise ValueError(
-            "Please provide start_hhmmss as HHMMSS string or as datetime.time"
-        )
-    # -------------------------------------------------------------------------.
-    # Check end time
-    if end_hhmmss is None:
-        end_hhmmss = "240000"
-    elif isinstance(end_hhmmss, datetime.time):
-        end_hhmmss = datetime.time.strftime(end_hhmmss, "%H%M%S")
-    elif isinstance(end_hhmmss, datetime.datetime):
-        end_hhmmss = datetime.datetime.strftime(end_hhmmss, "%H%M%S")
-    elif isinstance(end_hhmmss, str):
-        if len(end_hhmmss) != 6:
-            raise ValueError(
-                "Please provide end_hhmmss as HHMMSS string or as datetime.time"
-            )
-        end_hhmmss = end_hhmmss
-    else:
-        raise ValueError(
-            "Please provide end_hhmmss as HHMMSS string or as datetime.time"
-        )
-    return (start_hhmmss, end_hhmmss)
-
-
-##----------------------------------------------------------------------------.
-####################
-#### Scan Modes ####
-####################
 
 
 def check_scan_mode(scan_mode, product, version):
@@ -266,7 +194,6 @@ def check_scan_mode(scan_mode, product, version):
     return scan_mode
 
 
-##----------------------------------------------------------------------------.
 def check_bbox(bbox):
     """
     Check correctnes of bounding box.

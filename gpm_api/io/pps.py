@@ -36,7 +36,7 @@ def _get_pps_file_list(username, url_file_list, product, date, version, verbose=
     username: str
         Email address with which you registered on on NASA PPS.
     product : str
-        GPM product acronym. See GPM_products() .
+        GPM product acronym. See gpm_api.available_products() .
     date : datetime
         Single date for which to retrieve the data.
     verbose : bool, optional
@@ -90,7 +90,7 @@ def _get_pps_daily_filepaths(
     username: str
         Email address with which you registered on on NASA PPS.
     product : str
-        GPM product acronym. See GPM_products() .
+        GPM product acronym. See gpm_api.available_products() .
     date : datetime
         Single date for which to retrieve the data.
     product_type : str, optional
@@ -238,7 +238,6 @@ def find_pps_filepaths(
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     start_time, end_time = check_start_end_time(start_time, end_time)
-
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
@@ -247,7 +246,6 @@ def find_pps_filepaths(
     end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
     date_range = pd.date_range(start=start_date, end=end_date, freq="D")
     dates = list(date_range.to_pydatetime())
-
     # -------------------------------------------------------------------------.
     # Loop over dates and retrieve available filepaths
     if parallel: 

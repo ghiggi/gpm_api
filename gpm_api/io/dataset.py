@@ -378,9 +378,13 @@ def open_granule(
     # Get coordinates
     coords = get_coords(hdf, scan_mode)
 
-    # Get attributes(hdf)
-    # TODO Add FileHader Group attributes (see metadata doc)
+    # Get global attributes from the HDF file
+    # TODO Add FileHeader Group attributes (see metadata doc)
     # TODO Select all possible attributes?
+    
+    # Global attributes:
+    # - ProcessingSystem, DOI, InstrumentName, 
+    # - SatelliteName, AlgorithmID, ProductVersion
     attrs = get_attrs(hdf)
     attrs["ScanMode"] = scan_mode
 
@@ -410,7 +414,7 @@ def open_granule(
     # Assign coords
     ds = ds.assign_coords(coords)
 
-    # Assign attributes
+    # Assign global attributes
     ds.attrs = attrs
 
     # ------------------------------------------------------.
@@ -423,11 +427,11 @@ def open_granule(
         ds = decode_dataset(ds)
 
     # ------------------------------------------------------.
-    #### Check time coordinate
-
+    #### Check swath time coordinate
     # Ensure validity of the time dimension
     # - Infill up to 10 consecutive NaT
     # - Do not check for regular time dimension !
+    # --> TODO: this can be moved into get_orbit_coords !
     ds = ensure_time_validity(ds, limit=10)
 
     # Check regular timesteps within the granule
@@ -439,7 +443,10 @@ def open_granule(
     # TODO: check_valid_geolocation
     # TODO: ensure_valid_geolocation (1 spurious pixel)
     # TODO: ds_gpm.gpm_api.valid_geolocation
-
+    
+    # Add global attributes 
+    # TODO: i.e. gpm_api_product for gpm_api.title accessor
+    
     # ------------------------------------------------------.
     # Remove list xr.Dataset to close connections
     del list_ds
@@ -629,7 +636,10 @@ def open_dataset(
     # Decode dataset
     if decode_cf:
         ds = decode_dataset(ds)
-
+    
+    # Add global attributes 
+    ds.attrs["gpm_api_product"] = product
+    
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time
     ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
