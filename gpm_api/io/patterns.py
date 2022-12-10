@@ -278,7 +278,7 @@ def GPM_IMERG_NRT_pattern_dict():
 
 def GPM_IMERG_RS_pattern_dict():
     """Return the filename pattern* associated to GPM IMERG products."""
-    GPM_dict = {"IMERG-FR": "3B-HHR.MS.MRG.*"}  
+    GPM_dict = {"IMERG-FR": "3B-HHR.MS.MRG.*"}
     return GPM_dict
 
 

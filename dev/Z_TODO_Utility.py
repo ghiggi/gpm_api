@@ -52,7 +52,7 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
 # https://github.com/dopplerchase/DRpy/blob/7d4246d977e926d02b19059de0a0c3793711e2f1/drpy/graph/graph.py#L638
 
 
-# Zarrify the dataset 
+# Zarrify the dataset
 # ----------------------------------------------------------------------------.
 #### xrimage
 ## xr.upsample function (image) pixel ... duplicate or interpolate

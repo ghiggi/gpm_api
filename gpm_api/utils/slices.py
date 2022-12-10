@@ -5,7 +5,7 @@ Created on Sat Dec 10 18:46:00 2022
 
 @author: ghiggi
 """
-import numpy as np 
+import numpy as np
 
 
 def ensure_is_slice(slc):

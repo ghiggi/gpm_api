@@ -5,7 +5,7 @@ Created on Sat Dec 10 18:44:56 2022
 
 @author: ghiggi
 """
-import xarray as xr 
+import xarray as xr
 
 
 def xr_exclude_variables_without(ds, dim):

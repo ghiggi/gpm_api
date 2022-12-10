@@ -95,7 +95,7 @@ def curl_cmd(server_path, disk_path, username, password):
         ]
     )
     return cmd
- 
+
 
 def wget_cmd(server_path, disk_path, username, password):
     """Create wget command to download data via ftps."""
@@ -214,31 +214,31 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 
 
 def _download_with_ftlib(server_path, disk_path, username, password):
-    # Infer hostname 
-    hostname = server_path.split("/", 3)[2] # remove ftps:// and select host 
-    
+    # Infer hostname
+    hostname = server_path.split("/", 3)[2]  # remove ftps:// and select host
+
     # Remove hostname from server_path
-    server_path = server_path.split("/", 3)[3]  
-           
+    server_path = server_path.split("/", 3)[3]
+
     # Connect to the FTP server using FTPS
     ftps = ftplib.FTP_TLS(hostname)
-    
+
     # Login to the FTP server using the provided username and password
-    ftps.login(username, password) # /gpmdata base directory
-    
+    ftps.login(username, password)  # /gpmdata base directory
+
     # Download the file from the FTP server
-    try:     
+    try:
         with open(disk_path, "wb") as file:
             ftps.retrbinary(f"RETR {server_path}", file.write)
-    except EOFError: 
+    except EOFError:
         return f"Impossible to download {server_path}"
-    
+
     # Close the FTP connection
     ftps.close()
-        
-    
+
+
 def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
-    # Download file concurrently 
+    # Download file concurrently
     n_files = len(server_paths)
     with tqdm(total=n_files) as pbar:
         with concurrent.futures.ThreadPoolExecutor(max_workers=n_threads) as executor:
@@ -247,9 +247,10 @@ def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
                     _download_with_ftlib,
                     server_path=server_path,
                     disk_path=disk_path,
-                    username=username, 
-                    password=password, 
-                ): server_path for server_path, disk_path in zip(server_paths, disk_paths)
+                    username=username,
+                    password=password,
+                ): server_path
+                for server_path, disk_path in zip(server_paths, disk_paths)
             }
             # List cmds that didn't work
             l_cmd_error = []
@@ -258,6 +259,8 @@ def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
                 # Collect all commands that caused problems
                 if future.exception() is not None:
                     l_cmd_error.append(dict_futures[future])
+
+
 ####--------------------------------------------------------------------------.
 ############################
 #### Filtering routines ####
@@ -413,12 +416,12 @@ def _download_daily_data(
         product=product,
         product_type=product_type,
         version=version,
-        date=date, 
+        date=date,
         start_time=start_time,
-        end_time=end_time, 
+        end_time=end_time,
         verbose=verbose,
     )
-    
+
     disk_filepaths = convert_pps_to_disk_filepaths(
         pps_filepaths=pps_filepaths,
         base_dir=base_dir,
@@ -528,7 +531,7 @@ def download_data(
     check_version(version=version)
     base_dir = check_base_dir(base_dir)
     start_time, end_time = check_start_end_time(start_time, end_time)
-    
+
     # -------------------------------------------------------------------------.
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory
@@ -538,7 +541,7 @@ def download_data(
     end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
     date_range = pd.date_range(start=start_date, end=end_date, freq="D")
     dates = list(date_range.to_pydatetime())
-    
+
     # -------------------------------------------------------------------------.
     # Loop over dates and download the files
     for date in dates:

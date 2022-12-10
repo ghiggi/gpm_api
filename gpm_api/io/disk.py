@@ -152,13 +152,7 @@ def _find_daily_filepaths(
 
 
 def find_filepaths(
-    base_dir, 
-    product,
-    start_time, 
-    end_time, 
-    product_type="RS",
-    version=7, 
-    verbose=True
+    base_dir, product, start_time, end_time, product_type="RS", version=7, verbose=True
 ):
     """
     Retrieve GPM data filepaths on local disk for a specific time period and product.

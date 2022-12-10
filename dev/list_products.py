@@ -6,40 +6,41 @@ Created on Fri Dec  9 13:00:39 2022
 @author: ghiggi
 """
 import time
-import dask 
+import dask
 import gpm_api
 import datetime
 import numpy as np
 from gpm_api.io.pps import _find_pps_daily_filepaths, find_pps_filepaths
 from gpm_api.io.info import get_start_time_from_filepaths, get_end_time_from_filepaths
- 
 
- 
-username="gionata.ghiggi@epfl.ch"
-version=7
-verbose=False
+
+username = "gionata.ghiggi@epfl.ch"
+version = 7
+verbose = False
 start_year = 1997
-end_year=datetime.datetime.utcnow().year
+end_year = datetime.datetime.utcnow().year
 step_months = 6
 products = gpm_api.available_products("RS")
 product = "2A-DPR"
 
-#-----------------------------------------------------------------------------.
-#### List product temporal availability 
+# -----------------------------------------------------------------------------.
+#### List product temporal availability
 # TODO: find_pps_filepaths ...retry when PPS currently unavailable
 from gpm_api.utils.archive import get_product_temporal_coverage
 
-t_i = time.time() 
-info_dict = get_product_temporal_coverage(product=product,  
-                                          username=username,  
-                                          version=version, 
-                                          start_year=start_year, 
-                                          end_year=end_year, 
-                                          step_months=step_months,
-                                          verbose=verbose)
+t_i = time.time()
+info_dict = get_product_temporal_coverage(
+    product=product,
+    username=username,
+    version=version,
+    start_year=start_year,
+    end_year=end_year,
+    step_months=step_months,
+    verbose=verbose,
+)
 t_f = time.time()
 t_elapsed = np.round(t_f - t_i, 2)
-print(t_elapsed, "seconds") # 40 seconds per month 
+print(t_elapsed, "seconds")  # 40 seconds per month
 
 
 ### Save list of files, to test reader ....
@@ -81,6 +82,5 @@ print(t_elapsed, "seconds") # 40 seconds per month
 # 3B-HHR-E.MS.MRG.3IMERG.20221201-S020000-E022959.0120.V06C.RT-H5
 # # IMERG-LATE
 # 3B-HHR-L.MS.MRG.3IMERG.20221201-S023000-E025959.0150.V06C.RT-H5
-# # IMERG FINAL 
+# # IMERG FINAL
 # 3B-HHR.MS.MRG.3IMERG.20190713-S123000-E125959.0750.V06B.HDF5"
- 

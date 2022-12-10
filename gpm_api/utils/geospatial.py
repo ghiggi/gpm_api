@@ -23,7 +23,7 @@ def unwrap_longitude_degree(x, period=360):
 
 def crop_by_country(xr_obj, name):
     """
-    Crop an xarray object based on the specified country name. 
+    Crop an xarray object based on the specified country name.
 
     Parameters
     ----------
@@ -34,14 +34,15 @@ def crop_by_country(xr_obj, name):
 
     Returns
     -------
-    xr_obj : xr.DataArray or xr.Dataset 
+    xr_obj : xr.DataArray or xr.Dataset
         Cropped xarray object.
 
     """
-   
+
     from gpm_api.utils.countries import get_country_extent
+
     extent = get_country_extent(name)
-    return crop(xr_obj=xr_obj, bbox = extent)
+    return crop(xr_obj=xr_obj, bbox=extent)
 
 
 def crop(xr_obj, bbox):
@@ -54,12 +55,12 @@ def crop(xr_obj, bbox):
         xarray object.
     bbox : list or tuple
         The bounding box over which to crop the xarray object.
-        `bbox` must follow the matplotlib and cartopy extent conventions: 
+        `bbox` must follow the matplotlib and cartopy extent conventions:
         bbox = [x_min, x_max, y_min, y_max]
-        
+
     Returns
     -------
-    xr_obj : xr.DataArray or xr.Dataset 
+    xr_obj : xr.DataArray or xr.Dataset
         Cropped xarray object.
 
     """
@@ -77,7 +78,9 @@ def crop(xr_obj, bbox):
         if idx_row.size == 0:  # or idx_col.size == 0:
             raise ValueError("No data inside the provided bounding box.")
         # TODO: Check continuous ... otherwise warn and return a list of datasets
-        xr_obj_subset = xr_obj.isel(along_track=slice((min(idx_row)), (max(idx_row) + 1)))
+        xr_obj_subset = xr_obj.isel(
+            along_track=slice((min(idx_row)), (max(idx_row) + 1))
+        )
     elif is_grid(xr_obj):
         idx_row = np.where((lon >= bbox[0]) & (lon <= bbox[1]))[0]
         idx_col = np.where((lat >= bbox[2]) & (lat <= bbox[3]))[0]
@@ -85,7 +88,7 @@ def crop(xr_obj, bbox):
         if idx_row.size == 0 or idx_col.size == 0:
             raise ValueError("No data inside the provided bounding box.")
         else:
-            xr_obj_subset = xr_obj.isel({'lon': idx_row, 'lat': idx_col})
+            xr_obj_subset = xr_obj.isel({"lon": idx_row, "lat": idx_col})
     else:
         orbit_dims = ("cross_track", "along_track")
         grid_dims = ("lon", "lat")
@@ -114,13 +117,13 @@ def is_grid(xr_obj):
 
 def is_spatial_2D_field(xr_obj):
     """Check whether the GPM xarray object is a 2D fields.
-    
-    It returns True if the object has only two spatial dimensions. 
-    The xarray object is squeezed before testing, so that (i.e. time) 
-    dimension of size 1 are "removed".     
+
+    It returns True if the object has only two spatial dimensions.
+    The xarray object is squeezed before testing, so that (i.e. time)
+    dimension of size 1 are "removed".
     """
     # Remove i.e. time/range dimension if len(1)
-    xr_obj = xr_obj.squeeze() 
+    xr_obj = xr_obj.squeeze()
     # Check if spatial 2D fields
     if set(xr_obj.dims) == set(("cross_track", "along_track")):
         return True
@@ -128,7 +131,9 @@ def is_spatial_2D_field(xr_obj):
         return True
     elif set(xr_obj.dims) == set(("latitude", "longitude")):
         return True
-    elif set(xr_obj.dims) == set(("lat", "lon")):  # TOOD: Enforce latitude, longitude (i.e. with IMERG)
+    elif set(xr_obj.dims) == set(
+        ("lat", "lon")
+    ):  # TOOD: Enforce latitude, longitude (i.e. with IMERG)
         return True
     else:
         return False
@@ -137,9 +142,10 @@ def is_spatial_2D_field(xr_obj):
 def get_pyresample_area(xr_obj):
     """It returns the corresponding pyresample area."""
     from pyresample import SwathDefinition, AreaDefinition
+
     # TODO: Implement as pyresample accessor
-    # --> ds.pyresample.area 
-    
+    # --> ds.pyresample.area
+
     # If Orbit Granule --> Swath Definition
     if is_orbit(xr_obj):
         # Define SwathDefinition with xr.DataArray lat/lons
@@ -159,7 +165,7 @@ def get_pyresample_area(xr_obj):
     # If Grid Granule --> AreaDefinition
     elif is_grid(xr_obj):
         # Define AreaDefinition
-        # TODO: derive area_extent, projection, ... 
+        # TODO: derive area_extent, projection, ...
         raise NotImplementedError()
     # Unknown
     else:

@@ -5,8 +5,8 @@ Created on Sat Dec 10 18:44:25 2022
 
 @author: ghiggi
 """
-import pyproj 
-import numpy as np 
+import pyproj
+import numpy as np
 import xarray as xr
 import cartopy.crs as ccrs
 from gpm_api.utils.slices import ensure_is_slice, get_slice_size

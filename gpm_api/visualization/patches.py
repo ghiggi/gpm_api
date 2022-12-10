@@ -5,7 +5,7 @@ Created on Sat Dec 10 18:40:03 2022
 
 @author: ghiggi
 """
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
 from gpm_api.utils.checks import check_is_xarray_dataarray
 from gpm_api.patch.generator import get_da_patch_generator

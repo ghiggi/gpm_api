@@ -340,10 +340,10 @@ def get_pps_rs_product_dir(product, date, version):
 def get_pps_directory(product, product_type, date, version):
     """
     Retrieve the NASA PPS server directory paths where the GPM data are listed and stored.
-    
+
     The data list is retrieved using https.
     The data stored are retrieved using ftps.
-    
+
     Parameters
     ----------
     product : str

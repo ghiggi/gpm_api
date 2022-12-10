@@ -381,9 +381,9 @@ def open_granule(
     # Get global attributes from the HDF file
     # TODO Add FileHeader Group attributes (see metadata doc)
     # TODO Select all possible attributes?
-    
+
     # Global attributes:
-    # - ProcessingSystem, DOI, InstrumentName, 
+    # - ProcessingSystem, DOI, InstrumentName,
     # - SatelliteName, AlgorithmID, ProductVersion
     attrs = get_attrs(hdf)
     attrs["ScanMode"] = scan_mode
@@ -443,10 +443,10 @@ def open_granule(
     # TODO: check_valid_geolocation
     # TODO: ensure_valid_geolocation (1 spurious pixel)
     # TODO: ds_gpm.gpm_api.valid_geolocation
-    
-    # Add global attributes 
+
+    # Add global attributes
     # TODO: i.e. gpm_api_product for gpm_api.title accessor
-    
+
     # ------------------------------------------------------.
     # Remove list xr.Dataset to close connections
     del list_ds
@@ -636,10 +636,10 @@ def open_dataset(
     # Decode dataset
     if decode_cf:
         ds = decode_dataset(ds)
-    
-    # Add global attributes 
+
+    # Add global attributes
     ds.attrs["gpm_api_product"] = product
-    
+
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time
     ds = subset_by_time(ds, start_time=start_time, end_time=end_time)

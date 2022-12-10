@@ -10,13 +10,13 @@ Created on Mon Aug 15 23:02:04 2022
 # ds_gpm.gpm_api.pyresample_area.plot()  # property !!!
 
 # -----------------------------------------------------------------------------.
-# list: start_time end_time per satellite 
+# list: start_time end_time per satellite
 
-# download from filename 
+# download from filename
 
 
-# pyresample accessor 
-# pyresample.area 
+# pyresample accessor
+# pyresample.area
 
 # -----------------------------------------------------------------------------.
 # TODO: download GPM V7 on servers
@@ -36,9 +36,11 @@ Created on Mon Aug 15 23:02:04 2022
 # TODO: utils/archive: from corrupted fpath, extract product, start_time, end_time, version, and redownload
 
 import numpy as np
+
 granule_ids = [1, 2, 5, 6, 10, 11]
 
 # check_not_duplicate_granules(filepaths)
+
 
 def check_consecutive_granules(filepaths, verbose=True):
     from gpm_api.io.info import get_granule_from_filepaths
@@ -68,6 +70,7 @@ def check_consecutive_granules(filepaths, verbose=True):
         raise ValueError(
             f"There are non-regular timesteps starting from granule_id {first_non_consecutive}"
         )
+
 
 ###--------------------------------------------------------------------------.
 # TODO for geospatial.py
@@ -99,7 +102,7 @@ def check_consecutive_granules(filepaths, verbose=True):
 
 ###--------------------------------------------------------------------------.
 ### Orbit quality flags
-# --> Add as coordinate? 
+# --> Add as coordinate?
 # ScanStatus/dataQuality
 # ScanStatus/geoError
 # ScanStatus/modeStatus

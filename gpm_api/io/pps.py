@@ -26,9 +26,9 @@ from gpm_api.io.directories import get_pps_directory
 def _get_pps_file_list(username, url_file_list, product, date, version, verbose=True):
     """
     Retrieve the filepaths of the files available on the NASA PPS server for a specific day and product.
-    
-    The query is done using https ! 
-    The function does not return the full PPS server url, but the filepath 
+
+    The query is done using https !
+    The function does not return the full PPS server url, but the filepath
     from the server root: i.e: '/gpmdata/2020/07/05/radar/<...>.HDF5'
 
     Parameters
@@ -59,7 +59,9 @@ def _get_pps_file_list(username, url_file_list, product, date, version, verbose=
     if stdout == "":
         version_str = str(int(version))
         print("The PPS server is currently unavailable.")
-        print(f"This occured when searching for product {product} (V0{version_str}) at date {date}.")
+        print(
+            f"This occured when searching for product {product} (V0{version_str}) at date {date}."
+        )
         raise ValueError("Sorry for the incovenience.")
 
     # Check if data are available
@@ -73,7 +75,7 @@ def _get_pps_file_list(username, url_file_list, product, date, version, verbose=
     else:
         # Retrieve filepaths
         filepaths = stdout.split()
-    
+
     # Return file paths
     return filepaths
 
@@ -157,7 +159,7 @@ def _find_pps_daily_filepaths(
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
     verbose : bool, optional
-        Default is False. 
+        Default is False.
 
     Returns
     -------
@@ -193,7 +195,7 @@ def _find_pps_daily_filepaths(
         version=version,
         start_time=start_time,
         end_time=end_time,
-    )     
+    )
     return filepaths
 
 
@@ -201,10 +203,14 @@ def _find_pps_daily_filepaths(
 
 
 def find_pps_filepaths(
-    username, product, start_time, end_time, product_type="RS",
-    version=7, 
-    verbose=True, 
-    parallel=True, 
+    username,
+    product,
+    start_time,
+    end_time,
+    product_type="RS",
+    version=7,
+    verbose=True,
+    parallel=True,
 ):
     """
     Retrieve GPM data filepaths on NASA PPS server a specific time period and product.
@@ -223,9 +229,9 @@ def find_pps_filepaths(
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
-    parellel : bool, optional 
-        Whether to loop over dates in parallel. 
-        The default is True. 
+    parellel : bool, optional
+        Whether to loop over dates in parallel.
+        The default is True.
 
     Returns
     -------
@@ -248,7 +254,7 @@ def find_pps_filepaths(
     dates = list(date_range.to_pydatetime())
     # -------------------------------------------------------------------------.
     # Loop over dates and retrieve available filepaths
-    if parallel: 
+    if parallel:
         list_delayed = []
         for date in dates:
             del_op = dask.delayed(_find_pps_daily_filepaths)(
@@ -264,11 +270,11 @@ def find_pps_filepaths(
             list_delayed.append(del_op)
         # Get filepaths list for each date
         list_filepaths = dask.compute(*list_delayed)
-        # Flat the list 
+        # Flat the list
         filepaths = [item for sublist in list_filepaths for item in sublist]
-    else: 
-        # TODO list 
-        # - start_time and end_time filtering could be done only on first and last iteration 
+    else:
+        # TODO list
+        # - start_time and end_time filtering could be done only on first and last iteration
         # - misleading error message can occur on last iteration if end_time is close to 00:00:00
         #   and the searched granule is in previous day directory
         list_filepaths = []
