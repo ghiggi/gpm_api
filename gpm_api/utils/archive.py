@@ -11,7 +11,10 @@ import gpm_api
 import time
 import dask
 import datetime
+import time
 import numpy as np
+import datetime
+from dateutil.relativedelta import relativedelta
 from gpm_api.io.pps import find_pps_filepaths
 from gpm_api.io.info import get_start_time_from_filepaths, get_end_time_from_filepaths
 from gpm_api.io.disk import find_filepaths
@@ -21,10 +24,19 @@ from gpm_api.io.checks import (
     check_start_end_time,
 )
 
-
 ###########################
 #### Archiving utility ####
 ###########################
+def print_elapsed_time(fn):
+    def decorator(*args, **kwargs):
+        start_time = time.perf_counter()
+        results = fn(*args, **kwargs)
+        end_time = time.perf_counter()
+        execution_time = end_time - start_time
+        timedelta_str = str(datetime.timedelta(seconds=execution_time))
+        print(f'Elapsed time: {timedelta_str} .', end="\n")
+        return results
+    return decorator
 
 
 def check_file_integrity(
@@ -291,7 +303,7 @@ def get_product_temporal_coverage(
     info_dict["last_granule"] = last_pps_filepath
     return info_dict
 
-
+@print_elapsed_time
 def download_monthly_data(
     base_dir,
     username,
@@ -308,10 +320,9 @@ def download_monthly_data(
     remove_corrupted=True,
     verbose=True,
 ):
-    import datetime
-
-    start_time = datetime.datetime(year, month, 0, 0, 0, 0)
-    end_time = datetime.datetime(year, month, 0, 0, 0, 0)
+    start_time = datetime.date(year, month, 1)
+    end_time = start_time + relativedelta(months=1)
+    
     l_corrupted = gpm_api.download(
         base_dir=base_dir,
         username=username,

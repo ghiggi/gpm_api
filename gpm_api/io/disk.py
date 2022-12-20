@@ -139,12 +139,13 @@ def _find_daily_filepaths(
 
     ##-------------------------------------------------------------------------.
     # Print an optional message if daily data are not available
+    # - This message should be removed in future becasue can pop up when granule is in previous day
     if is_empty(filepaths):
-        if verbose:
-            version_str = str(int(version))
-            print(
-                f"No GPM {product} (V0{version_str}) product has been found on disk on date {date} !"
-            )
+        # if verbose:
+        #     version_str = str(int(version))
+        #     print(
+        #         f"No GPM {product} (V0{version_str}) product has been found on disk on date {date} !"
+        #     )
         return []
 
     ##------------------------------------------------------------------------.
