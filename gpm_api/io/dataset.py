@@ -28,9 +28,8 @@ from gpm_api.utils.utils_HDF5 import hdf5_datasets, hdf5_groups, hdf5_file_attrs
 from gpm_api.utils.time import (
     subset_by_time,
     ensure_time_validity,
-    has_regular_timesteps,
 )
-
+from gpm_api.utils.checks import has_regular_timesteps
 ####--------------------------------------------------------------------------.
 ### Define GPM_API Dataset Dimensions
 DIM_DICT = {
@@ -435,6 +434,8 @@ def open_granule(
     ds = ensure_time_validity(ds, limit=10)
 
     # Check regular timesteps within the granule
+    # TODO: This should become a warning 
+    # TODO: has_contiguous_scans
     if not has_regular_timesteps(ds):
         raise ValueError("The GPM granule {fpath} has non-regular timesteps.")
 

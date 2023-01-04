@@ -12,10 +12,11 @@ from gpm_api.io.checks import (
     check_start_end_time,
 )
 
-# NOTE! GPM ORBIT time array is most often non-unique !
-# --> Selection by time must be performed with
-
-ORBIT_TIME_TOLERANCE = np.timedelta64(3, "s")
+ 
+####--------------------------------------------------------------------------.
+############################
+#### Subsetting by time ####
+############################
 
 
 def subset_by_time(xr_obj, start_time=None, end_time=None):
@@ -89,9 +90,11 @@ def subset_by_time_slice(xr_obj, slice):
 
 
 ####--------------------------------------------------------------------------.
-############################
-#### Checks & Sanitizer ####
-############################
+##################################
+#### Time Dimension Sanitizer ####
+##################################
+
+
 def is_nat(timesteps):
     """Return a boolean array indicating timesteps which are NaT."""
     # pd.isnull(np.datetime64('NaT'))
@@ -175,128 +178,6 @@ def interpolate_nat(
     return timesteps
 
 
-def _check_regular_timesteps(timesteps, tolerance=None, verbose=True):
-    """
-    Check no missing timesteps for longer than 'tolerance' seconds.
-
-    Parameters
-    ----------
-    timesteps : np.array
-        Array of timesteps.
-    tolerance : np.timedelta, optional
-        The default is None.
-        If None, it use the first 2 timesteps to derive the tolerance timedelta.
-        Otherwise, it use the specified np.timedelta.
-
-    Returns
-    -------
-
-    None.
-
-    """
-    # Infer tolerance if not specified
-    if tolerance is None:
-        # If less than 2 timesteps, check nothing
-        if len(timesteps) < 2:
-            return None
-        # Otherwise infer t_res using first two timesteps
-        tolerance = np.diff(timesteps[0:2])[0]
-
-    # Cast timesteps to second accuracy
-    timesteps = timesteps.astype("M8[s]")
-    # Identify occurence of non-regular timesteps
-    is_regular = np.diff(timesteps) <= tolerance
-    # If non-regular timesteps occurs, reports the problems
-    if not np.all(is_regular):
-        indices_missing = np.argwhere(~is_regular).flatten()
-        list_discontinuous = [timesteps[i : i + 2] for i in indices_missing]
-        first_timestep_problem = list_discontinuous[0][0]
-        # Display non-regular time interval
-        if verbose:
-            for start, stop in list_discontinuous:
-                print(f"- Missing data between {start} and {stop}")
-        # Raise error and highligh first non-regular timestep
-        raise ValueError(
-            f"There are non-regular timesteps starting from {first_timestep_problem}"
-        )
-
-
-def check_regular_timesteps(xr_obj, verbose=True):
-    """Checks GPM object has regular "time" coordinate."""
-    from gpm_api.utils.geospatial import is_orbit, is_grid
-
-    timesteps = xr_obj["time"].values
-    if is_orbit(xr_obj):
-        _check_regular_timesteps(
-            timesteps, tolerance=ORBIT_TIME_TOLERANCE, verbose=verbose
-        )
-    elif is_grid(xr_obj):
-        _check_regular_timesteps(timesteps, tolerance=None, verbose=verbose)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
-
-
-def _has_regular_orbit(xr_obj):
-    """Check if GPM orbit object has regular timesteps."""
-    # Retrieve timesteps
-    timesteps = xr_obj[
-        "time"
-    ].values.copy()  # Avoid inplace remplacement of original data
-    try:
-        _check_regular_timesteps(
-            timesteps, tolerance=ORBIT_TIME_TOLERANCE, verbose=False
-        )
-        flag = True
-    except ValueError:
-        flag = False
-    return flag
-
-
-def _has_regular_grid(xr_obj):
-    """Check if GPM grid object has regular timesteps."""
-    # Retrieve timesteps
-    timesteps = xr_obj["time"].values
-    # Deal special case when only 1 timestep
-    if len(timesteps) == 1:
-        return True
-    # Otherwise, check if regular timesteps
-    if len(np.unique(np.diff(timesteps))) != 1:
-        return False
-    else:
-        return True
-
-
-def has_regular_timesteps(xr_obj):
-    """Checks GPM object has regular "time" coordinate.
-
-    If there are NaT values in the time array, it returns False.
-    """
-    from gpm_api.utils.geospatial import is_orbit, is_grid
-
-    if is_orbit(xr_obj):
-        return _has_regular_orbit(xr_obj)
-    elif is_grid(xr_obj):
-        return _has_regular_grid(xr_obj)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
-
-
-def has_consecutive_granules(xr_obj):
-    """Checks GPM object is composed of consecutive granules."""
-    from gpm_api.utils.geospatial import is_orbit, is_grid
-
-    if is_orbit(xr_obj):
-        granule_ids = xr_obj["gpm_granule_id"].data
-        if np.all(np.diff(granule_ids) <= 1):
-            return True
-        else:
-            return False
-    if is_grid(xr_obj):
-        return _has_regular_grid(xr_obj)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
-
-
 def ensure_time_validity(xr_obj, limit=10):
     """
     Attempt to correct the time coordinate if less than 'limit' consecutive NaT values are present.
@@ -315,6 +196,7 @@ def ensure_time_validity(xr_obj, limit=10):
 
     """
     timesteps = xr_obj["time"].values
+    
     # In case only 1 timestep, return the object (also Grid case)
     if len(timesteps) == 1:
         return xr_obj
@@ -333,78 +215,9 @@ def ensure_time_validity(xr_obj, limit=10):
 
     return xr_obj
 
+####--------------------------------------------------------------------------.
 
-def get_regular_time_slices(xr_obj, tolerance=None):
-    """
-    Return a list of time slices which are regular
 
-    [slice(start,stop), slice(start,stop),...]
 
-    Parameters
-    ----------
-    xr_obj : (xr.Dataset, xr.DataArray)
-        GPM xarray object.
-    tolerance : np.timedelta, optional
-        The timedelta tolerance to define regular vs. non-regular timesteps.
-        The default is None.
-        If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
-        If GPM ORBIT object, it uses the gpm_api.utils.time.ORBIT_TIME_TOLERANCE
 
-    Returns
-    -------
-    list_slices : list
-        List of slice object to select regular time intervals.
-    """
-    # Note: start and stop could be changes as str format (is accepted by subset_by_time*)
-    from gpm_api.utils.geospatial import is_orbit, is_grid
 
-    # Retrieve timestep
-    timesteps = xr_obj["time"].values
-    timesteps = timesteps.astype("M8[s]")
-
-    # If less than 2 timesteps, check nothing
-    if len(timesteps) < 2:
-        list_slices = [slice(start=timesteps[0], end=timesteps[0])]
-        return list_slices
-
-    # Infer tolerance if not specified
-    if tolerance is None:
-        if is_orbit(xr_obj):
-            tolerance = ORBIT_TIME_TOLERANCE
-        elif is_grid(xr_obj):
-            # Infer t_res using first two timesteps
-            tolerance = np.diff(timesteps[0:2])[0]
-        else:
-            raise ValueError("Unrecognized GPM xarray object.")
-
-    # Identify occurence of non-regular timesteps
-    is_regular = np.diff(timesteps) <= tolerance
-
-    # If non-regular timesteps occurs, reports the regular slices
-    if not np.all(is_regular):
-        # Retrieve last indices where is regular
-        indices_start_missing = np.argwhere(~is_regular).flatten()
-        list_slices = []
-        for i, idx in enumerate(indices_start_missing):
-            # Retrieve start
-            if i == 0:
-                start = timesteps[0]
-            else:
-                previous_start_idx = indices_start_missing[i - 1]
-                start = timesteps[previous_start_idx + 1]
-            # Retrieve stop
-            stop = timesteps[idx]
-            slc = slice(start, stop)
-            list_slices.append(slc)
-
-        # If last idx is not one of the 2 last timestep, add last interval
-        if idx != len(timesteps) - 2:
-            start = timesteps[idx + 1]
-            stop = timesteps[-1]
-            slc = slice(start, stop)
-            list_slices.append(slc)
-
-    # Otherwise return start and end time of timesteps
-    else:
-        list_slices = [slice(timesteps[0], timesteps[-1])]
-    return list_slices

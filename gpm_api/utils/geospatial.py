@@ -9,11 +9,6 @@ import numpy as np
 import xarray as xr
 
 
-def check_valid_geolocation(xr_obj, verbose=True):
-    # TODO implement
-    pass
-
-
 def unwrap_longitude_degree(x, period=360):
     """Unwrap longitude array."""
     x = np.asarray(x)
@@ -99,6 +94,12 @@ def crop(xr_obj, bbox):
     return xr_obj_subset
 
 
+#### TODO MOVE TO utils.checks !!!
+def check_valid_geolocation(xr_obj, verbose=True):
+    # TODO implement
+    pass
+
+
 def is_orbit(xr_obj):
     """Check whether the GPM xarray object is an orbit."""
     if "along_track" in list(xr_obj.dims):
@@ -137,6 +138,9 @@ def is_spatial_2D_field(xr_obj):
         return True
     else:
         return False
+
+
+#### TODO MOVE TO pyresample accessor !!!
 
 
 def get_pyresample_area(xr_obj):

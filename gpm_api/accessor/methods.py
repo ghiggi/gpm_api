@@ -52,12 +52,24 @@ class GPM_Base_Accessor:
         from gpm_api.utils.geospatial import is_spatial_2D_field
 
         return is_spatial_2D_field(self._obj)
+    
+    @property
+    def is_regular(self):
+        from gpm_api.utils.checks import is_regular
 
+        return is_regular(self._obj)
+    
     @property
     def has_regular_timesteps(self):
-        from gpm_api.utils.time import has_regular_timesteps
+        from gpm_api.utils.checks import has_regular_timesteps
 
         return has_regular_timesteps(self._obj)
+    
+    @property
+    def has_contiguous_scans(self):
+        from gpm_api.utils.checks import has_contiguous_scans
+
+        return has_contiguous_scans(self._obj)
 
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm_api.utils.time import subset_by_time
@@ -70,9 +82,13 @@ class GPM_Base_Accessor:
         return subset_by_time_slice(self._obj, slice=slice)
 
     def get_regular_time_slices(self, tolerance=None):
-        from gpm_api.utils.time import get_regular_time_slices
+        from gpm_api.utils.checks import get_regular_time_slices
 
         return get_regular_time_slices(self._obj, tolerance=tolerance)
+    
+    def get_contiguous_scan_slices(self, tolerance=None):
+        from gpm_api.utils.checks import get_contiguous_scan_slices
+        return get_contiguous_scan_slices(self._obj)
 
     def plot_transect_line(self, ax, color="black"):
         from gpm_api.visualization.profile import plot_transect_line
