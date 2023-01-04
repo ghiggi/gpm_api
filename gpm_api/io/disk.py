@@ -132,7 +132,7 @@ def _find_daily_filepaths(
         filepaths,
         product=product,
         product_type=product_type,
-        version=version,
+        # version=version, # DO NOT FILTER BY VERSION BECAUSE SOME PMW V7 HAVE VERSION V05D
         start_time=start_time,
         end_time=end_time,
     )
@@ -205,7 +205,9 @@ def find_filepaths(
     #   and the searched granule is in previous day directory
     # - this can be done in parallel !!!
     list_filepaths = []
-    for date in dates:
+    verbose_arg = verbose 
+    for i, date in enumerate(dates):
+        verbose = False if i == 0 else verbose_arg
         filepaths = _find_daily_filepaths(
             base_dir=base_dir,
             version=version,
@@ -214,7 +216,7 @@ def find_filepaths(
             date=date,
             start_time=start_time,
             end_time=end_time,
-            verbose=verbose,
+            verbose=verbose,   
         )
         list_filepaths += filepaths
     # -------------------------------------------------------------------------.
