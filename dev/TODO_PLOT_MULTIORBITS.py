@@ -8,7 +8,7 @@ Created on Wed Aug  3 14:56:37 2022
 import os
 import datetime
 import numpy as np
-from gpm_api.io_future.dataset import open_dataset
+import gpm_api
 from dask.diagnostics import ProgressBar
 
 base_dir = "/home/ghiggi"
@@ -18,10 +18,11 @@ start_time = datetime.datetime.strptime("2020-08-01 12:00:00", "%Y-%m-%d %H:%M:%
 end_time = datetime.datetime.strptime("2020-08-10 12:00:00", "%Y-%m-%d %H:%M:%S")
 
 product = "2A-GMI"
+product = "2A-MHS-METOPB" # non-regular timesteps 
 product_type = "RS"
 variables = "surfacePrecipitation"
 
-ds = open_dataset(
+ds = gpm_api.open_dataset(
     base_dir=base_dir,
     product=product,
     start_time=start_time,
@@ -31,111 +32,84 @@ ds = open_dataset(
     variables=variables,
     product_type=product_type,
     chunks="auto",
-    decode_cf=False,
+    # decode_cf=True,
     prefix_group=False,
 )
 
-# -----------------------------------------------------------------------------.
+ds1 = ds
+ds = ds.isel(along_track=slice(0, 10000))
+
+ds = ds.compute()
+
+ds['surfacePrecipitation'] 
+
+ds.gpm_api.plot_map(variable="surfacePrecipitation")
+
+timesteps = ds['time'].values
+timesteps = timesteps.astype("M8[s]")
+np.unique(np.diff(timesteps), return_counts=True)
+
+# 3 seconds is too much for orbits? 
+# - 1 occurence for 2A-GMI 
+timesteps.shape
+np.where(np.diff(timesteps).astype(int) == 3)
+ds.isel(along_track=slice(220049-2, 220049+2))['time']
 
 
-# -----------------------------------------------------------------------------.
-##### Plot PMW Swaths
-# TODO
+get_contiguous_scan_slices(ds)
+list_slices = get_discontiguous_scan_slices(ds)
+ds.isel(along_track=list_slices[0])['gpm_id']
+
+
+
+
+
+np.where(~is_contiguous)
+
+
+
+
+# get_contiguous_scans 
+
+
+### TODO: Add decorator to plot_orbit_map to iterate on regular blocks !!!! 
 # --> Iterate and check that lon diff not higher than XXXX
 #     --> Avoid plotting large pixels due to data interruption
 
-# pcolormesh works across antimeridian when using cartopy
-# - https://github.com/SciTools/cartopy/pull/1622
-# - https://github.com/geoschem/GCHP/issues/39
-# - https://github.com/SciTools/cartopy/issues/1447
-# --> Split at antimeridian, plot with polygon the remaining
 
-# -----------------------------------------------------------------------------.
-# ds = ds.compute()
-ds1 = ds
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-from gpm_api.utils.utils_cmap import *  # cmap, norm, cbar_kwargs, clevs_str
-import warnings
-from shapely.errors import ShapelyDeprecationWarning
-
-warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
-
-ds = ds1.isel(along_track=slice(100, 300))
-ds.lon
-
-# Replace all values equal to -9999 with np.nan
-# ds = ds.where(ds['surfacePrecipitation'] > 0.2, 0)
-
-variable = "surfacePrecipitation"
-dpi = 100
-figsize = (12, 10)
-crs_proj = ccrs.PlateCarree()
-crs_proj = ccrs.Robinson()
-
-# Create figure
-fig, ax = plt.subplots(subplot_kw={"projection": crs_proj}, figsize=figsize, dpi=dpi)
-# - Add coastlines
-# ax.set_global()
-ax.coastlines()
-# - TODO Add swath lines
-
-# - Add variable field with xarray
-# p  = ds[variable].plot.pcolormesh(x="lon", y="lat",
-#                                   ax=ax,
-#                                   transform=ccrs.PlateCarree(),
-#                                   cmap=cmap,
-#                                   norm=norm,
-#                                   cbar_kwargs=cbar_kwargs,
-#                                   )
-# cbar = p.colorbar
-# _ = cbar.ax.set_yticklabels(clevs_str)
-
-# p  = ax.pcolor(ds["lon"].data, ds['lat'].data, ds[variable].data,
-#                transform=ccrs.PlateCarree(),
-#                cmap=cmap,
-#                norm=norm,
-#                # cbar_kwargs=cbar_kwargs)
-# )
-p = ax.pcolormesh(
-    ds["lon"].data,
-    ds["lat"].data,
-    ds[variable].data,
-    transform=ccrs.PlateCarree(),
-    cmap=cmap,
-    norm=norm,
-    # cbar_kwargs=cbar_kwargs)
-)
+from gpm_api.utils.checks import get_contiguous_scan_slices
 
 
-cbar = p.colorbar
-_ = cbar.ax.set_yticklabels(clevs_str)
 
-# pcolormesh --> 'QuadMesh'
 
-# -----------------------------------------------------------------------------.
-# Create figure
-fig, ax = plt.subplots(subplot_kw={"projection": crs_proj}, figsize=figsize, dpi=dpi)
-# - Add coastlines
-ax.set_global()
-ax.coastlines()
-# - TODO Add swath lines
 
-# - Add variable field
-# p  = ds[variable].plot.pcolormesh(x="lon", y="lat",
-#                                   ax=ax,
-#                                   transform=ccrs.PlateCarree(),
-#                                   cmap=cmap,
-#                                   )
-ax.pcolormesh(
-    ds["lon"].data,
-    ds["lat"].data,
-    ds[variable].data,
-    transform=ccrs.PlateCarree(),
-    cmap=cmap,
-    norm=norm,
-)
+from gpm_api.utils.checks import get_nonregular_time_slices
+from gpm_api.utils.checks import get_discontiguous_scan_slices
+ds.gpm_api.is_regular
+ds.gpm_api.has_regular_timesteps
+ds.gpm_api.has_contiguous_scans
+ds.gpm_api.get_regular_time_slices()
+ds.gpm_api.get_contiguous_scan_slices()
 
+# Investigate discontinuities
+list_slices = get_discontiguous_scan_slices(ds)
+ds.isel(along_track=list_slices[0])['gpm_id']
+ds.isel(along_track=list_slices[0]).gpm_api.plot_map(variable="surfacePrecipitation")
+# TODO: 
+# - plot_footprint
+# - plot_mesh
+
+
+ds.gpm_api.get_contiguous_scan_slices()
+ 
+
+ds.isel(along_track=list_slices[0])
+
+#### Operational checks 
+# - No missing timesteps 
+# - No unvalid coordinates
+#   --> Mask for plotting 
+#   --> Do not mask for crop 
 
 # -----------------------------------------------------------------------------.
 ### TODO: add checks when missing coordinates

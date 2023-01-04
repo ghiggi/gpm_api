@@ -5,6 +5,7 @@ Created on Sat Dec 10 18:42:28 2022
 
 @author: ghiggi
 """
+import numpy as np 
 import cartopy
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -31,6 +32,29 @@ def get_extent(da, x="lon", y="lat"):
     lat_min, lat_max = da[y].min(), da[y].max()
     extent = (lon_min, lon_max, lat_min, lat_max)
     return extent
+
+
+def get_antimeridian_mask(lons, buffer=True):
+    """Get mask of longitude coordinates neighbors crossing the antimeridian."""
+    from scipy.ndimage import binary_dilation
+    # Check vertical edges 
+    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
+    row_idx_rev, col_idx_rev = np.where(np.abs(np.diff(lons[::-1, :], axis=0)) > 180)
+    row_idx_rev = lons.shape[0] - row_idx_rev - 1 
+    row_indices = np.append(row_idx, row_idx_rev)
+    col_indices = np.append(col_idx, col_idx_rev)
+    # Check horizontal 
+    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=1)) > 180)
+    row_idx_rev, col_idx_rev = np.where(np.abs(np.diff(lons[:, ::-1], axis=1)) > 180)
+    col_idx_rev = lons.shape[1] - col_idx_rev - 1 
+    row_indices = np.append(row_indices, np.append(row_idx, row_idx_rev))
+    col_indices = np.append(col_indices, np.append(col_idx, col_idx_rev)) 
+    # Create mask 
+    mask = np.zeros(lons.shape)
+    mask[row_indices, col_indices] = 1
+    # Buffer by 1 in all directions to ensure edges not crossing the antimeridian 
+    mask = binary_dilation(mask)
+    return mask
 
 
 def _plot_cartopy_background(ax):
@@ -119,16 +143,31 @@ def _plot_cartopy_pcolormesh(
     plot_kwargs,
     cbar_kwargs,
 ):
-    """Plot imshow with cartopy."""
-    # TODO: --> DO NOT DEAL CORRECTLY WITH THE ANTIMERIDIAN
-    # --> It generate stripes !!!!!!
-
+    """Plot imshow with cartopy.
+    
+    The function currently does not allow to zoom on regions across the antimeridian.
+    The function mask scanning pixels which spans across the antimeridian. 
+    """
+    # TODO: plot antimeridian crossing cells with PolyCollection 
+    
     # - Get x, y, and array to plot
     da = da.compute()
     x = da[x].data
     y = da[y].data
     arr = da.data
-
+    
+    # - Mask cells crossing the antimeridian    
+    mask = get_antimeridian_mask(x, buffer=True)
+    if np.any(mask):
+        arr = np.ma.masked_where(mask, arr)
+        # Sanitize cmap bad color to avoid cartopy bug 
+        if "cmap" in plot_kwargs: 
+            cmap = plot_kwargs['cmap']
+            bad = cmap.get_bad()
+            bad[3] = 0 # enforce to 0 (transparent) 
+            cmap.set_bad(bad)
+            plot_kwargs['cmap'] = cmap
+            
     # - Add variable field with cartopy
     p = ax.pcolormesh(
         x,
@@ -139,8 +178,10 @@ def _plot_cartopy_pcolormesh(
     )
 
     # - Set the extent
-    extent = get_extent(da, x="lon", y="lat")
-    ax.set_extent(extent)
+    # --> To be set in projection coordinates of crs !!!
+    #     lon/lat conversion to proj required !
+    # extent = get_extent(da, x="lon", y="lat")
+    # ax.set_extent(extent)
 
     # - Add colorbar
     if add_colorbar:
@@ -218,6 +259,7 @@ def plot_map(
     if is_orbit(da):
         p = plot_orbit_map(
             da=da,
+            ax=ax, 
             add_colorbar=add_colorbar,
             subplot_kw=subplot_kw,
             figsize=figsize,
