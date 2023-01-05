@@ -265,14 +265,26 @@ def _is_contiguous_scan(xr_obj):
     # Compute along track scan distance 
     dist = _get_along_track_scan_distance(xr_obj)
     # Convert to km and round 
-    dist_km = np.round(dist/1000,0)  
-    # Identify the most common distance
-    # TODO: replace with smallest ? Since the standard should be the smallest 
-    #  unless repeated scan or geolocation errors
-    dist_unique, dist_counts = np.unique(dist_km, return_counts=True) 
-    most_common_dist = dist_unique[np.argmax(dist_counts)]    
+    dist_km = np.round(dist/1000,0) 
+  
+    ##  Option 1
     # Identify if the next scan is contiguous 
-    bool_arr = dist_km < (most_common_dist + most_common_dist/2)
+    # - Use the smallest distance as reference 
+    # - Assumed to be non contiguous if separated by more than min_dist + half min_dist
+    # - This fails if duplicated geolocation --> min_dist = 0
+    min_dist = min(dist_km)
+    bool_arr = dist_km < (min_dist + min_dist/2)
+  
+    ### Option 2
+    # # Identify if the next scan is contiguous 
+    # # - Use the smallest distance as reference 
+    # # - Assumed to be non contiguous if exceeds min_dist + min_dist/2
+    # # - This fails when more discontiguous/repeated than contiguous
+    # dist_unique, dist_counts = np.unique(dist_km, return_counts=True) 
+    # most_common_dist = dist_unique[np.argmax(dist_counts)]    
+    # # Identify if the next scan is contiguous 
+    # bool_arr = dist_km < (most_common_dist + most_common_dist/2)
+    
     # Add True to last position 
     bool_arr = np.append(bool_arr, True)
     return bool_arr
