@@ -12,7 +12,7 @@ from gpm_api.io.products import (
 )
 
 
-def get_valid_scan_modes(product, version):
+def available_scan_modes(product, version):
 
     ##---------------------------------------------.
     #### TRMM Radar
@@ -75,7 +75,7 @@ def get_valid_scan_modes(product, version):
     ##---------------------------------------------.
     # L1A PMW
     elif product in ["1A-GMI"]:
-        scan_modes = ["S1", "S2", "S3", "S4", "S5"]  # gmi1aHeader
+        scan_modes = ["S1", "S2", "S4", "S5"]  # gmi1aHeader, "S3" not implemented
     elif product in ["1A-TMI"]:
         scan_modes = ["S1", "S2", "S3"]  # tmi1aHeader
     # L1B PMW

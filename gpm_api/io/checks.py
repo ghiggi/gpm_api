@@ -166,9 +166,9 @@ def check_scan_mode(scan_mode, product, version):
     """Checks the validity of scan_mode."""
     # -------------------------------------------------------------------------.
     # Get valid scan modes
-    from gpm_api.io.scan_modes import get_valid_scan_modes
+    from gpm_api.io.scan_modes import available_scan_modes
 
-    scan_modes = get_valid_scan_modes(product, version)
+    scan_modes = available_scan_modes(product, version)
 
     # Infer scan mode if not specified
     if scan_mode is None:
