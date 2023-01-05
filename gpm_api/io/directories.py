@@ -197,7 +197,7 @@ def get_pps_nrt_product_dir(product, date):
             folder_name = "GPROF/GMI"
         elif product in ["2A-TMI"]:
             folder_name = "GPROF/TMI"
-        elif product in ["2A-SSMI-F16", "2A-SSMI-F17", "2A-SSMI-F18"]:
+        elif product in ["2A-SSMIS-F16", "2A-SSMIS-F17", "2A-SSMIS-F18"]:
             folder_name = "GPROF/SSMIS"
         elif product in ["2A-ASMR2-GCOMW1"]:
             folder_name = "GPROF/AMSR2"
