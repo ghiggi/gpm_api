@@ -6,22 +6,22 @@ Created on Mon Aug 15 23:02:04 2022
 @author: ghiggi
 """
 # -----------------------------------------------------------------------------.
-# Create Jupyter Notebooks 
-# - Copy to Google Colab 
+# Create Jupyter Notebooks
+# - Copy to Google Colab
 # - Figure out a valid cartopy installation in Colab
 # - Copy to GitHub Codespace
 
 # -----------------------------------------------------------------------------.
-# Improve plot_map to accept custom plot kwargs 
+# Improve plot_map to accept custom plot kwargs
 # --> Add swath_lines=True
 # --> Plot 1-C-GMI Tb
-# --> tests/test_plot_orbit_pmw_custom_kwargs  
+# --> tests/test_plot_orbit_pmw_custom_kwargs
 
 
 # -----------------------------------------------------------------------------.
-# Implement valid geolocation checks 
+# Implement valid geolocation checks
 # --> In tests/test_dataset_valid_geolocation.py
-# --> Use SSMIS, MHS and GMI for testing 
+# --> Use SSMIS, MHS and GMI for testing
 
 # In checks
 # - check_valid_geolocation
@@ -39,7 +39,7 @@ Created on Mon Aug 15 23:02:04 2022
 # Refactor geospatial.py
 
 # -----------------------------------------------------------------------------.
-# Solve TODOs in dataset.py 
+# Solve TODOs in dataset.py
 
 ### Orbit quality flags
 # --> Add as coordinate?
@@ -59,7 +59,7 @@ Created on Mon Aug 15 23:02:04 2022
 
 # -----------------------------------------------------------------------------.
 # list: start_time end_time per satellite
-# --> dev/list_products.py 
+# --> dev/list_products.py
 
 # download from filename
 
@@ -70,7 +70,7 @@ Created on Mon Aug 15 23:02:04 2022
 
 # -----------------------------------------------------------------------------.
 ## Download GPM data after May 21 2018
- 
+
 # - SwathDefinition(ds_template['lons'], ds_template['lats']).plot()
 # gpm_api lon, lat --> longitude-latitude?
 
@@ -112,6 +112,7 @@ def check_consecutive_granules(filepaths, verbose=True):
         raise ValueError(
             f"There are non-regular timesteps starting from granule_id {first_non_consecutive}"
         )
+
 
 # -----------------------------------------------------------------------------.
 ### Refactor patterns.py and products.py

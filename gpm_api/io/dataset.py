@@ -31,15 +31,16 @@ from gpm_api.utils.time import (
     ensure_time_validity,
 )
 from gpm_api.utils.checks import has_regular_timesteps, is_regular
-  
+
+
 class GPM_Warning(Warning):
     def __init__(self, message):
         self.message = message
-        
+
     def __str__(self):
         return repr(self.message)
-    
-    
+
+
 ####--------------------------------------------------------------------------.
 ### Define GPM_API Dataset Dimensions
 DIM_DICT = {
@@ -56,26 +57,25 @@ DIM_DICT = {
     "nbinFS": "range",
     "nfreq": "frequency",
     # PMW 1B-GMI (V7)
-    "npix1": "cross_track", # PMW (i.e. GMI)
-    "npix2": "cross_track", # PMW (i.e. GMI)
+    "npix1": "cross_track",  # PMW (i.e. GMI)
+    "npix2": "cross_track",  # PMW (i.e. GMI)
     "nfreq1": "frequency",
     "nfreq2": "frequency",
-    "nchan1": "channel", 
-    "nchan2": "channel", 
+    "nchan1": "channel",
+    "nchan2": "channel",
     # PMW 1C-GMI (V7)
     "npixel1": "cross_track",
     "npixel2": "cross_track",
     # PMW 1A-GMI and 1C-GMI (V7)
     "nscan1": "along_track",
     "nscan2": "along_track",
-    "nchannel1": "channel", 
-    "nchannel2": "channel", 
+    "nchannel1": "channel",
+    "nchannel2": "channel",
     # PMW 1A-GMI (V7)
     "npixelev": "cross_track",
     "npixelht": "cross_track",
-    "npixelcs": "cross_track", 
-    "npixelfr": "cross_track", # S4 mode
-    
+    "npixelcs": "cross_track",
+    "npixelfr": "cross_track",  # S4 mode
     # 2A-DPR, 2A-Ku, 2A-Ka
     "nDSD": "DSD_params",
     # nBnPSD --> "range" in CORRA --> 88, 250 M interval
@@ -465,25 +465,25 @@ def open_granule(
     # --> TODO: this can be moved into get_orbit_coords !
     ds = ensure_time_validity(ds, limit=10)
 
-    # Warn  if non-contiguous scans are present in a GPM Orbit 
-    # - If ds is a GPM Grid Granule, is always a single timestep so always True 
+    # Warn  if non-contiguous scans are present in a GPM Orbit
+    # - If ds is a GPM Grid Granule, is always a single timestep so always True
     if not is_regular(ds):
         msg = f"The GPM granule {filepath} has non-contiguous scans !"
         warnings.warn(msg, GPM_Warning)
- 
+
     # ------------------------------------------------------.
     #### Check geolocation latitude/longitude coordinates
     # TODO: check_valid_geolocation
     # TODO: ensure_valid_geolocation (1 spurious pixel)
     # TODO: ds_gpm.gpm_api.valid_geolocation
-    
+
     # Add QUALITY_FLAGS (i.e. 1A-GMI)
     # - scanStatus
     #   - geoError
-    #   - missing 
-    #   - modeStatus 
+    #   - missing
+    #   - modeStatus
     #   - geoWarning
-    
+
     # Add global attributes
     # TODO: i.e. gpm_api_product for gpm_api.title accessor
 

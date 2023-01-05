@@ -205,7 +205,7 @@ def find_filepaths(
     #   and the searched granule is in previous day directory
     # - this can be done in parallel !!!
     list_filepaths = []
-    verbose_arg = verbose 
+    verbose_arg = verbose
     for i, date in enumerate(dates):
         verbose = False if i == 0 else verbose_arg
         filepaths = _find_daily_filepaths(
@@ -216,7 +216,7 @@ def find_filepaths(
             date=date,
             start_time=start_time,
             end_time=end_time,
-            verbose=verbose,   
+            verbose=verbose,
         )
         list_filepaths += filepaths
     # -------------------------------------------------------------------------.

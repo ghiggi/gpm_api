@@ -67,9 +67,9 @@ def _format_dataarray_attrs(da, product=None):
 def decode_dataset(ds):
     # Decode with xr.decode_cf
     with warnings.catch_warnings():
-        warnings.simplefilter(action='ignore', category=FutureWarning)
-        ds = xr.decode_cf(ds) 
-    
+        warnings.simplefilter(action="ignore", category=FutureWarning)
+        ds = xr.decode_cf(ds)
+
     # Clean the DataArray attributes and encodings
     for var, da in ds.items():
         # When decoding with xr.decode_cf, _FillValue and the source dtype are automatically
@@ -207,12 +207,12 @@ def apply_custom_decoding(ds, product):
         ds["TotalQualityCode"] = xr.DataArray(
             np.repeat(TotalQualityCode, ds.dims["along_track"]), dims=["along_track"]
         )
-    
-    # Correct for misreported _FillValue 
+
+    # Correct for misreported _FillValue
     if "surfacePrecipitation" in dataset_vars:
         # _FillValue often reported as -9999.9, but in data the values are -9999.0 !
         # --> Example 2A-MHS-METOB
         da = ds["surfacePrecipitation"]
-        ds["surfacePrecipitation"] = da.where(da != -9999.)
-        
+        ds["surfacePrecipitation"] = da.where(da != -9999.0)
+
     return ds

@@ -12,7 +12,7 @@ from gpm_api.io.checks import (
     check_start_end_time,
 )
 
- 
+
 ####--------------------------------------------------------------------------.
 ############################
 #### Subsetting by time ####
@@ -196,7 +196,7 @@ def ensure_time_validity(xr_obj, limit=10):
 
     """
     timesteps = xr_obj["time"].values
-    
+
     # In case only 1 timestep, return the object (also Grid case)
     if len(timesteps) == 1:
         return xr_obj
@@ -215,9 +215,5 @@ def ensure_time_validity(xr_obj, limit=10):
 
     return xr_obj
 
+
 ####--------------------------------------------------------------------------.
-
-
-
-
-

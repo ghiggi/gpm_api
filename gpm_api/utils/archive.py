@@ -34,8 +34,9 @@ def print_elapsed_time(fn):
         end_time = time.perf_counter()
         execution_time = end_time - start_time
         timedelta_str = str(datetime.timedelta(seconds=execution_time))
-        print(f'Elapsed time: {timedelta_str} .', end="\n")
+        print(f"Elapsed time: {timedelta_str} .", end="\n")
         return results
+
     return decorator
 
 
@@ -303,6 +304,7 @@ def get_product_temporal_coverage(
     info_dict["last_granule"] = last_pps_filepath
     return info_dict
 
+
 @print_elapsed_time
 def download_monthly_data(
     base_dir,
@@ -322,7 +324,7 @@ def download_monthly_data(
 ):
     start_time = datetime.date(year, month, 1)
     end_time = start_time + relativedelta(months=1)
-    
+
     l_corrupted = gpm_api.download(
         base_dir=base_dir,
         username=username,

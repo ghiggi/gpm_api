@@ -33,8 +33,8 @@ def check_is_orbit(xr_obj):
     "Check is a GPM orbit object."
     if not is_orbit(xr_obj):
         raise ValueError("Expecting a GPM ORBIT object.")
-        
-        
+
+
 def check_is_grid(xr_obj):
     "Check is a GPM grid object."
     if not is_grid(xr_obj):
@@ -59,11 +59,12 @@ def _get_timesteps(xr_obj):
     timesteps = xr_obj["time"].values
     timesteps = timesteps.astype("M8[s]")
     return timesteps
-    
+
 
 def _infer_time_tolerance(xr_obj):
     """Infer time interval tolerance between timesteps."""
     from gpm_api.utils.geospatial import is_orbit, is_grid
+
     # For GPM ORBIT objects, use the ORBIT_TIME_TOLERANCE
     if is_orbit(xr_obj):
         tolerance = ORBIT_TIME_TOLERANCE
@@ -73,18 +74,18 @@ def _infer_time_tolerance(xr_obj):
         tolerance = np.diff(timesteps[0:2])[0]
     else:
         raise ValueError("Unrecognized GPM xarray object.")
-    return tolerance 
-    
+    return tolerance
 
-def _is_regular_timesteps(xr_obj, tolerance=None): 
+
+def _is_regular_timesteps(xr_obj, tolerance=None):
     """Return a boolean array indicating if the next regular timestep is present."""
     # Retrieve timesteps
     timesteps = _get_timesteps(xr_obj)
     # Infer tolerance if not specified
     tolerance = _infer_time_tolerance(xr_obj) if tolerance is None else tolerance
-    #  # Identify if the next regular timestep is present 
+    #  # Identify if the next regular timestep is present
     bool_arr = np.diff(timesteps) <= tolerance
-    # Add True to last position 
+    # Add True to last position
     bool_arr = np.append(bool_arr, True)
     return bool_arr
 
@@ -94,10 +95,10 @@ def get_regular_time_slices(xr_obj, tolerance=None):
     Return a list of slices ensuring timesteps to be regular.
 
     Output format: [slice(start,stop), slice(start,stop),...]
-    
+
     Consecutive non-regular timesteps leads to slices of size 1.
     An input with less than 2 timesteps however returns an empty slice or a slice of size 1.
-    
+
     Parameters
     ----------
     xr_obj : (xr.Dataset, xr.DataArray)
@@ -116,24 +117,25 @@ def get_regular_time_slices(xr_obj, tolerance=None):
     # Retrieve timestep
     timesteps = _get_timesteps(xr_obj)
     n_timesteps = len(timesteps)
-    
-    # Define special behaviour if less than 2 timesteps 
+
+    # Define special behaviour if less than 2 timesteps
     # - If n_timesteps 0, slice(0, 0) returns empty array
     # - If n_timesteps 1, slice(0, 1) returns the single timestep
     # --> If less than 2 timesteps, assume regular timesteps
     if n_timesteps < 2:
-        list_slices = [slice(0, n_timesteps)]  
+        list_slices = [slice(0, n_timesteps)]
     # Otherwise
-    else: 
+    else:
         # Get boolean array indicating if the next regular timestep is present
         is_regular = _is_regular_timesteps(xr_obj, tolerance=tolerance)
-        
+
         # If non-regular timesteps are present, get the slices for each regular interval
         # - If consecutive non-regular timestep occurs, returns slices of size 1
-        list_slices = get_contiguous_true_slices(is_regular, include_false=True,
-                                                 skip_consecutive_false=False)
-    
-    # Return list of slices with regular timesteps 
+        list_slices = get_contiguous_true_slices(
+            is_regular, include_false=True, skip_consecutive_false=False
+        )
+
+    # Return list of slices with regular timesteps
     return list_slices
 
 
@@ -142,10 +144,10 @@ def get_nonregular_time_slices(xr_obj, tolerance=None):
     Return a list of slices where there are supposedly missing timesteps.
 
     Output format: [slice(start,stop), slice(start,stop),...]
-    
+
     The output slices have size 2.
     An input with less than 2 scans (along-track) returns an empty list.
-   
+
     Parameters
     ----------
     xr_obj : (xr.Dataset, xr.DataArray)
@@ -164,9 +166,9 @@ def get_nonregular_time_slices(xr_obj, tolerance=None):
     # Retrieve timestep
     timesteps = _get_timesteps(xr_obj)
     n_timesteps = len(timesteps)
-    
+
     # Define behaviour if less than 2 timesteps
-    # --> Here we decide to return an empty list ! 
+    # --> Here we decide to return an empty list !
     if n_timesteps < 2:
         list_slices = []
         return list_slices
@@ -178,19 +180,19 @@ def get_nonregular_time_slices(xr_obj, tolerance=None):
     if not np.all(is_regular):
         indices_next_nonregular = np.argwhere(~is_regular).flatten()
         list_slices = [slice(i, i + 2) for i in indices_next_nonregular]
-    else: 
-        list_slices = [] 
+    else:
+        list_slices = []
     return list_slices
 
 
 def check_regular_timesteps(xr_obj, tolerance=None, verbose=True):
     """
     Check no missing timesteps for longer than 'tolerance' seconds.
-    
-    Note: 
-    - This sometimes occurs between orbit/grid granules 
+
+    Note:
+    - This sometimes occurs between orbit/grid granules
     - This sometimes occurs within a orbit granule
-    
+
     Parameters
     ----------
     xr_obj : xr.Dataset or xr.DataArray
@@ -202,7 +204,7 @@ def check_regular_timesteps(xr_obj, tolerance=None, verbose=True):
         If GPM ORBIT object, it uses the gpm_api.utils.time.ORBIT_TIME_TOLERANCE
     verbose : bool
         If True, it prints the time interval when the non contiguous scans occurs.
-        The default is True. 
+        The default is True.
 
     Returns
     -------
@@ -211,7 +213,7 @@ def check_regular_timesteps(xr_obj, tolerance=None, verbose=True):
     """
     list_discontinuous_slices = get_nonregular_time_slices(xr_obj, tolerance=tolerance)
     n_discontinuous = len(list_discontinuous_slices)
-    if n_discontinuous > 0: 
+    if n_discontinuous > 0:
         # Retrieve discontinous timesteps interval
         timesteps = _get_timesteps(xr_obj)
         list_discontinuous = [timesteps[slc] for slc in list_discontinuous_slices]
@@ -224,82 +226,83 @@ def check_regular_timesteps(xr_obj, tolerance=None, verbose=True):
         raise ValueError(
             f"There are {n_discontinuous} non-regular timesteps. The first occur at {first_problematic_timestep}."
         )
-        
 
-def has_regular_timesteps(xr_obj): 
+
+def has_regular_timesteps(xr_obj):
     """Return True if all timesteps are regular. False otherwise."""
     list_discontinuous_slices = get_nonregular_time_slices(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
-    if n_discontinuous > 0: 
+    if n_discontinuous > 0:
         return False
     else:
-        return True 
-    
-    
+        return True
+
+
 ####--------------------------------------------------------------------------.
-######################## 
+########################
 #### Regular scans  ####
-######################## 
+########################
 
 
 def _get_along_track_scan_distance(xr_obj):
     """Compute the distance between along_track centroids."""
     from pyproj import Geod
+
     # Select centroids coordinates in the middle of the cross_track scan
-    middle_idx = int(xr_obj['cross_track'].shape[0]/2)
-    lons = xr_obj['lon'].isel(cross_track=middle_idx).data
-    lats = xr_obj['lat'].isel(cross_track=middle_idx).data
-    # Define between-centroids line coordinates  
+    middle_idx = int(xr_obj["cross_track"].shape[0] / 2)
+    lons = xr_obj["lon"].isel(cross_track=middle_idx).data
+    lats = xr_obj["lat"].isel(cross_track=middle_idx).data
+    # Define between-centroids line coordinates
     start_lons = lons[:-1]
     start_lats = lats[:-1]
     end_lons = lons[1:]
     end_lats = lats[1:]
-    # Compute distance 
+    # Compute distance
     geod = Geod(ellps="sphere")
-    _,_, dist = geod.inv(start_lons, start_lats, end_lons, end_lats)
-    return dist 
+    _, _, dist = geod.inv(start_lons, start_lats, end_lons, end_lats)
+    return dist
 
-       
+
 def _is_contiguous_scan(xr_obj):
     """Return a boolean array indicating if the next scan is contiguous."""
-    # Compute along track scan distance 
+    # Compute along track scan distance
     dist = _get_along_track_scan_distance(xr_obj)
-    # Convert to km and round 
-    dist_km = np.round(dist/1000,0) 
-  
+    # Convert to km and round
+    dist_km = np.round(dist / 1000, 0)
+
     ##  Option 1
-    # Identify if the next scan is contiguous 
-    # - Use the smallest distance as reference 
+    # Identify if the next scan is contiguous
+    # - Use the smallest distance as reference
     # - Assumed to be non contiguous if separated by more than min_dist + half min_dist
     # - This fails if duplicated geolocation --> min_dist = 0
     min_dist = min(dist_km)
-    bool_arr = dist_km < (min_dist + min_dist/2)
-  
+    bool_arr = dist_km < (min_dist + min_dist / 2)
+
     ### Option 2
-    # # Identify if the next scan is contiguous 
-    # # - Use the smallest distance as reference 
+    # # Identify if the next scan is contiguous
+    # # - Use the smallest distance as reference
     # # - Assumed to be non contiguous if exceeds min_dist + min_dist/2
     # # - This fails when more discontiguous/repeated than contiguous
-    # dist_unique, dist_counts = np.unique(dist_km, return_counts=True) 
-    # most_common_dist = dist_unique[np.argmax(dist_counts)]    
-    # # Identify if the next scan is contiguous 
+    # dist_unique, dist_counts = np.unique(dist_km, return_counts=True)
+    # most_common_dist = dist_unique[np.argmax(dist_counts)]
+    # # Identify if the next scan is contiguous
     # bool_arr = dist_km < (most_common_dist + most_common_dist/2)
-    
-    # Add True to last position 
+
+    # Add True to last position
     bool_arr = np.append(bool_arr, True)
     return bool_arr
 
-       
+
 def get_contiguous_scan_slices(xr_obj):
     """
     Return a list of slices ensuring contiguous scans.
 
     Output format: [slice(start,stop), slice(start,stop),...]
-    
+
     An input with less than 2 scans (along-track) returns an empty list.
     Consecutive non-contiguous scans are discarded and not included in the outputs.
     The minimum size of the output slices is 2.
-    
+
     Parameters
     ----------
     xr_obj : (xr.Dataset, xr.DataArray)
@@ -311,12 +314,12 @@ def get_contiguous_scan_slices(xr_obj):
         List of slice object to select contiguous scans.
     """
     check_is_orbit(xr_obj)
-    # Get number of scans 
-    n_scans = xr_obj['along_track'].shape[0]
+    # Get number of scans
+    n_scans = xr_obj["along_track"].shape[0]
     # Define behaviour if less than 2 scan along track
     # - If n_scans 0, slice(0, 0) could return empty array
     # - If n_scans 1, slice(0, 1) could return the single scan
-    # --> Here we decide to return an empty list ! 
+    # --> Here we decide to return an empty list !
     if n_scans < 2:
         list_slices = []
         return list_slices
@@ -326,13 +329,14 @@ def get_contiguous_scan_slices(xr_obj):
 
     # If non-contiguous scans are present, get the slices with contiguous scans
     # - It discard consecutive non-contiguous scans
-    list_slices = get_contiguous_true_slices(is_contiguous, include_false=True,
-                                             skip_consecutive_false=True)
-    
+    list_slices = get_contiguous_true_slices(
+        is_contiguous, include_false=True, skip_consecutive_false=True
+    )
+
     # Select only slices with at least 2 scans
     list_slices = filter_slices_by_size(list_slices, min_size=2)
-    
-    # Return list of contiguous scan slices 
+
+    # Return list of contiguous scan slices
     return list_slices
 
 
@@ -341,10 +345,10 @@ def get_discontiguous_scan_slices(xr_obj):
     Return a list of slices where the scan discontinuity occurs.
 
     Output format: [slice(start,stop), slice(start,stop),...]
-    
+
     The output slices have size 2.
     An input with less than 2 scans (along-track) returns an empty list.
-   
+
     Parameters
     ----------
     xr_obj : (xr.Dataset, xr.DataArray)
@@ -356,14 +360,14 @@ def get_discontiguous_scan_slices(xr_obj):
         List of slice object to select discontiguous scans.
     """
     check_is_orbit(xr_obj)
-    
-    # Get number of scans 
-    n_scans = xr_obj['along_track'].shape[0]
-    
+
+    # Get number of scans
+    n_scans = xr_obj["along_track"].shape[0]
+
     # Define behaviour if less than 2 scan along track
     # - If n_scans 0, slice(0, 0) could return empty array
     # - If n_scans 1, slice(0, 1) could return the single scan
-    # --> Here we decide to return an empty list ! 
+    # --> Here we decide to return an empty list !
     if n_scans < 2:
         list_slices = []
         return list_slices
@@ -375,19 +379,19 @@ def get_discontiguous_scan_slices(xr_obj):
     if not np.all(is_contiguous):
         indices_next_discontinuous = np.argwhere(~is_contiguous).flatten()
         list_slices = [slice(i, i + 2) for i in indices_next_discontinuous]
-    else: 
-        list_slices = [] 
+    else:
+        list_slices = []
     return list_slices
-    
+
 
 def check_contiguous_scans(xr_obj, verbose=True):
     """
     Check no missing scans across the along_track direction.
-    
-    Note: 
-    - This sometimes occurs between orbit granules 
+
+    Note:
+    - This sometimes occurs between orbit granules
     - This sometimes occurs within a orbit granule
-    
+
     Parameters
     ----------
     xr_obj : xr.Dataset or xr.DataArray
@@ -402,7 +406,7 @@ def check_contiguous_scans(xr_obj, verbose=True):
     """
     list_discontinuous_slices = get_discontiguous_scan_slices(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
-    if n_discontinuous > 0: 
+    if n_discontinuous > 0:
         # Retrieve discontinous timesteps interval
         timesteps = _get_timesteps(xr_obj)
         list_discontinuous = [timesteps[slc] for slc in list_discontinuous_slices]
@@ -415,27 +419,28 @@ def check_contiguous_scans(xr_obj, verbose=True):
         raise ValueError(
             f"There are {n_discontinuous} non-contiguous scans. The first occur at {first_problematic_timestep}."
         )
-        
 
-def has_contiguous_scans(xr_obj): 
+
+def has_contiguous_scans(xr_obj):
     """Return True if all scans are contiguous. False otherwise."""
     list_discontinuous_slices = get_discontiguous_scan_slices(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
-    if n_discontinuous > 0: 
+    if n_discontinuous > 0:
         return False
     else:
-        return True 
-        
+        return True
+
 
 ####--------------------------------------------------------------------------.
 ##########################
 #### Regular granules ####
 ##########################
- 
+
+
 def has_missing_granules(xr_obj):
     """Checks GPM object is composed of consecutive granules."""
     from gpm_api.utils.geospatial import is_orbit, is_grid
-    
+
     if is_orbit(xr_obj):
         granule_ids = xr_obj["gpm_granule_id"].data
         if np.all(np.diff(granule_ids) <= 1):
@@ -446,7 +451,7 @@ def has_missing_granules(xr_obj):
         return has_regular_timesteps(xr_obj)
     else:
         raise ValueError("Unrecognized GPM xarray object.")
-        
+
 
 ####---------------------------------------------------------------------------
 #####################################
@@ -455,8 +460,8 @@ def has_missing_granules(xr_obj):
 
 
 def is_regular(xr_obj):
-    """Checks the GPM object is regular. 
-    
+    """Checks the GPM object is regular.
+
     For GPM ORBITS, it checks that the scans are contiguous.
     For GPM GRID, it checks that the timesteps are regularly spaced.
     """
@@ -470,16 +475,16 @@ def is_regular(xr_obj):
         raise ValueError("Unrecognized GPM xarray object.")
 
 
-def get_regular_slices(xr_obj): 
+def get_regular_slices(xr_obj):
     """
     Return a list of slices to select regular GPM objects.
-    
+
     For GPM ORBITS, it returns slices to select contiguouse scans.
     For GPM GRID, it returns slices to select periods with regular timesteps.
-    
+
     The output format is: [slice(start,stop), slice(start,stop),...]
-    For more information, read the documentation of: 
-    - gpm_api.utils.checks.get_contiguous_scan_slices 
+    For more information, read the documentation of:
+    - gpm_api.utils.checks.get_contiguous_scan_slices
     - gpm_api.utils.checks.get_regular_time_slices
     """
     from gpm_api.utils.geospatial import is_orbit, is_grid
@@ -490,8 +495,6 @@ def get_regular_slices(xr_obj):
         return get_regular_time_slices(xr_obj)
     else:
         raise ValueError("Unrecognized GPM xarray object.")
-    
-    
-    
+
 
 ####--------------------------------------------------------------------------.
