@@ -16,3 +16,4 @@ from gpm_api.utils.checks import check_regular_timesteps
 from gpm_api.utils.checks import check_contiguous_scans
 from gpm_api.utils.geospatial import check_valid_geolocation
 from gpm_api.io.products import available_products
+from gpm_api.io.scan_modes import available_scan_modes

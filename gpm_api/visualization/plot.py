@@ -57,7 +57,7 @@ def get_antimeridian_mask(lons, buffer=True):
     return mask
 
 
-def _plot_cartopy_background(ax):
+def plot_cartopy_background(ax):
     """Plot cartopy background."""
     # - Add coastlines
     ax.coastlines()
@@ -312,5 +312,46 @@ def plot_image(
         )
     else:
         raise ValueError("Can not plot. It's neither a GPM GRID, neither a GPM ORBIT.")
+    # Return mappable
+    return p
+
+
+def plot_map_mesh(
+    da,
+    ax=None,
+    edgecolors="k", 
+    subplot_kw=None,
+    figsize=(12, 10),
+    dpi=100,
+):
+    # Interpolation only for grid objects
+    # figsize, dpi, subplot_kw only used if ax is None
+    from gpm_api.utils.geospatial import is_orbit, is_grid
+    # from .grid import plot_grid_mesh
+    from .orbit import plot_orbit_mesh
+
+    # Plot orbit
+    if is_orbit(da):
+        p = plot_orbit_mesh(
+            da=da,
+            ax=ax, 
+            edgecolors=edgecolors,
+            subplot_kw=subplot_kw,
+            figsize=figsize,
+            dpi=dpi,
+        )
+    # Plot grid
+    elif is_grid(da):
+        raise NotImplementedError("Not yet implemented.")
+    #     p = plot_grid_mesh(
+    #         da=da,
+    #         ax=ax,
+    #         edgecolors=edgecolors,
+    #         subplot_kw=subplot_kw,
+    #         figsize=figsize,
+    #         dpi=dpi,
+    #     )
+    # else:
+        raise ValueError("Can not plot. It's neither a GPM grid, neither a GPM orbit.")
     # Return mappable
     return p

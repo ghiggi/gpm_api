@@ -229,6 +229,13 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         p = plot_map(ax=ax, da=da, add_colorbar=add_colorbar)
         return p
 
+    def plot_map_mesh(self, ax=None, edgecolors="k"):
+        from gpm_api.visualization.plot import plot_map_mesh
+
+        da = self._obj
+        p = plot_map_mesh(ax=ax, da=da, edgecolors=edgecolors)
+        return p
+
     def plot_image(self, ax=None, add_colorbar=True, interpolation="nearest"):
         from gpm_api.visualization.plot import plot_image
 

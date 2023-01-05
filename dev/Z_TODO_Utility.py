@@ -46,20 +46,15 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
 
 # - DPR vs GMI
 
-# - Plot with pcolormesh when crossing the antimeridan
-
 # - Add temperate, pressure contours ....
 # https://github.com/dopplerchase/DRpy/blob/7d4246d977e926d02b19059de0a0c3793711e2f1/drpy/graph/graph.py#L638
 
-
-# Zarrify the dataset
 # ----------------------------------------------------------------------------.
-#### xrimage
-## xr.upsample function (image) pixel ... duplicate or interpolate
-## xr.downsample function
+#### x-image
+## xi.upsample function (image) pixel ... duplicate or interpolate
+## xi.downsample function
 
 # ----------------------------------------------------------------------------.
-#### Subset by country
 #### Subset by lat/lon coord (nearest neighbor over x km)
 # gpm.DPR.plot(timestep, bbox, product)
 # gpm.ZoomMax(bbox, product, n_scan).plot()
@@ -77,7 +72,6 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
 # Add 3D altitude and 3D lat/lon array
 # --> Watch https://docs.wradlib.org/en/stable/notebooks/match3d/wradlib_match_workflow.html
 # --> DPR ATBD explain how
-
 
 #  'alt':(['along_track', 'cross_track','range']
 # Height[binRangeNo] ={(binEllipsoid 2A − binRangeNo) × rangeBinSize

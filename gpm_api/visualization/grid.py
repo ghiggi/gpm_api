@@ -9,7 +9,7 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from gpm_api.utils.checks import check_is_spatial_2D_field
 from gpm_api.visualization.plot import (
-    _plot_cartopy_background,
+    plot_cartopy_background,
     _plot_cartopy_imshow,
     #  _plot_mpl_imshow,
     _plot_xr_imshow,
@@ -45,7 +45,7 @@ def plot_grid_map(
     plot_kwargs, cbar_kwargs, ticklabels = get_colorbar_settings(name=da.name)
 
     # - Add cartopy background
-    ax = _plot_cartopy_background(ax)
+    ax = plot_cartopy_background(ax)
 
     # - Add variable field with matplotlib
     p = _plot_cartopy_imshow(
