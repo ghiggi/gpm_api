@@ -13,6 +13,7 @@ from gpm_api.visualization.plot import (
     _plot_cartopy_imshow,
     #  _plot_mpl_imshow,
     _plot_xr_imshow,
+    _preprocess_figure_args,
     get_colorbar_settings,
 )
 
@@ -22,30 +23,26 @@ def plot_grid_map(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    subplot_kw=None,
-    figsize=(12, 10),
-    dpi=100,
+    fig_kwargs={}, 
+    subplot_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
 ):
-    """Plot DataArray 2D field with cartopy.
-
-    figsize, dpi, subplot_kw used only if ax is None.
-    """
-    # - Check is 2D array ... without time dimension
+    """Plot DataArray 2D field with cartopy."""
+    # - Check inputs
     check_is_spatial_2D_field(da)
-
-    # - Initialize cartopy projection
-    if subplot_kw is None:
-        subplot_kw = {"projection": ccrs.PlateCarree()}
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
     # - Initialize figure
     if ax is None:
-        fig, ax = plt.subplots(subplot_kw=subplot_kw, figsize=figsize, dpi=dpi)
-
-    # - Get colorbar settings as function of product name
-    plot_kwargs, cbar_kwargs, ticklabels = get_colorbar_settings(name=da.name)
-
-    # - Add cartopy background
-    ax = plot_cartopy_background(ax)
+        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
+        # - Add cartopy background
+        ax = plot_cartopy_background(ax)
+  
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=da.name,
+                                                     plot_kwargs=plot_kwargs, 
+                                                     cbar_kwargs=cbar_kwargs)
 
     # - Add variable field with matplotlib
     p = _plot_cartopy_imshow(
@@ -54,7 +51,6 @@ def plot_grid_map(
         x="lon",
         y="lat",
         interpolation=interpolation,
-        ticklabels=ticklabels,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
         add_colorbar=add_colorbar,
@@ -64,21 +60,26 @@ def plot_grid_map(
 
 
 def plot_grid_image(
-    da, ax=None, add_colorbar=True, interpolation="nearest", figsize=(12, 10), dpi=100
+    da, ax=None,
+    add_colorbar=True,
+    interpolation="nearest", 
+    fig_kwargs={}, 
+    cbar_kwargs={},
+    **plot_kwargs,
 ):
-    """Plot DataArray 2D image
-
-    figsize, dpi used only if ax is None.
-    """
+    """Plot DataArray 2D image."""
     # Check inputs
     check_is_spatial_2D_field(da)
-
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    
     # Initialize figure
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+        fig, ax = plt.subplots(**fig_kwargs)
 
-    # - Get colorbar settings as function of product name
-    plot_kwargs, cbar_kwargs, ticklabels = get_colorbar_settings(name=da.name)
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=da.name,
+                                                     plot_kwargs=plot_kwargs, 
+                                                     cbar_kwargs=cbar_kwargs)
 
     # # - Plot with matplotlib
     # p = _plot_mpl_imshow(ax=ax,
@@ -102,7 +103,6 @@ def plot_grid_image(
         add_colorbar=add_colorbar,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
-        ticklabels=ticklabels,
     )
     # - Return mappable
     return p

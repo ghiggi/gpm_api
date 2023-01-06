@@ -16,8 +16,6 @@ import numpy as np
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from dask.diagnostics import ProgressBar
-from gpm_api.io import download_GPM_data
-from gpm_api.io_future.dataset import open_dataset
 
 ####--------------------------------------------------------------------------.
 #### Define matplotlib settings
@@ -56,7 +54,7 @@ product_type = "RS"
 #### Download products
 # for product in products:
 #     print(product)
-#     download_GPM_data(base_dir=base_dir,
+#     gpm_api.download(base_dir=base_dir,
 #                       username=username,
 #                       product=product,
 #                       product_type=product_type,
@@ -117,7 +115,7 @@ dict_product = {}
 # product, variables = list(product_var_dict.items())[0]
 # product, variables = list(product_var_dict.items())[2]
 for product, variables in product_var_dict.items():
-    ds = open_dataset(
+    ds =  gpm_api.open_dataset(
         base_dir=base_dir,
         product=product,
         start_time=start_time,
@@ -153,35 +151,26 @@ variable = "precipRateNearSurface"
 bbox = [-104, -90, 26, 36]
 bbox_extent = [-102, -92, 28, 35]
 
-# Define figure settings
-dpi = 100
-figsize = (12, 10)
-crs_proj = ccrs.PlateCarree()
-
 # Create figure
 for product, variables in plot_product_var_dict.items():
     for variable in variables:
 
-        fig, ax = plt.subplots(
-            subplot_kw={"projection": crs_proj}, figsize=figsize, dpi=dpi
-        )
-
         ds = dict_product[product]
         # Crop dataset
-        ds_subset = ds.gpm_api.crop(bbox)
+        ds = ds.gpm_api.crop(bbox)
 
         # Retrieve DataArray
-        da_subset = ds_subset[variable]
+        da = ds[variable]
 
         # Plot map
-        p = da_subset.gpm_api.plot(ax=ax, add_colorbar=True)
+        p = da.gpm_api.plot_map(add_colorbar=True)
 
         # Set title
-        title = da_subset.gpm_api.title(time_idx=0)
-        ax.set_title(title)
+        title = da.gpm_api.title(time_idx=0)
+        p.axes.set_title(title)
 
         # Set extent
-        ax.set_extent(bbox_extent)
+        # ax.set_extent(bbox_extent)
 
         # Show the plot
         plt.show()

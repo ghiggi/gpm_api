@@ -18,10 +18,66 @@ from gpm_api.utils.utils_cmap import get_colormap_setting
 # _plot_cartopy_xr_pcolormesh
 
 
-def get_colorbar_settings(name):
+# TODO: modify ticklabels in all get_colorbar_settings in  grid and orbit 
+# def get_colorbar_settings(name):
+#     # TODO: to customize as function of da.name
+#     plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")
+#     return (plot_kwargs, cbar_kwargs, ticklabels)
+
+def _preprocess_figure_args(ax, fig_kwargs, subplot_kwargs):
+    if ax is not None: 
+        if len(subplot_kwargs) >= 1:
+            raise ValueError("Provide `subplot_kwargs`only if `ax`is None")
+        if len(fig_kwargs) >= 1:
+            raise ValueError("Provide `fig_kwargs` only if `ax`is None") 
+    
+    # If ax is not specified, specify the figure defaults
+    # if ax is None:
+        # Set default figure size and dpi  
+        # fig_kwargs['figsize'] = (12, 10)
+        # fig_kwargs['dpi'] = 100
+
+def _preprocess_subplot_kwargs(subplot_kwargs):
+    subplot_kwargs = subplot_kwargs.copy()
+    if "projection" not in subplot_kwargs:
+        subplot_kwargs["projection"] = ccrs.PlateCarree()
+    return subplot_kwargs
+        
+
+def get_colorbar_settings(name, plot_kwargs={}, cbar_kwargs={}):
     # TODO: to customize as function of da.name
-    plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")
-    return (plot_kwargs, cbar_kwargs, ticklabels)
+    try: 
+        default_plot_kwargs, default_cbar_kwargs, default_ticklabels = get_colormap_setting(name)
+        default_cbar_kwargs['ticklabels'] = None
+    except: 
+        default_plot_kwargs = {}
+        default_cbar_kwargs = {}
+        default_ticklabels = None # to be placed in cbar_kwargs
+        
+    # If the default is a segmented colormap (with ticks and ticklabels)
+    if default_cbar_kwargs.get("ticks", None) is not None:
+        # If specifying a custom vmin, vmax, norm or cmap args, remove  the defaults
+        # - The discrete colorbar makes no sense anymore
+        if np.any(np.isin(["vmin","vmax", "norm", "cmap"], list(plot_kwargs.keys()))):
+            default_cbar_kwargs.pop("ticks", None)
+            default_cbar_kwargs.pop("ticklabels", None)
+            default_plot_kwargs.pop("cmap", None)
+            default_plot_kwargs.pop("norm", None)
+            default_plot_kwargs.pop("vmin", None)
+            default_plot_kwargs.pop("vmax", None)
+    
+    # If cmap is a string, retrieve colormap 
+    if isinstance(plot_kwargs.get("cmap", None), str): 
+        plot_kwargs["cmap"] = plt.get_cmap(plot_kwargs["cmap"])
+                     
+    # Update defaults with custom kwargs 
+    default_plot_kwargs.update(plot_kwargs)
+    default_cbar_kwargs.update(cbar_kwargs)
+    
+    # Return the kwargs 
+    plot_kwargs = default_plot_kwargs
+    cbar_kwargs = default_cbar_kwargs
+    return (plot_kwargs, cbar_kwargs)
 
 
 def get_extent(da, x="lon", y="lat"):
@@ -58,6 +114,7 @@ def get_antimeridian_mask(lons, buffer=True):
     return mask
 
 
+####--------------------------------------------------------------------------.
 def plot_cartopy_background(ax):
     """Plot cartopy background."""
     # - Add coastlines
@@ -81,30 +138,31 @@ def plot_cartopy_background(ax):
     return ax
 
 
-def _plot_colorbar(p, ax, cbar_kwargs, ticklabels):
+def plot_colorbar(p, ax, cbar_kwargs={}):
     """Add a colorbar to a matplotlib/cartopy plot.
 
     p: matplotlib.image.AxesImage
     ax:  cartopy.mpl.geoaxes.GeoAxesSubplot
     """
+    ticklabels = cbar_kwargs.pop("ticklabels", None)
     divider = make_axes_locatable(ax)
     cax = divider.new_horizontal(size="5%", pad=0.1, axes_class=plt.Axes)
     p.figure.add_axes(cax)
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
-    _ = cbar.ax.set_yticklabels(ticklabels)
+    if ticklabels is not None:
+        _ = cbar.ax.set_yticklabels(ticklabels)
     return cbar
 
-
+####--------------------------------------------------------------------------.
 def _plot_cartopy_imshow(
     ax,
     da,
     x,
     y,
-    interpolation,
-    add_colorbar,
-    ticklabels,
-    plot_kwargs,
-    cbar_kwargs,
+    interpolation="nearest",
+    add_colorbar=True, 
+    plot_kwargs={},
+    cbar_kwargs={},
 ):
     """Plot imshow with cartopy."""
     # - Ensure image with correct dimensions orders
@@ -130,7 +188,7 @@ def _plot_cartopy_imshow(
     # - Add colorbar
     if add_colorbar:
         # --> TODO: set axis proportion in a meaningful way ...
-        _ = _plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs, ticklabels=ticklabels)
+        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     return p
 
 
@@ -139,10 +197,9 @@ def _plot_cartopy_pcolormesh(
     da,
     x,
     y,
-    add_colorbar,
-    ticklabels,
-    plot_kwargs,
-    cbar_kwargs,
+    add_colorbar=True,
+    plot_kwargs={},
+    cbar_kwargs={},
 ):
     """Plot imshow with cartopy.
 
@@ -183,11 +240,11 @@ def _plot_cartopy_pcolormesh(
     #     lon/lat conversion to proj required !
     # extent = get_extent(da, x="lon", y="lat")
     # ax.set_extent(extent)
-
+    
     # - Add colorbar
     if add_colorbar:
         # --> TODO: set axis proportion in a meaningful way ...
-        _ = _plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs, ticklabels=ticklabels)
+        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     return p
 
 
@@ -196,11 +253,10 @@ def _plot_mpl_imshow(
     da,
     x,
     y,
-    interpolation,
-    add_colorbar,
-    ticklabels,
-    plot_kwargs,
-    cbar_kwargs,
+    interpolation="nearest",
+    add_colorbar=True, 
+    plot_kwargs={},
+    cbar_kwargs={},
 ):
     """Plot imshow with matplotlib."""
     # - Ensure image with correct dimensions orders
@@ -217,16 +273,21 @@ def _plot_mpl_imshow(
     # - Add colorbar
     if add_colorbar:
         # --> TODO: set axis proportion in a meaningful way ...
-        _ = _plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs, ticklabels=ticklabels)
+        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     # - Return mappable
     return p
 
 
 def _plot_xr_imshow(
-    ax, da, x, y, interpolation, add_colorbar, plot_kwargs, cbar_kwargs, ticklabels
+    ax, da, x, y,
+    interpolation="nearest",
+    add_colorbar=True, 
+    plot_kwargs={},
+    cbar_kwargs={},
 ):
     """Plot imshow with xarray."""
     # --> BUG with colorbar: https://github.com/pydata/xarray/issues/7014
+    ticklabels = cbar_kwargs.pop("ticklabels", None)
     p = da.plot.imshow(
         x=x,
         y=y,
@@ -241,30 +302,33 @@ def _plot_xr_imshow(
     return p
 
 
+####--------------------------------------------------------------------------.
 def plot_map(
     da,
     ax=None,
     add_colorbar=True,
-    interpolation="nearest",
-    subplot_kw=None,
-    figsize=(12, 10),
-    dpi=100,
+    add_swath_lines=True,    # used only for GPM orbit objects
+    interpolation="nearest", # used only for GPM grid objects
+    fig_kwargs={}, 
+    subplot_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
 ):
-    # Interpolation only for grid objects
-    # figsize, dpi, subplot_kw only used if ax is None
+
     from gpm_api.utils.geospatial import is_orbit, is_grid
     from .grid import plot_grid_map
     from .orbit import plot_orbit_map
-
     # Plot orbit
     if is_orbit(da):
         p = plot_orbit_map(
             da=da,
             ax=ax,
             add_colorbar=add_colorbar,
-            subplot_kw=subplot_kw,
-            figsize=figsize,
-            dpi=dpi,
+            add_swath_lines=add_swath_lines, 
+            fig_kwargs=fig_kwargs, 
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
     # Plot grid
     elif is_grid(da):
@@ -273,9 +337,10 @@ def plot_map(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
-            subplot_kw=subplot_kw,
-            figsize=figsize,
-            dpi=dpi,
+            fig_kwargs=fig_kwargs, 
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
     else:
         raise ValueError("Can not plot. It's neither a GPM grid, neither a GPM orbit.")
@@ -284,7 +349,12 @@ def plot_map(
 
 
 def plot_image(
-    da, ax=None, add_colorbar=True, interpolation="nearest", figsize=(12, 10), dpi=100
+    da, ax=None, 
+    add_colorbar=True, 
+    interpolation="nearest",
+    fig_kwargs={}, 
+    cbar_kwargs={},
+    **plot_kwargs,
 ):
     # figsize, dpi, subplot_kw only used if ax is None
     from gpm_api.utils.geospatial import is_orbit, is_grid
@@ -298,8 +368,9 @@ def plot_image(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
-            figsize=figsize,
-            dpi=dpi,
+            fig_kwargs=fig_kwargs, 
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
     # Plot grid
     elif is_grid(da):
@@ -308,8 +379,9 @@ def plot_image(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
-            figsize=figsize,
-            dpi=dpi,
+            fig_kwargs=fig_kwargs, 
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
     else:
         raise ValueError("Can not plot. It's neither a GPM GRID, neither a GPM ORBIT.")
@@ -321,9 +393,10 @@ def plot_map_mesh(
     da,
     ax=None,
     edgecolors="k",
-    subplot_kw=None,
-    figsize=(12, 10),
-    dpi=100,
+    fig_kwargs={}, 
+    subplot_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
 ):
     # Interpolation only for grid objects
     # figsize, dpi, subplot_kw only used if ax is None
@@ -338,9 +411,10 @@ def plot_map_mesh(
             da=da,
             ax=ax,
             edgecolors=edgecolors,
-            subplot_kw=subplot_kw,
-            figsize=figsize,
-            dpi=dpi,
+            fig_kwargs=fig_kwargs, 
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
     # Plot grid
     elif is_grid(da):

@@ -17,7 +17,6 @@ Created on Mon Aug 15 23:02:04 2022
 # --> Plot 1-C-GMI Tb
 # --> tests/test_plot_orbit_pmw_custom_kwargs
 
-
 # -----------------------------------------------------------------------------.
 # Implement valid geolocation checks
 # --> In tests/test_dataset_valid_geolocation.py
@@ -37,6 +36,11 @@ Created on Mon Aug 15 23:02:04 2022
 
 ###--------------------------------------------------------------------------.
 # Refactor geospatial.py
+
+###--------------------------------------------------------------------------.
+# Add channels frequency coordinates to PMW 1B and 1C 
+# - Derive YAML with frequencies from 1C files 
+# --> test/test_pmw_channels_coords.py
 
 # -----------------------------------------------------------------------------.
 # Solve TODOs in dataset.py

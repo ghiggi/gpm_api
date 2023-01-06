@@ -15,6 +15,8 @@ from gpm_api.utils.checks import (
 )
 from gpm_api.visualization.plot import (
     plot_cartopy_background,
+    _preprocess_figure_args,
+    _preprocess_subplot_kwargs,
     _plot_cartopy_pcolormesh,
     #  _plot_mpl_imshow,
     _plot_xr_imshow,
@@ -72,6 +74,7 @@ def _call_over_contiguous_scans(function):
         # - Define kwargs
         user_kwargs = kwargs.copy()
         p = None
+        
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
 
@@ -87,7 +90,7 @@ def _call_over_contiguous_scans(function):
 
             # Set colorbar to False for all except last iteration
             # --> Avoid drawing multiple colorbars
-            if i != len(list_slices):
+            if i != len(list_slices) - 1:
                 if "add_colorbar" in user_kwargs:
                     tmp_kwargs["add_colorbar"] = False
 
@@ -101,28 +104,35 @@ def _call_over_contiguous_scans(function):
 
 @_call_over_contiguous_scans
 def plot_orbit_map(
-    da, ax=None, add_colorbar=True, subplot_kw=None, figsize=(12, 10), dpi=100
+    da, ax=None,
+    add_colorbar=True, 
+    add_swath_lines=True, 
+    fig_kwargs={}, 
+    subplot_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
 ):
     """Plot GPM orbit granule in a cartographic map."""
     # - Check inputs
     check_is_spatial_2D_field(da)
-    # check_contiguous_scans(da)
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
-    # - Initialize cartopy projection
-    if subplot_kw is None:
-        subplot_kw = {"projection": ccrs.PlateCarree()}
-
+    
     # - Initialize figure
     if ax is None:
-        fig, ax = plt.subplots(subplot_kw=subplot_kw, figsize=figsize, dpi=dpi)
+        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
         # - Add cartopy background
         ax = plot_cartopy_background(ax)
 
-    # - Get colorbar settings as function of product name
-    plot_kwargs, cbar_kwargs, ticklabels = get_colorbar_settings(name=da.name)
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=da.name,
+                                                     plot_kwargs=plot_kwargs, 
+                                                     cbar_kwargs=cbar_kwargs)
 
     # - Add swath lines
-    plot_swath_lines(da, ax=ax, linestyle="--", color="black")
+    if add_swath_lines:
+        plot_swath_lines(da, ax=ax, linestyle="--", color="black")
 
     # - Add variable field with matplotlib
     p = _plot_cartopy_pcolormesh(
@@ -130,7 +140,6 @@ def plot_orbit_map(
         da=da,
         x="lon",
         y="lat",
-        ticklabels=ticklabels,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
         add_colorbar=add_colorbar,
@@ -141,27 +150,26 @@ def plot_orbit_map(
 
 @_call_over_contiguous_scans
 def plot_orbit_mesh(
-    da, ax=None, edgecolors="k", subplot_kw=None, figsize=(12, 10), dpi=100
+    da, ax=None, edgecolors="k", 
+    fig_kwargs={}, 
+    subplot_kwargs={},
+    **plot_kwargs,
 ):
     """Plot GPM orbit granule mesh in a cartographic map."""
     # - Check inputs
     check_is_spatial_2D_field(da)
-
-    # - Initialize cartopy projection
-    if subplot_kw is None:
-        subplot_kw = {"projection": ccrs.PlateCarree()}
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
     # - Initialize figure
     if ax is None:
-        fig, ax = plt.subplots(subplot_kw=subplot_kw, figsize=figsize, dpi=dpi)
+        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
         # - Add cartopy background
         ax = plot_cartopy_background(ax)
 
     # - Define plot_kwargs to display only the mesh
-    plot_kwargs = {}
     plot_kwargs["facecolor"] = "none"
-    plot_kwargs["edgecolors"] = edgecolors
     plot_kwargs["alpha"] = 1
+    plot_kwargs["edgecolors"] = edgecolors
 
     # - Add variable field with matplotlib
     p = _plot_cartopy_pcolormesh(
@@ -171,30 +179,33 @@ def plot_orbit_mesh(
         y="lat",
         plot_kwargs=plot_kwargs,
         add_colorbar=False,
-        cbar_kwargs={},
-        ticklabels=None,
     )
     # - Return mappable
     return p
 
 
 def plot_orbit_image(
-    da, ax=None, add_colorbar=True, interpolation="nearest", figsize=(12, 10), dpi=100
+    da, ax=None, 
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs={}, 
+    cbar_kwargs={},
+    **plot_kwargs,
 ):
-    """Plot GPM orbit granule as in image.
-
-    figsize, dpi used only if ax is None.
-    """
+    """Plot GPM orbit granule as in image."""
     # - Check inputs
     check_is_spatial_2D_field(da)
     check_contiguous_scans(da)
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # - Initialize figure
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+        fig, ax = plt.subplots(**fig_kwargs)
 
-    # - Get colorbar settings as function of product name
-    plot_kwargs, cbar_kwargs, ticklabels = get_colorbar_settings(name=da.name)
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=da.name,
+                                                     plot_kwargs=plot_kwargs, 
+                                                     cbar_kwargs=cbar_kwargs)
 
     # # - Plot with matplotlib
     # p = _plot_mpl_imshow(ax=ax,
@@ -205,7 +216,6 @@ def plot_orbit_image(
     #                      add_colorbar=add_colorbar,
     #                      plot_kwargs=plot_kwargs,
     #                      cbar_kwargs=cbar_kwargs,
-    #                      ticklabels=ticklabels,
     # )
 
     # - Plot with xarray
@@ -218,7 +228,6 @@ def plot_orbit_image(
         add_colorbar=add_colorbar,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
-        ticklabels=ticklabels,
     )
     # - Return mappable
     return p

@@ -127,11 +127,28 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
         return title
 
-    def plot_map(self, variable, ax=None, add_colorbar=True):
+    def plot_map(self,
+                 variable, 
+                 ax=None, 
+                 add_colorbar=True,
+                 add_swath_lines=True, 
+                 interpolation="nearest", # used only for GPM grid object
+                 fig_kwargs={}, 
+                 subplot_kwargs={},
+                 cbar_kwargs={},
+                 **plot_kwargs,
+                 ):
         from gpm_api.visualization.plot import plot_map
-
         da = self._obj[variable]
-        p = plot_map(ax=ax, da=da, add_colorbar=add_colorbar)
+        p = plot_map(ax=ax, da=da,
+                     add_colorbar=add_colorbar,
+                     add_swath_lines=add_swath_lines, 
+                     interpolation=interpolation, 
+                     fig_kwargs=fig_kwargs, 
+                     subplot_kwargs=subplot_kwargs,
+                     cbar_kwargs=cbar_kwargs,
+                     **plot_kwargs,
+                     )
         return p
 
     def patch_generator(
@@ -223,26 +240,64 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         )
         return title
 
-    def plot_map(self, ax=None, add_colorbar=True):
+    def plot_map(self, ax=None, 
+                 add_colorbar=True,
+                 add_swath_lines=True, 
+                 interpolation="nearest", # used only for GPM grid object
+                 fig_kwargs={}, 
+                 subplot_kwargs={},
+                 cbar_kwargs={},
+                 **plot_kwargs,
+                 ):
         from gpm_api.visualization.plot import plot_map
-
         da = self._obj
-        p = plot_map(ax=ax, da=da, add_colorbar=add_colorbar)
+        p = plot_map(ax=ax, da=da,
+                     add_colorbar=add_colorbar,
+                     add_swath_lines=add_swath_lines, 
+                     interpolation=interpolation, 
+                     fig_kwargs=fig_kwargs, 
+                     subplot_kwargs=subplot_kwargs,
+                     cbar_kwargs=cbar_kwargs,
+                     **plot_kwargs,
+                     )
         return p
 
-    def plot_map_mesh(self, ax=None, edgecolors="k"):
+    def plot_map_mesh(self, ax=None, 
+                      edgecolors="k",
+                      fig_kwargs={}, 
+                      subplot_kwargs={},
+                      cbar_kwargs={},
+                      **plot_kwargs,
+                      ):
         from gpm_api.visualization.plot import plot_map_mesh
 
         da = self._obj
-        p = plot_map_mesh(ax=ax, da=da, edgecolors=edgecolors)
+        p = plot_map_mesh(ax=ax, da=da,
+                          edgecolors=edgecolors,
+                          fig_kwargs=fig_kwargs, 
+                          subplot_kwargs=subplot_kwargs,
+                          cbar_kwargs=cbar_kwargs,
+                          **plot_kwargs,
+        )
         return p
 
-    def plot_image(self, ax=None, add_colorbar=True, interpolation="nearest"):
+    def plot_image(self, ax=None,
+                   add_colorbar=True, 
+                   interpolation="nearest",
+                   fig_kwargs={}, 
+                   cbar_kwargs={},
+                   **plot_kwargs,
+                   ):
         from gpm_api.visualization.plot import plot_image
 
         da = self._obj
         p = plot_image(
-            da, ax=ax, add_colorbar=add_colorbar, interpolation=interpolation
+            da, ax=ax, 
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs, 
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
         return p
 

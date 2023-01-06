@@ -412,6 +412,71 @@ COLOR_DICT = {
     },
 }
 
+precip_variables = [
+     # DPR
+    "precipRate",
+    "precipRateNearSurface",
+    "precipRateESurface",
+    "precipRateESurface2",
+    "precipRateNearSurface", 
+    # CORRA
+    "precipTotRate",
+    "nearSurfPrecipTotRate",
+    "estimSurfPrecipTotRate", 
+    "OEestimSurfPrecipTotRate",
+    # 2A PMW 
+    "surfacePrecipitation",
+    # 2A-GPM-SLH
+    "nearSurfacePrecipRate",
+    # 2B-GPM-CSH
+    "surfacePrecipRate",
+    ]
+
+for var in precip_variables:
+    COLOR_DICT[var] = COLOR_DICT["pysteps_mm/hr"]
+
+# Reflectivity 
+# "2A-DPR": 
+#     "zFactorFinalESurface",
+#     "zFactorFinalNearSurface",
+#     "zFactorFinal",
+
+# 2A-DPR 
+# "airTemperature",
+# "landSurfaceType",
+
+# # '2A-ENV-DPR': 
+# "cloudLiquidWater", 
+# "waterVapor", 
+# "airPressure"],
+
+# # 2A-GMI
+# "rainWaterPath",
+# "cloudWaterPath",
+# "iceWaterPath",
+
+# # '2B-GPM-CORRA': [
+# "precipTotWaterCont",
+# "cloudIceWaterCont", 
+# "cloudLiqWaterCont",
+# "OEcolumnCloudLiqWater", 
+# "OEcloudLiqWaterCont",
+# "OEcolumnWaterVapor"
+
+# # 1B
+# "Tb", 
+# # 1C 
+# "Tc", 
+# # '2B-GPM-CORRA'
+# "OEsimulatedBrightTemp",
+
+# Latent Heat
+# '2B-GPM-CSH': ["latentHeating"],
+# '2A-GPM-SLH': ["latentHeating"],
+
+
+
+
 
 ####-------------------------------------------------------------------------.
 
