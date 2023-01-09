@@ -134,7 +134,7 @@ def plot_orbit_map(
     if add_swath_lines:
         plot_swath_lines(da, ax=ax, linestyle="--", color="black")
 
-    # - Add variable field with matplotlib
+    # - Add variable field with cartopy
     p = _plot_cartopy_pcolormesh(
         ax=ax,
         da=da,
@@ -171,7 +171,7 @@ def plot_orbit_mesh(
     plot_kwargs["alpha"] = 1
     plot_kwargs["edgecolors"] = edgecolors
 
-    # - Add variable field with matplotlib
+    # - Add variable field with cartopy
     p = _plot_cartopy_pcolormesh(
         ax=ax,
         da=da,

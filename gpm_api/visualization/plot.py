@@ -8,7 +8,10 @@ Created on Sat Dec 10 18:42:28 2022
 import numpy as np
 import cartopy
 import cartopy.crs as ccrs
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from scipy.ndimage import binary_dilation
+from matplotlib.collections import PolyCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from gpm_api.utils.utils_cmap import get_colormap_setting
 
@@ -77,6 +80,27 @@ def get_colorbar_settings(name, plot_kwargs={}, cbar_kwargs={}):
     # Return the kwargs 
     plot_kwargs = default_plot_kwargs
     cbar_kwargs = default_cbar_kwargs
+    
+    # Remove vmin, vmax
+    # --> vmin and vmax is not accepted by PolyCollection 
+    # --> create norm or modify norm accordigly 
+    if "norm" not in plot_kwargs:
+        norm = mpl.colors.Normalize(vmin=plot_kwargs.pop("vmin", None),
+                                    vmax=plot_kwargs.pop("vmax", None))
+        plot_kwargs["norm"] = norm 
+    else: 
+        if "vmin" in plot_kwargs: 
+            if plot_kwargs["vmin"] is None:
+                _ = plot_kwargs.pop("vmin")
+            else: 
+                plot_kwargs["norm"].vmin = plot_kwargs.pop("vmin")
+
+        if "vmax" in plot_kwargs: 
+            if plot_kwargs["vmax"] is None:
+                _ = plot_kwargs.pop("vmax")
+            else: 
+                plot_kwargs["norm"].vmax = plot_kwargs.pop("vmax")
+                
     return (plot_kwargs, cbar_kwargs)
 
 
@@ -92,8 +116,6 @@ def get_extent(da, x="lon", y="lat"):
 
 def get_antimeridian_mask(lons, buffer=True):
     """Get mask of longitude coordinates neighbors crossing the antimeridian."""
-    from scipy.ndimage import binary_dilation
-
     # Check vertical edges
     row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
     row_idx_rev, col_idx_rev = np.where(np.abs(np.diff(lons[::-1, :], axis=0)) > 180)
@@ -114,6 +136,51 @@ def get_antimeridian_mask(lons, buffer=True):
     return mask
 
 
+def get_masked_cells_polycollection(x, y, arr, mask, plot_kwargs):
+    from gpm_api.utils.area import _get_lonlat_corners, _from_corners_to_bounds, is_vertex_clockwise
+    
+    # - Buffer mask by 1 to derive vertices of all masked QuadMesh
+    mask = binary_dilation(mask)
+    
+    # - Get index of masked quadmesh 
+    row_mask, col_mask = np.where(mask)
+    
+    # - Retrieve values of masked cells
+    array = arr[row_mask, col_mask]
+    
+    # - Retrieve QuadMesh corners (m+1 x n+1)
+    x_corners, y_corners = _get_lonlat_corners(x, y)
+    
+    # - Retrieve QuadMesh bounds (m*n x 4)
+    x_bounds = _from_corners_to_bounds(x_corners)
+    y_bounds = _from_corners_to_bounds(y_corners)
+    
+    # - Retrieve vertices of masked QuadMesh (n_masked, 4, 2)
+    x_vertices = x_bounds[row_mask, col_mask]
+    y_vertices = y_bounds[row_mask, col_mask]
+    
+    vertices = np.stack((x_vertices, y_vertices), axis=2)
+    
+    # Check that are counterclockwise oriented (check first vertex)
+    # TODO: this check should be updated to use pyresample.future.spherical
+    if is_vertex_clockwise(vertices[0, :, :]):
+        vertices = vertices[:, ::-1, :]
+    
+    # - Define additional kwargs for PolyCollection 
+    plot_kwargs = plot_kwargs.copy()
+    if "edgecolors" not in plot_kwargs:
+        plot_kwargs["edgecolors"] = 'face' # 'none'
+    if "linewidth" not in plot_kwargs:
+        plot_kwargs["linewidth"] = 0
+    plot_kwargs["antialiaseds"] = False # to better plotting quality  
+    
+    # - Define PolyCollection 
+    coll = PolyCollection(verts=vertices,
+                          array=array,
+                          transform=ccrs.Geodetic(),
+                          **plot_kwargs,
+                          )
+    return coll
 ####--------------------------------------------------------------------------.
 def plot_cartopy_background(ax):
     """Plot cartopy background."""
@@ -206,8 +273,6 @@ def _plot_cartopy_pcolormesh(
     The function currently does not allow to zoom on regions across the antimeridian.
     The function mask scanning pixels which spans across the antimeridian.
     """
-    # TODO: plot antimeridian crossing cells with PolyCollection
-
     # - Get x, y, and array to plot
     da = da.compute()
     x = da[x].data
@@ -216,7 +281,8 @@ def _plot_cartopy_pcolormesh(
 
     # - Mask cells crossing the antimeridian
     mask = get_antimeridian_mask(x, buffer=True)
-    if np.any(mask):
+    is_crossing_antimeridian = np.any(mask)
+    if is_crossing_antimeridian:
         arr = np.ma.masked_where(mask, arr)
         # Sanitize cmap bad color to avoid cartopy bug
         if "cmap" in plot_kwargs:
@@ -234,6 +300,13 @@ def _plot_cartopy_pcolormesh(
         transform=ccrs.PlateCarree(),
         **plot_kwargs,
     )
+    print(plot_kwargs)
+    # - Add PolyCollection of QuadMesh cells crossing the antimeridian 
+    if is_crossing_antimeridian:
+        coll = get_masked_cells_polycollection(x, y, arr.data,
+                                               mask=mask,
+                                               plot_kwargs=plot_kwargs)
+        p = p.axes.add_collection(coll)
 
     # - Set the extent
     # --> To be set in projection coordinates of crs !!!

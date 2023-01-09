@@ -12,12 +12,6 @@ Created on Mon Aug 15 23:02:04 2022
 # - Copy to GitHub Codespace
 
 # -----------------------------------------------------------------------------.
-# Improve plot_map to accept custom plot kwargs
-# --> Add swath_lines=True
-# --> Plot 1-C-GMI Tb
-# --> tests/test_plot_orbit_pmw_custom_kwargs
-
-# -----------------------------------------------------------------------------.
 # Implement valid geolocation checks
 # --> In tests/test_dataset_valid_geolocation.py
 # --> Use SSMIS, MHS and GMI for testing
@@ -26,13 +20,6 @@ Created on Mon Aug 15 23:02:04 2022
 # - check_valid_geolocation
 # - ensure_valid_geolocation (1 spurious pixel)
 # - ds_gpm.gpm_api.has_valid_geolocation
-
-# -----------------------------------------------------------------------------.
-# Enable correct PMW plotting wrapping the pole
-# --> Add cells crossing antimeridian as  PolyCollection
-# --> Modify ../plot._plot_cartopy_pcolormesh function
-# --> Code in tests/test_plot_multiorbit_pmw_polar.py
-# --> Test with MHS and SSMIS (different polar orbits)
 
 ###--------------------------------------------------------------------------.
 # Refactor geospatial.py
@@ -87,6 +74,7 @@ granule_ids = [1, 2, 5, 6, 10, 11]
 
 # check_not_duplicate_granules(filepaths)
 
+# check_missing_granules
 
 def check_consecutive_granules(filepaths, verbose=True):
     from gpm_api.io.info import get_granule_from_filepaths
@@ -157,6 +145,25 @@ def check_consecutive_granules(filepaths, verbose=True):
 # gpm_api.bucket
 # gpm_api.geometry (grid, swath)
 # gpm_api.sensors
+
+
+### Oblique orbits 
+# Prograde orbit 
+# - Eastward (from west to east)
+# - In the same direction as the earth rotation 
+# - Inclination < 90°
+# - Regress with respect to the planes of their initial orbit
+# - Example: GEOs, TRMM, GPM
+
+# Retrograde orbit 
+# - Westward (from east to west)
+# - In the opposite direction of the earth rotation 
+# - Precess with respect to the planes of their initial orbit
+# - Inclination > 90°
+# - Example:
+#   - sun syncronous orbits: A-Train
+#   - MetOP-A, B, NOAA ... 
+
 
 # -----------------------------------------------------------------------------.
 #### GPM High-Level Classes (sensors)

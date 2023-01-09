@@ -456,7 +456,7 @@ def open_granule(
     # Apply cf decoding
     if decode_cf:
         ds = decode_dataset(ds)
-
+    
     # ------------------------------------------------------.
     #### Check swath time coordinate
     # Ensure validity of the time dimension
