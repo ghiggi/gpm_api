@@ -182,7 +182,7 @@ def plot_grid_image(
     #                      cbar_kwargs=cbar_kwargs,
     #                      ticklabels=ticklabels,
     # )
-    print(plot_kwargs)
+    
     # - Plot with xarray
     p = _plot_xr_imshow(
         ax=ax,

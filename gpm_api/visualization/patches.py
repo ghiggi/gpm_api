@@ -18,13 +18,17 @@ def plot_patches(
     max_value_threshold=np.inf,
     min_area_threshold=1,
     max_area_threshold=np.inf,
-    footprint_buffer=None,
+    footprint=None,
     sort_by="area",
     sort_decreasing=True,
     label_name="label",
     n_patches=None,
     patch_margin=None,
+    add_colorbar=True, 
     interpolation="nearest",
+    fig_kwargs={}, 
+    cbar_kwargs={},
+    **plot_kwargs,
 ):
     check_is_xarray_dataarray(data_array)
 
@@ -35,7 +39,7 @@ def plot_patches(
         max_value_threshold=max_value_threshold,
         min_area_threshold=min_area_threshold,
         max_area_threshold=max_area_threshold,
-        footprint_buffer=footprint_buffer,
+        footprint=footprint,
         sort_by=sort_by,
         sort_decreasing=sort_decreasing,
         label_name=label_name,
@@ -44,7 +48,14 @@ def plot_patches(
     )
     # Plot patches
     for da in gpm_da_patch_gen:
-        plot_image(da, interpolation=interpolation, add_colorbar=True)
-        plt.show()
+        # TODO: ENSURE PATCH SIZE IS SUFFICIENT (NOT DIM 1)(AND CONSTANT)
+        try:
+            plot_image(da, interpolation=interpolation, add_colorbar=add_colorbar, 
+                       fig_kwargs=fig_kwargs, 
+                       cbar_kwargs=cbar_kwargs,
+                       **plot_kwargs)
+            plt.show()
+        except: 
+            pass
 
     return None

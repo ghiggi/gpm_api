@@ -166,7 +166,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         max_value_threshold=np.inf,
         min_area_threshold=10,
         max_area_threshold=np.inf,
-        footprint_buffer=None,
+        footprint=None,
         sort_by="max",
         sort_decreasing=True,
         label_name="label",
@@ -183,7 +183,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             max_value_threshold=max_value_threshold,
             min_area_threshold=min_area_threshold,
             max_area_threshold=max_area_threshold,
-            footprint_buffer=footprint_buffer,
+            footprint=footprint,
             sort_by=sort_by,
             sort_decreasing=sort_decreasing,
             # Patch options
@@ -199,12 +199,16 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         max_value_threshold=np.inf,
         min_area_threshold=1,
         max_area_threshold=np.inf,
-        footprint_buffer=None,
+        footprint=None,
         sort_by="area",
         sort_decreasing=True,
         n_patches=None,
         patch_margin=None,
+        add_colorbar=True, 
         interpolation="nearest",
+        fig_kwargs={}, 
+        cbar_kwargs={},
+        **plot_kwargs
     ):
         from gpm_api.visualization.patches import plot_patches
 
@@ -215,11 +219,16 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             max_value_threshold=max_value_threshold,
             min_area_threshold=min_area_threshold,
             max_area_threshold=max_area_threshold,
-            footprint_buffer=footprint_buffer,
+            footprint=footprint,
             sort_by=sort_by,
             sort_decreasing=sort_decreasing,
             n_patches=n_patches,
             patch_margin=patch_margin,
+            add_colorbar=add_colorbar, 
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs, 
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
 
 
@@ -315,7 +324,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         max_value_threshold=np.inf,
         min_area_threshold=10,
         max_area_threshold=np.inf,
-        footprint_buffer=None,
+        footprint=None,
         sort_by="max",
         sort_decreasing=True,
         label_name="label",
@@ -331,7 +340,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             max_value_threshold=max_value_threshold,
             min_area_threshold=min_area_threshold,
             max_area_threshold=max_area_threshold,
-            footprint_buffer=footprint_buffer,
+            footprint=footprint,
             sort_by=sort_by,
             sort_decreasing=sort_decreasing,
             # Patch options
@@ -346,13 +355,17 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         max_value_threshold=np.inf,
         min_area_threshold=1,
         max_area_threshold=np.inf,
-        footprint_buffer=None,
+        footprint=None,
         sort_by="area",
         sort_decreasing=True,
         label_name="label",
         n_patches=None,
         patch_margin=None,
+        add_colorbar=True, 
         interpolation="nearest",
+        fig_kwargs={}, 
+        cbar_kwargs={},
+        **plot_kwargs
     ):
         from gpm_api.visualization.patches import plot_patches
 
@@ -362,10 +375,15 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             max_value_threshold=max_value_threshold,
             min_area_threshold=min_area_threshold,
             max_area_threshold=max_area_threshold,
-            footprint_buffer=footprint_buffer,
+            footprint=footprint,
             sort_by=sort_by,
             sort_decreasing=sort_decreasing,
             label_name=label_name,
             n_patches=n_patches,
             patch_margin=patch_margin,
+            add_colorbar=add_colorbar, 
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs, 
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )

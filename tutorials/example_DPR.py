@@ -102,8 +102,10 @@ ds["zFactorFinal"].gpm_api.is_spatial_2D_field  # False, because there is the ra
 ds["zFactorFinal"].isel(range=[0]).gpm_api.is_spatial_2D_field  # True,  because selected a single range
 ds["zFactorFinal"].isel(range=0).gpm_api.is_spatial_2D_field  # True,  because no range dimension anymore
 
-ds.gpm_api.has_regular_timesteps
-ds.gpm_api.get_regular_time_slices()  # List of time slices with regular timesteps
+ds.gpm_api.has_contiguous_scans
+ds.gpm_api.get_contiguous_scan_slices()  # List of along-track slices with contiguous scans
+
+ds.gpm_api.is_regular
 
 #### - Get pyresample SwathDefinition
 ds.gpm_api.pyresample_area
@@ -156,11 +158,12 @@ da = ds[variable].isel(along_track=slice(0, 10000))
 da.gpm_api.plot_patches(
     min_value_threshold=10,
     min_area_threshold=5,
-    footprint_buffer=3,
+    footprint=3,
     sort_by="max", # "area"
     sort_decreasing=True,
     label_name="label",
     n_patches=10,
+    patch_margin = (48, 20),
     interpolation="nearest",
 )
 

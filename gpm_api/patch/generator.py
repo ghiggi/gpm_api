@@ -17,14 +17,19 @@ from gpm_api.patch.utils import labels_bbox_slices, extend_row_col_slices
 # patch centered on max, min labels
 # patch on center_of_mass for area, mean, median, sum, sd labels
 
+# REFACTOR HEAVILY !!! 
+# REFACTOR ALSO USING STUFFS IN UTILS !
+# if patch_size not specified, it become label area 
+# --> choose if to add something around label area if patch_size=None
 
 def get_dataset_labels_patches(
-    ds, label, n_patches=None, patch_margin=None, patch_size=None
+    xr_obj, label, n_patches=None, patch_margin=None, patch_size=None
 ):
     # In memory label array
-    arr = np.asanyarray(ds[label].data)
+    arr = np.asanyarray(xr_obj[label].data)
 
     # Ensure 0 label is set to nan
+    arr = arr.astype(float) # otherwise if int throw an error when assigning nan
     arr[arr == 0] = np.nan
 
     # Get total number of labels
@@ -40,7 +45,7 @@ def get_dataset_labels_patches(
             n_patches = n_labels
 
     # Retrieve dimensions and shape
-    dims = ds[label].dims
+    dims = xr_obj[label].dims
     shape = arr.shape
 
     # Return xr.Dataset patches
@@ -50,7 +55,7 @@ def get_dataset_labels_patches(
             row_slice, col_slice, shape, margin=patch_margin
         )
         subset_isel_dict = {dims[0]: row_slice, dims[1]: col_slice}
-        yield ds.isel(subset_isel_dict)
+        yield xr_obj.isel(subset_isel_dict)
 
 
 def get_ds_patch_generator(
@@ -60,7 +65,7 @@ def get_ds_patch_generator(
     max_value_threshold=np.inf,
     min_area_threshold=1,
     max_area_threshold=np.inf,
-    footprint_buffer=None,
+    footprint=None,
     sort_by="area",
     sort_decreasing=True,
     label_name="label",
@@ -70,6 +75,7 @@ def get_ds_patch_generator(
     # Check valid variable
     if variable not in ds.data_vars:
         raise ValueError(f"'{variable}' is not a variable of the GPM xr.Dataset.")
+        
     # Retrieve rainy area labels (if available)
     da_labels, n_labels, values = xr_get_areas_labels(
         data_array=ds[variable],
@@ -77,13 +83,13 @@ def get_ds_patch_generator(
         max_value_threshold=max_value_threshold,
         min_area_threshold=min_area_threshold,
         max_area_threshold=max_area_threshold,
-        footprint_buffer=footprint_buffer,
+        footprint=footprint,
         sort_by=sort_by,
         sort_decreasing=sort_decreasing,
     )
     if n_labels == 0:
         raise ValueError(
-            "No patch available. You might want to change the patch parameters."
+            "No patch available. You might want to change the patch generator parameters."
         )
 
     da_labels = da_labels.where(da_labels > 0)
@@ -106,7 +112,7 @@ def get_da_patch_generator(
     max_value_threshold=np.inf,
     min_area_threshold=1,
     max_area_threshold=np.inf,
-    footprint_buffer=None,
+    footprint=None,
     sort_by="area",
     sort_decreasing=True,
     label_name="label",
@@ -121,10 +127,16 @@ def get_da_patch_generator(
         max_value_threshold=max_value_threshold,
         min_area_threshold=min_area_threshold,
         max_area_threshold=max_area_threshold,
-        footprint_buffer=footprint_buffer,
+        footprint=footprint,
         sort_by=sort_by,
         sort_decreasing=sort_decreasing,
     )
+    
+    if n_labels == 0:
+        raise ValueError(
+            "No patch available. You might want to change the patch generator parameters."
+        )
+        
     da_labels = da_labels.where(da_labels > 0)
 
     # Assign label to xr.DataArray  coordinate

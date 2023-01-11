@@ -12,24 +12,41 @@ import xarray as xr
 # from dask_image.ndmeasure import as dask_label_image
 import dask_image.ndmeasure
 from skimage.measure import label as label_image
-from skimage.morphology import binary_dilation
+from skimage.morphology import binary_dilation, disk
 
-####--------------------------------------------------------------------------.
-def _vec_translate(arr, my_dict):
-    """Remap array <value> based on the dictionary key-value pairs.
-
-    This function is used to redefine label array integer values based on the
-    label area_size/max_intensity value.
-
-    """
-    return np.vectorize(my_dict.__getitem__)(arr)
-
+# TODO: 
+# - xr_get_label_stats
 
 ####--------------------------------------------------------------------------.
 #####################
 #### Area labels ####
 #####################
-
+def _mask_buffer(mask, footprint):
+    """Dilate the mask by n pixel in all directions.
+    
+    If footprint = 0 or None, no dilation occur.
+    If footprint is a positive integer, it create a disk(footprint)
+    If footprint is a 2D array, it must represent the neighborhood expressed 
+    as a 2-D array of 1’s and 0’s.
+    For more info: https://scikit-image.org/docs/stable/api/skimage.morphology.html#skimage.morphology.binary_dilation
+    
+    """
+    # scikitimage > 0.19
+    if not isinstance(footprint, (int, np.ndarray, type(None))):
+        raise TypeError("`footprint` must be an integer, numpy 2D array or None.")
+    if isinstance(footprint, np.ndarray): 
+        if footprint.ndim != 2: 
+            raise ValueError("If providing the footprint for dilation as np.array, it must be 2D.")
+    if isinstance(footprint, int):
+        if footprint == 0: 
+            footprint = None 
+        if footprint < 0: 
+            raise ValueError("Footprint must be equal or larger than 1.")
+        footprint = disk(radius=footprint)
+    # Apply dilation
+    if footprint is not None:
+        mask = binary_dilation(mask, footprint=footprint)
+    return mask    
 
 def _check_array(arr):
     shape = arr.shape
@@ -49,7 +66,7 @@ def _no_labels_result(arr):
     counts = []
     return labels, n_labels, counts
 
-
+    
 def check_sort_by(value):
     valid_values = ["area", "max", "min", "sum", "mean", "median", "sd"]
     if not isinstance(value, str):
@@ -60,36 +77,46 @@ def check_sort_by(value):
         raise TypeError(f"Valid 'sort_by' values are: {valid_values}.")
 
 
-def get_sorting_area_values(arr, label_arr, label_indices, sort_by="area"):
-    """Compute area label values over which to later sort on."""
+def _get_label_value_stats(arr, label_arr, label_indices=None, stats="area"):
+    """Compute label value statistics over which to later sort on.
+    
+    If labels_indices is None, it compute the statistic for each label.
+    """
     # For custom function:
     # https://image.dask.org/en/latest/dask_image.ndmeasure.html#dask_image.ndmeasure.labeled_comprehension
-
-    if sort_by == "area":
+    # Note:
+    # - if label_indices None, by default would return the stats of the entire array  
+    # - if label_indices is 0, return nan
+    # - If label_indices is not inside label_arr, return 0 
+    
+    if label_indices is None:
+        label_indices = np.unique(label_arr)
+        
+    if stats == "area":
         values = dask_image.ndmeasure.area(
             image=arr, label_image=label_arr, index=label_indices
         )
-    elif sort_by == "max":
+    elif stats == "max":
         values = dask_image.ndmeasure.maximum(
             image=arr, label_image=label_arr, index=label_indices
         )
-    elif sort_by == "min":
+    elif stats == "min":
         values = dask_image.ndmeasure.minimum(
             image=arr, label_image=label_arr, index=label_indices
         )
-    elif sort_by == "mean":
+    elif stats == "mean":
         values = dask_image.ndmeasure.mean(
             image=arr, label_image=label_arr, index=label_indices
         )
-    elif sort_by == "median":
+    elif stats == "median":
         values = dask_image.ndmeasure.median(
             image=arr, label_image=label_arr, index=label_indices
         )
-    elif sort_by == "sum":
+    elif stats == "sum":
         values = dask_image.ndmeasure.sum_labels(
             image=arr, label_image=label_arr, index=label_indices
         )
-    elif sort_by == "sd":
+    elif stats == "sd":
         values = dask_image.ndmeasure.standard_deviation(
             image=arr, label_image=label_arr, index=label_indices
         )
@@ -101,17 +128,105 @@ def get_sorting_area_values(arr, label_arr, label_indices, sort_by="area"):
     return values
 
 
+def get_labels_stats(arr, 
+                     label_arr,
+                     label_indices=None, 
+                     stats="area",
+                     sort_decreasing=True):
+    """Return label and label statistics sorted by statistic value."""
+    # Get labels area values 
+    values = _get_label_value_stats(
+        arr, label_arr=label_arr, label_indices=label_indices, stats=stats
+    )
+    # Get sorting index based on values 
+    if sort_decreasing:
+        sort_index = np.argsort(values)[::-1]
+    else:
+        sort_index = np.argsort(values)
+
+    # Sort values
+    values = values[sort_index]
+    label_indices = label_indices[sort_index]
+    
+    return label_indices, values 
+
+
+def _vec_translate(arr, my_dict):
+    """Remap array <value> based on the dictionary key-value pairs.
+
+    This function is used to redefine label array integer values based on the
+    label area_size/max_intensity value.
+
+    """
+    return np.vectorize(my_dict.__getitem__)(arr)
+
+
+
+def get_labels_with_requested_occurence(label_arr, vmin, vmax):
+    "Get label indices with requested occurence."
+    # Compute label occurence 
+    label_indices, label_occurence = np.unique(label_arr, return_counts=True)
+
+    # Remove label 0 and associate pixel count if present 
+    if label_indices[0] == 0: 
+        label_indices = label_indices[1:]
+        label_occurence = label_occurence[1:]
+    # Get index with required occurence 
+    valid_area_indices = np.where(
+        np.logical_and(
+            label_occurence >= vmin,
+            label_occurence <= vmax))[0]
+    # Return list of valid label indices 
+    if len(valid_area_indices) > 0:
+        label_indices = label_indices[valid_area_indices]
+    else: 
+        label_indices = []
+    return label_indices
+
+
+def redefine_label_array(label_arr, label_indices): 
+    """Redefine labels of a label array from 0 to len(label_indices).
+    
+    Native label values not present in label_indices are set to 0.
+    The first label in label_indices becomes 1, the second 2, and so on.
+    """
+    
+    # Compute max label index 
+    max_label = max(label_indices)
+    
+    # Set to 0 labels in label_arr larger than max_label
+    # - These are some of the labels that were set to 0 because of mask or area filtering
+    label_arr[label_arr > max_label] = 0 
+    
+    # Initialize dictionary with keys corresponding to all possible labels indices
+    val_dict = {k: 0 for k in range(0, max_label+1)}
+    
+    # Update the dictionary keys with the selected label_indices
+    # - Assume 0 not in label_indices
+    n_labels = len(label_indices)
+    label_indices = label_indices.tolist()
+    label_indices_new = np.arange(1, n_labels + 1).tolist()
+    for k, v in zip(label_indices, label_indices_new):
+        val_dict[k] = v
+    
+    # Redefine the id of the labels 
+    labels_arr = _vec_translate(label_arr, val_dict)
+    
+    return labels_arr
+
+    
+####--------------------------------------------------------------------------.
 def get_areas_labels(
     arr,
     min_value_threshold=-np.inf,
     max_value_threshold=np.inf,
     min_area_threshold=1,
     max_area_threshold=np.inf,
-    footprint_buffer=None,
+    footprint=None,
     sort_by="area",
     sort_decreasing=True,
 ):
-    # footprint_buffer: The neighborhood expressed as a 2-D array of 1’s and 0’s.
+    # footprint: The neighborhood expressed as a 2-D array of 1’s and 0’s.
     # ---------------------------------.
     # TODO: this could be extended to work with dask >2D array
     # - dask_image.ndmeasure.label  https://image.dask.org/en/latest/dask_image.ndmeasure.html
@@ -124,24 +239,18 @@ def get_areas_labels(
     # Check input arguments
     check_sort_by(sort_by)
 
-    if min_value_threshold == -np.inf and max_value_threshold == np.inf:
-        raise ValueError(
-            "Specify at least 'min_value_threshold' or 'max_value_threshold'."
-        )
-
     # ---------------------------------.
-    # Define binary mask
+    # Define masks
+    # - mask_native: True when between min and max thresholds 
+    # - mask_nan: True where is not finite (inf or nan)
     mask_native = np.logical_and(
-        arr >= min_value_threshold, arr <= max_value_threshold, ~np.isfinite(arr)
+        arr >= min_value_threshold, arr <= max_value_threshold
     )
-
-    mask_native[~np.isfinite(arr)] = True  # masked later below
+    mask_nan = ~np.isfinite(arr)
     # ---------------------------------.
-    # Apply optional buffering
-    if footprint_buffer is not None:
-        mask = binary_dilation(mask_native, footprint_buffer)
-    else:
-        mask = mask_native
+    # Dilate (buffer) the native mask 
+    # - This enable to assign closely connected mask_native areas to the same label
+    mask = _mask_buffer(mask_native, footprint=footprint)
 
     # ---------------------------------.
     # Get area labels
@@ -160,58 +269,33 @@ def get_areas_labels(
         return _no_labels_result(arr)
 
     # ---------------------------------.
-    # Set areas outside the native mask to label value 0
+    # Set areas outside the mask_native to label value 0
     label_arr[~mask_native] = 0
 
     # Set NaN pixels to label value 0
-    label_arr[~np.isfinite(arr)] = 0
+    label_arr[mask_nan] = 0
 
     # ---------------------------------.
-    # Recompute label indices
-    label_indices, label_occurence = np.unique(label_arr, return_counts=True)
-    n_initial_labels = len(label_indices)
-
-    # ---------------------------------.
-    # Remove 0 label and associate pixel count
-    label_indices = label_indices[1:]
-    label_occurence = label_occurence[1:]
-
-    # ---------------------------------.
-    # Filter by area
-    valid_area_indices = np.where(
-        np.logical_and(
-            label_occurence >= min_area_threshold, label_occurence <= max_area_threshold
-        )
-    )[0]
-    if len(valid_area_indices) > 0:
-        label_indices = label_indices[valid_area_indices]
-    else:
+    # Filter label by area 
+    label_indices = get_labels_with_requested_occurence(label_arr=label_arr,
+                                                        vmin=min_area_threshold,
+                                                        vmax=max_area_threshold)
+    if len(label_indices) == 0:
         return _no_labels_result(arr)
 
     # ---------------------------------.
-    # Sort labels
-    values = get_sorting_area_values(
-        arr, label_arr=label_arr, label_indices=label_indices, sort_by=sort_by
+    # Sort labels by statistics (i.e. label area, label max value ...)
+    label_indices, values = get_labels_stats(arr=arr,
+                                             label_arr=label_arr,
+                                             label_indices=label_indices,
+                                             stats=sort_by,
+                                             sort_decreasing=sort_decreasing, 
     )
-    if sort_decreasing:
-        sort_index = np.argsort(values)[::-1]
-    else:
-        sort_index = np.argsort(values)
-
-    # Sort values
-    values = values[sort_index]
-    label_indices = label_indices[sort_index]
-
+    
     # ---------------------------------.
     # Relabel labels array (from 1 to n_labels)
+    labels_arr = redefine_label_array(label_arr=label_arr, label_indices=label_indices)
     n_labels = len(label_indices)
-    val_dict = {k: 0 for k in range(0, n_initial_labels + 1)}
-    label_indices = label_indices.tolist()
-    label_indices_new = np.arange(1, n_labels + 1).tolist()
-    for k, v in zip(label_indices, label_indices_new):
-        val_dict[k] = v
-    labels_arr = _vec_translate(label_arr, val_dict)
-
     # ---------------------------------.
     # Return infos
     return labels_arr, n_labels, values
@@ -223,7 +307,7 @@ def xr_get_areas_labels(
     max_value_threshold=np.inf,
     min_area_threshold=1,
     max_area_threshold=np.inf,
-    footprint_buffer=None,
+    footprint=None,
     sort_by="area",
     sort_decreasing=True,
 ):
@@ -237,7 +321,7 @@ def xr_get_areas_labels(
         max_value_threshold=max_value_threshold,
         min_area_threshold=min_area_threshold,
         max_area_threshold=max_area_threshold,
-        footprint_buffer=footprint_buffer,
+        footprint=footprint,
         sort_by=sort_by,
         sort_decreasing=sort_decreasing,
     )

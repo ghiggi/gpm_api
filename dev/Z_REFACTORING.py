@@ -5,6 +5,9 @@ Created on Mon Aug 15 23:02:04 2022
 
 @author: ghiggi
 """
+
+### Refactor patches generator 
+
 # -----------------------------------------------------------------------------.
 # Implement valid geolocation checks
 # --> In tests/test_dataset_valid_geolocation.py
@@ -14,9 +17,6 @@ Created on Mon Aug 15 23:02:04 2022
 # - check_valid_geolocation
 # - ensure_valid_geolocation (1 spurious pixel)
 # - ds_gpm.gpm_api.has_valid_geolocation
-
-###--------------------------------------------------------------------------.
-# Refactor geospatial.py
 
 # -----------------------------------------------------------------------------.
 # Solve TODOs in dataset.py
@@ -37,11 +37,24 @@ Created on Mon Aug 15 23:02:04 2022
 # -----------------------------------------------------------------------------.
 #### Investigate chunking of a granule
 
+
+
+
+
+# -----------------------------------------------------------------------------.
+## Download GPM data after May 21 2018
+
+# - SwathDefinition(ds_template['lons'], ds_template['lats']).plot()
+# gpm_api lon, lat --> longitude-latitude?
+
 # -----------------------------------------------------------------------------.
 # list: start_time end_time per satellite
 # --> dev/list_products.py
 
 # download from filename
+
+###--------------------------------------------------------------------------.
+# Refactor geospatial.py
 
 ###--------------------------------------------------------------------------.
 # Add channels frequency coordinates to PMW 1B and 1C 
@@ -52,12 +65,6 @@ Created on Mon Aug 15 23:02:04 2022
 # pyresample accessor
 # - pyresample.area
 # - ds_gpm.pyresample.area.plot()  # property !!!
-
-# -----------------------------------------------------------------------------.
-## Download GPM data after May 21 2018
-
-# - SwathDefinition(ds_template['lons'], ds_template['lats']).plot()
-# gpm_api lon, lat --> longitude-latitude?
 
 # -----------------------------------------------------------------------------.
 # TODO: utils/archive: from corrupted fpath, extract product, start_time, end_time, version, and redownload

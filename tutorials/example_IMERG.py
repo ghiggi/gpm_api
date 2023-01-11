@@ -68,11 +68,11 @@ ds.isel(time=0).gpm_api.is_spatial_2D_field  # True,  because no time dimension 
 ds.gpm_api.has_regular_timesteps
 ds.gpm_api.get_regular_time_slices()  # List of time slices with regular timesteps
 
+ds.gpm_api.is_regular
+
 ds.gpm_api.pyresample_area  # TODO: not yet implemented
 
-# Plot with xarray
-ds[variable].isel(time=0).plot.imshow(x="lon", y="lat")
-
+####--------------------------------------------------------------------------.
 #### Plotting with gpm_api a single timestep
 ds[variable].isel(time=0).gpm_api.plot_map()    # With cartopy
 ds[variable].isel(time=0).gpm_api.plot_image()  # Without cartopy
@@ -157,20 +157,12 @@ ds_ch = ds.gpm_api.crop_by_country("Switzerland")
 ds_ch[variable].isel(time=0).gpm_api.plot_map()
 
 ####--------------------------------------------------------------------------.
-#### Patch generator
-patch_gen = ds.isel(time=0).gpm_api.patch_generator(
-    variable=variable,
-    min_value_threshold=3,
-    min_area_threshold=5,
-    sort_by="max",  # area
-    sort_decreasing=True,
-    n_patches=10,
-    patch_margin=(20, 20),
-)
-list_patch = list(patch_gen)
-
 #### Plot Patches
-ds[variable].isel(time=0).gpm_api.plot_patches(
+# - It expects a single timestep 
+
+# - Either pass a xr.DataArray 
+da = ds[variable].isel(time=0)
+da.gpm_api.plot_patches(
     min_value_threshold=3,
     min_area_threshold=5,
     sort_by="max",  # area
@@ -180,9 +172,9 @@ ds[variable].isel(time=0).gpm_api.plot_patches(
     interpolation="nearest",
 )
 
-
-ds.gpm_api.plot_patches(
-    variable=variable,
+# - Or xr.Dataset
+ds.isel(time=0).gpm_api.plot_patches(
+    variable=variable, # this is required for xr.Dataset !
     min_value_threshold=3,
     min_area_threshold=5,
     sort_by="max",  # area
@@ -191,3 +183,5 @@ ds.gpm_api.plot_patches(
     patch_margin=(20, 20),
     interpolation="nearest",
 )
+
+####--------------------------------------------------------------------------.
