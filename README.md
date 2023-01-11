@@ -7,7 +7,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/ghiggi/gpm_api/badge.svg?branch=main)](https://coveralls.io/github/ghiggi/gpm_api?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/gpm_api/badge/?version=latest)](https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/?badge=stable)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-[![License](https://img.shields.io/github/license/ghiggi/gpm_api)(https://github.com/ghiggi/gpm_api/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/ghiggi/gpm_api)](https://github.com/ghiggi/gpm_api/blob/master/LICENSE)
 
 The GPM-API is still in development. Feel free to try it out and to report issues or to suggest changes.
 
