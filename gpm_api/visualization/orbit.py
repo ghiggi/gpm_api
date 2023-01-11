@@ -125,11 +125,16 @@ def plot_orbit_map(
         # - Add cartopy background
         ax = plot_cartopy_background(ax)
 
-    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=da.name,
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
+    variable = da.name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=variable,
                                                      plot_kwargs=plot_kwargs, 
                                                      cbar_kwargs=cbar_kwargs)
-
+    # - Specify colorbar label 
+    if "label" not in cbar_kwargs: 
+        unit = da.attrs.get('units', "-")
+        cbar_kwargs['label'] = f"{variable} [{unit}]"
+    
     # - Add swath lines
     if add_swath_lines:
         plot_swath_lines(da, ax=ax, linestyle="--", color="black")
@@ -150,7 +155,7 @@ def plot_orbit_map(
 
 @_call_over_contiguous_scans
 def plot_orbit_mesh(
-    da, ax=None, edgecolors="k", 
+    da, ax=None, edgecolors="k", linewidth=0.1,
     fig_kwargs={}, 
     subplot_kwargs={},
     **plot_kwargs,
@@ -159,9 +164,10 @@ def plot_orbit_mesh(
     # - Check inputs
     check_is_spatial_2D_field(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
-
+    
     # - Initialize figure
     if ax is None:
+        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
         # - Add cartopy background
         ax = plot_cartopy_background(ax)
@@ -169,8 +175,10 @@ def plot_orbit_mesh(
     # - Define plot_kwargs to display only the mesh
     plot_kwargs["facecolor"] = "none"
     plot_kwargs["alpha"] = 1
-    plot_kwargs["edgecolors"] = edgecolors
-
+    plot_kwargs["edgecolors"] = edgecolors,
+    plot_kwargs["linewidth"] = linewidth,
+    plot_kwargs["antialiased"] = True
+    print(plot_kwargs)
     # - Add variable field with cartopy
     p = _plot_cartopy_pcolormesh(
         ax=ax,

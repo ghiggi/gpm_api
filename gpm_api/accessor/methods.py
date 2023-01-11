@@ -28,6 +28,14 @@ class GPM_Base_Accessor:
         from gpm_api.utils.geospatial import crop_by_country
 
         return crop_by_country(self._obj, name)
+    
+    def get_crop_slices_by_extent(self, extent):
+        """Get subsetting slices given the extent."""
+        from gpm_api.utils.geospatial import get_crop_slices_by_extent
+
+        return get_crop_slices_by_extent(self._obj, extent)
+    
+
 
     @property
     def pyresample_area(self):
@@ -264,9 +272,9 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
 
     def plot_map_mesh(self, ax=None, 
                       edgecolors="k",
+                      linewidth=0.1, 
                       fig_kwargs={}, 
                       subplot_kwargs={},
-                      cbar_kwargs={},
                       **plot_kwargs,
                       ):
         from gpm_api.visualization.plot import plot_map_mesh
@@ -274,9 +282,9 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         da = self._obj
         p = plot_map_mesh(ax=ax, da=da,
                           edgecolors=edgecolors,
+                          linewidth=linewidth,
                           fig_kwargs=fig_kwargs, 
                           subplot_kwargs=subplot_kwargs,
-                          cbar_kwargs=cbar_kwargs,
                           **plot_kwargs,
         )
         return p

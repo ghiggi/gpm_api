@@ -7,6 +7,14 @@ Created on Wed Aug 17 09:30:29 2022
 """
 import numpy as np
 import xarray as xr
+from gpm_api.utils.slices import _get_list_slices_from_indices
+
+#### TODO: 
+# - crop_by_continent, 
+# - croup_around(point, distance)
+# - get_extent_around(point, distance) 
+
+
 
 
 def unwrap_longitude_degree(x, period=360):
@@ -40,6 +48,50 @@ def crop_by_country(xr_obj, name):
     return crop(xr_obj=xr_obj, bbox=extent)
 
 
+def get_crop_slices_by_extent(xr_obj, extent):
+    """Compute the slices required to subset the xarray object.
+    
+    If the input is a GPM Orbit, it returns a list of along-track slices
+    If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
+    
+    Parameters
+    ----------
+    xr_obj : xr.DataArray or xr.Dataset
+        xarray object.
+    extent : list or tuple
+        The extent over which to crop the xarray object.
+        `extent` must follow the matplotlib and cartopy conventions:
+        extent = [x_min, x_max, y_min, y_max]
+    """
+
+    if is_orbit(xr_obj):
+        xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
+        lon = xr_obj["lon"].data
+        lat = xr_obj["lat"].data
+        idx_row, idx_col = np.where(
+            (lon >= extent[0]) & (lon <= extent[1]) & (lat >= extent[2]) & (lat <= extent[3])
+        )
+        if idx_col.size == 0:
+            raise ValueError("No data inside the provided bounding box.")
+        # Retrieve list of along_track slices
+        list_slices = _get_list_slices_from_indices(idx_col)
+        return list_slices        
+    elif is_grid(xr_obj):
+        lon = xr_obj["lon"].data
+        lat = xr_obj["lat"].data
+        idx_col = np.where((lon >= extent[0]) & (lon <= extent[1]))[0]
+        idx_row = np.where((lat >= extent[2]) & (lat <= extent[3]))[0]
+        # If no data in the bounding box in current granule, return empty list
+        if idx_row.size == 0 or idx_col.size == 0:
+            raise ValueError("No data inside the provided bounding box.")
+        lat_slices = _get_list_slices_from_indices(idx_row)[0]
+        lon_slices = _get_list_slices_from_indices(idx_col)[0]
+        slices_dict = {"lon": lon_slices, "lat": lat_slices}
+        return slices_dict 
+    else:
+        raise NotImplementedError("")
+         
+
 def crop(xr_obj, bbox):
     """
     Crop a xarray object based on the provided bounding box.
@@ -60,30 +112,17 @@ def crop(xr_obj, bbox):
 
     """
     # TODO: Check bbox
-    lon = xr_obj["lon"].data
-    lat = xr_obj["lat"].data
-    # Crop orbit data
-    # - Subset only along_track to allow concat on cross_track !
+    
     if is_orbit(xr_obj):
-        lon = xr_obj["lon"].data
-        lat = xr_obj["lat"].data
-        idx_row, idx_col = np.where(
-            (lon >= bbox[0]) & (lon <= bbox[1]) & (lat >= bbox[2]) & (lat <= bbox[3])
-        )
-        if idx_row.size == 0:  # or idx_col.size == 0:
-            raise ValueError("No data inside the provided bounding box.")
-        # TODO: Check continuous ... otherwise warn and return a list of datasets
-        xr_obj_subset = xr_obj.isel(
-            along_track=slice((min(idx_row)), (max(idx_row) + 1))
-        )
+        # - Subset only along_track
+        list_slices = get_crop_slices_by_extent(xr_obj, bbox)
+        if len(list_slices) > 1: 
+            raise ValueError("The orbit is crossing the bbox multiple times. Use get_crop_slices_by_extent !.")
+        xr_obj_subset =  xr_obj.isel(along_track=list_slices[0])
+
     elif is_grid(xr_obj):
-        idx_row = np.where((lon >= bbox[0]) & (lon <= bbox[1]))[0]
-        idx_col = np.where((lat >= bbox[2]) & (lat <= bbox[3]))[0]
-        # If no data in the bounding box in current granule, return empty list
-        if idx_row.size == 0 or idx_col.size == 0:
-            raise ValueError("No data inside the provided bounding box.")
-        else:
-            xr_obj_subset = xr_obj.isel({"lon": idx_row, "lat": idx_col})
+        slice_dict = get_crop_slices_by_extent(xr_obj, bbox)
+        xr_obj_subset = xr_obj.isel(slice_dict)
     else:
         orbit_dims = ("cross_track", "along_track")
         grid_dims = ("lon", "lat")
@@ -94,6 +133,7 @@ def crop(xr_obj, bbox):
     return xr_obj_subset
 
 
+####---------------------------------------------------------------------------.
 #### TODO MOVE TO utils.checks !!!
 def check_valid_geolocation(xr_obj, verbose=True):
     # TODO implement

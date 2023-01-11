@@ -30,7 +30,7 @@ def initialize_dict_with(keys):
 
 def numpy_numeric_format():
     return (
-        numpy.float,
+        float, # numpy.float deprecated since 1.20 and remove in 1.24
         numpy.float32,
         numpy.float64,
         numpy.integer,

@@ -487,6 +487,11 @@ def open_granule(
     # Add global attributes
     # TODO: i.e. gpm_api_product for gpm_api.title accessor
 
+
+    # TODO: tranpose data already here !!! 
+    # cross-track - along_track
+    # lat, lon 
+    
     # ------------------------------------------------------.
     # Remove list xr.Dataset to close connections
     del list_ds
@@ -663,6 +668,9 @@ def open_dataset(
     if len(l_Datasets) >= 1:
         if "time" in list(ds.dims):
             ds = xr.concat(l_Datasets, dim="time")
+            # Tranpose to have (y,x) = (time, lat, lon)
+            # --> To work nicely with pyresample ...
+            ds = ds.transpose(..., "lat", "lon")
         else:
             ds = xr.concat(l_Datasets, dim="along_track")
             # Tranpose to have (y,x) = (cross_track, along_track)

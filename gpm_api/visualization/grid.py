@@ -14,11 +14,12 @@ from gpm_api.visualization.plot import (
     #  _plot_mpl_imshow,
     _plot_xr_imshow,
     _preprocess_figure_args,
+    _preprocess_subplot_kwargs,
     get_colorbar_settings,
 )
 
 
-def plot_grid_map(
+def _plot_grid_map_cartopy(
     da,
     ax=None,
     add_colorbar=True,
@@ -35,15 +36,22 @@ def plot_grid_map(
 
     # - Initialize figure
     if ax is None:
+        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
         # - Add cartopy background
         ax = plot_cartopy_background(ax)
   
-    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=da.name,
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
+    variable = da.name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=variable,
                                                      plot_kwargs=plot_kwargs, 
                                                      cbar_kwargs=cbar_kwargs)
-
+    
+    # - Specify colorbar label 
+    if "label" not in cbar_kwargs: 
+        unit = da.attrs.get('units', "-")
+        cbar_kwargs['label'] = f"{variable} [{unit}]"
+        
     # - Add variable field with matplotlib
     p = _plot_cartopy_imshow(
         ax=ax,
@@ -59,6 +67,83 @@ def plot_grid_map(
     return p
 
 
+def _plot_grid_map_facetgrid(
+    da,
+    ax=None,
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs={}, 
+    subplot_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
+):
+    """Plot DataArray 2D field with xarray."""
+    # - Check inputs
+    if ax is not None: 
+        raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+    subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+    # - Add info required to plot on cartopy axes within FacetGrid
+    plot_kwargs.update({"subplot_kws": subplot_kwargs})  
+    plot_kwargs.update({"transform": ccrs.PlateCarree()}) 
+
+    # - Plot with FacetGrid   
+    p = plot_grid_image(da=da,
+                        ax=None,
+                        add_colorbar=add_colorbar,
+                        interpolation=interpolation, 
+                        fig_kwargs={}, 
+                        cbar_kwargs={},
+                        **plot_kwargs,
+    )
+    
+    # - Add cartopy background to each subplot 
+    for ax in p.axs.flatten():
+        plot_cartopy_background(ax)
+
+    # - Return mappable
+    return p
+
+
+def plot_grid_map(
+    da,
+    ax=None,
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs={}, 
+    subplot_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
+):
+    """Plot DataArray 2D field with cartopy."""
+    # Plot FacetGrid with xarray imshow
+    if "col" in plot_kwargs or "row" in plot_kwargs:
+        p = _plot_grid_map_facetgrid(
+            da=da,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs, 
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    # Plot with cartopy imshow 
+    else: 
+        p = _plot_grid_map_cartopy(
+            da=da,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs, 
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    # - Return mappable
+    return p
+
+
 def plot_grid_image(
     da, ax=None,
     add_colorbar=True,
@@ -69,12 +154,17 @@ def plot_grid_image(
 ):
     """Plot DataArray 2D image."""
     # Check inputs
-    check_is_spatial_2D_field(da)
+    # check_is_spatial_2D_field(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
     
     # Initialize figure
     if ax is None:
-        fig, ax = plt.subplots(**fig_kwargs)
+        # - If col and row are not provided (not FacetedGrid), initialize 
+        if "col" not in plot_kwargs and "row" not in plot_kwargs:
+            fig, ax = plt.subplots(**fig_kwargs)
+        # Add fig_kwargs to plot_kwargs for FacetGrid initialization
+        else: 
+            plot_kwargs.update(fig_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
     plot_kwargs, cbar_kwargs = get_colorbar_settings(name=da.name,
@@ -92,7 +182,7 @@ def plot_grid_image(
     #                      cbar_kwargs=cbar_kwargs,
     #                      ticklabels=ticklabels,
     # )
-
+    print(plot_kwargs)
     # - Plot with xarray
     p = _plot_xr_imshow(
         ax=ax,

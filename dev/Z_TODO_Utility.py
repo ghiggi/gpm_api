@@ -25,11 +25,6 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
 #### Iterate through patches and plot
 
 ##----------------------------------------------------------------------------.
-#### GridBucket - Collect overpass values onto grid cell --> Parquet optmized
-# --> pyresample bucket resampler
-# --> https://pyresample.readthedocs.io/en/latest/api/pyresample.bucket.html
-
-##----------------------------------------------------------------------------.
 #### Plotting
 # - Retrieve outer coordinates instead of centroid
 # - Enlarge swath line to account for pixel centroid
@@ -49,18 +44,15 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
 # - Add temperate, pressure contours ....
 # https://github.com/dopplerchase/DRpy/blob/7d4246d977e926d02b19059de0a0c3793711e2f1/drpy/graph/graph.py#L638
 
+##----------------------------------------------------------------------------.
+#### GridBucket - Collect overpass values onto grid cell --> Parquet optmized
+# --> pyresample bucket resampler
+# --> https://pyresample.readthedocs.io/en/latest/api/pyresample.bucket.html
+
 # ----------------------------------------------------------------------------.
 #### x-image
 ## xi.upsample function (image) pixel ... duplicate or interpolate
 ## xi.downsample function
-
-# ----------------------------------------------------------------------------.
-#### Subset by lat/lon coord (nearest neighbor over x km)
-# gpm.DPR.plot(timestep, bbox, product)
-# gpm.ZoomMax(bbox, product, n_scan).plot()
-# gpm.ZoomMin(bbox.product, n_scan).plot()
-# gpm.ZoomRandom(min_val, max_val, bbox, product, n_scan).plot()
-# gpm.isel(), sel()
 
 # ----------------------------------------------------------------------------.
 #### Compute height
@@ -101,5 +93,6 @@ lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
 # - Extract oblique transect (i.e. with longest amount of )
 # - get_max_latlon_coordinates() ... and pass lat lon to get_transect
 
+
 ##----------------------------------------------------------------------------.
-#### Test download NRT data
+

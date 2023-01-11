@@ -31,8 +31,8 @@ gpm_api.download(
     check_integrity=False,
 )
 
-
-# Load GPM DPR 2A product dataset (with group prefix)
+####--------------------------------------------------------------------------.
+#### Load GPM DPR 2A product dataset (with group prefix)
 ds = gpm_api.open_dataset(
     base_dir=base_dir,
     product=product,
@@ -50,7 +50,7 @@ ds
 variables = list(ds.data_vars)
 print(variables)
 
-# Load GPM DPR 2A product dataset (without group prefix)
+#### Load GPM DPR 2A product dataset (without group prefix)
 variables = [
     "airTemperature",
     "precipRate",
@@ -85,9 +85,7 @@ print(variables)
 # Select variable
 variable = "precipRateNearSurface"
 
-# Plot with xarray
-ds[variable].plot.imshow(x="along_track", y="cross_track")
-
+####--------------------------------------------------------------------------.
 #### GPM-API methods
 # xr.Dataset methods provided by gpm_api
 print(dir(ds.gpm_api))
@@ -95,8 +93,8 @@ print(dir(ds.gpm_api))
 # xr.DataArray methods provided by gpm_api
 print(dir(ds[variable].gpm_api))
 
-#### Check geometry and dimensions
-ds.gpm_api.is_grid  # False
+#### - Check geometry and dimensions
+ds.gpm_api.is_grid   # False
 ds.gpm_api.is_orbit  # True
 
 ds.gpm_api.is_spatial_2D_field  # False, because not only cross-track and along-track
@@ -107,38 +105,62 @@ ds["zFactorFinal"].isel(range=0).gpm_api.is_spatial_2D_field  # True,  because n
 ds.gpm_api.has_regular_timesteps
 ds.gpm_api.get_regular_time_slices()  # List of time slices with regular timesteps
 
-#### Get pyresample SwathDefinition
+#### - Get pyresample SwathDefinition
 ds.gpm_api.pyresample_area
 
-#### Plotting with gpm_api
-# --> TODO: SOLVE BUG AT ANTIMERIDIAN IN CARTOPY !!!
-ds[variable].gpm_api.plot_map()  # In geographic space
-ds[variable].isel(along_track=slice(0, 500)).gpm_api.plot_map()
-ds[variable].gpm_api.plot_image()  # In swath view
-
-ds[variable].isel(along_track=slice(0, 500)).gpm_api.plot_image()
-
-#### Title
+#### - Get the dataset title
 ds.gpm_api.title(add_timestep=True)
 ds.gpm_api.title(add_timestep=False)
 
 ds[variable].gpm_api.title(add_timestep=False)
 ds[variable].gpm_api.title(add_timestep=True)
 
-#### Cropping
-# Crop by bbox
-bbox = (6.02260949059, 45.7769477403, 10.4427014502, 47.8308275417)  # Switzerland
-ds_ch = ds.gpm_api.crop(bbox=bbox)
-ds_ch[variable].gpm_api.plot_map()
+####--------------------------------------------------------------------------.
+#### Plotting with gpm_api
+# - In geographic space
+ds[variable].gpm_api.plot_map()  
+ds[variable].isel(along_track=slice(0, 500)).gpm_api.plot_map()
 
-# Crop by country
-ds_usa = ds.gpm_api.crop_by_country("United States")
-ds_usa[variable].gpm_api.plot_map()
+# - In swath view
+ds[variable].gpm_api.plot_image()  # In swath view
+ds[variable].isel(along_track=slice(0, 500)).gpm_api.plot_image()
 
-# TODO: get_crop_slices !!!!
-# --> Select the largest slice
+####--------------------------------------------------------------------------.
+#### Zoom on a geographic area 
+from gpm_api.utils.countries import get_country_extent
+title = ds.gpm_api.title(add_timestep=False)
+extent = get_country_extent("United States")
+p = ds[variable].gpm_api.plot_map()  
+p.axes.set_extent(extent)
+p.axes.set_title(label=title)
 
-#### Patches
-# TODO EXAMPLE
-patch_generator
-plot_patches
+####--------------------------------------------------------------------------.
+#### Crop the dataset 
+# - A orbit can cross an area multiple times 
+# - Therefore first retrieve the crossing slices, and then select the intersection of interest
+# - The extent must be specified following the cartopy and matplotlib convention
+# ---> extent = [lon_min, lon_max, lat_min, lat_max]
+extent = get_country_extent("United States")
+list_slices = ds.gpm_api.get_crop_slices_by_extent(extent)
+print(list_slices)
+for slc in list_slices:
+    da_subset = ds[variable].isel(along_track=slc)
+    slice_title = da_subset.gpm_api.title(add_timestep=True)
+    p = da_subset.gpm_api.plot_map()  
+    p.axes.set_extent(extent)
+    p.axes.set_title(label=slice_title)
+
+####--------------------------------------------------------------------------.
+#### Plot precipitation patches 
+da = ds[variable].isel(along_track=slice(0, 10000))
+da.gpm_api.plot_patches(
+    min_value_threshold=10,
+    min_area_threshold=5,
+    footprint_buffer=3,
+    sort_by="max", # "area"
+    sort_decreasing=True,
+    label_name="label",
+    n_patches=10,
+    interpolation="nearest",
+)
+

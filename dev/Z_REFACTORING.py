@@ -6,12 +6,6 @@ Created on Mon Aug 15 23:02:04 2022
 @author: ghiggi
 """
 # -----------------------------------------------------------------------------.
-# Create Jupyter Notebooks
-# - Copy to Google Colab
-# - Figure out a valid cartopy installation in Colab
-# - Copy to GitHub Codespace
-
-# -----------------------------------------------------------------------------.
 # Implement valid geolocation checks
 # --> In tests/test_dataset_valid_geolocation.py
 # --> Use SSMIS, MHS and GMI for testing
@@ -23,11 +17,6 @@ Created on Mon Aug 15 23:02:04 2022
 
 ###--------------------------------------------------------------------------.
 # Refactor geospatial.py
-
-###--------------------------------------------------------------------------.
-# Add channels frequency coordinates to PMW 1B and 1C 
-# - Derive YAML with frequencies from 1C files 
-# --> test/test_pmw_channels_coords.py
 
 # -----------------------------------------------------------------------------.
 # Solve TODOs in dataset.py
@@ -53,6 +42,11 @@ Created on Mon Aug 15 23:02:04 2022
 # --> dev/list_products.py
 
 # download from filename
+
+###--------------------------------------------------------------------------.
+# Add channels frequency coordinates to PMW 1B and 1C 
+# - Derive YAML with frequencies from 1C files 
+# --> test/test_pmw_channels_coords.py
 
 # -----------------------------------------------------------------------------.
 # pyresample accessor
@@ -129,57 +123,62 @@ def check_consecutive_granules(filepaths, verbose=True):
 # Improve decoding and DataArray attributes
 # --> Decode before or after each Dataset
 
+##----------------------------------------------------------------------------.
+#### Test download NRT data
+
 # -----------------------------------------------------------------------------.
-# dpr
-# imerg
-# pmw
+# Download set of background .... 
+# - Callable from ax.background_img(name='BM', resolution='high')  
+# - Add BlueMarble to IMERG example 
 
-# gpm = gpm_api.GPM(...)
+# Add PlateCarre backgrounds at /home/ghiggi/anaconda3/envs/satpy39/lib/python3.9/site-packages/cartopy/data/raster/natural_earth
+# https://neo.gsfc.nasa.gov/
+# https://neo.gsfc.nasa.gov/view.php?datasetId=BlueMarbleNG
 
-# PR
-# DPR
-# PMW
-# CMB
-# IMERG
+# bg_dict = {
+#    "__comment__": """JSON file specifying the image to use for a given type/name and
+#                      resolution. Read in by cartopy.mpl.geoaxes.read_user_background_images.""",
+#   "BM": {
+#     "__comment__": "Blue Marble Next Generation, July ",
+#     "__source__": "https://neo.sci.gsfc.nasa.gov/view.php?datasetId=BlueMarbleNG-TB",
+#     "__projection__": "PlateCarree",
+#     "low": "BM_July_low.png",
+#     "high": "BM_July_high.png"
+#   },
+# }
 
-# gpm_api.bucket
-# gpm_api.geometry (grid, swath)
-# gpm_api.sensors
+# import json
+# fpath = "/home/ghiggi/Backgrounds/images.json"
+# with open(fpath, 'w', encoding ='utf8') as f:
+#     json.dump(bg_dict, f, allow_nan=False)
+
+# -----------------------------------------------------------------------------.
 
 
-### Oblique orbits 
-# Prograde orbit 
-# - Eastward (from west to east)
-# - In the same direction as the earth rotation 
-# - Inclination < 90°
-# - Regress with respect to the planes of their initial orbit
-# - Example: GEOs, TRMM, GPM
+# gpm_api/bucket
+# gpm_api/geometry (grid, swath)
+# gpm_api/sensors
 
-# Retrograde orbit 
-# - Westward (from east to west)
-# - In the opposite direction of the earth rotation 
-# - Precess with respect to the planes of their initial orbit
-# - Inclination > 90°
-# - Example:
-#   - sun syncronous orbits: A-Train
-#   - MetOP-A, B, NOAA ... 
-
+# -----------------------------------------------------------------------------.
+### Create Jupyter Notebooks
+# - Copy to Google Colab and GitHub Codespace
+# - Figure out a valid cartopy installation in Colab
+# https://colab.research.google.com/drive/14SFtTM5BydEElTgy83F_74-J9MJBCznb?usp=sharing
+# https://colab.research.google.com/drive/1vptHQjopOYi0HohHCRqVcmQiWM5xSgZ8?usp=sharing
+# https://colab.research.google.com/drive/1OYW2KXvBUT7lexrBXd71njU1zjQsKSQ5?usp=sharing
 
 # -----------------------------------------------------------------------------.
 #### GPM High-Level Classes (sensors)
+# gpm = gpm_api.GPM(...)
+
 # Swath CLASS
 # --> TRMM PR
 # --> GPM DPR
 # --> GPM CMB
+# --> GPM PMW
 # -> pyresample.SwathDef
 
 # Grid CLASS
 # --> GPM IMERG
 # -> pyresample.AreaDef
 
-# -----------------------------------------------------------------------------.
-
-# 2A-ENV-DPR --> 2A-DPR-ENV ?
-# Ka--> KA , Ku --> KU ?
-
-# -----------------------------------------------------------------------------.

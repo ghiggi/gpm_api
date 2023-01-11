@@ -27,7 +27,7 @@ from gpm_api.utils.utils_cmap import get_colormap_setting
 #     plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")
 #     return (plot_kwargs, cbar_kwargs, ticklabels)
 
-def _preprocess_figure_args(ax, fig_kwargs, subplot_kwargs):
+def _preprocess_figure_args(ax, fig_kwargs={}, subplot_kwargs={}):
     if ax is not None: 
         if len(subplot_kwargs) >= 1:
             raise ValueError("Provide `subplot_kwargs`only if `ax`is None")
@@ -238,13 +238,16 @@ def _plot_cartopy_imshow(
 
     # - Derive extent
     extent = [-180, 180, -90, 90]  # TODO: Derive from data !!!!
+    
+    # TODO: ensure y data is increasing --> origin = "lower" 
+    # TODO: ensure y data is decreasing --> origin = "upper" 
 
     # - Add variable field with cartopy
     p = ax.imshow(
         arr,
         transform=ccrs.PlateCarree(),
         extent=extent,
-        origin="upper",
+        origin="lower",
         interpolation=interpolation,
         **plot_kwargs,
     )
@@ -300,13 +303,12 @@ def _plot_cartopy_pcolormesh(
         transform=ccrs.PlateCarree(),
         **plot_kwargs,
     )
-    print(plot_kwargs)
     # - Add PolyCollection of QuadMesh cells crossing the antimeridian 
     if is_crossing_antimeridian:
         coll = get_masked_cells_polycollection(x, y, arr.data,
                                                mask=mask,
                                                plot_kwargs=plot_kwargs)
-        p = p.axes.add_collection(coll)
+        p.axes.add_collection(coll)
 
     # - Set the extent
     # --> To be set in projection coordinates of crs !!!
@@ -370,7 +372,7 @@ def _plot_xr_imshow(
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
-    if add_colorbar:
+    if add_colorbar and ticklabels is not None:
         p.colorbar.ax.set_yticklabels(ticklabels)
     return p
 
@@ -466,9 +468,9 @@ def plot_map_mesh(
     da,
     ax=None,
     edgecolors="k",
+    linewidth=0.1,
     fig_kwargs={}, 
     subplot_kwargs={},
-    cbar_kwargs={},
     **plot_kwargs,
 ):
     # Interpolation only for grid objects
@@ -484,9 +486,9 @@ def plot_map_mesh(
             da=da,
             ax=ax,
             edgecolors=edgecolors,
+            linewidth=linewidth,
             fig_kwargs=fig_kwargs, 
             subplot_kwargs=subplot_kwargs,
-            cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
     # Plot grid

@@ -42,6 +42,9 @@ def get_country_extent(name):
     valid_countries_lower = list(countries_lower_extent_dict)
     if name.lower() in valid_countries_lower:
         extent = countries_lower_extent_dict[name.lower()]
+        # TODO:
+        # - add 0.5° degree buffer
+        # - ensure extent is correct
         return extent
     else:
         possible_match = difflib.get_close_matches(

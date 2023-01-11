@@ -16,6 +16,7 @@ base_dir = "/home/ghiggi"
 #### Define analysis time period
 start_time = datetime.datetime.strptime("2020-08-01 12:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2020-08-01 15:00:00", "%Y-%m-%d %H:%M:%S")
+
 product_type = "RS"
 
 product = "1A-GMI"
@@ -32,20 +33,21 @@ pmw_variable = "Tc"  # Quality
 product = "2A-GMI"
 pmw_variable = "surfacePrecipitation"
 
+version = 7
 # product = "1A-GMI"
 # product = "1B-GMI"
 # product = "1C-GMI"
 # product = "2A-GMI"
-# gpm_api.download(
-#     username="gionata.ghiggi@epfl.ch",
-#     base_dir=base_dir,
-#     product=product,
-#     product_type = product_type,
-#     start_time=start_time,
-#     end_time=end_time,
-#     # Optional
-#     version=7,
-#     )
+gpm_api.download(
+    username="gionata.ghiggi@epfl.ch",
+    base_dir=base_dir,
+    product=product,
+    product_type = product_type,
+    start_time=start_time,
+    end_time=end_time,
+    # Optional
+    version=version,
+    )
 
 # gpm_api.available_scan_modes(product='1A-GMI', version=7)
 # gpm_api.available_scan_modes(product='1B-GMI', version=7)
@@ -59,7 +61,7 @@ ds_gmi = gpm_api.open_dataset(
     start_time=start_time,
     end_time=end_time,
     # Optional
-    version=7,
+    version=version,
     variables=pmw_variable,
     chunks="auto",
     prefix_group=False,
@@ -68,9 +70,7 @@ ds_gmi = gpm_api.open_dataset(
 ds_gmi = ds_gmi.compute()
 
 # Investigate PMW GMI direction
-ds_gmi[pmw_variable].isel(
-    along_track=slice(0, 10), cross_track=slice(0, 10)
-).gpm_api.plot_map_mesh()
+ds_gmi[pmw_variable].isel(along_track=slice(0, 10), cross_track=slice(0, 10)).gpm_api.plot_map_mesh()
 ds_gmi[pmw_variable].isel(along_track=slice(0, 10)).gpm_api.plot_map_mesh()
 ds_gmi[pmw_variable].isel(along_track=slice(0, 20)).gpm_api.plot_map_mesh()
 ds_gmi[pmw_variable].isel(along_track=slice(0, 21)).gpm_api.plot_map_mesh()

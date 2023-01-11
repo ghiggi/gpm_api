@@ -118,3 +118,38 @@ def filter_slices_by_size(list_slices, min_size=None, max_size=None):
     )
     list_slices = np.array(list_slices)[valid_bool].tolist()
     return list_slices
+
+
+def _get_list_slices_from_indices(indices):
+    """Return a list of slices from a list/array of integer indices.
+    Example:
+        [0,1,2,4,5,8] --> [slices(0,3),slice(4,6), slice(8,9)]
+    """
+    # TODO ... used in used in get_extent_slices , _replace_0_values --> get ascend/desc_slices
+    # Checks
+    indices = np.asarray(indices).astype(int)
+    indices = sorted(np.unique(indices))
+    if np.any(np.sign(indices) < 0):
+        raise ValueError("_get_list_slices_from_indices expects only positive"
+                         " integer indices.")
+    if len(indices) == 1:
+        return [slice(indices[0], indices[0] + 1)]
+    # Retrieve slices
+    # idx_splits = np.where(np.diff(indices) > 1)[0]
+    # if len(idx_splits) == 0:
+    #     list_slices = [slice(min(indices), max(indices))]
+    # else:
+    #     list_idx = np.split(indices, idx_splits+1)
+    #     list_slices = [slice(x.min(), x.max()+1) for x in list_idx]
+    start = indices[0]
+    previous = indices[0]
+    list_slices = []
+    for idx in indices[1:]:
+        if idx - previous == 1:
+            previous = idx
+        else:
+            list_slices.append(slice(start, previous + 1))
+            start = idx
+            previous = idx
+    list_slices.append(slice(start, previous + 1))
+    return list_slices

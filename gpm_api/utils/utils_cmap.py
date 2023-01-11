@@ -51,7 +51,7 @@ Created on Mon Nov 29 16:33:35 2021
 # -----------------------------------------------------------------------------.
 # cmaps[name] = mpl.colorsListedColormap(data, name=name)
 
-####--------------------------------------------------------------------------.
+# --------------------------------------------------------------------------.
 # ListedColormap, which produces a discrete colormap,
 # dir(matplotlib.colors)
 
@@ -66,7 +66,7 @@ Created on Mon Nov 29 16:33:35 2021
 # https://stackoverflow.com/questions/16834861/create-own-colormap-using-matplotlib-and-plot-color-scale
 # Look at pycolorbar existing code
 
-####--------------------------------------------------------------------------.
+# --------------------------------------------------------------------------.
 import copy
 import warnings
 import matplotlib
@@ -80,7 +80,7 @@ PRECIP_VALID_TYPES = ("intensity", "depth", "prob")
 PRECIP_VALID_UNITS = ("mm/h", "mm", "dBZ")
 
 CMAP_DICT = {
-    "IMERG_SolidPrecip": {
+    "IMERG_Solid": {
         "type": "hex",
         "color_list": [
             "#45ffff",  # [0.1 - 0.2]
@@ -95,7 +95,7 @@ CMAP_DICT = {
             "#8c149c",  # [20.0 - 50.0]
         ],
     },
-    "IMERG_liquid": {
+    "IMERG_Liquid": {
         "type": "hex",
         "color_list": [
             "#008114",  # [0.1 - 0.2]
@@ -179,25 +179,25 @@ CMAP_DICT = {
 COLOR_DICT = {
     "IMERG_Solid": {
         "over_color": "#8c149c",
-        "under_color": "#3a3d48",
+        "under_color": "none", # "#3a3d48",
         "bad_color": "gray",
         "bad_alpha": 0.5,
-        "cmap": "IMERG_solid",
+        "cmap": "IMERG_Solid",
         "cmap_type": "LinearSegmented",
         "levels": [0.1, 0.2, 0.3, 0.5, 1, 2, 3, 5, 10, 20, 50],
         "extend": "max",
-        # TODO: Add label
+        "label": "Precipitation intensity [$mm \ hr^{-1}$]",
     },
     "IMERG_Liquid": {
         "over_color": "#910000",
-        "under_color": "#3a3d48",
+        "under_color": "none", # "#3a3d48",
         "bad_color": "gray",
         "bad_alpha": 0.5,
-        "cmap": "IMERG_liquid",
+        "cmap": "IMERG_Liquid",
         "cmap_type": "LinearSegmented",
         "levels": [0.1, 0.2, 0.3, 0.5, 1, 2, 3, 5, 10, 20, 50],
-        "extend": "max"
-        # TODO: Add label
+        "extend": "max",
+        "label": "Precipitation intensity [$mm \ hr^{-1}$]",
     },
     "GPM_Z": {
         "bad_color": "gray",
@@ -430,6 +430,10 @@ precip_variables = [
     "nearSurfacePrecipRate",
     # 2B-GPM-CSH
     "surfacePrecipRate",
+    # IMERG 
+    "precipitationCal",
+    "precipitationUncal", 
+    "IRprecipitation",
     ]
 
 for var in precip_variables:
@@ -478,7 +482,7 @@ for var in precip_variables:
 
 
 
-####-------------------------------------------------------------------------.
+#-----------------------------------------------------------------------------.
 
 
 def _dynamic_formatting_floats(float_array, colorscale="pysteps"):
@@ -511,7 +515,7 @@ def _dynamic_formatting_floats(float_array, colorscale="pysteps"):
     return labels
 
 
-####--------------------------------------------------------------------------.
+#...--------------------------------------------------------------------------.
 
 
 def get_colormap_setting(cbar_settings_name):
@@ -532,7 +536,7 @@ def get_colormap_setting(cbar_settings_name):
 
         # raise ValueError("{cbar_settings_name} cbar_settings  does not exist.")
 
-    ####---------------------------------------------------------------------.
+    #--------------------------------------------------------------------------.
     # Get cmap
     cmap_type = color_dict["cmap_type"]
     cmap_name = color_dict["cmap"]
@@ -565,7 +569,7 @@ def get_colormap_setting(cbar_settings_name):
         # vmin and vmax to be defined
         raise NotImplementedError
 
-    ####---------------------------------------------------------------------.
+    #-------------------------------------------------------------------------.
     # Set norm if specified
     if color_dict.get("norm", None):
         if color_dict["norm"] == "SymLogNorm":
@@ -578,7 +582,7 @@ def get_colormap_setting(cbar_settings_name):
         else:
             raise NotImplementedError()
 
-    ####---------------------------------------------------------------------.
+    #-------------------------------------------------------------------------.
     # Define BoundaryNorm
     if clevs is not None:
         norm = mpl.colors.BoundaryNorm(clevs, cmap.N)
@@ -591,7 +595,7 @@ def get_colormap_setting(cbar_settings_name):
         ticks = None
         # vmin and vmax to be defined
 
-    ####---------------------------------------------------------------------.
+    #-------------------------------------------------------------------------.
     # Define ticklabels
     # - Generate color level strings with correct amount of decimal places
     if clevs is not None:
@@ -600,7 +604,7 @@ def get_colormap_setting(cbar_settings_name):
     else:
         ticklabels = None
 
-    ####---------------------------------------------------------------------.
+    #-------------------------------------------------------------------------.
     # Set over, under and alpha
     # If not specified, do not set ---> Will fill with the first/last color value
     # If 'none' --> It will be depicted in white
