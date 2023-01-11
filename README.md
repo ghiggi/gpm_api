@@ -1,4 +1,4 @@
- # Welcome to GPM-API
+# Welcome to GPM-API
 
 [![DOI](https://zenodo.org/badge/DOI/XXX)](https://doi.org/10.5281/zenodo.XXXX)
 [![PyPI version](https://badge.fury.io/py/gpm_api.svg)](https://badge.fury.io/py/gpm_api)
@@ -7,11 +7,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/ghiggi/gpm_api/badge.svg?branch=main)](https://coveralls.io/github/ghiggi/gpm_api?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/gpm_api/badge/?version=latest)](https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/?badge=stable)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-[![License](https://img.shields.io/github/license/ghiggi/gpm_api)]
+[![License](https://img.shields.io/github/license/ghiggi/gpm_api)(https://github.com/ghiggi/gpm_api/blob/master/LICENSE)
 
-
-Experimental api to download and read GPM data into xarray Datasets.
-Updates will follow. 
+The GPM-API is still in development. Feel free to try it out and to report issues or to suggest changes.
 
 ## Purpose
 GPM-API provides an easy-to-use python interface to download, read, process and visualize most of the products of the Global Precipitation Measurement Mission (GPM) data archive. The available products can be retrieved by: 
@@ -69,49 +67,39 @@ You can find the documentation under [gpm_api.readthedocs.io][doc_link]
 
 ### Tutorials and Examples
 
-The documentation also includes some [tutorials][tut_link], showing the most important use cases of GPM-API, which are
+The documentation also includes some [tutorials][tut_link], showing the most important use cases of GPM-API.
+These tutorial are also available as Jupyter Notebooks and in Google Colab:
 
-- [GPM product Download][tut1_link]
+- GPM Product Download [Notebook][tut1_link][Colab][colab1_link]
 - [GPM Products Reading][tut2_link]
 - [GPM Product Visualization ][tut3_link]
-- [Exploratory data analysis of a DPR 1A product][tut4_link
-- [Exploratory data analysis of a PMW 1C product][tut4_link]
-- [Exploratory data analysis of a DPR 2A product][tut5_link]
-- [Exploratory data analysis of a CORRA 2B product][tut6_link]
-- [Exploratory data analysis of a Latent Heating product][tut7_link]
-- [Exploratory data analysis of a IMERG product][tut8_link]
+- [Exploratory data analysis of the IMERG dataset][tut8_link]
+- [Exploratory data analysis of PMW 1B and 1C products][tut4_link]
+- [Exploratory data analysis of the DPR 1A product][tut4_link
+- [Exploratory data analysis of the DPR 2A product][tut5_link]
+- [Exploratory data analysis of the CORRA 2B product][tut6_link]
+- [Exploratory data analysis of the Latent Heating products][tut7_link]
 - [Area Labeling][tut10_link]
 - [Patch Data Extraction][tut9_link]
 
-The associated python scripts are provided in the `tutorial` folder.
-
-### Examples
-
-
-Example are also available on Google Colab and GitHub Codespace
-# Notebook GPM DPR [GG]
-https://colab.research.google.com/drive/14SFtTM5BydEElTgy83F_74-J9MJBCznb?usp=sharing
-
-# Notebook IMERG [GG]
-https://colab.research.google.com/drive/1vptHQjopOYi0HohHCRqVcmQiWM5xSgZ8?usp=sharing
-
-# Notebook PMW [GG]
-https://colab.research.google.com/drive/1OYW2KXvBUT7lexrBXd71njU1zjQsKSQ5?usp=sharing
-
+The associated python scripts are also provided in the `tutorial` folder.
+ 
 ## Requirements:
 
-- [xarray](https://www.numpy.org)
-- [dask](https://www.scipy.org/scipylib)
-- [cartopy](https://github.com/steven-murray/hankel)
-- [pyresample](https://github.com/dfm/emcee)
-- [h5py](https://github.com/pyscience-projects/pyevtk)
-- [curl](https://github.com/nschloe/meshio)
-- [wget](https://github.com/nschloe/meshio)
+- [xarray](https://docs.xarray.dev/en/stable/)
+- [dask](https://www.dask.org/)
+- [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
+- [pyresample](https://pyresample.readthedocs.io/en/latest/)
+- [h5py](https://github.com/h5py/h5py)
+- [curl](https://curl.se/)
+- [wget](https://www.gnu.org/software/wget/)
 
 ### Optional
 
-- [zarr](https://github.com/GeoStat-Framework/GSTools-Core)
- 
+- [zarr](https://zarr.readthedocs.io/en/stable/)
+- [dask_image](https://image.dask.org/en/latest/)
+- [skimage](https://scikit-image.org/)
+
 ## License
 
 [MIT][license_link] © 2021-2023
@@ -128,7 +116,7 @@ https://colab.research.google.com/drive/1OYW2KXvBUT7lexrBXd71njU1zjQsKSQ5?usp=sh
  
 [doc_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/
 [doc_install_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/#pip
-[tut_link]: https://gpm_api.readthedocs.io/projects/gstools/en/stable/tutorials.html
-[tut1_link]: https://gpm_api.readthedocs.io/projects/gstools/en/stable/examples/01_random_field/index.html
+[tut_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/tutorials.html
+[tut1_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/examples/XXX/index.html
  
  
