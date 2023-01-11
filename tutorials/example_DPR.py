@@ -42,6 +42,8 @@ ds = gpm_api.open_dataset(
     end_time=end_time,
     prefix_group=True,
 )
+
+# Display dataset structure
 ds
 
 # Available variables
@@ -98,15 +100,9 @@ ds.gpm_api.is_grid  # False
 ds.gpm_api.is_orbit  # True
 
 ds.gpm_api.is_spatial_2D_field  # False, because not only cross-track and along-track
-ds[
-    "zFactorFinal"
-].gpm_api.is_spatial_2D_field  # False, because there is the range dimension
-ds["zFactorFinal"].isel(
-    range=[0]
-).gpm_api.is_spatial_2D_field  # True,  because selected a single range
-ds["zFactorFinal"].isel(
-    range=0
-).gpm_api.is_spatial_2D_field  # True,  because no range dimension anymore
+ds["zFactorFinal"].gpm_api.is_spatial_2D_field  # False, because there is the range dimension
+ds["zFactorFinal"].isel(range=[0]).gpm_api.is_spatial_2D_field  # True,  because selected a single range
+ds["zFactorFinal"].isel(range=0).gpm_api.is_spatial_2D_field  # True,  because no range dimension anymore
 
 ds.gpm_api.has_regular_timesteps
 ds.gpm_api.get_regular_time_slices()  # List of time slices with regular timesteps
@@ -141,7 +137,6 @@ ds_usa[variable].gpm_api.plot_map()
 
 # TODO: get_crop_slices !!!!
 # --> Select the largest slice
-
 
 #### Patches
 # TODO EXAMPLE

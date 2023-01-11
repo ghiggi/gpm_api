@@ -1,0 +1,201 @@
+# pyproject.toml
+
+[build-system]
+requires      = ["setuptools>=61.0.0", "setuptools_scm[toml]>=6.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpm_api"
+version = "0.0.1" # TODO dynamic in future
+description = "Python API for the Global Precipitation Mission Data Archive"
+readme = "README.md"
+authors = [
+	{ name = "Gionata Ghiggi", email = "gionata.ghiggi@epfl.ch" },
+]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Operating System :: Unix",
+    "Operating System :: Microsoft",
+    "Operating System :: MacOS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Atmospheric Science"
+    "Topic :: Scientific/Engineering :: GIS", 
+    "Topic :: Scientific/Engineering :: Hydrology",
+    "Topic :: Scientific/Engineering :: Image Processing", 
+]
+keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
+dependencies = [
+    "xarray",
+    "h5py", 
+    "dask", 
+    "pyresample",
+    "trollsift", 
+    "cartopy",
+    "curl", 
+    "wget",
+    "tqdm", 
+]
+requires-python = ">=3.8"
+
+[project.optional-dependencies]
+dev = ["pre-commit", "black", "isort", "flake8", 
+       "pytest", "pytest-cov", 
+       "pip-tools", "bumpver", 
+       "setuptools>=61.0.0", "wheel"]
+doc = ["sphinx", "sphinx-gallery", "nbsphinx"] # sphinx-rtd-theme numpydoc pandodc
+tests = ["pre-commit", "pytest", "pytest-cov"]
+
+[project.urls]
+Homepage = "https://github.com/ghiggi/gpm_api"
+Source = "https://github.com/ghiggi/gpm_api"
+Tracker = "https://github.com/ghiggi/gpm_api/issues"
+Documentation = "https://gpm_api.readthedocs.io"
+changelog = "https://github.com/ghigg/gpm_api/CHANGELOG.md"
+
+# dynamic = ["version"] # use setuptools_scm for automatic versioning
+
+# [tool.setuptools_scm]
+# write_to = "gpm_api/_version.py"
+# write_to_template = "__version__ = '{version}'"
+# local_scheme = "no-local-version"
+# fallback_version = "0.0.0.dev0"
+
+# OR 
+
+# [tool.setuptools.dynamic]
+# version = {attr = "gpm_api.VERSION"}
+
+# OR using versioneer (see pyresample)
+# - https://pypi.org/project/versioneer/
+
+[tool.bumpver]
+current_version = "0.0.1"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message  = "Bump version {old_version} -> {new_version}"
+commit          = true
+tag             = true
+push            = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
+"gpm_api/__init__.py" = ['__version__ = "{version}"']
+
+
+
+
+# [project.scripts]
+# gpm_download = "gpm_api.cli:download"
+
+[tool.setuptools]
+license-files = ["LICENSE"]
+# packages = ["gpm_api"] # explicitly list the packages in modules
+
+[tool.setuptools.packages.find]
+where = ["gpm_api"]           # list of folders that contain the packages (["."] by default)
+include = ["*"]   # package names should match these glob patterns (["*"] by default)
+exclude = ["cli*",    # exclude packages matching these glob patterns (empty by default)
+	   "tests*",
+]	    
+namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+multi_line_output = 3
+line_length = 100
+skip = [".tox", ".venv", "build", "dist"]
+
+[tool.black]
+line-length = 100
+# skip-string-normalization = true
+target-version = [
+    "py37",
+    "py38",
+    "py39",
+    "py310",
+    "py311",
+]
+
+[tool.pylint]
+    [tool.pylint.main]
+    extension-pkg-whitelist = [
+        "numpy",
+        "scipy",
+    ]
+    ignore = "_version.py"
+    load-plugins = [
+        "pylint.extensions.no_self_use",
+    ]
+
+    [tool.pylint.message_control]
+    disable = [
+        "R0801",
+    ]
+
+    [tool.pylint.reports]
+    output-format = "colorized"
+
+    [tool.pylint.design]
+    max-args = 20
+    max-locals = 50
+    max-branches = 30
+    max-statements = 80
+    max-attributes = 25
+    max-public-methods = 75
+
+[tool.coverage]
+    [tool.coverage.run]
+    source = ["gpm_api"]
+    omit = [
+        "*dev*
+        "*docs*",
+        "*tutorials*",
+        "*tests*",
+        "*/gpm_api/cli*",
+        # "*/gpm_api/custom_script.py",
+    ]
+
+    [tool.coverage.report]
+    exclude_lines = [
+        "pragma: no cover",
+        "def __repr__",
+        "def __str__",
+    ]
+
+
+[tool.cibuildwheel]
+## Switch to using build
+# build-frontend = "build"
+## Disable building PyPy wheels on all platforms, 32bit for py3.10/11 and musllinux builds, py3.6
+# skip = ["cp36-*", "pp*", "cp31*-win32", "cp31*-manylinux_i686", "*-musllinux_*"]
+
+# Run the package tests using `pytest`
+test-extras = "test"
+test-command = "pytest -v {package}/gpm_api/tests"
+# Skip trying to test arm64 builds on Intel Macs
+# test-skip = "*-macosx_arm64 *-macosx_universal2:arm64"
+# no wheels for linux-32bit anymore for numpy>=1.22
+environment = "PIP_PREFER_BINARY=1"
+
+
+
+
+
+ 
+   
+
+ 
