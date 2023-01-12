@@ -6,10 +6,11 @@ Created on Wed Oct 19 19:40:12 2022
 @author: ghiggi
 """
 import numpy as np
-from gpm_api.patch.labels import xr_get_areas_labels
+import xarray as xr
+from gpm_api.patch.labels import label_xarray_object
 from gpm_api.patch.utils import labels_bbox_slices, extend_row_col_slices
 
-
+####--------------------------------------------------------------------------.
 #########################
 #### Patch Generator ####
 #########################
@@ -22,11 +23,18 @@ from gpm_api.patch.utils import labels_bbox_slices, extend_row_col_slices
 # if patch_size not specified, it become label area 
 # --> choose if to add something around label area if patch_size=None
 
-def get_dataset_labels_patches(
-    xr_obj, label, n_patches=None, patch_margin=None, patch_size=None
+# _get_labeled_xr_obj_patch_gen used in visualization.labels 
+
+
+# Note
+# - get_patch_generator available as ds.gpm_api.patch_generator
+
+
+def _get_labeled_xr_obj_patch_gen(
+    xr_obj, label_name, n_patches=None, patch_margin=None, patch_size=None
 ):
     # In memory label array
-    arr = np.asanyarray(xr_obj[label].data)
+    arr = np.asanyarray(xr_obj[label_name].data)
 
     # Ensure 0 label is set to nan
     arr = arr.astype(float) # otherwise if int throw an error when assigning nan
@@ -45,7 +53,7 @@ def get_dataset_labels_patches(
             n_patches = n_labels
 
     # Retrieve dimensions and shape
-    dims = xr_obj[label].dims
+    dims = xr_obj[label_name].dims
     shape = arr.shape
 
     # Return xr.Dataset patches
@@ -58,9 +66,9 @@ def get_dataset_labels_patches(
         yield xr_obj.isel(subset_isel_dict)
 
 
-def get_ds_patch_generator(
-    ds,
-    variable,
+def get_patch_generator(
+    xr_obj,
+    variable=None,
     min_value_threshold=-np.inf,
     max_value_threshold=np.inf,
     min_area_threshold=1,
@@ -68,82 +76,27 @@ def get_ds_patch_generator(
     footprint=None,
     sort_by="area",
     sort_decreasing=True,
-    label_name="label",
     n_patches=None,
     patch_margin=None,
-):
-    # Check valid variable
-    if variable not in ds.data_vars:
-        raise ValueError(f"'{variable}' is not a variable of the GPM xr.Dataset.")
-        
-    # Retrieve rainy area labels (if available)
-    da_labels, n_labels, values = xr_get_areas_labels(
-        data_array=ds[variable],
-        min_value_threshold=min_value_threshold,
-        max_value_threshold=max_value_threshold,
-        min_area_threshold=min_area_threshold,
-        max_area_threshold=max_area_threshold,
-        footprint=footprint,
-        sort_by=sort_by,
-        sort_decreasing=sort_decreasing,
-    )
-    if n_labels == 0:
-        raise ValueError(
-            "No patch available. You might want to change the patch generator parameters."
-        )
-
-    da_labels = da_labels.where(da_labels > 0)
-
-    # Assign label to xr.DataArray  coordinate
-    ds = ds.assign_coords({label_name: da_labels})
-
-    # Build a generator returning patches around rainy areas
-    if patch_margin is None:
-        patch_margin = (48, 20)
-    ds_patch_gen = get_dataset_labels_patches(
-        ds, label=label_name, n_patches=n_patches, patch_margin=patch_margin
-    )
-    return ds_patch_gen
-
-
-def get_da_patch_generator(
-    data_array,
-    min_value_threshold=-np.inf,
-    max_value_threshold=np.inf,
-    min_area_threshold=1,
-    max_area_threshold=np.inf,
-    footprint=None,
-    sort_by="area",
-    sort_decreasing=True,
-    label_name="label",
-    n_patches=None,
-    patch_margin=(48, 20),
-):
-
-    # Retrieve rainy area labels (if available)
-    da_labels, n_labels, values = xr_get_areas_labels(
-        data_array=data_array,
-        min_value_threshold=min_value_threshold,
-        max_value_threshold=max_value_threshold,
-        min_area_threshold=min_area_threshold,
-        max_area_threshold=max_area_threshold,
-        footprint=footprint,
-        sort_by=sort_by,
-        sort_decreasing=sort_decreasing,
+):  
+    # Retrieve labeled xarray object 
+    xr_obj = label_xarray_object(xr_obj, 
+                                 variable=variable,
+                                 min_value_threshold=min_value_threshold,
+                                 max_value_threshold=max_value_threshold,
+                                 min_area_threshold=min_area_threshold,
+                                 max_area_threshold=max_area_threshold,
+                                 footprint=footprint,
+                                 sort_by=sort_by,
+                                 sort_decreasing=sort_decreasing,
+                                 label_name="label",
+                                 )
+    # Define the patch generator 
+    patch_gen = _get_labeled_xr_obj_patch_gen(
+        xr_obj, 
+        label_name="label", 
+        n_patches=n_patches, 
+        patch_margin=patch_margin
     )
     
-    if n_labels == 0:
-        raise ValueError(
-            "No patch available. You might want to change the patch generator parameters."
-        )
-        
-    da_labels = da_labels.where(da_labels > 0)
-
-    # Assign label to xr.DataArray  coordinate
-    data_array = data_array.assign_coords({label_name: da_labels})
-
-    # Build a generator returning patches around rainy areas
-    da_patch_gen = get_dataset_labels_patches(
-        data_array, label=label_name, n_patches=n_patches, patch_margin=patch_margin
-    )
-    return da_patch_gen
+    return patch_gen

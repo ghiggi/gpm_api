@@ -110,7 +110,65 @@ class GPM_Base_Accessor:
 
         p = plot_swath_lines(self._obj, ax=ax, **kwargs)
         return p
+    
+    def label_object(self, 
+                     variable=None,
+                     min_value_threshold=0.1,
+                     max_value_threshold=np.inf,
+                     min_area_threshold=1,
+                     max_area_threshold=np.inf,
+                     footprint=None,
+                     sort_by="area",
+                     sort_decreasing=True,
+                     label_name="label"):
+        from gpm_api.patch.labels import label_xarray_object
+        
+        xr_obj = label_xarray_object(
+            self._obj,
+            variable=variable, 
+            # Labels options
+            min_value_threshold=min_value_threshold,
+            max_value_threshold=max_value_threshold,
+            min_area_threshold=min_area_threshold,
+            max_area_threshold=max_area_threshold,
+            footprint=footprint,
+            sort_by=sort_by,
+            sort_decreasing=sort_decreasing
+            )
+        return xr_obj
+           
+    def patch_generator(
+        self,
+        variable=None,
+        min_value_threshold=0.1,
+        max_value_threshold=np.inf,
+        min_area_threshold=1,
+        max_area_threshold=np.inf,
+        footprint=None,
+        sort_by="area",
+        sort_decreasing=True,
+        n_patches=None,
+        patch_margin=(48, 20),
+    ):
+        from gpm_api.patch.generator import get_patch_generator
 
+        gen = get_patch_generator(
+            self._obj,
+            variable=variable, 
+            # Labels options
+            min_value_threshold=min_value_threshold,
+            max_value_threshold=max_value_threshold,
+            min_area_threshold=min_area_threshold,
+            max_area_threshold=max_area_threshold,
+            footprint=footprint,
+            sort_by=sort_by,
+            sort_decreasing=sort_decreasing,
+            # Patch options
+            n_patches=n_patches,
+            patch_margin=patch_margin,
+        )
+        return gen
+    
 
 @xr.register_dataset_accessor("gpm_api")
 class GPM_Dataset_Accessor(GPM_Base_Accessor):
@@ -159,38 +217,6 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
                      )
         return p
 
-    def patch_generator(
-        self,
-        variable,
-        min_value_threshold=0.1,
-        max_value_threshold=np.inf,
-        min_area_threshold=10,
-        max_area_threshold=np.inf,
-        footprint=None,
-        sort_by="max",
-        sort_decreasing=True,
-        label_name="label",
-        n_patches=None,
-        patch_margin=(48, 20),
-    ):
-        from gpm_api.patch.generator import get_ds_patch_generator
-
-        gen = get_ds_patch_generator(
-            self._obj,
-            variable=variable,
-            # Labels options
-            min_value_threshold=min_value_threshold,
-            max_value_threshold=max_value_threshold,
-            min_area_threshold=min_area_threshold,
-            max_area_threshold=max_area_threshold,
-            footprint=footprint,
-            sort_by=sort_by,
-            sort_decreasing=sort_decreasing,
-            # Patch options
-            n_patches=n_patches,
-            patch_margin=patch_margin,
-        )
-        return gen
 
     def plot_patches(
         self,
@@ -318,47 +344,16 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         )
         return p
 
-    def patch_generator(
-        self,
-        min_value_threshold=0.1,
-        max_value_threshold=np.inf,
-        min_area_threshold=10,
-        max_area_threshold=np.inf,
-        footprint=None,
-        sort_by="max",
-        sort_decreasing=True,
-        label_name="label",
-        n_patches=None,
-        patch_margin=(48, 20),
-    ):
-        from gpm_api.patch.generator import get_da_patch_generator
-
-        gen = get_da_patch_generator(
-            self._obj,
-            # Labels options
-            min_value_threshold=min_value_threshold,
-            max_value_threshold=max_value_threshold,
-            min_area_threshold=min_area_threshold,
-            max_area_threshold=max_area_threshold,
-            footprint=footprint,
-            sort_by=sort_by,
-            sort_decreasing=sort_decreasing,
-            # Patch options
-            n_patches=n_patches,
-            patch_margin=patch_margin,
-        )
-        return gen
 
     def plot_patches(
         self,
-        min_value_threshold=-np.inf,
+        min_value_threshold=0.1,
         max_value_threshold=np.inf,
         min_area_threshold=1,
         max_area_threshold=np.inf,
         footprint=None,
         sort_by="area",
         sort_decreasing=True,
-        label_name="label",
         n_patches=None,
         patch_margin=None,
         add_colorbar=True, 
@@ -378,7 +373,6 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             footprint=footprint,
             sort_by=sort_by,
             sort_decreasing=sort_decreasing,
-            label_name=label_name,
             n_patches=n_patches,
             patch_margin=patch_margin,
             add_colorbar=add_colorbar, 

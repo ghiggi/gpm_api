@@ -38,9 +38,6 @@ Created on Mon Aug 15 23:02:04 2022
 #### Investigate chunking of a granule
 
 
-
-
-
 # -----------------------------------------------------------------------------.
 ## Download GPM data after May 21 2018
 

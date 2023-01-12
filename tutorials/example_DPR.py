@@ -161,7 +161,6 @@ da.gpm_api.plot_patches(
     footprint=3,
     sort_by="max", # "area"
     sort_decreasing=True,
-    label_name="label",
     n_patches=10,
     patch_margin = (48, 20),
     interpolation="nearest",

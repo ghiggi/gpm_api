@@ -17,6 +17,13 @@ from skimage.morphology import binary_dilation, disk
 # TODO: 
 # - xr_get_label_stats
 
+# Future renaming: 
+# - get_areas_labels --> get_labels
+# - xr_get_areas_labels --> xr_get_labels
+
+# Note
+# - label_xarray_object available as ds.gpm_api.label_object
+
 ####--------------------------------------------------------------------------.
 #####################
 #### Area labels ####
@@ -38,11 +45,12 @@ def _mask_buffer(mask, footprint):
         if footprint.ndim != 2: 
             raise ValueError("If providing the footprint for dilation as np.array, it must be 2D.")
     if isinstance(footprint, int):
-        if footprint == 0: 
-            footprint = None 
         if footprint < 0: 
             raise ValueError("Footprint must be equal or larger than 1.")
-        footprint = disk(radius=footprint)
+        if footprint == 0: 
+            footprint = None 
+        else:
+            footprint = disk(radius=footprint)
     # Apply dilation
     if footprint is not None:
         mask = binary_dilation(mask, footprint=footprint)
@@ -184,12 +192,33 @@ def get_labels_with_requested_occurence(label_arr, vmin, vmax):
     return label_indices
 
 
-def redefine_label_array(label_arr, label_indices): 
+def redefine_label_array(label_arr, label_indices=None): 
     """Redefine labels of a label array from 0 to len(label_indices).
+    
+    If label_indices is None, it takes the unique values of label_arr.
+    If label_indices contains a 0, it is discarded ! 
+    If label_indices is not unique, raise an error !
     
     Native label values not present in label_indices are set to 0.
     The first label in label_indices becomes 1, the second 2, and so on.
     """
+    if label_indices is None: 
+        label_indices = np.unique(label_arr)
+    else: 
+        # Check unique values are provided 
+        _, c = np.unique(label_indices, return_counts=True)
+        if np.any(c > 1):
+            raise ValueError("'label_indices' must be uniques.")
+            
+    # Remove 0 and nan if present in label_indices 
+    label_indices = np.delete(label_indices, np.where(label_indices == 0)[0].flatten())
+    label_indices = np.delete(label_indices, np.where(np.isnan(label_indices))[0].flatten())
+    
+    # Ensure label indices are integer 
+    label_indices = label_indices.astype(int)
+    
+    # Remove nan from label_arr 
+    label_arr[np.isnan(label_arr)] = 0
     
     # Compute max label index 
     max_label = max(label_indices)
@@ -208,6 +237,9 @@ def redefine_label_array(label_arr, label_indices):
     label_indices_new = np.arange(1, n_labels + 1).tolist()
     for k, v in zip(label_indices, label_indices_new):
         val_dict[k] = v
+        
+    # Remove keys not in label_arr 
+    # TODO: to speed up _vec_translate maybe 
     
     # Redefine the id of the labels 
     labels_arr = _vec_translate(label_arr, val_dict)
@@ -330,4 +362,64 @@ def xr_get_areas_labels(
     da_labels = data_array.copy()
     da_labels.data = labels_arr
     da_labels.name = f"labels_{sort_by}"
+    da_labels.attrs = {}
     return da_labels, n_labels, values
+
+
+def _check_xr_obj(xr_obj, variable):
+    """Check xarray object and variable validity."""
+    # Check inputs 
+    if not isinstance(xr_obj, (xr.Dataset, xr.DataArray)):
+        raise TypeError("'xr_obj' must be a xr.Dataset or xr.DataArray.")
+    if isinstance(xr_obj, xr.Dataset):
+        # Check valid variable is specified 
+        if variable is None: 
+            raise ValueError("An xr.Dataset 'variable' must be specified.")
+        if variable not in xr_obj.data_vars:
+            raise ValueError(f"'{variable}' is not a variable of the xr.Dataset.")
+    else: 
+        if variable is not None: 
+            raise ValueError("'variable' must not be specified when providing a xr.DataArray.")
+
+
+def label_xarray_object(xr_obj, 
+                        variable=None,
+                        min_value_threshold=-np.inf,
+                        max_value_threshold=np.inf,
+                        min_area_threshold=1,
+                        max_area_threshold=np.inf,
+                        footprint=None,
+                        sort_by="area",
+                        sort_decreasing=True,
+                        label_name="label"):
+    # Check xarray input 
+    _check_xr_obj(xr_obj=xr_obj, variable=variable)
+    
+    # Retrieve labels (if available)
+    if isinstance(xr_obj, xr.Dataset):
+        data_array_to_label = xr_obj[variable],
+    else:
+        data_array_to_label = xr_obj
+    
+    da_labels, n_labels, values = xr_get_areas_labels(
+        data_array=data_array_to_label,
+        min_value_threshold=min_value_threshold,
+        max_value_threshold=max_value_threshold,
+        min_area_threshold=min_area_threshold,
+        max_area_threshold=max_area_threshold,
+        footprint=footprint,
+        sort_by=sort_by,
+        sort_decreasing=sort_decreasing,
+    )
+    if n_labels == 0:
+        raise ValueError(
+            "No patch available. You might want to change the patch generator parameters."
+        )
+
+    da_labels = da_labels.where(da_labels > 0)
+
+    # Assign label to xr.DataArray  coordinate
+    xr_obj = xr_obj.assign_coords({label_name: da_labels})
+    
+    return xr_obj
+
