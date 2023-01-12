@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gpm_api"
-version = "0.0.1" # TODO dynamic in future
+version = "0.0.1post" # TODO dynamic in future
 description = "Python API for the Global Precipitation Mission Data Archive"
 readme = "README.md"
 authors = [
@@ -32,7 +32,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Atmospheric Science"
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
     "Topic :: Scientific/Engineering :: GIS", 
     "Topic :: Scientific/Engineering :: Hydrology",
     "Topic :: Scientific/Engineering :: Image Processing", 
@@ -44,11 +44,11 @@ dependencies = [
     "netcdf4",
     "dask", 
     "pyresample",
-    "trollsift", 
-    "cartopy",
-    "curl", 
+    "trollsift",
+    "cartopy>=0.20.0",  # should be installed with conda to avoid GEOS compatibility issues.
+     # "curl", can be installed with conda.  Make it optional in the code.
     "wget",
-    "tqdm", 
+    "tqdm",
 ]
 requires-python = ">=3.8"
 
@@ -56,8 +56,10 @@ requires-python = ">=3.8"
 image = ["dask-image", "scikit-image"]
 dev = ["pre-commit", "black", "isort", "flake8", 
        "pytest", "pytest-cov", 
-       "pip-tools", "bumpver", 
-       "setuptools>=61.0.0", "wheel"]
+       "pip-tools", "bumpver", "twine",
+       "setuptools>=61.0.0", "wheel",
+       "dask-image", "scikit-image",
+       "sphinx", "sphinx-gallery", "nbsphinx"]
 doc = ["sphinx", "sphinx-gallery", "nbsphinx"] # sphinx-rtd-theme numpydoc pandodc
 tests = ["pre-commit", "pytest", "pytest-cov"]
 
@@ -68,51 +70,10 @@ Tracker = "https://github.com/ghiggi/gpm_api/issues"
 Documentation = "https://gpm_api.readthedocs.io"
 changelog = "https://github.com/ghigg/gpm_api/CHANGELOG.md"
 
-# dynamic = ["version"] # use setuptools_scm for automatic versioning
-
-# [tool.setuptools_scm]
-# write_to = "gpm_api/_version.py"
-# write_to_template = "__version__ = '{version}'"
-# local_scheme = "no-local-version"
-# fallback_version = "0.0.0.dev0"
-
-# OR 
-
-# [tool.setuptools.dynamic]
-# version = {attr = "gpm_api.VERSION"}
-
-# OR using versioneer (see pyresample)
-# - https://pypi.org/project/versioneer/
-
-[tool.bumpver]
-current_version = "0.0.1"
-version_pattern = "MAJOR.MINOR.PATCH"
-commit_message  = "Bump version {old_version} -> {new_version}"
-commit          = true
-tag             = true
-push            = false
-
-[tool.bumpver.file_patterns]
-"pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
-"gpm_api/__init__.py" = ['__version__ = "{version}"']
-
-
-
-
-# [project.scripts]
-# gpm_download = "gpm_api.cli:download"
-
 [tool.setuptools]
 license-files = ["LICENSE"]
-# packages = ["gpm_api"] # explicitly list the packages in modules
-
-[tool.setuptools.packages.find]
-where = ["gpm_api"]           # list of folders that contain the packages (["."] by default)
-include = ["*"]   # package names should match these glob patterns (["*"] by default)
-exclude = ["cli*",    # exclude packages matching these glob patterns (empty by default)
-	   "tests*",
-]	    
-namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+packages = ["gpm_api"] # explicitly list the packages in modules
+# To customize, remove packages and use instead [tool.setuptools.packages.find]
 
 [tool.isort]
 profile = "black"
@@ -163,11 +124,12 @@ target-version = [
     [tool.coverage.run]
     source = ["gpm_api"]
     omit = [
-        "*dev*
+        "*dev*",
         "*docs*",
         "*tutorials*",
         "*tests*",
         "*/gpm_api/cli*",
+        "*/gpm_api/0_OLD*",
         # "*/gpm_api/custom_script.py",
     ]
 
@@ -179,19 +141,6 @@ target-version = [
     ]
 
 
-[tool.cibuildwheel]
-## Switch to using build
-# build-frontend = "build"
-## Disable building PyPy wheels on all platforms, 32bit for py3.10/11 and musllinux builds, py3.6
-# skip = ["cp36-*", "pp*", "cp31*-win32", "cp31*-manylinux_i686", "*-musllinux_*"]
-
-# Run the package tests using `pytest`
-test-extras = "test"
-test-command = "pytest -v {package}/gpm_api/tests"
-# Skip trying to test arm64 builds on Intel Macs
-# test-skip = "*-macosx_arm64 *-macosx_universal2:arm64"
-# no wheels for linux-32bit anymore for numpy>=1.22
-environment = "PIP_PREFER_BINARY=1"
 
 
 
