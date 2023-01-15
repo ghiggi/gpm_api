@@ -168,7 +168,7 @@ da.gpm_api.plot_patches(
     sort_by="max",  # area
     sort_decreasing=True,
     n_patches=10,
-    patch_margin=(20, 20),
+    min_patch_size = (20, 20),
     interpolation="nearest",
 )
 
@@ -180,7 +180,7 @@ ds.isel(time=0).gpm_api.plot_patches(
     sort_by="max",  # area
     sort_decreasing=True,
     n_patches=10,
-    patch_margin=(20, 20),
+    min_patch_size = (20, 20),
     interpolation="nearest",
 )
 

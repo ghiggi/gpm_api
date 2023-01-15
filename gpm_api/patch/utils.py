@@ -13,67 +13,19 @@ from scipy.ndimage import find_objects
 from scipy.ndimage.measurements import center_of_mass
 
 from gpm_api.patch.labels import get_areas_labels
-
+from gpm_api.utils.slices import (
+    get_slice_size,
+    get_idx_bounds_from_slice,
+    get_slice_from_idx_bounds,
+    pad_slices,
+)
 ####--------------------------------------------------------------------------.
-#### Notes
-## Patchify
-# - https://github.com/dovahcrow/patchify.py
-# - https://pypi.org/project/patchify/
-
-# Patch extraction
-# - https://github.com/scikit-learn/scikit-learn/blob/baf828ca1/sklearn/feature_extraction/image.py#L453
-
-
-####--------------------------------------------------------------------------.
-#####################
-#### Slice Tools ####
-#####################
-def labels_bbox(arr):
-    rows = np.any(arr, axis=1)
-    cols = np.any(arr, axis=0)
-    rmin, rmax = np.where(rows)[0][[0, -1]]
-    cmin, cmax = np.where(cols)[0][[0, -1]]
-    return rmin, rmax, cmin, cmax
-
-
-def labels_bbox_slices(arr):
-    rmin, rmax, cmin, cmax = labels_bbox(arr)
-    return slice(rmin, rmax + 1), slice(cmin, cmax + 1)
-
-
-def get_slice_idx_bounds(slice):
-    idx_start = slice.start
-    idx_end = slice.stop - 1
-    return idx_start, idx_end
-
-
-def extend_row_col_bounds(rmin, rmax, cmin, cmax, shape, margin=None):
-    if margin is None:
-        margin = (0, 0)
-    rmin = max(0, rmin - margin[0])
-    rmax = min(shape[0] - 1, rmax + margin[0])
-    cmin = max(0, cmin - margin[1])
-    cmax = min(shape[1] - 1, cmax + margin[1])
-    return rmin, rmax, cmin, cmax
-
-
-def extend_row_col_slices(row_slice, col_slice, shape, margin=None):
-    rmin, rmax = get_slice_idx_bounds(row_slice)
-    cmin, cmax = get_slice_idx_bounds(col_slice)
-    rmin, rmax, cmin, cmax = extend_row_col_bounds(
-        rmin, rmax, cmin, cmax, shape, margin=margin
-    )
-    return slice(rmin, rmax + 1), slice(cmin, cmax + 1)
-
-
-# Shapely bounds: (minx, miny, maxx, maxy)
+# Shapely bounds: (xmin, ymin, xmax, ymax)
 # Matlotlib extent: (xmin, xmax, ymin, ymax)
-
-# rmin, rmax, cmin, cmax = labels_bbox(arr == label_id)
-# rmin, rmax, cmin, cmax = extend_row_col_bounds(rmin, rmax, cmin, cmax, shape, patch_margin)
-# row_slices, col_slices = labels_bbox_slices(arr)
-# extend_row_col_slices(row_slices, col_slices, shape, margin=patch_margin)
-
+# Cartopy extent: (xmin, xmax, ymin, ymax)
+# GPM-API extent: (xmin, xmax, ymin, ymax)
+    
+####--------------------------------------------------------------------------.
 
 def get_row_col_slice_centroid(row_slice, col_slice):
     row = int((row_slice.start + row_slice.stop - 1) / 2)
@@ -81,17 +33,8 @@ def get_row_col_slice_centroid(row_slice, col_slice):
     return row, col
 
 
-# def get_slice_idx_bounds(slice):
-#     """Return start/stop indices from slice object."""
-#     idx_start = slice.start
-#     idx_end = slice.stop - 1
-#     return idx_start, idx_end
-
-
-def get_slice_size(slice):
-    """Return slice size."""
-    return slice.stop - slice.start
-
+####--------------------------------------------------------------------------.
+#### Patch splitter 
 
 def split_large_object_slices(object_slices, patch_size):
     if len(patch_size) == 1:
@@ -130,7 +73,7 @@ def split_large_objects_slices(objects_slices, patch_size):
 #### Patch Extraction ####
 ##########################
 
-
+# get_patch_slices_around_point
 def get_patch_slices_around(row, col, patch_size, image_shape):
     if len(patch_size) != len(image_shape):
         raise ValueError("patch_size and image shape dimensions do not coincide.")
@@ -321,6 +264,12 @@ def get_patch_per_label(
     # Return object
     return list_patch_slices, patch_statistics
 
+####--------------------------------------------------------------------------.
+#########################
+#### Patch Stats Info ###
+#########################
+# TODO: Inside get_label_stats
+# - Add label mask 
 
 def patch_stats_fun(patch: np.ndarray):
     width = patch.shape[1]

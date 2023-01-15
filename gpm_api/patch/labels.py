@@ -7,7 +7,6 @@ Created on Wed Oct 19 19:34:53 2022
 """
 import numpy as np
 import xarray as xr
-
 # import dask_image.ndmeasure
 # from dask_image.ndmeasure import as dask_label_image
 import dask_image.ndmeasure
@@ -16,8 +15,11 @@ from skimage.morphology import binary_dilation, disk
 
 # TODO: 
 # - xr_get_label_stats
+# - Enable to label in n-dimensions
+#   - (2D+VERTICAL) --> CORE PROFILES
+#   - (2D+TIME) --> TRACKING
 
-# Future renaming: 
+# Future internal renaming: 
 # - get_areas_labels --> get_labels
 # - xr_get_areas_labels --> xr_get_labels
 

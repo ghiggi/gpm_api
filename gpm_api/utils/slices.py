@@ -25,10 +25,195 @@ def ensure_is_slice(slc):
 
 
 def get_slice_size(slc):
+    """Get size of the slice.
+    
+    Note: The actual slice size must not be representative of the true slice if 
+    slice.stop is larger than the length of object to be sliced.
+    """
     if not isinstance(slc, slice):
         raise TypeError("Expecting slice object")
     size = slc.stop - slc.start
     return size
+
+
+def get_idx_bounds_from_slice(slc):
+    """Get start and end indices of the slice.
+    
+    Note: For index based selection, use idx_start:idx_end+1 !
+    """    
+    if not isinstance(slc, slice):
+        raise TypeError("Expecting slice object")
+    idx_start = slice.start
+    idx_end = slice.stop - 1
+    return idx_start, idx_end
+
+
+def get_slice_from_idx_bounds(idx_start, idx_end):
+    """Return the slice required to include the idx bounds."""
+    return slice(idx_start, idx_end+1)
+   
+
+def pad_slice(slc, padding, min_start=0, max_stop=np.inf): 
+    """
+    Increase/decrease the slice with the padding argument.
+    
+    Parameters
+    ----------
+    slc : slice
+        Slice objects.
+    padding : int
+        Padding to be applied to the slice.
+    min_start : int, optional
+       The default is np.inf.
+       The minimum value for the start of the new slice.
+       The default is 0.
+    max_stop : int
+        The maximum value for the stop of the new slice.
+
+    Returns
+    -------
+    list_slices : TYPE
+        The list of slices after applying padding.
+    """
+    
+    new_slice = slice(max(slc.start - padding, 0), min(slc.stop + padding, max_stop))
+    return new_slice
+
+
+def pad_slices(list_slices, padding, valid_shape):
+    """
+    Increase/decrease the list of slices with the padding argument.
+    
+    Parameters
+    ----------
+    list_slices : list
+        List of slice objects.
+    padding : (int or tuple)
+        Padding to be applied on each slice.
+    valid_shape : tuple
+        The shape of the array which the slices should be valid on. 
+
+    Returns
+    -------
+    list_slices : TYPE
+        The list of slices after applying padding.
+    """
+    # Check the inputs 
+    if isinstance(padding, int):
+        padding = [padding] * len(list_slices)
+    if isinstance(valid_shape, int):
+        valid_shape = [valid_shape] * len(list_slices)
+    if isinstance(padding, (list, tuple)) and len(padding) != len(valid_shape):
+        raise ValueError("Invalid padding. The length of padding should be the same as the length of valid_shape.")
+    # Apply padding 
+    list_slices = [pad_slice(s, padding=p, min_start=0, max_stop=valid_shape[i]) for i, (s, p) in enumerate(zip(list_slices, padding))]
+    return list_slices
+
+
+# min_size = 10
+# min_start = 0
+# max_stop = 20 
+# slc = slice(1, 5)   # left bound
+# slc = slice(15, 20) # right bound
+# slc = slice(8, 12) # middle
+
+def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
+     """
+     Enlarge a slice object to have at least a size of min_size. 
+     
+     The function enforces the left and right bounds of the slice by max_stop and min_start.
+     If the original slice size is larger than min_size, the original slice will be returned.
+                 
+     Parameters
+     ----------
+     slc : slice
+         The original slice object to be enlarged.
+     min_size : min_size
+         The desired minimum size of the new slice.
+     min_start : int, optional
+        The default is np.inf.
+        The minimum value for the start of the new slice.
+        The default is 0.
+     max_stop : int
+         The maximum value for the stop of the new slice.
+
+     Returns
+     -------
+     slice
+         The new slice object with a size of at least min_size and respecting the left and right bounds.
+
+     """
+     # Get slice size 
+     slice_size = get_slice_size(slc)
+     
+     # If slice size larger than min_size, return the slice 
+     if slice_size >= min_size:
+         return slc
+          
+     # Calculate the number of points to add on both sides
+     n_indices_to_add = min_size - slice_size
+     add_to_left = add_to_right = n_indices_to_add // 2
+     
+     # If n_indices_to_add is odd, add + 1 on the left 
+     if n_indices_to_add % 2 == 1:
+         add_to_left += 1
+     
+     # Adjust adding for left and right bounds 
+     naive_start = slc.start - add_to_left 
+     naive_stop = slc.stop + add_to_right
+     if naive_start <= min_start:
+         exceeding_left_size = min_start - naive_start
+         add_to_right += exceeding_left_size
+         add_to_left -= exceeding_left_size
+     if naive_stop >= max_stop:
+         exceeding_right_size = naive_stop - max_stop
+         add_to_right -= exceeding_right_size
+         add_to_left += exceeding_right_size
+     
+     # Define new slice 
+     start = slc.start - add_to_left
+     stop = slc.stop + add_to_right
+     new_slice = slice(start, stop) 
+     
+     # Check 
+     assert  get_slice_size(new_slice) == min_size
+     
+     # Return new slice 
+     return new_slice
+ 
+
+def enlarge_slices(list_slices, min_size, valid_shape):
+    """
+    Enlarge a list of slice object to have at least a size of min_size. 
+     
+    The function enforces the left and right bounds of the slice to be between 0 and valid_shape.
+    If the original slice size is larger than min_size, the original slice will be returned.
+    
+    Parameters
+    ----------
+    list_slices : list
+        List of slice objects.
+    min_size : (int or tuple)
+        Minimum size of the output slice.
+    valid_shape : tuple
+        The shape of the array which the slices should be valid on. 
+
+    Returns
+    -------
+    list_slices : list
+        The list of slices after enlarging it (if necessary).
+    """
+    # Check the inputs 
+    if isinstance(min_size, int):
+        min_size = [min_size] * len(list_slices)
+    if isinstance(valid_shape, int):
+        valid_shape = [valid_shape] * len(list_slices)
+    if isinstance(min_size, (list, tuple)) and len(min_size) != len(min_size):
+        raise ValueError("Invalid min_size. The length of min_size should be the same as the length of valid_shape.")
+    # Enlarge the slice  
+    list_slices = [enlarge_slice(slc, min_size=s, min_start=0, max_stop=valid_shape[i]) for i, (slc, s) in enumerate(zip(list_slices, min_size))]
+    return list_slices
+
 
 
 # tests for _get_contiguous_true_slices

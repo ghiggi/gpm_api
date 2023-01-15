@@ -137,7 +137,7 @@ class GPM_Base_Accessor:
             )
         return xr_obj
            
-    def patch_generator(
+    def labels_patch_generator(
         self,
         variable=None,
         min_value_threshold=0.1,
@@ -148,11 +148,12 @@ class GPM_Base_Accessor:
         sort_by="area",
         sort_decreasing=True,
         n_patches=None,
-        patch_margin=(48, 20),
+        padding=None,
+        min_patch_size=None,
     ):
-        from gpm_api.patch.generator import get_patch_generator
+        from gpm_api.patch.labels_patch import labels_patch_generator
 
-        gen = get_patch_generator(
+        gen = labels_patch_generator(
             self._obj,
             variable=variable, 
             # Labels options
@@ -165,7 +166,8 @@ class GPM_Base_Accessor:
             sort_decreasing=sort_decreasing,
             # Patch options
             n_patches=n_patches,
-            patch_margin=patch_margin,
+            padding=padding,
+            min_patch_size=min_patch_size,
         )
         return gen
     

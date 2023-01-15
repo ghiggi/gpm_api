@@ -81,9 +81,9 @@ da_labels, n_labels, values = xr_get_areas_labels(
 
 ####--------------------------------------------------------------------------.
 #### Patch generator
-# TODO: ENSURE PATCH SIZE IS SUFFICIENT (NOT DIM 1)(AND CONSTANT)
+ 
   
-patch_gen = da.gpm_api.patch_generator(
+patch_gen = da.gpm_api.labels_patch_generator(
     min_value_threshold=min_value_threshold,
     min_area_threshold=min_area_threshold,
     footprint=footprint, 

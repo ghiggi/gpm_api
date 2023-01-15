@@ -162,7 +162,7 @@ da.gpm_api.plot_patches(
     sort_by="max", # "area"
     sort_decreasing=True,
     n_patches=10,
-    patch_margin = (48, 20),
+    min_patch_size = (48, 20),
     interpolation="nearest",
 )
 

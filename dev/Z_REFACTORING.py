@@ -5,9 +5,6 @@ Created on Mon Aug 15 23:02:04 2022
 
 @author: ghiggi
 """
-
-### Refactor patches generator 
-
 # -----------------------------------------------------------------------------.
 # Implement valid geolocation checks
 # --> In tests/test_dataset_valid_geolocation.py
