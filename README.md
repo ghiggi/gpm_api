@@ -41,7 +41,10 @@ instructions on [conda forge][conda_forge_link].
 
 GPM-API can be installed via [pip][pip_link] on Linux, Mac, and Windows.
 On Windows you can install [WinPython][winpy_link] to get Python and pip
-running. Install the package by typing the following command in a command terminal:
+running.
+Prior installation of GPM-API, to avoid [GEOS](https://libgeos.org/) library version incompatibilities when installing the Cartopy package, we highly suggest to install first Cartopy using `conda install cartopy>=0.20.0`.
+
+Then, install the GPM-API package by typing the following command in the command terminal:
 
     pip install gpm_api
 
@@ -70,18 +73,17 @@ You can find the documentation under [gpm_api.readthedocs.io][doc_link]
 The documentation also includes some [tutorials][tut_link], showing the most important use cases of GPM-API.
 These tutorial are also available as Jupyter Notebooks and in Google Colab:
 
-- GPM Product Download [Notebook][tut1_link][Colab][colab1_link]
-- [GPM Products Reading][tut2_link]
-- [GPM Product Visualization ][tut3_link]
-- [Exploratory data analysis of the IMERG dataset][tut8_link]
-- [Exploratory data analysis of PMW 1B and 1C products][tut4_link]
-- [Exploratory data analysis of the DPR 1A product][tut4_link
-- [Exploratory data analysis of the DPR 2A product][tut5_link]
-- [Exploratory data analysis of the CORRA 2B product][tut6_link]
-- [Exploratory data analysis of the Latent Heating products][tut7_link]
-- [Area Labeling][tut10_link]
-- [Patch Data Extraction][tut9_link]
-
+- 1. Introduction to download the GPM products [Notebook][tut1_download_link][Colab][colab1_download_link]
+- 2. Introduction to the IMERG products [Notebook][tut2_imerg_link][Colab][colab2_imerg_link]
+- 2. Introduction to the PMW 1B and 1C products [Notebook][tut2_pmw1bc_link][Colab][colab_pmw1bc_link]
+- 2. Introduction to the PMW 2A products [Notebook][tut2_pmw2a_link][Colab][colab2_pmw2a_link]
+- 2. Introduction to the RADAR 2A products [Notebook][tut2_radar_2a_link][Colab][colab2_radar_2a_link]
+- 2. Introduction to the CORRA 2B products [Notebook][tut2_corra_2b_link][Colab][colab2_corra_2b_link]
+- 2. Introduction to the Latent Heating products [Notebook][tut2_lh_link][Colab][colab2_lh_link]
+- 2. Introduction to the ENVironment products [Notebook][tut2_env_link][Colab][colab2_env_link]
+- 3. Introduction to image labeling and patch extraction [Notebook][tut3_label_link][Colab][colab3_label_link] 
+- 3. Introduction to image patch extraction [Notebook][tut3_patch_link][Colab][colab3_patch_link] 
+ 
 The associated python scripts are also provided in the `tutorial` folder.
  
 ## Requirements:
@@ -116,7 +118,35 @@ The associated python scripts are also provided in the `tutorial` folder.
  
 [doc_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/
 [doc_install_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/#pip
-[tut_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/tutorials.html
-[tut1_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/examples/XXX/index.html
+
+[tut1_download_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab1_download_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut2_imerg_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab2_imerg_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut2_pmw1bc_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab_pmw1bc_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut2_pmw2a_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab2_pmw2a_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut2_radar_2a_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab2_radar_2a_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut2_corra_2b_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab2_corra_2b_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut2_lh_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab2_lh_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut2_env_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab2_env_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut3_label_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab3_label_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+[tut3_patch_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+[colab3_patch_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
  
  
