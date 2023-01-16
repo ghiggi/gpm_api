@@ -73,16 +73,16 @@ You can find the documentation under [gpm_api.readthedocs.io][doc_link]
 The documentation also includes some [tutorials][tut_link], showing the most important use cases of GPM-API.
 These tutorial are also available as Jupyter Notebooks and in Google Colab:
 
-- 1. Introduction to download the GPM products [Notebook][tut1_download_link][Colab][colab1_download_link]
-- 2. Introduction to the IMERG products [Notebook][tut2_imerg_link][Colab][colab2_imerg_link]
-- 2. Introduction to the PMW 1B and 1C products [Notebook][tut2_pmw1bc_link][Colab][colab_pmw1bc_link]
-- 2. Introduction to the PMW 2A products [Notebook][tut2_pmw2a_link][Colab][colab2_pmw2a_link]
-- 2. Introduction to the RADAR 2A products [Notebook][tut2_radar_2a_link][Colab][colab2_radar_2a_link]
-- 2. Introduction to the CORRA 2B products [Notebook][tut2_corra_2b_link][Colab][colab2_corra_2b_link]
-- 2. Introduction to the Latent Heating products [Notebook][tut2_lh_link][Colab][colab2_lh_link]
-- 2. Introduction to the ENVironment products [Notebook][tut2_env_link][Colab][colab2_env_link]
-- 3. Introduction to image labeling and patch extraction [Notebook][tut3_label_link][Colab][colab3_label_link] 
-- 3. Introduction to image patch extraction [Notebook][tut3_patch_link][Colab][colab3_patch_link] 
+- 1. Introduction to download the GPM products [[Notebook][tut1_download_link]][[Colab][colab1_download_link]]
+- 2. Introduction to the IMERG products [[Notebook][tut2_imerg_link]][[Colab][colab2_imerg_link]]
+- 2. Introduction to the PMW 1B and 1C products [[Notebook][tut2_pmw1bc_link]][[Colab][colab_pmw1bc_link]]
+- 2. Introduction to the PMW 2A products [[Notebook][tut2_pmw2a_link]][[Colab][colab2_pmw2a_link]]
+- 2. Introduction to the RADAR 2A products [[Notebook][tut2_radar_2a_link]][[Colab][colab2_radar_2a_link]]
+- 2. Introduction to the CORRA 2B products [[Notebook][tut2_corra_2b_link]][[Colab][colab2_corra_2b_link]]
+- 2. Introduction to the Latent Heating products [[Notebook][tut2_lh_link]][[Colab][colab2_lh_link]]
+- 2. Introduction to the ENVironment products [[Notebook][tut2_env_link]][[Colab][colab2_env_link]]
+- 3. Introduction to image labeling and patch extraction [[Notebook][tut3_label_link]][[Colab][colab3_label_link]]
+- 3. Introduction to image patch extraction [[Notebook][tut3_patch_link]][[Colab][colab3_patch_link]]
  
 The associated python scripts are also provided in the `tutorial` folder.
  
