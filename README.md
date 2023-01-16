@@ -73,7 +73,7 @@ You can find the documentation under [gpm_api.readthedocs.io][doc_link]
 The documentation also includes some [tutorials][tut_link], showing the most important use cases of GPM-API.
 These tutorial are also available as Jupyter Notebooks and in Google Colab:
 
-- 1. Introduction to download the GPM products [[Notebook][tut1_download_link]][[Colab][colab1_download_link]]
+- 1. Download the GPM products [[Notebook][tut1_download_link]][[Colab][colab1_download_link]]
 - 2. Introduction to the IMERG products [[Notebook][tut2_imerg_link]][[Colab][colab2_imerg_link]]
 - 2. Introduction to the PMW 1B and 1C products [[Notebook][tut2_pmw1bc_link]][[Colab][colab_pmw1bc_link]]
 - 2. Introduction to the PMW 2A products [[Notebook][tut2_pmw2a_link]][[Colab][colab2_pmw2a_link]]
