@@ -45,7 +45,15 @@ ds
 
 # Available variables
 variables = list(ds.data_vars)
-print(variables)
+
+print("Available variables: ", variables)
+# Available coordinates 
+coords = list(ds.coords)
+print("Available coordinates: ", coords)
+
+# Available dimensions 
+dims = list(ds.dims)
+print("Available dimensions: ", dims)
 
 # Select variable
 variable = "precipitationCal"
@@ -149,12 +157,16 @@ p.axes.set_title(label=da_solid.gpm_api.title())
 #### Crop the dataset
 # Crop by extent                                      
 extent = get_country_extent("United States")
-ds_ch = ds.gpm_api.crop(bbox=extent)
+ds_ch = ds.gpm_api.crop(extent=extent)
 ds_ch[variable].isel(time=0).gpm_api.plot_map()
 
 # Crop by country name
 ds_ch = ds.gpm_api.crop_by_country("Switzerland")
 ds_ch[variable].isel(time=0).gpm_api.plot_map()
+
+# Crop by country name
+ds_continent = ds.gpm_api.crop_by_continent("Australia")
+ds_continent[variable].isel(time=0).gpm_api.plot_map()
 
 ####--------------------------------------------------------------------------.
 #### Plot Patches
@@ -167,8 +179,9 @@ da.gpm_api.plot_patches(
     min_area_threshold=5,
     sort_by="max",  # area
     sort_decreasing=True,
-    n_patches=10,
-    min_patch_size = (20, 20),
+    n_patches=4,
+    min_patch_size = (50, 50),
+    padding=5, 
     interpolation="nearest",
 )
 
@@ -181,6 +194,7 @@ ds.isel(time=0).gpm_api.plot_patches(
     sort_decreasing=True,
     n_patches=10,
     min_patch_size = (20, 20),
+    padding = 1, 
     interpolation="nearest",
 )
 

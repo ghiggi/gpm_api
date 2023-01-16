@@ -17,11 +17,11 @@ class GPM_Base_Accessor:
             )
         self._obj = xarray_obj
 
-    def crop(self, bbox):
+    def crop(self, extent):
         """Crop xarray object by bounding box."""
         from gpm_api.utils.geospatial import crop
 
-        return crop(self._obj, bbox)
+        return crop(self._obj, extent)
 
     def crop_by_country(self, name):
         """Crop xarray object by country name."""
@@ -29,14 +29,30 @@ class GPM_Base_Accessor:
 
         return crop_by_country(self._obj, name)
     
+    def crop_by_continent(self, name):
+        """Crop xarray object by continent name."""
+        from gpm_api.utils.geospatial import crop_by_continent
+
+        return crop_by_continent(self._obj, name)
+    
     def get_crop_slices_by_extent(self, extent):
         """Get subsetting slices given the extent."""
         from gpm_api.utils.geospatial import get_crop_slices_by_extent
 
         return get_crop_slices_by_extent(self._obj, extent)
     
+    def get_crop_slices_by_country(self, name):
+        """Get subsetting slices given the country name."""
+        from gpm_api.utils.geospatial import get_crop_slices_by_country
 
+        return get_crop_slices_by_country(self._obj, name)
+    
+    def get_crop_slices_by_continent(self, name):
+        """Get subsetting slices given the continent name."""
+        from gpm_api.utils.geospatial import get_crop_slices_by_continent
 
+        return get_crop_slices_by_continent(self._obj, name)
+    
     @property
     def pyresample_area(self):
         from gpm_api.utils.geospatial import get_pyresample_area
@@ -231,14 +247,15 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         sort_by="area",
         sort_decreasing=True,
         n_patches=None,
-        patch_margin=None,
+        min_patch_size=None,
+        padding=None,
         add_colorbar=True, 
         interpolation="nearest",
         fig_kwargs={}, 
         cbar_kwargs={},
         **plot_kwargs
     ):
-        from gpm_api.visualization.patches import plot_patches
+        from gpm_api.visualization.labels import plot_patches
 
         data_array = self._obj[variable]
         plot_patches(
@@ -251,7 +268,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             sort_by=sort_by,
             sort_decreasing=sort_decreasing,
             n_patches=n_patches,
-            patch_margin=patch_margin,
+            min_patch_size=min_patch_size,
+            padding=padding,
             add_colorbar=add_colorbar, 
             interpolation=interpolation,
             fig_kwargs=fig_kwargs, 
@@ -357,14 +375,15 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         sort_by="area",
         sort_decreasing=True,
         n_patches=None,
-        patch_margin=None,
+        min_patch_size=None,
+        padding=None,
         add_colorbar=True, 
         interpolation="nearest",
         fig_kwargs={}, 
         cbar_kwargs={},
         **plot_kwargs
     ):
-        from gpm_api.visualization.patches import plot_patches
+        from gpm_api.visualization.labels import plot_patches
 
         plot_patches(
             data_array=self._obj,
@@ -376,7 +395,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             sort_by=sort_by,
             sort_decreasing=sort_decreasing,
             n_patches=n_patches,
-            patch_margin=patch_margin,
+            min_patch_size=min_patch_size,
+            padding=padding,
             add_colorbar=add_colorbar, 
             interpolation=interpolation,
             fig_kwargs=fig_kwargs, 

@@ -151,7 +151,6 @@ def _check_padding(padding, array_shape):
     padding tuple
         The padding to apply on each dimension.
     """
- 
     n_dims = len(array_shape)
     if padding is None:
         padding = 0

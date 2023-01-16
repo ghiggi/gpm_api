@@ -56,6 +56,9 @@ DIM_DICT = {
     "nbinHS": "range",
     "nbinFS": "range",
     "nfreq": "frequency",
+    # PMW 1B-TMI
+    "npixelev1": "cross_track",
+    "npixelev2": "cross_track", 
     # PMW 1B-GMI (V7)
     "npix1": "cross_track",  # PMW (i.e. GMI)
     "npix2": "cross_track",  # PMW (i.e. GMI)

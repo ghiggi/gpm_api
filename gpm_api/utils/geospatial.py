@@ -10,11 +10,8 @@ import xarray as xr
 from gpm_api.utils.slices import _get_list_slices_from_indices
 
 #### TODO: 
-# - crop_by_continent, 
 # - croup_around(point, distance)
 # - get_extent_around(point, distance) 
-
-
 
 
 def unwrap_longitude_degree(x, period=360):
@@ -45,11 +42,36 @@ def crop_by_country(xr_obj, name):
     from gpm_api.utils.countries import get_country_extent
 
     extent = get_country_extent(name)
-    return crop(xr_obj=xr_obj, bbox=extent)
+    return crop(xr_obj=xr_obj, extent=extent)
 
 
+def crop_by_continent(xr_obj, name):
+    """
+    Crop an xarray object based on the specified continent name.
+
+    Parameters
+    ----------
+    xr_obj : xr.DataArray or xr.Dataset
+        xarray object.
+    name : str
+        Continent name.
+
+    Returns
+    -------
+    xr_obj : xr.DataArray or xr.Dataset
+        Cropped xarray object.
+
+    """
+
+    from gpm_api.utils.continents import get_continent_extent
+
+    extent = get_continent_extent(name)
+    return crop(xr_obj=xr_obj, extent=extent)
+  
+    
 def get_crop_slices_by_extent(xr_obj, extent):
-    """Compute the slices required to subset the xarray object.
+    """Compute the xarray object slices which are within the specified extent.
+    
     
     If the input is a GPM Orbit, it returns a list of along-track slices
     If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
@@ -90,9 +112,47 @@ def get_crop_slices_by_extent(xr_obj, extent):
         return slices_dict 
     else:
         raise NotImplementedError("")
-         
 
-def crop(xr_obj, bbox):
+    
+def get_crop_slices_by_continent(xr_obj, name):
+    """Compute the xarray object slices which are within the specified continent.
+    
+    If the input is a GPM Orbit, it returns a list of along-track slices
+    If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
+    
+    Parameters
+    ----------
+    xr_obj : xr.DataArray or xr.Dataset
+        xarray object.
+    name : str
+        Continent name.
+    """
+    from gpm_api.utils.continents import get_continent_extent
+
+    extent = get_continent_extent(name)
+    return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
+
+
+def get_crop_slices_by_country(xr_obj, name):
+    """Compute the xarray object slices which are within the specified country.
+    
+    If the input is a GPM Orbit, it returns a list of along-track slices
+    If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
+    
+    Parameters
+    ----------
+    xr_obj : xr.DataArray or xr.Dataset
+        xarray object.
+    name : str
+        Country name.
+    """
+    from gpm_api.utils.countries import get_country_extent
+
+    extent = get_country_extent(name)
+    return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
+
+
+def crop(xr_obj, extent):
     """
     Crop a xarray object based on the provided bounding box.
 
@@ -100,10 +160,10 @@ def crop(xr_obj, bbox):
     ----------
     xr_obj : xr.DataArray or xr.Dataset
         xarray object.
-    bbox : list or tuple
+    extent : list or tuple
         The bounding box over which to crop the xarray object.
-        `bbox` must follow the matplotlib and cartopy extent conventions:
-        bbox = [x_min, x_max, y_min, y_max]
+        `extent` must follow the matplotlib and cartopy extent conventions:
+        extent = [x_min, x_max, y_min, y_max]
 
     Returns
     -------
@@ -111,17 +171,17 @@ def crop(xr_obj, bbox):
         Cropped xarray object.
 
     """
-    # TODO: Check bbox
+    # TODO: Check extent
     
     if is_orbit(xr_obj):
         # - Subset only along_track
-        list_slices = get_crop_slices_by_extent(xr_obj, bbox)
+        list_slices = get_crop_slices_by_extent(xr_obj, extent)
         if len(list_slices) > 1: 
-            raise ValueError("The orbit is crossing the bbox multiple times. Use get_crop_slices_by_extent !.")
+            raise ValueError("The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !.")
         xr_obj_subset =  xr_obj.isel(along_track=list_slices[0])
 
     elif is_grid(xr_obj):
-        slice_dict = get_crop_slices_by_extent(xr_obj, bbox)
+        slice_dict = get_crop_slices_by_extent(xr_obj, extent)
         xr_obj_subset = xr_obj.isel(slice_dict)
     else:
         orbit_dims = ("cross_track", "along_track")

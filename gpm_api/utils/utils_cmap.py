@@ -259,6 +259,17 @@ COLOR_DICT = {
         "extendfrac": 0.05,
         "label": "Latent Heating [K/hr]",
     },
+    "Brightness_Temperature": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "Spectral_r",
+        "cmap_type": "Colormap",
+        # "vmin": 140,
+        # "vmax": 300,
+        "extend": "both",
+        "extendfrac": 0.05,
+        "label": "Brightness Temperature [K]",
+    },
     "Precip_Probability": {
         "over_color": "none",
         "under_color": "none",
@@ -438,6 +449,9 @@ precip_variables = [
 
 for var in precip_variables:
     COLOR_DICT[var] = COLOR_DICT["pysteps_mm/hr"]
+
+COLOR_DICT['Tb'] = COLOR_DICT["Brightness_Temperature"]
+COLOR_DICT['Tc'] = COLOR_DICT["Brightness_Temperature"]
 
 # Reflectivity 
 # "2A-DPR": 

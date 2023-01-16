@@ -83,8 +83,9 @@ def get_colorbar_settings(name, plot_kwargs={}, cbar_kwargs={}):
     
     # Remove vmin, vmax
     # --> vmin and vmax is not accepted by PolyCollection 
-    # --> create norm or modify norm accordigly 
-    if "norm" not in plot_kwargs:
+    # --> create norm or modify norm accordigly
+    norm = plot_kwargs.get("norm", None)
+    if norm is None:
         norm = mpl.colors.Normalize(vmin=plot_kwargs.pop("vmin", None),
                                     vmax=plot_kwargs.pop("vmax", None))
         plot_kwargs["norm"] = norm 
@@ -188,7 +189,7 @@ def plot_cartopy_background(ax):
     ax.coastlines()
     ax.add_feature(cartopy.feature.LAND, facecolor=[0.9, 0.9, 0.9])
     ax.add_feature(cartopy.feature.OCEAN, alpha=0.6)
-    ax.add_feature(cartopy.feature.STATES)
+    ax.add_feature(cartopy.feature.BORDERS) # BORDERS also draws provinces, ...
     # - Add grid lines
     gl = ax.gridlines(
         crs=ccrs.PlateCarree(),

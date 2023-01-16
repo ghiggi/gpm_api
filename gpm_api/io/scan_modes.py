@@ -91,7 +91,7 @@ def available_scan_modes(product, version):
         scan_modes = ["S1"]
     elif product.find("1C-GMI") == 0:
         scan_modes = ["S1", "S2"]
-    elif product.find("1C-ATMS"):
+    elif product.find("1C-ATMS") == 0:
         scan_modes = ["S1", "S2", "S3", "S4"]
     elif product.find("1C-AMSR2") == 0:
         scan_modes = ["S1", "S2", "S3", "S4", "S5", "S6"]

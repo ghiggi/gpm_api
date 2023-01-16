@@ -10,6 +10,33 @@ import yaml
 import difflib
 
 
+def extend_lonlat_extent(extent, x):
+    """
+    Extend the lat/lon extent by x degrees in every direction.
+
+    Parameters
+    ----------
+    extent : (tuple)
+        A tuple of four values representing the lat/lon extent.
+        The extent format must be [xmin, xmax, ymin, ymax]
+    x : float
+        The number of degrees to extend the extent in every direction.
+
+    Returns
+    -------
+    new_extent, tuple
+        The extended extent
+        DESCRIPTION.
+    """
+    xmin, xmax, ymin, ymax = extent
+    xmin = max(xmin - x, -180)
+    xmax = min(xmax + x, 180)
+    ymin = max(ymin - x, -90)
+    ymax = min(ymax + x, 90)
+    new_extent = (xmin, xmax, ymin, ymax)
+    return new_extent 
+
+
 def get_country_extent_dictionary():
     # TODO: improve relative path
     file_dir = os.path.realpath(__file__)
@@ -42,9 +69,7 @@ def get_country_extent(name):
     valid_countries_lower = list(countries_lower_extent_dict)
     if name.lower() in valid_countries_lower:
         extent = countries_lower_extent_dict[name.lower()]
-        # TODO:
-        # - add 0.5° degree buffer
-        # - ensure extent is correct
+        extent = extend_lonlat_extent(extent, 0.2)
         return extent
     else:
         possible_match = difflib.get_close_matches(

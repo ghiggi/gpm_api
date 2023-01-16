@@ -15,6 +15,9 @@ Created on Mon Aug 15 23:02:04 2022
 # - ensure_valid_geolocation (1 spurious pixel)
 # - ds_gpm.gpm_api.has_valid_geolocation
 
+
+# check ax is geoaxes or mpl.axes ! 
+
 # -----------------------------------------------------------------------------.
 # Solve TODOs in dataset.py
 
