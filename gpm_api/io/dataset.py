@@ -289,12 +289,15 @@ def _open_hdf_group(
     prefix_group=True,
     decode_cf=False,
     chunks=None,
+    engine="netcdf4",
 ):
     # Define hdf group
     # - group == '' to retrieve variables attached to scan_mode group
     hdf_group = scan_mode + "/" + group
     ds = xr.open_dataset(
-        filepath, engine="netcdf4", group=hdf_group, decode_cf=decode_cf, chunks=chunks
+        filepath, engine=engine, mode="r",
+        group=hdf_group, decode_cf=decode_cf, chunks=chunks,
+        # autoclose=True,
     )
     # Assign dimensions
     ds = assign_dataset_dimensions(ds)
@@ -480,12 +483,7 @@ def open_granule(
     # TODO: ensure_valid_geolocation (1 spurious pixel)
     # TODO: ds_gpm.gpm_api.valid_geolocation
 
-    # Add QUALITY_FLAGS (i.e. 1A-GMI)
-    # - scanStatus
-    #   - geoError
-    #   - missing
-    #   - modeStatus
-    #   - geoWarning
+    # Add QUALITY_FLAGS ATTRS  
 
     # Add global attributes
     # TODO: i.e. gpm_api_product for gpm_api.title accessor
@@ -533,6 +531,72 @@ def is_valid_granule(filepath):
         return False
 
 
+def _open_valid_granules(filepaths,
+                         scan_mode,
+                         variables,
+                         # groups,
+                         decode_cf,
+                         prefix_group,
+                         chunks,
+                         ):
+    """
+    Open a list of granules. 
+    
+    Corrupted granules are not returned !
+
+    Returns
+    -------
+    l_Datasets : list
+        List of xr.Datasets.
+
+    """
+    l_datasets = []
+    for filepath in filepaths:
+        # Retrieve data if granule is not empty
+        if is_valid_granule(filepath):
+            ds = open_granule(
+                filepath,
+                scan_mode=scan_mode,
+                variables=variables,
+                # groups=groups, # TODO
+                decode_cf=False,
+                prefix_group=prefix_group,
+                chunks=chunks,
+            )
+            if ds is not None:
+                l_datasets.append(ds)
+    return l_datasets          
+
+
+def _concat_datasets(l_datasets):
+    """Concatenate datasets together."""
+    if len(l_datasets) >= 1:
+        dims = list(l_datasets[0].dims)
+        is_grid = "time" in dims
+        if is_grid:
+            concat_dim = "time"
+        else: 
+            concat_dim = "along_track"
+        
+        # Concatenate the datasets 
+        ds = xr.concat(l_datasets, dim=concat_dim,
+                       coords="minimal", # "all"
+                       compat="override",
+                       combine_attrs='override')
+        
+        # Tranpose to have (y,x) dimension order 
+        # --> To work nicely with pyresample and matplotlib
+        # - GRID:  (..., time, lat, lon)
+        # - ORBIT: (cross_track, along_track, ...)
+        if is_grid:          
+            ds = ds.transpose(..., "lat", "lon")
+        else:
+            ds = ds.transpose("cross_track", "along_track", ...)
+    else:
+        raise ValueError("No valid GPM granule available for current request.")
+    return ds 
+
+
 def open_dataset(
     base_dir,
     product,
@@ -546,6 +610,7 @@ def open_dataset(
     chunks="auto",
     decode_cf=True,
     prefix_group=True,
+    verbose=False,
 ):
     """
     Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
@@ -618,6 +683,7 @@ def open_dataset(
         product_type=product_type,
         start_time=start_time,
         end_time=end_time,
+        verbose=verbose,
     )
     ##------------------------------------------------------------------------.
     # Check that files have been downloaded  on disk
@@ -637,24 +703,16 @@ def open_dataset(
 
     ##------------------------------------------------------------------------.
     # Initialize list (to store Dataset of each granule )
-    # TODO: open in parallel !!!
-    l_Datasets = []
-    for filepath in filepaths:
-        # Retrieve data if granule is not empty
-        if is_valid_granule(filepath):
-            ds = open_granule(
-                filepath,
-                scan_mode=scan_mode,
-                variables=variables,
-                # groups=groups, # TODO
-                decode_cf=False,
-                prefix_group=prefix_group,
-                chunks=chunks,
-            )
-            # ------------------------------------------------------------------.
-            if ds is not None:
-                l_Datasets.append(ds)
-
+    l_datasets = _open_valid_granules(filepaths=filepaths,
+                                      scan_mode=scan_mode,
+                                      variables=variables,
+                                      # groups=groups, # TODO
+                                      decode_cf=False,
+                                      prefix_group=prefix_group,
+                                      chunks=chunks,
+                                      )
+    
+    ##-------------------------------------------------------------------------.
     # TODO
     # - Extract attributes and summarize it
     # - MissingData in FileHeaderGroup: The number of missing scans.
@@ -667,23 +725,10 @@ def open_dataset(
 
     # - ScanType: SwathHeader Group (”CROSSTRACK”, ”CONICAL”)
     ##-------------------------------------------------------------------------.
-    # Concat all Datasets
-    if len(l_Datasets) >= 1:
-        if "time" in list(ds.dims):
-            ds = xr.concat(l_Datasets, dim="time")
-            # Tranpose to have (y,x) = (time, lat, lon)
-            # --> To work nicely with pyresample ...
-            ds = ds.transpose(..., "lat", "lon")
-        else:
-            ds = xr.concat(l_Datasets, dim="along_track")
-            # Tranpose to have (y,x) = (cross_track, along_track)
-            # --> To work nicely with pyresample ...
-            ds = ds.transpose("cross_track", "along_track", ...)
-        print(f"GPM {product} has been loaded successfully !")
-    else:
-        print("No valid GPM granule available for current request.")
-        return None
-
+    # Concat all datasets
+    ds = _concat_datasets(l_datasets)
+    
+    ##-------------------------------------------------------------------------.
     # Decode dataset
     if decode_cf:
         ds = decode_dataset(ds)

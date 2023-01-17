@@ -394,12 +394,12 @@ def label_xarray_object(xr_obj,
                         sort_by="area",
                         sort_decreasing=True,
                         label_name="label"):
-    # Check xarray input 
+    # Check xarray input
     _check_xr_obj(xr_obj=xr_obj, variable=variable)
     
     # Retrieve labels (if available)
     if isinstance(xr_obj, xr.Dataset):
-        data_array_to_label = xr_obj[variable],
+        data_array_to_label = xr_obj[variable]
     else:
         data_array_to_label = xr_obj
     
