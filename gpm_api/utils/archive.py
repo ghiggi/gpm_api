@@ -11,9 +11,7 @@ import gpm_api
 import time
 import dask
 import datetime
-import time
 import numpy as np
-import datetime
 from dateutil.relativedelta import relativedelta
 from gpm_api.io.pps import find_pps_filepaths
 from gpm_api.io.info import get_start_time_from_filepaths, get_end_time_from_filepaths
@@ -39,6 +37,25 @@ def print_elapsed_time(fn):
 
     return decorator
 
+
+def get_corrupted_filepaths(filepaths):
+    l_corrupted = []
+    for filepath in filepaths:
+        # Load hdf granule file
+        try:
+            hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
+            hdf.close()
+        except OSError:
+            l_corrupted.append(filepath)
+    return l_corrupted
+
+
+def remove_corrupted_filepaths(filepaths, verbose=True): 
+    for filepath in filepaths:
+        if verbose:
+            print(f"{filepath} is corrupted and is being removed.")
+        os.remove(filepath)
+        
 
 def check_file_integrity(
     base_dir,
@@ -106,26 +123,20 @@ def check_file_integrity(
 
     ##---------------------------------------------------------------------.
     # Loop over files and list file that can't be opened
-    l_corrupted = []
-    for filepath in filepaths:
-        # Load hdf granule file
-        try:
-            hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
-            hdf.close()
-        except OSError:
-            l_corrupted.append(filepath)
-
+    l_corrupted = get_corrupted_filepaths(filepaths)
+    
     ##---------------------------------------------------------------------.
     # Report corrupted and remove if asked
-    for filepath in l_corrupted:
-        if verbose and remove_corrupted:
-            print(f"{filepath} is corrupted and is being removed.")
-        else:
+    if remove_corrupted:
+        remove_corrupted_filepaths(filepaths=l_corrupted, verbose=verbose)
+    else: 
+        for filepath in l_corrupted:
             print(f"{filepath} is corrupted.")
-        if remove_corrupted:
-            os.remove(filepath)
+
     ##---------------------------------------------------------------------.
     return l_corrupted
+
+
 
 
 def get_product_temporal_coverage(
@@ -321,6 +332,7 @@ def download_monthly_data(
     check_integrity=True,
     remove_corrupted=True,
     verbose=True,
+    retry=1, 
 ):
     start_time = datetime.date(year, month, 1)
     end_time = start_time + relativedelta(months=1)
@@ -340,8 +352,8 @@ def download_monthly_data(
         check_integrity=check_integrity,
         remove_corrupted=remove_corrupted,
         verbose=verbose,
+        retry=retry,
     )
     return l_corrupted
 
 
-# TODO: from fpath, extract product, start_time, end_time, version, and redownload

@@ -13,9 +13,13 @@ import subprocess
 import pandas as pd
 import concurrent.futures
 from tqdm import tqdm
-from gpm_api.io.pps import find_pps_filepaths, _find_pps_daily_filepaths
+from gpm_api.io.pps import _find_pps_daily_filepaths #, find_pps_filepaths
 from gpm_api.utils.utils_string import subset_list_by_boolean
-from gpm_api.utils.archive import check_file_integrity
+from gpm_api.utils.archive import (
+    check_file_integrity, 
+    get_corrupted_filepaths,
+    remove_corrupted_filepaths,
+)
 from gpm_api.io.checks import (
     check_base_dir,
     check_version,
@@ -25,8 +29,8 @@ from gpm_api.io.checks import (
     check_date,
     is_empty,
 )
-from gpm_api.io.info import get_start_time_from_filepaths
-from gpm_api.io.directories import get_disk_directory
+from gpm_api.io.info import get_start_time_from_filepaths, get_info_from_filepath
+from gpm_api.io.directories import get_disk_directory, get_pps_directory
 
 
 ### Currently we open a connection for every file
@@ -261,6 +265,35 @@ def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
                     l_cmd_error.append(dict_futures[future])
 
 
+def _download_files(src_fpaths, 
+                    dst_fpaths, 
+                    username,
+                    password,
+                    transfer_tool="wget", 
+                    n_threads=4,
+                    progress_bar=True,
+                    verbose=False):
+    
+    if transfer_tool == "curl":
+        list_cmd = [
+            curl_cmd(src_path, dst_path, username, username)
+            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+        ]
+    elif transfer_tool == "wget":
+        list_cmd = [
+            wget_cmd(src_path, dst_path, username, username)
+            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+        ]
+    else:
+        raise NotImplementedError("Download is available with 'wget' or 'curl'.")
+    # -------------------------------------------------------------------------.
+    ## Download the data (in parallel)
+    bad_cmds = run(
+        list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose
+    )
+    return bad_cmds
+
+
 ####--------------------------------------------------------------------------.
 ############################
 #### Filtering routines ####
@@ -303,6 +336,48 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
 ###########################
 #### Download routines ####
 ###########################
+
+
+def _convert_disk_to_pps_fpath(filepath):
+    """Convert a disk filepath into a PPS filepath."""
+    # Extract file information from filepath
+    filename = os.path.basename(filepath)
+    info_dict = get_info_from_filepath(filepath)
+    start_time = info_dict["start_time"]
+    date = start_time.date()
+    list_dirs = filepath.split(os.path.sep)
+    product = list_dirs[-5]
+    version = int(list_dirs[-7][2])
+    product_type = list_dirs[-8]
+    # base_dir = os.path.join(os.path.sep, *list_dirs[0:-8])
+    
+    # Retrieve PPS filepath 
+    url_data_server, url_file_list = get_pps_directory(product=product,
+                                                       product_type=product_type, 
+                                                       date=date,
+                                                       version=version)
+    dir_tree = os.path.join(*url_file_list.split(os.path.sep)[4:])
+    pps_filepath = os.path.join(url_data_server, dir_tree, filename)
+    return pps_filepath
+    
+
+def convert_disk_to_pps_filepaths(filepaths):
+    """
+    Convert disk filepaths to PPS filepaths.
+
+    Parameters
+    ----------
+    filepaths : list
+        GPM file paths on disk.
+    
+    Returns
+    -------
+    pps_filepaths : list
+        List of file paths on PPS.
+
+    """
+    pps_fpaths = [_convert_disk_to_pps_fpath(fpath) for fpath in filepaths]
+    return pps_fpaths
 
 
 def convert_pps_to_disk_filepaths(
@@ -444,24 +519,14 @@ def _download_daily_data(
     )
     # -------------------------------------------------------------------------.
     # Retrieve commands
-    if transfer_tool == "curl":
-        list_cmd = [
-            curl_cmd(pps_path, disk_path, username, username)
-            for pps_path, disk_path in zip(pps_filepaths, disk_filepaths)
-        ]
-    else:
-        list_cmd = [
-            wget_cmd(pps_path, disk_path, username, username)
-            for pps_path, disk_path in zip(pps_filepaths, disk_filepaths)
-        ]
-
-    # -------------------------------------------------------------------------.
-    ## Download the data (in parallel)
-    bad_cmds = run(
-        list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose
-    )
+    bad_cmds = _download_files(src_fpaths=pps_filepaths,
+                               dst_fpaths=disk_filepaths,
+                               username=username,
+                               password=username, 
+                               n_threads=n_threads,
+                               progress_bar=progress_bar,
+                               verbose=verbose)
     return bad_cmds
-
 
 ##-----------------------------------------------------------------------------.
 def download_data(
@@ -478,6 +543,7 @@ def download_data(
     force_download=False,
     check_integrity=True,
     remove_corrupted=True,
+    retry=1, 
     verbose=True,
 ):
     """
@@ -488,7 +554,7 @@ def download_data(
     base_dir : str
         The base directory where to store GPM data.
     username: str
-        Email address with which you registered on NASA PPS
+        Email address with which you registered on NASA PPS.
     product : str
         GPM product acronym. See gpm_api.available_products()
     start_time : datetime
@@ -516,7 +582,10 @@ def download_data(
     remove_corrupted: bool, optional
         Whether to remove the corrupted files.
         By default is True.
-
+    retry : int, optional, 
+        The number of attempts to redownload the corrupted files. The default is 1.
+        Only applies if check_integrity is True !
+    
     Returns
     -------
 
@@ -545,7 +614,7 @@ def download_data(
     # -------------------------------------------------------------------------.
     # Loop over dates and download the files
     for date in dates:
-        _download_daily_data(
+        _ = _download_daily_data(
             base_dir=base_dir,
             username=username,
             date=date,
@@ -562,7 +631,8 @@ def download_data(
         )
 
     # -------------------------------------------------------------------------.
-    print(f"Download of available GPM {product} product completed.")
+    if verbose:
+        print(f"Download of available GPM {product} product completed.")
     if check_integrity:
         l_corrupted = check_file_integrity(
             base_dir=base_dir,
@@ -574,9 +644,124 @@ def download_data(
             remove_corrupted=remove_corrupted,
             verbose=verbose,
         )
-        print("Checking integrity of GPM files completed.")
+        if verbose:
+            print("Checking integrity of GPM files completed.")
+        if retry > 0 and remove_corrupted:
+            if verbose:
+                print("Attempt to redownload the corrupted files.")
+            l_corrupted = redownload_from_filepaths(filepaths=l_corrupted,
+                                                    username=username,
+                                                    n_threads=n_threads,
+                                                    transfer_tool=transfer_tool,
+                                                    progress_bar=progress_bar,
+                                                    verbose=verbose,
+                                                    retry=retry)
         return l_corrupted
     return None
 
 
 ####--------------------------------------------------------------------------.
+def redownload_from_filepaths(filepaths,
+                              username,
+                              n_threads=4,
+                              transfer_tool="wget",
+                              progress_bar=False,
+                              verbose=True,
+                              retry=1):
+    """
+    Redownload GPM files from the PPS archive.
+
+    Parameters
+    ----------
+    filepaths : list
+        List of disk filepaths.
+    username: str
+        Email address with which you registered on NASA PPS.
+    n_threads : int, optional
+        Number of parallel downloads. The default is set to 10.
+    progress_bar : bool, optional
+        Wheter to display progress. The default is True.
+    transfer_tool : str, optional
+        Wheter to use curl or wget for data download. The default is "curl".
+    verbose : bool, optional
+        Whether to print processing details. The default is False.
+    retry : int, optional, 
+        The number of attempts to redownload the corrupted files. The default is 1.
+
+    Returns
+    -------
+    l_corrupted : list
+        List of remaining corrupted file paths.
+    """
+    if isinstance(filepaths, type(None)): 
+        return None 
+    if not isinstance(filepaths, list):
+        raise TypeError("Expecting a list of filepaths.")
+    if len(filepaths) == 0: 
+        return None
+    
+    # Attempt to redownload the corrupted files
+    if verbose: 
+        n_files = len(filepaths)
+        print(f"Attempt to redownload {n_files}.")
+        
+    # Retrieve the PPS file paths 
+    pps_filepaths = convert_disk_to_pps_filepaths(filepaths)
+       
+    # Download files     
+    _ = _download_files(src_fpaths=pps_filepaths,
+                        dst_fpaths=filepaths,
+                        username=username,
+                        password=username, 
+                        n_threads=n_threads,
+                        progress_bar=progress_bar,
+                        verbose=verbose)
+    
+    # Get corrupted filepaths 
+    l_corrupted = get_corrupted_filepaths(filepaths)
+    # Remove corrupted filepaths
+    remove_corrupted_filepaths(filepaths=l_corrupted, verbose=verbose)
+    # Retry download if retry > 1 as input argument 
+    if len(l_corrupted) > 0 and retry > 1: 
+        l_corrupted = redownload_from_filepaths(
+            filepaths=l_corrupted,
+            username=username, 
+            n_threads=n_threads,
+            transfer_tool=transfer_tool,
+            progress_bar=progress_bar,
+            verbose=verbose,
+            retry=retry-1,
+            )
+        
+    ### Old single process, slow 
+    # for fpath in filepaths:
+    #     # Extract file information from filepath
+    #     info_dict = get_info_from_filepath(fpath)
+    #     start_time = info_dict["start_time"]
+    #     end_time = info_dict["end_time"]
+    #     list_dirs = fpath.split(os.path.sep)
+    #     product = list_dirs[-5]
+    #     version = int(list_dirs[-7][2])
+    #     product_type = list_dirs[-8]
+    #     base_dir = os.path.join(os.path.sep, *list_dirs[0:-8])
+    #     # Redownload the file 
+    #     l_corrupted_fpath = download_data(
+    #         base_dir=base_dir,
+    #         username=username,
+    #         product=product,
+    #         start_time=start_time,
+    #         end_time=end_time,
+    #         product_type=product_type,
+    #         version=version,
+    #         n_threads=1,
+    #         transfer_tool=transfer_tool,
+    #         progress_bar=progress_bar,
+    #         force_download=force_download,
+    #         check_integrity=True,
+    #         remove_corrupted=True,
+    #         verbose=verbose,
+    #         retry=retry-1,
+    #     )
+    #     if len(l_corrupted_fpath) != 0:
+    #         l_corrupted.append(l_corrupted_fpath[0])
+    return l_corrupted
