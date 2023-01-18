@@ -105,15 +105,15 @@ class GPM_Base_Accessor:
 
         return subset_by_time_slice(self._obj, slice=slice)
 
-    def get_regular_time_slices(self, tolerance=None):
+    def get_regular_time_slices(self, tolerance=None, min_size=1):
         from gpm_api.utils.checks import get_regular_time_slices
 
-        return get_regular_time_slices(self._obj, tolerance=tolerance)
+        return get_regular_time_slices(self._obj, tolerance=tolerance, min_size=min_size)
 
-    def get_contiguous_scan_slices(self, tolerance=None):
+    def get_contiguous_scan_slices(self, min_size=2):
         from gpm_api.utils.checks import get_contiguous_scan_slices
 
-        return get_contiguous_scan_slices(self._obj)
+        return get_contiguous_scan_slices(self._obj, min_size=min_size)
 
     def plot_transect_line(self, ax, color="black"):
         from gpm_api.visualization.profile import plot_transect_line

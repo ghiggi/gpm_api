@@ -90,7 +90,7 @@ def _is_regular_timesteps(xr_obj, tolerance=None):
     return bool_arr
 
 
-def get_regular_time_slices(xr_obj, tolerance=None):
+def get_regular_time_slices(xr_obj, tolerance=None, min_size=1):
     """
     Return a list of slices ensuring timesteps to be regular.
 
@@ -105,10 +105,11 @@ def get_regular_time_slices(xr_obj, tolerance=None):
         GPM xarray object.
     tolerance : np.timedelta, optional
         The timedelta tolerance to define regular vs. non-regular timesteps.
-        The default is None.
-        If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
-        If GPM ORBIT object, it uses the gpm_api.utils.time.ORBIT_TIME_TOLERANCE
-
+        If None, it uses the first 2 timesteps to derive the tolerance timedelta.
+        The default is None. 
+    min_size : int
+        Minimum size for a slice to be returned.
+    
     Returns
     -------
     list_slices : list
@@ -134,7 +135,10 @@ def get_regular_time_slices(xr_obj, tolerance=None):
         list_slices = get_contiguous_true_slices(
             is_regular, include_false=True, skip_consecutive_false=False
         )
-
+    
+    # Select only slices with at least min_size timesteps
+    list_slices = filter_slices_by_size(list_slices, min_size=min_size)
+    
     # Return list of slices with regular timesteps
     return list_slices
 
@@ -293,7 +297,7 @@ def _is_contiguous_scan(xr_obj):
     return bool_arr
 
 
-def get_contiguous_scan_slices(xr_obj):
+def get_contiguous_scan_slices(xr_obj, min_size=2):
     """
     Return a list of slices ensuring contiguous scans.
 
@@ -307,6 +311,8 @@ def get_contiguous_scan_slices(xr_obj):
     ----------
     xr_obj : (xr.Dataset, xr.DataArray)
         GPM xarray object.
+    min_size : int
+        Minimum size for a slice to be returned.
 
     Returns
     -------
@@ -334,7 +340,7 @@ def get_contiguous_scan_slices(xr_obj):
     )
 
     # Select only slices with at least 2 scans
-    list_slices = filter_slices_by_size(list_slices, min_size=2)
+    list_slices = filter_slices_by_size(list_slices, min_size=min_size)
 
     # Return list of contiguous scan slices
     return list_slices
@@ -475,7 +481,7 @@ def is_regular(xr_obj):
         raise ValueError("Unrecognized GPM xarray object.")
 
 
-def get_regular_slices(xr_obj):
+def get_regular_slices(xr_obj, min_size=None):
     """
     Return a list of slices to select regular GPM objects.
 
@@ -486,13 +492,28 @@ def get_regular_slices(xr_obj):
     For more information, read the documentation of:
     - gpm_api.utils.checks.get_contiguous_scan_slices
     - gpm_api.utils.checks.get_regular_time_slices
+    
+    Parameters
+    ----------
+    xr_obj : (xr.Dataset, xr.DataArray)
+        GPM xarray object.
+    min_size : int
+        Minimum size for a slice to be returned.
+        If None, default to 1 for GRID objects, 2 for ORBIT objects.
+
+    Returns
+    -------
+    list_slices : list
+        List of slice object to select regular portions.
     """
     from gpm_api.utils.geospatial import is_orbit, is_grid
 
     if is_orbit(xr_obj):
-        return get_contiguous_scan_slices(xr_obj)
+        min_size = 2 if min_size is None else min_size
+        return get_contiguous_scan_slices(xr_obj, min_size=min_size)
     elif is_grid(xr_obj):
-        return get_regular_time_slices(xr_obj)
+        min_size = 1 if min_size is None else min_size
+        return get_regular_time_slices(xr_obj, min_size=min_size)
     else:
         raise ValueError("Unrecognized GPM xarray object.")
 
