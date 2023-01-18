@@ -7,9 +7,14 @@ Created on Sat Dec 10 18:41:48 2022
 """
 import numpy as np
 import xarray as xr
-from gpm_api.utils.slices import get_contiguous_true_slices, filter_slices_by_size
 from gpm_api.utils.geospatial import is_orbit, is_grid
-
+from gpm_api.utils.slices import (
+    get_contiguous_true_slices,
+    list_slices_union, 
+    list_slices_intersection,
+    list_slices_sort,
+    filter_slices_by_size
+)
 
 ORBIT_TIME_TOLERANCE = np.timedelta64(3, "s")
 
@@ -160,7 +165,8 @@ def get_nonregular_time_slices(xr_obj, tolerance=None):
         The timedelta tolerance to define regular vs. non-regular timesteps.
         The default is None.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
-        If GPM ORBIT object, it uses the gpm_api.utils.time.ORBIT_TIME_TOLERANCE
+        If GPM ORBIT object, it uses the gpm_api.utils.time.ORBIT_TIME_TOLERANCE. 
+        It is discouraged to use this function for GPM ORBIT objects !
 
     Returns
     -------
@@ -519,3 +525,59 @@ def get_regular_slices(xr_obj, min_size=None):
 
 
 ####--------------------------------------------------------------------------.
+#### Get slices from GPM object variables values 
+# from specific_value
+# from value in interval 
+
+# get_slices_variable_between()
+
+
+def _get_slices_variable_equal_value(ds, variable, value, dim=None):
+    """Return the slices with contiguous `value` in the `dim` dimension."""
+    # Check dim 
+    if isinstance(dim, str): 
+        dim = [dim]
+    dim = set(dim)
+    # Get data array and dimensions 
+    da = ds[variable]
+    da = da.compute()
+    # Retrieve dims 
+    dims = set(da.dims)
+    # Identify regions where the flag is equal to value 
+    da_bool = da == value
+    # Collapse other dimension than dim
+    dims_apply_over=list(dims.difference(dim))
+    bool_arr = da_bool.all(dim=dims_apply_over).data
+    # Get list of slices with contiguous value
+    list_slices = get_contiguous_true_slices(bool_arr, include_false=False, skip_consecutive_false=True)
+    return list_slices
+
+
+def get_slices_variable_equals(ds,
+                               variable,
+                               values,
+                               dim,
+                               union=True):
+    """Return the slices with contiguous `values` in the `dim` dimension.
+    If values are a list of flag values
+    - if union=True, it return slices corresponding to the sequence of consecutive values.
+    - if union=False, it return slices for each value in values.
+    
+    If union=False [0,0, 1, 1] with values=[0,1] will return [slice(0,2), slice(2,4)]
+    If union=True [0,0, 1, 1] with values=[0,1] will return [slice(0,4)]
+    """   
+    if isinstance(values, (float, int)): 
+        return _get_slices_variable_equal_value(ds=ds, 
+                                                variable=variable,
+                                                value=values,
+                                                dim=dim)
+    else: 
+        list_of_list_slices = [_get_slices_variable_equal_value(ds=ds, 
+                                                                variable=variable,
+                                                                value=value,
+                                                                dim=dim) for value in values]
+        if union: 
+             list_slices = list_slices_union(*list_of_list_slices) 
+        else: 
+             list_slices = list_slices_sort(*list_of_list_slices)              
+    return list_slices 
