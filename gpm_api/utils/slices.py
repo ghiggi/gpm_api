@@ -135,12 +135,13 @@ def get_contiguous_true_slices(
     If include_false=False, no element in each slice sequence will be False
     If skip_consecutive_false=True (default), the first element of each slice must be a True.
     If skip_consecutive_false=False, it returns also slices of size 1 which selects just the False value.
-    Note: if include_false = False, skip_consecutive_false is automatically True.
+    Note: if include_false = False, skip_consecutive_false is automatically True.   
+    
     """
     # Check the arguments
     if not include_false:
         skip_consecutive_false = True
-
+    bool_arr = np.array(bool_arr)
     # If all True
     if np.all(bool_arr):
         list_slices = [slice(0, len(bool_arr))]

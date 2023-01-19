@@ -24,6 +24,8 @@ from gpm_api.io.directories import get_disk_directory
 ######################
 #### Find utility ####
 ######################
+            
+            
 def _get_disk_daily_filepaths(
     base_dir, product, product_type, date, version, verbose=True
 ):

@@ -31,14 +31,7 @@ from gpm_api.utils.time import (
     ensure_time_validity,
 )
 from gpm_api.utils.checks import has_regular_time, is_regular, has_missing_granules
-
-
-class GPM_Warning(Warning):
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return repr(self.message)
+from gpm_api.utils.warnings import GPM_Warning
 
 
 ####--------------------------------------------------------------------------.
@@ -744,7 +737,9 @@ def open_dataset(
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time
     ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
-
+    
+    # TODO: add warning if timeperiod not fully covered ! 
+    
     ##------------------------------------------------------------------------.
     # Return Dataset
     return ds

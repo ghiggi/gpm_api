@@ -11,7 +11,7 @@ from gpm_api.utils.geospatial import is_orbit, is_grid
 from gpm_api.utils.slices import (
     get_contiguous_true_slices,
     list_slices_union, 
-    list_slices_intersection,
+    # list_slices_intersection,
     list_slices_sort,
     filter_slices_by_size
 )
@@ -448,20 +448,15 @@ def has_contiguous_scans(xr_obj):
 #### Regular granules ####
 ##########################
 
-
-def _is_unmissing_granule(xr_obj):
+def _is_unmissing_granule(granule_ids):
     """Return a boolean array indicating if the next scan is not the same/next granule."""
-    
-    # Get granule ids 
-    granule_ids = xr_obj["gpm_granule_id"].data
-    
     # Retrieve if next scan is in the same or next granule (True) or False.
     bool_arr = np.diff(granule_ids) <= 1
 
     # Add True to last position
     bool_arr = np.append(bool_arr, True)
     return bool_arr
-
+    
 
 def get_missing_granule_numbers(xr_obj): 
     """Return ID numbers of missing granules."""
@@ -478,7 +473,7 @@ def has_missing_granules(xr_obj):
     from gpm_api.utils.geospatial import is_orbit, is_grid
 
     if is_orbit(xr_obj):
-        if np.any(~_is_unmissing_granule(xr_obj)):
+        if np.any(~_is_unmissing_granule(xr_obj["gpm_granule_id"].data)):
             return True
         else:
             return False
@@ -525,7 +520,7 @@ def get_slices_with_unmissing_granules(xr_obj, min_size=2):
             return list_slices
         
         # Get boolean array indicating if the next scan is same or next granule
-        bool_arr = _is_unmissing_granule(xr_obj)
+        bool_arr = _is_unmissing_granule(xr_obj["gpm_granule_id"].data)
         
         # If granules are missing present, get the slices with non-missing granules
         list_slices = get_contiguous_true_slices(
@@ -831,3 +826,4 @@ def get_slices_var_between(da,
     # Get list of slices with contiguous value
     list_slices = get_contiguous_true_slices(bool_arr, include_false=False, skip_consecutive_false=True)
     return list_slices
+
