@@ -30,7 +30,7 @@ from gpm_api.utils.time import (
     subset_by_time,
     ensure_time_validity,
 )
-from gpm_api.utils.checks import has_regular_time, is_regular
+from gpm_api.utils.checks import has_regular_time, is_regular, has_missing_granules
 
 
 class GPM_Warning(Warning):
@@ -470,7 +470,7 @@ def open_granule(
     # - Do not check for regular time dimension !
     # --> TODO: this can be moved into get_orbit_coords !
     ds = ensure_time_validity(ds, limit=10)
-
+            
     # Warn  if non-contiguous scans are present in a GPM Orbit
     # - If ds is a GPM Grid Granule, is always a single timestep so always True
     if not is_regular(ds):
@@ -735,7 +735,12 @@ def open_dataset(
 
     # Add global attributes
     ds.attrs["gpm_api_product"] = product
-
+    
+    # Warns about missing granules 
+    if has_missing_granules(ds):
+        msg = "The GPM Dataset has missing granules !"
+        warnings.warn(msg, GPM_Warning)
+        
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time
     ds = subset_by_time(ds, start_time=start_time, end_time=end_time)

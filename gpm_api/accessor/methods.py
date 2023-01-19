@@ -94,6 +94,18 @@ class GPM_Base_Accessor:
         from gpm_api.utils.checks import has_contiguous_scans
 
         return has_contiguous_scans(self._obj)
+    
+    @property
+    def has_missing_granules(self):
+        from gpm_api.utils.checks import has_missing_granules
+
+        return has_missing_granules(self._obj)
+
+    @property
+    def has_valid_geolocation(self):
+        from gpm_api.utils.checks import has_valid_geolocation
+
+        return has_valid_geolocation(self._obj)
 
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm_api.utils.time import subset_by_time
@@ -114,6 +126,16 @@ class GPM_Base_Accessor:
         from gpm_api.utils.checks import get_slices_contiguous_scans
 
         return get_slices_contiguous_scans(self._obj, min_size=min_size)
+
+    def get_slices_with_unmissing_granules(self, min_size=2):
+        from gpm_api.utils.checks import get_slices_with_unmissing_granules
+
+        return get_slices_with_unmissing_granules(self._obj, min_size=min_size)
+    
+    def get_slices_with_valid_geolocation(self, min_size=2):
+        from gpm_api.utils.checks import get_slices_with_valid_geolocation
+
+        return get_slices_with_valid_geolocation(self._obj, min_size=min_size)
 
     def plot_transect_line(self, ax, color="black"):
         from gpm_api.visualization.profile import plot_transect_line
