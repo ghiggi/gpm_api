@@ -15,14 +15,13 @@ import warnings
 import numpy as np
 from dateutil.relativedelta import relativedelta
 from gpm_api.utils.warnings import GPM_Warning
-from gpm_api.io.download import download_data
 from gpm_api.io.pps import find_pps_filepaths
+from gpm_api.io.disk import find_filepaths
 from gpm_api.io.info import (
     get_start_time_from_filepaths, 
     get_end_time_from_filepaths, 
     get_granule_from_filepaths
 )
-from gpm_api.io.disk import find_filepaths
 from gpm_api.io.checks import (
     check_product,
     check_base_dir,
@@ -354,6 +353,8 @@ def download_monthly_data(
     verbose=True,
     retry=1, 
 ):
+    from gpm_api.io.download import download_data
+    
     start_time = datetime.date(year, month, 1)
     end_time = start_time + relativedelta(months=1)
 
@@ -566,6 +567,8 @@ def check_archive_completness(
         Whether to print processing details. The default is False.
     """
     ##--------------------------------------------------------------------.
+    from gpm_api.io.download import download_data
+    
     if download: 
         if username is None: 
             raise ValueError("If download=True, provide the username.")

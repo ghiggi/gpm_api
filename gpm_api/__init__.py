@@ -12,9 +12,12 @@ from gpm_api.io.dataset import (
     open_dataset,
 )
 from gpm_api.io.disk import find_filepaths as find_files
-from gpm_api.utils.checks import check_regular_time
-from gpm_api.utils.checks import check_contiguous_scans
-from gpm_api.utils.geospatial import check_valid_geolocation
+from gpm_api.utils.checks import (
+    check_regular_time,
+    check_contiguous_scans,
+    check_valid_geolocation,
+    check_missing_granules,
+)
 from gpm_api.io.products import available_products
 from gpm_api.io.scan_modes import available_scan_modes
 

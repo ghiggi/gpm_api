@@ -96,7 +96,7 @@ def get_crop_slices_by_extent(xr_obj, extent):
         if idx_col.size == 0:
             raise ValueError("No data inside the provided bounding box.")
         # Retrieve list of along_track slices
-        list_slices = _get_list_slices_from_indices(idx_col)
+        list_slices = get_list_slices_from_indices(idx_col)
         return list_slices        
     elif is_grid(xr_obj):
         lon = xr_obj["lon"].data
@@ -106,8 +106,8 @@ def get_crop_slices_by_extent(xr_obj, extent):
         # If no data in the bounding box in current granule, return empty list
         if idx_row.size == 0 or idx_col.size == 0:
             raise ValueError("No data inside the provided bounding box.")
-        lat_slices = _get_list_slices_from_indices(idx_row)[0]
-        lon_slices = _get_list_slices_from_indices(idx_col)[0]
+        lat_slices = get_list_slices_from_indices(idx_row)[0]
+        lon_slices = get_list_slices_from_indices(idx_col)[0]
         slices_dict = {"lon": lon_slices, "lat": lat_slices}
         return slices_dict 
     else:
@@ -195,9 +195,6 @@ def crop(xr_obj, extent):
 
 ####---------------------------------------------------------------------------.
 #### TODO MOVE TO utils.checks !!!
-def check_valid_geolocation(xr_obj, verbose=True):
-    # TODO implement
-    pass
 
 
 def is_orbit(xr_obj):
