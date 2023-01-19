@@ -72,10 +72,10 @@ class GPM_Base_Accessor:
         return is_grid(self._obj)
 
     @property
-    def is_spatial_2D_field(self):
-        from gpm_api.utils.geospatial import is_spatial_2D_field
+    def is_spatial_2d(self):
+        from gpm_api.utils.geospatial import is_spatial_2d
 
-        return is_spatial_2D_field(self._obj)
+        return is_spatial_2d(self._obj)
 
     @property
     def is_regular(self):
@@ -84,10 +84,10 @@ class GPM_Base_Accessor:
         return is_regular(self._obj)
 
     @property
-    def has_regular_timesteps(self):
-        from gpm_api.utils.checks import has_regular_timesteps
+    def has_regular_time(self):
+        from gpm_api.utils.checks import has_regular_time
 
-        return has_regular_timesteps(self._obj)
+        return has_regular_time(self._obj)
 
     @property
     def has_contiguous_scans(self):
@@ -110,10 +110,10 @@ class GPM_Base_Accessor:
 
         return get_slices_regular_time(self._obj, tolerance=tolerance, min_size=min_size)
 
-    def get_slices_contiguous_scan(self, min_size=2):
-        from gpm_api.utils.checks import get_slices_contiguous_scan
+    def get_slices_contiguous_scans(self, min_size=2):
+        from gpm_api.utils.checks import get_slices_contiguous_scans
 
-        return get_slices_contiguous_scan(self._obj, min_size=min_size)
+        return get_slices_contiguous_scans(self._obj, min_size=min_size)
 
     def plot_transect_line(self, ax, color="black"):
         from gpm_api.visualization.profile import plot_transect_line

@@ -97,13 +97,13 @@ print(dir(ds[variable].gpm_api))
 ds.gpm_api.is_grid   # False
 ds.gpm_api.is_orbit  # True
 
-ds.gpm_api.is_spatial_2D_field  # False, because not only cross-track and along-track
-ds["zFactorFinal"].gpm_api.is_spatial_2D_field  # False, because there is the range dimension
-ds["zFactorFinal"].isel(range=[0]).gpm_api.is_spatial_2D_field  # True,  because selected a single range
-ds["zFactorFinal"].isel(range=0).gpm_api.is_spatial_2D_field  # True,  because no range dimension anymore
+ds.gpm_api.is_spatial_2d  # False, because not only cross-track and along-track
+ds["zFactorFinal"].gpm_api.is_spatial_2d  # False, because there is the range dimension
+ds["zFactorFinal"].isel(range=[0]).gpm_api.is_spatial_2d  # True,  because selected a single range
+ds["zFactorFinal"].isel(range=0).gpm_api.is_spatial_2d  # True,  because no range dimension anymore
 
 ds.gpm_api.has_contiguous_scans
-ds.gpm_api.get_slices_contiguous_scan()  # List of along-track slices with contiguous scans
+ds.gpm_api.get_slices_contiguous_scans()  # List of along-track slices with contiguous scans
 
 ds.gpm_api.is_regular
 

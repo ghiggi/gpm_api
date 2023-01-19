@@ -22,7 +22,7 @@ timesteps = ds_gpm["time"].values
 timesteps[5:10] = timesteps[100:105]
 
 # Check if regular timesteps
-ds_gpm.gpm_api.has_regular_timesteps
+ds_gpm.gpm_api.has_regular_time
 
 # Retrieve slices of regular timesteps
 list_slices = ds_gpm.gpm_api.get_slices_regular_time()
@@ -32,4 +32,4 @@ print(list_slices)
 ds_regular = ds_gpm.gpm_api.subset_by_time_slice(slice=list_slices[1])
 
 # Check if regular timesteps
-ds_regular.gpm_api.has_regular_timesteps
+ds_regular.gpm_api.has_regular_time

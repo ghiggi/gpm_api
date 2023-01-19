@@ -30,7 +30,7 @@ from gpm_api.utils.time import (
     subset_by_time,
     ensure_time_validity,
 )
-from gpm_api.utils.checks import has_regular_timesteps, is_regular
+from gpm_api.utils.checks import has_regular_time, is_regular
 
 
 class GPM_Warning(Warning):

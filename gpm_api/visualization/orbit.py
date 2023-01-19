@@ -9,9 +9,9 @@ import functools
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from gpm_api.utils.checks import (
-    check_is_spatial_2D_field,
+    check_is_spatial_2d,
     check_contiguous_scans,
-    get_slices_contiguous_scan,
+    get_slices_contiguous_scans,
 )
 from gpm_api.visualization.plot import (
     plot_cartopy_background,
@@ -64,10 +64,10 @@ def _call_over_contiguous_scans(function):
             ax = kwargs.get("ax")
 
         # - Check data array
-        check_is_spatial_2D_field(da)
+        check_is_spatial_2d(da)
 
         # - Get slices with contiguous scans
-        list_slices = get_slices_contiguous_scan(da)
+        list_slices = get_slices_contiguous_scans(da)
         if len(list_slices) == 0:
             return ValueError("No contiguous scans available. Impossible to plot.")
 
@@ -114,7 +114,7 @@ def plot_orbit_map(
 ):
     """Plot GPM orbit granule in a cartographic map."""
     # - Check inputs
-    check_is_spatial_2D_field(da)
+    check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
     
@@ -162,7 +162,7 @@ def plot_orbit_mesh(
 ):
     """Plot GPM orbit granule mesh in a cartographic map."""
     # - Check inputs
-    check_is_spatial_2D_field(da)
+    check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
     
     # - Initialize figure
@@ -202,7 +202,7 @@ def plot_orbit_image(
 ):
     """Plot GPM orbit granule as in image."""
     # - Check inputs
-    check_is_spatial_2D_field(da)
+    check_is_spatial_2d(da)
     check_contiguous_scans(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 

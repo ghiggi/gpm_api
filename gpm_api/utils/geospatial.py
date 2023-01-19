@@ -216,7 +216,7 @@ def is_grid(xr_obj):
         return False
 
 
-def is_spatial_2D_field(xr_obj):
+def is_spatial_2d(xr_obj):
     """Check whether the GPM xarray object is a 2D fields.
 
     It returns True if the object has only two spatial dimensions.

@@ -46,10 +46,10 @@ def check_is_grid(xr_obj):
         raise ValueError("Expecting a GPM GRID object.")
 
 
-def check_is_spatial_2D_field(da):
-    from .geospatial import is_spatial_2D_field
+def check_is_spatial_2d(da):
+    from .geospatial import is_spatial_2d
 
-    if not is_spatial_2D_field(da):
+    if not is_spatial_2d(da):
         raise ValueError("Expecting a 2D GPM field.")
 
 
@@ -82,7 +82,7 @@ def _infer_time_tolerance(xr_obj):
     return tolerance
 
 
-def _is_regular_timesteps(xr_obj, tolerance=None):
+def _is_regular_time(xr_obj, tolerance=None):
     """Return a boolean array indicating if the next regular timestep is present."""
     # Retrieve timesteps
     timesteps = _get_timesteps(xr_obj)
@@ -133,7 +133,7 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
     # Otherwise
     else:
         # Get boolean array indicating if the next regular timestep is present
-        is_regular = _is_regular_timesteps(xr_obj, tolerance=tolerance)
+        is_regular = _is_regular_time(xr_obj, tolerance=tolerance)
 
         # If non-regular timesteps are present, get the slices for each regular interval
         # - If consecutive non-regular timestep occurs, returns slices of size 1
@@ -184,7 +184,7 @@ def get_slices_nonregular_time(xr_obj, tolerance=None):
         return list_slices
 
     # Get boolean array indicating if the next regular timestep is present
-    is_regular = _is_regular_timesteps(xr_obj, tolerance=tolerance)
+    is_regular = _is_regular_time(xr_obj, tolerance=tolerance)
 
     # If non-regular timesteps are present, get the slices where timesteps non-regularity occur
     if not np.all(is_regular):
@@ -195,7 +195,7 @@ def get_slices_nonregular_time(xr_obj, tolerance=None):
     return list_slices
 
 
-def check_regular_timesteps(xr_obj, tolerance=None, verbose=True):
+def check_regular_time(xr_obj, tolerance=None, verbose=True):
     """
     Check no missing timesteps for longer than 'tolerance' seconds.
 
@@ -238,7 +238,7 @@ def check_regular_timesteps(xr_obj, tolerance=None, verbose=True):
         )
 
 
-def has_regular_timesteps(xr_obj):
+def has_regular_time(xr_obj):
     """Return True if all timesteps are regular. False otherwise."""
     list_discontinuous_slices = get_slices_nonregular_time(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
@@ -273,7 +273,7 @@ def _get_along_track_scan_distance(xr_obj):
     return dist
 
 
-def _is_contiguous_scan(xr_obj):
+def _is_contiguous_scans(xr_obj):
     """Return a boolean array indicating if the next scan is contiguous."""
     # Compute along track scan distance
     dist = _get_along_track_scan_distance(xr_obj)
@@ -303,7 +303,7 @@ def _is_contiguous_scan(xr_obj):
     return bool_arr
 
 
-def get_slices_contiguous_scan(xr_obj, min_size=2):
+def get_slices_contiguous_scans(xr_obj, min_size=2):
     """
     Return a list of slices ensuring contiguous scans.
 
@@ -337,7 +337,7 @@ def get_slices_contiguous_scan(xr_obj, min_size=2):
         return list_slices
 
     # Get boolean array indicating if the next scan is contiguous
-    is_contiguous = _is_contiguous_scan(xr_obj)
+    is_contiguous = _is_contiguous_scans(xr_obj)
 
     # If non-contiguous scans are present, get the slices with contiguous scans
     # - It discard consecutive non-contiguous scans
@@ -352,7 +352,7 @@ def get_slices_contiguous_scan(xr_obj, min_size=2):
     return list_slices
 
 
-def get_slices_discontiguous_scan(xr_obj):
+def get_slices_discontiguous_scans(xr_obj):
     """
     Return a list of slices where the scan discontinuity occurs.
 
@@ -385,7 +385,7 @@ def get_slices_discontiguous_scan(xr_obj):
         return list_slices
 
     # Get boolean array indicating if the next scan is contiguous
-    is_contiguous = _is_contiguous_scan(xr_obj)
+    is_contiguous = _is_contiguous_scans(xr_obj)
 
     # If non-contiguous scans are present, get the slices when discontinuity occurs
     if not np.all(is_contiguous):
@@ -416,7 +416,7 @@ def check_contiguous_scans(xr_obj, verbose=True):
 
     None.
     """
-    list_discontinuous_slices = get_slices_discontiguous_scan(xr_obj)
+    list_discontinuous_slices = get_slices_discontiguous_scans(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         # Retrieve discontinous timesteps interval
@@ -435,7 +435,7 @@ def check_contiguous_scans(xr_obj, verbose=True):
 
 def has_contiguous_scans(xr_obj):
     """Return True if all scans are contiguous. False otherwise."""
-    list_discontinuous_slices = get_slices_discontiguous_scan(xr_obj)
+    list_discontinuous_slices = get_slices_discontiguous_scans(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         return False
@@ -460,7 +460,7 @@ def has_missing_granules(xr_obj):
         else:
             return False
     if is_grid(xr_obj):
-        return has_regular_timesteps(xr_obj)
+        return has_regular_time(xr_obj)
     else:
         raise ValueError("Unrecognized GPM xarray object.")
 
@@ -482,7 +482,7 @@ def is_regular(xr_obj):
     if is_orbit(xr_obj):
         return has_contiguous_scans(xr_obj)
     elif is_grid(xr_obj):
-        return has_regular_timesteps(xr_obj)
+        return has_regular_time(xr_obj)
     else:
         raise ValueError("Unrecognized GPM xarray object.")
 
@@ -496,7 +496,7 @@ def get_slices_regular(xr_obj, min_size=None):
 
     The output format is: [slice(start,stop), slice(start,stop),...]
     For more information, read the documentation of:
-    - gpm_api.utils.checks.get_slices_contiguous_scan
+    - gpm_api.utils.checks.get_slices_contiguous_scans
     - gpm_api.utils.checks.get_slices_regular_time
     
     Parameters
@@ -516,7 +516,7 @@ def get_slices_regular(xr_obj, min_size=None):
 
     if is_orbit(xr_obj):
         min_size = 2 if min_size is None else min_size
-        return get_slices_contiguous_scan(xr_obj, min_size=min_size)
+        return get_slices_contiguous_scans(xr_obj, min_size=min_size)
     elif is_grid(xr_obj):
         min_size = 1 if min_size is None else min_size
         return get_slices_regular_time(xr_obj, min_size=min_size)

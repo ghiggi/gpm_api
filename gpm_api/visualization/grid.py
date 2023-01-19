@@ -7,7 +7,7 @@ Created on Sat Dec 10 19:13:34 2022
 """
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
-from gpm_api.utils.checks import check_is_spatial_2D_field
+from gpm_api.utils.checks import check_is_spatial_2d
 from gpm_api.visualization.plot import (
     plot_cartopy_background,
     _plot_cartopy_imshow,
@@ -31,7 +31,7 @@ def _plot_grid_map_cartopy(
 ):
     """Plot DataArray 2D field with cartopy."""
     # - Check inputs
-    check_is_spatial_2D_field(da)
+    check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
     # - Initialize figure
@@ -154,7 +154,7 @@ def plot_grid_image(
 ):
     """Plot DataArray 2D image."""
     # Check inputs
-    # check_is_spatial_2D_field(da)
+    # check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
     
     # Initialize figure
