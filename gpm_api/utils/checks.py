@@ -525,59 +525,108 @@ def get_regular_slices(xr_obj, min_size=None):
 
 
 ####--------------------------------------------------------------------------.
-#### Get slices from GPM object variables values 
-# from specific_value
-# from value in interval 
+#### Get slices from GPM object variable values 
 
-# get_slices_variable_between()
+def _check_criteria(criteria):
+    if criteria not in ["all", "any"]:
+        raise ValueError("Invalid value for criteria parameter. Must be 'all' or 'any'.")
 
 
-def _get_slices_variable_equal_value(ds, variable, value, dim=None):
+def _get_slices_variable_equal_value(da, value, dim=None, criteria="all"):
     """Return the slices with contiguous `value` in the `dim` dimension."""
     # Check dim 
     if isinstance(dim, str): 
         dim = [dim]
     dim = set(dim)
-    # Get data array and dimensions 
-    da = ds[variable]
-    da = da.compute()
     # Retrieve dims 
     dims = set(da.dims)
-    # Identify regions where the flag is equal to value 
+    # Identify regions where the value occurs
     da_bool = da == value
     # Collapse other dimension than dim
     dims_apply_over=list(dims.difference(dim))
-    bool_arr = da_bool.all(dim=dims_apply_over).data
+    if criteria == "all":
+        bool_arr = da_bool.all(dim=dims_apply_over).data
+    else:
+        bool_arr = da_bool.all(dim=dims_apply_over).data
     # Get list of slices with contiguous value
     list_slices = get_contiguous_true_slices(bool_arr, include_false=False, skip_consecutive_false=True)
     return list_slices
 
 
-def get_slices_variable_equals(ds,
-                               variable,
-                               values,
-                               dim,
-                               union=True):
-    """Return the slices with contiguous `values` in the `dim` dimension.
-    If values are a list of flag values
+def get_slices_var_equals(da,
+                          dim,
+                          values,
+                          union=True,
+                          criteria="all"):
+    """Return a list of slices along the `dim` dimension where `values` occurs. 
+    
+    The function is applied recursively to each value in `values`.
+    If the DataArray has additional dimensions, the "criteria" parameter is 
+    used to determine whether all values within each slice index must be equal
+    to value (if set to "all") or if at least one value within the slice index 
+    must be equal to value (if set to "any"). 
+    
+    If `values` are a list of values:
     - if union=True, it return slices corresponding to the sequence of consecutive values.
     - if union=False, it return slices for each value in values.
     
     If union=False [0,0, 1, 1] with values=[0,1] will return [slice(0,2), slice(2,4)]
     If union=True [0,0, 1, 1] with values=[0,1] will return [slice(0,4)]
-    """   
+    
+    `union` matters when multiple values are specified 
+    `criteria` matters when the DataArray has multiple dimensions.
+    """
+    _check_criteria(criteria)
+    # Get data array and dimensions 
+    da = da.compute()
+    # Retrieve the slices where the value(s) occur
     if isinstance(values, (float, int)): 
-        return _get_slices_variable_equal_value(ds=ds, 
-                                                variable=variable,
+        return _get_slices_variable_equal_value(da=da, 
                                                 value=values,
-                                                dim=dim)
+                                                dim=dim,
+                                                criteria=criteria)
     else: 
-        list_of_list_slices = [_get_slices_variable_equal_value(ds=ds, 
-                                                                variable=variable,
+        list_of_list_slices = [_get_slices_variable_equal_value(da=da, 
                                                                 value=value,
-                                                                dim=dim) for value in values]
+                                                                dim=dim,
+                                                                criteria=criteria) for value in values]
         if union: 
              list_slices = list_slices_union(*list_of_list_slices) 
         else: 
              list_slices = list_slices_sort(*list_of_list_slices)              
     return list_slices 
+
+
+def get_slices_var_between(da,
+                           dim,
+                           vmin=-np.inf,
+                           vmax=np.inf,
+                           criteria="all"):
+    """Return a list of slices along the `dim` dimension where values are between the interval. 
+    
+    If the DataArray has additional dimensions, the "criteria" parameter is 
+    used to determine whether all values within each slice index must be between
+    the interval (if set to "all") or if at least one value within the slice index 
+    must be between the interval (if set to "any"). 
+  
+    """
+    _check_criteria(criteria)
+    # Check dim 
+    if isinstance(dim, str): 
+        dim = [dim]
+    dim = set(dim)
+    # Get data array and dimensions 
+    da = da.compute()
+    # Retrieve dims 
+    dims = set(da.dims)
+    # Identify regions where the value are between the thresholds 
+    da_bool = np.logical_and(da >= vmin, da <= vmax)
+    # Collapse other dimension than dim
+    dims_apply_over=list(dims.difference(dim))
+    if criteria == "all":
+        bool_arr = da_bool.all(dim=dims_apply_over).data
+    else:
+        bool_arr = da_bool.any(dim=dims_apply_over).data
+    # Get list of slices with contiguous value
+    list_slices = get_contiguous_true_slices(bool_arr, include_false=False, skip_consecutive_false=True)
+    return list_slices

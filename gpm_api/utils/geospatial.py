@@ -7,7 +7,7 @@ Created on Wed Aug 17 09:30:29 2022
 """
 import numpy as np
 import xarray as xr
-from gpm_api.utils.slices import _get_list_slices_from_indices
+from gpm_api.utils.slices import get_list_slices_from_indices
 
 #### TODO: 
 # - croup_around(point, distance)

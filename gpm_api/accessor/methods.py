@@ -280,9 +280,21 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 
 @xr.register_dataarray_accessor("gpm_api")
 class GPM_DataArray_Accessor(GPM_Base_Accessor):
+    
     def __init__(self, xarray_obj):
         super().__init__(xarray_obj)
+    
+    def get_slices_var_equals(self, dim, values, union=True, criteria="all"):
+        from gpm_api.utils.checks import get_slices_var_equals
 
+        return get_slices_var_equals(self._obj, dim=dim, values=values, 
+                                     union=union, criteria=criteria)
+    
+    def get_slices_var_between(self, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
+        from gpm_api.utils.checks import get_slices_var_between
+        
+        return get_slices_var_between(self._obj, dim=dim, vmin=vmin, vmax=vmax, criteria=criteria)
+    
     def title(
         self,
         prefix_product=True,
