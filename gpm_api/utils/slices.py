@@ -105,8 +105,7 @@ def list_slices_sort(*args):
     return list_slices
 
 
-# TODO: RENAME list_slices_filter
-def filter_slices_by_size(list_slices, min_size=None, max_size=None):
+def list_slices_filter(list_slices, min_size=None, max_size=None):
     """Filter list of slices by size."""
     if min_size is None and max_size is None:
         return list_slices
@@ -125,8 +124,7 @@ def filter_slices_by_size(list_slices, min_size=None, max_size=None):
     return list_slices
 
 
-# TODO: RENAME get_list_slices_from_bool_arr
-def get_contiguous_true_slices(
+def get_list_slices_from_bool_arr(
     bool_arr, include_false=True, skip_consecutive_false=True
 ):
     """Return the slices corresponding to sequences of True in the input arrays.
@@ -135,8 +133,18 @@ def get_contiguous_true_slices(
     If include_false=False, no element in each slice sequence will be False
     If skip_consecutive_false=True (default), the first element of each slice must be a True.
     If skip_consecutive_false=False, it returns also slices of size 1 which selects just the False value.
-    Note: if include_false = False, skip_consecutive_false is automatically True.   
+    Note: if include_false = False, skip_consecutive_false is automatically True.
     
+    Examples:
+    If include_false=True and skip_consecutive_false=False: 
+       --> [False, False] --> [slice(0,1), slice(1,2)]
+    If include_false=True and skip_consecutive_false=True: 
+       --> [False, False] --> []
+       --> [False, False, True] --> [slice(2,3)]
+       --> [False, False, True, False] --> [slice(2,4)]
+    If include_false=False:
+        --> [False, False, True, False] --> [slice(2,3)]
+        
     """
     # Check the arguments
     if not include_false:
@@ -185,7 +193,7 @@ def get_contiguous_true_slices(
     # Return list of slices
     return list_slices
 
-# tests for _get_contiguous_true_slices
+# tests for _get_list_slices_from_bool_arr
 # bool_arr = np.array([True, False, True, True, True])
 # bool_arr = np.array([True, True, True, False, True])
 # bool_arr = np.array([True, True, True, True, False])

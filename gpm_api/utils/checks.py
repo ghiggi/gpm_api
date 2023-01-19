@@ -9,11 +9,11 @@ import numpy as np
 import xarray as xr
 from gpm_api.utils.geospatial import is_orbit, is_grid
 from gpm_api.utils.slices import (
-    get_contiguous_true_slices,
+    get_list_slices_from_bool_arr,
     list_slices_union, 
     # list_slices_intersection,
     list_slices_sort,
-    filter_slices_by_size
+    list_slices_filter
 )
 
 ORBIT_TIME_TOLERANCE = np.timedelta64(3, "s")
@@ -137,12 +137,12 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
 
         # If non-regular timesteps are present, get the slices for each regular interval
         # - If consecutive non-regular timestep occurs, returns slices of size 1
-        list_slices = get_contiguous_true_slices(
+        list_slices = get_list_slices_from_bool_arr(
             is_regular, include_false=True, skip_consecutive_false=False
         )
     
     # Select only slices with at least min_size timesteps
-    list_slices = filter_slices_by_size(list_slices, min_size=min_size)
+    list_slices = list_slices_filter(list_slices, min_size=min_size)
     
     # Return list of slices with regular timesteps
     return list_slices
@@ -341,12 +341,12 @@ def get_slices_contiguous_scans(xr_obj, min_size=2):
 
     # If non-contiguous scans are present, get the slices with contiguous scans
     # - It discard consecutive non-contiguous scans
-    list_slices = get_contiguous_true_slices(
+    list_slices = get_list_slices_from_bool_arr(
         is_contiguous, include_false=True, skip_consecutive_false=True
     )
 
     # Select only slices with at least 2 scans
-    list_slices = filter_slices_by_size(list_slices, min_size=min_size)
+    list_slices = list_slices_filter(list_slices, min_size=min_size)
 
     # Return list of contiguous scan slices
     return list_slices
@@ -523,12 +523,12 @@ def get_slices_with_unmissing_granules(xr_obj, min_size=2):
         bool_arr = _is_unmissing_granule(xr_obj["gpm_granule_id"].data)
         
         # If granules are missing present, get the slices with non-missing granules
-        list_slices = get_contiguous_true_slices(
+        list_slices = get_list_slices_from_bool_arr(
             bool_arr, include_false=True, skip_consecutive_false=True
         )
         
         # Select only slices with at least 2 scans
-        list_slices = filter_slices_by_size(list_slices, min_size=min_size)
+        list_slices = list_slices_filter(list_slices, min_size=min_size)
         
         # Return list of contiguous scan slices
         return list_slices
@@ -630,12 +630,12 @@ def get_slices_with_valid_geolocation(xr_obj, min_size=2):
     #     bool_arr = _is_unmissing_granule(xr_obj)
         
     #     # If granules are missing present, get the slices with non-missing granules
-    #     list_slices = get_contiguous_true_slices(
+    #     list_slices = get_list_slices_from_bool_arr(
     #         bool_arr, include_false=True, skip_consecutive_false=True
     #     )
         
     #     # Select only slices with at least 2 scans
-    #     list_slices = filter_slices_by_size(list_slices, min_size=min_size)
+    #     list_slices = list_slices_filter(list_slices, min_size=min_size)
         
     #     # Return list of contiguous scan slices
     #     return list_slices
@@ -745,7 +745,7 @@ def _get_slices_variable_equal_value(da, value, dim=None, criteria="all"):
     else:
         bool_arr = da_bool.all(dim=dims_apply_over).data
     # Get list of slices with contiguous value
-    list_slices = get_contiguous_true_slices(bool_arr, include_false=False, skip_consecutive_false=True)
+    list_slices = get_list_slices_from_bool_arr(bool_arr, include_false=False, skip_consecutive_false=True)
     return list_slices
 
 
@@ -824,6 +824,6 @@ def get_slices_var_between(da,
     else:
         bool_arr = da_bool.any(dim=dims_apply_over).data
     # Get list of slices with contiguous value
-    list_slices = get_contiguous_true_slices(bool_arr, include_false=False, skip_consecutive_false=True)
+    list_slices = get_list_slices_from_bool_arr(bool_arr, include_false=False, skip_consecutive_false=True)
     return list_slices
 

@@ -483,7 +483,7 @@ def get_time_period_with_missing_files(filepaths):
 
     """
     from gpm_api.utils.checks import _is_unmissing_granule
-    from gpm_api.utils.slices import get_contiguous_true_slices
+    from gpm_api.utils.slices import get_list_slices_from_bool_arr
     from gpm_api.io.info import (
         get_granule_from_filepaths,
         get_start_time_from_filepaths,
@@ -507,7 +507,7 @@ def get_time_period_with_missing_files(filepaths):
         # - Do not skip consecutive False  
         # --> is_not_missing=np.array([False, False, True, True, False, False])
         # --> list_slices = [slice(0, 1, None), slice(1, 2, None), slice(2, 5, None), slice(5, 6, None)]
-        list_slices = get_contiguous_true_slices(
+        list_slices = get_list_slices_from_bool_arr(
             is_not_missing, include_false=True, skip_consecutive_false=False)   
         # Retrieve start and end_time where there are missing files
         for slc in list_slices[0:-1]:
