@@ -95,7 +95,7 @@ def _is_regular_timesteps(xr_obj, tolerance=None):
     return bool_arr
 
 
-def get_regular_time_slices(xr_obj, tolerance=None, min_size=1):
+def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
     """
     Return a list of slices ensuring timesteps to be regular.
 
@@ -148,7 +148,7 @@ def get_regular_time_slices(xr_obj, tolerance=None, min_size=1):
     return list_slices
 
 
-def get_nonregular_time_slices(xr_obj, tolerance=None):
+def get_slices_nonregular_time(xr_obj, tolerance=None):
     """
     Return a list of slices where there are supposedly missing timesteps.
 
@@ -221,7 +221,7 @@ def check_regular_timesteps(xr_obj, tolerance=None, verbose=True):
 
     None.
     """
-    list_discontinuous_slices = get_nonregular_time_slices(xr_obj, tolerance=tolerance)
+    list_discontinuous_slices = get_slices_nonregular_time(xr_obj, tolerance=tolerance)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         # Retrieve discontinous timesteps interval
@@ -240,7 +240,7 @@ def check_regular_timesteps(xr_obj, tolerance=None, verbose=True):
 
 def has_regular_timesteps(xr_obj):
     """Return True if all timesteps are regular. False otherwise."""
-    list_discontinuous_slices = get_nonregular_time_slices(xr_obj)
+    list_discontinuous_slices = get_slices_nonregular_time(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         return False
@@ -303,7 +303,7 @@ def _is_contiguous_scan(xr_obj):
     return bool_arr
 
 
-def get_contiguous_scan_slices(xr_obj, min_size=2):
+def get_slices_contiguous_scan(xr_obj, min_size=2):
     """
     Return a list of slices ensuring contiguous scans.
 
@@ -352,7 +352,7 @@ def get_contiguous_scan_slices(xr_obj, min_size=2):
     return list_slices
 
 
-def get_discontiguous_scan_slices(xr_obj):
+def get_slices_discontiguous_scan(xr_obj):
     """
     Return a list of slices where the scan discontinuity occurs.
 
@@ -416,7 +416,7 @@ def check_contiguous_scans(xr_obj, verbose=True):
 
     None.
     """
-    list_discontinuous_slices = get_discontiguous_scan_slices(xr_obj)
+    list_discontinuous_slices = get_slices_discontiguous_scan(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         # Retrieve discontinous timesteps interval
@@ -435,7 +435,7 @@ def check_contiguous_scans(xr_obj, verbose=True):
 
 def has_contiguous_scans(xr_obj):
     """Return True if all scans are contiguous. False otherwise."""
-    list_discontinuous_slices = get_discontiguous_scan_slices(xr_obj)
+    list_discontinuous_slices = get_slices_discontiguous_scan(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         return False
@@ -487,7 +487,7 @@ def is_regular(xr_obj):
         raise ValueError("Unrecognized GPM xarray object.")
 
 
-def get_regular_slices(xr_obj, min_size=None):
+def get_slices_regular(xr_obj, min_size=None):
     """
     Return a list of slices to select regular GPM objects.
 
@@ -496,8 +496,8 @@ def get_regular_slices(xr_obj, min_size=None):
 
     The output format is: [slice(start,stop), slice(start,stop),...]
     For more information, read the documentation of:
-    - gpm_api.utils.checks.get_contiguous_scan_slices
-    - gpm_api.utils.checks.get_regular_time_slices
+    - gpm_api.utils.checks.get_slices_contiguous_scan
+    - gpm_api.utils.checks.get_slices_regular_time
     
     Parameters
     ----------
@@ -516,10 +516,10 @@ def get_regular_slices(xr_obj, min_size=None):
 
     if is_orbit(xr_obj):
         min_size = 2 if min_size is None else min_size
-        return get_contiguous_scan_slices(xr_obj, min_size=min_size)
+        return get_slices_contiguous_scan(xr_obj, min_size=min_size)
     elif is_grid(xr_obj):
         min_size = 1 if min_size is None else min_size
-        return get_regular_time_slices(xr_obj, min_size=min_size)
+        return get_slices_regular_time(xr_obj, min_size=min_size)
     else:
         raise ValueError("Unrecognized GPM xarray object.")
 

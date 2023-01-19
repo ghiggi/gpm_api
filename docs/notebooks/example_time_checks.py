@@ -25,7 +25,7 @@ timesteps[5:10] = timesteps[100:105]
 ds_gpm.gpm_api.has_regular_timesteps
 
 # Retrieve slices of regular timesteps
-list_slices = ds_gpm.gpm_api.get_regular_time_slices()
+list_slices = ds_gpm.gpm_api.get_slices_regular_time()
 print(list_slices)
 
 # Subset time using time slice

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from gpm_api.utils.checks import (
     check_is_spatial_2D_field,
     check_contiguous_scans,
-    get_contiguous_scan_slices,
+    get_slices_contiguous_scan,
 )
 from gpm_api.visualization.plot import (
     plot_cartopy_background,
@@ -67,7 +67,7 @@ def _call_over_contiguous_scans(function):
         check_is_spatial_2D_field(da)
 
         # - Get slices with contiguous scans
-        list_slices = get_contiguous_scan_slices(da)
+        list_slices = get_slices_contiguous_scan(da)
         if len(list_slices) == 0:
             return ValueError("No contiguous scans available. Impossible to plot.")
 

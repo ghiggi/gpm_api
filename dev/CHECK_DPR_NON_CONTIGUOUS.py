@@ -12,7 +12,7 @@ fpath = "/ltenas8/data/GPM/RS/V07/RADAR/2A-DPR/2020/07/20/2A.GPM.DPR.V9-20211125
 fpath = "/ltenas8/data/GPM/RS/V07/RADAR/2A-DPR/2020/07/20/2A.GPM.DPR.V9-20211125.20200720-S180156-E193431.036326.V07A.HDF5"
 
 ds_gpm = gpm_api.open_granule(fpath)
-list_regular_slices = ds_gpm.gpm_api.get_contiguous_scan_slices()
+list_regular_slices = ds_gpm.gpm_api.get_slices_contiguous_scan()
 print(list_regular_slices)
 slc = list_regular_slices[0]
 

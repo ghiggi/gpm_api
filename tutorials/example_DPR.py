@@ -103,7 +103,7 @@ ds["zFactorFinal"].isel(range=[0]).gpm_api.is_spatial_2D_field  # True,  because
 ds["zFactorFinal"].isel(range=0).gpm_api.is_spatial_2D_field  # True,  because no range dimension anymore
 
 ds.gpm_api.has_contiguous_scans
-ds.gpm_api.get_contiguous_scan_slices()  # List of along-track slices with contiguous scans
+ds.gpm_api.get_slices_contiguous_scan()  # List of along-track slices with contiguous scans
 
 ds.gpm_api.is_regular
 

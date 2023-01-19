@@ -74,7 +74,7 @@ ds.isel(time=[0]).gpm_api.is_spatial_2D_field  # True,  because of a single time
 ds.isel(time=0).gpm_api.is_spatial_2D_field  # True,  because no time dimension anymore
 
 ds.gpm_api.has_regular_timesteps
-ds.gpm_api.get_regular_time_slices()  # List of time slices with regular timesteps
+ds.gpm_api.get_slices_regular_time()  # List of time slices with regular timesteps
 
 ds.gpm_api.is_regular
 
