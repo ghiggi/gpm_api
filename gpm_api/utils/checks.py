@@ -6,12 +6,15 @@ Created on Sat Dec 10 18:41:48 2022
 @author: ghiggi
 """
 import numpy as np
+import pandas as pd
 import xarray as xr
 from gpm_api.utils.geospatial import is_orbit, is_grid
 from gpm_api.utils.slices import (
+    get_list_slices_from_indices,
     get_list_slices_from_bool_arr,
     list_slices_union, 
-    # list_slices_intersection,
+    list_slices_difference,
+    list_slices_intersection,
     list_slices_sort,
     list_slices_filter
 )
@@ -551,6 +554,88 @@ def check_missing_granules(xr_obj):
     if n_missing > 0:
         msg = f"There are {n_missing} missing granules. Their IDs are {missing_ids}."
         raise ValueError(msg)       
+
+####--------------------------------------------------------------------------.
+####################### 
+#### Regular orbit ####
+#######################
+def _replace_0_values(x):
+    """Replace 0 values with previous left non-zero occuring values.
+
+    If the array start with 0, it take the first non-zero occuring values
+    """
+    # Check inputs 
+    x = np.array(x)
+    dtype = x.dtype
+    if np.all(x==0):  
+        raise ValueError("It's flat swath orbit.")  
+    # Set 0 to NaN
+    x = x.astype(float)
+    x[x==0] = np.nan 
+    # Infill from left values, and then from right (if x start with 0)
+    x = pd.Series(x).fillna(method="ffill").fillna(method="bfill").to_numpy()
+    # Reset original dtype 
+    x = x.astype(dtype)
+    return x
+
+def _get_non_wobbling_lats(lats, threshold=100):
+    from gpm_api.utils.slices import list_slices_filter, list_slices_simplify
+    # Get direction (1 ascending , -1 descending)
+    directions = np.sign(np.diff(lats))
+    directions = np.append(directions[0], directions)  # include startpoint
+    directions = _replace_0_values(directions)
+       
+    # Identify index where next element change
+    idxs_change = np.where(np.diff(directions) != 0)[0]
+    
+    # Retrieve valid slices
+    indices = np.unique(np.concatenate(([0], idxs_change, [len(lats)-1])))
+    orbit_slices = [slice(indices[i], indices[i+1]+1) for i in range(len(indices)-1)]
+    list_slices = list_slices_filter(orbit_slices, min_size=threshold)
+    list_slices = list_slices_simplify(list_slices)
+    return list_slices
+
+
+def get_slices_swath_non_wobbling(xr_obj, threshold=100):
+    """Return the along-track slices along which the swath is not wobbling.
+    
+    For wobbling, we define the occurence of changes in latitude directions 
+    in less than `threshold` scans.
+    The function extract the along-track boundary on both swath sides and 
+    identify where the change in orbit direction occurs.
+   """
+    
+    from gpm_api.utils.slices import list_slices_intersection
+    
+    # Assume lats, lons having shape (y, x) with x=along_track direction
+    swath_def = xr_obj.gpm_api.pyresample_area
+    lats_side0 = swath_def.lats[0, :]
+    lats_side2 = swath_def.lats[-1, :]
+    # Get valid slices 
+    list_slices1 = _get_non_wobbling_lats(lats_side0, threshold=100)
+    list_slices2 = _get_non_wobbling_lats(lats_side2, threshold=100)
+    list_slices = list_slices_intersection(list_slices1, list_slices2)
+    return list_slices
+
+
+def get_slices_swath_wobbling(xr_obj, threshold=100):
+    """Return the along-track slices along which the swath is wobbling.
+    
+    For wobbling, we define the occurence of changes in latitude directions 
+    in less than `threshold` scans.
+    The function extract the along-track boundary on both swath sides and 
+    identify where the change in orbit direction occurs.
+   """
+    # TODO: this has not been well checked...likely need +1 somewhere ... 
+    list_slices1 = get_slices_swath_non_wobbling(xr_obj, threshold=threshold)
+    list_slices_full = [slice(0, len(xr_obj["along_track"]))]
+    list_slices = list_slices_difference(list_slices_full, list_slices1)
+    return list_slices
+
+
+
+
+
 
 ####--------------------------------------------------------------------------.
 #############################

@@ -21,6 +21,7 @@ def get_list_slices_from_indices(indices):
     # Checks
     if len(indices) == 0: 
         list_slices = []
+        return list_slices
     indices = np.asarray(indices).astype(int)
     indices = sorted(np.unique(indices))
     if np.any(np.sign(indices) < 0):
@@ -72,6 +73,15 @@ def list_slices_union(*args):
     list_indices = [get_indices_from_list_slices(l) for l in list(args)]
     union_indices = np.unique(np.concatenate(list_indices))
     return get_list_slices_from_indices(union_indices)
+
+
+def list_slices_difference(list_slices1, list_slices2): 
+    """Return the list of slices covered by list_slices1 not intersecting list_slices2."""
+    list_indices1 = get_indices_from_list_slices(list_slices1)
+    list_indices2 = get_indices_from_list_slices(list_slices2)
+    diff_indices = np.setdiff1d(list_indices1, list_indices2)
+    list_slices = get_list_slices_from_indices(diff_indices)
+    return list_slices
 
 
 def list_slices_combine(*args):
