@@ -123,6 +123,25 @@ def assign_dataset_dimensions(ds):
     return ds
 
 
+def get_variables_dims(ds):
+    """Retrieve the dimensions used by the xr.Dataset variables."""
+    dims = np.unique(np.concatenate([list(ds[var].dims) for var in ds.data_vars]))
+    return dims
+
+
+def unused_var_dims(ds):
+    """Retrieve the dimensions not used by the the xr.Dataset variables."""
+    var_dims = set(get_variables_dims(ds))
+    ds_dims = set(list(ds.dims))
+    unused_dims = ds_dims.difference(var_dims)
+    return list(unused_dims)
+
+
+def remove_unused_var_dims(ds):
+    """Remove coordinates and dimensions not used by the xr.Dataset variables."""
+    return ds.drop_dims(unused_var_dims(ds))
+
+
 ####--------------------------------------------------------------------------.
 #####################
 #### Coordinates ####
@@ -299,6 +318,7 @@ def _open_hdf_group(
     if variables is not None:
         variables_subset = variables[np.isin(variables, list(ds.data_vars))]
         ds = ds[variables_subset]
+    
     # Remove unuseful variables
     dummy_variables = [
         "Latitude",
@@ -316,6 +336,81 @@ def _open_hdf_group(
         if len(group) > 0:
             rename_var_dict = {var: group + "/" + var for var in ds.data_vars}
             ds = ds.rename_vars(rename_var_dict)
+    return ds
+
+
+def _get_granule_info(filepath, 
+                      scan_mode,
+                      variables,
+                      groups):
+    """Retrieve coordinates, attributes and valid variables and groups from the HDF file."""
+    # Open HDF5 file
+    hdf = h5py.File(filepath, "r")
+    
+    # Get coordinates
+    coords = get_coords(hdf, scan_mode)
+    
+    # Get global attributes from the HDF file
+    # TODO Add FileHeader Group attributes (see metadata doc)
+    # TODO Select all possible attributes?
+    
+    # Global attributes:
+    # - ProcessingSystem, DOI, InstrumentName,
+    # - SatelliteName, AlgorithmID, ProductVersion
+    attrs = get_attrs(hdf)
+    attrs["ScanMode"] = scan_mode
+    
+    # Get groups to process (filtering out groups without any `variables`)
+    groups, variables = _get_hdf_groups(
+        hdf, scan_mode=scan_mode, variables=variables, groups=groups
+    )
+    # Close HDF5 file 
+    hdf.close()
+    
+    return (coords, attrs, groups, variables)
+
+
+def _get_granule_dataset(filepath,
+                         scan_mode,
+                         variables,
+                         groups,
+                         prefix_group,
+                         chunks,
+                         decode_cf=False):
+    """Open a grouped HDF file into a xr.Dataset."""
+    # Retrieve coords, attrs and valid group and variables from the HDF file
+    coords, attrs, groups, variables = _get_granule_info(filepath=filepath,
+                                                         scan_mode=scan_mode,
+                                                         variables=variables, 
+                                                         groups=groups)
+    
+    # Iterate over groups and create xr.Datasets
+    list_ds = []
+    for group in groups:
+        ds = _open_hdf_group(
+            filepath,
+            scan_mode=scan_mode,
+            group=group,
+            variables=variables,
+            prefix_group=prefix_group,
+            decode_cf=False,
+            chunks=chunks,
+        )
+        list_ds.append(ds)
+
+    # Create single xr.Dataset
+    ds = xr.merge(list_ds)
+
+    # Assign coords
+    ds = ds.assign_coords(coords)
+
+    # Assign global attributes
+    ds.attrs = attrs
+    
+    # Remove list_ds 
+    del list_ds
+    
+    # Return dataset
     return ds
 
 
@@ -401,62 +496,30 @@ def open_granule(
 
     # Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version)
-
-    # Open HDF5 file
-    hdf = h5py.File(filepath, "r")
-
-    # Get coordinates
-    coords = get_coords(hdf, scan_mode)
-
-    # Get global attributes from the HDF file
-    # TODO Add FileHeader Group attributes (see metadata doc)
-    # TODO Select all possible attributes?
-
-    # Global attributes:
-    # - ProcessingSystem, DOI, InstrumentName,
-    # - SatelliteName, AlgorithmID, ProductVersion
-    attrs = get_attrs(hdf)
-    attrs["ScanMode"] = scan_mode
-
-    # Get groups to process (filtering out groups without any `variables`)
-    groups, variables = _get_hdf_groups(
-        hdf, scan_mode=scan_mode, variables=variables, groups=groups
-    )
-    hdf.close()
-
-    # Iterate over groups and create xr.Datasets
-    list_ds = []
-    for group in groups:
-        ds = _open_hdf_group(
-            filepath,
-            scan_mode=scan_mode,
-            group=group,
-            variables=variables,
-            prefix_group=prefix_group,
-            decode_cf=False,
-            chunks=chunks,
-        )
-        list_ds.append(ds)
-
-    # Create single xr.Dataset
-    ds = xr.merge(list_ds)
-
-    # Assign coords
-    ds = ds.assign_coords(coords)
-
-    # Assign global attributes
-    ds.attrs = attrs
-
-    # ------------------------------------------------------.
+    
+    ###-----------------------------------------------------------------------.
+    # Retrieve the granule dataset (without cf decoding)
+    ds = _get_granule_dataset(filepath=filepath,
+                              scan_mode=scan_mode,
+                              groups=groups,
+                              variables=variables,
+                              prefix_group=prefix_group,
+                              chunks=chunks,
+                              decode_cf=False)
+                          
+    ###-----------------------------------------------------------------------.
     ### Clean attritubes, decode variables
     # Apply custom processing
     ds = apply_custom_decoding(ds, product)
 
-    # Apply cf decoding
+    # Apply CF decoding
     if decode_cf:
         ds = decode_dataset(ds)
     
-    # ------------------------------------------------------.
+    # Remove coords and dimensions not exploited by data variables
+    ds = remove_unused_var_dims(ds)
+
+    ###-----------------------------------------------------------------------.
     #### Check swath time coordinate
     # Ensure validity of the time dimension
     # - Infill up to 10 consecutive NaT
@@ -470,7 +533,7 @@ def open_granule(
         msg = f"The GPM granule {filepath} has non-contiguous scans !"
         warnings.warn(msg, GPM_Warning)
 
-    # ------------------------------------------------------.
+    ###-----------------------------------------------------------------------.
     #### Check geolocation latitude/longitude coordinates
     # TODO: check_valid_geolocation
     # TODO: ensure_valid_geolocation (1 spurious pixel)
@@ -486,11 +549,7 @@ def open_granule(
     # cross-track - along_track
     # lat, lon 
     
-    # ------------------------------------------------------.
-    # Remove list xr.Dataset to close connections
-    del list_ds
-
-    # ------------------------------------------------------.
+    ###-----------------------------------------------------------------------.
     # Return xr.Dataset
     return ds
 
@@ -501,23 +560,53 @@ def open_granule(
 ##############################
 
 
-def is_valid_granule(filepath):
-    # Load hdf granule file
+def _check_time_period_coverage(ds, start_time, end_time, raise_error=False): 
+    """Check time period start_time, end_time is covered.
+    
+    If raise_error=True, raise error if time period is not covered.
+    If raise_error=False, it raise a GPM warning.
+    
+    """
+    # Get first and last timestep from xr.Dataset 
+    first_start = ds['time'].data[0].astype("M8[s]").tolist()
+    last_end = ds['time'].data[-1].astype("M8[s]").tolist()
+    # Check time period is covered
+    msg = ""
+    if first_start > start_time:
+        msg = f"The dataset start at {first_start}, although the specified start_time is {start_time}."
+        
+    if last_end < end_time:
+        msg1 = f"The dataset end_time {last_end} occurs before the specified end_time {end_time}."
+        if msg != "":
+           msg = msg[:-1] + "; and t" + msg1[1:]
+        else: 
+            msg = msg1
+    if msg != "": 
+        if raise_error:
+            raise ValueError(msg)
+        else: 
+            warnings.warn(msg, GPM_Warning)
+
+
+def _is_valid_granule(filepath):
+    """Chech the GPM HDF file is readable, not corrupted and not EMPTY."""
+    # Try loading the HDF granule file
     try:
         hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
         hdf_attr = hdf5_file_attrs(hdf)
         hdf.close()
+    # If raise an OSError, warn and remove the file
     except OSError:
         if not os.path.exists(filepath):
             raise ValueError(
                 "This is a gpm_api bug. `find_GPM_files` should not have returned this filepath."
             )
         else:
-            print(f"The following file is corrupted and is being removed: {filepath}")
-            print("Redownload the file !!!")
+            msg = f"The following file is corrupted and is being removed: {filepath}. Redownload the file."
+            warnings.warn(msg, GPM_Warning)
             os.remove(filepath)
             return False
-
+    # If the GPM granule is empty, return False, otherwise True
     if hdf_attr["FileHeader"]["EmptyGranule"] == "NOT_EMPTY":
         return True
     else:
@@ -533,7 +622,7 @@ def _open_valid_granules(filepaths,
                          chunks,
                          ):
     """
-    Open a list of granules. 
+    Open a list of HDF granules. 
     
     Corrupted granules are not returned !
 
@@ -546,7 +635,7 @@ def _open_valid_granules(filepaths,
     l_datasets = []
     for filepath in filepaths:
         # Retrieve data if granule is not empty
-        if is_valid_granule(filepath):
+        if _is_valid_granule(filepath):
             ds = open_granule(
                 filepath,
                 scan_mode=scan_mode,
@@ -578,7 +667,7 @@ def _concat_datasets(l_datasets):
                        combine_attrs='override')
         
         # Tranpose to have (y,x) dimension order 
-        # --> To work nicely with pyresample and matplotlib
+        # - This shape is expected by i.e. pyresample and matplotlib
         # - GRID:  (..., time, lat, lon)
         # - ORBIT: (cross_track, along_track, ...)
         if is_grid:          
@@ -679,20 +768,15 @@ def open_dataset(
         verbose=verbose,
     )
     ##------------------------------------------------------------------------.
-    # Check that files have been downloaded  on disk
+    # Check that files have been downloaded on disk
     if len(filepaths) == 0:
         raise ValueError(
             "Requested files are not found on disk. Please download them before."
         )
 
-    # Filter by version
-    # TODO
-
     # Check same version
-    # TODO
-
-    # Check consecutive granules
-    # TODO
+    # - Filter by version make no sense because gpm_api version != filename version 
+    # --> TODO: PUT IN DISK FIND_FILES 
 
     ##------------------------------------------------------------------------.
     # Initialize list (to store Dataset of each granule )
@@ -706,8 +790,7 @@ def open_dataset(
                                       )
     
     ##-------------------------------------------------------------------------.
-    # TODO
-    # - Extract attributes and summarize it
+    # TODO - Extract attributes and add as coordinate ?
     # - MissingData in FileHeaderGroup: The number of missing scans.
     # - TotalQualityCode in JAXAInfo Group
     # - NumberOfRainPixels (FS/HS) in JAXAInfo Group
@@ -715,8 +798,8 @@ def open_dataset(
     # - ProcessingMode in JAXAInfo Group
     # - DielectricFactorKa in JAXAInfo Group
     # - DielectricFactorKu in JAXAInfo Group
-
     # - ScanType: SwathHeader Group (”CROSSTRACK”, ”CONICAL”)
+    
     ##-------------------------------------------------------------------------.
     # Concat all datasets
     ds = _concat_datasets(l_datasets)
@@ -736,9 +819,9 @@ def open_dataset(
         
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time
+    # - Raise warning if the time period is not fully covered
     ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
-    
-    # TODO: add warning if timeperiod not fully covered ! 
+    _check_time_period_coverage(ds, start_time, end_time, raise_error=False)
     
     ##------------------------------------------------------------------------.
     # Return Dataset

@@ -19,7 +19,7 @@ def _get_valid_granule(filepath,
                        prefix_group,
                        chunks,
                        ): 
-    if is_valid_granule(filepath):
+    if _is_valid_granule(filepath):
         ds = open_granule(
             filepath,
             scan_mode=scan_mode,
