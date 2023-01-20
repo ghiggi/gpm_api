@@ -22,6 +22,7 @@ Created on Mon Aug 15 23:02:04 2022
 
 # -----------------------------------------------------------------------------.
 # Solve TODOs in dataset.py
+# - Add granule_id also to GRID (imerg) dataset
 
 ### Orbit quality flags
 # --> Add as coordinate?

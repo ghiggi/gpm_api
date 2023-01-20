@@ -32,7 +32,7 @@ from gpm_api.utils.time import (
 )
 from gpm_api.utils.checks import has_regular_time, is_regular, has_missing_granules
 from gpm_api.utils.warnings import GPM_Warning
-
+from gpm_api.io import VERSION # CURRENT GPM VERSION
 
 ####--------------------------------------------------------------------------.
 ### Define GPM_API Dataset Dimensions
@@ -190,7 +190,7 @@ def get_grid_coords(hdf, scan_mode):
     time = hdf_attr["FileHeader"]["StartGranuleDateTime"][:-1]
     time = np.array(
         np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1
-    )  # TODO: document why + 30 m
+    )  # TODO: document why + 30 min
     coords = {"time": time, "lon": lon, "lat": lat}
     return coords
 
@@ -687,7 +687,7 @@ def open_dataset(
     variables=None,
     groups=None,  # TODO implement
     scan_mode=None,
-    version=7,
+    version=VERSION,
     product_type="RS",
     chunks="auto",
     decode_cf=True,
