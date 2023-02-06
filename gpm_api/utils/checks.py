@@ -57,6 +57,116 @@ def check_is_spatial_2d(da):
 
 
 ####--------------------------------------------------------------------------.
+##########################
+#### Regular granules ####
+##########################
+
+def _is_unmissing_granule(granule_ids):
+    """Return a boolean array indicating if the next scan is not the same/next granule."""
+    # Retrieve if next scan is in the same or next granule (True) or False.
+    bool_arr = np.diff(granule_ids) <= 1
+
+    # Add True to last position
+    bool_arr = np.append(bool_arr, True)
+    return bool_arr
+    
+
+def get_missing_granule_numbers(xr_obj): 
+    """Return ID numbers of missing granules."""
+    granule_ids = np.unique(xr_obj["gpm_granule_id"].data)
+    min_id =  min(granule_ids)
+    max_id = max(granule_ids)
+    possible_ids = np.arange(min_id, max_id+1)
+    missing_ids = possible_ids[~np.isin(possible_ids, granule_ids)]
+    return missing_ids
+
+
+def has_missing_granules(xr_obj):
+    """Checks GPM object is composed of consecutive granules."""
+    from gpm_api.utils.geospatial import is_orbit, is_grid
+
+    if is_orbit(xr_obj):
+        if np.any(~_is_unmissing_granule(xr_obj["gpm_granule_id"].data)):
+            return True
+        else:
+            return False
+    if is_grid(xr_obj):
+        return has_regular_time(xr_obj)
+    else:
+        raise ValueError("Unrecognized GPM xarray object.")
+
+
+def get_slices_with_unmissing_granules(xr_obj, min_size=2):
+    """
+    Return a list of slices ensuring contiguous granules.
+
+    Output format: [slice(start,stop), slice(start,stop),...]
+
+    The minimum size of the output slices is 2.
+
+    Parameters
+    ----------
+    xr_obj : (xr.Dataset, xr.DataArray)
+        GPM xarray object.
+    min_size : int
+        Minimum size for a slice to be returned.
+
+    Returns
+    -------
+    list_slices : list
+        List of slice object to select contiguous granules.
+    """
+
+    if is_grid(xr_obj):
+        # TODO: use granule_id when gpm_api modified to include it also in GRID product
+        return get_slices_regular_time(xr_obj, tolerance=None, min_size=min_size)
+    
+    if is_orbit(xr_obj): 
+        # Get number of scans
+        n_scans = xr_obj["along_track"].shape[0]
+        # Define behaviour if less than 2 scan along track
+        # - If n_scans 0, slice(0, 0) could return empty array
+        # - If n_scans 1, slice(0, 1) could return the single scan
+        # --> Here we decide to return an empty list !
+        if n_scans < 2:
+            list_slices = []
+            return list_slices
+        
+        # Get boolean array indicating if the next scan is same or next granule
+        bool_arr = _is_unmissing_granule(xr_obj["gpm_granule_id"].data)
+        
+        # If granules are missing present, get the slices with non-missing granules
+        list_slices = get_list_slices_from_bool_arr(
+            bool_arr, include_false=True, skip_consecutive_false=True
+        )
+        
+        # Select only slices with at least 2 scans
+        list_slices = list_slices_filter(list_slices, min_size=min_size)
+        
+        # Return list of contiguous scan slices
+        return list_slices
+    else:
+        raise ValueError("Unrecognized GPM xarray object.")
+
+
+def check_missing_granules(xr_obj):
+    """
+    Check no missing granules in the GPM Dataset.
+
+    Parameters
+    ----------
+    xr_obj : xr.Dataset or xr.DataArray
+        xarray object.
+
+    """
+    missing_ids = get_missing_granule_numbers(xr_obj)
+    n_missing = len(missing_ids)
+    if n_missing > 0:
+        msg = f"There are {n_missing} missing granules. Their IDs are {missing_ids}."
+        raise ValueError(msg)    
+        
+        
+####--------------------------------------------------------------------------.
 ############################
 #### Regular timesteps  ####
 ############################
@@ -308,14 +418,14 @@ def _is_contiguous_scans(xr_obj):
 
 def get_slices_contiguous_scans(xr_obj, min_size=2):
     """
-    Return a list of slices ensuring contiguous scans.
+    Return a list of slices ensuring contiguous scans (and granules).
 
     Output format: [slice(start,stop), slice(start,stop),...]
 
     An input with less than 2 scans (along-track) returns an empty list.
     Consecutive non-contiguous scans are discarded and not included in the outputs.
     The minimum size of the output slices is 2.
-
+    
     Parameters
     ----------
     xr_obj : (xr.Dataset, xr.DataArray)
@@ -329,8 +439,10 @@ def get_slices_contiguous_scans(xr_obj, min_size=2):
         List of slice object to select contiguous scans.
     """
     check_is_orbit(xr_obj)
+    
     # Get number of scans
     n_scans = xr_obj["along_track"].shape[0]
+    
     # Define behaviour if less than 2 scan along track
     # - If n_scans 0, slice(0, 0) could return empty array
     # - If n_scans 1, slice(0, 1) could return the single scan
@@ -347,10 +459,15 @@ def get_slices_contiguous_scans(xr_obj, min_size=2):
     list_slices = get_list_slices_from_bool_arr(
         is_contiguous, include_false=True, skip_consecutive_false=True
     )
-
     # Select only slices with at least 2 scans
     list_slices = list_slices_filter(list_slices, min_size=min_size)
-
+    
+    # Also retrieve the slices with non missing granule 
+    list_slices1 = get_slices_with_unmissing_granules(xr_obj)
+    
+    # Perform list_slices intersection
+    list_slices = list_slices_intersection(list_slices, list_slices1)
+    
     # Return list of contiguous scan slices
     return list_slices
 
@@ -443,117 +560,7 @@ def has_contiguous_scans(xr_obj):
     if n_discontinuous > 0:
         return False
     else:
-        return True
-
-
-####--------------------------------------------------------------------------.
-##########################
-#### Regular granules ####
-##########################
-
-def _is_unmissing_granule(granule_ids):
-    """Return a boolean array indicating if the next scan is not the same/next granule."""
-    # Retrieve if next scan is in the same or next granule (True) or False.
-    bool_arr = np.diff(granule_ids) <= 1
-
-    # Add True to last position
-    bool_arr = np.append(bool_arr, True)
-    return bool_arr
-    
-
-def get_missing_granule_numbers(xr_obj): 
-    """Return ID numbers of missing granules."""
-    granule_ids = np.unique(xr_obj["gpm_granule_id"].data)
-    min_id =  min(granule_ids)
-    max_id = max(granule_ids)
-    possible_ids = np.arange(min_id, max_id+1)
-    missing_ids = possible_ids[~np.isin(possible_ids, granule_ids)]
-    return missing_ids
-
-
-def has_missing_granules(xr_obj):
-    """Checks GPM object is composed of consecutive granules."""
-    from gpm_api.utils.geospatial import is_orbit, is_grid
-
-    if is_orbit(xr_obj):
-        if np.any(~_is_unmissing_granule(xr_obj["gpm_granule_id"].data)):
-            return True
-        else:
-            return False
-    if is_grid(xr_obj):
-        return has_regular_time(xr_obj)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
-
-
-def get_slices_with_unmissing_granules(xr_obj, min_size=2):
-    """
-    Return a list of slices ensuring contiguous granules.
-
-    Output format: [slice(start,stop), slice(start,stop),...]
-
-    The minimum size of the output slices is 2.
-
-    Parameters
-    ----------
-    xr_obj : (xr.Dataset, xr.DataArray)
-        GPM xarray object.
-    min_size : int
-        Minimum size for a slice to be returned.
-
-    Returns
-    -------
-    list_slices : list
-        List of slice object to select contiguous granules.
-    """
-
-    if is_grid(xr_obj):
-        # TODO: use granule_id when gpm_api modified to include it also in GRID product
-        return get_slices_regular_time(xr_obj, tolerance=None, min_size=min_size)
-    
-    if is_orbit(xr_obj): 
-        # Get number of scans
-        n_scans = xr_obj["along_track"].shape[0]
-        # Define behaviour if less than 2 scan along track
-        # - If n_scans 0, slice(0, 0) could return empty array
-        # - If n_scans 1, slice(0, 1) could return the single scan
-        # --> Here we decide to return an empty list !
-        if n_scans < 2:
-            list_slices = []
-            return list_slices
-        
-        # Get boolean array indicating if the next scan is same or next granule
-        bool_arr = _is_unmissing_granule(xr_obj["gpm_granule_id"].data)
-        
-        # If granules are missing present, get the slices with non-missing granules
-        list_slices = get_list_slices_from_bool_arr(
-            bool_arr, include_false=True, skip_consecutive_false=True
-        )
-        
-        # Select only slices with at least 2 scans
-        list_slices = list_slices_filter(list_slices, min_size=min_size)
-        
-        # Return list of contiguous scan slices
-        return list_slices
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
-
-
-def check_missing_granules(xr_obj):
-    """
-    Check no missing granules in the GPM Dataset.
-
-    Parameters
-    ----------
-    xr_obj : xr.Dataset or xr.DataArray
-        xarray object.
-
-    """
-    missing_ids = get_missing_granule_numbers(xr_obj)
-    n_missing = len(missing_ids)
-    if n_missing > 0:
-        msg = f"There are {n_missing} missing granules. Their IDs are {missing_ids}."
-        raise ValueError(msg)       
+        return True 
 
 ####--------------------------------------------------------------------------.
 ####################### 
