@@ -8,7 +8,7 @@ Created on Mon Aug 15 00:12:47 2022
 import numpy as np
 import xarray as xr
 import warnings
-
+from gpm_api.utils.warnings import GPM_Warning
 ####--------------------------------------------------------------------------.
 #### Attributes cleaning
 
@@ -118,33 +118,26 @@ def decode_dataset(ds):
 #   print('Decoding of typePrecip not yet implemented')
 
 
-def infill_invalid_coords(ds, mask):
-    lon = ds["lon"].data
-    lat = ds["lat"].data
-
-    lon_dummy = lon.copy()
-    lon_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), lon[~mask])
-    lat_dummy = lat.copy()
-    lat_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), lat[~mask])
-
-    ds["lon"].data = lon_dummy
-    ds["lat"].data = lat_dummy
-    return ds
-
-
 def ensure_valid_coords(ds, raise_error=False):
-    invalid_coords = np.logical_or(ds["lon"].data == -9999.9, ds["lat"].data == -9999.9)
+    # invalid_coords = np.logical_or(ds["lon"].data == -9999.9,
+    #                                ds["lat"].data == -9999.9)
+    invalid_coords = np.logical_or(np.logical_or(ds["lon"].data < -180, ds["lon"].data > 180),
+                                   np.logical_or(ds["lat"].data < -90, ds["lat"].data > 90))
     if np.any(invalid_coords):
+        # Raise error or add warning 
+        msg = "Invalid coordinate in the granule."
         if raise_error:
-            raise ValueError("Invalid coordinate in the granule.")
+            raise ValueError(msg)
         else:
-            print("Warning: invalid coordinates in ...")
+            warnings.warn(msg, GPM_Warning)
+
         da_invalid_coords = ds["lon"].copy()
         da_invalid_coords.data = invalid_coords
-        # Set NaN value over invalid coordinates
+        # For each variable, set NaN value where invalid coordinates
         ds = ds.where(~da_invalid_coords)
-        # Replace invalid coordinate with closer value
-        ds = infill_invalid_coords(ds, invalid_coords)
+        # Add NaN to longitude and latitude 
+        ds["lon"] = ds["lon"].where(~da_invalid_coords)
+        ds["lat"] = ds["lat"].where(~da_invalid_coords)
     return ds
 
 

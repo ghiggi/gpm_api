@@ -6,12 +6,13 @@ Created on Sat Dec 10 19:06:20 2022
 @author: ghiggi
 """
 import functools
+import numpy as np
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from gpm_api.utils.checks import (
     check_is_spatial_2d,
     check_contiguous_scans,
-    get_slices_contiguous_scans,
+    get_slices_regular,
 )
 from gpm_api.visualization.plot import (
     plot_cartopy_background,
@@ -36,6 +37,28 @@ def plot_swath_lines(ds, ax=None, **kwargs):
     # ax.plot(da['lon'][:, 0] + 0.0485, da['lat'][:,0],'--k')
     # ax.plot(da['lon'][:,-1] - 0.0485, da['lat'][:,-1],'--k')
 
+
+def infill_invalid_coords(xr_obj):
+    """Replace invalid coordinates with closer valid location.
+    
+    It assumes that the invalid pixel variables are already masked to NaN.
+    """
+    # TODO: unvalid pixel coordinates should be masked by full transparency ! 
+    
+    from gpm_api.utils.checks import _is_non_valid_geolocation
+    # Retrieve array indicated unvalid geolocation 
+    mask = _is_non_valid_geolocation(xr_obj).data
+    # Retrieve lon and lat array 
+    lon = xr_obj["lon"].data
+    lat = xr_obj["lat"].data
+    # Replace unvalid coordinates with closer valid values 
+    lon_dummy = lon.copy()
+    lon_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), lon[~mask])
+    lat_dummy = lat.copy()
+    lat_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), lat[~mask])
+    xr_obj["lon"].data = lon_dummy
+    xr_obj["lat"].data = lat_dummy
+    return xr_obj
 
 # TODO: plot swath polygon
 # def plot_swath(ds, ax=None):
@@ -66,10 +89,10 @@ def _call_over_contiguous_scans(function):
         # - Check data array
         check_is_spatial_2d(da)
 
-        # - Get slices with contiguous scans
-        list_slices = get_slices_contiguous_scans(da)
+        # - Get slices with contiguous scans and valid geolocation
+        list_slices = get_slices_regular(da)
         if len(list_slices) == 0:
-            return ValueError("No contiguous scans available. Impossible to plot.")
+            return ValueError("No regular scans available. Impossible to plot.")
 
         # - Define kwargs
         user_kwargs = kwargs.copy()
@@ -80,6 +103,12 @@ def _call_over_contiguous_scans(function):
 
             # Retrive contiguous data array
             tmp_da = da.isel(along_track=slc)
+            
+            # Replace invalid coordinate with closer value
+            # - This might be necessary for some products 
+            #   having all the outer swath invalid coordinates 
+            # tmp_da = infill_invalid_coords(tmp_da)
+         
             # Define  temporary kwargs
             tmp_kwargs = user_kwargs.copy()
             tmp_kwargs["da"] = tmp_da

@@ -295,24 +295,7 @@ def _get_hdf_groups(hdf, scan_mode, variables=None, groups=None):
     return groups, variables
 
 
-def _open_hdf_group(
-    filepath,
-    scan_mode,
-    group,
-    variables=None,
-    prefix_group=True,
-    decode_cf=False,
-    chunks=None,
-    engine="netcdf4",
-):
-    # Define hdf group
-    # - group == '' to retrieve variables attached to scan_mode group
-    hdf_group = scan_mode + "/" + group
-    ds = xr.open_dataset(
-        filepath, engine=engine, mode="r",
-        group=hdf_group, decode_cf=decode_cf, chunks=chunks,
-        # autoclose=True,
-    )
+def _preprocess_hdf_group(ds, variables, group, prefix_group):
     # Assign dimensions
     ds = assign_dataset_dimensions(ds)
 
@@ -339,6 +322,47 @@ def _open_hdf_group(
             rename_var_dict = {var: group + "/" + var for var in ds.data_vars}
             ds = ds.rename_vars(rename_var_dict)
     return ds
+
+
+def _open_hdf_group(
+    filepath,
+    scan_mode,
+    group,
+    variables=None,
+    prefix_group=True,
+    decode_cf=False,
+    chunks=None,
+    engine="netcdf4",
+):
+    # Define hdf group
+    # - group == '' to retrieve variables attached to scan_mode group
+    hdf_group = scan_mode + "/" + group
+    
+    # If chunks is None, read in memory and close connection
+    # - But read with chunks="auto" to read just variables of interest !
+    if chunks is None:
+        with  xr.open_dataset(filepath,
+                            engine=engine,
+                            mode="r",
+                            group=hdf_group, 
+                            decode_cf=decode_cf,
+                            chunks="auto") as ds:
+            ds = _preprocess_hdf_group(ds=ds, 
+                                       variables=variables,
+                                       group=group,
+                                       prefix_group=prefix_group)
+            ds = ds.compute() 
+    else:
+        # Else keep connection open to lazy file on disk
+        ds = xr.open_dataset(
+            filepath, engine=engine, mode="r",
+            group=hdf_group, decode_cf=decode_cf, chunks=chunks,
+        )
+        ds = _preprocess_hdf_group(ds=ds, 
+                                   variables=variables,
+                                   group=group,
+                                   prefix_group=prefix_group)
+    return ds 
 
 
 def _get_granule_info(filepath, 
@@ -508,7 +532,7 @@ def open_granule(
                               decode_cf=False)
                           
     ###-----------------------------------------------------------------------.
-    ### Clean attritubes, decode variables
+    ### Clean attributes, decode variables
     # Apply custom processing
     ds = apply_custom_decoding(ds, product)
 
@@ -597,8 +621,12 @@ def _is_valid_granule(filepath):
     # Try loading the HDF granule file
     try:
         with h5py.File(filepath, "r", locking=False, swmr=SWMR) as hdf:
-            hdf_attr = hdf5_file_attrs(hdf)   
+            hdf_attr = hdf5_file_attrs(hdf)
     # If raise an OSError, warn and remove the file
+    # - OSError: Unable to open file (file locking flag values don't match)
+    # - OSError: Unable to open file (file signature not found) 
+    # - OSError: Unable to open file (truncated file: eof = ...)
+    
     except OSError:
         if not os.path.exists(filepath):
             raise ValueError(
@@ -607,7 +635,7 @@ def _is_valid_granule(filepath):
         else:
             msg = f"The following file is corrupted and is being removed: {filepath}. Redownload the file."
             warnings.warn(msg, GPM_Warning)
-            os.remove(filepath)
+            # os.remove(filepath) # TODO !!! 
             return False
     # If the GPM granule is empty, return False, otherwise True
     if hdf_attr["FileHeader"]["EmptyGranule"] == "NOT_EMPTY":
@@ -793,7 +821,7 @@ def open_dataset(
                                       prefix_group=prefix_group,
                                       chunks=chunks,
                                       )
-    
+
     ##-------------------------------------------------------------------------.
     # TODO - Extract attributes and add as coordinate ?
     # - MissingData in FileHeaderGroup: The number of missing scans.
@@ -825,6 +853,8 @@ def open_dataset(
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time
     # - Raise warning if the time period is not fully covered
+    # - The warning can raise if some data are not downloaded or some granule 
+    #   at the start/end of the period are empty
     ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
     _check_time_period_coverage(ds, start_time, end_time, raise_error=False)
     

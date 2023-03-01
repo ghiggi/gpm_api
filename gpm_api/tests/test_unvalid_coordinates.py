@@ -7,97 +7,61 @@ Created on Wed Mar  1 11:23:49 2023
 """
 import os
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
-
 import dask
 import gpm_api
 import datetime
 import pandas as pd
 import xarray as xr
-from dask.distributed import get_client
-from dateutil.relativedelta import relativedelta
-from gpm_api.utils.archive import print_elapsed_time
 import matplotlib.pyplot as plt 
-
-### GPM-GEO ####
-from gpm_geo.gpm import get_gpm_extended_swath_coords
-from gpm_geo.checks import check_date, check_satellite
-from gpm_geo.production.io import define_dataset_filepath
-from gpm_geo.production.encoding import set_coords_encoding
-from gpm_geo.production.attrs import set_coords_attrs, set_grid_global_attrs
-from gpm_geo.production.logger import create_logger, log_error, log_info 
-from gpm_geo.production.utils import clean_memory
-from pyresample_dev.spherical import SPolygon
-from pyresample_dev.utils_swath import * # temporary hack
-
-from gpm_geo.production.grid import clean_memory, get_valid_grid_slices
 
 # import warnings
 # warnings.filterwarnings("ignore")
 
-## DEBUG
-gpm_base_dir = "/ltenas8/data/GPM"
-geo_base_dir = "/ltenas8/data/GPM_GEO"
-gpm_geo_base_dir = "/ltenas8/data/GPM_GEO"
-satellite = "GOES16" # "GOES17"
- 
-date = datetime.datetime(2020, 8, 19)
-print(date)
-
-###----------------------------------------------------------------------.
-#### Checks inputs 
-date = check_date(date)
-satellite = check_satellite(satellite)
-
-####----------------------------------------------------------------------.
-#### Define GEO AOI 
-AOI_MAX_RESOLUTION = 2   # KM 
-aoi_fname = f"AOI_MAX_{AOI_MAX_RESOLUTION}km_resolution.shp"
-aoi_fpath = os.path.join(gpm_geo_base_dir, satellite, "AOI", aoi_fname)
-area_to_cover = SPolygon.from_file(aoi_fpath)
-area_to_cover = area_to_cover.subsample(n_vertices=40) 
-area_to_cover.plot()
-
-####----------------------------------------------------------------------.
-#### Define start_time and end_time bounds to generate daily GPM-GEO GRIDS
-date_time = datetime.datetime(date.year, date.month, date.day)
-start_time = date_time - datetime.timedelta(hours=3)
-end_time = date_time + datetime.timedelta(days=1, hours=3)
-
-####----------------------------------------------------------------------.
 #### Load GPM Swath
-# - Specify product and 
+gpm_base_dir = "/ltenas8/data/GPM"
 product_type = "RS"
 product = "2A-DPR"
 variables = ["precipRateNearSurface",
              "dataQuality", 
              "SCorientation"]
-
-# - Specify version and scan_mode
 version = 7      
 scan_mode = "FS"
-
-# - Load xr.Dataset 
-ds_gpm = gpm_api.open_dataset(
-    base_dir=gpm_base_dir,
-    product=product,
-    scan_mode=scan_mode,   
-    product_type=product_type, 
-    version=version,
+base_dir = gpm_base_dir
+chunks="auto" # otherwise concatenating datasets is very slow !
+groups=None
+decode_cf=False
+prefix_group=False
+verbose=False
+    
+#------------------------------
+### GPM DPR 
+# After 2019 change scan 
+filepath = '/ltenas8/data/GPM/RS/V07/RADAR/2A-DPR/2020/08/19/2A.GPM.DPR.V9-20211125.20200819-S092131-E105404.036787.V07A.HDF5'
+ds_gpm = gpm_api.open_granule(
+    filepath,
+    scan_mode=scan_mode,
     variables=variables,
-    start_time=start_time,
-    end_time=end_time,
-    chunks="auto", # otherwise concatenating datasets is very slow !
-    decode_cf=False, 
-    prefix_group=False,
-    verbose=False, 
+    # groups=groups, # TODO
+    decode_cf=False,
+    prefix_group=prefix_group,
+    chunks=chunks,
 )
 
-ds_gpm = ds_gpm.compute()
-ds_gpm.close()
-        
-# Check GPM daily orbit data quality 
-# - Check valid geolocation and not missing granules !
-gpm_api.check_valid_geolocation(ds_gpm) # TODO: ADAPT verbose=True)
  
-# Generate GRID only over non-problematic swath portions 
-list_valid_slices = get_valid_grid_slices(ds_gpm)
+ds_gpm["precipRateNearSurface"].gpm_api.plot_map()
+
+xr_obj = ds_gpm
+xr_obj.gpm_api.get_slices_valid_geolocation() # till 7434
+xr_obj.gpm_api.get_slices_contiguous_scans()  # till 7435
+xr_obj.gpm_api.is_regular
+xr_obj.isel(along_track=7434)["lon"]
+xr_obj.isel(along_track=7435)["lon"]
+ds_gpm.isel(along_track=slice(0, 7435, None))["precipRateNearSurface"].gpm_api.plot_map()
+ds_gpm.isel(along_track=slice(0, 7435, None)).gpm_api.is_regular
+
+from gpm_api.utils.checks import check_valid_geolocation, get_slices_non_contiguous_scans
+check_valid_geolocation(xr_obj)
+ 
+xr_obj.gpm_api.get_slices_contiguous_scans(min_size=2)   
+xr_obj.gpm_api.get_slices_contiguous_scans(min_size=1)  #seems buggy because can not verify if last element is contiguous
+get_slices_non_contiguous_scans(xr_obj)

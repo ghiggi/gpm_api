@@ -487,7 +487,7 @@ def get_time_period_with_missing_files(filepaths):
         List of tuple (start_time, end_time).
 
     """
-    from gpm_api.utils.checks import _is_unmissing_granule
+    from gpm_api.utils.checks import _is_contiguous_granule
     from gpm_api.utils.slices import get_list_slices_from_bool_arr
     from gpm_api.io.info import (
         get_granule_from_filepaths,
@@ -503,7 +503,7 @@ def get_time_period_with_missing_files(filepaths):
     granule_ids = np.array(granule_ids)[indices]
     
     # Check if next file granule number is +1 
-    is_not_missing = _is_unmissing_granule(granule_ids)
+    is_not_missing = _is_contiguous_granule(granule_ids)
     
     # If there are missing files 
     list_missing = []

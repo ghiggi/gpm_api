@@ -62,16 +62,6 @@ def check_is_spatial_2d(da):
 #### Regular granules ####
 ##########################
 
-def _is_unmissing_granule(granule_ids):
-    """Return a boolean array indicating if the next scan is not the same/next granule."""
-    # Retrieve if next scan is in the same or next granule (True) or False.
-    bool_arr = np.diff(granule_ids) <= 1
-
-    # Add True to last position
-    bool_arr = np.append(bool_arr, True)
-    return bool_arr
-    
-
 def get_missing_granule_numbers(xr_obj): 
     """Return ID numbers of missing granules."""
     granule_ids = np.unique(xr_obj["gpm_granule_id"].data)
@@ -82,22 +72,17 @@ def get_missing_granule_numbers(xr_obj):
     return missing_ids
 
 
-def has_missing_granules(xr_obj):
-    """Checks GPM object is composed of consecutive granules."""
-    from gpm_api.utils.geospatial import is_orbit, is_grid
+def _is_contiguous_granule(granule_ids):
+    """Return a boolean array indicating if the next scan is not the same/next granule."""
+    # Retrieve if next scan is in the same or next granule (True) or False.
+    bool_arr = np.diff(granule_ids) <= 1
 
-    if is_orbit(xr_obj):
-        if np.any(~_is_unmissing_granule(xr_obj["gpm_granule_id"].data)):
-            return True
-        else:
-            return False
-    if is_grid(xr_obj):
-        return has_regular_time(xr_obj)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
+    # Add True to last position
+    bool_arr = np.append(bool_arr, True)
+    return bool_arr
+    
 
-
-def get_slices_with_unmissing_granules(xr_obj, min_size=2):
+def get_slices_contiguous_granules(xr_obj, min_size=2):
     """
     Return a list of slices ensuring contiguous granules.
 
@@ -119,7 +104,7 @@ def get_slices_with_unmissing_granules(xr_obj, min_size=2):
     """
 
     if is_grid(xr_obj):
-        # TODO: use granule_id when gpm_api modified to include it also in GRID product
+        # TODO: use granule_id when gpm_api modified to include it also for GRID product
         return get_slices_regular_time(xr_obj, tolerance=None, min_size=min_size)
     
     if is_orbit(xr_obj): 
@@ -134,7 +119,7 @@ def get_slices_with_unmissing_granules(xr_obj, min_size=2):
             return list_slices
         
         # Get boolean array indicating if the next scan is same or next granule
-        bool_arr = _is_unmissing_granule(xr_obj["gpm_granule_id"].data)
+        bool_arr = _is_contiguous_granule(xr_obj["gpm_granule_id"].data)
         
         # If granules are missing present, get the slices with non-missing granules
         list_slices = get_list_slices_from_bool_arr(
@@ -165,7 +150,40 @@ def check_missing_granules(xr_obj):
     if n_missing > 0:
         msg = f"There are {n_missing} missing granules. Their IDs are {missing_ids}."
         raise ValueError(msg)    
+
+
+def check_contiguous_granules(xr_obj):
+    return check_missing_granules(xr_obj)
         
+
+def has_contiguous_granules(xr_obj):
+    """Checks GPM object is composed of consecutive granules."""
+    from gpm_api.utils.geospatial import is_orbit, is_grid
+
+    if is_orbit(xr_obj):
+        if np.all(_is_contiguous_granule(xr_obj["gpm_granule_id"].data)):
+            return True
+        else:
+            return False
+    if is_grid(xr_obj):
+        return has_regular_time(xr_obj)
+    else:
+        raise ValueError("Unrecognized GPM xarray object.")
+    
+    
+def has_missing_granules(xr_obj):
+    """Checks GPM object has missing granules."""
+    from gpm_api.utils.geospatial import is_orbit, is_grid
+
+    if is_orbit(xr_obj):
+        if np.any(~_is_contiguous_granule(xr_obj["gpm_granule_id"].data)):
+            return True
+        else:
+            return False
+    if is_grid(xr_obj):
+        return ~has_regular_time(xr_obj)
+    else:
+        raise ValueError("Unrecognized GPM xarray object.")
         
 ####--------------------------------------------------------------------------.
 ############################
@@ -262,7 +280,7 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
     return list_slices
 
 
-def get_slices_nonregular_time(xr_obj, tolerance=None):
+def get_slices_non_regular_time(xr_obj, tolerance=None):
     """
     Return a list of slices where there are supposedly missing timesteps.
 
@@ -335,7 +353,7 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
 
     None.
     """
-    list_discontinuous_slices = get_slices_nonregular_time(xr_obj, tolerance=tolerance)
+    list_discontinuous_slices = get_slices_non_regular_time(xr_obj, tolerance=tolerance)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         # Retrieve discontinous timesteps interval
@@ -354,7 +372,7 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
 
 def has_regular_time(xr_obj):
     """Return True if all timesteps are regular. False otherwise."""
-    list_discontinuous_slices = get_slices_nonregular_time(xr_obj)
+    list_discontinuous_slices = get_slices_non_regular_time(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         return False
@@ -405,7 +423,10 @@ def _get_along_track_scan_distance(xr_obj):
 
 @_check_cross_track
 def _is_contiguous_scans(xr_obj):
-    """Return a boolean array indicating if the next scan is contiguous."""
+    """Return a boolean array indicating if the next scan is contiguous.
+    
+    The last element is set to True since it can not be verified.
+    """
     # Compute along track scan distance
     dist = _get_along_track_scan_distance(xr_obj)
     # Convert to km and round
@@ -440,7 +461,9 @@ def get_slices_contiguous_scans(xr_obj, min_size=2):
     Return a list of slices ensuring contiguous scans (and granules).
 
     Output format: [slice(start,stop), slice(start,stop),...]
-
+    
+    It checks for contiguous scans only in the middle of the cross-track !
+    If a scan geolocation is NaN, it will be considered non-contiguous.
     An input with less than 2 scans (along-track) returns an empty list.
     Consecutive non-contiguous scans are discarded and not included in the outputs.
     The minimum size of the output slices is 2.
@@ -482,7 +505,7 @@ def get_slices_contiguous_scans(xr_obj, min_size=2):
     list_slices = list_slices_filter(list_slices, min_size=min_size)
     
     # Also retrieve the slices with non missing granule 
-    list_slices1 = get_slices_with_unmissing_granules(xr_obj)
+    list_slices1 = get_slices_contiguous_granules(xr_obj)
     
     # Perform list_slices intersection
     list_slices = list_slices_intersection(list_slices, list_slices1)
@@ -492,13 +515,12 @@ def get_slices_contiguous_scans(xr_obj, min_size=2):
 
 
 @_check_cross_track
-def get_slices_discontiguous_scans(xr_obj):
+def get_slices_non_contiguous_scans(xr_obj):
     """
-    Return a list of slices where the scan discontinuity occurs.
+    Return a list of slices where the scans discontinuity occurs.
 
     Output format: [slice(start,stop), slice(start,stop),...]
 
-    The output slices have size 2.
     An input with less than 2 scans (along-track) returns an empty list.
 
     Parameters
@@ -523,16 +545,22 @@ def get_slices_discontiguous_scans(xr_obj):
     if n_scans < 2:
         list_slices = []
         return list_slices
+    
+    ### CODE to output slices with size 2.
+    # # Get boolean array indicating if the next scan is contiguous
+    # is_contiguous = _is_contiguous_scans(xr_obj)
 
-    # Get boolean array indicating if the next scan is contiguous
-    is_contiguous = _is_contiguous_scans(xr_obj)
-
-    # If non-contiguous scans are present, get the slices when discontinuity occurs
-    if not np.all(is_contiguous):
-        indices_next_discontinuous = np.argwhere(~is_contiguous).flatten()
-        list_slices = [slice(i, i + 2) for i in indices_next_discontinuous]
-    else:
-        list_slices = []
+    # # If non-contiguous scans are present, get the slices when discontinuity occurs
+    # if not np.all(is_contiguous):
+    #     indices_next_discontinuous = np.argwhere(~is_contiguous).flatten()
+    #     list_slices = [slice(i, i + 2) for i in indices_next_discontinuous]
+    # else:
+    #     list_slices = []
+    # return list_slices
+    
+    list_slices_valid = get_slices_contiguous_scans(xr_obj, min_size=2)
+    list_slices_full = [slice(0, len(xr_obj["along_track"]))]
+    list_slices = list_slices_difference(list_slices_full, list_slices_valid)
     return list_slices
 
 
@@ -557,12 +585,12 @@ def check_contiguous_scans(xr_obj, verbose=True):
 
     None.
     """
-    list_discontinuous_slices = get_slices_discontiguous_scans(xr_obj)
+    list_discontinuous_slices = get_slices_non_contiguous_scans(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         # Retrieve discontinous timesteps interval
         timesteps = _get_timesteps(xr_obj)
-        list_discontinuous = [timesteps[slc] for slc in list_discontinuous_slices]
+        list_discontinuous = [(timesteps[slc][0],timesteps[slc][-1]) for slc in list_discontinuous_slices]
         first_problematic_timestep = list_discontinuous[0][0]
         # Print non-contiguous scans
         if verbose:
@@ -570,13 +598,14 @@ def check_contiguous_scans(xr_obj, verbose=True):
                 print(f"- Missing scans between {start} and {stop}")
         # Raise error and highlight first non-contiguous scan
         raise ValueError(
-            f"There are {n_discontinuous} non-contiguous scans. The first occur at {first_problematic_timestep}."
+            f"There are {n_discontinuous} swath portions with non-contiguous scans. The first occur at {first_problematic_timestep}."
         )
+
 
 @_check_cross_track
 def has_contiguous_scans(xr_obj):
     """Return True if all scans are contiguous. False otherwise."""
-    list_discontinuous_slices = get_slices_discontiguous_scans(xr_obj)
+    list_discontinuous_slices = get_slices_non_contiguous_scans(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         return False
@@ -626,7 +655,7 @@ def _get_non_wobbling_lats(lats, threshold=100):
     return list_slices
 
 
-def get_slices_swath_non_wobbling(xr_obj, threshold=100):
+def get_slices_non_wobbling_swath(xr_obj, threshold=100):
     """Return the along-track slices along which the swath is not wobbling.
     
     For wobbling, we define the occurence of changes in latitude directions 
@@ -648,7 +677,7 @@ def get_slices_swath_non_wobbling(xr_obj, threshold=100):
     return list_slices
 
 
-def get_slices_swath_wobbling(xr_obj, threshold=100):
+def get_slices_wobbling_swath(xr_obj, threshold=100):
     """Return the along-track slices along which the swath is wobbling.
     
     For wobbling, we define the occurence of changes in latitude directions 
@@ -657,14 +686,10 @@ def get_slices_swath_wobbling(xr_obj, threshold=100):
     identify where the change in orbit direction occurs.
    """
     # TODO: this has not been well checked...likely need +1 somewhere ... 
-    list_slices1 = get_slices_swath_non_wobbling(xr_obj, threshold=threshold)
+    list_slices1 = get_slices_non_wobbling_swath(xr_obj, threshold=threshold)
     list_slices_full = [slice(0, len(xr_obj["along_track"]))]
     list_slices = list_slices_difference(list_slices_full, list_slices1)
     return list_slices
-
-
-
-
 
 
 ####--------------------------------------------------------------------------.
@@ -673,7 +698,7 @@ def get_slices_swath_wobbling(xr_obj, threshold=100):
 #############################
 
 
-# def _is_unmissing_granule(xr_obj):
+# def _is_contiguous_granule(xr_obj):
 #     """Return a boolean array indicating if the next scan is not the same/next granule."""
     
 #     # Get granule ids 
@@ -687,78 +712,96 @@ def get_slices_swath_wobbling(xr_obj, threshold=100):
 #     return bool_arr
 
 
-def has_valid_geolocation(xr_obj):
-    """Checks GPM object has valid geolocation."""
-    pass
-    return 
-    # from gpm_api.utils.geospatial import is_orbit, is_grid
+def _is_non_valid_geolocation(xr_obj):
+    """Return a boolean array indicating if the geolocation is unvalid."""
+    bool_arr = np.isnan(xr_obj["lon"])
+    return bool_arr
 
-    # if is_orbit(xr_obj):
-    #     if np.any(~_is_unmissing_granule(xr_obj)):
-    #         return True
-    #     else:
-    #         return False
-    # if is_grid(xr_obj):
-    #     return has_regular_time(xr_obj)
-    # else:
-    #     raise ValueError("Unrecognized GPM xarray object.")
+def _is_valid_geolocation(xr_obj):
+    """Return a boolean array indicating if the geolocation is valid."""
+    bool_arr = ~np.isnan(xr_obj["lon"])
+    return bool_arr
 
 
-def get_slices_with_valid_geolocation(xr_obj, min_size=2):
-    """
-    Return a list of slices ensuring valid geolocation.
+def get_slices_valid_geolocation(xr_obj, min_size=2):
+    """Return a list of along-track slices ensuring valid geolocation.
 
     Output format: [slice(start,stop), slice(start,stop),...]
 
     The minimum size of the output slices is 2.
-
+    
+    If at a given cross-track index, there are always wrong geolocation,
+    it discards such cross-track index(es) before indentifying the along-track slices.
+    
     Parameters
     ----------
     xr_obj : (xr.Dataset, xr.DataArray)
         GPM xarray object.
     min_size : int
         Minimum size for a slice to be returned.
+        The default is 2.
 
     Returns
     -------
     list_slices : list
         List of slice object with valid geolocation.
     """
-    pass
-    return 
-    # if is_grid(xr_obj):
-    #     # # TODO: use granule_id when gpm_api modified to include it also in GRID product
-    #     # return get_slices_regular_time(xr_obj, tolerance=None, min_size=min_size)
+    # Check input 
+    if is_grid(xr_obj):
+        raise ValueError("For GRID products, geolocation is expected to be valid.")
+    if is_orbit(xr_obj):
+        # - Get unvalid coordinates 
+        unvalid_coords = _is_non_valid_geolocation(xr_obj)
+        # - Identify cross-track index that along-track are always unvalid
+        idx_cross_track_not_all_unvalid = np.where(~unvalid_coords.all("along_track"))[0]
+        # - If all unvalid, return empty list 
+        if len(idx_cross_track_not_all_unvalid) == 0: 
+            list_slices = []
+            return list_slices
+        # - Select only cross-track index that are not all unvalid along-track
+        unvalid_coords = unvalid_coords.isel(cross_track=idx_cross_track_not_all_unvalid)
+        # - Now identify scans across which there are still unvalid coordinates
+        unvalid_scans = unvalid_coords.any(dim="cross_track")  
+        valid_scans = ~unvalid_scans
+        # - Now identify valid along-track slices 
+        list_slices = get_list_slices_from_bool_arr(
+            valid_scans, include_false=False, skip_consecutive_false=True
+        )
+        # Select only slices with at least 2 scans
+        list_slices = list_slices_filter(list_slices, min_size=min_size)
+        return list_slices
+
+
+def get_slices_non_valid_geolocation(xr_obj):
+    """Return a list of along-track slices with non-valid geolocation.
+
+    Output format: [slice(start,stop), slice(start,stop),...]
+
+    The minimum size of the output slices is 2.
     
-    # if is_orbit(xr_obj): 
-    #     # Get number of scans
-    #     n_scans = xr_obj["along_track"].shape[0]
-    #     # Define behaviour if less than 2 scan along track
-    #     # - If n_scans 0, slice(0, 0) could return empty array
-    #     # - If n_scans 1, slice(0, 1) could return the single scan
-    #     # --> Here we decide to return an empty list !
-    #     if n_scans < 2:
-    #         list_slices = []
-    #         return list_slices
-        
-    #     # Get boolean array indicating if the next scan is same or next granule
-    #     bool_arr = _is_unmissing_granule(xr_obj)
-        
-    #     # If granules are missing present, get the slices with non-missing granules
-    #     list_slices = get_list_slices_from_bool_arr(
-    #         bool_arr, include_false=True, skip_consecutive_false=True
-    #     )
-        
-    #     # Select only slices with at least 2 scans
-    #     list_slices = list_slices_filter(list_slices, min_size=min_size)
-        
-    #     # Return list of contiguous scan slices
-    #     return list_slices
-    # else:
-    #     raise ValueError("Unrecognized GPM xarray object.")
+    If at a given cross-track index, there are always wrong geolocation,
+    it discards such cross-track index(es) before indentifying the along-track slices.
+    
+    Parameters
+    ----------
+    xr_obj : (xr.Dataset, xr.DataArray)
+        GPM xarray object.
+    min_size : int
+        Minimum size for a slice to be returned.
+        The default is 1.
+
+    Returns
+    -------
+    list_slices : list
+        List of slice object with non-valid geolocation.
+    """
+    list_slices_valid = get_slices_valid_geolocation(xr_obj, min_size=1)
+    list_slices_full = [slice(0, len(xr_obj["along_track"]))]
+    list_slices = list_slices_difference(list_slices_full, list_slices_valid)
+    return list_slices
 
 
-def check_valid_geolocation(xr_obj):
+def check_valid_geolocation(xr_obj, verbose=True):
     """
     Check no geolocation errors in the GPM Dataset.
 
@@ -768,14 +811,41 @@ def check_valid_geolocation(xr_obj):
         xarray object.
 
     """
-    pass
-    return
-    # missing_ids = get_missing_granule_numbers(xr_obj)
-    # n_missing = len(missing_ids)
-    # if n_missing > 0:
-    #     msg = f"There are {n_missing} missing granules. Their IDs are {missing_ids}."
-    #     raise ValueError(msg)  
+    list_unvalid_slices = get_slices_non_valid_geolocation(xr_obj)
+    n_unvalid_scan_slices = len(list_unvalid_slices)
+    if n_unvalid_scan_slices > 0:
+        # Retrieve timesteps interval with non valid geolocation
+        timesteps = _get_timesteps(xr_obj)
+        list_unvalid = [(timesteps[slc][0],timesteps[slc][-1]) for slc in list_unvalid_slices]
+        first_problematic_timestep = list_unvalid[0][0]
+        # Print non-contiguous scans
+        if verbose:
+            for start, stop in list_unvalid:
+                print(f"- Missing scans between {start} and {stop}")
+        # Raise error and highlight first non-contiguous scan
+        raise ValueError(
+            f"There are {n_unvalid_scan_slices} swath portions with non-valid geolocation. The first occur at {first_problematic_timestep}."
+        )
+        
+    return None 
 
+
+
+
+def has_valid_geolocation(xr_obj):
+    """Checks GPM object has valid geolocation."""
+    if is_orbit(xr_obj):
+        list_unvalid_slices = get_slices_non_valid_geolocation(xr_obj)
+        n_unvalid_scan_slices = len(list_unvalid_slices)
+        if n_unvalid_scan_slices == 0:
+            return True
+        else:
+            return False
+    if is_grid(xr_obj):
+        return True
+    else:
+        raise ValueError("Unrecognized GPM xarray object.")    
+    
 ####---------------------------------------------------------------------------
 #####################################
 #### Check GPM object regularity ####
@@ -802,7 +872,7 @@ def get_slices_regular(xr_obj, min_size=None):
     """
     Return a list of slices to select regular GPM objects.
 
-    For GPM ORBITS, it returns slices to select contiguouse scans.
+    For GPM ORBITS, it returns slices to select contiguouse scans with valid geolocation.
     For GPM GRID, it returns slices to select periods with regular timesteps.
 
     The output format is: [slice(start,stop), slice(start,stop),...]
@@ -827,7 +897,15 @@ def get_slices_regular(xr_obj, min_size=None):
 
     if is_orbit(xr_obj):
         min_size = 2 if min_size is None else min_size
-        return get_slices_contiguous_scans(xr_obj, min_size=min_size)
+        # Get swath portions where there are not missing scans (and granules)
+        list_slices_contiguous = get_slices_contiguous_scans(xr_obj, min_size=min_size)
+        # Get swath portions where there are valid geolocation
+        list_slices_geolocation = get_slices_valid_geolocation(xr_obj, min_size=min_size)
+        # Find swath portions meeting all the requirements 
+        list_slices = list_slices_intersection(list_slices_geolocation, 
+                                               list_slices_contiguous)
+        
+        return list_slices
     elif is_grid(xr_obj):
         min_size = 1 if min_size is None else min_size
         return get_slices_regular_time(xr_obj, min_size=min_size)
