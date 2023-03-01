@@ -8,6 +8,7 @@ Created on Sat Dec 10 18:41:48 2022
 import numpy as np
 import pandas as pd
 import xarray as xr
+import functools
 from gpm_api.utils.geospatial import is_orbit, is_grid
 from gpm_api.utils.slices import (
     get_list_slices_from_indices,
@@ -365,8 +366,24 @@ def has_regular_time(xr_obj):
 ########################
 #### Regular scans  ####
 ########################
+def _check_cross_track(function):
+    """Check that the cross-track dimension is available.
+    
+    If not available, raise an error."""
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        # Write decorator function logic here
+        xr_obj = args[0]
+        if "cross_track" not in xr_obj.dims:
+            raise ValueError("cross-track dimension not available. Not possible to check for scan regularity.")
+        # Call the function 
+        result = function(*args, **kwargs)
+        # Return results 
+        return result
+    return wrapper
 
 
+@_check_cross_track
 def _get_along_track_scan_distance(xr_obj):
     """Compute the distance between along_track centroids."""
     from pyproj import Geod
@@ -386,6 +403,7 @@ def _get_along_track_scan_distance(xr_obj):
     return dist
 
 
+@_check_cross_track
 def _is_contiguous_scans(xr_obj):
     """Return a boolean array indicating if the next scan is contiguous."""
     # Compute along track scan distance
@@ -416,6 +434,7 @@ def _is_contiguous_scans(xr_obj):
     return bool_arr
 
 
+@_check_cross_track
 def get_slices_contiguous_scans(xr_obj, min_size=2):
     """
     Return a list of slices ensuring contiguous scans (and granules).
@@ -472,6 +491,7 @@ def get_slices_contiguous_scans(xr_obj, min_size=2):
     return list_slices
 
 
+@_check_cross_track
 def get_slices_discontiguous_scans(xr_obj):
     """
     Return a list of slices where the scan discontinuity occurs.
@@ -516,6 +536,7 @@ def get_slices_discontiguous_scans(xr_obj):
     return list_slices
 
 
+@_check_cross_track
 def check_contiguous_scans(xr_obj, verbose=True):
     """
     Check no missing scans across the along_track direction.
@@ -552,7 +573,7 @@ def check_contiguous_scans(xr_obj, verbose=True):
             f"There are {n_discontinuous} non-contiguous scans. The first occur at {first_problematic_timestep}."
         )
 
-
+@_check_cross_track
 def has_contiguous_scans(xr_obj):
     """Return True if all scans are contiguous. False otherwise."""
     list_discontinuous_slices = get_slices_discontiguous_scans(xr_obj)
@@ -562,6 +583,8 @@ def has_contiguous_scans(xr_obj):
     else:
         return True 
 
+
+    
 ####--------------------------------------------------------------------------.
 ####################### 
 #### Regular orbit ####

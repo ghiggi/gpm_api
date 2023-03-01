@@ -79,6 +79,7 @@ DIM_DICT = {
     # nlayer --> in CSH, SLH --> converted to height in decoding
 }
 
+SWMR = False # HDF options 
 
 def _decode_dimensions(ds):
     dataset_dims = list(ds.dims)
@@ -139,7 +140,8 @@ def unused_var_dims(ds):
 
 def remove_unused_var_dims(ds):
     """Remove coordinates and dimensions not used by the xr.Dataset variables."""
-    return ds.drop_dims(unused_var_dims(ds))
+    unused_dims = unused_var_dims(ds)       
+    return ds.drop_dims(unused_dims)
 
 
 ####--------------------------------------------------------------------------.
@@ -345,27 +347,25 @@ def _get_granule_info(filepath,
                       groups):
     """Retrieve coordinates, attributes and valid variables and groups from the HDF file."""
     # Open HDF5 file
-    hdf = h5py.File(filepath, "r")
-    
-    # Get coordinates
-    coords = get_coords(hdf, scan_mode)
-    
-    # Get global attributes from the HDF file
-    # TODO Add FileHeader Group attributes (see metadata doc)
-    # TODO Select all possible attributes?
-    
-    # Global attributes:
-    # - ProcessingSystem, DOI, InstrumentName,
-    # - SatelliteName, AlgorithmID, ProductVersion
-    attrs = get_attrs(hdf)
-    attrs["ScanMode"] = scan_mode
-    
-    # Get groups to process (filtering out groups without any `variables`)
-    groups, variables = _get_hdf_groups(
-        hdf, scan_mode=scan_mode, variables=variables, groups=groups
-    )
-    # Close HDF5 file 
-    hdf.close()
+    with h5py.File(filepath, "r", locking=False, swmr=SWMR) as hdf:
+       
+        # Get coordinates
+        coords = get_coords(hdf, scan_mode)
+        
+        # Get global attributes from the HDF file
+        # TODO Add FileHeader Group attributes (see metadata doc)
+        # TODO Select all possible attributes?
+        
+        # Global attributes:
+        # - ProcessingSystem, DOI, InstrumentName,
+        # - SatelliteName, AlgorithmID, ProductVersion
+        attrs = get_attrs(hdf)
+        attrs["ScanMode"] = scan_mode
+        
+        # Get groups to process (filtering out groups without any `variables`)
+        groups, variables = _get_hdf_groups(
+            hdf, scan_mode=scan_mode, variables=variables, groups=groups
+        )
     
     return (coords, attrs, groups, variables)
 
@@ -527,11 +527,15 @@ def open_granule(
     # --> TODO: this can be moved into get_orbit_coords !
     ds = ensure_time_validity(ds, limit=10)
             
-    # Warn  if non-contiguous scans are present in a GPM Orbit
+    # Try to warn if non-contiguous scans are present in a GPM Orbit
+    # - If any of the  GPM Orbit specified variables has the cross-track dimension, the check raise an error 
     # - If ds is a GPM Grid Granule, is always a single timestep so always True
-    if not is_regular(ds):
-        msg = f"The GPM granule {filepath} has non-contiguous scans !"
-        warnings.warn(msg, GPM_Warning)
+    try: 
+        if not is_regular(ds):
+            msg = f"The GPM granule {filepath} has non-contiguous scans !"
+            warnings.warn(msg, GPM_Warning)
+    except Exception: 
+        pass 
 
     ###-----------------------------------------------------------------------.
     #### Check geolocation latitude/longitude coordinates
@@ -592,9 +596,8 @@ def _is_valid_granule(filepath):
     """Chech the GPM HDF file is readable, not corrupted and not EMPTY."""
     # Try loading the HDF granule file
     try:
-        hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
-        hdf_attr = hdf5_file_attrs(hdf)
-        hdf.close()
+        with h5py.File(filepath, "r", locking=False, swmr=SWMR) as hdf:
+            hdf_attr = hdf5_file_attrs(hdf)   
     # If raise an OSError, warn and remove the file
     except OSError:
         if not os.path.exists(filepath):
@@ -647,35 +650,37 @@ def _open_valid_granules(filepaths,
             )
             if ds is not None:
                 l_datasets.append(ds)
+    if len(l_datasets) == 0: 
+        raise ValueError("No valid GPM granule available for current request. All granules are EMPTY.")
     return l_datasets          
 
 
 def _concat_datasets(l_datasets):
     """Concatenate datasets together."""
-    if len(l_datasets) >= 1:
-        dims = list(l_datasets[0].dims)
-        is_grid = "time" in dims
-        if is_grid:
-            concat_dim = "time"
-        else: 
-            concat_dim = "along_track"
-        
-        # Concatenate the datasets 
-        ds = xr.concat(l_datasets, dim=concat_dim,
-                       coords="minimal", # "all"
-                       compat="override",
-                       combine_attrs='override')
-        
-        # Tranpose to have (y,x) dimension order 
-        # - This shape is expected by i.e. pyresample and matplotlib
-        # - GRID:  (..., time, lat, lon)
-        # - ORBIT: (cross_track, along_track, ...)
-        if is_grid:          
-            ds = ds.transpose(..., "lat", "lon")
-        else:
-            ds = ds.transpose("cross_track", "along_track", ...)
+    dims = list(l_datasets[0].dims)
+    is_grid = "time" in dims
+    if is_grid:
+        concat_dim = "time"
+    else: 
+        concat_dim = "along_track"
+    
+    # Concatenate the datasets 
+    ds = xr.concat(l_datasets, dim=concat_dim,
+                   coords="minimal", # "all"
+                   compat="override",
+                   combine_attrs='override')
+    
+    # Tranpose to have (y,x) dimension order 
+    # - This shape is expected by i.e. pyresample and matplotlib
+    # - GRID:  (..., time, lat, lon)
+    # - ORBIT: (cross_track, along_track, ...)
+    if is_grid:          
+        ds = ds.transpose(..., "lat", "lon")
     else:
-        raise ValueError("No valid GPM granule available for current request.")
+        if "cross_track" in ds:
+            ds = ds.transpose("cross_track", "along_track", ...)
+        else: 
+            ds = ds.transpose("along_track", ...)
     return ds 
 
 

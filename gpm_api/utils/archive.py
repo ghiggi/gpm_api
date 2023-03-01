@@ -445,6 +445,9 @@ def check_time_period_coverage(filepaths, start_time, end_time, raise_error=Fals
         get_start_time_from_filepaths,
         get_end_time_from_filepaths,
     )
+    # Check valid start/end time
+    start_time, end_time = check_start_end_time(start_time, end_time)
+    
     # Get first and last timestep from filepaths 
     filepaths = sorted(filepaths)
     first_start = get_start_time_from_filepaths(filepaths[0])[0]
@@ -452,10 +455,10 @@ def check_time_period_coverage(filepaths, start_time, end_time, raise_error=Fals
     # Check time period is covered
     msg = ""
     if first_start > start_time:
-        msg = "The files start_time ({first_start}) occurs after the specified start_time ({start_time})"
+        msg = f"The first file start_time ({first_start}) occurs after the specified start_time ({start_time})"
         
     if last_end < end_time:
-        msg1 = f"The files end_time ({last_end}) occurs before the specified end_time ({end_time})"
+        msg1 = f"The last file end_time ({last_end}) occurs before the specified end_time ({end_time})"
         if msg != "":
            msg = msg + "; and t" + msg1[1:]
         else: 
@@ -513,8 +516,8 @@ def get_time_period_with_missing_files(filepaths):
             is_not_missing, include_false=True, skip_consecutive_false=False)   
         # Retrieve start and end_time where there are missing files
         for slc in list_slices[0:-1]:
-            missing_start = get_end_time_from_filepaths(filepaths[slc.stop-1])
-            missing_end = get_start_time_from_filepaths(filepaths[slc.stop])
+            missing_start = get_end_time_from_filepaths(filepaths[slc.stop-1])[0]
+            missing_end = get_start_time_from_filepaths(filepaths[slc.stop])[0]
             list_missing.append((missing_start, missing_end))
     return list_missing
 
@@ -573,6 +576,10 @@ def check_archive_completness(
     if download: 
         if username is None: 
             raise ValueError("If download=True, provide the username.")
+            
+    # Check valid start/end time
+    start_time, end_time = check_start_end_time(start_time, end_time)
+    
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
@@ -585,7 +592,7 @@ def check_archive_completness(
         verbose=verbose,
     )
     ##---------------------------------------------------------------------.
-    # Check that files have been downloaded  on disk
+    # Check that files have been downloaded on disk
     if len(filepaths) == 0:
         raise ValueError(
             "Requested files are not found on disk. Please download them before."
@@ -596,14 +603,12 @@ def check_archive_completness(
     check_time_period_coverage(filepaths, start_time, end_time, raise_error=False)
 
     ##---------------------------------------------------------------------.
-    # Loop over files and sear for time period with missing granules
+    # Loop over files and retrieve time period with missing granules
     list_missing_periods = get_time_period_with_missing_files(filepaths)
-     
+    
+    # If there are missing data,
     if len(list_missing_periods) > 0: 
-        if download:
-            # Simply missing period by day date ! 
-            # - TODO: 
-            
+        if download: # and download=True
             # Attempt to download the missing data
             for s_time, e_time in list_missing_periods: 
                 download_data(base_dir=base_dir,
@@ -621,6 +626,7 @@ def check_archive_completness(
                               verbose=verbose,
                               )
         else: 
+            # Otherwise print time periods with missing data and raise error
             for s_time, e_time in list_missing_periods: 
                 print(f"- Missing data between {s_time} and {e_time}")
             raise ValueError("The GPM {product} archive is not complete between {start_time} and {end_time}.")
