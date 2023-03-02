@@ -17,7 +17,8 @@ from gpm_api.utils.slices import (
     list_slices_difference,
     list_slices_intersection,
     list_slices_sort,
-    list_slices_filter
+    list_slices_filter,
+    list_slices_flatten
 )
 
 ORBIT_TIME_TOLERANCE = np.timedelta64(3, "s")
@@ -613,109 +614,17 @@ def has_contiguous_scans(xr_obj):
         return True 
 
 
-    
-####--------------------------------------------------------------------------.
-####################### 
-#### Regular orbit ####
-#######################
-def _replace_0_values(x):
-    """Replace 0 values with previous left non-zero occuring values.
-
-    If the array start with 0, it take the first non-zero occuring values
-    """
-    # Check inputs 
-    x = np.array(x)
-    dtype = x.dtype
-    if np.all(x==0):  
-        raise ValueError("It's flat swath orbit.")  
-    # Set 0 to NaN
-    x = x.astype(float)
-    x[x==0] = np.nan 
-    # Infill from left values, and then from right (if x start with 0)
-    x = pd.Series(x).fillna(method="ffill").fillna(method="bfill").to_numpy()
-    # Reset original dtype 
-    x = x.astype(dtype)
-    return x
-
-def _get_non_wobbling_lats(lats, threshold=100):
-    from gpm_api.utils.slices import list_slices_filter, list_slices_simplify
-    # Get direction (1 ascending , -1 descending)
-    directions = np.sign(np.diff(lats))
-    directions = np.append(directions[0], directions)  # include startpoint
-    directions = _replace_0_values(directions)
-       
-    # Identify index where next element change
-    idxs_change = np.where(np.diff(directions) != 0)[0]
-    
-    # Retrieve valid slices
-    indices = np.unique(np.concatenate(([0], idxs_change, [len(lats)-1])))
-    orbit_slices = [slice(indices[i], indices[i+1]+1) for i in range(len(indices)-1)]
-    list_slices = list_slices_filter(orbit_slices, min_size=threshold)
-    list_slices = list_slices_simplify(list_slices)
-    return list_slices
-
-
-def get_slices_non_wobbling_swath(xr_obj, threshold=100):
-    """Return the along-track slices along which the swath is not wobbling.
-    
-    For wobbling, we define the occurence of changes in latitude directions 
-    in less than `threshold` scans.
-    The function extract the along-track boundary on both swath sides and 
-    identify where the change in orbit direction occurs.
-   """
-    
-    from gpm_api.utils.slices import list_slices_intersection
-    
-    # Assume lats, lons having shape (y, x) with x=along_track direction
-    swath_def = xr_obj.gpm_api.pyresample_area
-    lats_side0 = swath_def.lats[0, :]
-    lats_side2 = swath_def.lats[-1, :]
-    # Get valid slices 
-    list_slices1 = _get_non_wobbling_lats(lats_side0, threshold=100)
-    list_slices2 = _get_non_wobbling_lats(lats_side2, threshold=100)
-    list_slices = list_slices_intersection(list_slices1, list_slices2)
-    return list_slices
-
-
-def get_slices_wobbling_swath(xr_obj, threshold=100):
-    """Return the along-track slices along which the swath is wobbling.
-    
-    For wobbling, we define the occurence of changes in latitude directions 
-    in less than `threshold` scans.
-    The function extract the along-track boundary on both swath sides and 
-    identify where the change in orbit direction occurs.
-   """
-    # TODO: this has not been well checked...likely need +1 somewhere ... 
-    list_slices1 = get_slices_non_wobbling_swath(xr_obj, threshold=threshold)
-    list_slices_full = [slice(0, len(xr_obj["along_track"]))]
-    list_slices = list_slices_difference(list_slices_full, list_slices1)
-    return list_slices
-
-
 ####--------------------------------------------------------------------------.
 #############################
 #### Regular geolocation ####
 #############################
 
 
-# def _is_contiguous_granule(xr_obj):
-#     """Return a boolean array indicating if the next scan is not the same/next granule."""
-    
-#     # Get granule ids 
-#     granule_ids = xr_obj["gpm_granule_id"].data
-    
-#     # Retrieve if next scan is in the same or next granule (True) or False.
-#     bool_arr = np.diff(granule_ids) <= 1
-
-#     # Add True to last position
-#     bool_arr = np.append(bool_arr, True)
-#     return bool_arr
-
-
 def _is_non_valid_geolocation(xr_obj):
     """Return a boolean array indicating if the geolocation is unvalid."""
     bool_arr = np.isnan(xr_obj["lon"])
     return bool_arr
+
 
 def _is_valid_geolocation(xr_obj):
     """Return a boolean array indicating if the geolocation is valid."""
@@ -830,8 +739,6 @@ def check_valid_geolocation(xr_obj, verbose=True):
     return None 
 
 
-
-
 def has_valid_geolocation(xr_obj):
     """Checks GPM object has valid geolocation."""
     if is_orbit(xr_obj):
@@ -845,7 +752,122 @@ def has_valid_geolocation(xr_obj):
         return True
     else:
         raise ValueError("Unrecognized GPM xarray object.")    
+
+
+def apply_on_valid_geolocation(function):
+    """A decorator that apply the get_slices_<function> only on portions 
+    with valid geolocation."""
+
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        xr_obj = args[0]
+        # Get slices with valid geolocation
+        list_slices_valid = get_slices_valid_geolocation(xr_obj)
+        # Loop over valid slices and retrieve the final slices
+        list_slices = []
+        new_args = list(args)
+        for slc in list_slices_valid:
+            # Retrieve slice offset 
+            start_offset = slc.start
+            # Retrieve dataset subset 
+            subset_xr_obj = xr_obj.isel(along_track=slc)
+            # Update args 
+            new_args[0] = subset_xr_obj
+            # Apply function 
+            subset_slices = function(*args, **kwargs)
+            # Add start offset to subset slices 
+            if len(subset_slices) > 0: 
+                subset_slices = [slice(slc.start + start_offset, slc.stop + start_offset) for slc in subset_slices]
+                list_slices.append(subset_slices)
+        # Flatten the list 
+        list_slices = list_slices_flatten(list_slices)
+        # Return list of slices 
+        return list_slices
+    return wrapper
+
+
+####--------------------------------------------------------------------------.
+############################
+#### Non-wobbling orbit ####
+############################
+
+
+def _replace_0_values(x):
+    """Replace 0 values with previous left non-zero occuring values.
+
+    If the array start with 0, it take the first non-zero occuring values
+    """
+    # Check inputs 
+    x = np.array(x)
+    dtype = x.dtype
+    if np.all(x==0):  
+        raise ValueError("It's flat swath orbit.")  
+    # Set 0 to NaN
+    x = x.astype(float)
+    x[x==0] = np.nan 
+    # Infill from left values, and then from right (if x start with 0)
+    x = pd.Series(x).fillna(method="ffill").fillna(method="bfill").to_numpy()
+    # Reset original dtype 
+    x = x.astype(dtype)
+    return x
+
+def _get_non_wobbling_lats(lats, threshold=100):
+    from gpm_api.utils.slices import list_slices_filter, list_slices_simplify
+    # Get direction (1 ascending , -1 descending)
+    directions = np.sign(np.diff(lats))
+    directions = np.append(directions[0], directions)  # include startpoint
+    directions = _replace_0_values(directions)
+       
+    # Identify index where next element change
+    idxs_change = np.where(np.diff(directions) != 0)[0]
     
+    # Retrieve valid slices
+    indices = np.unique(np.concatenate(([0], idxs_change, [len(lats)-1])))
+    orbit_slices = [slice(indices[i], indices[i+1]+1) for i in range(len(indices)-1)]
+    list_slices = list_slices_filter(orbit_slices, min_size=threshold)
+    list_slices = list_slices_simplify(list_slices)
+    return list_slices
+
+
+@apply_on_valid_geolocation
+def get_slices_non_wobbling_swath(xr_obj, threshold=100):
+    """Return the along-track slices along which the swath is not wobbling.
+    
+    For wobbling, we define the occurence of changes in latitude directions 
+    in less than `threshold` scans.
+    The function extract the along-track boundary on both swath sides and 
+    identify where the change in orbit direction occurs.
+   """
+    
+    from gpm_api.utils.slices import list_slices_intersection
+    
+    # Assume lats, lons having shape (y, x) with x=along_track direction
+    swath_def = xr_obj.gpm_api.pyresample_area
+    lats_side0 = swath_def.lats[0, :]
+    lats_side2 = swath_def.lats[-1, :]
+    # Get valid slices 
+    list_slices1 = _get_non_wobbling_lats(lats_side0, threshold=100)
+    list_slices2 = _get_non_wobbling_lats(lats_side2, threshold=100)
+    list_slices = list_slices_intersection(list_slices1, list_slices2)
+    return list_slices
+
+
+@apply_on_valid_geolocation
+def get_slices_wobbling_swath(xr_obj, threshold=100):
+    """Return the along-track slices along which the swath is wobbling.
+    
+    For wobbling, we define the occurence of changes in latitude directions 
+    in less than `threshold` scans.
+    The function extract the along-track boundary on both swath sides and 
+    identify where the change in orbit direction occurs.
+   """
+    # TODO: this has not been well checked...likely need +1 somewhere ... 
+    list_slices1 = get_slices_non_wobbling_swath(xr_obj, threshold=threshold)
+    list_slices_full = [slice(0, len(xr_obj["along_track"]))]
+    list_slices = list_slices_difference(list_slices_full, list_slices1)
+    return list_slices
+
+
 ####---------------------------------------------------------------------------
 #####################################
 #### Check GPM object regularity ####

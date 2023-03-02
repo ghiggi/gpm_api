@@ -134,6 +134,23 @@ def list_slices_filter(list_slices, min_size=None, max_size=None):
     return list_slices
 
 
+def list_slices_flatten(list_slices):
+    """Flatten out list of slices with 2 nested level.
+    
+    Examples:
+    [[slice(1, 7934, None)], [slice(1, 2, None)]] --> [slice(1, 7934, None), slice(1, 2, None)]
+    [slice(1, 7934, None), slice(1, 2, None)] --> [slice(1, 7934, None), slice(1, 2, None)]
+    """
+    flat_list = []
+    for sublist in list_slices:
+        if isinstance(sublist, list):
+            for item in sublist:
+                flat_list.append(item)
+        else: 
+            flat_list.append(sublist)
+    return flat_list 
+   
+
 def get_list_slices_from_bool_arr(
     bool_arr, include_false=True, skip_consecutive_false=True
 ):

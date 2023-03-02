@@ -705,7 +705,7 @@ def _concat_datasets(l_datasets):
     if is_grid:          
         ds = ds.transpose(..., "lat", "lon")
     else:
-        if "cross_track" in ds:
+        if "cross_track" in ds.dims:
             ds = ds.transpose("cross_track", "along_track", ...)
         else: 
             ds = ds.transpose("along_track", ...)

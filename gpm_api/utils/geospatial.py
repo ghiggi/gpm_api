@@ -251,6 +251,13 @@ def get_pyresample_area(xr_obj):
     if is_orbit(xr_obj):
         # Define SwathDefinition with xr.DataArray lat/lons
         # - Otherwise fails https://github.com/pytroll/satpy/issues/1434
+        
+        # Ensure correct dimension order 
+        if "cross_track" in xr_obj.dims:
+            xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
+        else: 
+            raise ValueError("Can not derive SwathDefinition area without cross-track dimension.")
+            
         lons = xr_obj["lon"].values
         lats = xr_obj["lat"].values
 

@@ -59,9 +59,20 @@ xr_obj.isel(along_track=7435)["lon"]
 ds_gpm.isel(along_track=slice(0, 7435, None))["precipRateNearSurface"].gpm_api.plot_map()
 ds_gpm.isel(along_track=slice(0, 7435, None)).gpm_api.is_regular
 
-from gpm_api.utils.checks import check_valid_geolocation, get_slices_non_contiguous_scans
+from gpm_api.utils.checks import (
+    check_valid_geolocation,
+    get_slices_non_contiguous_scans, 
+    get_slices_non_wobbling_swath
+)
+
 check_valid_geolocation(xr_obj)
  
 xr_obj.gpm_api.get_slices_contiguous_scans(min_size=2)   
-xr_obj.gpm_api.get_slices_contiguous_scans(min_size=1)  #seems buggy because can not verify if last element is contiguous
+xr_obj.gpm_api.get_slices_contiguous_scans(min_size=1)  #seems buggy but is because can not verify if last element is contiguous
 get_slices_non_contiguous_scans(xr_obj)
+
+get_slices_non_wobbling_swath(xr_obj, threshold=100)
+ 
+
+ 
+
