@@ -31,7 +31,6 @@ gpm_api.download(
     check_integrity=False,
 )
 
-
 # Load IMERG dataset
 ds = gpm_api.open_dataset(
     base_dir=base_dir,

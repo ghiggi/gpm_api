@@ -5,6 +5,9 @@ Created on Mon Aug  3 11:22:04 2020
 
 @author: ghiggi
 """
+import os 
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
+
 import gpm_api.accessor  # .methods
 from gpm_api.io.download import download_data as download
 from gpm_api.io.dataset import (

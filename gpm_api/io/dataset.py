@@ -9,11 +9,12 @@ Created on Mon Aug 15 14:35:55 2022
 import os
 import re
 import h5py
+import pyproj 
 import warnings
+import datetime
 import numpy as np
 import pandas as pd
 import xarray as xr
-
 from gpm_api.io.disk import find_filepaths
 from gpm_api.io.checks import (
     check_variables,
@@ -33,6 +34,7 @@ from gpm_api.utils.time import (
 from gpm_api.utils.checks import has_regular_time, is_regular, has_missing_granules
 from gpm_api.utils.warnings import GPM_Warning
 from gpm_api.io import VERSION # CURRENT GPM VERSION
+from gpm_api.io.crs import set_dataset_crs
 
 ####--------------------------------------------------------------------------.
 ### Define GPM_API Dataset Dimensions
@@ -79,6 +81,8 @@ DIM_DICT = {
     # nlayer --> in CSH, SLH --> converted to height in decoding
 }
 
+EPOCH = 'seconds since 1970-01-01 00:00:00'
+    
 SWMR = False # HDF options 
 
 def _decode_dimensions(ds):
@@ -437,79 +441,182 @@ def _get_granule_dataset(filepath,
     # Return dataset
     return ds
 
+####--------------------------------------------------------------------------.
+#################################
+#### GPM Dataset Conventions ####
+#################################
+def is_orbit(xr_obj):
+    """Check whether the GPM xarray object is an orbit."""
+    if "along_track" in list(xr_obj.dims):
+        return True
+    else:
+        return False
+
+
+def is_grid(xr_obj):
+    """Check whether the GPM xarray object is a grid."""
+    if "longitude" in list(xr_obj.dims) or "lon" in list(xr_obj.dims):
+        return True
+    else:
+        return False
+    
+
+def _set_attrs_dict(ds, attrs_dict):
+    """Set dataset attributes for each attrs_dict key."""
+    for var in attrs_dict.keys(): 
+        ds[var].attrs.update(attrs_dict[var])
+
+
+def _subset_dict_by_dataset(ds, dictionary):
+    """Select the relevant dictionary key for a given dataset."""
+    # Get dataset coords and variables 
+    names = list(ds.coords) + list(ds.data_vars)
+    # Select valid keys 
+    valid_keys = [key for key in names if key in dictionary.keys()]
+    dictionary = {k: dictionary[k] for k in valid_keys}
+    return dictionary  
+
+        
+def get_coords_attrs_dict(ds):
+    """Return relevant GPM coordinates attributes."""
+    attrs_dict = {}
+    # Define attributes for latitude and longitude 
+    attrs_dict['lat'] = {'name': "latitude",
+                        'standard_name': "latitude",
+                        "long_name": "latitude", 
+                        'units': 'degrees_north',
+                        "valid_min": -90., 
+                        "valid_max": 90., 
+                        "comment": "Geographical coordinates, WGS84 datum",
+                        "coverage_content_type": "coordinate"}
+    attrs_dict['lon'] = {'name': "longitude",
+                        'standard_name': "longitude",
+                        'long_name': "longitude",
+                        'units': 'degrees_east',
+                        "valid_min": -180., 
+                        "valid_max": 180., 
+                        "comment": "Geographical coordinates, WGS84 datum",
+                        "coverage_content_type": "coordinate"}
+    
+    attrs_dict["gpm_granule_id"] = {}
+    attrs_dict["gpm_granule_id"]['long_name'] = "GPM Granule ID"
+    attrs_dict["gpm_granule_id"]['description'] = "ID number of the GPM Granule"
+    attrs_dict["gpm_granule_id"]['coverage_content_type'] = "auxiliaryInformation"
+     
+    # Define general attributes for time coordinates 
+    attrs_dict["time"] = {'standard_name': 'time', 'coverage_content_type': "coordinate"}
+     
+    # Add description of GPM ORBIT coordinates 
+    attrs_dict["gpm_cross_track_id"] = {}
+    attrs_dict["gpm_cross_track_id"]['long_name'] = "Cross-Track ID"
+    attrs_dict["gpm_cross_track_id"]['description'] = "Cross-Track ID."
+    attrs_dict["gpm_cross_track_id"]['coverage_content_type'] = "auxiliaryInformation"
+    
+    attrs_dict["gpm_along_track_id"] = {}
+    attrs_dict["gpm_along_track_id"]['long_name'] = "Along-Track ID"
+    attrs_dict["gpm_along_track_id"]['description'] = "Along-Track ID."
+    attrs_dict["gpm_along_track_id"]['coverage_content_type'] = "auxiliaryInformation"
+    
+    attrs_dict["gpm_id"] = {}
+    attrs_dict["gpm_id"]['long_name'] = "Scan ID"
+    attrs_dict["gpm_id"]['description'] = "Scan ID. Format: '{gpm_granule_id}-{gpm_along_track_id}'"
+    attrs_dict["gpm_id"]['coverage_content_type'] = "auxiliaryInformation"
+    
+    # Select required attributes  
+    attrs_dict = _subset_dict_by_dataset(ds, attrs_dict)
+    return attrs_dict
+
+
+def set_coords_attrs(ds): 
+    """Set dataset coordinate attributes."""
+    # Get attributes dictionary
+    attrs_dict = get_coords_attrs_dict(ds)
+    # Set attributes 
+    _set_attrs_dict(ds, attrs_dict)    
+    return ds
+  
+
+def reshape_dataset(ds): 
+    """Define the dataset dimension order.
+    
+    It ensure that the output dimension order is  (y, x) 
+    This shape is expected by i.e. pyresample and matplotlib
+    For GPM GRID objects:  (..., time, lat, lon)
+    For GPM ORBIT objects: (cross_track, along_track, ...)
+    """
+    if is_grid(ds):      
+        ds = ds.transpose(..., "lat", "lon")
+    else:
+        if "cross_track" in ds.dims:
+            ds = ds.transpose("cross_track", "along_track", ...)
+        else: 
+            ds = ds.transpose("along_track", ...)
+    return ds 
+
+
+def add_history(ds):
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    history = f"Created by ghiggi/gpm_api software on {current_time}"
+    ds.attrs["history"] = history
+    return ds
+
+
+def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
+    """Finalize GPM dataset."""
+    ##------------------------------------------------------------------------.
+    # Tranpose to have (y, x) dimension order 
+    ds = reshape_dataset(ds)
+    
+    ##------------------------------------------------------------------------.
+    # Decode dataset
+    if decode_cf:
+        ds = decode_dataset(ds)
+    
+    ##------------------------------------------------------------------------.
+    # Add coordinates attributes
+    ds = set_coords_attrs(ds)
+    
+    ##------------------------------------------------------------------------.
+    # Add CRS information
+    crs = pyproj.CRS(proj="longlat", ellps="WGS84")
+    ds = set_dataset_crs(ds, crs=crs, grid_mapping_name="crsWGS84", inplace=False)
+    
+    ##------------------------------------------------------------------------.
+    # Add time encoding 
+    encoding = {}
+    encoding['units'] = EPOCH
+    encoding['calendar'] = 'proleptic_gregorian'   
+    ds["time"].encoding = encoding 
+    
+    ##------------------------------------------------------------------------.
+    # Add global attributes
+    ds = add_history(ds)
+    ds.attrs["gpm_api_product"] = product
+
+        
+    ##------------------------------------------------------------------------.
+    # Subset dataset for start_time and end_time
+    # - Raise warning if the time period is not fully covered
+    # - The warning can raise if some data are not downloaded or some granule 
+    #   at the start/end of the period are empty
+    ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
+    _check_time_period_coverage(ds, start_time, end_time, raise_error=False)
+    
+    return ds 
 
 ####--------------------------------------------------------------------------.
 ##############################
 #### gpm_api.open_granule ####
 ##############################
-def open_granule(
-    filepath,
-    scan_mode=None,
-    groups=None,
-    variables=None,
-    decode_cf=False,
-    chunks="auto",
-    prefix_group=True,
-):
-    """
-    Create a lazy xarray.Dataset with relevant GPM data and attributes
-    for a specific granule.
-
-    Parameters
-    ----------
-    fpath : str
-        Filepath of GPM granule dataset
-    scan_mode : str
-        The radar products have the following scan modes
-        - 'FS' = Full Scan --> For Ku, Ka and DPR      (since version 7 products)
-        - 'NS' = Normal Scan --> For Ku band and DPR   (till version 6  products)
-        - 'MS' = Matched Scans --> For Ka band and DPR  (till version 6 for L2 products)
-        - 'HS' = High-sensitivity Scans --> For Ka band and DPR
-        For version 7:
-        - For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'FS'
-        - For products '1B-Ka' specify either 'MS' or 'HS'.
-        - For products '2A-Ka' and '2A-ENV-Ka' specify 'FS' or 'HS'.
-        - For products '2A-DPR' and '2A-ENV-DPR' specify either 'FS' or 'HS'
-        For version < 7:
-        - NS must be used instead of FS in Ku product.
-        - MS is available in DPR L2 products till version 6.
-
-        For product '2A-SLH', specify scan_mode = 'Swath'
-        For product '2A-<PMW>', specify scan_mode = 'S1'
-        For product '2B-GPM-CSH', specify scan_mode = 'Swath'.
-        For product '2B-GPM-CORRA', specify either 'KuKaGMI' or 'KuGMI'.
-        For product 'IMERG-ER','IMERG-LR' and 'IMERG-FR', specify scan_mode = 'Grid'.
-
-        The above guidelines related to product version 7.
-
-    variables : list, str
-         Datasets names to extract from the HDF5 file.
-         Hint: utils_HDF5.hdf5_datasets_names() to see available datasets.
-    groups
-        TODO
-    chunks : str, list, optional
-        Chunk size for dask array. The default is 'auto'.
-        If you want to load data in memory directly, specify chunks=None.
-
-        Hint: xarray’s lazy loading of remote or on-disk datasets is often but not always desirable.
-        Before performing computationally intense operations, load the Dataset
-        entirely into memory by invoking ds.compute().
-
-        Custom chunks can be specified by: TODO
-        - Provide a list (with length equal to 'variables') specifying
-          the chunk size option for each variable.
-    decode_cf: bool, optional
-        Whether to decode the dataset. The default is False.
-    prefix_group: bool, optional
-        Whether to add the group as a prefix to the variable names.
-        THe default is True.
-
-    Returns
-    -------
-
-    ds:  xarray.Dataset
-
-    """
+def _open_granule(
+        filepath,
+        scan_mode=None,
+        groups=None,
+        variables=None,
+        decode_cf=False,
+        chunks="auto",
+        prefix_group=True,
+    ):
     # Get product
     product = get_product_from_filepath(filepath)
     version = get_version_from_filepath(filepath)
@@ -581,6 +688,96 @@ def open_granule(
     # Return xr.Dataset
     return ds
 
+    
+def open_granule(
+    filepath,
+    scan_mode=None,
+    groups=None,
+    variables=None,
+    decode_cf=False,
+    chunks="auto",
+    prefix_group=True,
+):
+    """
+    Create a lazy xarray.Dataset with relevant GPM data and attributes
+    for a specific granule.
+
+    Parameters
+    ----------
+    fpath : str
+        Filepath of GPM granule dataset
+    scan_mode : str
+        The radar products have the following scan modes
+        - 'FS' = Full Scan --> For Ku, Ka and DPR      (since version 7 products)
+        - 'NS' = Normal Scan --> For Ku band and DPR   (till version 6  products)
+        - 'MS' = Matched Scans --> For Ka band and DPR  (till version 6 for L2 products)
+        - 'HS' = High-sensitivity Scans --> For Ka band and DPR
+        For version 7:
+        - For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'FS'
+        - For products '1B-Ka' specify either 'MS' or 'HS'.
+        - For products '2A-Ka' and '2A-ENV-Ka' specify 'FS' or 'HS'.
+        - For products '2A-DPR' and '2A-ENV-DPR' specify either 'FS' or 'HS'
+        For version < 7:
+        - NS must be used instead of FS in Ku product.
+        - MS is available in DPR L2 products till version 6.
+
+        For product '2A-SLH', specify scan_mode = 'Swath'
+        For product '2A-<PMW>', specify scan_mode = 'S1'
+        For product '2B-GPM-CSH', specify scan_mode = 'Swath'.
+        For product '2B-GPM-CORRA', specify either 'KuKaGMI' or 'KuGMI'.
+        For product 'IMERG-ER','IMERG-LR' and 'IMERG-FR', specify scan_mode = 'Grid'.
+
+        The above guidelines related to product version 7.
+
+    variables : list, str
+         Datasets names to extract from the HDF5 file.
+         Hint: utils_HDF5.hdf5_datasets_names() to see available datasets.
+    groups
+        TODO
+    chunks : str, list, optional
+        Chunk size for dask array. The default is 'auto'.
+        If you want to load data in memory directly, specify chunks=None.
+
+        Hint: xarray’s lazy loading of remote or on-disk datasets is often but not always desirable.
+        Before performing computationally intense operations, load the Dataset
+        entirely into memory by invoking ds.compute().
+
+        Custom chunks can be specified by: TODO
+        - Provide a list (with length equal to 'variables') specifying
+          the chunk size option for each variable.
+    decode_cf: bool, optional
+        Whether to decode the dataset. The default is False.
+    prefix_group: bool, optional
+        Whether to add the group as a prefix to the variable names.
+        THe default is True.
+
+    Returns
+    -------
+
+    ds:  xarray.Dataset
+
+    """
+    # Open granule 
+    ds = _open_granule(
+             filepath=filepath, 
+             scan_mode=scan_mode,
+             groups=groups,
+             variables=variables,
+             decode_cf=decode_cf,
+             chunks=chunks,
+             prefix_group=prefix_group,
+    )
+    
+    # Finalize granule
+    product = get_product_from_filepath(filepath)
+    ds = finalize_dataset(ds=ds,
+                          product=product,
+                          decode_cf=decode_cf, 
+                          start_time=None, 
+                          end_time=None)
+    return ds
+    
+
 
 ####---------------------------------------------------------------------------.
 ##############################
@@ -626,13 +823,18 @@ def _is_valid_granule(filepath):
     # - OSError: Unable to open file (file locking flag values don't match)
     # - OSError: Unable to open file (file signature not found) 
     # - OSError: Unable to open file (truncated file: eof = ...)
-    
-    except OSError:
+    except OSError as e:
+        error_str = str(e)
         if not os.path.exists(filepath):
             raise ValueError(
                 "This is a gpm_api bug. `find_GPM_files` should not have returned this filepath."
-            )
-        else:
+            )           
+        elif "lock" in error_str: 
+            msg = " \n".join(["Unfortunately, HDF locking is occuring.",
+                              "Export the environment variable HDF5_USE_FILE_LOCKING = 'FALSE' into your environment (i.e. in the .bashrc).",
+                              f"The error is: '{error_str}'."])
+            raise ValueError(msg)
+        else:            
             msg = f"The following file is corrupted and is being removed: {filepath}. Redownload the file."
             warnings.warn(msg, GPM_Warning)
             # os.remove(filepath) # TODO !!! 
@@ -667,7 +869,7 @@ def _open_valid_granules(filepaths,
     for filepath in filepaths:
         # Retrieve data if granule is not empty
         if _is_valid_granule(filepath):
-            ds = open_granule(
+            ds = _open_granule(
                 filepath,
                 scan_mode=scan_mode,
                 variables=variables,
@@ -682,7 +884,7 @@ def _open_valid_granules(filepaths,
         raise ValueError("No valid GPM granule available for current request. All granules are EMPTY.")
     return l_datasets          
 
-
+    
 def _concat_datasets(l_datasets):
     """Concatenate datasets together."""
     dims = list(l_datasets[0].dims)
@@ -697,18 +899,6 @@ def _concat_datasets(l_datasets):
                    coords="minimal", # "all"
                    compat="override",
                    combine_attrs='override')
-    
-    # Tranpose to have (y,x) dimension order 
-    # - This shape is expected by i.e. pyresample and matplotlib
-    # - GRID:  (..., time, lat, lon)
-    # - ORBIT: (cross_track, along_track, ...)
-    if is_grid:          
-        ds = ds.transpose(..., "lat", "lon")
-    else:
-        if "cross_track" in ds.dims:
-            ds = ds.transpose("cross_track", "along_track", ...)
-        else: 
-            ds = ds.transpose("along_track", ...)
     return ds 
 
 
@@ -838,26 +1028,19 @@ def open_dataset(
     ds = _concat_datasets(l_datasets)
     
     ##-------------------------------------------------------------------------.
-    # Decode dataset
-    if decode_cf:
-        ds = decode_dataset(ds)
-
-    # Add global attributes
-    ds.attrs["gpm_api_product"] = product
+    # Finalize dataset
+    ds = finalize_dataset(ds=ds,
+                          product=product,
+                          decode_cf=decode_cf, 
+                          start_time=start_time, 
+                          end_time=end_time)
     
+    ##------------------------------------------------------------------------.
     # Warns about missing granules 
     if has_missing_granules(ds):
         msg = "The GPM Dataset has missing granules !"
         warnings.warn(msg, GPM_Warning)
         
-    ##------------------------------------------------------------------------.
-    # Subset dataset for start_time and end_time
-    # - Raise warning if the time period is not fully covered
-    # - The warning can raise if some data are not downloaded or some granule 
-    #   at the start/end of the period are empty
-    ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
-    _check_time_period_coverage(ds, start_time, end_time, raise_error=False)
-    
     ##------------------------------------------------------------------------.
     # Return Dataset
     return ds

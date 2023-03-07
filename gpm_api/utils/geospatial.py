@@ -198,6 +198,7 @@ def crop(xr_obj, extent):
 
 
 def is_orbit(xr_obj):
+    # TODO: --> MOVED TO gpm_api.dataset
     """Check whether the GPM xarray object is an orbit."""
     if "along_track" in list(xr_obj.dims):
         return True
@@ -206,6 +207,7 @@ def is_orbit(xr_obj):
 
 
 def is_grid(xr_obj):
+    # TODO: --> MOVED TO gpm_api.dataset
     """Check whether the GPM xarray object is a grid."""
     if "longitude" in list(xr_obj.dims) or "lon" in list(xr_obj.dims):
         return True
