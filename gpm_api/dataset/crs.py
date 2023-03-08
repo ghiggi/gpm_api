@@ -46,7 +46,8 @@ import pyproj
 
 # - If two CRS specified (projection and crs), returns AreaDefinition
 
-#------------------------------------------------------------------------------.
+####---------------------------------------------------------------------------.
+#### CF-Writers utility 
 
 def get_pyproj_crs(ds):
     """Return :py:class:`pyproj.crs.CoordinateSystem` from CRS coordinate. 
@@ -78,7 +79,12 @@ def _get_pyproj_crs_cf_dict(crs):
     # Retrieve CF-compliant CRS information 
     attrs = crs.to_cf()
     # Add spatial_ref for compatibility with GDAL 
-    attrs["spatial_ref"] = attrs["crs_wkt"]
+    #  - GDAL: Only OGC WKT GEOGCS and PROJCS Projections supported  
+    #  - PYPROJ write crs_wkt starting with GEOGCRS instead of GEOGCS ! 
+    if "crs_wkt" in attrs:
+        spatial_ref = attrs["crs_wkt"]
+        spatial_ref = spatial_ref.replace("GEOGCRS", "GEOGCS")
+        attrs["spatial_ref"] = spatial_ref
     # Return attributes
     return attrs 
 
@@ -217,7 +223,7 @@ def _get_swath_dim_coords(xr_obj):
         dim_x = dims[0]
         dim_y = dims[1]
         if dim_x in xr_obj.coords and dim_y in xr_obj.coords:
-            if len(xr_obj[dim_x].dims) >= 2 and len(xr_obj[dim_y].dims) >= 2:
+            if len(xr_obj[dim_x].dims) == 2 and len(xr_obj[dim_y].dims) == 2:
                 return dim_x, dim_y 
 
     # Otherwise look at available coordinates, and search for CF attributes
@@ -229,7 +235,7 @@ def _get_swath_dim_coords(xr_obj):
         coords_names = list(xr_obj.coords)
         for coord in coords_names:
             # Select only lon/lat swath coordinates with dimension like ('y','x')   
-            if len(xr_obj[coord].dims) <= 1: # ('y', 'x'), ('cross_track', 'along_track')
+            if len(xr_obj[coord].dims) != 2: # ('y', 'x'), ('cross_track', 'along_track')
                 continue
             attrs = xr_obj[coord].attrs
             if attrs.get("standard_name", "").lower() in ("longitude"):
@@ -434,17 +440,82 @@ def _grid_mapping_reference(ds, crs, grid_mapping_name):
     return output 
 
 
+def _simplify_grid_mapping_value(grid_mapping_value):
+    """Simplify grid_mapping value. 
+    
+    GDAL does not support grid_mapping defined as "crs_wgs84: lat lon"
+    If only 1 CRS is specified in such format, it returns "crs_wgs84"
+    """
+    n_crs = grid_mapping_value.count(":")
+    if n_crs == 1: 
+        grid_mapping_value = grid_mapping_value.split(":")[0]
+    return grid_mapping_value
+
+
+def simplify_grid_mapping_values(ds):
+    """Simplify grid_mapping value. 
+    
+    GDAL does not support grid_mapping defined as "crs_wgs84: lat lon"
+    If only 1 CRS is specified in such format, it returns "crs_wgs84"
+    """
+    keys = list(ds.coords) + list(ds.data_vars)
+    for key in keys:
+        if "grid_mapping" in ds[key].attrs:
+            ds[key].attrs["grid_mapping"] = _simplify_grid_mapping_value(ds[key].attrs["grid_mapping"])
+    return ds 
+
+
+def _get_spatial_coordinates(xr_obj): 
+    """Return the spatial coordinates."""
+    coords1 = _get_proj_dim_coords(xr_obj)
+    coords2 = _get_swath_dim_coords(xr_obj)
+    coords = [coord for coord in (coords1 + coords2) if coord is not None]
+    return coords
+
+ 
+def _get_spatial_dims(xr_obj):
+    """Return the spatial dimensions."""
+    coords = _get_spatial_coordinates(xr_obj) # can be []
+    list_dims = [] 
+    for coord in coords: 
+        _ = [list_dims.append(dim) for dim in list(xr_obj[coord].dims)]
+    spatial_dims = list(set(list_dims))
+    return spatial_dims 
+
+
+def _get_variables_with_spatial_dims(ds): 
+    """Return variables and coordinates depending on spatial dimensions.
+    
+    A coordinate with dimension (time, y, x) is selected 
+    The spatial coordinates (y, x) or (latitude, longitude) are not selected.
+    """
+    spatial_dims = _get_spatial_dims(ds) # can be []
+    spatial_dims = set(spatial_dims)
+    if len(spatial_dims) == 0: 
+        raise ValueError("No spatial dimension identified in the dataset.")
+    variables = list(ds.coords) + list(ds.data_vars)
+    list_spatial_variables = []
+    for var in variables: 
+        if set(ds[var].dims).issuperset(spatial_dims):
+            list_spatial_variables.append(var)
+    # Remove spatial coordinates from the list 
+    coords = _get_spatial_coordinates(ds)
+    spatial_variables = set(list_spatial_variables).difference(coords)
+    return spatial_variables 
+
+
 def _add_variables_crs_attrs(ds, crs, grid_mapping_name):
     """Add 'grid_mapping' and 'coordinates' (for swath only) attributes to the variable.
     
-    It assumes that all variables need the attributes !
-    """
-    # TODO: check which variable require attributes ! 
-    
-    # Add grid_mapping attributes 
-    # - If one already existing, attach to it another one ! 
+    If a grid_mapping attribute is already existing, add also the new one !
+    """    
+    # Retrieve grid_mapping attributes value
     grid_mapping_value = _grid_mapping_reference(ds, crs=crs, grid_mapping_name=grid_mapping_name)
-    for var in ds.data_vars:  
+    
+    # Retrieve variables (and coordinates) requiring the crs attribute
+    variables = _get_variables_with_spatial_dims(ds)
+    
+    for var in variables:  
         grid_mapping = ds[var].attrs.get("grid_mapping", "")
         if grid_mapping == "": 
             grid_mapping = grid_mapping_value
@@ -455,17 +526,29 @@ def _add_variables_crs_attrs(ds, crs, grid_mapping_name):
     # Add coordinates attribute if swath data
     if has_swath_coords(ds): 
         lon_coord, lat_coord = _get_swath_dim_coords(ds)
-        for var in ds.data_vars:
+        for var in variables:
             da_coords = ds[var].coords
             if lon_coord in da_coords and lat_coord in da_coords:
                 ds[var].attrs["coordinates"] = f"{lat_coord} {lon_coord}"
     return ds 
 
 
-def remove_existing_grid_mapping_attrs(ds):
+def _get_name_existing_crs_coords(xr_obj):
+    """Return a list with the name of CRS coordinates."""
+    list_crs_coords = []
+    for coord in list(xr_obj.coords):
+        if "crs_wkt" in xr_obj[coord].attrs or "grid_mapping_name" in xr_obj[coord].attrs:
+            list_crs_coords.append(coord)
+    return list_crs_coords
+
+
+def remove_existing_crs_info(ds):
     """Remove existing grid_mapping attributes."""
     for var in ds.data_vars: 
         _ = ds[var].attrs.pop("grid_mapping", None)
+        _ = ds[var].attrs.pop("coordinates", None)
+    crs_coords = _get_name_existing_crs_coords(ds)
+    ds = ds.drop(crs_coords)
     return ds
 
 
@@ -500,9 +583,9 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
     # Add CF attributes to CRS coordinates
     ds = _add_coords_crs_attrs(ds, crs=crs)
     
-    # Add CF attributes 'grid_mapping' (and 'coordinates' for swath) to the variables 
+    # Add CF attributes 'grid_mapping' (and 'coordinates' for swath) 
+    # - To relevant variables and coordinates 
     ds = _add_variables_crs_attrs(ds=ds, crs=crs, grid_mapping_name=grid_mapping_name)
-    
     return ds
     
     
@@ -531,12 +614,15 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
     ds : xarray.Dataset
         Dataset with CF-compliant CRS information.
     """ 
-    ds = remove_existing_grid_mapping_attrs(ds)
+    ds = remove_existing_crs_info(ds)
     ds = set_dataset_single_crs(ds=ds, crs=crs, grid_mapping_name=grid_mapping_name, inplace=inplace)
     # If CRS is projected and 2D lon/lat are available, also add the WGS84 CRS
     if crs.is_projected and has_swath_coords(ds):
         crs_wgs84 = pyproj.CRS(proj="longlat", ellps="WGS84")
         ds = set_dataset_single_crs(ds=ds, crs=crs_wgs84, grid_mapping_name="crsWGS84", inplace=inplace)
+    # Simplify grid_mapping if possible 
+    # - For compatibility with GDAL, if only 1 CRS is specified ! 
+    ds = simplify_grid_mapping_values(ds)
     return ds 
 
 
@@ -557,6 +643,7 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 #     # https://github.com/corteva/rioxarray/blob/master/rioxarray/rioxarray.py#L118 
 #     pass 
 
+# # simplify grid_mapping_value  when not 2 crs
 # def _get_ds_area_extent 
 # def _get_ds_resolution 
 # def _get_ds_shape 

@@ -5,7 +5,7 @@ Created on Sat Dec 10 15:06:51 2022
 
 @author: ghiggi
 """
-from gpm_api.io.dataset import open_granule, open_dataset
+from gpm_api.dataset.reader import open_granule, open_dataset
 
 scan_mode=None
 groups=None

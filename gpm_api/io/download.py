@@ -31,7 +31,7 @@ from gpm_api.io.checks import (
 )
 from gpm_api.io.info import get_start_time_from_filepaths, get_info_from_filepath
 from gpm_api.io.directories import get_disk_directory, get_pps_directory
-from gpm_api.io import VERSION # CURRENT GPM VERSION
+from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
 
 ### Currently we open a connection for every file
 ### We might want to launch wget in parallel directly
@@ -536,7 +536,7 @@ def download_data(
     start_time,
     end_time,
     product_type="RS",
-    version=VERSION,
+    version=GPM_VERSION,
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,

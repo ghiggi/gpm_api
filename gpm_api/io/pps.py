@@ -21,7 +21,7 @@ from gpm_api.io.checks import (
 )
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.directories import get_pps_directory
-from gpm_api.io import VERSION # CURRENT GPM VERSION
+from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
 
 def _get_pps_file_list(username, url_file_list, product, date, version, verbose=True):
     """
@@ -208,7 +208,7 @@ def find_pps_filepaths(
     start_time,
     end_time,
     product_type="RS",
-    version=VERSION,
+    version=GPM_VERSION,
     verbose=True,
     parallel=True,
 ):

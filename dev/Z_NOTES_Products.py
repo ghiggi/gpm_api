@@ -145,3 +145,16 @@ Created on Thu Oct 13 10:24:52 2022
 
 # Scale	the  near-surface precipitation	 rates	 to	 statistically	 estimate	 surface
 # precipitation	 rates	 when	 the	 surface	 level	 is	 within	 the	 clutter
+
+
+# Like TRMM, the GPM spacecraft is designed to collect data while flying either “forward” (i.e.,
+# +X Flight axis along the velocity direction, yaw = 0) or “backward” (i.e., -X Flight axis along the
+# velocity direction, yaw = 180 degrees). The orientation is changed about every 40 days in order
+# to keep the +Y side of the spacecraft in shadow, and the –Y side in sunlight as the orbit
+# precesses. This is done for the purpose of thermal control. For yaw turns, the slew periods are
+# expected to be about 10 minutes.
+
+# Delta-V Maneuvers
+# The GPM spacecraft will adjust its orbit about once a week to once a month, depending on solar
+# activity, which affects atmospheric drag. There is a special sequence of mode changes that will
+# occur with each orbit adjust.

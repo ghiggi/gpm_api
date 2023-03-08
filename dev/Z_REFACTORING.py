@@ -17,8 +17,12 @@ Created on Mon Aug 15 23:02:04 2022
 
 # check ax is geoaxes or mpl.axes ! 
 
-###--------------------------------------------------------------------------.
+###---------------------------------------------------------------------------.
 # Refactor geospatial.py
+
+###---------------------------------------------------------------------------.
+# prefix_group=False to save data to netcdf ! 
+# SLV/precipRateESurface: variables with / can not be saved to netcdf ! 
 
 # -----------------------------------------------------------------------------.
 # Solve TODOs in dataset.py

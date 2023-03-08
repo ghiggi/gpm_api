@@ -27,7 +27,7 @@ from gpm_api.io.checks import (
     check_base_dir,
     check_start_end_time,
 )
-from gpm_api.io import VERSION # CURRENT GPM VERSION
+from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
 
 ####--------------------------------------------------------------------------.
 ###########################
@@ -73,7 +73,7 @@ def check_file_integrity(
     product,
     start_time,
     end_time,
-    version=VERSION,
+    version=GPM_VERSION,
     product_type="RS",
     remove_corrupted=True,
     verbose=True,
@@ -344,7 +344,7 @@ def download_monthly_data(
     year,
     month,
     product_type="RS",
-    version=VERSION,
+    version=GPM_VERSION,
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,
@@ -390,7 +390,7 @@ def check_no_duplicated_files(
     product,
     start_time,
     end_time,
-    version=VERSION,
+    version=GPM_VERSION,
     product_type="RS",
     verbose=True, 
 ):
@@ -527,7 +527,7 @@ def check_archive_completness(
     product,
     start_time,
     end_time,
-    version=VERSION,
+    version=GPM_VERSION,
     product_type="RS",
     download=True,
     username=None,

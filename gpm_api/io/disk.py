@@ -19,7 +19,7 @@ from gpm_api.io.checks import (
 )
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.directories import get_disk_directory
-from gpm_api.io import VERSION # CURRENT GPM VERSION
+from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
 
 ####--------------------------------------------------------------------------.
 ######################
@@ -156,7 +156,7 @@ def _find_daily_filepaths(
 
 
 def find_filepaths(
-    base_dir, product, start_time, end_time, product_type="RS", version=VERSION, verbose=True
+    base_dir, product, start_time, end_time, product_type="RS", version=GPM_VERSION, verbose=True
 ):
     """
     Retrieve GPM data filepaths on local disk for a specific time period and product.

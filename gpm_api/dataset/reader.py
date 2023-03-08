@@ -25,7 +25,7 @@ from gpm_api.io.checks import (
     check_start_end_time,
 )
 from gpm_api.io.info import get_version_from_filepath, get_product_from_filepath
-from gpm_api.io.decoding import apply_custom_decoding, decode_dataset
+
 from gpm_api.utils.utils_HDF5 import hdf5_datasets, hdf5_groups, hdf5_file_attrs
 from gpm_api.utils.time import (
     subset_by_time,
@@ -33,8 +33,12 @@ from gpm_api.utils.time import (
 )
 from gpm_api.utils.checks import has_regular_time, is_regular, has_missing_granules
 from gpm_api.utils.warnings import GPM_Warning
-from gpm_api.io import VERSION # CURRENT GPM VERSION
-from gpm_api.io.crs import set_dataset_crs
+
+from gpm_api.dataset.crs import set_dataset_crs
+from gpm_api.dataset.decoding import apply_custom_decoding, decode_dataset
+
+from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
+
 
 ####--------------------------------------------------------------------------.
 ### Define GPM_API Dataset Dimensions
@@ -578,6 +582,8 @@ def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
     
     ##------------------------------------------------------------------------.
     # Add CRS information
+    # --> See Geolocation toolkit ATBD 
+    # --> https://gpm.nasa.gov/sites/default/files/document_files/GPMGeolocationToolkitATBDv2.1-2012-07-31.pdf 
     crs = pyproj.CRS(proj="longlat", ellps="WGS84")
     ds = set_dataset_crs(ds, crs=crs, grid_mapping_name="crsWGS84", inplace=False)
     
@@ -910,7 +916,7 @@ def open_dataset(
     variables=None,
     groups=None,  # TODO implement
     scan_mode=None,
-    version=VERSION,
+    version=GPM_VERSION,
     product_type="RS",
     chunks="auto",
     decode_cf=True,

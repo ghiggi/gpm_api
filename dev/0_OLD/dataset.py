@@ -14,7 +14,7 @@ import numpy as np
 import xarray as xr
 from gpm_api.utils.utils_HDF5 import hdf5_file_attrs
 from gpm_api.io.find import find_GPM_files
-from gpm_api.io.decoding import apply_custom_decoding
+from gpm_api.dataset.decoding import apply_custom_decoding
 from gpm_api.io.checks import (
     is_not_empty,
     is_empty,

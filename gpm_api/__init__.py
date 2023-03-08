@@ -10,7 +10,7 @@ os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
 import gpm_api.accessor  # .methods
 from gpm_api.io.download import download_data as download
-from gpm_api.io.dataset import (
+from gpm_api.dataset.reader import (
     open_granule,
     open_dataset,
 )
