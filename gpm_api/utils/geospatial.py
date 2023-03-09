@@ -245,9 +245,11 @@ def is_spatial_2d(xr_obj):
 def get_pyresample_area(xr_obj):
     """It returns the corresponding pyresample area."""
     from pyresample import SwathDefinition, AreaDefinition
-
+    
     # TODO: Implement as pyresample accessor
     # --> ds.pyresample.area
+    # ds.crs.to_pyresample_area
+    # ds.crs.to_pyresample_swath
 
     # If Orbit Granule --> Swath Definition
     if is_orbit(xr_obj):

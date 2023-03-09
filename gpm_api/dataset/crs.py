@@ -5,10 +5,39 @@ Created on Tue Mar  7 17:27:48 2023
 
 @author: ghiggi
 """
+
+import pyproj
 import warnings
-from xarray import Variable
+import numpy as np
 import xarray as xr 
-import pyproj 
+from xarray import Variable
+
+# If the longitude, latitude, vertical or time coordinate is multi-valued, 
+# varies in only one dimension, and varies independently of other spatiotemporal coordinates, 
+# it is not permitted to store it as an auxiliary coordinate variable. 
+# This is both to enhance conformance to COARDS and to facilitate the
+# use of generic applications that recognize the NUG convention for coordinate variables.
+# An application that is trying to find the latitude coordinate of a variable 
+# should always look first to see if any of the variable’s dimensions correspond to a latitude coordinate variable.
+# If the latitude coordinate is not found this way, then the auxiliary coordinate variables
+# listed by the coordinates attribute should be checked.
+# Note that it is permissible, but optional, to list coordinate variables
+# as well as auxiliary coordinate variables in the coordinates attribute
+# --> https://github.com/pydata/xarray/issues/6310
+# --> https://github.com/pydata/xarray/pull/6366 
+# --> Coordinates in encoding ? Why ? 
+# --> Rioxarray save grid_mapping in the encoding ! 
+
+# --> In https://cfconventions.org/cf-conventions/cf-conventions.html#coordinate-system, search for: coordinates = 
+
+# --> https://github.com/corteva/rioxarray/pull/284
+# --> https://github.com/opendatacube/datacube-core/issues/1084
+
+# Others work: 
+# - https://github.com/dcherian/xindexes/blob/main/crsindex.ipynb 
+# - https://github.com/xarray-contrib/cf-xarray
+# - https://cf-xarray.readthedocs.io/en/latest/grid_mappings.html
+# - https://cf-xarray.readthedocs.io/en/latest/roadmap.html
 
 #------------------------------------------------------------------------------.
 #### CF-Writers 
@@ -49,30 +78,6 @@ import pyproj
 ####---------------------------------------------------------------------------.
 #### CF-Writers utility 
 
-def get_pyproj_crs(ds):
-    """Return :py:class:`pyproj.crs.CoordinateSystem` from CRS coordinate. 
-    
-    It search for ``spatial_ref``, ``crs`` and ``grid_mapping`` named coordinate.
-    
-    Parameters
-    ----------
-    ds : xarray.Dataset
-
-    Returns
-    -------
-    proj_crs : :py:class:`~pyproj.crs.CoordinateSystem`
-    """
-    
-    if "spatial_ref" in ds:
-        proj_crs = pyproj.CRS.from_cf(ds["spatial_ref"].attrs)
-    elif "crs" in ds: 
-        proj_crs = pyproj.CRS.from_cf(ds["crs"].attrs)
-    elif "grid_mapping" in ds: 
-        proj_crs = pyproj.CRS.from_cf(ds["grid_mapping"].attrs)
-    else: 
-        raise ValueError("No CRS coordinate in the dataset.")
-    return proj_crs
-
 
 def _get_pyproj_crs_cf_dict(crs):
     """Return the CF-compliant CRS attributes."""
@@ -112,9 +117,11 @@ def _get_obj(ds, inplace=False):
 
 def _get_dataarray_with_spatial_dims(xr_obj):
     # TODO: maybe select variable with spatial dimensions ! 
-    # --> Exclude dimensions with datetime and integer dtype coordinates?
-    if isinstance(xr_obj, xr.Dataset): 
-        var = list(xr_obj.data_vars)[0] 
+    if isinstance(xr_obj, xr.Dataset):
+        variables = list(xr_obj.data_vars)
+        if len(variables) == 0:
+            raise ValueError("The dataset has no variables")
+        var = variables[0]
         xr_obj = xr_obj[var]
     return xr_obj
 
@@ -164,23 +171,20 @@ def _get_proj_dim_coords(xr_obj):
     
     Parameters
     ----------
-    da : :obj:`xarray.DataArray`
+    xr_obj : xr.Dataset or xr.DataArray
     
     Returns
     -------
     (x_dim, y_dim) tuple 
         Tuple with the name of the spatial dimensions.
-    """
-    # Retrieve DataArray 
-    xr_obj = _get_dataarray_with_spatial_dims(xr_obj)
-       
+    """      
     # Check for classical options
     list_options = [("x","y"), ("lon", "lat"), ("longitude", "latitude")]
     for dims in list_options: 
         dim_x = dims[0]
         dim_y = dims[1]
         if dim_x in xr_obj.coords and dim_y in xr_obj.coords:
-            if xr_obj[dim_x].dims == (dim_x,) and xr_obj[dim_y].dims == (dim_y,):
+            if xr_obj[dim_x].dims == (dim_x,) and xr_obj[dim_y].dims == (dim_y,):   
                 return dims
     # Otherwise look at available coordinates, and search for CF attributes 
     else:
@@ -207,16 +211,13 @@ def _get_swath_dim_coords(xr_obj):
     
     Parameters
     ----------
-    da : :obj:`xarray.DataArray`
+    xr_obj : xr.Dataset or xr.DataArray
     
     Returns
     -------
     (x_dim, y_dim) tuple 
         Tuple with the name of the swath coordinates.
-    """
-    # Retrieve DataArray 
-    xr_obj = _get_dataarray_with_spatial_dims(xr_obj)
-       
+    """      
     # Check for classical options
     list_options = [("lon", "lat"), ("longitude", "latitude")]
     for dims in list_options: 
@@ -547,6 +548,7 @@ def remove_existing_crs_info(ds):
     for var in ds.data_vars: 
         _ = ds[var].attrs.pop("grid_mapping", None)
         _ = ds[var].attrs.pop("coordinates", None)
+        _ = ds[var].encoding.pop("coordinates", None)
     crs_coords = _get_name_existing_crs_coords(ds)
     ds = ds.drop(crs_coords)
     return ds
@@ -643,7 +645,86 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 #     # https://github.com/corteva/rioxarray/blob/master/rioxarray/rioxarray.py#L118 
 #     pass 
 
-# # simplify grid_mapping_value  when not 2 crs
-# def _get_ds_area_extent 
+
+####---------------------------------------------------------------------------.
+#### CF-Readers 
+
+ 
+def _get_crs_coordinates(xr_obj):
+    """Return a list with the name(s) of the CRS coordinate(s)."""
+    list_crs_names = [] 
+    crs_attributes = ["grid_mapping_name", "crs_wkt","spatial_ref"]
+    for coord in list(xr_obj.coords):
+        if np.any(np.isin(crs_attributes, list(xr_obj[coord].attrs))):
+            list_crs_names.append(coord)
+    return list_crs_names
+
+
+def _get_list_pyproj_crs(xr_obj):
+    """Return a list of pyproj specified CRS."""
+    list_crs_names = _get_crs_coordinates(xr_obj)
+    if len(list_crs_names) == 0: 
+        raise ValueError("No CRS coordinate in the dataset.")
+    list_crs = [pyproj.CRS.from_cf(xr_obj[crs_coord].attrs) for crs_coord in list_crs_names]
+    return list_crs 
+
+
+def _get_geographic_crs(xr_obj): 
+    list_crs = _get_list_pyproj_crs(xr_obj)
+    list_geographic_crs = [proj_crs for proj_crs in list_crs if proj_crs.is_geographic]
+    if len(list_geographic_crs) > 1:
+           raise ValueError("More than 1 geographic CRS is specified")
+    if len(list_geographic_crs) == 0:
+           raise ValueError("No geographic CRS is specified")
+    crs = list_geographic_crs[0]
+    return crs
+
+
+def get_pyproj_crs(xr_obj):
+    """Return :py:class:`pyproj.crs.CoordinateSystem` from CRS coordinate(s). 
+    
+    If a geographic and projected CRS are present, it returns the projected.
+    
+    Parameters
+    ----------
+    xr_obj : xarray.Dataset or xarray.DataArray
+
+    Returns
+    -------
+    proj_crs : :py:class:`~pyproj.crs.CoordinateSystem`
+    """
+    list_crs = _get_list_pyproj_crs(xr_obj)
+    # If two crs are provided, select the projected ! 
+    if len(list_crs) == 2: 
+        list_crs = [proj_crs for proj_crs in list_crs if proj_crs.is_projected]
+        if len(list_crs) != 1 :
+            raise ValueError("A DataArray should have only 1 projected CRS.")
+    # Return crs
+    crs = list_crs[0]
+    return crs 
+
+
+def get_pyresample_swath(xr_obj):
+    from pyresample import SwathDefinition
+    
+    if not has_swath_coords(xr_obj):
+        raise ValueError("Not a swath object.")
+        
+    # Identify name of longitude and latitude coordinates
+    lons, lats = _get_swath_dim_coords(xr_obj)
+    
+    # Retrieve geographic CRS if available
+    try: 
+        pyproj_crs = _get_geographic_crs(xr_obj)
+    except Exception: 
+        pyproj_crs = None 
+    # Define SwathDefinition 
+    swath_def = SwathDefinition(xr_obj[lons], xr_obj[lats], crs=pyproj_crs) 
+    return swath_def
+
+
+# def get_pyresample_area(xr_obj) --> pyresample cf area 
+# def _get_ds_area_extent  
 # def _get_ds_resolution 
 # def _get_ds_shape 
+
