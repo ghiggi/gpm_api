@@ -1,12 +1,11 @@
 # pyproject.toml
 
 [build-system]
-requires      = ["setuptools>=61.0.0", "setuptools_scm[toml]>=6.2", "wheel"]
+requires = ["setuptools>=61.0.0", "setuptools_scm[toml]>=6.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "gpm_api"
-version = "0.0.1post" # TODO dynamic in future
 description = "Python API for the Global Precipitation Mission Data Archive"
 readme = "README.md"
 authors = [
@@ -51,6 +50,7 @@ dependencies = [
     "tqdm",
 ]
 requires-python = ">=3.8"
+dynamic = ["version"]
 
 [project.optional-dependencies]
 image = ["dask-image", "scikit-image"]
@@ -69,6 +69,9 @@ Source = "https://github.com/ghiggi/gpm_api"
 Tracker = "https://github.com/ghiggi/gpm_api/issues"
 Documentation = "https://gpm_api.readthedocs.io"
 changelog = "https://github.com/ghigg/gpm_api/CHANGELOG.md"
+
+[tool.setuptools_scm]
+write_to = "gpm_api/_version.py"
 
 [tool.setuptools]
 license-files = ["LICENSE"]

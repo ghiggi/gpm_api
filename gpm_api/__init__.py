@@ -7,8 +7,11 @@ Created on Mon Aug  3 11:22:04 2020
 """
 import os 
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
-
 import gpm_api.accessor  # .methods
+from importlib.metadata import version, PackageNotFoundError
+from gpm_api.configs import define_gpm_api_configs as define_configs
+from gpm_api.configs import read_gpm_api_configs as read_configs
+
 from gpm_api.io.download import download_data as download
 from gpm_api.dataset.reader import (
     open_granule,
@@ -24,5 +27,24 @@ from gpm_api.utils.checks import (
 from gpm_api.io.products import available_products
 from gpm_api.io.scan_modes import available_scan_modes
 
-# Version of the GPM-API package
-__version__ = "0.0.1"
+__all__ = [
+    "define_configs",
+    "read_configs",
+    "available_products",
+    "available_scan_modes",
+    "download",
+    "find_files",
+    "open_granule",
+    "open_dataset",
+    "check_regular_time",
+    "check_contiguous_scans",
+    "check_valid_geolocation",
+    "check_missing_granules",
+]
+
+# Get version
+try:
+    __version__ = version("gpm_api")
+except PackageNotFoundError:
+    # package is not installed
+    pass
