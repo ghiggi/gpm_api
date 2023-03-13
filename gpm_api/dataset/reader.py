@@ -38,7 +38,7 @@ from gpm_api.dataset.crs import set_dataset_crs
 from gpm_api.dataset.decoding import apply_custom_decoding, decode_dataset
 
 from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
-
+from gpm_api.configs import get_gpm_base_dir
 
 ####--------------------------------------------------------------------------.
 ### Define GPM_API Dataset Dimensions
@@ -909,7 +909,6 @@ def _concat_datasets(l_datasets):
 
 
 def open_dataset(
-    base_dir,
     product,
     start_time,
     end_time,
@@ -922,6 +921,7 @@ def open_dataset(
     decode_cf=True,
     prefix_group=True,
     verbose=False,
+    base_dir=None,
 ):
     """
     Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
@@ -931,8 +931,6 @@ def open_dataset(
 
     Parameters
     ----------
-    base_dir : str
-       The base directory where GPM data are stored.
     product : str
         GPM product acronym.
     variables : list, str
@@ -959,16 +957,27 @@ def open_dataset(
         Chunck size for dask. The default is 'auto'.
         Alternatively provide a list (with length equal to 'variables') specifying
         the chunk size option for each variable.
-     decode_cf: bool, optional
-         Whether to decode the dataset. The default is False.
-     prefix_group: bool, optional
-         Whether to add the group as a prefix to the variable names.
-         THe default is True.
+    decode_cf: bool, optional
+        Whether to decode the dataset. The default is False.
+    prefix_group: bool, optional
+        Whether to add the group as a prefix to the variable names.
+        If you aim to save the Dataset to disk as netCDF or Zarr, you need to set prefix_group=False
+        or later remove the prefix before writing the dataset.
+        The default is True.
+    base_dir : str, optional
+        The path to the GPM base directory. If None, it use the one specified 
+        in the GPM-API config file. 
+        The default is None.
+        
     Returns
     -------
     xarray.Dataset
 
     """
+    # -------------------------------------------------------------------------.
+    # Retrieve GPM-API configs
+    base_dir = get_gpm_base_dir(base_dir)
+    
     ##------------------------------------------------------------------------.
     # Check base_dir
     base_dir = check_base_dir(base_dir)

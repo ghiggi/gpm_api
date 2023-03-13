@@ -78,6 +78,14 @@ license-files = ["LICENSE"]
 packages = ["gpm_api"] # explicitly list the packages in modules
 # To customize, remove packages and use instead [tool.setuptools.packages.find]
 
+# [tool.setuptools.packages.find]
+# where = ["gpm_api"]
+# include = ["io", "..."]
+
+[project.scripts]
+download_daily_gpm_data="gpm_api.scripts.download_daily_gpm_data:download_daily_gpm_data"
+download_monthly_gpm_data="gpm_api.scripts.download_monthly_gpm_data:download_monthly_gpm_data"
+
 [tool.isort]
 profile = "black"
 skip_gitignore = true

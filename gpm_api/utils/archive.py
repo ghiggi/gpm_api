@@ -337,12 +337,11 @@ def get_product_temporal_coverage(
 #######################
 
 @print_elapsed_time
-def download_monthly_data(
-    base_dir,
-    username,
+def download_daily_data(
     product,
     year,
     month,
+    day,
     product_type="RS",
     version=GPM_VERSION,
     n_threads=10,
@@ -353,15 +352,16 @@ def download_monthly_data(
     remove_corrupted=True,
     verbose=True,
     retry=1, 
+    base_dir=None,
+    username=None,
+    password=None,
 ):
     from gpm_api.io.download import download_data
     
-    start_time = datetime.date(year, month, 1)
-    end_time = start_time + relativedelta(months=1)
+    start_time = datetime.date(year, month, day)
+    end_time = start_time + relativedelta(days=1)
 
     l_corrupted = download_data(
-        base_dir=base_dir,
-        username=username,
         product=product,
         start_time=start_time,
         end_time=end_time,
@@ -375,6 +375,54 @@ def download_monthly_data(
         remove_corrupted=remove_corrupted,
         verbose=verbose,
         retry=retry,
+        base_dir=base_dir,
+        username=username,
+        password=password,
+    )
+    return l_corrupted
+
+
+@print_elapsed_time
+def download_monthly_data(
+    product,
+    year,
+    month,
+    product_type="RS",
+    version=GPM_VERSION,
+    n_threads=10,
+    transfer_tool="curl",
+    progress_bar=False,
+    force_download=False,
+    check_integrity=True,
+    remove_corrupted=True,
+    verbose=True,
+    retry=1, 
+    base_dir=None,
+    username=None,
+    password=None,
+):
+    from gpm_api.io.download import download_data
+    
+    start_time = datetime.date(year, month, 1)
+    end_time = start_time + relativedelta(months=1)
+
+    l_corrupted = download_data(
+        product=product,
+        start_time=start_time,
+        end_time=end_time,
+        product_type=product_type,
+        version=version,
+        n_threads=n_threads,
+        transfer_tool=transfer_tool,
+        progress_bar=progress_bar,
+        force_download=force_download,
+        check_integrity=check_integrity,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
+        retry=retry,
+        base_dir=base_dir,
+        username=username,
+        password=password,
     )
     return l_corrupted
 

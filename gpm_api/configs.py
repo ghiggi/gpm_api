@@ -94,3 +94,27 @@ def read_gpm_api_configs() -> Dict[str, str]:
     # Read the GPM-API config file  
     config_dict = _read_yaml_file(fpath)
     return config_dict 
+
+
+####--------------------------------------------------------------------------.
+def _get_config_key(key, value=None): 
+    """Return the config key if `value` is None."""
+    if value is None: 
+        value = read_gpm_api_configs()[key] 
+    return value 
+
+
+def get_gpm_base_dir(gpm_base_dir=None):
+    """Return the GPM base directory."""
+    return _get_config_key(key="gpm_base_dir", value=gpm_base_dir)
+
+
+def get_gpm_username(gpm_username=None):
+    """Return the GPM-API PPS username."""
+    return _get_config_key(key="gpm_username", value=gpm_username)
+
+
+def get_gpm_password(gpm_password=None):
+    """Return the GPM-API PPS password."""
+    return _get_config_key(key="gpm_password", value=gpm_password)
+ 

@@ -26,6 +26,7 @@ from gpm_api.utils.checks import (
 )
 from gpm_api.io.products import available_products
 from gpm_api.io.scan_modes import available_scan_modes
+from gpm_api.utils.archive import download_daily_data, download_monthly_data
 
 __all__ = [
     "define_configs",
@@ -33,6 +34,8 @@ __all__ = [
     "available_products",
     "available_scan_modes",
     "download",
+    "download_daily_data", 
+    "download_monthly_data",
     "find_files",
     "open_granule",
     "open_dataset",

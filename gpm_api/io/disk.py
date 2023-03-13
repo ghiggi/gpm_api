@@ -8,6 +8,8 @@ Created on Mon Aug 15 00:18:13 2022
 import os
 import datetime
 import pandas as pd
+from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
+from gpm_api.configs import get_gpm_base_dir
 from gpm_api.io.checks import (
     check_date,
     check_start_end_time,
@@ -19,7 +21,7 @@ from gpm_api.io.checks import (
 )
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.directories import get_disk_directory
-from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
+
 
 ####--------------------------------------------------------------------------.
 ######################
@@ -156,15 +158,19 @@ def _find_daily_filepaths(
 
 
 def find_filepaths(
-    base_dir, product, start_time, end_time, product_type="RS", version=GPM_VERSION, verbose=True
+    product,
+    start_time,
+    end_time, 
+    product_type="RS", 
+    version=GPM_VERSION, 
+    verbose=True,
+    base_dir=None,
 ):
     """
     Retrieve GPM data filepaths on local disk for a specific time period and product.
 
     Parameters
     ----------
-    base_dir : str
-       The base directory where GPM data are stored.
     product : str
         GPM product acronym. See gpm_api.available_products()
     start_time : datetime.datetime
@@ -177,13 +183,22 @@ def find_filepaths(
         GPM version of the data to retrieve if product_type = 'RS'.
     verbose : bool, optional
         Whether to print processing details. The default is True.
-
+    base_dir : str, optional
+        The path to the GPM base directory. If None, it use the one specified 
+        in the GPM-API config file. 
+        The default is None.
+        
     Returns
     -------
     filepaths : list
         List of GPM filepaths.
 
     """
+    # -------------------------------------------------------------------------.
+    # Retrieve GPM-API configs
+    base_dir = get_gpm_base_dir(base_dir)
+ 
+    # -------------------------------------------------------------------------.
     ## Checks input arguments
     check_version(version=version)
     base_dir = check_base_dir(base_dir)

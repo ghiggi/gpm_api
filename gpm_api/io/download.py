@@ -32,6 +32,7 @@ from gpm_api.io.checks import (
 from gpm_api.io.info import get_start_time_from_filepaths, get_info_from_filepath
 from gpm_api.io.directories import get_disk_directory, get_pps_directory
 from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
+from gpm_api.configs import get_gpm_base_dir, get_gpm_username, get_gpm_password
 
 ### Currently we open a connection for every file
 ### We might want to launch wget in parallel directly
@@ -424,6 +425,7 @@ def convert_pps_to_disk_filepaths(
 def _download_daily_data(
     base_dir,
     username,
+    password,
     date,
     version,
     product,
@@ -444,7 +446,9 @@ def _download_daily_data(
     base_dir : str
         The base directory where to store GPM data.
     username: str
-        Email address with which you registered on on NASA PPS
+        Email address with which you registered on the NASA PPS.
+    password: str
+        Password to access the NASA PPS server.
     product : str
         GPM product name. See: gpm_api.available_products()
     date : datetime
@@ -488,6 +492,7 @@ def _download_daily_data(
     ## Retrieve the list of files available on NASA PPS server
     pps_filepaths = _find_pps_daily_filepaths(
         username=username,
+        password=password,
         product=product,
         product_type=product_type,
         version=version,
@@ -522,7 +527,7 @@ def _download_daily_data(
     bad_cmds = _download_files(src_fpaths=pps_filepaths,
                                dst_fpaths=disk_filepaths,
                                username=username,
-                               password=username, 
+                               password=password, 
                                n_threads=n_threads,
                                progress_bar=progress_bar,
                                verbose=verbose)
@@ -530,8 +535,6 @@ def _download_daily_data(
 
 ##-----------------------------------------------------------------------------.
 def download_data(
-    base_dir,
-    username,
     product,
     start_time,
     end_time,
@@ -545,16 +548,15 @@ def download_data(
     remove_corrupted=True,
     retry=1, 
     verbose=True,
+    base_dir=None,
+    username=None,
+    password=None,
 ):
     """
     Download GPM data from NASA servers (day by day).
 
     Parameters
     ----------
-    base_dir : str
-        The base directory where to store GPM data.
-    username: str
-        Email address with which you registered on NASA PPS.
     product : str
         GPM product acronym. See gpm_api.available_products()
     start_time : datetime
@@ -585,6 +587,18 @@ def download_data(
     retry : int, optional, 
         The number of attempts to redownload the corrupted files. The default is 1.
         Only applies if check_integrity is True !
+    base_dir : str, optional
+        The path to the GPM base directory. If None, it use the one specified 
+        in the GPM-API config file. 
+        The default is None.
+    username: str, optional
+        Email address with which you registered on the NASA PPS.
+        If None, it uses the one specified in the GPM-API config file. 
+        The default is None.
+    password: str, optional
+        Email address with which you registered on the NASA PPS.
+        If None, it uses the one specified in the GPM-API config file. 
+        The default is None.
     
     Returns
     -------
@@ -593,6 +607,12 @@ def download_data(
         0 if everything went fine.
 
     """
+    # -------------------------------------------------------------------------.
+    # Retrieve GPM-API configs
+    base_dir = get_gpm_base_dir(base_dir)
+    username = get_gpm_username(username)
+    password = get_gpm_password(password)
+    
     # -------------------------------------------------------------------------.
     ## Checks input arguments
     check_product_type(product_type=product_type)
@@ -662,12 +682,14 @@ def download_data(
 
 ####--------------------------------------------------------------------------.
 def redownload_from_filepaths(filepaths,
-                              username,
                               n_threads=4,
                               transfer_tool="wget",
                               progress_bar=False,
                               verbose=True,
-                              retry=1):
+                              retry=1,
+                              username=None,
+                              password=None,
+                              ):
     """
     Redownload GPM files from the PPS archive.
 
@@ -675,8 +697,6 @@ def redownload_from_filepaths(filepaths,
     ----------
     filepaths : list
         List of disk filepaths.
-    username: str
-        Email address with which you registered on NASA PPS.
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
@@ -687,7 +707,15 @@ def redownload_from_filepaths(filepaths,
         Whether to print processing details. The default is False.
     retry : int, optional, 
         The number of attempts to redownload the corrupted files. The default is 1.
-
+    username: str, optional
+        Email address with which you registered on the NASA PPS.
+        If None, it uses the one specified in the GPM-API config file. 
+        The default is None.
+    password: str, optional
+        Email address with which you registered on the NASA PPS.
+        If None, it uses the one specified in the GPM-API config file. 
+        The default is None.
+          
     Returns
     -------
     l_corrupted : list
@@ -700,6 +728,12 @@ def redownload_from_filepaths(filepaths,
     if len(filepaths) == 0: 
         return None
     
+    # -------------------------------------------------------------------------.
+    # Retrieve GPM-API configs
+    username = get_gpm_username(username)
+    password = get_gpm_password(password)
+    
+    # -------------------------------------------------------------------------.
     # Attempt to redownload the corrupted files
     if verbose: 
         n_files = len(filepaths)
@@ -712,7 +746,7 @@ def redownload_from_filepaths(filepaths,
     _ = _download_files(src_fpaths=pps_filepaths,
                         dst_fpaths=filepaths,
                         username=username,
-                        password=username, 
+                        password=password, 
                         n_threads=n_threads,
                         progress_bar=progress_bar,
                         verbose=verbose)
