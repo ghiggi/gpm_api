@@ -106,7 +106,27 @@ class GPM_Base_Accessor:
         from gpm_api.utils.checks import has_valid_geolocation
 
         return has_valid_geolocation(self._obj)
-
+    
+    @property
+    def start_time(self): 
+        if "time" in self._obj.coords:
+            start_time = self._obj["time"].values[0] 
+        elif "gpm_time" in self._obj.coords:
+            start_time = self._obj["gpm_time"].values[0] 
+        else: 
+            raise ValueError("Time coordinate not found")
+        return start_time 
+    
+    @property
+    def end_time(self):
+        if "time" in self._obj.coords:
+            end_time = self._obj["time"].values[-1] 
+        elif "gpm_time" in self._obj.coords:
+            end_time = self._obj["gpm_time"].values[-1] 
+        else: 
+            raise ValueError("Time coordinate not found")
+        return end_time 
+    
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm_api.utils.time import subset_by_time
 
