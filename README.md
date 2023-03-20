@@ -34,8 +34,8 @@ To facilitate the creation of the configuration file, you can run the following 
 ```python
 import gpm_api
 
-username = <your PPS username> # likely your mail 
-password = <your PPS password> # likely your mail 
+username = "<your PPS username>" # likely your mail 
+password = "<your PPS password>" # likely your mail 
 gpm_base_dir = "<path/to/directory/GPM"  # path to the directory where to download the data
 gpm_api.define_configs(gpm_username=username, 
                        gpm_password=password, 
@@ -103,7 +103,7 @@ ds = gpm_api.open_dataset(product=product,
                           end_time=end_time)
 ```
 
-Look at the Tutorials to learn how to analyse and visualize the GPM products !
+Look at the [Tutorials][tutorial_link] to learn how to analyse and visualize the GPM products !
 
 ## Installation
 
@@ -134,18 +134,6 @@ In case conda forge is not set up for your system yet, see the easy to follow
 instructions on [conda forge][conda_forge_link].
 
 
-## Citation
-
-If you are using GPM-API in your publication please cite our paper:
-
-TODO: GMD
-
-You can cite the Zenodo code publication of GPM-API by:
-
-> Ghiggi Gionata & XXXX . ghiggi/gpm_api. Zenodo. https://doi.org/10.5281/zenodo.XXXXX
-
-If you want to cite a specific version, have a look at the [Zenodo site](https://doi.org/10.5281/zenodo.XXXXX).
-
 ## Documentation for GPM-API
 
 You can find the documentation under [gpm_api.readthedocs.io][doc_link]
@@ -167,7 +155,19 @@ These tutorial are also available as Jupyter Notebooks and in Google Colab:
 - 3. Introduction to image patch extraction [[Notebook][tut3_patch_link]][[Colab][colab3_patch_link]]
  
 The associated python scripts are also provided in the `tutorial` folder.
- 
+
+## Citation
+
+If you are using GPM-API in your publication please cite our paper:
+
+TODO: GMD
+
+You can cite the Zenodo code publication of GPM-API by:
+
+> Ghiggi Gionata & XXXX . ghiggi/gpm_api. Zenodo. https://doi.org/10.5281/zenodo.XXXXX
+
+If you want to cite a specific version, have a look at the [Zenodo site](https://doi.org/10.5281/zenodo.XXXXX).
+
 ## Requirements:
 
 - [xarray](https://docs.xarray.dev/en/stable/)
@@ -190,6 +190,7 @@ The associated python scripts are also provided in the `tutorial` folder.
 
 
 [PPS_link]: https://gpm.nasa.gov/data/sources/pps-research
+[tutorial_link]: https://github.com/ghiggi/gpm_api/tree/master#tutorials-and-examples
 
 [pip_link]: https://pypi.org/project/gstools
 [conda_link]: https://docs.conda.io/en/latest/miniconda.html
