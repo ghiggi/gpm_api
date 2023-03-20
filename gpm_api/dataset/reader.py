@@ -606,7 +606,7 @@ def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
     # - The warning can raise if some data are not downloaded or some granule 
     #   at the start/end of the period are empty
     ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
-    _check_time_period_coverage(ds, start_time, end_time, raise_error=False)
+    _check_time_period_coverage(ds, start_time=start_time, end_time=end_time, raise_error=False)
     
     return ds 
 
@@ -791,7 +791,7 @@ def open_granule(
 ##############################
 
 
-def _check_time_period_coverage(ds, start_time, end_time, raise_error=False): 
+def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=False): 
     """Check time period start_time, end_time is covered.
     
     If raise_error=True, raise error if time period is not covered.
@@ -803,15 +803,16 @@ def _check_time_period_coverage(ds, start_time, end_time, raise_error=False):
     last_end = ds['time'].data[-1].astype("M8[s]").tolist()
     # Check time period is covered
     msg = ""
-    if first_start > start_time:
-        msg = f"The dataset start at {first_start}, although the specified start_time is {start_time}."
-        
-    if last_end < end_time:
-        msg1 = f"The dataset end_time {last_end} occurs before the specified end_time {end_time}."
-        if msg != "":
-           msg = msg[:-1] + "; and t" + msg1[1:]
-        else: 
-            msg = msg1
+    if start_time:
+        if first_start > start_time:
+            msg = f"The dataset start at {first_start}, although the specified start_time is {start_time}."
+    if end_time:       
+        if last_end < end_time:
+            msg1 = f"The dataset end_time {last_end} occurs before the specified end_time {end_time}."
+            if msg != "":
+               msg = msg[:-1] + "; and t" + msg1[1:]
+            else: 
+                msg = msg1
     if msg != "": 
         if raise_error:
             raise ValueError(msg)
