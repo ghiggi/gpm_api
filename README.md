@@ -11,21 +11,117 @@
 
 The GPM-API is still in development. Feel free to try it out and to report issues or to suggest changes.
 
-## Purpose
-GPM-API provides an easy-to-use python interface to download, read, process and visualize most of the products of the Global Precipitation Measurement Mission (GPM) data archive. The available products can be retrieved by: 
+## Quick start
+GPM-API provides an easy-to-use python interface to download, read, process and visualize most 
+of the products of the Global Precipitation Measurement Mission (GPM) data archive. 
+
+The list of available products can be retrieved using: 
 
 ```python
 import gpm_api
+
 gpm_api.available_products(product_type="RS")  # research products
 gpm_api.available_products(product_type="NRT") # near-real-time products
 
 ```
 
-The gpm-api enable to:
-- TODO: list all gpm_api utility
+Before starting using GPM-API, we highly suggest to save into a configuration file: 
+1. your credentials to access the [NASA Precipitation Processing System (PPS) servers][PPS_link] 
+2. the directory on the local disk where to save the GPM dataset of interest. 
 
+To facilitate the creation of the configuration file, you can run the following script: 
+
+```python
+import gpm_api
+
+username = <your PPS username> # likely your mail 
+password = <your PPS password> # likely your mail 
+gpm_base_dir = "<path/to/directory/GPM"  # path to the directory where to download the data
+gpm_api.define_configs(gpm_username=username, 
+                       gpm_password=password, 
+                       gpm_base_dir=gpm_base_dir)
+
+# You can check that the config file has been correctly created with:
+configs = gpm_api.read_configs()
+print(configs)
+
+```
+
+Now you can either start to download GPM data within python: 
+
+```python
+import gpm_api
+import datetime 
+
+product = "2A-DPR"
+product_type = "RS"
+version = 7
+
+start_time = datetime.datetime(2020,7, 22, 0, 1, 11)
+end_time = datetime.datetime(2020,7, 22, 0, 23, 5)
+
+gpm_api.download(product=product, 
+                 product_type=product_type,
+                 version=version,
+                 n_threads=2,
+                 start_time=start_time, 
+                 end_time=end_time)
+
+```
+
+or from the terminal using i.e. `download_daily_gpm_data <product> <year> <month> <day>`:
+
+```bash
+    download_daily_gpm_data 2A-DPR 2022 7 22
+```
+
+A GPM granule can be opened in python using: 
+
+```python
+import gpm_api
+
+ds = gpm_api.open_granule(<path_to_granule>)
+
+```
+
+while multiple granules over a specific time period can be opened using: 
+
+```python
+import gpm_api
+import datetime 
+
+product = "2A-DPR"
+product_type = "RS"
+version = 7
+
+start_time = datetime.datetime(2020,7, 22, 0, 1, 11)
+end_time = datetime.datetime(2020,7, 22, 0, 23, 5)
+ds = gpm_api.open_dataset(product=product, 
+                          product_type=product_type,
+                          version=version
+                          start_time=start_time, 
+                          end_time=end_time)
+```
+
+Look at the Tutorials to learn how to analyse and visualize the GPM products !
 
 ## Installation
+
+
+### pip
+
+GPM-API can be installed via [pip][pip_link] on Linux, Mac, and Windows.
+On Windows you can install [WinPython][winpy_link] to get Python and pip
+running.
+Prior installation of GPM-API, to avoid [GEOS](https://libgeos.org/) library version incompatibilities when 
+installing the Cartopy package, we highly suggest to install first Cartopy using `conda install cartopy>=0.21.0`.
+
+Then, install the GPM-API package by typing the following command in the command terminal:
+
+    pip install gpm_api
+
+To install the latest development version via pip, see the
+[documentation][doc_install_link].
 
 ### conda [NOT YET AVAILABLE]
 
@@ -36,20 +132,6 @@ Install the package by typing the following command in a command terminal:
 
 In case conda forge is not set up for your system yet, see the easy to follow
 instructions on [conda forge][conda_forge_link].
-
-### pip
-
-GPM-API can be installed via [pip][pip_link] on Linux, Mac, and Windows.
-On Windows you can install [WinPython][winpy_link] to get Python and pip
-running.
-Prior installation of GPM-API, to avoid [GEOS](https://libgeos.org/) library version incompatibilities when installing the Cartopy package, we highly suggest to install first Cartopy using `conda install cartopy>=0.20.0`.
-
-Then, install the GPM-API package by typing the following command in the command terminal:
-
-    pip install gpm_api
-
-To install the latest development version via pip, see the
-[documentation][doc_install_link].
 
 
 ## Citation
@@ -106,6 +188,8 @@ The associated python scripts are also provided in the `tutorial` folder.
 
 [MIT][license_link] © 2021-2023
 
+
+[PPS_link]: https://gpm.nasa.gov/data/sources/pps-research
 
 [pip_link]: https://pypi.org/project/gstools
 [conda_link]: https://docs.conda.io/en/latest/miniconda.html
