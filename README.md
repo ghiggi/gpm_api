@@ -1,6 +1,5 @@
 # Welcome to GPM-API
-
-[![DOI](https://zenodo.org/badge/DOI/XXX)](https://doi.org/10.5281/zenodo.XXXX)
+[![DOI](https://zenodo.org/badge/286664485.svg)](https://zenodo.org/badge/latestdoi/286664485)
 [![PyPI version](https://badge.fury.io/py/gpm_api.svg)](https://badge.fury.io/py/gpm_api)
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/gpm_api.svg)](https://anaconda.org/conda-forge/gpm_api)
 [![Build Status](https://github.com/ghiggi/gpm_api/workflows/Continuous%20Integration/badge.svg?branch=main)](https://github.com/ghiggi/gpm_api/actions)
@@ -164,9 +163,9 @@ TODO: GMD
 
 You can cite the Zenodo code publication of GPM-API by:
 
-> Ghiggi Gionata & XXXX . ghiggi/gpm_api. Zenodo. https://doi.org/10.5281/zenodo.XXXXX
+> Ghiggi Gionata & XXXX . ghiggi/gpm_api. Zenodo. https://doi.org/10.5281/zenodo.7753488
 
-If you want to cite a specific version, have a look at the [Zenodo site](https://doi.org/10.5281/zenodo.XXXXX).
+If you want to cite a specific version, have a look at the [Zenodo site](https://doi.org/10.5281/zenodo.7753488).
 
 ## Requirements:
 
