@@ -189,6 +189,7 @@ def _find_pps_daily_filepaths(
     # Retrieve list of available files on pps
     filepaths = _get_pps_daily_filepaths(
         username=username,
+        password=password,
         product=product,
         product_type=product_type,
         date=date,

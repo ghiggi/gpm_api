@@ -637,6 +637,7 @@ def download_data(
         _ = _download_daily_data(
             base_dir=base_dir,
             username=username,
+            password=password,
             date=date,
             version=version,
             product=product,
