@@ -195,13 +195,18 @@ def get_orbit_coords(hdf, scan_mode):
 
 def get_grid_coords(hdf, scan_mode):
     hdf_attr = hdf5_file_attrs(hdf)
+    granule_id = hdf_attr["FileHeader"]["GranuleNumber"]
     lon = hdf[scan_mode]["lon"][:]
     lat = hdf[scan_mode]["lat"][:]
     time = hdf_attr["FileHeader"]["StartGranuleDateTime"][:-1]
     time = np.array(
         np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1
     )  # TODO: document why + 30 min
-    coords = {"time": time, "lon": lon, "lat": lat}
+    coords = {"time": time, 
+              "lon": lon, 
+              "lat": lat,
+              "gpm_id": (["time"], granule_id),
+             }
     return coords
 
 
@@ -592,7 +597,9 @@ def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
     encoding = {}
     encoding['units'] = EPOCH
     encoding['calendar'] = 'proleptic_gregorian'   
-    ds["time"].encoding = encoding 
+    ds["time"].encoding = encoding
+    
+    
     
     ##------------------------------------------------------------------------.
     # Add global attributes
