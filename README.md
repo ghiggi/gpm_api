@@ -185,8 +185,7 @@ If you want to cite a specific version, have a look at the [Zenodo site](https:/
 
 ## License
 
-[MIT][license_link] © 2021-2023
-
+The content of this repository is released under the terms of the [MIT](LICENSE) license.
 
 [PPS_link]: https://gpm.nasa.gov/data/sources/pps-research
 [tutorial_link]: https://github.com/ghiggi/gpm_api/tree/master#tutorials-and-examples
@@ -197,8 +196,6 @@ If you want to cite a specific version, have a look at the [Zenodo site](https:/
 [conda_pip]: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-pkgs.html#installing-non-conda-packages
 [pipiflag]: https://pip-python3.readthedocs.io/en/latest/reference/pip_install.html?highlight=i#cmdoption-i
 [winpy_link]: https://winpython.github.io/
-
-[license_link]: https://github.com/ghiggi/gpm_api/blob/main/LICENSE
  
 [doc_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/
 [doc_install_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/#pip
