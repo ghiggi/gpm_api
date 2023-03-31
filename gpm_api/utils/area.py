@@ -70,7 +70,6 @@ def _get_corners_from_centroids(centroids):
     return corners
 
 
-
 def _do_transform(src_proj, dst_proj, lons, lats, alt):
     """Perform pyproj transformation and stack the results.
     
@@ -161,23 +160,15 @@ def _get_lonlat_corners(lons, lats):
   
 
 def _from_corners_to_bounds(corners, order="counterclockwise"):
-    """Convert from corner 2D array (N+1,M+1)  to bounds 3D array (N,M, vertices).
+    """Convert from corner 2D array (N+1, M+1)  to quadmesh vertices array (N,M, 4).
     
     Counterclockwise and clockwise bounds are defined from the top left corner.
     Inspired from https://github.com/xarray-contrib/cf-xarray/blob/main/cf_xarray/helpers.py#L113
-   
- 
-   """
-    # TODO: The order assumptions might not hold for retrograde satellite orbits
-    # --> spherical checks should be performed !!!
-     
-    # TODO: Is this dask efficient? Or map_overlap and take neighbour values? 
-    
+    """
     top_left = corners[:-1, :-1]
     top_right = corners[:-1, 1:]
     bottom_right = corners[1:, 1:]
     bottom_left = corners[1:, :-1]  
-    
     if order == "clockwise":
         list_vertices = [top_left, top_right, bottom_right, bottom_left]
     else: # counterclockwise
