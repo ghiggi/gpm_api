@@ -29,6 +29,17 @@ def plot_swath_lines(ds, ax=None, **kwargs):
     """Plot GPM orbit granule swath lines."""
     # - 0.0485 to account for 2.5 km from pixel center
     # TODO: adapt based on bin length (changing for each sensor) --> FUNCTION
+    
+    # - Initialize figure
+    subplot_kwargs = kwargs.get("subplot_kwargs", {})
+    fig_kwargs = kwargs.get("fig_kwargs", {})
+    if ax is None:
+        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
+        # - Add cartopy background
+        ax = plot_cartopy_background(ax)
+    
+    # - Plot swath line 
     lon = ds["lon"].transpose("cross_track", "along_track").data
     lat = ds["lat"].transpose("cross_track", "along_track").data
     ax.plot(lon[0, :] + 0.0485, lat[0, :], transform=ccrs.Geodetic(), **kwargs)

@@ -162,13 +162,13 @@ class GPM_Base_Accessor:
 
         return get_slices_regular(self._obj, min_size=min_size)
     
-    def plot_transect_line(self, ax, color="black"):
+    def plot_transect_line(self, ax=None, color="black"):
         from gpm_api.visualization.profile import plot_transect_line
 
         p = plot_transect_line(self._obj, ax=ax, color=color)
         return p
 
-    def plot_swath_lines(self, ax, **kwargs):
+    def plot_swath_lines(self, ax=None, **kwargs):
         from gpm_api.visualization.orbit import plot_swath_lines
 
         p = plot_swath_lines(self._obj, ax=ax, **kwargs)

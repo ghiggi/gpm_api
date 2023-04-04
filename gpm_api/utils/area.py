@@ -163,6 +163,9 @@ def _from_corners_to_bounds(corners, order="counterclockwise"):
     """Convert from corner 2D array (N+1, M+1)  to quadmesh vertices array (N,M, 4).
     
     Counterclockwise and clockwise bounds are defined from the top left corner.
+    Counterclockwise: [top_left, bottom_left, bottom_right, top_right]
+    Clockwise: [bottom_left, top_left, top_right, bottom_right]
+    
     Inspired from https://github.com/xarray-contrib/cf-xarray/blob/main/cf_xarray/helpers.py#L113
     """
     top_left = corners[:-1, :-1]
@@ -170,7 +173,7 @@ def _from_corners_to_bounds(corners, order="counterclockwise"):
     bottom_right = corners[1:, 1:]
     bottom_left = corners[1:, :-1]  
     if order == "clockwise":
-        list_vertices = [top_left, top_right, bottom_right, bottom_left]
+        list_vertices = [bottom_left, top_left, top_right, bottom_right]
     else: # counterclockwise
         list_vertices = [top_left, bottom_left, bottom_right, top_right]
     if hasattr(corners, "chunks"):
