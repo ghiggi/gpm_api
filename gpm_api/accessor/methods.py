@@ -270,6 +270,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
                  **plot_kwargs,
                  ):
         from gpm_api.visualization.plot import plot_map
+        
         da = self._obj[variable]
         p = plot_map(ax=ax, da=da,
                      add_colorbar=add_colorbar,
@@ -281,7 +282,28 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
                      **plot_kwargs,
                      )
         return p
+    
+    def plot_image(self, 
+                   variable,
+                   ax=None,
+                   add_colorbar=True, 
+                   interpolation="nearest",
+                   fig_kwargs={}, 
+                   cbar_kwargs={},
+                   **plot_kwargs,
+                   ):
+        from gpm_api.visualization.plot import plot_image
 
+        da = self._obj[variable]
+        p = plot_image(
+            da, ax=ax, 
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs, 
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+        return p
 
     def plot_patches(
         self,
