@@ -28,6 +28,8 @@ from gpm_api.io.checks import (
     check_start_end_time,
 )
 from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
+from gpm_api.configs import get_gpm_base_dir, get_gpm_username, get_gpm_password
+
 
 ####--------------------------------------------------------------------------.
 ###########################
@@ -69,7 +71,6 @@ def remove_corrupted_filepaths(filepaths, verbose=True):
         
 
 def check_file_integrity(
-    base_dir,
     product,
     start_time,
     end_time,
@@ -77,6 +78,7 @@ def check_file_integrity(
     product_type="RS",
     remove_corrupted=True,
     verbose=True,
+    base_dir=None,
 ):
     """
     Check GPM granule file integrity over a given period.
@@ -85,8 +87,6 @@ def check_file_integrity(
 
     Parameters
     ----------
-    base_dir : str
-       The base directory where GPM data are stored.
     product : str
         GPM product acronym.
     start_time : datetime.datetime
@@ -101,13 +101,20 @@ def check_file_integrity(
     remove_corrupted : bool, optional
         Whether to remove the corrupted files.
         The default is True.
-
+    base_dir : str, optional
+        The path to the GPM base directory. If None, it use the one specified 
+        in the GPM-API config file. 
+        The default is None.
+        
     Returns
     -------
     filepaths, list
         List of file paths which are corrupted.
 
     """
+    # Retrieve GPM-API configs
+    base_dir = get_gpm_base_dir(base_dir)
+    
     ##--------------------------------------------------------------------.
     # Check base_dir
     base_dir = check_base_dir(base_dir)
@@ -571,17 +578,18 @@ def get_time_period_with_missing_files(filepaths):
 
 
 def check_archive_completness(
-    base_dir,
     product,
     start_time,
     end_time,
     version=GPM_VERSION,
     product_type="RS",
     download=True,
-    username=None,
     transfer_tool="wget",
     n_threads=4,
     verbose=True,
+    base_dir=None, 
+    username=None, 
+    password=None,
 ):
     """
     Check that the GPM product archive is not missing granules over a given period.
@@ -593,8 +601,6 @@ def check_archive_completness(
 
     Parameters
     ----------
-    base_dir : str
-       The base directory where GPM data are stored.
     product : str
         GPM product acronym.
     start_time : datetime.datetime
@@ -609,22 +615,34 @@ def check_archive_completness(
     download : bool, optional
         Whether to download the missing files.
         The default is True.
-    username: str
-        Email address with which you registered on NASA PPS.
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     transfer_tool : str, optional
         Wheter to use curl or wget for data download. The default is "wget".
     verbose : bool, optional
         Whether to print processing details. The default is False.
+    base_dir : str, optional
+        The path to the GPM base directory. If None, it use the one specified 
+        in the GPM-API config file. 
+        The default is None.
+    username: str, optional
+        Email address with which you registered on the NASA PPS.
+        If None, it uses the one specified in the GPM-API config file. 
+        The default is None.
+    password: str, optional
+        Email address with which you registered on the NASA PPS.
+        If None, it uses the one specified in the GPM-API config file. 
+        The default is None.
     """
     ##--------------------------------------------------------------------.
     from gpm_api.io.download import download_data
-    
-    if download: 
-        if username is None: 
-            raise ValueError("If download=True, provide the username.")
-            
+
+    # -------------------------------------------------------------------------.
+    # Retrieve GPM-API configs
+    base_dir = get_gpm_base_dir(base_dir)
+    username = get_gpm_username(username)
+    password = get_gpm_password(password)
+                
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
     
