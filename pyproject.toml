@@ -32,16 +32,16 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
-    "Topic :: Scientific/Engineering :: GIS", 
+    "Topic :: Scientific/Engineering :: GIS",
     "Topic :: Scientific/Engineering :: Hydrology",
-    "Topic :: Scientific/Engineering :: Image Processing", 
+    "Topic :: Scientific/Engineering :: Image Processing",
 ]
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
     "xarray",
-    "h5py", 
+    "h5py",
     "netcdf4",
-    "dask", 
+    "dask",
     "pyresample",
     "trollsift",
     "cartopy>=0.20.0",  # should be installed with conda to avoid GEOS compatibility issues.
@@ -54,8 +54,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 image = ["dask-image", "scikit-image"]
-dev = ["pre-commit", "black", "isort", "flake8", 
-       "pytest", "pytest-cov", 
+dev = ["pre-commit", "black", "isort", "flake8",
+       "pytest", "pytest-cov",
        "pip-tools", "bumpver", "twine",
        "setuptools>=61.0.0", "wheel",
        "dask-image", "scikit-image",
@@ -157,7 +157,7 @@ target-version = [
 
 
 
- 
-   
 
- 
+
+
+

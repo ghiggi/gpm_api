@@ -5,21 +5,23 @@ Created on Tue Jul 21 19:54:34 2020
 
 @author: ghiggi
 """
-import numpy
 import ast
+
 import h5py
+import numpy
 
 # -----------------------------------------------------------------------------.
 from gpm_api.utils.utils_string import (
-    str_replace,
-    str_islist,
-    str_detect,
-    str_isinteger,
-    str_isfloat,
-    str_remove,
     str_collapse,
+    str_detect,
+    str_isfloat,
+    str_isinteger,
+    str_islist,
+    str_remove,
     str_remove_empty,
+    str_replace,
 )
+
 
 # -----------------------------------------------------------------------------.
 def initialize_dict_with(keys):
@@ -30,7 +32,7 @@ def initialize_dict_with(keys):
 
 def numpy_numeric_format():
     return (
-        float, # numpy.float deprecated since 1.20 and remove in 1.24
+        float,  # numpy.float deprecated since 1.20 and remove in 1.24
         numpy.float32,
         numpy.float64,
         numpy.integer,
@@ -77,9 +79,7 @@ def parse_HDF5_GPM_attributes(x, parser=parse_attr_string):
         # If a compressed string [with lot of attributes separeted by \n ...
         elif isinstance(attr, numpy.bytes_):
             # Decode
-            attr_str = attr.decode("UTF-8", errors="ignore").split(
-                "\n"
-            )  # Always create a list
+            attr_str = attr.decode("UTF-8", errors="ignore").split("\n")  # Always create a list
             # Clean the string
             attr_str = str_replace(attr_str, ";", "")
             attr_str = str_replace(attr_str, "\t", "")
@@ -95,8 +95,7 @@ def parse_HDF5_GPM_attributes(x, parser=parse_attr_string):
                 # If = is present in each list element --> Return a subdictionary
                 else:
                     tmp_dict = dict(
-                        (k.strip(), v.strip())
-                        for k, v in (s.split("=", 1) for s in attr_str)
+                        (k.strip(), v.strip()) for k, v in (s.split("=", 1) for s in attr_str)
                     )
                     # Process dictionary values
                     for k, v in tmp_dict.items():
@@ -150,9 +149,7 @@ def print_hdf5(hdf, sep="\t", dataset_attrs=True, group_attrs=False):
                     if isinstance(tmp_attr, numpy.bytes_):
                         tmp_attr = tmp_attr.decode("UTF-8")
                         tmp_attr = "\n" + tmp_attr
-                        tmp_attr = str_replace(
-                            tmp_attr, "\n", str("\n" + sep + "\t" + "\t" + "\t")
-                        )
+                        tmp_attr = str_replace(tmp_attr, "\n", str("\n" + sep + "\t" + "\t" + "\t"))
                         print(sep + "\t", "-->", attr_key, ":", tmp_attr)
                     else:
                         print(sep + "\t", "-->", attr_key, ":", tmp_attr)
@@ -223,6 +220,7 @@ def h5dump(filepath, group="/", dataset_attrs=True, group_attrs=True):
 #         if hasattr(x, 'keys'):
 #             for item in x.keys():
 #                 print_hdf5_shape(x[item])
+
 
 # -----------------------------------------------------------------------------.
 def hdf5_objects_names(hdf):

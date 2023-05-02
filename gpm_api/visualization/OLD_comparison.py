@@ -5,12 +5,13 @@ Created on Fri Sep  9 12:14:03 2022
 
 @author: ghiggi
 """
-import gpm_api
 import cartopy
-import numpy as np
-import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
+import numpy as np
+
+import gpm_api
 
 
 def compare_products(
@@ -23,7 +24,6 @@ def compare_products(
     version=7,
     product_type="RS",
 ):
-
     #### Preprocess bbox
     # - Enlarge so to be sure to include all data when cropping
     # TODO: Robustify to deal when close to the antimeridian

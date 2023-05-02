@@ -13,7 +13,6 @@ from gpm_api.io.products import (
 
 
 def available_scan_modes(product, version):
-
     ##---------------------------------------------.
     #### TRMM Radar
     if product in ["1B-PR"]:

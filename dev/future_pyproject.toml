@@ -12,7 +12,7 @@ include = ["*"]   # package names should match these glob patterns (["*"] by def
 exclude = ["cli*",    # exclude packages matching these glob patterns (empty by default)
 	       "tests*",
 	       "*/gpm_api/0_OLD*",
-]	    
+]
 namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
 
 
@@ -24,7 +24,7 @@ namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
 # local_scheme = "no-local-version"
 # fallback_version = "0.0.0.dev0"
 
-# OR 
+# OR
 
 # [tool.setuptools.dynamic]
 # version = {attr = "gpm_api.VERSION"}

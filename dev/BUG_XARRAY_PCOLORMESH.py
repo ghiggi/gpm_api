@@ -5,21 +5,22 @@ Created on Fri Sep  9 16:42:49 2022
 
 @author: ghiggi
 """
-import os
 import datetime
-import gpm_api
+import os
+
 import cartopy
-import numpy as np
-import xarray as xp
-import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import xarray as xp
 from dask.diagnostics import ProgressBar
+
+import gpm_api
 from gpm_api.io import download_GPM_data
 from gpm_api.io_future.dataset import open_dataset
 from gpm_api.utils.utils_cmap import get_colormap_setting
-
-import matplotlib
 
 matplotlib.rcParams["axes.facecolor"] = [0.9, 0.9, 0.9]
 matplotlib.rcParams["axes.labelsize"] = 11
@@ -140,12 +141,13 @@ cbar = p.colorbar
 _ = cbar.ax.set_yticklabels(ticklabels)
 
 
+import matplotlib as mpl
+
 # -----------------------------------------------------------------------------.
 #### Reproducible example
 import matplotlib.colors
 import numpy as np
 import xarray as xr
-import matplotlib as mpl
 
 # Define DatArray
 arr = np.array(

@@ -7,8 +7,8 @@ Created on Wed Aug 19 13:55:47 2020
 """
 from .DPR.DPR import create_DPR
 from .DPR.DPR_ENV import create_DPR_ENV
-from .PMW.GMI import create_GMI
 from .IMERG.IMERG import create_IMERG
+from .PMW.GMI import create_GMI
 
 
 def create_GPM_class(base_DIR, product, bbox=None, start_time=None, end_time=None):

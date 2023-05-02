@@ -5,10 +5,11 @@ Created on Sat Dec 10 18:44:25 2022
 
 @author: ghiggi
 """
-import pyproj
-import numpy as np
-import xarray as xr
 import cartopy.crs as ccrs
+import numpy as np
+import pyproj
+import xarray as xr
+
 from gpm_api.utils.slices import ensure_is_slice, get_slice_size
 from gpm_api.utils.utils_cmap import get_colormap_setting
 
@@ -36,9 +37,7 @@ def optimize_transect_slices(
     if along_track_size == 1 and cross_track_size == 1:
         raise ValueError("Both 'along_track' and 'cross_track' slices have size 1.")
     if along_track_size != 1 and cross_track_size != 1:
-        raise ValueError(
-            "Either 'along_track' or 'cross_track' must have a slice of size 1."
-        )
+        raise ValueError("Either 'along_track' or 'cross_track' must have a slice of size 1.")
     # --------------------------------------------------------------------------.
     # Get object transect
     obj_transect = obj.isel(transect_slices)
@@ -69,9 +68,7 @@ def optimize_transect_slices(
         idx_above_thr = np.where(obj_transect.data > trim_threshold)[0]
     else:  # 2D case (profile) or more ... (i.e. time or ensemble simulations)
         any_axis = tuple(np.arange(1, ndim_transect))
-        idx_above_thr = np.where(
-            np.any(obj_transect.data > trim_threshold, axis=any_axis)
-        )[0]
+        idx_above_thr = np.where(np.any(obj_transect.data > trim_threshold, axis=any_axis))[0]
 
     # --------------------------------------------------------------------------.
     # Check there are residual data along the transect
@@ -151,9 +148,7 @@ def get_transect_slices(
     else:
         if isinstance(obj, xr.Dataset):
             if variable is None:
-                raise ValueError(
-                    "If providing a xr.Dataset, 'variable' must be specified."
-                )
+                raise ValueError("If providing a xr.Dataset, 'variable' must be specified.")
             da_variable = obj[variable].compute()
             obj[variable] = da_variable
         else:
@@ -189,9 +184,7 @@ def get_transect_slices(
 def plot_profile(da_profile, colorscale=None, ylim=None, ax=None):
     x_direction = da_profile["lon"].dims[0]
     # Retrieve title
-    title = da_profile.gpm_api.title(
-        time_idx=0, prefix_product=False, add_timestep=False
-    )
+    title = da_profile.gpm_api.title(time_idx=0, prefix_product=False, add_timestep=False)
     # Retrieve colormap configs
     plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting(colorscale)
     # Plot

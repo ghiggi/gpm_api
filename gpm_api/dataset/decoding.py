@@ -5,10 +5,13 @@ Created on Mon Aug 15 00:12:47 2022
 
 @author: ghiggi
 """
+import warnings
+
 import numpy as np
 import xarray as xr
-import warnings
+
 from gpm_api.utils.warnings import GPM_Warning
+
 ####--------------------------------------------------------------------------.
 #### Attributes cleaning
 
@@ -121,10 +124,12 @@ def decode_dataset(ds):
 def ensure_valid_coords(ds, raise_error=False):
     # invalid_coords = np.logical_or(ds["lon"].data == -9999.9,
     #                                ds["lat"].data == -9999.9)
-    invalid_coords = np.logical_or(np.logical_or(ds["lon"].data < -180, ds["lon"].data > 180),
-                                   np.logical_or(ds["lat"].data < -90, ds["lat"].data > 90))
+    invalid_coords = np.logical_or(
+        np.logical_or(ds["lon"].data < -180, ds["lon"].data > 180),
+        np.logical_or(ds["lat"].data < -90, ds["lat"].data > 90),
+    )
     if np.any(invalid_coords):
-        # Raise error or add warning 
+        # Raise error or add warning
         msg = "Invalid coordinate in the granule."
         if raise_error:
             raise ValueError(msg)
@@ -135,7 +140,7 @@ def ensure_valid_coords(ds, raise_error=False):
         da_invalid_coords.data = invalid_coords
         # For each variable, set NaN value where invalid coordinates
         ds = ds.where(~da_invalid_coords)
-        # Add NaN to longitude and latitude 
+        # Add NaN to longitude and latitude
         ds["lon"] = ds["lon"].where(~da_invalid_coords)
         ds["lat"] = ds["lat"].where(~da_invalid_coords)
     return ds
@@ -189,7 +194,7 @@ def apply_custom_decoding(ds, product):
     if "flagBB" in dataset_vars and product == "2A-DPR":
         ds["flagBB"].attrs[
             "description"
-        ] = """Flag for Bright Band: 
+        ] = """Flag for Bright Band:
                                                 0 : BB not detected
                                                 1 : Bright Band detected by Ku and DFRm
                                                 2 : Bright Band detected by Ku only

@@ -6,35 +6,34 @@ Created on Thu Oct 13 16:48:22 2022
 @author: ghiggi
 """
 
+import datetime
+
 ##----------------------------------------------------------------------------.
 import os
-import datetime
+
 from gpm_api.io.checks import check_base_dir
-from gpm_api.io.products import (
-    GPM_NRT_products,
-    GPM_RS_products,
-    GPM_RADAR_NRT_products,
-    GPM_PMW_NRT_products,
-    # CMB NRT?
-    GPM_RADAR_RS_products,
-    GPM_PMW_RS_products,
-    GPM_CMB_RS_products,
+from gpm_api.io.products import (  # CMB NRT?; GPM_RADAR_1B_NRT_products,
     GPM_1B_RS_products,
     GPM_1C_NRT_products,
-    # GPM_RADAR_1B_NRT_products,
-    GPM_RADAR_2A_NRT_products,
-    GPM_PMW_1B_NRT_products,
-    GPM_PMW_2A_GPROF_NRT_products,
-    GPM_PMW_2A_PRPS_NRT_products,
-    # CMB NRT?
-    GPM_IMERG_NRT_products,
-    GPM_RADAR_2A_RS_products,
-    GPM_PMW_1A_RS_products,
-    GPM_PMW_1C_RS_products,
-    GPM_PMW_2A_PRPS_RS_products,
-    GPM_PMW_2A_GPROF_RS_products,
     GPM_CMB_2B_RS_products,
+    GPM_CMB_RS_products,
+    GPM_IMERG_NRT_products,
     GPM_IMERG_RS_products,
+    GPM_NRT_products,
+    GPM_PMW_1A_RS_products,
+    GPM_PMW_1B_NRT_products,
+    GPM_PMW_1C_RS_products,
+    GPM_PMW_2A_GPROF_NRT_products,
+    GPM_PMW_2A_GPROF_RS_products,
+    GPM_PMW_2A_PRPS_NRT_products,
+    GPM_PMW_2A_PRPS_RS_products,
+    GPM_PMW_NRT_products,
+    GPM_PMW_RS_products,
+    GPM_RADAR_2A_NRT_products,
+    GPM_RADAR_2A_RS_products,
+    GPM_RADAR_NRT_products,
+    GPM_RADAR_RS_products,
+    GPM_RS_products,
 )
 
 ####--------------------------------------------------------------------------.
@@ -99,9 +98,7 @@ def get_disk_dir_pattern(product, product_type, version):
         dir_structure = os.path.join("GPM", product_type, product_category, product)
     else:  # product_type == "RS"
         version_str = "V0" + str(int(version))
-        dir_structure = os.path.join(
-            "GPM", product_type, version_str, product_category, product
-        )
+        dir_structure = os.path.join("GPM", product_type, version_str, product_category, product)
     return dir_structure
 
 
@@ -243,9 +240,7 @@ def get_pps_nrt_product_dir(product, date):
             raise ValueError("BUG - Some product option is missing.")
 
         #### Specify the directory structure for the daily list of IMERG NRT products
-        dir_structure = os.path.join(
-            folder_name, datetime.datetime.strftime(date, "%Y%m")
-        )
+        dir_structure = os.path.join(folder_name, datetime.datetime.strftime(date, "%Y%m"))
         return dir_structure
     # ------------------------------------------------------------------------.
     else:
@@ -380,7 +375,6 @@ def get_pps_directory(product, product_type, date, version):
     ##------------------------------------------------------------------------.
     #### RS data
     elif product_type == "RS":
-
         ## Specify servers
         url_server_text = "https://arthurhouhttps.pps.eosdis.nasa.gov/text"
         url_data_server = "ftps://arthurhouftps.pps.eosdis.nasa.gov"

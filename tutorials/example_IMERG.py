@@ -5,8 +5,9 @@ Created on Sat Dec 10 14:16:00 2022
 
 @author: ghiggi
 """
-import gpm_api
 import datetime
+
+import gpm_api
 
 base_dir = "/home/ghiggi/GPM"
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
@@ -46,11 +47,11 @@ ds
 variables = list(ds.data_vars)
 
 print("Available variables: ", variables)
-# Available coordinates 
+# Available coordinates
 coords = list(ds.coords)
 print("Available coordinates: ", coords)
 
-# Available dimensions 
+# Available dimensions
 dims = list(ds.dims)
 print("Available dimensions: ", dims)
 
@@ -81,13 +82,13 @@ ds.gpm_api.pyresample_area  # TODO: not yet implemented
 
 ####--------------------------------------------------------------------------.
 #### Plotting with gpm_api a single timestep
-ds[variable].isel(time=0).gpm_api.plot_map()    # With cartopy
+ds[variable].isel(time=0).gpm_api.plot_map()  # With cartopy
 ds[variable].isel(time=0).gpm_api.plot_image()  # Without cartopy
 
 #### Plotting with gpm_api multiple timestep or multiple variables
-ds[variable].isel(time=slice(0,4)).gpm_api.plot_map(col="time", col_wrap=2)     
-ds[variable].isel(time=slice(0,4)).gpm_api.plot_image(col="time", col_wrap=2)
-  
+ds[variable].isel(time=slice(0, 4)).gpm_api.plot_map(col="time", col_wrap=2)
+ds[variable].isel(time=slice(0, 4)).gpm_api.plot_image(col="time", col_wrap=2)
+
 ####--------------------------------------------------------------------------.
 #### Title
 ds.gpm_api.title(add_timestep=True)
@@ -98,23 +99,26 @@ ds[variable].gpm_api.title(add_timestep=True)
 ds[variable].isel(time=0).gpm_api.title(add_timestep=True)
 
 ####--------------------------------------------------------------------------.
-#### Zoom on a geographic area 
+#### Zoom on a geographic area
 from gpm_api.utils.countries import get_country_extent
+
 title = ds.gpm_api.title(add_timestep=False)
 extent = get_country_extent("United States")
 da = ds[variable].isel(time=0)
-p = da.gpm_api.plot_map()  
+p = da.gpm_api.plot_map()
 p.axes.set_extent(extent)
 p.axes.set_title(label=title)
 
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+
 ####--------------------------------------------------------------------------.
 #### Customize geographic maps
-#### - Customize the projection 
+#### - Customize the projection
 # --> See list at https://scitools.org.uk/cartopy/docs/latest/reference/projections.html?highlight=projections
 import gpm_api
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 from gpm_api.visualization.plot import plot_cartopy_background
+
 dpi = 100
 figsize = (12, 10)
 crs_proj = ccrs.InterruptedGoodeHomolosine()
@@ -126,35 +130,36 @@ fig, ax = plt.subplots(subplot_kw={"projection": crs_proj}, figsize=figsize, dpi
 plot_cartopy_background(ax)
 da.gpm_api.plot_map(ax=ax)
 # ---------------------------------------------------------------------
-#### - Customize the colormap 
+#### - Customize the colormap
 # - In the classic way
 da.gpm_api.plot_map(cmap="Spectral", norm=None, vmin=0.1, vmax=100)
 
 # - Using gpm_api pre-implemented colormap and colorbar settings
 from gpm_api.visualization.plot import get_colorbar_settings
-plot_kwargs, cbar_kwargs =  get_colorbar_settings("IMERG_Solid")
+
+plot_kwargs, cbar_kwargs = get_colorbar_settings("IMERG_Solid")
 da.gpm_api.plot_map(cbar_kwargs=cbar_kwargs, **plot_kwargs)
 
-plot_kwargs, cbar_kwargs =  get_colorbar_settings("IMERG_Liquid")
+plot_kwargs, cbar_kwargs = get_colorbar_settings("IMERG_Liquid")
 da.gpm_api.plot_map(cbar_kwargs=cbar_kwargs, **plot_kwargs)
 
 # ---------------------------------------------------------------------
-#### - Create GPM IMERG Solid + Liquid precipitation map 
+#### - Create GPM IMERG Solid + Liquid precipitation map
 ds_single_timestep = ds.isel(time=0)
 da_is_liquid = ds_single_timestep["probabilityLiquidPrecipitation"] > 90
 da_precip = ds_single_timestep[variable]
 da_liquid = da_precip.where(da_is_liquid, 0)
 da_solid = da_precip.where(~da_is_liquid, 0)
 
-plot_kwargs, cbar_kwargs =  get_colorbar_settings("IMERG_Liquid")
+plot_kwargs, cbar_kwargs = get_colorbar_settings("IMERG_Liquid")
 p = da_liquid.gpm_api.plot_map(cbar_kwargs=cbar_kwargs, **plot_kwargs, add_colorbar=False)
-plot_kwargs, cbar_kwargs =  get_colorbar_settings("IMERG_Solid")
+plot_kwargs, cbar_kwargs = get_colorbar_settings("IMERG_Solid")
 p = da_solid.gpm_api.plot_map(ax=p.axes, cbar_kwargs=cbar_kwargs, **plot_kwargs, add_colorbar=False)
 p.axes.set_title(label=da_solid.gpm_api.title())
 
 ####--------------------------------------------------------------------------.
 #### Crop the dataset
-# Crop by extent                                      
+# Crop by extent
 extent = get_country_extent("United States")
 ds_ch = ds.gpm_api.crop(extent=extent)
 ds_ch[variable].isel(time=0).gpm_api.plot_map()
@@ -169,9 +174,9 @@ ds_continent[variable].isel(time=0).gpm_api.plot_map()
 
 ####--------------------------------------------------------------------------.
 #### Plot Patches
-# - It expects a single timestep 
+# - It expects a single timestep
 
-# - Either pass a xr.DataArray 
+# - Either pass a xr.DataArray
 da = ds[variable].isel(time=0)
 da.gpm_api.plot_patches(
     min_value_threshold=3,
@@ -179,21 +184,21 @@ da.gpm_api.plot_patches(
     sort_by="max",  # area
     sort_decreasing=True,
     n_patches=4,
-    min_patch_size = (50, 50),
-    padding=5, 
+    min_patch_size=(50, 50),
+    padding=5,
     interpolation="nearest",
 )
 
 # - Or xr.Dataset
 ds.isel(time=0).gpm_api.plot_patches(
-    variable=variable, # this is required for xr.Dataset !
+    variable=variable,  # this is required for xr.Dataset !
     min_value_threshold=3,
     min_area_threshold=5,
     sort_by="max",  # area
     sort_decreasing=True,
     n_patches=10,
-    min_patch_size = (20, 20),
-    padding = 1, 
+    min_patch_size=(20, 20),
+    padding=1,
     interpolation="nearest",
 )
 

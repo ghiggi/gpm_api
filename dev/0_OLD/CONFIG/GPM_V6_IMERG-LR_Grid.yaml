@@ -14,7 +14,7 @@ PMWobservationTime:
   _FillValue: -9999
   description: "Observation time (from the beginnning of the current half hour) \
     \ of the instantaneous PMW-only precipitation estimate covering the current 30-minute period\n\
-    \ Values range from 0 to 29 minutes."                         
+    \ Values range from 0 to 29 minutes."
   dims:
   - time
   - lon
@@ -27,20 +27,20 @@ PMWobservationTime:
 PMWprecipSource:
   _FillValue: -9999.9
   description: "Sensor used for HQprecipitation:\n\
-    \ 0 = no observation\n\                           
+    \ 0 = no observation\n\
     \ 1 = TMI\n\
     \ 2 = TCI\n\
-    \ 3 = AMSR\n\    
+    \ 3 = AMSR\n\
     \ 4 = SSMI\n\
-    \ 5 = SSMIS\n\                                                    
-    \ 6 = AMSU\n\  
-    \ 7 = MHS\n\     
-    \ 8 = Megha-Tropiques\n\                                           
-    \ 9 = GMI\n\                           
+    \ 5 = SSMIS\n\
+    \ 6 = AMSU\n\
+    \ 7 = MHS\n\
+    \ 8 = Megha-Tropiques\n\
+    \ 9 = GMI\n\
     \ 10 = GCI\n\
-    \ 11 = ATMS\n\                        
+    \ 11 = ATMS\n\
     \ 12 = AIRS\n\
-    \ 13 = TOVS\n\                            
+    \ 13 = TOVS\n\
     \ 14 = CrlS\n"
   dims:
   - time
@@ -77,7 +77,7 @@ precipitationCal:
   units: mm/hr
 precipitationQualityIndex:
   _FillValue: -9999
-  description: Estimated quality of precipitationCal where 0 is worse and 100 is better. 
+  description: Estimated quality of precipitationCal where 0 is worse and 100 is better.
   dims:
   - time
   - lon
@@ -103,8 +103,8 @@ probabilityLiquidPrecipitation:
   _FillValue: -9999
   description: " Probability of liquid precipitation\n\
     \ 0 = definitely frozen.\n\
-    \ 100 = definitely liquid.\n\                                        
-    \ 50 = equal probability frozen or liquid.\n"                                       
+    \ 100 = definitely liquid.\n\
+    \ 50 = equal probability frozen or liquid.\n"
   dims:
   - time
   - lon

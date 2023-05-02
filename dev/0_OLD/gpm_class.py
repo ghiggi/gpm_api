@@ -5,21 +5,15 @@ Created on Sun Aug 14 19:59:58 2022
 
 @author: ghiggi
 """
-from gpm_api.dataset import (
-    GPM_Dataset,
-    GPM_variables,
-)
-from gpm_api.checks import (
-    check_version,
-    check_product,
-    check_scan_mode,
-)
+from gpm_api.checks import check_product, check_scan_mode, check_version
+from gpm_api.dataset import GPM_Dataset, GPM_variables
 
 # For create_GPM_Class
 from gpm_api.DPR.DPR import create_DPR
 from gpm_api.DPR.DPR_ENV import create_DPR_ENV
-from gpm_api.PMW.GMI import create_GMI
 from gpm_api.IMERG.IMERG import create_IMERG
+from gpm_api.PMW.GMI import create_GMI
+
 
 ################
 ### Classes ####
@@ -133,7 +127,7 @@ def read_GPM(
     xarray.Dataset
 
     """
-    from gpm_api.checks import initialize_scan_modes, check_version, check_product
+    from gpm_api.checks import check_product, check_version, initialize_scan_modes
 
     ##------------------------------------------------------------------------.
     ## Check GPM version

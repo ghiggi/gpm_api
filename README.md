@@ -11,10 +11,10 @@
 The GPM-API is still in development. Feel free to try it out and to report issues or to suggest changes.
 
 ## Quick start
-GPM-API provides an easy-to-use python interface to download, read, process and visualize most 
-of the products of the Global Precipitation Measurement Mission (GPM) data archive. 
+GPM-API provides an easy-to-use python interface to download, read, process and visualize most
+of the products of the Global Precipitation Measurement Mission (GPM) data archive.
 
-The list of available products can be retrieved using: 
+The list of available products can be retrieved using:
 
 ```python
 import gpm_api
@@ -24,20 +24,20 @@ gpm_api.available_products(product_type="NRT") # near-real-time products
 
 ```
 
-Before starting using GPM-API, we highly suggest to save into a configuration file: 
-1. your credentials to access the [NASA Precipitation Processing System (PPS) servers][PPS_link] 
-2. the directory on the local disk where to save the GPM dataset of interest. 
+Before starting using GPM-API, we highly suggest to save into a configuration file:
+1. your credentials to access the [NASA Precipitation Processing System (PPS) servers][PPS_link]
+2. the directory on the local disk where to save the GPM dataset of interest.
 
-To facilitate the creation of the configuration file, you can run the following script: 
+To facilitate the creation of the configuration file, you can run the following script:
 
 ```python
 import gpm_api
 
-username = "<your PPS username>" # likely your mail 
-password = "<your PPS password>" # likely your mail 
+username = "<your PPS username>" # likely your mail
+password = "<your PPS password>" # likely your mail
 gpm_base_dir = "<path/to/directory/GPM"  # path to the directory where to download the data
-gpm_api.define_configs(gpm_username=username, 
-                       gpm_password=password, 
+gpm_api.define_configs(gpm_username=username,
+                       gpm_password=password,
                        gpm_base_dir=gpm_base_dir)
 
 # You can check that the config file has been correctly created with:
@@ -46,11 +46,11 @@ print(configs)
 
 ```
 
-Now you can either start to download GPM data within python: 
+Now you can either start to download GPM data within python:
 
 ```python
 import gpm_api
-import datetime 
+import datetime
 
 product = "2A-DPR"
 product_type = "RS"
@@ -59,11 +59,11 @@ version = 7
 start_time = datetime.datetime(2020,7, 22, 0, 1, 11)
 end_time = datetime.datetime(2020,7, 22, 0, 23, 5)
 
-gpm_api.download(product=product, 
+gpm_api.download(product=product,
                  product_type=product_type,
                  version=version,
                  n_threads=2,
-                 start_time=start_time, 
+                 start_time=start_time,
                  end_time=end_time)
 
 ```
@@ -74,7 +74,7 @@ or from the terminal using i.e. `download_daily_gpm_data <product> <year> <month
     download_daily_gpm_data 2A-DPR 2022 7 22
 ```
 
-A GPM granule can be opened in python using: 
+A GPM granule can be opened in python using:
 
 ```python
 import gpm_api
@@ -83,11 +83,11 @@ ds = gpm_api.open_granule(<path_to_granule>)
 
 ```
 
-while multiple granules over a specific time period can be opened using: 
+while multiple granules over a specific time period can be opened using:
 
 ```python
 import gpm_api
-import datetime 
+import datetime
 
 product = "2A-DPR"
 product_type = "RS"
@@ -95,10 +95,10 @@ version = 7
 
 start_time = datetime.datetime(2020,7, 22, 0, 1, 11)
 end_time = datetime.datetime(2020,7, 22, 0, 23, 5)
-ds = gpm_api.open_dataset(product=product, 
+ds = gpm_api.open_dataset(product=product,
                           product_type=product_type,
                           version=version
-                          start_time=start_time, 
+                          start_time=start_time,
                           end_time=end_time)
 ```
 
@@ -112,7 +112,7 @@ Look at the [Tutorials][tutorial_link] to learn how to analyse and visualize the
 GPM-API can be installed via [pip][pip_link] on Linux, Mac, and Windows.
 On Windows you can install [WinPython][winpy_link] to get Python and pip
 running.
-Prior installation of GPM-API, to avoid [GEOS](https://libgeos.org/) library version incompatibilities when 
+Prior installation of GPM-API, to avoid [GEOS](https://libgeos.org/) library version incompatibilities when
 installing the Cartopy package, we highly suggest to install first Cartopy using `conda install cartopy>=0.21.0`.
 
 Then, install the GPM-API package by typing the following command in the command terminal:
@@ -152,7 +152,7 @@ These tutorial are also available as Jupyter Notebooks and in Google Colab:
 - 2. Introduction to the ENVironment products [[Notebook][tut2_env_link]][[Colab][colab2_env_link]]
 - 3. Introduction to image labeling and patch extraction [[Notebook][tut3_label_link]][[Colab][colab3_label_link]]
 - 3. Introduction to image patch extraction [[Notebook][tut3_patch_link]][[Colab][colab3_patch_link]]
- 
+
 The associated python scripts are also provided in the `tutorial` folder.
 
 ## Citation
@@ -196,7 +196,7 @@ The content of this repository is released under the terms of the [MIT](LICENSE)
 [conda_pip]: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-pkgs.html#installing-non-conda-packages
 [pipiflag]: https://pip-python3.readthedocs.io/en/latest/reference/pip_install.html?highlight=i#cmdoption-i
 [winpy_link]: https://winpython.github.io/
- 
+
 [doc_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/
 [doc_install_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/#pip
 
@@ -229,5 +229,5 @@ The content of this repository is released under the terms of the [MIT](LICENSE)
 
 [tut3_patch_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
 [colab3_patch_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
- 
- 
+
+

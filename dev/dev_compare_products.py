@@ -5,9 +5,11 @@ Created on Fri Sep  9 11:55:43 2022
 
 @author: ghiggi
 """
-import gpm_api
 import datetime
+
 import matplotlib
+
+import gpm_api
 from gpm_api.visualization.comparison import compare_products
 
 matplotlib.rcParams["axes.facecolor"] = [0.9, 0.9, 0.9]

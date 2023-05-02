@@ -5,14 +5,15 @@ Created on Fri Dec  9 13:00:39 2022
 
 @author: ghiggi
 """
-import time
-import dask
-import gpm_api
 import datetime
-import numpy as np
-from gpm_api.io.pps import _find_pps_daily_filepaths, find_pps_filepaths
-from gpm_api.io.info import get_start_time_from_filepaths, get_end_time_from_filepaths
+import time
 
+import dask
+import numpy as np
+
+import gpm_api
+from gpm_api.io.info import get_end_time_from_filepaths, get_start_time_from_filepaths
+from gpm_api.io.pps import _find_pps_daily_filepaths, find_pps_filepaths
 
 username = "gionata.ghiggi@epfl.ch"
 version = 7

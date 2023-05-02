@@ -5,11 +5,13 @@ Created on Thu Jan  5 00:36:59 2023
 
 @author: ghiggi
 """
-import os
 import datetime
+import os
+
 import numpy as np
-import gpm_api
 from dask.diagnostics import ProgressBar
+
+import gpm_api
 
 ###----------------------------------------------------------------------------.
 base_dir = "/home/ghiggi"
@@ -17,18 +19,18 @@ start_time = datetime.datetime.strptime("2020-08-01 12:00:00", "%Y-%m-%d %H:%M:%
 end_time = datetime.datetime.strptime("2020-08-10 12:00:00", "%Y-%m-%d %H:%M:%S")
 product = "2A-SSMIS-F16"
 product_type = "RS"
-variable = "surfacePrecipitation" 
+variable = "surfacePrecipitation"
 
 ds = gpm_api.open_dataset(
     base_dir=base_dir,
     product=product,
-    product_type = product_type,
+    product_type=product_type,
     start_time=start_time,
     end_time=end_time,
     # Optional
     version=7,
     variables=variable,
-    # decode_cf=True, 
+    # decode_cf=True,
     chunks="auto",
     prefix_group=False,
 )
@@ -44,19 +46,19 @@ ds[variable].gpm_api.plot_map()
 
 # -----------------------------------------------------------------------------.
 ### TODO: add checks when missing coordinates
-# 3. Implement missing coordinates checks 
-# 4. Test get_contiguous_scan_slices when missing coordinates   
-# 4. Test plotting for missing coordinates ---> mask ! 
+# 3. Implement missing coordinates checks
+# 4. Test get_contiguous_scan_slices when missing coordinates
+# 4. Test plotting for missing coordinates ---> mask !
 #   --> No unvalid coordinates
-#   --> Mask for plotting 
-#   --> Do not mask for crop 
+#   --> Mask for plotting
+#   --> Do not mask for crop
 
-# --> When mask --- when decoding cf ... or custom afterwards ! 
-# --> Mask variables only? 
-# --> xarray does not allow masked coordinates 
+# --> When mask --- when decoding cf ... or custom afterwards !
+# --> Mask variables only?
+# --> xarray does not allow masked coordinates
 gpm_api.check_valid_geolocation()
 
-# Coordinate -9999 
+# Coordinate -9999
 
 idx_nan = np.where(ds["lat"].data == -9999)
 

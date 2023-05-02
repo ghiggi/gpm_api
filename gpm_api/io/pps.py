@@ -5,29 +5,28 @@ Created on Thu Oct 13 17:45:37 2022
 
 @author: ghiggi
 """
-import os
-import dask
 import datetime
+import os
 import subprocess
+
+import dask
 import pandas as pd
 
+from gpm_api.configs import get_gpm_password, get_gpm_username
+from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_date,
-    check_start_end_time,
     check_product,
     check_product_type,
+    check_start_end_time,
     check_version,
     is_empty,
 )
-from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.directories import get_pps_directory
-from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
-from gpm_api.configs import get_gpm_username, get_gpm_password
+from gpm_api.io.filter import filter_filepaths
 
 
-def _get_pps_file_list(username, 
-                       password, 
-                       url_file_list, product, date, version, verbose=True):
+def _get_pps_file_list(username, password, url_file_list, product, date, version, verbose=True):
     """
     Retrieve the filepaths of the files available on the NASA PPS server for a specific day and product.
 
@@ -74,9 +73,7 @@ def _get_pps_file_list(username,
     if stdout[0] == "<":
         if verbose:
             version_str = str(int(version))
-            print(
-                f"No data found on PPS on date {date} for product {product} (V0{version_str})"
-            )
+            print(f"No data found on PPS on date {date} for product {product} (V0{version_str})")
         return []
     else:
         # Retrieve filepaths
@@ -140,7 +137,7 @@ def _get_pps_daily_filepaths(
 
 def _find_pps_daily_filepaths(
     username,
-    password, 
+    password,
     date,
     product,
     product_type,
@@ -223,7 +220,7 @@ def find_pps_filepaths(
     version=GPM_VERSION,
     verbose=True,
     parallel=True,
-    username=None, 
+    username=None,
     password=None,
 ):
     """
@@ -245,18 +242,18 @@ def find_pps_filepaths(
         Whether to loop over dates in parallel.
         The default is True.
     base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified 
-        in the GPM-API config file. 
+        The path to the GPM base directory. If None, it use the one specified
+        in the GPM-API config file.
         The default is None.
     username: str, optional
         Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file. 
+        If None, it uses the one specified in the GPM-API config file.
         The default is None.
     password: str, optional
         Password to access the NASA PPS server.
-        If None, it uses the one specified in the GPM-API config file. 
+        If None, it uses the one specified in the GPM-API config file.
         The default is None.
-        
+
     Returns
     -------
     filepaths : list
@@ -267,7 +264,7 @@ def find_pps_filepaths(
     # Retrieve GPM-API configs
     username = get_gpm_username(username)
     password = get_gpm_password(password)
-    
+
     # -------------------------------------------------------------------------.
     ## Checks input arguments
     check_version(version=version)

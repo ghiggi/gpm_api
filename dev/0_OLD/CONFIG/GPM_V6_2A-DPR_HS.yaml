@@ -11,7 +11,7 @@ PIA:
   units: dB
 PIA_Final:
   _FillValue: -9999.9
-  description: The final estimates of path integrated attenuation caused by precipitation particles.              
+  description: The final estimates of path integrated attenuation caused by precipitation particles.
   dims:
   - along_track
   - cross_track
@@ -276,7 +276,7 @@ heightBB:
   units: m
 heightStormTop:
   _FillValue: -9999.9
-  description: Height of storm top. 
+  description: Height of storm top.
   dims:
   - along_track
   - cross_track
@@ -346,7 +346,7 @@ precipRate:
   units: mm/hr
 precipRateAve24:
   _FillValue: -9999.9
-  description: Average of precipitation rate between 2 and 4km height.             
+  description: Average of precipitation rate between 2 and 4km height.
   dims:
   - along_track
   - cross_track
@@ -368,7 +368,7 @@ precipRateESurface:
   units: mm/hr
 precipRateESurface2:
   _FillValue: -9999.9
-  description: Estimates Surface Precipitation using alternate method.            
+  description: Estimates Surface Precipitation using alternate method.
   dims:
   - along_track
   - cross_track
@@ -390,7 +390,7 @@ precipRateNearSurface:
   units: mm/hr
 precipWaterIntegrated:
   _FillValue: -9999.9
-  description: Precipitation water vertically integrated.    
+  description: Precipitation water vertically integrated.
   dims:
   - along_track
   - cross_track
@@ -450,7 +450,7 @@ qualityPIA:
   units: dB
 seaIceConcentration:
   _FillValue: -9999.9
-  description: Sea ice concentration estimated by Ku. Values range from 30 to 100 percent. 
+  description: Sea ice concentration estimated by Ku. Values range from 30 to 100 percent.
   dims:
   - along_track
   - cross_track
@@ -545,7 +545,7 @@ zFactorCorrected:
   units: dBZ
 zFactorCorrectedESurface:
   _FillValue: -9999.9
-  description: Reflectivity factor with attenuation correction at the estimated surface.                          
+  description: Reflectivity factor with attenuation correction at the estimated surface.
   dims:
   - along_track
   - cross_track
@@ -556,7 +556,7 @@ zFactorCorrectedESurface:
   units: dBZ
 zFactorCorrectedNearSurface:
   _FillValue: -9999.9
-  description: Reflectivity factor with attenuation correction at the near surface.                         
+  description: Reflectivity factor with attenuation correction at the near surface.
   dims:
   - along_track
   - cross_track
@@ -567,7 +567,7 @@ zFactorCorrectedNearSurface:
   units: dBZ
 zFactorMeasured:
   _FillValue: -9999.9
-  description: Vertical profile of reflectivity without attenuation correction.                             
+  description: Vertical profile of reflectivity without attenuation correction.
   dims:
   - along_track
   - cross_track

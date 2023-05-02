@@ -5,15 +5,16 @@ Created on Tue Aug  2 10:43:23 2022
 
 @author: ghiggi
 """
-import os
-import dask
 import datetime
-import pandas as pd
-import numpy as np
+import os
 
-from gpm_api.io import download_GPM_data, GPM_PMW_2A_GPROF_RS_products
-from gpm_api.dataset import GPM_Dataset, GPM_variables, read_GPM, GPM_Dataset
+import dask
+import numpy as np
+import pandas as pd
 from dask.diagnostics import ProgressBar
+
+from gpm_api.dataset import GPM_Dataset, GPM_variables, read_GPM
+from gpm_api.io import GPM_PMW_2A_GPROF_RS_products, download_GPM_data
 
 BASE_DIR = "/home/ghiggi"
 OVERPASS_TABLE_DIR = "/home/ghiggi/Overpass/Tables"
@@ -43,6 +44,7 @@ for product in products:
         progress_bar=True,
         n_threads=10,
     )
+
 
 ####--------------------------------------------------------------------------.
 #### Compute overpass tables

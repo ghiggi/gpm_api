@@ -5,17 +5,18 @@ Created on Sun Aug 14 13:52:46 2022
 
 @author: ghiggi
 """
-import os
-import gpm_api
-import cartopy
 import datetime
+import os
+
+import cartopy
+import cartopy.crs as ccrs
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xp
-import numpy as np
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 from dask.diagnostics import ProgressBar
+
+import gpm_api
 
 ####--------------------------------------------------------------------------.
 #### Define matplotlib settings
@@ -115,7 +116,7 @@ dict_product = {}
 # product, variables = list(product_var_dict.items())[0]
 # product, variables = list(product_var_dict.items())[2]
 for product, variables in product_var_dict.items():
-    ds =  gpm_api.open_dataset(
+    ds = gpm_api.open_dataset(
         base_dir=base_dir,
         product=product,
         start_time=start_time,
@@ -154,7 +155,6 @@ bbox_extent = [-102, -92, 28, 35]
 # Create figure
 for product, variables in plot_product_var_dict.items():
     for variable in variables:
-
         ds = dict_product[product]
         # Crop dataset
         ds = ds.gpm_api.crop(bbox)

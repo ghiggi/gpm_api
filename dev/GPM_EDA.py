@@ -5,27 +5,27 @@ Created on Mon Nov 29 13:19:14 2021
 
 @author: ghiggi
 """
+import datetime
 import os
 import sys
-import datetime
+
+import matplotlib.pyplot as plt
 
 # import h5py
 # import netCDF4
 # import pandas as pd
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 from dask.diagnostics import ProgressBar
+from gpm_geo.utils_GPM import *
+from pyresample_dev.utils_swath import *
+
+from gpm_api.dataset import GPM_Dataset, GPM_variables, read_GPM  # read_GPM (importing here do)
+from gpm_api.DPR.DPR_ENV import create_DPR_ENV
 
 ### GPM Scripts ####
 from gpm_api.io import download_GPM_data
-from gpm_api.DPR.DPR_ENV import create_DPR_ENV
-from gpm_api.dataset import read_GPM
-from gpm_api.dataset import GPM_Dataset, GPM_variables  # read_GPM (importing here do)
-
 from gpm_api.utils.utils_cmap import *
-from gpm_geo.utils_GPM import *
-from pyresample_dev.utils_swath import *
 
 ##----------------------------------------------------------------------------.
 #### Download data
@@ -92,15 +92,11 @@ da_labels_area.name = "precip_label_area"
 
 # da_labels_area = da_labels.where(da_labels_area.values < 20)
 
-p = da_labels_area.plot.imshow(
-    x="along_track", y="cross_track", cmap="Spectral", vmin=1
-)
+p = da_labels_area.plot.imshow(x="along_track", y="cross_track", cmap="Spectral", vmin=1)
 p.cmap.set_under("white")
 plt.show()
 
-p = da_labels_area.plot.imshow(
-    x="along_track", y="cross_track", cmap="Spectral", vmin=1, vmax=20
-)
+p = da_labels_area.plot.imshow(x="along_track", y="cross_track", cmap="Spectral", vmin=1, vmax=20)
 p.cmap.set_under("white")
 plt.show()
 
@@ -122,9 +118,7 @@ def bbox(img):
 
 for label_id in np.arange(1, n_plots):
     rmin, rmax, cmin, cmax = bbox(da_labels_area.data == label_id)
-    ds_subset = ds.isel(
-        along_track=slice(rmin, rmax + 1), cross_track=slice(cmin, cmax + 1)
-    )
+    ds_subset = ds.isel(along_track=slice(rmin, rmax + 1), cross_track=slice(cmin, cmax + 1))
 
     da_precip_subset = ds_subset["precipRateNearSurface"]
     p = da_precip_subset.plot.imshow(
@@ -152,9 +146,7 @@ data = da_precip_subset.values
 swath_def = SwathDefinition(lons, lats)
 area_def = swath_def.compute_optimal_bb_area()
 
-data_proj = resample_nearest(
-    swath_def, data, area_def, radius_of_influence=20000, fill_value=None
-)
+data_proj = resample_nearest(swath_def, data, area_def, radius_of_influence=20000, fill_value=None)
 crs = area_def.to_cartopy_crs()
 fig, ax = plt.subplots(subplot_kw=dict(projection=crs))
 coastlines = ax.coastlines()
@@ -166,9 +158,7 @@ cbar = plt.colorbar()
 #### Check pixel centroids
 import cartopy.crs as ccrs
 
-da_precip_subset1 = da_precip_subset.isel(
-    along_track=slice(0, 5), cross_track=slice(0, 5)
-)
+da_precip_subset1 = da_precip_subset.isel(along_track=slice(0, 5), cross_track=slice(0, 5))
 lon = da_precip_subset1["lon"]
 lat = da_precip_subset1["lat"]
 fig, ax = plt.subplots(subplot_kw=dict(projection=ccrs.PlateCarree()))
@@ -237,9 +227,7 @@ ds = ds.set_coords("precip_label_max")
 
 for label_id in np.arange(1, len(np.unique(ds["precip_label_max"]))):
     rmin, rmax, cmin, cmax = bbox(ds["precip_label_max"] == label_id)
-    ds_subset = ds.isel(
-        along_track=slice(rmin, rmax + 1), cross_track=slice(cmin, cmax + 1)
-    )
+    ds_subset = ds.isel(along_track=slice(rmin, rmax + 1), cross_track=slice(cmin, cmax + 1))
 
     da_precip_subset = ds_subset["precipRateNearSurface"]
     p = da_precip_subset.plot.imshow(
@@ -282,12 +270,13 @@ timedelta = timedelta.astype("m8[s]")
 timedelta = timedelta[timedelta < np.timedelta64(2, "s")]
 plt.hist(timedelta.astype(int))
 
+import cartopy.crs as ccrs
+
 ##----------------------------------------------------------------------------.
 #### GEO bounding box polygon
 import satpy.resample
-import cartopy.crs as ccrs
-from shapely.geometry import Polygon
 from pyresample.geometry import get_geostationary_bounding_box
+from shapely.geometry import Polygon
 
 area_def = satpy.resample.get_area_def("goes_east_abi_f_500m")
 area_def = satpy.resample.get_area_def("goes_east_abi_f_1km")
@@ -320,10 +309,11 @@ gl = ax.gridlines(draw_labels=True, linestyle="--")
 gl.xlabels_top = False
 gl.ylabels_right = False
 
+import cartopy.crs as ccrs
+
 ##----------------------------------------------------------------------------.
 #### GPM time to scan across GEO during one orbit
 from pyresample.geometry import SwathDefinition
-import cartopy.crs as ccrs
 
 lons = da_precip["lon"].values
 lats = da_precip["lat"].values
@@ -363,10 +353,11 @@ da_precip_cross_geo["time"][-1]
 dt = da_precip_cross_geo["time"][-1] - da_precip_cross_geo["time"][0]
 dt.values.astype("m8[m]")  # 39 minutes
 
+import cartopy.crs as ccrs
+
 ##----------------------------------------------------------------------------.
 #### Plot GPM swaths
 from pyresample.geometry import SwathDefinition
-import cartopy.crs as ccrs
 
 lons = da_precip["lon"].values
 lats = da_precip["lat"].values

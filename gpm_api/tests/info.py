@@ -5,25 +5,25 @@ Created on Tue Nov  1 15:14:46 2022
 
 @author: ghiggi
 """
-### NASA pattern 
-# product level: 
-# - 1A, 2A, 2B, 
+### NASA pattern
+# product level:
+# - 1A, 2A, 2B,
 # - 3A-MO, 3B-DAY, 3A-DAY-ASC, 3A-DAY-DESC, 3B-ORBIT, 3B-MO. 3B-HHR-{E/L}
 # - 2A-CS-<SITE> (CS=COINCIDENCE)
 
-# satellite: 
+# satellite:
 # - TRMM, GPM, SSMIS, ..
 # - MS (multi-sensor) --> IMERG
 
-### JAXA pattern 
+### JAXA pattern
 # mission_id (mission + satellite_id)
-# sensor: KUR, KAR, CMB 
+# sensor: KUR, KAR, CMB
 # product_type: R(NRT) or S (RS)
 
-### Example file names 
-# # IMERG 
+### Example file names
+# # IMERG
 # fname = "3B-HHR.MS.MRG.3IMERG.20140422-S043000-E045959.0270.V06B.HDF5"
- 
+
 # # 2B
 # fname = "2B.GPM.DPRGMI.2HCSHv7-0.20140422-S013047-E030320.000831.V07A.HDF5"
 # fname = "2B.GPM.DPRGMI.CORRA2022.20140422-S230649-E003923.000845.V07A.HDF5"
@@ -32,7 +32,7 @@ Created on Tue Nov  1 15:14:46 2022
 # # 2A
 # fname = "2A.MT1.SAPHIR.PRPS2019v2-02.20140422-S000858-E015053.013038.V06A.HDF5"
 # fname = "2A.GPM.DPR.V9-20211125.20201028-S075448-E092720.037875.V07A.HDF5"
-# # 1C 
+# # 1C
 # fname = "1C.GPM.GMI.XCAL2016-C.20140422-S013047-E030320.000831.V07A.HDF5"
 # # 1B
 # fname = "GPMCOR_KUR_2010280754_0927_037875_1BS_DAB_07A.h5"

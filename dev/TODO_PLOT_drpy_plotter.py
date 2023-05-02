@@ -6,9 +6,7 @@ Created on Sun Aug 14 13:22:52 2022
 @author: ghiggi
 """
 # Download
-io = drpy.io.netrunner(
-    servername="Research", username="username@email.com", start_time=dtime
-)
+io = drpy.io.netrunner(servername="Research", username="username@email.com", start_time=dtime)
 # Class
 dpr = drpy.core.GPMDPR(filename=io.filename[0][-64:])
 

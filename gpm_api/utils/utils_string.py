@@ -5,11 +5,13 @@ Created on Tue Jul 21 20:07:02 2020
 
 @author: ghiggi
 """
+import ast
+
 # -----------------------------------------------------------------------------.
 ### Utils for parsing strings ####
 # https://www.rdocumentation.org/packages/stringr/versions/1.4.0
 import re
-import ast
+
 import numpy as np
 
 
@@ -194,9 +196,7 @@ def str_detect(l_string, pattern):
 
 def str_extract(l_string, pattern, simplify=True):
     if isinstance(l_string, list):
-        return [
-            str_simplify(re.findall(pattern, string), simplify) for string in l_string
-        ]
+        return [str_simplify(re.findall(pattern, string), simplify) for string in l_string]
     else:
         return str_simplify(re.findall(pattern, l_string), simplify)
 

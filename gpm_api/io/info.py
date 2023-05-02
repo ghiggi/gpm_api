@@ -5,11 +5,13 @@ Created on Sun Aug 14 20:49:06 2022
 
 @author: ghiggi
 """
-import re
-import os
 import datetime
+import os
+import re
+
 import numpy as np
 from trollsift import Parser
+
 from gpm_api.io.patterns import GPM_products_pattern_dict
 
 ####---------------------------------------------------------------------------
@@ -29,7 +31,6 @@ JAXA_FNAME_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_
 
 
 def _parse_GPM_fname(fname):
-
     # Retrieve information from filename
     p = Parser(NASA_FNAME_PATTERN)
     info_dict = p.parse(fname)
@@ -157,9 +158,7 @@ def get_version_from_filepath(filepath, integer=True):
 def get_version_from_filepaths(filepaths, integer=True):
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-    list_version = [
-        get_version_from_filepath(fpath, integer=integer) for fpath in filepaths
-    ]
+    list_version = [get_version_from_filepath(fpath, integer=integer) for fpath in filepaths]
     return list_version
 
 

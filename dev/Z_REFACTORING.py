@@ -15,14 +15,14 @@ Created on Mon Aug 15 23:02:04 2022
 # - ensure_valid_geolocation (1 spurious pixel)
 # - ds_gpm.gpm_api.has_valid_geolocation
 
-# check ax is geoaxes or mpl.axes ! 
+# check ax is geoaxes or mpl.axes !
 
 ###---------------------------------------------------------------------------.
 # Refactor geospatial.py
 
 ###---------------------------------------------------------------------------.
-# prefix_group=False to save data to netcdf ! 
-# SLV/precipRateESurface: variables with / can not be saved to netcdf ! 
+# prefix_group=False to save data to netcdf !
+# SLV/precipRateESurface: variables with / can not be saved to netcdf !
 
 # -----------------------------------------------------------------------------.
 # Solve TODOs in dataset.py
@@ -36,7 +36,7 @@ Created on Mon Aug 15 23:02:04 2022
 # ScanStatus/dataWarning
 # ScanStatus/operationalMode
 
-### Granule attributes 
+### Granule attributes
 # DataQualityFiltering = {'TotalQualityCode' : ['Good'],  # ”Fair” or ”EG”
 
 #### Masking functions
@@ -59,8 +59,8 @@ Created on Mon Aug 15 23:02:04 2022
 # download from filename
 
 ###--------------------------------------------------------------------------.
-# Add channels frequency coordinates to PMW 1B and 1C 
-# - Derive YAML with frequencies from 1C files 
+# Add channels frequency coordinates to PMW 1B and 1C
+# - Derive YAML with frequencies from 1C files
 # --> test/test_pmw_channels_coords.py
 
 # -----------------------------------------------------------------------------.
@@ -95,9 +95,9 @@ Created on Mon Aug 15 23:02:04 2022
 #### Test download NRT data
 
 # -----------------------------------------------------------------------------.
-# Download set of background .... 
-# - Callable from ax.background_img(name='BM', resolution='high')  
-# - Add BlueMarble to IMERG example 
+# Download set of background ....
+# - Callable from ax.background_img(name='BM', resolution='high')
+# - Add BlueMarble to IMERG example
 
 # Add PlateCarre backgrounds at /home/ghiggi/anaconda3/envs/satpy39/lib/python3.9/site-packages/cartopy/data/raster/natural_earth
 # https://neo.gsfc.nasa.gov/

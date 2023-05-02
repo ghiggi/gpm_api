@@ -5,8 +5,9 @@ Created on Wed Jan 11 12:00:18 2023
 
 @author: ghiggi
 """
-import gpm_api
 import datetime
+
+import gpm_api
 
 base_dir = "/home/ghiggi/GPM"
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
@@ -53,20 +54,20 @@ variable = "precipitationCal"
 da = ds[variable].isel(time=0)
 
 ####--------------------------------------------------------------------------.
-#### Image Label extraction 
+#### Image Label extraction
 from gpm_api.patch.labels import xr_get_areas_labels
- 
-min_value_threshold=3
-max_value_threshold=np.inf
 
-min_area_threshold=5
-max_area_threshold=np.inf
- 
-sort_by="max"  # area
-sort_decreasing=True
+min_value_threshold = 3
+max_value_threshold = np.inf
 
-footprint=None
- 
+min_area_threshold = 5
+max_area_threshold = np.inf
+
+sort_by = "max"  # area
+sort_decreasing = True
+
+footprint = None
+
 da_labels, n_labels, values = xr_get_areas_labels(
     data_array=da,
     min_value_threshold=min_value_threshold,
@@ -81,15 +82,14 @@ da_labels, n_labels, values = xr_get_areas_labels(
 
 ####--------------------------------------------------------------------------.
 #### Patch generator
- 
-  
+
+
 patch_gen = da.gpm_api.labels_patch_generator(
     min_value_threshold=min_value_threshold,
     min_area_threshold=min_area_threshold,
-    footprint=footprint, 
+    footprint=footprint,
     sort_by="max",  # area
     sort_decreasing=True,
     n_patches=10,
 )
 list_patch = list(patch_gen)
- 

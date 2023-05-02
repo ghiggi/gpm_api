@@ -6,39 +6,39 @@ Created on Thu Oct 13 11:53:39 2022
 @author: ghiggi
 """
 
+import datetime
+
 ##----------------------------------------------------------------------------.
 import os
-import datetime
-from gpm_api.io.products import (
-    GPM_NRT_products,
-    GPM_RS_products,
-    GPM_DPR_NRT_products,
-    GPM_PMW_NRT_products,
-    # CMB NRT?
-    GPM_DPR_RS_products,
-    GPM_PMW_RS_products,
-    GPM_CMB_RS_products,
+
+from gpm_api.io.products import (  # CMB NRT?; GPM_DPR_1B_NRT_products,
     GPM_1B_RS_products,
     GPM_1C_NRT_products,
-    # GPM_DPR_1B_NRT_products,
-    GPM_DPR_2A_NRT_products,
-    GPM_PMW_1B_NRT_products,
-    GPM_PMW_2A_GPROF_NRT_products,
-    GPM_PMW_2A_PRPS_NRT_products,
-    # CMB NRT?
-    GPM_IMERG_NRT_products,
-    GPM_DPR_2A_RS_products,
-    GPM_PMW_1A_RS_products,
-    GPM_PMW_1C_RS_products,
-    GPM_PMW_2A_PRPS_RS_products,
-    GPM_PMW_2A_GPROF_RS_products,
     GPM_CMB_2B_RS_products,
+    GPM_CMB_RS_products,
+    GPM_DPR_2A_NRT_products,
+    GPM_DPR_2A_RS_products,
+    GPM_DPR_NRT_products,
+    GPM_DPR_RS_products,
+    GPM_IMERG_NRT_products,
     GPM_IMERG_RS_products,
+    GPM_NRT_products,
+    GPM_PMW_1A_RS_products,
+    GPM_PMW_1B_NRT_products,
+    GPM_PMW_1C_RS_products,
+    GPM_PMW_2A_GPROF_NRT_products,
+    GPM_PMW_2A_GPROF_RS_products,
+    GPM_PMW_2A_PRPS_NRT_products,
+    GPM_PMW_2A_PRPS_RS_products,
+    GPM_PMW_NRT_products,
+    GPM_PMW_RS_products,
+    GPM_RS_products,
 )
 
 # TODO:
 # GPM/version/<RS/NRT>/<PRODUCT>
 # Search files without internet connection
+
 
 # -----------------------------------------------------------------------------.
 ###############################

@@ -7,11 +7,12 @@ Created on Wed Aug 17 09:30:29 2022
 """
 import numpy as np
 import xarray as xr
+
 from gpm_api.utils.slices import get_list_slices_from_indices
 
-#### TODO: 
+#### TODO:
 # - croup_around(point, distance)
-# - get_extent_around(point, distance) 
+# - get_extent_around(point, distance)
 
 
 def unwrap_longitude_degree(x, period=360):
@@ -67,15 +68,15 @@ def crop_by_continent(xr_obj, name):
 
     extent = get_continent_extent(name)
     return crop(xr_obj=xr_obj, extent=extent)
-  
-    
+
+
 def get_crop_slices_by_extent(xr_obj, extent):
     """Compute the xarray object slices which are within the specified extent.
-    
-    
+
+
     If the input is a GPM Orbit, it returns a list of along-track slices
     If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
-    
+
     Parameters
     ----------
     xr_obj : xr.DataArray or xr.Dataset
@@ -97,7 +98,7 @@ def get_crop_slices_by_extent(xr_obj, extent):
             raise ValueError("No data inside the provided bounding box.")
         # Retrieve list of along_track slices
         list_slices = get_list_slices_from_indices(idx_col)
-        return list_slices        
+        return list_slices
     elif is_grid(xr_obj):
         lon = xr_obj["lon"].data
         lat = xr_obj["lat"].data
@@ -109,17 +110,17 @@ def get_crop_slices_by_extent(xr_obj, extent):
         lat_slices = get_list_slices_from_indices(idx_row)[0]
         lon_slices = get_list_slices_from_indices(idx_col)[0]
         slices_dict = {"lon": lon_slices, "lat": lat_slices}
-        return slices_dict 
+        return slices_dict
     else:
         raise NotImplementedError("")
 
-    
+
 def get_crop_slices_by_continent(xr_obj, name):
     """Compute the xarray object slices which are within the specified continent.
-    
+
     If the input is a GPM Orbit, it returns a list of along-track slices
     If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
-    
+
     Parameters
     ----------
     xr_obj : xr.DataArray or xr.Dataset
@@ -135,10 +136,10 @@ def get_crop_slices_by_continent(xr_obj, name):
 
 def get_crop_slices_by_country(xr_obj, name):
     """Compute the xarray object slices which are within the specified country.
-    
+
     If the input is a GPM Orbit, it returns a list of along-track slices
     If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
-    
+
     Parameters
     ----------
     xr_obj : xr.DataArray or xr.Dataset
@@ -172,13 +173,15 @@ def crop(xr_obj, extent):
 
     """
     # TODO: Check extent
-    
+
     if is_orbit(xr_obj):
         # - Subset only along_track
         list_slices = get_crop_slices_by_extent(xr_obj, extent)
-        if len(list_slices) > 1: 
-            raise ValueError("The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !.")
-        xr_obj_subset =  xr_obj.isel(along_track=list_slices[0])
+        if len(list_slices) > 1:
+            raise ValueError(
+                "The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !."
+            )
+        xr_obj_subset = xr_obj.isel(along_track=list_slices[0])
 
     elif is_grid(xr_obj):
         slice_dict = get_crop_slices_by_extent(xr_obj, extent)
@@ -244,24 +247,23 @@ def is_spatial_2d(xr_obj):
 
 def get_pyresample_area(xr_obj):
     """It returns the corresponding pyresample area."""
-    from pyresample import SwathDefinition, AreaDefinition
-    
+    from pyresample import AreaDefinition, SwathDefinition
+
     # TODO: Implement as pyresample accessor
     # --> ds.pyresample.area
     # ds.crs.to_pyresample_area
     # ds.crs.to_pyresample_swath
-
     # If Orbit Granule --> Swath Definition
     if is_orbit(xr_obj):
         # Define SwathDefinition with xr.DataArray lat/lons
         # - Otherwise fails https://github.com/pytroll/satpy/issues/1434
-        
-        # Ensure correct dimension order 
+
+        # Ensure correct dimension order
         if "cross_track" in xr_obj.dims:
             xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
-        else: 
+        else:
             raise ValueError("Can not derive SwathDefinition area without cross-track dimension.")
-            
+
         lons = xr_obj["lon"].values
         lats = xr_obj["lat"].values
 

@@ -1,8 +1,8 @@
-# Black to ensure code is formatted 
-# Flake8 to  XXXX 
+# Black to ensure code is formatted
+# Flake8 to  XXXX
 # isort to order imports alphabetically, by section and type
-# Pylint to disallow unused imports 
-# Mypy for type checking 
+# Pylint to disallow unused imports
+# Mypy for type checking
 # Prospector for brings together the functionality of other Python analysis tools such as Pylint, pycodestyle, and McCabe complexity.
 
 
@@ -39,7 +39,7 @@ repos:
           - flake8-black>=0.1.1
         language_version: python3
 
-## Type Checks 
+## Type Checks
 #  - repo: https://github.com/pre-commit/mirrors-mypy
 #    rev: v0.961
 #    hooks:

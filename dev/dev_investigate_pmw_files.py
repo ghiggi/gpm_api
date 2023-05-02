@@ -6,11 +6,13 @@ Created on Mon Aug 15 21:46:46 2022
 @author: ghiggi
 """
 
-import h5py
 import glob
 import os
-from gpm_api.utils.utils_HDF5 import hdf5_groups_names
+
+import h5py
+
 from gpm_api.io import download_GPM_data
+from gpm_api.utils.utils_HDF5 import hdf5_groups_names
 
 base_dir = "/tmp/"
 

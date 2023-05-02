@@ -5,12 +5,14 @@ Created on Sun Aug 14 13:52:46 2022
 
 @author: ghiggi
 """
-import os
 import datetime
-import gpm_api
+import os
+
 import numpy as np
 import xarray as xp
 from dask.diagnostics import ProgressBar
+
+import gpm_api
 from gpm_api.io import download_GPM_data
 from gpm_api.io_future.dataset import open_dataset
 
@@ -120,17 +122,11 @@ for product, variables in product_var_dict.items():
     dict_product[product] = ds
 
 # GPM CORRA and GPM DPR same coords ;)
-np.testing.assert_equal(
-    dict_product["2A-DPR"].lon.data, dict_product["2B-GPM-CORRA"].lon.data
-)
+np.testing.assert_equal(dict_product["2A-DPR"].lon.data, dict_product["2B-GPM-CORRA"].lon.data)
 
 np.unique(dict_product["2A-DPR"]["precipRateESurface2"].data.compute())
-np.unique(
-    dict_product["2B-GPM-CORRA"]["nearSurfPrecipTotRate"].data.compute()
-)  # only -9999
-np.unique(
-    dict_product["2B-GPM-CORRA"]["estimSurfPrecipTotRate"].data.compute()
-)  # only -9999
+np.unique(dict_product["2B-GPM-CORRA"]["nearSurfPrecipTotRate"].data.compute())  # only -9999
+np.unique(dict_product["2B-GPM-CORRA"]["estimSurfPrecipTotRate"].data.compute())  # only -9999
 np.unique(dict_product["2A-GMI"]["surfacePrecipitation"].data.compute())  # only -9999
 
 # Check difference between products
@@ -140,10 +136,7 @@ diff = (
     dict_product["2A-DPR"]["precipRateESurface2"]
     - dict_product["2B-GPM-CORRA"]["nearSurfPrecipTotRate"]
 )
-diff = (
-    dict_product["2A-DPR"]["precipRateESurface2"]
-    - dict_product["2A-DPR"]["precipRateESurface"]
-)
+diff = dict_product["2A-DPR"]["precipRateESurface2"] - dict_product["2A-DPR"]["precipRateESurface"]
 
 diff = diff.compute()
 np.unique(diff.data.flatten().round(1), return_counts=True)

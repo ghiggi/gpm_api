@@ -5,23 +5,25 @@ Created on Wed Jan  4 19:45:26 2023
 
 @author: ghiggi
 """
-import os
 import datetime
+import os
+
 import numpy as np
-import gpm_api
 from dask.diagnostics import ProgressBar
+
+import gpm_api
 
 base_dir = "/home/ghiggi"
 
 #### Define analysis time period
-# - Backward scan 
+# - Backward scan
 start_time = datetime.datetime.strptime("2020-08-01 12:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2020-08-01 15:00:00", "%Y-%m-%d %H:%M:%S")
 
 # Forward scan
 start_time = datetime.datetime.strptime("2016-06-15 00:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2016-06-16 00:00:00", "%Y-%m-%d %H:%M:%S")
-# --> TODO: compare to this 
+# --> TODO: compare to this
 # https://disc.gsfc.nasa.gov/datasets/GPM_1BGMI_07/summary?keywords=GPM%20GMI%201
 
 product_type = "RS"
@@ -30,9 +32,7 @@ product_type = "RS"
 # pmw_variable = "satAzimuthAngle"
 
 product = "1B-GMI"
-pmw_variable = (
-    "Tb"  # sunGlintAngle, # solarAzimuthAngle, # solarZenAngle, # satAzimuthAngle
-)
+pmw_variable = "Tb"  # sunGlintAngle, # solarAzimuthAngle, # solarZenAngle, # satAzimuthAngle
 
 # product = "1C-GMI"
 # pmw_variable = "Tc"  # Quality
@@ -69,13 +69,13 @@ ds_gmi = gpm_api.open_dataset(
     end_time=end_time,
     # Optional
     version=version,
-   # variables=pmw_variable,
+    # variables=pmw_variable,
     chunks="auto",
     prefix_group=False,
 )
 
 
-ds_gmi["SCorientation"].compute() # 180 --> backward scan, 0 --> forward scan
+ds_gmi["SCorientation"].compute()  # 180 --> backward scan, 0 --> forward scan
 
 da_gmi = ds_gmi[pmw_variable].isel(channel=0).compute()
 

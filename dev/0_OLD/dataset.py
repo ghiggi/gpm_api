@@ -6,31 +6,33 @@ Created on Mon Aug  3 14:50:39 2020
 @author: ghiggi
 """
 import os
-import h5py
-import yaml
+
 import dask.array
-import pandas as pd
+import h5py
 import numpy as np
+import pandas as pd
 import xarray as xr
-from gpm_api.utils.utils_HDF5 import hdf5_file_attrs
-from gpm_api.io.find import find_GPM_files
+import yaml
+
 from gpm_api.dataset.decoding import apply_custom_decoding
 from gpm_api.io.checks import (
-    is_not_empty,
-    is_empty,
-    check_product,
-    check_version,
-    check_scan_mode,
     check_bbox,
+    check_product,
+    check_scan_mode,
+    check_version,
+    is_empty,
+    is_not_empty,
 )
+from gpm_api.io.find import find_GPM_files
 from gpm_api.io.products import (
-    GPM_DPR_RS_products,
     GPM_DPR_2A_ENV_RS_products,
+    GPM_DPR_RS_products,
+    GPM_IMERG_products,
     GPM_PMW_2A_GPROF_RS_products,
     GPM_PMW_2A_PRPS_RS_products,
-    GPM_IMERG_products,
     GPM_products,
 )
+from gpm_api.utils.utils_HDF5 import hdf5_file_attrs
 
 
 ##----------------------------------------------------------------------------.
@@ -130,16 +132,12 @@ def GPM_variables(product, scan_modes=None, version=6):
         l_vars = []
         for scan_mode in scan_modes:
             GPM_vars = list(
-                GPM_variables_dict(
-                    product=product, scan_mode=scan_mode, version=version
-                )
+                GPM_variables_dict(product=product, scan_mode=scan_mode, version=version)
             )
             l_vars = l_vars + GPM_vars
         GPM_vars = list(np.unique(np.array(l_vars)))
     else:
-        GPM_var_dict = GPM_variables_dict(
-            product=product, scan_mode=scan_modes[0], version=version
-        )
+        GPM_var_dict = GPM_variables_dict(product=product, scan_mode=scan_modes[0], version=version)
         GPM_vars = list(GPM_var_dict.keys())
     return GPM_vars
 
@@ -151,9 +149,7 @@ def check_variables(variables, product, scan_mode, version=6):
     if isinstance(variables, str):
         variables = [variables]
     # Check variables are valid
-    valid_variables = GPM_variables(
-        product=product, scan_modes=scan_mode, version=version
-    )
+    valid_variables = GPM_variables(product=product, scan_modes=scan_mode, version=version)
     idx_valid = [var in valid_variables for var in variables]
     if not all(idx_valid):
         idx_not_valid = np.logical_not(idx_valid)
@@ -239,9 +235,7 @@ def get_grid_coords(hdf, scan_mode):
     lon = hdf[scan_mode]["lon"][:]
     lat = hdf[scan_mode]["lat"][:]
     time = hdf_attr["FileHeader"]["StartGranuleDateTime"][:-1]
-    time = np.array(
-        np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1
-    )  # TODO: why plus 30
+    time = np.array(np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1)  # TODO: why plus 30
     coords = {"time": time, "lon": lon, "lat": lat}
     return coords
 
@@ -276,10 +270,7 @@ def get_attrs(hdf):
     fileheader_attrs = hdf_attr.get("FileHeader", None)
     if fileheader_attrs:
         attrs.update(
-            {
-                k: fileheader_attrs[k]
-                for k in fileheader_attrs.keys() & set(fileheader_keys)
-            }
+            {k: fileheader_attrs[k] for k in fileheader_attrs.keys() & set(fileheader_keys)}
         )
 
     # JAXAInfo attributes

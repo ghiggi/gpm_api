@@ -5,9 +5,11 @@ Created on Thu Jan 12 11:04:56 2023
 
 @author: ghiggi
 """
-import xarray as xr
-import gpm_api
 import datetime
+
+import xarray as xr
+
+import gpm_api
 
 base_dir = "/home/ghiggi/GPM"
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
@@ -67,47 +69,51 @@ da = ds[variable].isel(time=0)
 # list_patch = list(patch_gen)
 
 
-#----------------------------------------------------------------------------.
+# ----------------------------------------------------------------------------.
 # DEBUG
-import numpy as np 
+import numpy as np
+
 from gpm_api.patch.labels import label_xarray_object
 from gpm_api.patch.labels_patch import get_labeled_object_patches
 from gpm_api.visualization.labels import plot_label
 
-# Args labels 
-min_value_threshold=1
-max_value_threshold=np.inf
-min_area_threshold=5
-max_area_threshold=np.inf
-footprint=None
-sort_by="area"
-sort_decreasing=True
-label_name="label"
+# Args labels
+min_value_threshold = 1
+max_value_threshold = np.inf
+min_area_threshold = 5
+max_area_threshold = np.inf
+footprint = None
+sort_by = "area"
+sort_decreasing = True
+label_name = "label"
 
-# Retrieve labeled xarray object 
-xr_obj = label_xarray_object(da, 
-                             min_value_threshold=min_value_threshold,
-                             max_value_threshold=max_value_threshold,
-                             min_area_threshold=min_area_threshold,
-                             max_area_threshold=max_area_threshold,
-                             footprint=footprint,
-                             sort_by=sort_by,
-                             sort_decreasing=sort_decreasing,
-                             label_name=label_name,
-                             )
+# Retrieve labeled xarray object
+xr_obj = label_xarray_object(
+    da,
+    min_value_threshold=min_value_threshold,
+    max_value_threshold=max_value_threshold,
+    min_area_threshold=min_area_threshold,
+    max_area_threshold=max_area_threshold,
+    footprint=footprint,
+    sort_by=sort_by,
+    sort_decreasing=sort_decreasing,
+    label_name=label_name,
+)
 
 # Build a generator returning patches around rainy areas
-n_patches=20
+n_patches = 20
 labels_id = None
 padding = None
-min_patch_size=(100, 100)
+min_patch_size = (100, 100)
 highlight_label_id = False
 
 
 da_patch_gen = get_labeled_object_patches(
-    xr_obj, label_name=label_name, n_patches=n_patches, 
+    xr_obj,
+    label_name=label_name,
+    n_patches=n_patches,
     min_patch_size=min_patch_size,
-    highlight_label_id=highlight_label_id, 
+    highlight_label_id=highlight_label_id,
 )
 
 list_patch = list(da_patch_gen)
@@ -119,7 +125,7 @@ plot_label(da_patch[label_name])
 
 for da_patch in list_patch:
     da_patch.gpm_api.plot_image()
-    
+
 for da_patch in list_patch:
     print(da_patch.shape)
 

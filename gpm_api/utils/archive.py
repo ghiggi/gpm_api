@@ -5,30 +5,28 @@ Created on Tue Nov  1 11:24:29 2022
 
 @author: ghiggi
 """
-import os
-import h5py
-import gpm_api
-import time
-import dask
 import datetime
+import os
+import time
 import warnings
+
+import dask
+import h5py
 import numpy as np
 from dateutil.relativedelta import relativedelta
-from gpm_api.utils.warnings import GPM_Warning
-from gpm_api.io.pps import find_pps_filepaths
+
+import gpm_api
+from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
+from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
+from gpm_api.io.checks import check_base_dir, check_product, check_start_end_time
 from gpm_api.io.disk import find_filepaths
 from gpm_api.io.info import (
-    get_start_time_from_filepaths, 
-    get_end_time_from_filepaths, 
-    get_granule_from_filepaths
+    get_end_time_from_filepaths,
+    get_granule_from_filepaths,
+    get_start_time_from_filepaths,
 )
-from gpm_api.io.checks import (
-    check_product,
-    check_base_dir,
-    check_start_end_time,
-)
-from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
-from gpm_api.configs import get_gpm_base_dir, get_gpm_username, get_gpm_password
+from gpm_api.io.pps import find_pps_filepaths
+from gpm_api.utils.warnings import GPM_Warning
 
 
 ####--------------------------------------------------------------------------.
@@ -47,6 +45,7 @@ def print_elapsed_time(fn):
 
     return decorator
 
+
 ####--------------------------------------------------------------------------.
 #########################
 #### Data corruption ####
@@ -63,12 +62,12 @@ def get_corrupted_filepaths(filepaths):
     return l_corrupted
 
 
-def remove_corrupted_filepaths(filepaths, verbose=True): 
+def remove_corrupted_filepaths(filepaths, verbose=True):
     for filepath in filepaths:
         if verbose:
             print(f"{filepath} is corrupted and is being removed.")
         os.remove(filepath)
-        
+
 
 def check_file_integrity(
     product,
@@ -82,7 +81,7 @@ def check_file_integrity(
 ):
     """
     Check GPM granule file integrity over a given period.
-    
+
     If remove_corrupted=True, it removes the corrupted files.
 
     Parameters
@@ -102,10 +101,10 @@ def check_file_integrity(
         Whether to remove the corrupted files.
         The default is True.
     base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified 
-        in the GPM-API config file. 
+        The path to the GPM base directory. If None, it use the one specified
+        in the GPM-API config file.
         The default is None.
-        
+
     Returns
     -------
     filepaths, list
@@ -114,7 +113,7 @@ def check_file_integrity(
     """
     # Retrieve GPM-API configs
     base_dir = get_gpm_base_dir(base_dir)
-    
+
     ##--------------------------------------------------------------------.
     # Check base_dir
     base_dir = check_base_dir(base_dir)
@@ -137,19 +136,17 @@ def check_file_integrity(
     ##---------------------------------------------------------------------.
     # Check that files have been downloaded  on disk
     if len(filepaths) == 0:
-        raise ValueError(
-            "Requested files are not found on disk. Please download them before."
-        )
+        raise ValueError("Requested files are not found on disk. Please download them before.")
 
     ##---------------------------------------------------------------------.
     # Loop over files and list file that can't be opened
     l_corrupted = get_corrupted_filepaths(filepaths)
-    
+
     ##---------------------------------------------------------------------.
     # Report corrupted and remove if asked
     if remove_corrupted:
         remove_corrupted_filepaths(filepaths=l_corrupted, verbose=verbose)
-    else: 
+    else:
         for filepath in l_corrupted:
             print(f"{filepath} is corrupted.")
 
@@ -246,8 +243,7 @@ def get_product_temporal_coverage(
     first_start_time = min(l_start_time)
     # Loop every month
     start_times = [
-        first_start_time - datetime.timedelta(days=31 * m)
-        for m in range(1, step_months + 1)
+        first_start_time - datetime.timedelta(days=31 * m) for m in range(1, step_months + 1)
     ]
     start_times = sorted(start_times)
     for start_time in start_times:
@@ -290,8 +286,7 @@ def get_product_temporal_coverage(
     last_start_time = max(l_start_time)
     # Loop every month
     start_times = [
-        last_start_time + datetime.timedelta(days=31 * m)
-        for m in range(1, step_months + 1)
+        last_start_time + datetime.timedelta(days=31 * m) for m in range(1, step_months + 1)
     ]
     start_times = sorted(start_times)[::-1]
     for start_time in start_times:
@@ -343,6 +338,7 @@ def get_product_temporal_coverage(
 #### Data download ####
 #######################
 
+
 @print_elapsed_time
 def download_daily_data(
     product,
@@ -358,13 +354,13 @@ def download_daily_data(
     check_integrity=True,
     remove_corrupted=True,
     verbose=True,
-    retry=1, 
+    retry=1,
     base_dir=None,
     username=None,
     password=None,
 ):
     from gpm_api.io.download import download_data
-    
+
     start_time = datetime.date(year, month, day)
     end_time = start_time + relativedelta(days=1)
 
@@ -403,13 +399,13 @@ def download_monthly_data(
     check_integrity=True,
     remove_corrupted=True,
     verbose=True,
-    retry=1, 
+    retry=1,
     base_dir=None,
     username=None,
     password=None,
 ):
     from gpm_api.io.download import download_data
-    
+
     start_time = datetime.date(year, month, 1)
     end_time = start_time + relativedelta(months=1)
 
@@ -447,7 +443,7 @@ def check_no_duplicated_files(
     end_time,
     version=GPM_VERSION,
     product_type="RS",
-    verbose=True, 
+    verbose=True,
 ):
     """Check that there are not duplicated files based on granule number."""
     ##--------------------------------------------------------------------.
@@ -464,18 +460,16 @@ def check_no_duplicated_files(
     ##---------------------------------------------------------------------.
     # Check that files have been downloaded  on disk
     if len(filepaths) == 0:
-        raise ValueError(
-            "Requested files are not found on disk. Please download them before."
-        )
-    ##---------------------------------------------------------------------. 
+        raise ValueError("Requested files are not found on disk. Please download them before.")
+    ##---------------------------------------------------------------------.
     # Retrieve granule id from filename
     filepaths = np.array(filepaths)
     granule_ids = get_granule_from_filepaths(filepaths)
-    
-    # Count granule ids occurence 
+
+    # Count granule ids occurence
     ids, counts = np.unique(granule_ids, return_counts=True)
-    
-    # Get duplicated indices 
+
+    # Get duplicated indices
     idx_ids_duplicated = np.where(counts > 1)[0].flatten()
     n_duplicated = len(idx_ids_duplicated)
     if n_duplicated > 0:
@@ -487,23 +481,21 @@ def check_no_duplicated_files(
             for path in tmp_paths_duplicated:
                 print(f"- {path}")
         raise ValueError("There are {n_duplicated} duplicated granules.")
-        
-        
-def check_time_period_coverage(filepaths, start_time, end_time, raise_error=False): 
+
+
+def check_time_period_coverage(filepaths, start_time, end_time, raise_error=False):
     """Check time period start_time, end_time is covered.
-    
+
     If raise_error=True, raise error if time period is not covered.
     If raise_error=False, it raise a GPM warning.
-    
+
     """
-    from gpm_api.io.info import (
-        get_start_time_from_filepaths,
-        get_end_time_from_filepaths,
-    )
+    from gpm_api.io.info import get_end_time_from_filepaths, get_start_time_from_filepaths
+
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
-    
-    # Get first and last timestep from filepaths 
+
+    # Get first and last timestep from filepaths
     filepaths = sorted(filepaths)
     first_start = get_start_time_from_filepaths(filepaths[0])[0]
     last_end = get_end_time_from_filepaths(filepaths[-1])[0]
@@ -511,24 +503,26 @@ def check_time_period_coverage(filepaths, start_time, end_time, raise_error=Fals
     msg = ""
     if first_start > start_time:
         msg = f"The first file start_time ({first_start}) occurs after the specified start_time ({start_time})"
-        
+
     if last_end < end_time:
-        msg1 = f"The last file end_time ({last_end}) occurs before the specified end_time ({end_time})"
+        msg1 = (
+            f"The last file end_time ({last_end}) occurs before the specified end_time ({end_time})"
+        )
         if msg != "":
-           msg = msg + "; and t" + msg1[1:]
-        else: 
+            msg = msg + "; and t" + msg1[1:]
+        else:
             msg = msg1
-    if msg != "": 
+    if msg != "":
         if raise_error:
             raise ValueError(msg)
-        else: 
+        else:
             warnings.warn(msg, GPM_Warning)
-        
+
 
 def get_time_period_with_missing_files(filepaths):
     """
-    It returns the time period where the are missing granules. 
-    
+    It returns the time period where the are missing granules.
+
     It assumes the input filepaths are for a single GPM product.
 
     Parameters
@@ -542,36 +536,38 @@ def get_time_period_with_missing_files(filepaths):
         List of tuple (start_time, end_time).
 
     """
-    from gpm_api.utils.checks import _is_contiguous_granule
-    from gpm_api.utils.slices import get_list_slices_from_bool_arr
     from gpm_api.io.info import (
+        get_end_time_from_filepaths,
         get_granule_from_filepaths,
         get_start_time_from_filepaths,
-        get_end_time_from_filepaths,
     )
+    from gpm_api.utils.checks import _is_contiguous_granule
+    from gpm_api.utils.slices import get_list_slices_from_bool_arr
+
     # Retrieve granule id from filename
     granule_ids = get_granule_from_filepaths(filepaths)
-    
-    # Sort filepaths by granule number 
+
+    # Sort filepaths by granule number
     indices = np.argsort(granule_ids)
     filepaths = np.array(filepaths)[indices]
     granule_ids = np.array(granule_ids)[indices]
-    
-    # Check if next file granule number is +1 
+
+    # Check if next file granule number is +1
     is_not_missing = _is_contiguous_granule(granule_ids)
-    
-    # If there are missing files 
+
+    # If there are missing files
     list_missing = []
     if np.any(~is_not_missing):
         # Retrieve slices with unmissing granules
-        # - Do not skip consecutive False  
+        # - Do not skip consecutive False
         # --> is_not_missing=np.array([False, False, True, True, False, False])
         # --> list_slices = [slice(0, 1, None), slice(1, 2, None), slice(2, 5, None), slice(5, 6, None)]
         list_slices = get_list_slices_from_bool_arr(
-            is_not_missing, include_false=True, skip_consecutive_false=False)   
+            is_not_missing, include_false=True, skip_consecutive_false=False
+        )
         # Retrieve start and end_time where there are missing files
         for slc in list_slices[0:-1]:
-            missing_start = get_end_time_from_filepaths(filepaths[slc.stop-1])[0]
+            missing_start = get_end_time_from_filepaths(filepaths[slc.stop - 1])[0]
             missing_end = get_start_time_from_filepaths(filepaths[slc.stop])[0]
             list_missing.append((missing_start, missing_end))
     return list_missing
@@ -587,16 +583,16 @@ def check_archive_completness(
     transfer_tool="wget",
     n_threads=4,
     verbose=True,
-    base_dir=None, 
-    username=None, 
+    base_dir=None,
+    username=None,
     password=None,
 ):
     """
     Check that the GPM product archive is not missing granules over a given period.
-    
+
     This function does not require connection to the PPS to search for the missing files.
-    However, the start and end period are based on the first and last file found on disk ! 
- 
+    However, the start and end period are based on the first and last file found on disk !
+
     If download=True, it attempt to download the missing granules.
 
     Parameters
@@ -622,16 +618,16 @@ def check_archive_completness(
     verbose : bool, optional
         Whether to print processing details. The default is False.
     base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified 
-        in the GPM-API config file. 
+        The path to the GPM base directory. If None, it use the one specified
+        in the GPM-API config file.
         The default is None.
     username: str, optional
         Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file. 
+        If None, it uses the one specified in the GPM-API config file.
         The default is None.
     password: str, optional
         Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file. 
+        If None, it uses the one specified in the GPM-API config file.
         The default is None.
     """
     ##--------------------------------------------------------------------.
@@ -642,10 +638,10 @@ def check_archive_completness(
     base_dir = get_gpm_base_dir(base_dir)
     username = get_gpm_username(username)
     password = get_gpm_password(password)
-                
+
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
-    
+
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
@@ -660,41 +656,43 @@ def check_archive_completness(
     ##---------------------------------------------------------------------.
     # Check that files have been downloaded on disk
     if len(filepaths) == 0:
-        raise ValueError(
-            "Requested files are not found on disk. Please download them before."
-        )
-    
+        raise ValueError("Requested files are not found on disk. Please download them before.")
+
     ##---------------------------------------------------------------------.
-    # Check that the specified time period is covered 
+    # Check that the specified time period is covered
     check_time_period_coverage(filepaths, start_time, end_time, raise_error=False)
 
     ##---------------------------------------------------------------------.
     # Loop over files and retrieve time period with missing granules
     list_missing_periods = get_time_period_with_missing_files(filepaths)
-    
+
     # If there are missing data,
-    if len(list_missing_periods) > 0: 
-        if download: # and download=True
+    if len(list_missing_periods) > 0:
+        if download:  # and download=True
             # Attempt to download the missing data
-            for s_time, e_time in list_missing_periods: 
-                download_data(base_dir=base_dir,
-                              username=username,
-                              version=version,
-                              product=product,
-                              product_type=product_type,
-                              start_time=s_time,
-                              end_time=e_time,
-                              n_threads=n_threads,
-                              transfer_tool=transfer_tool,
-                              check_integrity=True,
-                              remove_corrupted=True,
-                              retry=2, 
-                              verbose=verbose,
-                              )
-        else: 
+            for s_time, e_time in list_missing_periods:
+                download_data(
+                    base_dir=base_dir,
+                    username=username,
+                    version=version,
+                    product=product,
+                    product_type=product_type,
+                    start_time=s_time,
+                    end_time=e_time,
+                    n_threads=n_threads,
+                    transfer_tool=transfer_tool,
+                    check_integrity=True,
+                    remove_corrupted=True,
+                    retry=2,
+                    verbose=verbose,
+                )
+        else:
             # Otherwise print time periods with missing data and raise error
-            for s_time, e_time in list_missing_periods: 
+            for s_time, e_time in list_missing_periods:
                 print(f"- Missing data between {s_time} and {e_time}")
-            raise ValueError("The GPM {product} archive is not complete between {start_time} and {end_time}.")
+            raise ValueError(
+                "The GPM {product} archive is not complete between {start_time} and {end_time}."
+            )
+
 
 ####--------------------------------------------------------------------------.

@@ -6,19 +6,21 @@ Created on Thu Aug 18 17:00:40 2022
 @author: ghiggi
 """
 import datetime
+
 import cartopy
-import matplotlib
-import numpy as np
-import xarray as xr
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import xarray as xr
+
 from gpm_api.io_future.dataset import open_dataset
 from gpm_api.utils.utils_cmap import get_colormap_setting
 from gpm_api.utils.visualization import (
     get_transect_slices,
-    xr_exclude_variables_without,
     plot_profile,
+    xr_exclude_variables_without,
 )
 
 base_dir = "/home/ghiggi"
@@ -95,7 +97,5 @@ plt.show()
 plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")
 plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("GPM_LatentHeating")
 
-p = da_profile.plot.pcolormesh(
-    x=x_direction, y="height", cbar_kwargs=cbar_kwargs, **plot_kwargs
-)
+p = da_profile.plot.pcolormesh(x=x_direction, y="height", cbar_kwargs=cbar_kwargs, **plot_kwargs)
 plt.show()

@@ -5,8 +5,9 @@ Created on Tue Nov  1 14:15:34 2022
 
 @author: ghiggi
 """
-import gpm_api
 import datetime
+
+import gpm_api
 
 base_dir = "/ltenas3/0_Data/GPM"
 base_dir = "/home/ghiggi/GPM"

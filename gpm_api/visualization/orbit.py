@@ -6,22 +6,19 @@ Created on Sat Dec 10 19:06:20 2022
 @author: ghiggi
 """
 import functools
-import numpy as np
+
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
-from gpm_api.utils.checks import (
-    check_is_spatial_2d,
-    check_contiguous_scans,
-    get_slices_regular,
-)
-from gpm_api.visualization.plot import (
-    plot_cartopy_background,
+import numpy as np
+
+from gpm_api.utils.checks import check_contiguous_scans, check_is_spatial_2d, get_slices_regular
+from gpm_api.visualization.plot import (  # _plot_mpl_imshow,
+    _plot_cartopy_pcolormesh,
+    _plot_xr_imshow,
     _preprocess_figure_args,
     _preprocess_subplot_kwargs,
-    _plot_cartopy_pcolormesh,
-    #  _plot_mpl_imshow,
-    _plot_xr_imshow,
     get_colorbar_settings,
+    plot_cartopy_background,
 )
 
 
@@ -29,7 +26,7 @@ def plot_swath_lines(ds, ax=None, **kwargs):
     """Plot GPM orbit granule swath lines."""
     # - 0.0485 to account for 2.5 km from pixel center
     # TODO: adapt based on bin length (changing for each sensor) --> FUNCTION
-    
+
     # - Initialize figure
     subplot_kwargs = kwargs.get("subplot_kwargs", {})
     fig_kwargs = kwargs.get("fig_kwargs", {})
@@ -38,8 +35,8 @@ def plot_swath_lines(ds, ax=None, **kwargs):
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
         # - Add cartopy background
         ax = plot_cartopy_background(ax)
-    
-    # - Plot swath line 
+
+    # - Plot swath line
     lon = ds["lon"].transpose("cross_track", "along_track").data
     lat = ds["lat"].transpose("cross_track", "along_track").data
     ax.plot(lon[0, :] + 0.0485, lat[0, :], transform=ccrs.Geodetic(), **kwargs)
@@ -51,18 +48,19 @@ def plot_swath_lines(ds, ax=None, **kwargs):
 
 def infill_invalid_coords(xr_obj):
     """Replace invalid coordinates with closer valid location.
-    
+
     It assumes that the invalid pixel variables are already masked to NaN.
     """
-    # TODO: unvalid pixel coordinates should be masked by full transparency ! 
-    
+    # TODO: unvalid pixel coordinates should be masked by full transparency !
+
     from gpm_api.utils.checks import _is_non_valid_geolocation
-    # Retrieve array indicated unvalid geolocation 
+
+    # Retrieve array indicated unvalid geolocation
     mask = _is_non_valid_geolocation(xr_obj).data
-    # Retrieve lon and lat array 
+    # Retrieve lon and lat array
     lon = xr_obj["lon"].data
     lat = xr_obj["lat"].data
-    # Replace unvalid coordinates with closer valid values 
+    # Replace unvalid coordinates with closer valid values
     lon_dummy = lon.copy()
     lon_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), lon[~mask])
     lat_dummy = lat.copy()
@@ -70,6 +68,7 @@ def infill_invalid_coords(xr_obj):
     xr_obj["lon"].data = lon_dummy
     xr_obj["lat"].data = lat_dummy
     return xr_obj
+
 
 # TODO: plot swath polygon
 # def plot_swath(ds, ax=None):
@@ -108,18 +107,17 @@ def _call_over_contiguous_scans(function):
         # - Define kwargs
         user_kwargs = kwargs.copy()
         p = None
-        
+
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
-
             # Retrive contiguous data array
             tmp_da = da.isel(along_track=slc)
-            
+
             # Replace invalid coordinate with closer value
-            # - This might be necessary for some products 
-            #   having all the outer swath invalid coordinates 
+            # - This might be necessary for some products
+            #   having all the outer swath invalid coordinates
             # tmp_da = infill_invalid_coords(tmp_da)
-         
+
             # Define  temporary kwargs
             tmp_kwargs = user_kwargs.copy()
             tmp_kwargs["da"] = tmp_da
@@ -144,10 +142,11 @@ def _call_over_contiguous_scans(function):
 
 @_call_over_contiguous_scans
 def plot_orbit_map(
-    da, ax=None,
-    add_colorbar=True, 
-    add_swath_lines=True, 
-    fig_kwargs={}, 
+    da,
+    ax=None,
+    add_colorbar=True,
+    add_swath_lines=True,
+    fig_kwargs={},
     subplot_kwargs={},
     cbar_kwargs={},
     **plot_kwargs,
@@ -157,7 +156,6 @@ def plot_orbit_map(
     check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
-    
     # - Initialize figure
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
@@ -167,14 +165,14 @@ def plot_orbit_map(
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=variable,
-                                                     plot_kwargs=plot_kwargs, 
-                                                     cbar_kwargs=cbar_kwargs)
-    # - Specify colorbar label 
-    if "label" not in cbar_kwargs: 
-        unit = da.attrs.get('units', "-")
-        cbar_kwargs['label'] = f"{variable} [{unit}]"
-    
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(
+        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    )
+    # - Specify colorbar label
+    if "label" not in cbar_kwargs:
+        unit = da.attrs.get("units", "-")
+        cbar_kwargs["label"] = f"{variable} [{unit}]"
+
     # - Add swath lines
     if add_swath_lines:
         plot_swath_lines(da, ax=ax, linestyle="--", color="black")
@@ -195,8 +193,11 @@ def plot_orbit_map(
 
 @_call_over_contiguous_scans
 def plot_orbit_mesh(
-    da, ax=None, edgecolors="k", linewidth=0.1,
-    fig_kwargs={}, 
+    da,
+    ax=None,
+    edgecolors="k",
+    linewidth=0.1,
+    fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
 ):
@@ -204,7 +205,7 @@ def plot_orbit_mesh(
     # - Check inputs
     check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
-    
+
     # - Initialize figure
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
@@ -215,8 +216,8 @@ def plot_orbit_mesh(
     # - Define plot_kwargs to display only the mesh
     plot_kwargs["facecolor"] = "none"
     plot_kwargs["alpha"] = 1
-    plot_kwargs["edgecolors"] = edgecolors,
-    plot_kwargs["linewidth"] = linewidth,
+    plot_kwargs["edgecolors"] = (edgecolors,)
+    plot_kwargs["linewidth"] = (linewidth,)
     plot_kwargs["antialiased"] = True
     print(plot_kwargs)
     # - Add variable field with cartopy
@@ -233,10 +234,11 @@ def plot_orbit_mesh(
 
 
 def plot_orbit_image(
-    da, ax=None, 
+    da,
+    ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={}, 
+    fig_kwargs={},
     cbar_kwargs={},
     **plot_kwargs,
 ):
@@ -251,9 +253,9 @@ def plot_orbit_image(
         fig, ax = plt.subplots(**fig_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(name=da.name,
-                                                     plot_kwargs=plot_kwargs, 
-                                                     cbar_kwargs=cbar_kwargs)
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(
+        name=da.name, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    )
 
     # # - Plot with matplotlib
     # p = _plot_mpl_imshow(ax=ax,

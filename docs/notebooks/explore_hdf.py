@@ -5,10 +5,11 @@ Created on Mon Aug 15 16:00:25 2022
 
 @author: ghiggi
 """
+import h5py
+
 # -----------------------------------------------------------------------------.
 #### Explore GPM file structure
 from gpm_api.utils.utils_HDF5 import *
-import h5py
 
 filepath = "/home/ghiggi/GPM_V6/DPR_RS/2A-DPR/2020/10/28/2A.GPM.DPR.V9-20211125.20201028-S075448-E092720.037875.V07A.HDF5"
 

@@ -5,17 +5,18 @@ Created on Fri Sep  9 13:19:45 2022
 
 @author: ghiggi
 """
-import os
-import gpm_api
-import cartopy
 import datetime
+import os
+
+import cartopy
+import cartopy.crs as ccrs
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xp
-import numpy as np
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 from dask.diagnostics import ProgressBar
+
+import gpm_api
 from gpm_api.io import download_GPM_data
 from gpm_api.io_future.dataset import open_dataset
 

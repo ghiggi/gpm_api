@@ -5,24 +5,26 @@ Created on Fri Aug 19 10:34:55 2022
 
 @author: ghiggi
 """
-import os
 import datetime
-import gpm_api
+import os
+
 import cartopy
-import matplotlib
-import numpy as np
-import xarray as xp
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import xarray as xp
 from dask.diagnostics import ProgressBar
+
+import gpm_api
 from gpm_api.io import download_GPM_data
 from gpm_api.io_future.dataset import open_dataset
 from gpm_api.utils.utils_cmap import get_colormap_setting
 from gpm_api.utils.visualization import (
     get_transect_slices,
-    xr_exclude_variables_without,
     plot_profile,
+    xr_exclude_variables_without,
 )
 
 # Matplotlib settings
@@ -162,12 +164,12 @@ ds_latent = ds_latent.gpm_api.crop(bbox)
 ds_dpr["dfrMeasured"] = ds_dpr["zFactorMeasured"].sel(frequency="Ku") - ds_dpr[
     "zFactorMeasured"
 ].sel(frequency="Ka")
-ds_dpr["dfrFinal"] = ds_dpr["zFactorFinal"].sel(frequency="Ku") - ds_dpr[
-    "zFactorFinal"
+ds_dpr["dfrFinal"] = ds_dpr["zFactorFinal"].sel(frequency="Ku") - ds_dpr["zFactorFinal"].sel(
+    frequency="Ka"
+)
+ds_dpr["dfrFinalNearSurface "] = ds_dpr["zFactorFinalNearSurface"].sel(frequency="Ku") - ds_dpr[
+    "zFactorFinalNearSurface"
 ].sel(frequency="Ka")
-ds_dpr["dfrFinalNearSurface "] = ds_dpr["zFactorFinalNearSurface"].sel(
-    frequency="Ku"
-) - ds_dpr["zFactorFinalNearSurface"].sel(frequency="Ka")
 
 # -----------------------------------------------------------------------------.
 #### Extract profile along transect

@@ -5,27 +5,29 @@ Created on Wed Oct 19 16:51:11 2022
 
 @author: ghiggi
 """
-import pandas as pd
-import numpy as np
 import itertools
 
+import numpy as np
+import pandas as pd
 from scipy.ndimage import find_objects
 from scipy.ndimage.measurements import center_of_mass
 
 from gpm_api.patch.labels import get_areas_labels
 from gpm_api.utils.slices import (
-    get_slice_size,
     get_idx_bounds_from_slice,
     get_slice_from_idx_bounds,
+    get_slice_size,
     pad_slices,
 )
+
 ####--------------------------------------------------------------------------.
 # Shapely bounds: (xmin, ymin, xmax, ymax)
 # Matlotlib extent: (xmin, xmax, ymin, ymax)
 # Cartopy extent: (xmin, xmax, ymin, ymax)
 # GPM-API extent: (xmin, xmax, ymin, ymax)
-    
+
 ####--------------------------------------------------------------------------.
+
 
 def get_row_col_slice_centroid(row_slice, col_slice):
     row = int((row_slice.start + row_slice.stop - 1) / 2)
@@ -34,7 +36,8 @@ def get_row_col_slice_centroid(row_slice, col_slice):
 
 
 ####--------------------------------------------------------------------------.
-#### Patch splitter 
+#### Patch splitter
+
 
 def split_large_object_slices(object_slices, patch_size):
     if len(patch_size) == 1:
@@ -72,6 +75,7 @@ def split_large_objects_slices(objects_slices, patch_size):
 ##########################
 #### Patch Extraction ####
 ##########################
+
 
 # get_patch_slices_around_point
 def get_patch_slices_around(row, col, patch_size, image_shape):
@@ -172,9 +176,7 @@ def get_patch_per_label(
     # object_slice = objects_slices[i]
     for i, object_slice in enumerate(objects_slices):
         # If slices larger than patch_size, split into multiple slices and loop over it
-        conform_object_slices = split_large_object_slices(
-            object_slice, patch_size=patch_size
-        )
+        conform_object_slices = split_large_object_slices(object_slice, patch_size=patch_size)
         # r_slice, c_slice = conform_object_slices[0]
         for r_slice, c_slice in conform_object_slices:
             # print(i)
@@ -224,9 +226,7 @@ def get_patch_per_label(
                 row = r_slice.start + row[0]
                 col = c_slice.start + col[0]
             elif centered_on == "centroid":
-                row, col = get_row_col_slice_centroid(
-                    row_slice=r_slice, col_slice=c_slice
-                )
+                row, col = get_row_col_slice_centroid(row_slice=r_slice, col_slice=c_slice)
             elif centered_on == "center_of_mass":
                 row, col = center_of_mass(tmp_label_mask)
                 row = int(row)
@@ -238,9 +238,7 @@ def get_patch_per_label(
 
             # ---------------------------------.
             # Retrieve actual patch
-            row_slice, col_slice = get_patch_slices_around(
-                row, col, patch_size, image_shape
-            )
+            row_slice, col_slice = get_patch_slices_around(row, col, patch_size, image_shape)
             # assert get_slice_size(col_slice) == 128
             # print(get_slice_size(col_slice))
             # Append to list
@@ -255,8 +253,7 @@ def get_patch_per_label(
     # Compute patch statistics
     if callable(patch_stats_fun):
         patch_statistics = [
-            patch_stats_fun(intensity[r_slice, c_slice])
-            for r_slice, c_slice in list_patch_slices
+            patch_stats_fun(intensity[r_slice, c_slice]) for r_slice, c_slice in list_patch_slices
         ]
     else:
         patch_statistics = None
@@ -264,12 +261,14 @@ def get_patch_per_label(
     # Return object
     return list_patch_slices, patch_statistics
 
+
 ####--------------------------------------------------------------------------.
 #########################
 #### Patch Stats Info ###
 #########################
 # TODO: Inside get_label_stats
-# - Add label mask 
+# - Add label mask
+
 
 def patch_stats_fun(patch: np.ndarray):
     width = patch.shape[1]
@@ -333,9 +332,7 @@ def get_patch_info(
         list_patch_upper_left_idx = [
             [slc.start for slc in list_slc] for list_slc in list_patch_slices
         ]
-        upper_left_str = [
-            str(row) + "-" + str(col) for row, col in list_patch_upper_left_idx
-        ]
+        upper_left_str = [str(row) + "-" + str(col) for row, col in list_patch_upper_left_idx]
 
         # Define data.frame
         df = pd.DataFrame(patch_statistics)
