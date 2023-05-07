@@ -100,7 +100,7 @@ target-version = [
 [tool.ruff]
 select = ["F",
 	  "E",
-	  "I001",
+	  "I",
 	  "W",
 	  "UP",
 	  "Q",

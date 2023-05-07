@@ -1,0 +1,73 @@
+name: Tests
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  tests:
+    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', experimental' || '' }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: ["ubuntu-latest"]
+        python-version: ["3.8", "3.9", "3.10"]
+        experimental: [false]
+        include:
+          - os: "ubuntu-latest"
+            python-version: "3.10"
+            experimental: true
+
+          - os: "ubuntu-latest"
+            python-version: "3.10"
+            experimental: false
+            coverage: true
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if echo ${{ matrix.experimental }} | grep -c "true"
+          then
+            pip install -e .[dev]
+          else
+            pip install -r requirements.txt
+            pip install -e .
+          fi
+        shell: bash
+
+      - name: Test with pytest
+        run: |
+          coverage run -m pytest
+
+      - name: CodeCov
+
+        uses: codecov/codecov-action@v3
+        if: matrix.coverage
+
+      - name: Generate coverage report
+        if: matrix.coverage
+        run: |
+          coverage lcov -o coverage/lcov.info
+
+      - name: Coveralls Parallel
+        uses: coverallsapp/github-action@v1
+        if: matrix.coverage
+        with:
+          parallel: true
+
+  end-coveralls:
+    needs: [tests]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@v1
+      with:
+        parallel-finished: true
