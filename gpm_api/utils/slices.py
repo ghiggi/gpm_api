@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sat Dec 10 18:46:00 2022
 
 @author: ghiggi
 """
-import numpy as np
 from functools import reduce
 
+import numpy as np
+
 ####---------------------------------------------------------------------------.
-#### Tools for list_slices  
+#### Tools for list_slices
 
 
 def get_list_slices_from_indices(indices):
@@ -19,14 +19,13 @@ def get_list_slices_from_indices(indices):
         [0,1,2,4,5,8] --> [slices(0,3),slice(4,6), slice(8,9)]
     """
     # Checks
-    if len(indices) == 0: 
+    if len(indices) == 0:
         list_slices = []
         return list_slices
     indices = np.asarray(indices).astype(int)
     indices = sorted(np.unique(indices))
     if np.any(np.sign(indices) < 0):
-        raise ValueError("get_list_slices_from_indices expects only positive"
-                         " integer indices.")
+        raise ValueError("get_list_slices_from_indices expects only positive" " integer indices.")
     if len(indices) == 1:
         return [slice(indices[0], indices[0] + 1)]
     # Retrieve slices
@@ -52,7 +51,7 @@ def get_list_slices_from_indices(indices):
 
 def get_indices_from_list_slices(list_slices, check_non_intersecting=True):
     """Return a numpy array of indices from a list of slices."""
-    if len(list_slices) == 0: 
+    if len(list_slices) == 0:
         return np.array([])
     list_indices = [np.arange(slc.start, slc.stop, slc.step) for slc in list_slices]
     indices, counts = np.unique(np.concatenate(list_indices), return_counts=True)
@@ -63,19 +62,19 @@ def get_indices_from_list_slices(list_slices, check_non_intersecting=True):
 
 def list_slices_intersection(*args):
     """Return the intersecting slices from multiple list of slices."""
-    list_indices = [get_indices_from_list_slices(l) for l in list(args)]
+    list_indices = [get_indices_from_list_slices(l_slc) for l_slc in list(args)]
     intersect_indices = reduce(np.intersect1d, list_indices)
     return get_list_slices_from_indices(intersect_indices)
 
 
 def list_slices_union(*args):
     """Return the union slices from multiple list of slices."""
-    list_indices = [get_indices_from_list_slices(l) for l in list(args)]
+    list_indices = [get_indices_from_list_slices(l_slc) for l_slc in list(args)]
     union_indices = np.unique(np.concatenate(list_indices))
     return get_list_slices_from_indices(union_indices)
 
 
-def list_slices_difference(list_slices1, list_slices2): 
+def list_slices_difference(list_slices1, list_slices2):
     """Return the list of slices covered by list_slices1 not intersecting list_slices2."""
     list_indices1 = get_indices_from_list_slices(list_slices1)
     list_indices2 = get_indices_from_list_slices(list_slices2)
@@ -107,7 +106,7 @@ def _list_slices_sort(list_slices):
 
 def list_slices_sort(*args):
     """Sort a single or multiple list of slices by slice.start.
-    
+
     It output a single list of slices!
     """
     list_slices = list_slices_combine(*args)
@@ -123,20 +122,16 @@ def list_slices_filter(list_slices, min_size=None, max_size=None):
     min_size = 0 if min_size is None else min_size
     max_size = np.inf if max_size is None else max_size
     # Get list of slice sizes
-    sizes = [
-        get_slice_size(slc) if isinstance(slc, slice) else 0 for slc in list_slices
-    ]
+    sizes = [get_slice_size(slc) if isinstance(slc, slice) else 0 for slc in list_slices]
     # Retrieve valid slices
-    valid_bool = np.logical_and(
-        np.array(sizes) >= min_size, np.array(sizes) <= max_size
-    )
+    valid_bool = np.logical_and(np.array(sizes) >= min_size, np.array(sizes) <= max_size)
     list_slices = np.array(list_slices)[valid_bool].tolist()
     return list_slices
 
 
 def list_slices_flatten(list_slices):
     """Flatten out list of slices with 2 nested level.
-    
+
     Examples:
     [[slice(1, 7934, None)], [slice(1, 2, None)]] --> [slice(1, 7934, None), slice(1, 2, None)]
     [slice(1, 7934, None), slice(1, 2, None)] --> [slice(1, 7934, None), slice(1, 2, None)]
@@ -146,14 +141,12 @@ def list_slices_flatten(list_slices):
         if isinstance(sublist, list):
             for item in sublist:
                 flat_list.append(item)
-        else: 
+        else:
             flat_list.append(sublist)
-    return flat_list 
-   
+    return flat_list
 
-def get_list_slices_from_bool_arr(
-    bool_arr, include_false=True, skip_consecutive_false=True
-):
+
+def get_list_slices_from_bool_arr(bool_arr, include_false=True, skip_consecutive_false=True):
     """Return the slices corresponding to sequences of True in the input arrays.
 
     If include_false=True, the last element of each slice sequence (except the last) will be False
@@ -161,17 +154,17 @@ def get_list_slices_from_bool_arr(
     If skip_consecutive_false=True (default), the first element of each slice must be a True.
     If skip_consecutive_false=False, it returns also slices of size 1 which selects just the False value.
     Note: if include_false = False, skip_consecutive_false is automatically True.
-    
+
     Examples:
-    If include_false=True and skip_consecutive_false=False: 
+    If include_false=True and skip_consecutive_false=False:
        --> [False, False] --> [slice(0,1), slice(1,2)]
-    If include_false=True and skip_consecutive_false=True: 
+    If include_false=True and skip_consecutive_false=True:
        --> [False, False] --> []
        --> [False, False, True] --> [slice(2,3)]
        --> [False, False, True, False] --> [slice(2,4)]
     If include_false=False:
         --> [False, False, True, False] --> [slice(2,3)]
-        
+
     """
     # Check the arguments
     if not include_false:
@@ -182,10 +175,9 @@ def get_list_slices_from_bool_arr(
         list_slices = [slice(0, len(bool_arr))]
     # If all False
     elif np.all(~bool_arr):
-        if skip_consecutive_false:
-            list_slices = []
-        else:
-            list_slices = [slice(i, i + 1) for i in range(0, len(bool_arr))]
+        list_slices = (
+            [] if skip_consecutive_false else [slice(i, i + 1) for i in range(0, len(bool_arr))]
+        )
     # If True and False
     else:
         # Retrieve indices where False start to occur
@@ -196,16 +188,12 @@ def get_list_slices_from_bool_arr(
         for i in range(1, len(false_indices)):
             idx_before = false_indices[i - 1]
             idx = false_indices[i]
-            if skip_consecutive_false:
-                if idx - idx_before == 1:
-                    continue
+            if skip_consecutive_false and idx - idx_before == 1:
+                continue
             # Define start
             start = idx_before + 1
             # Define stop
-            if include_false:
-                stop = idx + 1
-            else:
-                stop = idx
+            stop = idx + 1 if include_false else idx
             # Define slice
             slc = slice(start, stop)
             list_slices.append(slc)
@@ -220,6 +208,7 @@ def get_list_slices_from_bool_arr(
     # Return list of slices
     return list_slices
 
+
 # tests for _get_list_slices_from_bool_arr
 # bool_arr = np.array([True, False, True, True, True])
 # bool_arr = np.array([True, True, True, False, True])
@@ -233,6 +222,7 @@ def get_list_slices_from_bool_arr(
 
 ####----------------------------------------------------------------------------.
 #### Tools for slice manipulation
+
 
 def ensure_is_slice(slc):
     if isinstance(slc, slice):
@@ -252,8 +242,8 @@ def ensure_is_slice(slc):
 
 def get_slice_size(slc):
     """Get size of the slice.
-    
-    Note: The actual slice size must not be representative of the true slice if 
+
+    Note: The actual slice size must not be representative of the true slice if
     slice.stop is larger than the length of object to be sliced.
     """
     if not isinstance(slc, slice):
@@ -264,9 +254,9 @@ def get_slice_size(slc):
 
 def get_idx_bounds_from_slice(slc):
     """Get start and end indices of the slice.
-    
+
     Note: For index based selection, use idx_start:idx_end+1 !
-    """    
+    """
     if not isinstance(slc, slice):
         raise TypeError("Expecting slice object")
     idx_start = slice.start
@@ -276,13 +266,13 @@ def get_idx_bounds_from_slice(slc):
 
 def get_slice_from_idx_bounds(idx_start, idx_end):
     """Return the slice required to include the idx bounds."""
-    return slice(idx_start, idx_end+1)
-   
+    return slice(idx_start, idx_end + 1)
 
-def pad_slice(slc, padding, min_start=0, max_stop=np.inf): 
+
+def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
     """
     Increase/decrease the slice with the padding argument.
-    
+
     Parameters
     ----------
     slc : slice
@@ -301,7 +291,7 @@ def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
     list_slices : TYPE
         The list of slices after applying padding.
     """
-    
+
     new_slice = slice(max(slc.start - padding, 0), min(slc.stop + padding, max_stop))
     return new_slice
 
@@ -309,7 +299,7 @@ def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
 def pad_slices(list_slices, padding, valid_shape):
     """
     Increase/decrease the list of slices with the padding argument.
-    
+
     Parameters
     ----------
     list_slices : list
@@ -317,104 +307,110 @@ def pad_slices(list_slices, padding, valid_shape):
     padding : (int or tuple)
         Padding to be applied on each slice.
     valid_shape : tuple
-        The shape of the array which the slices should be valid on. 
+        The shape of the array which the slices should be valid on.
 
     Returns
     -------
     list_slices : TYPE
         The list of slices after applying padding.
     """
-    # Check the inputs 
+    # Check the inputs
     if isinstance(padding, int):
         padding = [padding] * len(list_slices)
     if isinstance(valid_shape, int):
         valid_shape = [valid_shape] * len(list_slices)
     if isinstance(padding, (list, tuple)) and len(padding) != len(valid_shape):
-        raise ValueError("Invalid padding. The length of padding should be the same as the length of valid_shape.")
-    # Apply padding 
-    list_slices = [pad_slice(s, padding=p, min_start=0, max_stop=valid_shape[i]) for i, (s, p) in enumerate(zip(list_slices, padding))]
+        raise ValueError(
+            "Invalid padding. The length of padding should be the same as the length of valid_shape."
+        )
+    # Apply padding
+    list_slices = [
+        pad_slice(s, padding=p, min_start=0, max_stop=valid_shape[i])
+        for i, (s, p) in enumerate(zip(list_slices, padding))
+    ]
     return list_slices
 
 
 # min_size = 10
 # min_start = 0
-# max_stop = 20 
+# max_stop = 20
 # slc = slice(1, 5)   # left bound
 # slc = slice(15, 20) # right bound
 # slc = slice(8, 12) # middle
 
+
 def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
-     """
-     Enlarge a slice object to have at least a size of min_size. 
-     
-     The function enforces the left and right bounds of the slice by max_stop and min_start.
-     If the original slice size is larger than min_size, the original slice will be returned.
-                 
-     Parameters
-     ----------
-     slc : slice
-         The original slice object to be enlarged.
-     min_size : min_size
-         The desired minimum size of the new slice.
-     min_start : int, optional
-        The default is np.inf.
-        The minimum value for the start of the new slice.
-        The default is 0.
-     max_stop : int
-         The maximum value for the stop of the new slice.
+    """
+    Enlarge a slice object to have at least a size of min_size.
 
-     Returns
-     -------
-     slice
-         The new slice object with a size of at least min_size and respecting the left and right bounds.
+    The function enforces the left and right bounds of the slice by max_stop and min_start.
+    If the original slice size is larger than min_size, the original slice will be returned.
 
-     """
-     # Get slice size 
-     slice_size = get_slice_size(slc)
-     
-     # If slice size larger than min_size, return the slice 
-     if slice_size >= min_size:
-         return slc
-          
-     # Calculate the number of points to add on both sides
-     n_indices_to_add = min_size - slice_size
-     add_to_left = add_to_right = n_indices_to_add // 2
-     
-     # If n_indices_to_add is odd, add + 1 on the left 
-     if n_indices_to_add % 2 == 1:
-         add_to_left += 1
-     
-     # Adjust adding for left and right bounds 
-     naive_start = slc.start - add_to_left 
-     naive_stop = slc.stop + add_to_right
-     if naive_start <= min_start:
-         exceeding_left_size = min_start - naive_start
-         add_to_right += exceeding_left_size
-         add_to_left -= exceeding_left_size
-     if naive_stop >= max_stop:
-         exceeding_right_size = naive_stop - max_stop
-         add_to_right -= exceeding_right_size
-         add_to_left += exceeding_right_size
-     
-     # Define new slice 
-     start = slc.start - add_to_left
-     stop = slc.stop + add_to_right
-     new_slice = slice(start, stop) 
-     
-     # Check 
-     assert  get_slice_size(new_slice) == min_size
-     
-     # Return new slice 
-     return new_slice
- 
+    Parameters
+    ----------
+    slc : slice
+        The original slice object to be enlarged.
+    min_size : min_size
+        The desired minimum size of the new slice.
+    min_start : int, optional
+       The default is np.inf.
+       The minimum value for the start of the new slice.
+       The default is 0.
+    max_stop : int
+        The maximum value for the stop of the new slice.
+
+    Returns
+    -------
+    slice
+        The new slice object with a size of at least min_size and respecting the left and right bounds.
+
+    """
+    # Get slice size
+    slice_size = get_slice_size(slc)
+
+    # If slice size larger than min_size, return the slice
+    if slice_size >= min_size:
+        return slc
+
+    # Calculate the number of points to add on both sides
+    n_indices_to_add = min_size - slice_size
+    add_to_left = add_to_right = n_indices_to_add // 2
+
+    # If n_indices_to_add is odd, add + 1 on the left
+    if n_indices_to_add % 2 == 1:
+        add_to_left += 1
+
+    # Adjust adding for left and right bounds
+    naive_start = slc.start - add_to_left
+    naive_stop = slc.stop + add_to_right
+    if naive_start <= min_start:
+        exceeding_left_size = min_start - naive_start
+        add_to_right += exceeding_left_size
+        add_to_left -= exceeding_left_size
+    if naive_stop >= max_stop:
+        exceeding_right_size = naive_stop - max_stop
+        add_to_right -= exceeding_right_size
+        add_to_left += exceeding_right_size
+
+    # Define new slice
+    start = slc.start - add_to_left
+    stop = slc.stop + add_to_right
+    new_slice = slice(start, stop)
+
+    # Check
+    assert get_slice_size(new_slice) == min_size
+
+    # Return new slice
+    return new_slice
+
 
 def enlarge_slices(list_slices, min_size, valid_shape):
     """
-    Enlarge a list of slice object to have at least a size of min_size. 
-     
+    Enlarge a list of slice object to have at least a size of min_size.
+
     The function enforces the left and right bounds of the slice to be between 0 and valid_shape.
     If the original slice size is larger than min_size, the original slice will be returned.
-    
+
     Parameters
     ----------
     list_slices : list
@@ -422,30 +418,28 @@ def enlarge_slices(list_slices, min_size, valid_shape):
     min_size : (int or tuple)
         Minimum size of the output slice.
     valid_shape : tuple
-        The shape of the array which the slices should be valid on. 
+        The shape of the array which the slices should be valid on.
 
     Returns
     -------
     list_slices : list
         The list of slices after enlarging it (if necessary).
     """
-    # Check the inputs 
+    # Check the inputs
     if isinstance(min_size, int):
         min_size = [min_size] * len(list_slices)
     if isinstance(valid_shape, int):
         valid_shape = [valid_shape] * len(list_slices)
     if isinstance(min_size, (list, tuple)) and len(min_size) != len(min_size):
-        raise ValueError("Invalid min_size. The length of min_size should be the same as the length of valid_shape.")
-    # Enlarge the slice  
-    list_slices = [enlarge_slice(slc, min_size=s, min_start=0, max_stop=valid_shape[i]) for i, (slc, s) in enumerate(zip(list_slices, min_size))]
+        raise ValueError(
+            "Invalid min_size. The length of min_size should be the same as the length of valid_shape."
+        )
+    # Enlarge the slice
+    list_slices = [
+        enlarge_slice(slc, min_size=s, min_start=0, max_stop=valid_shape[i])
+        for i, (slc, s) in enumerate(zip(list_slices, min_size))
+    ]
     return list_slices
 
+
 ###----------------------------------------------------------------------------.
- 
-
-
-
-
-
-
-

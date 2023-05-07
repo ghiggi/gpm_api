@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Wed Aug 17 09:31:39 2022
 
@@ -28,31 +27,31 @@ class GPM_Base_Accessor:
         from gpm_api.utils.geospatial import crop_by_country
 
         return crop_by_country(self._obj, name)
-    
+
     def crop_by_continent(self, name):
         """Crop xarray object by continent name."""
         from gpm_api.utils.geospatial import crop_by_continent
 
         return crop_by_continent(self._obj, name)
-    
+
     def get_crop_slices_by_extent(self, extent):
         """Get subsetting slices given the extent."""
         from gpm_api.utils.geospatial import get_crop_slices_by_extent
 
         return get_crop_slices_by_extent(self._obj, extent)
-    
+
     def get_crop_slices_by_country(self, name):
         """Get subsetting slices given the country name."""
         from gpm_api.utils.geospatial import get_crop_slices_by_country
 
         return get_crop_slices_by_country(self._obj, name)
-    
+
     def get_crop_slices_by_continent(self, name):
         """Get subsetting slices given the continent name."""
         from gpm_api.utils.geospatial import get_crop_slices_by_continent
 
         return get_crop_slices_by_continent(self._obj, name)
-    
+
     @property
     def pyresample_area(self):
         from gpm_api.utils.geospatial import get_pyresample_area
@@ -94,7 +93,7 @@ class GPM_Base_Accessor:
         from gpm_api.utils.checks import has_contiguous_scans
 
         return has_contiguous_scans(self._obj)
-    
+
     @property
     def has_missing_granules(self):
         from gpm_api.utils.checks import has_missing_granules
@@ -106,27 +105,27 @@ class GPM_Base_Accessor:
         from gpm_api.utils.checks import has_valid_geolocation
 
         return has_valid_geolocation(self._obj)
-    
+
     @property
-    def start_time(self): 
+    def start_time(self):
         if "time" in self._obj.coords:
-            start_time = self._obj["time"].values[0] 
+            start_time = self._obj["time"].values[0]
         elif "gpm_time" in self._obj.coords:
-            start_time = self._obj["gpm_time"].values[0] 
-        else: 
+            start_time = self._obj["gpm_time"].values[0]
+        else:
             raise ValueError("Time coordinate not found")
-        return start_time 
-    
+        return start_time
+
     @property
     def end_time(self):
         if "time" in self._obj.coords:
-            end_time = self._obj["time"].values[-1] 
+            end_time = self._obj["time"].values[-1]
         elif "gpm_time" in self._obj.coords:
-            end_time = self._obj["gpm_time"].values[-1] 
-        else: 
+            end_time = self._obj["gpm_time"].values[-1]
+        else:
             raise ValueError("Time coordinate not found")
-        return end_time 
-    
+        return end_time
+
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm_api.utils.time import subset_by_time
 
@@ -151,17 +150,17 @@ class GPM_Base_Accessor:
         from gpm_api.utils.checks import get_slices_contiguous_granules
 
         return get_slices_contiguous_granules(self._obj, min_size=min_size)
-    
+
     def get_slices_valid_geolocation(self, min_size=2):
         from gpm_api.utils.checks import get_slices_valid_geolocation
 
         return get_slices_valid_geolocation(self._obj, min_size=min_size)
-    
+
     def get_slices_regular(self, min_size=2):
         from gpm_api.utils.checks import get_slices_regular
 
         return get_slices_regular(self._obj, min_size=min_size)
-    
+
     def plot_transect_line(self, ax=None, color="black"):
         from gpm_api.visualization.profile import plot_transect_line
 
@@ -173,22 +172,24 @@ class GPM_Base_Accessor:
 
         p = plot_swath_lines(self._obj, ax=ax, **kwargs)
         return p
-    
-    def label_object(self, 
-                     variable=None,
-                     min_value_threshold=0.1,
-                     max_value_threshold=np.inf,
-                     min_area_threshold=1,
-                     max_area_threshold=np.inf,
-                     footprint=None,
-                     sort_by="area",
-                     sort_decreasing=True,
-                     label_name="label"):
+
+    def label_object(
+        self,
+        variable=None,
+        min_value_threshold=0.1,
+        max_value_threshold=np.inf,
+        min_area_threshold=1,
+        max_area_threshold=np.inf,
+        footprint=None,
+        sort_by="area",
+        sort_decreasing=True,
+        label_name="label",
+    ):
         from gpm_api.patch.labels import label_xarray_object
-        
+
         xr_obj = label_xarray_object(
             self._obj,
-            variable=variable, 
+            variable=variable,
             # Labels options
             min_value_threshold=min_value_threshold,
             max_value_threshold=max_value_threshold,
@@ -196,10 +197,10 @@ class GPM_Base_Accessor:
             max_area_threshold=max_area_threshold,
             footprint=footprint,
             sort_by=sort_by,
-            sort_decreasing=sort_decreasing
-            )
+            sort_decreasing=sort_decreasing,
+        )
         return xr_obj
-           
+
     def labels_patch_generator(
         self,
         variable=None,
@@ -218,7 +219,7 @@ class GPM_Base_Accessor:
 
         gen = labels_patch_generator(
             self._obj,
-            variable=variable, 
+            variable=variable,
             # Labels options
             min_value_threshold=min_value_threshold,
             max_value_threshold=max_value_threshold,
@@ -233,7 +234,7 @@ class GPM_Base_Accessor:
             min_patch_size=min_patch_size,
         )
         return gen
-    
+
 
 @xr.register_dataset_accessor("gpm_api")
 class GPM_Dataset_Accessor(GPM_Base_Accessor):
@@ -258,48 +259,53 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
         return title
 
-    def plot_map(self,
-                 variable, 
-                 ax=None, 
-                 add_colorbar=True,
-                 add_swath_lines=True, 
-                 interpolation="nearest", # used only for GPM grid object
-                 fig_kwargs={}, 
-                 subplot_kwargs={},
-                 cbar_kwargs={},
-                 **plot_kwargs,
-                 ):
+    def plot_map(
+        self,
+        variable,
+        ax=None,
+        add_colorbar=True,
+        add_swath_lines=True,
+        interpolation="nearest",  # used only for GPM grid object
+        fig_kwargs={},
+        subplot_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
         from gpm_api.visualization.plot import plot_map
-        
+
         da = self._obj[variable]
-        p = plot_map(ax=ax, da=da,
-                     add_colorbar=add_colorbar,
-                     add_swath_lines=add_swath_lines, 
-                     interpolation=interpolation, 
-                     fig_kwargs=fig_kwargs, 
-                     subplot_kwargs=subplot_kwargs,
-                     cbar_kwargs=cbar_kwargs,
-                     **plot_kwargs,
-                     )
+        p = plot_map(
+            ax=ax,
+            da=da,
+            add_colorbar=add_colorbar,
+            add_swath_lines=add_swath_lines,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
         return p
-    
-    def plot_image(self, 
-                   variable,
-                   ax=None,
-                   add_colorbar=True, 
-                   interpolation="nearest",
-                   fig_kwargs={}, 
-                   cbar_kwargs={},
-                   **plot_kwargs,
-                   ):
+
+    def plot_image(
+        self,
+        variable,
+        ax=None,
+        add_colorbar=True,
+        interpolation="nearest",
+        fig_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
         from gpm_api.visualization.plot import plot_image
 
         da = self._obj[variable]
         p = plot_image(
-            da, ax=ax, 
+            da,
+            ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
-            fig_kwargs=fig_kwargs, 
+            fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
@@ -318,11 +324,11 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         n_patches=None,
         min_patch_size=None,
         padding=None,
-        add_colorbar=True, 
+        add_colorbar=True,
         interpolation="nearest",
-        fig_kwargs={}, 
+        fig_kwargs={},
         cbar_kwargs={},
-        **plot_kwargs
+        **plot_kwargs,
     ):
         from gpm_api.visualization.labels import plot_patches
 
@@ -339,9 +345,9 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             n_patches=n_patches,
             min_patch_size=min_patch_size,
             padding=padding,
-            add_colorbar=add_colorbar, 
+            add_colorbar=add_colorbar,
             interpolation=interpolation,
-            fig_kwargs=fig_kwargs, 
+            fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
@@ -349,21 +355,21 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 
 @xr.register_dataarray_accessor("gpm_api")
 class GPM_DataArray_Accessor(GPM_Base_Accessor):
-    
     def __init__(self, xarray_obj):
         super().__init__(xarray_obj)
-    
+
     def get_slices_var_equals(self, dim, values, union=True, criteria="all"):
         from gpm_api.utils.checks import get_slices_var_equals
 
-        return get_slices_var_equals(self._obj, dim=dim, values=values, 
-                                     union=union, criteria=criteria)
-    
+        return get_slices_var_equals(
+            self._obj, dim=dim, values=values, union=union, criteria=criteria
+        )
+
     def get_slices_var_between(self, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
         from gpm_api.utils.checks import get_slices_var_between
-        
+
         return get_slices_var_between(self._obj, dim=dim, vmin=vmin, vmax=vmax, criteria=criteria)
-    
+
     def title(
         self,
         prefix_product=True,
@@ -384,67 +390,78 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         )
         return title
 
-    def plot_map(self, ax=None, 
-                 add_colorbar=True,
-                 add_swath_lines=True, 
-                 interpolation="nearest", # used only for GPM grid object
-                 fig_kwargs={}, 
-                 subplot_kwargs={},
-                 cbar_kwargs={},
-                 **plot_kwargs,
-                 ):
+    def plot_map(
+        self,
+        ax=None,
+        add_colorbar=True,
+        add_swath_lines=True,
+        interpolation="nearest",  # used only for GPM grid object
+        fig_kwargs={},
+        subplot_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
         from gpm_api.visualization.plot import plot_map
-        da = self._obj
-        p = plot_map(ax=ax, da=da,
-                     add_colorbar=add_colorbar,
-                     add_swath_lines=add_swath_lines, 
-                     interpolation=interpolation, 
-                     fig_kwargs=fig_kwargs, 
-                     subplot_kwargs=subplot_kwargs,
-                     cbar_kwargs=cbar_kwargs,
-                     **plot_kwargs,
-                     )
-        return p
-
-    def plot_map_mesh(self, ax=None, 
-                      edgecolors="k",
-                      linewidth=0.1, 
-                      fig_kwargs={}, 
-                      subplot_kwargs={},
-                      **plot_kwargs,
-                      ):
-        from gpm_api.visualization.plot import plot_map_mesh
 
         da = self._obj
-        p = plot_map_mesh(ax=ax, da=da,
-                          edgecolors=edgecolors,
-                          linewidth=linewidth,
-                          fig_kwargs=fig_kwargs, 
-                          subplot_kwargs=subplot_kwargs,
-                          **plot_kwargs,
-        )
-        return p
-
-    def plot_image(self, ax=None,
-                   add_colorbar=True, 
-                   interpolation="nearest",
-                   fig_kwargs={}, 
-                   cbar_kwargs={},
-                   **plot_kwargs,
-                   ):
-        from gpm_api.visualization.plot import plot_image
-
-        da = self._obj
-        p = plot_image(
-            da, ax=ax, 
+        p = plot_map(
+            ax=ax,
+            da=da,
             add_colorbar=add_colorbar,
+            add_swath_lines=add_swath_lines,
             interpolation=interpolation,
-            fig_kwargs=fig_kwargs, 
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
         return p
 
+    def plot_map_mesh(
+        self,
+        ax=None,
+        edgecolors="k",
+        linewidth=0.1,
+        fig_kwargs={},
+        subplot_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.plot import plot_map_mesh
+
+        da = self._obj
+        p = plot_map_mesh(
+            ax=ax,
+            da=da,
+            edgecolors=edgecolors,
+            linewidth=linewidth,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
+        return p
+
+    def plot_image(
+        self,
+        ax=None,
+        add_colorbar=True,
+        interpolation="nearest",
+        fig_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.plot import plot_image
+
+        da = self._obj
+        p = plot_image(
+            da,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+        return p
 
     def plot_patches(
         self,
@@ -458,11 +475,11 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         n_patches=None,
         min_patch_size=None,
         padding=None,
-        add_colorbar=True, 
+        add_colorbar=True,
         interpolation="nearest",
-        fig_kwargs={}, 
+        fig_kwargs={},
         cbar_kwargs={},
-        **plot_kwargs
+        **plot_kwargs,
     ):
         from gpm_api.visualization.labels import plot_patches
 
@@ -478,9 +495,9 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             n_patches=n_patches,
             min_patch_size=min_patch_size,
             padding=padding,
-            add_colorbar=add_colorbar, 
+            add_colorbar=add_colorbar,
             interpolation=interpolation,
-            fig_kwargs=fig_kwargs, 
+            fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )

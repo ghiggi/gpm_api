@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Fri Sep  9 12:14:03 2022
 
 @author: ghiggi
 """
-import gpm_api
-import cartopy
-import numpy as np
-import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
+
+import gpm_api
 
 
 def compare_products(
@@ -84,7 +81,7 @@ def compare_products(
     da = list_da[0]
 
     # - Plot map
-    p = da.gpm_api.plot(ax=ax, add_colorbar=False)
+    da.gpm_api.plot(ax=ax, add_colorbar=False)
 
     # - Set title
     title = da.gpm_api.title(time_idx=0, add_timestep=False)
@@ -101,7 +98,7 @@ def compare_products(
     da = list_da[1]
 
     # - Plot map
-    p = da.gpm_api.plot(ax=ax, add_colorbar=True)
+    da.gpm_api.plot(ax=ax, add_colorbar=True)
 
     # TODO: REMOVE Y AXIS
     # ax.set_yticklabels(None)

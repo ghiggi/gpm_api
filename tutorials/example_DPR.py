@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sat Dec 10 14:16:00 2022
 
 @author: ghiggi
 """
-import gpm_api
 import datetime
+
+import gpm_api
+from gpm_api.utils.countries import get_country_extent
 
 base_dir = "/home/ghiggi/GPM"
 start_time = datetime.datetime.strptime("2020-07-05 02:00:00", "%Y-%m-%d %H:%M:%S")
@@ -94,7 +95,7 @@ print(dir(ds.gpm_api))
 print(dir(ds[variable].gpm_api))
 
 #### - Check geometry and dimensions
-ds.gpm_api.is_grid   # False
+ds.gpm_api.is_grid  # False
 ds.gpm_api.is_orbit  # True
 
 ds.gpm_api.is_spatial_2d  # False, because not only cross-track and along-track
@@ -120,7 +121,7 @@ ds[variable].gpm_api.title(add_timestep=True)
 ####--------------------------------------------------------------------------.
 #### Plotting with gpm_api
 # - In geographic space
-ds[variable].gpm_api.plot_map()  
+ds[variable].gpm_api.plot_map()
 ds[variable].isel(along_track=slice(0, 500)).gpm_api.plot_map()
 
 # - In swath view
@@ -128,17 +129,16 @@ ds[variable].gpm_api.plot_image()  # In swath view
 ds[variable].isel(along_track=slice(0, 500)).gpm_api.plot_image()
 
 ####--------------------------------------------------------------------------.
-#### Zoom on a geographic area 
-from gpm_api.utils.countries import get_country_extent
+#### Zoom on a geographic area
 title = ds.gpm_api.title(add_timestep=False)
 extent = get_country_extent("United States")
-p = ds[variable].gpm_api.plot_map()  
+p = ds[variable].gpm_api.plot_map()
 p.axes.set_extent(extent)
 p.axes.set_title(label=title)
 
 ####--------------------------------------------------------------------------.
-#### Crop the dataset 
-# - A orbit can cross an area multiple times 
+#### Crop the dataset
+# - A orbit can cross an area multiple times
 # - Therefore first retrieve the crossing slices, and then select the intersection of interest
 # - The extent must be specified following the cartopy and matplotlib convention
 # ---> extent = [lon_min, lon_max, lat_min, lat_max]
@@ -148,21 +148,20 @@ print(list_slices)
 for slc in list_slices:
     da_subset = ds[variable].isel(along_track=slc)
     slice_title = da_subset.gpm_api.title(add_timestep=True)
-    p = da_subset.gpm_api.plot_map()  
+    p = da_subset.gpm_api.plot_map()
     p.axes.set_extent(extent)
     p.axes.set_title(label=slice_title)
 
 ####--------------------------------------------------------------------------.
-#### Plot precipitation patches 
+#### Plot precipitation patches
 da = ds[variable].isel(along_track=slice(0, 10000))
 da.gpm_api.plot_patches(
     min_value_threshold=10,
     min_area_threshold=5,
     footprint=3,
-    sort_by="max", # "area"
+    sort_by="max",  # "area"
     sort_decreasing=True,
     n_patches=10,
-    min_patch_size = (48, 20),
+    min_patch_size=(48, 20),
     interpolation="nearest",
 )
-

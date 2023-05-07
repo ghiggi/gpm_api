@@ -32,36 +32,36 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
-    "Topic :: Scientific/Engineering :: GIS", 
+    "Topic :: Scientific/Engineering :: GIS",
     "Topic :: Scientific/Engineering :: Hydrology",
-    "Topic :: Scientific/Engineering :: Image Processing", 
+    "Topic :: Scientific/Engineering :: Image Processing",
 ]
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
     "xarray",
-    "h5py", 
+    "h5py",
     "netcdf4",
-    "dask", 
+    "dask",
     "pyresample",
     "trollsift",
     "cartopy>=0.20.0",  # should be installed with conda to avoid GEOS compatibility issues.
      # "curl", can be installed with conda.  Make it optional in the code.
     "wget",
     "tqdm",
+    "click",
 ]
 requires-python = ">=3.8"
 dynamic = ["version"]
 
 [project.optional-dependencies]
 image = ["dask-image", "scikit-image"]
-dev = ["pre-commit", "black", "isort", "flake8", 
-       "pytest", "pytest-cov", 
+dev = ["pre-commit",
+       "black", "black[jupyter]", "blackdoc", "ruff",
+       "pytest", "pytest-cov", "pytest-mock", "pydantic",
        "pip-tools", "bumpver", "twine",
        "setuptools>=61.0.0", "wheel",
        "dask-image", "scikit-image",
-       "sphinx", "sphinx-gallery", "nbsphinx"]
-doc = ["sphinx", "sphinx-gallery", "nbsphinx"] # sphinx-rtd-theme numpydoc pandodc
-tests = ["pre-commit", "pytest", "pytest-cov"]
+       "sphinx", "sphinx-gallery", "sphinx_rtd_theme", "nbsphinx"]
 
 [project.urls]
 Homepage = "https://github.com/ghiggi/gpm_api"
@@ -86,13 +86,6 @@ packages = ["gpm_api"] # explicitly list the packages in modules
 download_daily_gpm_data="gpm_api.scripts.download_daily_gpm_data:download_daily_gpm_data"
 download_monthly_gpm_data="gpm_api.scripts.download_monthly_gpm_data:download_monthly_gpm_data"
 
-[tool.isort]
-profile = "black"
-skip_gitignore = true
-multi_line_output = 3
-line_length = 100
-skip = [".tox", ".venv", "build", "dist"]
-
 [tool.black]
 line-length = 100
 # skip-string-normalization = true
@@ -104,32 +97,48 @@ target-version = [
     "py311",
 ]
 
-[tool.pylint]
-    [tool.pylint.main]
-    extension-pkg-whitelist = [
-        "numpy",
-        "scipy",
-    ]
-    ignore = "_version.py"
-    load-plugins = [
-        "pylint.extensions.no_self_use",
-    ]
+[tool.ruff]
+select = ["F",
+	  "E",
+	  "I001",
+	  "W",
+	  "UP",
+	  "Q",
+	  # "SIM",
+	  # "PTH",
+	  #"RET",
+	 ]
+ignore = ["E722"]
+line-length = 120
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
+unfixable = []
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    "dev*",
+    "gpm_api/test*",
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
 
-    [tool.pylint.message_control]
-    disable = [
-        "R0801",
-    ]
-
-    [tool.pylint.reports]
-    output-format = "colorized"
-
-    [tool.pylint.design]
-    max-args = 20
-    max-locals = 50
-    max-branches = 30
-    max-statements = 80
-    max-attributes = 25
-    max-public-methods = 75
 
 [tool.coverage]
     [tool.coverage.run]
@@ -138,10 +147,8 @@ target-version = [
         "*dev*",
         "*docs*",
         "*tutorials*",
-        "*tests*",
+        "*/gpm_api/tests*",
         "*/gpm_api/cli*",
-        "*/gpm_api/0_OLD*",
-        # "*/gpm_api/custom_script.py",
     ]
 
     [tool.coverage.report]
@@ -150,14 +157,3 @@ target-version = [
         "def __repr__",
         "def __str__",
     ]
-
-
-
-
-
-
-
- 
-   
-
- 

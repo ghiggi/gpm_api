@@ -95,7 +95,5 @@ plt.show()
 plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")
 plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("GPM_LatentHeating")
 
-p = da_profile.plot.pcolormesh(
-    x=x_direction, y="height", cbar_kwargs=cbar_kwargs, **plot_kwargs
-)
+p = da_profile.plot.pcolormesh(x=x_direction, y="height", cbar_kwargs=cbar_kwargs, **plot_kwargs)
 plt.show()

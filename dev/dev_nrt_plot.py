@@ -162,12 +162,12 @@ ds_latent = ds_latent.gpm_api.crop(bbox)
 ds_dpr["dfrMeasured"] = ds_dpr["zFactorMeasured"].sel(frequency="Ku") - ds_dpr[
     "zFactorMeasured"
 ].sel(frequency="Ka")
-ds_dpr["dfrFinal"] = ds_dpr["zFactorFinal"].sel(frequency="Ku") - ds_dpr[
-    "zFactorFinal"
+ds_dpr["dfrFinal"] = ds_dpr["zFactorFinal"].sel(frequency="Ku") - ds_dpr["zFactorFinal"].sel(
+    frequency="Ka"
+)
+ds_dpr["dfrFinalNearSurface "] = ds_dpr["zFactorFinalNearSurface"].sel(frequency="Ku") - ds_dpr[
+    "zFactorFinalNearSurface"
 ].sel(frequency="Ka")
-ds_dpr["dfrFinalNearSurface "] = ds_dpr["zFactorFinalNearSurface"].sel(
-    frequency="Ku"
-) - ds_dpr["zFactorFinalNearSurface"].sel(frequency="Ka")
 
 # -----------------------------------------------------------------------------.
 #### Extract profile along transect

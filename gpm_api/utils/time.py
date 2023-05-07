@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Mon Oct 31 13:24:41 2022
 
@@ -7,11 +6,11 @@ Created on Mon Oct 31 13:24:41 2022
 """
 import numpy as np
 import pandas as pd
-from gpm_api.io.checks import (
-    check_time,
-    check_start_end_time,
-)
 
+from gpm_api.io.checks import (
+    check_start_end_time,
+    check_time,
+)
 
 ####--------------------------------------------------------------------------.
 ############################
@@ -106,9 +105,7 @@ def has_nat(timesteps):
     return np.any(is_nat(timesteps))
 
 
-def interpolate_nat(
-    timesteps, method="linear", limit=5, limit_direction=None, limit_area=None
-):
+def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, limit_area=None):
     """
     Fill NaT values using an interpolation method.
 
@@ -202,9 +199,7 @@ def ensure_time_validity(xr_obj, limit=10):
         return xr_obj
 
     # Interpolate if maximum 10 timesteps are missing
-    timesteps = interpolate_nat(
-        timesteps, method="linear", limit=limit, limit_area="inside"
-    )
+    timesteps = interpolate_nat(timesteps, method="linear", limit=limit, limit_area="inside")
 
     # Check if there are still residual NaT
     if np.any(is_nat(timesteps)):

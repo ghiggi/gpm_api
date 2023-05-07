@@ -92,15 +92,11 @@ da_labels_area.name = "precip_label_area"
 
 # da_labels_area = da_labels.where(da_labels_area.values < 20)
 
-p = da_labels_area.plot.imshow(
-    x="along_track", y="cross_track", cmap="Spectral", vmin=1
-)
+p = da_labels_area.plot.imshow(x="along_track", y="cross_track", cmap="Spectral", vmin=1)
 p.cmap.set_under("white")
 plt.show()
 
-p = da_labels_area.plot.imshow(
-    x="along_track", y="cross_track", cmap="Spectral", vmin=1, vmax=20
-)
+p = da_labels_area.plot.imshow(x="along_track", y="cross_track", cmap="Spectral", vmin=1, vmax=20)
 p.cmap.set_under("white")
 plt.show()
 
@@ -122,9 +118,7 @@ def bbox(img):
 
 for label_id in np.arange(1, n_plots):
     rmin, rmax, cmin, cmax = bbox(da_labels_area.data == label_id)
-    ds_subset = ds.isel(
-        along_track=slice(rmin, rmax + 1), cross_track=slice(cmin, cmax + 1)
-    )
+    ds_subset = ds.isel(along_track=slice(rmin, rmax + 1), cross_track=slice(cmin, cmax + 1))
 
     da_precip_subset = ds_subset["precipRateNearSurface"]
     p = da_precip_subset.plot.imshow(
@@ -152,9 +146,7 @@ data = da_precip_subset.values
 swath_def = SwathDefinition(lons, lats)
 area_def = swath_def.compute_optimal_bb_area()
 
-data_proj = resample_nearest(
-    swath_def, data, area_def, radius_of_influence=20000, fill_value=None
-)
+data_proj = resample_nearest(swath_def, data, area_def, radius_of_influence=20000, fill_value=None)
 crs = area_def.to_cartopy_crs()
 fig, ax = plt.subplots(subplot_kw=dict(projection=crs))
 coastlines = ax.coastlines()
@@ -166,9 +158,7 @@ cbar = plt.colorbar()
 #### Check pixel centroids
 import cartopy.crs as ccrs
 
-da_precip_subset1 = da_precip_subset.isel(
-    along_track=slice(0, 5), cross_track=slice(0, 5)
-)
+da_precip_subset1 = da_precip_subset.isel(along_track=slice(0, 5), cross_track=slice(0, 5))
 lon = da_precip_subset1["lon"]
 lat = da_precip_subset1["lat"]
 fig, ax = plt.subplots(subplot_kw=dict(projection=ccrs.PlateCarree()))
@@ -237,9 +227,7 @@ ds = ds.set_coords("precip_label_max")
 
 for label_id in np.arange(1, len(np.unique(ds["precip_label_max"]))):
     rmin, rmax, cmin, cmax = bbox(ds["precip_label_max"] == label_id)
-    ds_subset = ds.isel(
-        along_track=slice(rmin, rmax + 1), cross_track=slice(cmin, cmax + 1)
-    )
+    ds_subset = ds.isel(along_track=slice(rmin, rmax + 1), cross_track=slice(cmin, cmax + 1))
 
     da_precip_subset = ds_subset["precipRateNearSurface"]
     p = da_precip_subset.plot.imshow(

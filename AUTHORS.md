@@ -9,4 +9,3 @@ GPM-API is available on [GitHub](https://github.com/ghiggi/gpm_api) and was crea
 ## Contributors (in order of contributions)
 
 - Randy Chase, GitHub: [@fhesze](https://github.com/dopplerchase), Email: <randy.chase12@gmail.com>
- 

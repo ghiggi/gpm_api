@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sat Dec 10 18:44:25 2022
 
 @author: ghiggi
 """
-import pyproj
-import numpy as np
-import xarray as xr
 import cartopy.crs as ccrs
+import numpy as np
+import pyproj
+import xarray as xr
+
 from gpm_api.utils.slices import ensure_is_slice, get_slice_size
 from gpm_api.utils.utils_cmap import get_colormap_setting
 
@@ -23,9 +23,8 @@ def optimize_transect_slices(
     # --> Left and right padding make sense only when trim_threshold is provided
     # TODO: Min_length, max_length arguments
     # --------------------------------------------------------------------------.
-    if isinstance(obj, xr.Dataset):
-        if variable is None:
-            raise ValueError("If providing a xr.Dataset, 'variable' must be specified.")
+    if isinstance(obj, xr.Dataset) and variable is None:
+        raise ValueError("If providing a xr.Dataset, 'variable' must be specified.")
 
     # --------------------------------------------------------------------------.
     # Check profile slice validity
@@ -36,18 +35,13 @@ def optimize_transect_slices(
     if along_track_size == 1 and cross_track_size == 1:
         raise ValueError("Both 'along_track' and 'cross_track' slices have size 1.")
     if along_track_size != 1 and cross_track_size != 1:
-        raise ValueError(
-            "Either 'along_track' or 'cross_track' must have a slice of size 1."
-        )
+        raise ValueError("Either 'along_track' or 'cross_track' must have a slice of size 1.")
     # --------------------------------------------------------------------------.
     # Get object transect
     obj_transect = obj.isel(transect_slices)
 
     # Retrieve transect dimension name
-    if along_track_size == 1:
-        transect_dim_name = "cross_track"
-    else:
-        transect_dim_name = "along_track"
+    transect_dim_name = "cross_track" if along_track_size == 1 else "along_track"
 
     # Transpose transect dimension to first dimension
     obj_transect = obj_transect.transpose(transect_dim_name, ...)
@@ -69,14 +63,11 @@ def optimize_transect_slices(
         idx_above_thr = np.where(obj_transect.data > trim_threshold)[0]
     else:  # 2D case (profile) or more ... (i.e. time or ensemble simulations)
         any_axis = tuple(np.arange(1, ndim_transect))
-        idx_above_thr = np.where(
-            np.any(obj_transect.data > trim_threshold, axis=any_axis)
-        )[0]
+        idx_above_thr = np.where(np.any(obj_transect.data > trim_threshold, axis=any_axis))[0]
 
     # --------------------------------------------------------------------------.
     # Check there are residual data along the transect
     if len(idx_above_thr) == 0:
-        trim_variable = obj_transect.name
         raise ValueError(
             "No {trim_variable} value above trim_threshold={trim_threshold}. Try to decrease it."
         )
@@ -133,11 +124,10 @@ def get_transect_slices(
         raise ValueError(f"Requires xarray object with dimensions {required_dims}")
     # - Verifiy valid input combination
     # --> If input xr.Dataset and variable, lat and lon not specified, raise Error
-    if isinstance(obj, xr.Dataset):
-        if lat is None and lon is None and variable is None:
-            raise ValueError(
-                "Need to provide 'variable' if passing a xr.Dataset and not specifying 'lat' / 'lon'."
-            )
+    if isinstance(obj, xr.Dataset) and lat is None and lon is None and variable is None:
+        raise ValueError(
+            "Need to provide 'variable' if passing a xr.Dataset and not specifying 'lat' / 'lon'."
+        )
 
     # -------------------------------------------------------------------------.
     # If lon and lat are provided, derive center idx
@@ -151,9 +141,7 @@ def get_transect_slices(
     else:
         if isinstance(obj, xr.Dataset):
             if variable is None:
-                raise ValueError(
-                    "If providing a xr.Dataset, 'variable' must be specified."
-                )
+                raise ValueError("If providing a xr.Dataset, 'variable' must be specified.")
             da_variable = obj[variable].compute()
             obj[variable] = da_variable
         else:
@@ -189,9 +177,7 @@ def get_transect_slices(
 def plot_profile(da_profile, colorscale=None, ylim=None, ax=None):
     x_direction = da_profile["lon"].dims[0]
     # Retrieve title
-    title = da_profile.gpm_api.title(
-        time_idx=0, prefix_product=False, add_timestep=False
-    )
+    title = da_profile.gpm_api.title(time_idx=0, prefix_product=False, add_timestep=False)
     # Retrieve colormap configs
     plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting(colorscale)
     # Plot

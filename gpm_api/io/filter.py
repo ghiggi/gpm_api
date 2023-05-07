@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Thu Oct 13 11:30:46 2022
 
 @author: ghiggi
 """
-import re
 import datetime
+import re
+
 import numpy as np
+
 from gpm_api.io.checks import (
-    check_product,
     check_filepaths,
+    check_product,
     check_start_end_time,
     check_version,
 )
-from gpm_api.utils.utils_string import str_subset
-from gpm_api.io.patterns import GPM_products_pattern_dict
 from gpm_api.io.info import (
+    get_info_from_filepath,
     get_start_end_time_from_filepaths,
     get_version_from_filepaths,
-    get_info_from_filepath,
 )
+from gpm_api.io.patterns import GPM_products_pattern_dict
+from gpm_api.utils.utils_string import str_subset
 
 
 def is_granule_within_time(start_time, end_time, file_start_time, file_end_time):
@@ -52,9 +53,7 @@ def is_granule_within_time(start_time, end_time, file_start_time, file_end_time)
 ##########################
 
 
-def _filter_filepath(
-    filepath, product=None, version=None, start_time=None, end_time=None
-):
+def _filter_filepath(filepath, product=None, version=None, start_time=None, end_time=None):
     """
     Check if a single filepath pass the filtering parameters.
 
@@ -91,7 +90,7 @@ def _filter_filepath(
     # Filter by version
     if version is not None:
         file_version = info_dict["version"]
-        file_version = int(re.findall("\d+", file_version)[0])
+        file_version = int(re.findall("\\d+", file_version)[0])
         if file_version != version:
             return None
 
@@ -107,9 +106,7 @@ def _filter_filepath(
     if start_time is not None and end_time is not None:
         file_start_time = info_dict["start_time"]
         file_end_time = info_dict["end_time"]
-        if not is_granule_within_time(
-            start_time, end_time, file_start_time, file_end_time
-        ):
+        if not is_granule_within_time(start_time, end_time, file_start_time, file_end_time):
             return None
 
     return filepath

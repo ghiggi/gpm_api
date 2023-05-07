@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sun Aug 14 20:02:18 2022
 @author: ghiggi
 """
-import os
 import datetime
+import os
+
 import numpy as np
 
 
 def is_not_empty(x):
-    return not not x
+    return x
 
 
 def is_empty(x):
@@ -74,26 +74,18 @@ def check_groups(groups):
 
 def check_version(version):
     if not isinstance(version, int):
-        raise ValueError(
-            "Please specify the GPM version with an integer between 5 and 7."
-        )
+        raise ValueError("Please specify the GPM version with an integer between 5 and 7.")
     if version not in [5, 6, 7]:
-        raise ValueError(
-            "Download/Reading have been implemented only for GPM versions 5, 6 and 7."
-        )
+        raise ValueError("Download/Reading have been implemented only for GPM versions 5, 6 and 7.")
 
 
 def check_product(product, product_type):
     from gpm_api.io.products import available_products
 
     if not isinstance(product, str):
-        raise ValueError(
-            "'Ask for a single product at time.'product' must be a single string."
-        )
+        raise ValueError("'Ask for a single product at time.'product' must be a single string.")
     if product not in available_products(product_type=product_type):
-        raise ValueError(
-            "Please provide a valid GPM product --> gpm_api.available_products()."
-        )
+        raise ValueError("Please provide a valid GPM product --> gpm_api.available_products().")
 
 
 def check_product_type(product_type):
@@ -178,17 +170,13 @@ def check_scan_mode(scan_mode, product, version):
 
     # -------------------------------------------------------------------------.
     # Check that a single scan mode is specified
-    if scan_mode is not None:
-        if not isinstance(scan_mode, str):
-            raise ValueError("Specify a single 'scan_mode'.")
+    if scan_mode is not None and not isinstance(scan_mode, str):
+        raise ValueError("Specify a single 'scan_mode'.")
 
     # -------------------------------------------------------------------------.
     # Check that a valid scan mode is specified
-    if scan_mode is not None:
-        if not scan_mode in scan_modes:
-            raise ValueError(
-                f"For {product} product, valid scan_modes are {scan_modes}."
-            )
+    if scan_mode is not None and scan_mode not in scan_modes:
+        raise ValueError(f"For {product} product, valid scan_modes are {scan_modes}.")
 
     # -------------------------------------------------------------------------.
     return scan_mode

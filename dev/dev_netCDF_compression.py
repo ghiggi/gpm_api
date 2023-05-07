@@ -5,9 +5,10 @@ Created on Thu Mar  9 14:05:52 2023
 
 @author: ghiggi
 """
-# - Define xr.Dataset 
-ds_grid = xr.Dataset(data_vars={},
-                     coords=coords_dict,
+# - Define xr.Dataset
+ds_grid = xr.Dataset(
+    data_vars={},
+    coords=coords_dict,
 )
 
 ds_grid.to_netcdf("/tmp/dummy2.nc")
@@ -31,4 +32,3 @@ ds_grid["latitude"].encoding["compression"] = "blosc_zlib"
 ds_grid.to_netcdf("/tmp/dummy6.nc")
 ds_grid["latitude"].encoding["compression"] = "blosc_lz4hc"
 ds_grid.to_netcdf("/tmp/dummy7.nc")
-

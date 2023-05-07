@@ -1,107 +1,108 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sat Dec 10 18:42:28 2022
 
 @author: ghiggi
 """
-import numpy as np
 import cartopy
 import cartopy.crs as ccrs
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from scipy.ndimage import binary_dilation
+import numpy as np
 from matplotlib.collections import PolyCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from gpm_api.utils.utils_cmap import get_colormap_setting
+from scipy.ndimage import binary_dilation
 
+from gpm_api.utils.utils_cmap import get_colormap_setting
 
 ### TODO: Add xarray + cartopy  (xr_carto) (xr_mpl)
 # _plot_cartopy_xr_imshow
 # _plot_cartopy_xr_pcolormesh
 
 
-# TODO: modify ticklabels in all get_colorbar_settings in  grid and orbit 
+# TODO: modify ticklabels in all get_colorbar_settings in  grid and orbit
 # def get_colorbar_settings(name):
 #     # TODO: to customize as function of da.name
 #     plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")
 #     return (plot_kwargs, cbar_kwargs, ticklabels)
 
+
 def _preprocess_figure_args(ax, fig_kwargs={}, subplot_kwargs={}):
-    if ax is not None: 
+    if ax is not None:
         if len(subplot_kwargs) >= 1:
             raise ValueError("Provide `subplot_kwargs`only if `ax`is None")
         if len(fig_kwargs) >= 1:
-            raise ValueError("Provide `fig_kwargs` only if `ax`is None") 
-    
+            raise ValueError("Provide `fig_kwargs` only if `ax`is None")
+
     # If ax is not specified, specify the figure defaults
     # if ax is None:
-        # Set default figure size and dpi  
-        # fig_kwargs['figsize'] = (12, 10)
-        # fig_kwargs['dpi'] = 100
+    # Set default figure size and dpi
+    # fig_kwargs['figsize'] = (12, 10)
+    # fig_kwargs['dpi'] = 100
+
 
 def _preprocess_subplot_kwargs(subplot_kwargs):
     subplot_kwargs = subplot_kwargs.copy()
     if "projection" not in subplot_kwargs:
         subplot_kwargs["projection"] = ccrs.PlateCarree()
     return subplot_kwargs
-        
+
 
 def get_colorbar_settings(name, plot_kwargs={}, cbar_kwargs={}):
     # TODO: to customize as function of da.name
-    try: 
+    try:
         default_plot_kwargs, default_cbar_kwargs, default_ticklabels = get_colormap_setting(name)
-        default_cbar_kwargs['ticklabels'] = None
-    except: 
+        default_cbar_kwargs["ticklabels"] = None
+    except:
         default_plot_kwargs = {}
         default_cbar_kwargs = {}
-        default_ticklabels = None # to be placed in cbar_kwargs
-        
+
     # If the default is a segmented colormap (with ticks and ticklabels)
     if default_cbar_kwargs.get("ticks", None) is not None:
         # If specifying a custom vmin, vmax, norm or cmap args, remove  the defaults
         # - The discrete colorbar makes no sense anymore
-        if np.any(np.isin(["vmin","vmax", "norm", "cmap"], list(plot_kwargs.keys()))):
+        if np.any(np.isin(["vmin", "vmax", "norm", "cmap"], list(plot_kwargs.keys()))):
             default_cbar_kwargs.pop("ticks", None)
             default_cbar_kwargs.pop("ticklabels", None)
             default_plot_kwargs.pop("cmap", None)
             default_plot_kwargs.pop("norm", None)
             default_plot_kwargs.pop("vmin", None)
             default_plot_kwargs.pop("vmax", None)
-    
-    # If cmap is a string, retrieve colormap 
-    if isinstance(plot_kwargs.get("cmap", None), str): 
+
+    # If cmap is a string, retrieve colormap
+    if isinstance(plot_kwargs.get("cmap", None), str):
         plot_kwargs["cmap"] = plt.get_cmap(plot_kwargs["cmap"])
-                     
-    # Update defaults with custom kwargs 
+
+    # Update defaults with custom kwargs
     default_plot_kwargs.update(plot_kwargs)
     default_cbar_kwargs.update(cbar_kwargs)
-    
-    # Return the kwargs 
+
+    # Return the kwargs
     plot_kwargs = default_plot_kwargs
     cbar_kwargs = default_cbar_kwargs
-    
+
     # Remove vmin, vmax
-    # --> vmin and vmax is not accepted by PolyCollection 
+    # --> vmin and vmax is not accepted by PolyCollection
     # --> create norm or modify norm accordigly
     norm = plot_kwargs.get("norm", None)
     if norm is None:
-        norm = mpl.colors.Normalize(vmin=plot_kwargs.pop("vmin", None),
-                                    vmax=plot_kwargs.pop("vmax", None))
-        plot_kwargs["norm"] = norm 
-    else: 
-        if "vmin" in plot_kwargs: 
+        norm = mpl.colors.Normalize(
+            vmin=plot_kwargs.pop("vmin", None), vmax=plot_kwargs.pop("vmax", None)
+        )
+        plot_kwargs["norm"] = norm
+    else:
+        if "vmin" in plot_kwargs:
             if plot_kwargs["vmin"] is None:
                 _ = plot_kwargs.pop("vmin")
-            else: 
+            else:
                 plot_kwargs["norm"].vmin = plot_kwargs.pop("vmin")
 
-        if "vmax" in plot_kwargs: 
+        if "vmax" in plot_kwargs:
             if plot_kwargs["vmax"] is None:
                 _ = plot_kwargs.pop("vmax")
-            else: 
+            else:
                 plot_kwargs["norm"].vmax = plot_kwargs.pop("vmax")
-                
+
     return (plot_kwargs, cbar_kwargs)
 
 
@@ -138,50 +139,53 @@ def get_antimeridian_mask(lons, buffer=True):
 
 
 def get_masked_cells_polycollection(x, y, arr, mask, plot_kwargs):
-    from gpm_api.utils.area import _get_lonlat_corners, _from_corners_to_bounds, is_vertex_clockwise
-    
+    from gpm_api.utils.area import _from_corners_to_bounds, _get_lonlat_corners, is_vertex_clockwise
+
     # - Buffer mask by 1 to derive vertices of all masked QuadMesh
     mask = binary_dilation(mask)
-    
-    # - Get index of masked quadmesh 
+
+    # - Get index of masked quadmesh
     row_mask, col_mask = np.where(mask)
-    
+
     # - Retrieve values of masked cells
     array = arr[row_mask, col_mask]
-    
+
     # - Retrieve QuadMesh corners (m+1 x n+1)
     x_corners, y_corners = _get_lonlat_corners(x, y)
-    
+
     # - Retrieve QuadMesh bounds (m*n x 4)
     x_bounds = _from_corners_to_bounds(x_corners)
     y_bounds = _from_corners_to_bounds(y_corners)
-    
+
     # - Retrieve vertices of masked QuadMesh (n_masked, 4, 2)
     x_vertices = x_bounds[row_mask, col_mask]
     y_vertices = y_bounds[row_mask, col_mask]
-    
+
     vertices = np.stack((x_vertices, y_vertices), axis=2)
-    
+
     # Check that are counterclockwise oriented (check first vertex)
     # TODO: this check should be updated to use pyresample.future.spherical
     if is_vertex_clockwise(vertices[0, :, :]):
         vertices = vertices[:, ::-1, :]
-    
-    # - Define additional kwargs for PolyCollection 
+
+    # - Define additional kwargs for PolyCollection
     plot_kwargs = plot_kwargs.copy()
     if "edgecolors" not in plot_kwargs:
-        plot_kwargs["edgecolors"] = 'face' # 'none'
+        plot_kwargs["edgecolors"] = "face"  # 'none'
     if "linewidth" not in plot_kwargs:
         plot_kwargs["linewidth"] = 0
-    plot_kwargs["antialiaseds"] = False # to better plotting quality  
-    
-    # - Define PolyCollection 
-    coll = PolyCollection(verts=vertices,
-                          array=array,
-                          transform=ccrs.Geodetic(),
-                          **plot_kwargs,
-                          )
+    plot_kwargs["antialiaseds"] = False  # to better plotting quality
+
+    # - Define PolyCollection
+    coll = PolyCollection(
+        verts=vertices,
+        array=array,
+        transform=ccrs.Geodetic(),
+        **plot_kwargs,
+    )
     return coll
+
+
 ####--------------------------------------------------------------------------.
 def plot_cartopy_background(ax):
     """Plot cartopy background."""
@@ -189,7 +193,7 @@ def plot_cartopy_background(ax):
     ax.coastlines()
     ax.add_feature(cartopy.feature.LAND, facecolor=[0.9, 0.9, 0.9])
     ax.add_feature(cartopy.feature.OCEAN, alpha=0.6)
-    ax.add_feature(cartopy.feature.BORDERS) # BORDERS also draws provinces, ...
+    ax.add_feature(cartopy.feature.BORDERS)  # BORDERS also draws provinces, ...
     # - Add grid lines
     gl = ax.gridlines(
         crs=ccrs.PlateCarree(),
@@ -221,6 +225,7 @@ def plot_colorbar(p, ax, cbar_kwargs={}):
         _ = cbar.ax.set_yticklabels(ticklabels)
     return cbar
 
+
 ####--------------------------------------------------------------------------.
 def _plot_cartopy_imshow(
     ax,
@@ -228,7 +233,7 @@ def _plot_cartopy_imshow(
     x,
     y,
     interpolation="nearest",
-    add_colorbar=True, 
+    add_colorbar=True,
     plot_kwargs={},
     cbar_kwargs={},
 ):
@@ -239,9 +244,9 @@ def _plot_cartopy_imshow(
 
     # - Derive extent
     extent = [-180, 180, -90, 90]  # TODO: Derive from data !!!!
-    
-    # TODO: ensure y data is increasing --> origin = "lower" 
-    # TODO: ensure y data is decreasing --> origin = "upper" 
+
+    # TODO: ensure y data is increasing --> origin = "lower"
+    # TODO: ensure y data is decreasing --> origin = "upper"
 
     # - Add variable field with cartopy
     p = ax.imshow(
@@ -304,11 +309,9 @@ def _plot_cartopy_pcolormesh(
         transform=ccrs.PlateCarree(),
         **plot_kwargs,
     )
-    # - Add PolyCollection of QuadMesh cells crossing the antimeridian 
+    # - Add PolyCollection of QuadMesh cells crossing the antimeridian
     if is_crossing_antimeridian:
-        coll = get_masked_cells_polycollection(x, y, arr.data,
-                                               mask=mask,
-                                               plot_kwargs=plot_kwargs)
+        coll = get_masked_cells_polycollection(x, y, arr.data, mask=mask, plot_kwargs=plot_kwargs)
         p.axes.add_collection(coll)
 
     # - Set the extent
@@ -316,7 +319,7 @@ def _plot_cartopy_pcolormesh(
     #     lon/lat conversion to proj required !
     # extent = get_extent(da, x="lon", y="lat")
     # ax.set_extent(extent)
-    
+
     # - Add colorbar
     if add_colorbar:
         # --> TODO: set axis proportion in a meaningful way ...
@@ -330,7 +333,7 @@ def _plot_mpl_imshow(
     x,
     y,
     interpolation="nearest",
-    add_colorbar=True, 
+    add_colorbar=True,
     plot_kwargs={},
     cbar_kwargs={},
 ):
@@ -355,9 +358,12 @@ def _plot_mpl_imshow(
 
 
 def _plot_xr_imshow(
-    ax, da, x, y,
+    ax,
+    da,
+    x,
+    y,
     interpolation="nearest",
-    add_colorbar=True, 
+    add_colorbar=True,
     plot_kwargs={},
     cbar_kwargs={},
 ):
@@ -383,25 +389,27 @@ def plot_map(
     da,
     ax=None,
     add_colorbar=True,
-    add_swath_lines=True,    # used only for GPM orbit objects
-    interpolation="nearest", # used only for GPM grid objects
-    fig_kwargs={}, 
+    add_swath_lines=True,  # used only for GPM orbit objects
+    interpolation="nearest",  # used only for GPM grid objects
+    fig_kwargs={},
     subplot_kwargs={},
     cbar_kwargs={},
     **plot_kwargs,
 ):
 
-    from gpm_api.utils.geospatial import is_orbit, is_grid
+    from gpm_api.utils.geospatial import is_grid, is_orbit
+
     from .grid import plot_grid_map
     from .orbit import plot_orbit_map
+
     # Plot orbit
     if is_orbit(da):
         p = plot_orbit_map(
             da=da,
             ax=ax,
             add_colorbar=add_colorbar,
-            add_swath_lines=add_swath_lines, 
-            fig_kwargs=fig_kwargs, 
+            add_swath_lines=add_swath_lines,
+            fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
@@ -413,7 +421,7 @@ def plot_map(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
-            fig_kwargs=fig_kwargs, 
+            fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
@@ -425,15 +433,16 @@ def plot_map(
 
 
 def plot_image(
-    da, ax=None, 
-    add_colorbar=True, 
+    da,
+    ax=None,
+    add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={}, 
+    fig_kwargs={},
     cbar_kwargs={},
     **plot_kwargs,
 ):
     # figsize, dpi, subplot_kw only used if ax is None
-    from gpm_api.utils.geospatial import is_orbit, is_grid
+    from gpm_api.utils.geospatial import is_grid, is_orbit
     from gpm_api.visualization.grid import plot_grid_image
     from gpm_api.visualization.orbit import plot_orbit_image
 
@@ -444,7 +453,7 @@ def plot_image(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
-            fig_kwargs=fig_kwargs, 
+            fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
@@ -455,7 +464,7 @@ def plot_image(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
-            fig_kwargs=fig_kwargs, 
+            fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
@@ -470,13 +479,13 @@ def plot_map_mesh(
     ax=None,
     edgecolors="k",
     linewidth=0.1,
-    fig_kwargs={}, 
+    fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
 ):
     # Interpolation only for grid objects
     # figsize, dpi, subplot_kw only used if ax is None
-    from gpm_api.utils.geospatial import is_orbit, is_grid
+    from gpm_api.utils.geospatial import is_grid, is_orbit
 
     # from .grid import plot_grid_mesh
     from .orbit import plot_orbit_mesh
@@ -488,7 +497,7 @@ def plot_map_mesh(
             ax=ax,
             edgecolors=edgecolors,
             linewidth=linewidth,
-            fig_kwargs=fig_kwargs, 
+            fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )

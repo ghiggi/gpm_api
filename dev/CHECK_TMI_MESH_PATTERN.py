@@ -19,7 +19,7 @@ start_time = datetime.datetime.strptime("2005-08-28 20:00:00", "%Y-%m-%d %H:%M:%
 end_time = datetime.datetime.strptime("2005-08-28 23:00:00", "%Y-%m-%d %H:%M:%S")
 version = 5
 
-# Backward 
+# Backward
 start_time = datetime.datetime.strptime("2014-07-01 06:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2014-07-01 09:00:00", "%Y-%m-%d %H:%M:%S")
 version = 7
@@ -27,9 +27,7 @@ version = 7
 product_type = "RS"
 
 product = "1B-TMI"
-pmw_variable = (
-    "Tb"  # sunGlintAngle, # solarAzimuthAngle, # solarZenAngle, # satAzimuthAngle
-)
+pmw_variable = "Tb"  # sunGlintAngle, # solarAzimuthAngle, # solarZenAngle, # satAzimuthAngle
 
 # gpm_api.download(
 #     username="gionata.ghiggi@epfl.ch",
@@ -60,7 +58,7 @@ ds_tmi = gpm_api.open_dataset(
     prefix_group=False,
 )
 
-ds_tmi["SCorientation"].compute() # 180 --> backward scan, 0 --> forward scan
+ds_tmi["SCorientation"].compute()  # 180 --> backward scan, 0 --> forward scan
 
 da_tmi = ds_tmi[pmw_variable].isel(channel=0)
 da_tmi = da_tmi.compute()
@@ -72,7 +70,7 @@ da_tmi.isel(along_track=slice(920, 1000)).gpm_api.plot_map(cmap="Spectral")
 da_tmi.isel(along_track=slice(0, 110)).gpm_api.plot_map(cmap="Spectral")
 da_tmi.isel(along_track=slice(0, 5)).gpm_api.plot_map(cmap="Spectral")
 da_tmi.isel(along_track=slice(0, 19)).gpm_api.plot_map(cmap="Spectral")
-                                                        
+
 da_tmi.isel(along_track=slice(0, 10), cross_track=slice(0, 10)).gpm_api.plot_map_mesh()
 da_tmi.isel(along_track=slice(0, 10)).gpm_api.plot_map_mesh()
 da_tmi.isel(along_track=slice(0, 20)).gpm_api.plot_map_mesh()
@@ -90,12 +88,12 @@ gpm_api.download(
     username="gionata.ghiggi@epfl.ch",
     base_dir=base_dir,
     product=product,
-    product_type = product_type,
+    product_type=product_type,
     start_time=start_time,
     end_time=end_time,
     # Optional
     version=version,
-    )
+)
 
 
 ds_pr = gpm_api.open_dataset(

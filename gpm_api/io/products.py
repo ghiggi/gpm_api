@@ -1,42 +1,43 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Thu Oct 13 11:13:15 2022
 
 @author: ghiggi
 """
 import numpy as np
+
 from gpm_api.io.patterns import (
     GPM_1B_NRT_pattern_dict,
-    GPM_2A_NRT_pattern_dict,
-    GPM_2B_NRT_pattern_dict,
     GPM_1B_RS_pattern_dict,
+    GPM_2A_NRT_pattern_dict,
     GPM_2A_RS_pattern_dict,
+    GPM_2B_NRT_pattern_dict,
     GPM_2B_RS_pattern_dict,
-    GPM_RADAR_1B_RS_pattern_dict,
-    GPM_RADAR_2A_RS_pattern_dict,
-    GPM_RADAR_2A_NRT_pattern_dict,
-    GPM_PMW_1A_RS_pattern_dict,
-    GPM_PMW_1B_RS_pattern_dict,
-    GPM_PMW_1C_RS_pattern_dict,
-    GPM_PMW_2A_PRPS_RS_pattern_dict,
-    GPM_PMW_2A_GPROF_RS_pattern_dict,
-    GPM_PMW_1B_NRT_pattern_dict,
-    GPM_PMW_1C_NRT_pattern_dict,
-    GPM_PMW_2A_PRPS_NRT_pattern_dict,
-    GPM_PMW_2A_GPROF_NRT_pattern_dict,
     GPM_CMB_2B_NRT_pattern_dict,
     GPM_CMB_2B_RS_pattern_dict,
-    GPM_RADAR_RS_pattern_dict,
-    GPM_PMW_RS_pattern_dict,
-    GPM_CMB_RS_pattern_dict,
-    GPM_IMERG_RS_pattern_dict,
-    GPM_RADAR_NRT_pattern_dict,
     GPM_CMB_NRT_pattern_dict,
-    GPM_PMW_NRT_pattern_dict,
+    GPM_CMB_RS_pattern_dict,
     GPM_IMERG_NRT_pattern_dict,
     GPM_IMERG_pattern_dict,
+    GPM_IMERG_RS_pattern_dict,
+    GPM_PMW_1A_RS_pattern_dict,
+    GPM_PMW_1B_NRT_pattern_dict,
+    GPM_PMW_1B_RS_pattern_dict,
+    GPM_PMW_1C_NRT_pattern_dict,
+    GPM_PMW_1C_RS_pattern_dict,
+    GPM_PMW_2A_GPROF_NRT_pattern_dict,
+    GPM_PMW_2A_GPROF_RS_pattern_dict,
+    GPM_PMW_2A_PRPS_NRT_pattern_dict,
+    GPM_PMW_2A_PRPS_RS_pattern_dict,
+    GPM_PMW_NRT_pattern_dict,
+    GPM_PMW_RS_pattern_dict,
+    GPM_RADAR_1B_RS_pattern_dict,
+    GPM_RADAR_2A_NRT_pattern_dict,
+    GPM_RADAR_2A_RS_pattern_dict,
+    GPM_RADAR_NRT_pattern_dict,
+    GPM_RADAR_RS_pattern_dict,
 )
+
 
 ####--------------------------------------------------------------------------.
 ###########################

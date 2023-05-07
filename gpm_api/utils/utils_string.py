@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Tue Jul 21 20:07:02 2020
 
@@ -8,8 +7,9 @@ Created on Tue Jul 21 20:07:02 2020
 # -----------------------------------------------------------------------------.
 ### Utils for parsing strings ####
 # https://www.rdocumentation.org/packages/stringr/versions/1.4.0
-import re
 import ast
+import re
+
 import numpy as np
 
 
@@ -140,7 +140,7 @@ def str_subset(l_string, pattern):
         if re.search(pattern, l_string):
             return l_string
         else:
-            return
+            return None
 
 
 def str_remove(l_string, pattern):
@@ -151,7 +151,7 @@ def str_remove(l_string, pattern):
         if not re.search(pattern, l_string):
             return l_string
         else:
-            return
+            return None
 
 
 def str_remove_empty(l_string):
@@ -162,7 +162,7 @@ def str_remove_empty(l_string):
         if len(l_string) >= 1:
             return l_string
         else:
-            return
+            return None
 
 
 def str_locate(l_string, pattern):
@@ -194,9 +194,7 @@ def str_detect(l_string, pattern):
 
 def str_extract(l_string, pattern, simplify=True):
     if isinstance(l_string, list):
-        return [
-            str_simplify(re.findall(pattern, string), simplify) for string in l_string
-        ]
+        return [str_simplify(re.findall(pattern, string), simplify) for string in l_string]
     else:
         return str_simplify(re.findall(pattern, l_string), simplify)
 

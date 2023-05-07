@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Thu Oct 13 11:12:31 2022
 
@@ -19,8 +18,8 @@ def GPM_RADAR_1B_RS_pattern_dict():
 def GPM_RADAR_2A_RS_pattern_dict():
     """Return the filename pattern* associated to GPM DPR 2A RS products."""
     GPM_dict = {
-        "2A-PR": "2A.TRMM.PR.V\d-*",  # to distinguish from SLH
-        "2A-DPR": "2A.GPM.DPR.V\d-*",  # to distinguish from SLH
+        "2A-PR": "2A.TRMM.PR.V\\d-*",  # to distinguish from SLH
+        "2A-DPR": "2A.GPM.DPR.V\\d-*",  # to distinguish from SLH
         "2A-Ka": "2A.GPM.Ka.V*",
         "2A-Ku": "2A.GPM.Ku.V*",
         "2A-ENV-PR": "2A-ENV.TRMM.PR.V*",
@@ -36,7 +35,7 @@ def GPM_RADAR_2A_RS_pattern_dict():
 def GPM_RADAR_2A_NRT_pattern_dict():
     """Return the filename pattern* associated to GPM DPR 2A NRT products."""
     GPM_dict = {
-        "2A-DPR": "2A.GPM.DPR.V\d-*",  # to distinguish from SLH
+        "2A-DPR": "2A.GPM.DPR.V\\d-*",  # to distinguish from SLH
         "2A-Ka": "2A.GPM.Ka.V*",
         "2A-Ku": "2A.GPM.Ku.V*",
     }

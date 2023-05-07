@@ -5,11 +5,9 @@ Created on Thu Jan  5 00:19:05 2023
 
 @author: ghiggi
 """
-import os
 import datetime
-import numpy as np
+
 import gpm_api
-from dask.diagnostics import ProgressBar
 
 base_dir = "/home/ghiggi"
 
@@ -18,8 +16,8 @@ start_time = datetime.datetime.strptime("2020-08-01 12:00:00", "%Y-%m-%d %H:%M:%
 end_time = datetime.datetime.strptime("2020-08-02 12:00:00", "%Y-%m-%d %H:%M:%S")
 # end_time = datetime.datetime.strptime("2020-08-10 12:00:00", "%Y-%m-%d %H:%M:%S")
 
-product = "2A-MHS-METOPB"   
-product = "2A-SSMIS-F17"    
+product = "2A-MHS-METOPB"
+product = "2A-SSMIS-F17"
 
 
 product_type = "RS"
@@ -39,7 +37,7 @@ ds = gpm_api.open_dataset(
     prefix_group=False,
 )
 
-# gpm_api.check_regular_timesteps(ds) # BAD INDICATOR ! 
+# gpm_api.check_regular_timesteps(ds) # BAD INDICATOR !
 # gpm_api.check_contiguous_scans(ds)
 # ds.gpm_api.get_contiguous_scan_slices()
 
@@ -52,19 +50,21 @@ ds = ds1
 
 ds = ds.isel(along_track=slice(0, 20000))
 
-ds = ds.isel(along_track=slice(0, 5000)) # ENOUGH FOR DEVELOPMENT
+ds = ds.isel(along_track=slice(0, 5000))  # ENOUGH FOR DEVELOPMENT
 
-ds[variable] 
+ds[variable]
 
 ds.gpm_api.plot_map(variable=variable)
 
 ds.gpm_api.plot_map(variable=variable, cmap="Spectral", add_swath_lines=False)
 
 # -----------------------------------------------------------------------------.
-# Custom plots 
-import matplotlib.pyplot as plt
+# Custom plots
 import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+
 from gpm_api.visualization.plot import plot_cartopy_background
+
 dpi = 100
 figsize = (12, 10)
 
@@ -73,5 +73,5 @@ crs_proj = ccrs.Orthographic(180, -90)
 fig, ax = plt.subplots(subplot_kw={"projection": crs_proj}, figsize=figsize, dpi=dpi)
 plot_cartopy_background(ax)
 p = ds.gpm_api.plot_map(variable=variable, ax=ax, add_swath_lines=True, cmap="Spectral")
- 
+
 # -----------------------------------------------------------------------------.

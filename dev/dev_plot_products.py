@@ -115,7 +115,7 @@ dict_product = {}
 # product, variables = list(product_var_dict.items())[0]
 # product, variables = list(product_var_dict.items())[2]
 for product, variables in product_var_dict.items():
-    ds =  gpm_api.open_dataset(
+    ds = gpm_api.open_dataset(
         base_dir=base_dir,
         product=product,
         start_time=start_time,

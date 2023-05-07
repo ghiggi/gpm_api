@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sun Aug 14 20:49:06 2022
 
 @author: ghiggi
 """
-import re
-import os
 import datetime
+import os
+import re
+
 import numpy as np
 from trollsift import Parser
+
 from gpm_api.io.patterns import GPM_products_pattern_dict
 
 ####---------------------------------------------------------------------------
@@ -17,10 +18,10 @@ from gpm_api.io.patterns import GPM_products_pattern_dict
 #### FNAME PATTERNS ####
 ########################
 # General pattern for all GPM products
-NASA_FNAME_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{granule_id}.{version}.{data_format}"
+NASA_FNAME_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{granule_id}.{version}.{data_format}"  # noqa
 # General pattern for all JAXA products
 # - Pattern for 1B-Ku and 1B-Ka
-JAXA_FNAME_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_time:%H%M}_{granule_id}_{product_level:2s}{product_type}_{algorithm:s}_{version}.{data_format}"
+JAXA_FNAME_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_time:%H%M}_{granule_id}_{product_level:2s}{product_type}_{algorithm:s}_{version}.{data_format}"  # noqa
 
 ####---------------------------------------------------------------------------.
 ##########################
@@ -150,16 +151,14 @@ def get_product_from_filepaths(filepaths):
 def get_version_from_filepath(filepath, integer=True):
     version = get_key_from_filepath(filepath, key="version")
     if integer:
-        version = int(re.findall("\d+", version)[0])
+        version = int(re.findall("\\d+", version)[0])
     return version
 
 
 def get_version_from_filepaths(filepaths, integer=True):
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-    list_version = [
-        get_version_from_filepath(fpath, integer=integer) for fpath in filepaths
-    ]
+    list_version = [get_version_from_filepath(fpath, integer=integer) for fpath in filepaths]
     return list_version
 
 

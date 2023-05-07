@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sat Dec 10 16:10:52 2022
 
 @author: ghiggi
 """
-import os
-import yaml
 import difflib
+import os
+
+import yaml
 
 
 def extend_lonlat_extent(extent, x):
@@ -34,7 +34,7 @@ def extend_lonlat_extent(extent, x):
     ymin = max(ymin - x, -90)
     ymax = min(ymax + x, 90)
     new_extent = (xmin, xmax, ymin, ymax)
-    return new_extent 
+    return new_extent
 
 
 def get_country_extent_dictionary():
@@ -44,7 +44,7 @@ def get_country_extent_dictionary():
     # Define file with extents dictionary
     countries_extent_fpath = os.path.join(base_dir, "etc/country_extent.yaml")
     # Read the data from the YAML file
-    with open(countries_extent_fpath, "r") as infile:
+    with open(countries_extent_fpath) as infile:
         countries_extent_dict = yaml.load(infile, Loader=yaml.FullLoader)
     return countries_extent_dict
 
@@ -61,9 +61,7 @@ def get_country_extent(name):
     # Get country extent dictionary
     countries_extent_dict = get_country_extent_dictionary()
     # Create same dictionary with lower case keys
-    countries_lower_extent_dict = {
-        s.lower(): v for s, v in countries_extent_dict.items()
-    }
+    countries_lower_extent_dict = {s.lower(): v for s, v in countries_extent_dict.items()}
     # Get list of valid countries
     valid_countries = list(countries_extent_dict.keys())
     valid_countries_lower = list(countries_lower_extent_dict)
@@ -72,13 +70,9 @@ def get_country_extent(name):
         extent = extend_lonlat_extent(extent, 0.2)
         return extent
     else:
-        possible_match = difflib.get_close_matches(
-            name, valid_countries, n=1, cutoff=0.6
-        )
+        possible_match = difflib.get_close_matches(name, valid_countries, n=1, cutoff=0.6)
         if len(possible_match) == 0:
             raise ValueError("Provide a valid country name.")
         else:
             possible_match = possible_match[0]
-            raise ValueError(
-                f"No matching country. Maybe are you looking for '{possible_match}'?"
-            )
+            raise ValueError(f"No matching country. Maybe are you looking for '{possible_match}'?")

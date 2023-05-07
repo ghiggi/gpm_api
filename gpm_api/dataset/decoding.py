@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Mon Aug 15 00:12:47 2022
 
 @author: ghiggi
 """
+import warnings
+
 import numpy as np
 import xarray as xr
-import warnings
+
 from gpm_api.utils.warnings import GPM_Warning
+
 ####--------------------------------------------------------------------------.
 #### Attributes cleaning
 
@@ -23,17 +25,15 @@ def _format_dataarray_attrs(da, product=None):
     attrs = da.attrs
 
     # Convert CodeMissingValue' to _FillValue if available
-    if not attrs.get("_FillValue", False):
-        if attrs.get("CodeMissingValue", False):
-            attrs["_FillValue"] = attrs.pop("CodeMissingValue")
+    if not attrs.get("_FillValue", False) and attrs.get("CodeMissingValue", False):
+        attrs["_FillValue"] = attrs.pop("CodeMissingValue")
 
     # Remove 'CodeMissingValue'
     attrs.pop("CodeMissingValue", None)
 
     # Convert 'Units' to 'units'
-    if not attrs.get("units", False):
-        if attrs.get("Units", False):
-            attrs["units"] = attrs.pop("Units")
+    if not attrs.get("units", False) and attrs.get("Units", False):
+        attrs["units"] = attrs.pop("Units")
 
     # Remove 'Units'
     attrs.pop("Units", None)
@@ -121,10 +121,12 @@ def decode_dataset(ds):
 def ensure_valid_coords(ds, raise_error=False):
     # invalid_coords = np.logical_or(ds["lon"].data == -9999.9,
     #                                ds["lat"].data == -9999.9)
-    invalid_coords = np.logical_or(np.logical_or(ds["lon"].data < -180, ds["lon"].data > 180),
-                                   np.logical_or(ds["lat"].data < -90, ds["lat"].data > 90))
+    invalid_coords = np.logical_or(
+        np.logical_or(ds["lon"].data < -180, ds["lon"].data > 180),
+        np.logical_or(ds["lat"].data < -90, ds["lat"].data > 90),
+    )
     if np.any(invalid_coords):
-        # Raise error or add warning 
+        # Raise error or add warning
         msg = "Invalid coordinate in the granule."
         if raise_error:
             raise ValueError(msg)
@@ -135,7 +137,7 @@ def ensure_valid_coords(ds, raise_error=False):
         da_invalid_coords.data = invalid_coords
         # For each variable, set NaN value where invalid coordinates
         ds = ds.where(~da_invalid_coords)
-        # Add NaN to longitude and latitude 
+        # Add NaN to longitude and latitude
         ds["lon"] = ds["lon"].where(~da_invalid_coords)
         ds["lat"] = ds["lat"].where(~da_invalid_coords)
     return ds
@@ -155,26 +157,22 @@ def apply_custom_decoding(ds, product):
     ds = clean_dataarrays_attrs(ds, product)
 
     # Add coordinates
-    if product == "2A-DPR":
-        if "frequency" in list(ds.dims):
-            ds = ds.assign_coords({"frequency": ["Ku", "Ka"]})
+    if product == "2A-DPR" and "frequency" in list(ds.dims):
+        ds = ds.assign_coords({"frequency": ["Ku", "Ka"]})
 
-    if product in ["2A-DPR", "2A-Ku", "2A-Ka"]:
-        if "paramDSD" in list(ds):
-            ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
+    if product in ["2A-DPR", "2A-Ku", "2A-Ka"] and "paramDSD" in list(ds):
+        ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
 
-    if product in ["2A-DPR", "2A-Ku", "2A-Ka"]:
-        if "height" in list(ds):
-            ds = ds.set_coords("height")
+    if product in ["2A-DPR", "2A-Ku", "2A-Ka"] and "height" in list(ds):
+        ds = ds.set_coords("height")
 
-    if product in ["2A-GPM-SLH", "2B-GPM-CSH"]:
-        if "nlayer" in list(ds.dims):
-            # Fixed heights for 2HSLH and 2HCSH
-            # - FileSpec v7: p.2395, 2463
-            height = np.linspace(0.25 / 2, 20 - 0.25 / 2, 80) * 1000  # in meters
-            ds = ds.rename_dims({"nlayer": "height"})
-            ds = ds.assign_coords({"height": height})
-            ds["height"].attrs["units"] = "km a.s.l"
+    if product in ["2A-GPM-SLH", "2B-GPM-CSH"] and "nlayer" in list(ds.dims):
+        # Fixed heights for 2HSLH and 2HCSH
+        # - FileSpec v7: p.2395, 2463
+        height = np.linspace(0.25 / 2, 20 - 0.25 / 2, 80) * 1000  # in meters
+        ds = ds.rename_dims({"nlayer": "height"})
+        ds = ds.assign_coords({"height": height})
+        ds["height"].attrs["units"] = "km a.s.l"
 
     # Modify variables
     dataset_vars = list(ds.data_vars)
@@ -189,7 +187,7 @@ def apply_custom_decoding(ds, product):
     if "flagBB" in dataset_vars and product == "2A-DPR":
         ds["flagBB"].attrs[
             "description"
-        ] = """Flag for Bright Band: 
+        ] = """Flag for Bright Band:
                                                 0 : BB not detected
                                                 1 : Bright Band detected by Ku and DFRm
                                                 2 : Bright Band detected by Ku only

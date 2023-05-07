@@ -1,37 +1,35 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Mon Aug 15 00:18:13 2022
 
 @author: ghiggi
 """
-import os
 import datetime
+import os
+
 import pandas as pd
-from gpm_api.io import GPM_VERSION # CURRENT GPM VERSION
+
 from gpm_api.configs import get_gpm_base_dir
+from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
+    check_base_dir,
     check_date,
-    check_start_end_time,
     check_product,
     check_product_type,
+    check_start_end_time,
     check_version,
-    check_base_dir,
     is_empty,
 )
-from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.directories import get_disk_directory
-
+from gpm_api.io.filter import filter_filepaths
 
 ####--------------------------------------------------------------------------.
 ######################
 #### Find utility ####
 ######################
-            
-            
-def _get_disk_daily_filepaths(
-    base_dir, product, product_type, date, version, verbose=True
-):
+
+
+def _get_disk_daily_filepaths(base_dir, product, product_type, date, version, verbose=True):
     """
     Retrieve GPM data filepaths on the local disk directory of a specific day and product.
 
@@ -160,9 +158,9 @@ def _find_daily_filepaths(
 def find_filepaths(
     product,
     start_time,
-    end_time, 
-    product_type="RS", 
-    version=GPM_VERSION, 
+    end_time,
+    product_type="RS",
+    version=GPM_VERSION,
     verbose=True,
     base_dir=None,
 ):
@@ -184,10 +182,10 @@ def find_filepaths(
     verbose : bool, optional
         Whether to print processing details. The default is True.
     base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified 
-        in the GPM-API config file. 
+        The path to the GPM base directory. If None, it use the one specified
+        in the GPM-API config file.
         The default is None.
-        
+
     Returns
     -------
     filepaths : list
@@ -197,7 +195,7 @@ def find_filepaths(
     # -------------------------------------------------------------------------.
     # Retrieve GPM-API configs
     base_dir = get_gpm_base_dir(base_dir)
- 
+
     # -------------------------------------------------------------------------.
     ## Checks input arguments
     check_version(version=version)

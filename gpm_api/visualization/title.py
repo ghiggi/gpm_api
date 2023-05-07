@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sat Dec 10 18:50:02 2022
 
@@ -129,10 +128,7 @@ def get_dataarray_title(
     product = da.attrs.get("gpm_api_product", "")
 
     # Create title string
-    if prefix_product:
-        title_str = product + " " + variable
-    else:
-        title_str = da.name
+    title_str = product + " " + variable if prefix_product else da.name
 
     # Make title in Capital Case
     title_str = " ".join([word[0].upper() + word[1:] for word in title_str.split(" ")])

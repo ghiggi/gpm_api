@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Mon Nov 29 16:33:35 2021
 
@@ -68,13 +67,12 @@ Created on Mon Nov 29 16:33:35 2021
 
 # --------------------------------------------------------------------------.
 import copy
-import warnings
-import matplotlib
-import matplotlib.colors
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pylab as plt
 
+import matplotlib
+import matplotlib as mpl
+import matplotlib.colors
+import matplotlib.pylab as plt
+import numpy as np
 
 PRECIP_VALID_TYPES = ("intensity", "depth", "prob")
 PRECIP_VALID_UNITS = ("mm/h", "mm", "dBZ")
@@ -179,25 +177,25 @@ CMAP_DICT = {
 COLOR_DICT = {
     "IMERG_Solid": {
         "over_color": "#8c149c",
-        "under_color": "none", # "#3a3d48",
+        "under_color": "none",  # "#3a3d48",
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "IMERG_Solid",
         "cmap_type": "LinearSegmented",
         "levels": [0.1, 0.2, 0.3, 0.5, 1, 2, 3, 5, 10, 20, 50],
         "extend": "max",
-        "label": "Precipitation intensity [$mm \ hr^{-1}$]",
+        "label": "Precipitation intensity [$mm \\ hr^{-1}$]",
     },
     "IMERG_Liquid": {
         "over_color": "#910000",
-        "under_color": "none", # "#3a3d48",
+        "under_color": "none",  # "#3a3d48",
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "IMERG_Liquid",
         "cmap_type": "LinearSegmented",
         "levels": [0.1, 0.2, 0.3, 0.5, 1, 2, 3, 5, 10, 20, 50],
         "extend": "max",
-        "label": "Precipitation intensity [$mm \ hr^{-1}$]",
+        "label": "Precipitation intensity [$mm \\ hr^{-1}$]",
     },
     "GPM_Z": {
         "bad_color": "gray",
@@ -243,7 +241,7 @@ COLOR_DICT = {
         "vmin": -1,
         "vmax": 6,
         "extend": "both",
-        "label": "$N_w$ [$\log{(mm^{-1} \ m^{-3})}$]",
+        "label": "$N_w$ [$\\log{(mm^{-1} \\ m^{-3})}$]",
     },
     "GPM_LatentHeating": {
         "bad_color": "gray",
@@ -387,7 +385,7 @@ COLOR_DICT = {
         ],
         "extend": "max",
         "extendrect": False,
-        "label": "Precipitation intensity [$mm \ hr^{-1}$]",
+        "label": "Precipitation intensity [$mm \\ hr^{-1}$]",
     },
     "pysteps_dBZ": {
         "over_color": "darkred",
@@ -405,14 +403,14 @@ COLOR_DICT = {
         "cmap_type": "LinearSegmented",
         "levels": [0.1, 0.25, 0.4, 0.63, 1, 1.6, 2.5, 4, 6.3, 10, 16, 25, 40, 63, 100],
     },
-    "STEPS-BE_mm/hr": {
-        "over_color": "black",
-        "bad_color": "gray",
-        "bad_alpha": 0.5,
-        "cmap": "STEPS-BE",
-        "cmap_type": "LinearSegmented",
-        "levels": [0.1, 0.25, 0.4, 0.63, 1, 1.6, 2.5, 4, 6.3, 10, 16, 25, 40, 63, 100],
-    },
+    # "STEPS-BE_mm/hr": {
+    #     "over_color": "black",
+    #     "bad_color": "gray",
+    #     "bad_alpha": 0.5,
+    #     "cmap": "STEPS-BE",
+    #     "cmap_type": "LinearSegmented",
+    #     "levels": [0.1, 0.25, 0.4, 0.63, 1, 1.6, 2.5, 4, 6.3, 10, 16, 25, 40, 63, 100],
+    # },
     "STEPS-BE_mm/hr": {
         "over_color": "black",
         "bad_color": "gray",
@@ -424,48 +422,48 @@ COLOR_DICT = {
 }
 
 precip_variables = [
-     # DPR
+    # DPR
     "precipRate",
     "precipRateNearSurface",
     "precipRateESurface",
     "precipRateESurface2",
-    "precipRateNearSurface", 
+    "precipRateNearSurface",
     # CORRA
     "precipTotRate",
     "nearSurfPrecipTotRate",
-    "estimSurfPrecipTotRate", 
+    "estimSurfPrecipTotRate",
     "OEestimSurfPrecipTotRate",
-    # 2A PMW 
+    # 2A PMW
     "surfacePrecipitation",
     # 2A-GPM-SLH
     "nearSurfacePrecipRate",
     # 2B-GPM-CSH
     "surfacePrecipRate",
-    # IMERG 
+    # IMERG
     "precipitationCal",
-    "precipitationUncal", 
+    "precipitationUncal",
     "IRprecipitation",
-    ]
+]
 
 for var in precip_variables:
     COLOR_DICT[var] = COLOR_DICT["pysteps_mm/hr"]
 
-COLOR_DICT['Tb'] = COLOR_DICT["Brightness_Temperature"]
-COLOR_DICT['Tc'] = COLOR_DICT["Brightness_Temperature"]
+COLOR_DICT["Tb"] = COLOR_DICT["Brightness_Temperature"]
+COLOR_DICT["Tc"] = COLOR_DICT["Brightness_Temperature"]
 
-# Reflectivity 
-# "2A-DPR": 
+# Reflectivity
+# "2A-DPR":
 #     "zFactorFinalESurface",
 #     "zFactorFinalNearSurface",
 #     "zFactorFinal",
 
-# 2A-DPR 
+# 2A-DPR
 # "airTemperature",
 # "landSurfaceType",
 
-# # '2A-ENV-DPR': 
-# "cloudLiquidWater", 
-# "waterVapor", 
+# # '2A-ENV-DPR':
+# "cloudLiquidWater",
+# "waterVapor",
 # "airPressure"],
 
 # # 2A-GMI
@@ -475,16 +473,16 @@ COLOR_DICT['Tc'] = COLOR_DICT["Brightness_Temperature"]
 
 # # '2B-GPM-CORRA': [
 # "precipTotWaterCont",
-# "cloudIceWaterCont", 
+# "cloudIceWaterCont",
 # "cloudLiqWaterCont",
-# "OEcolumnCloudLiqWater", 
+# "OEcolumnCloudLiqWater",
 # "OEcloudLiqWaterCont",
 # "OEcolumnWaterVapor"
 
 # # 1B
-# "Tb", 
-# # 1C 
-# "Tc", 
+# "Tb",
+# # 1C
+# "Tc",
 # # '2B-GPM-CORRA'
 # "OEsimulatedBrightTemp",
 
@@ -493,10 +491,7 @@ COLOR_DICT['Tc'] = COLOR_DICT["Brightness_Temperature"]
 # '2A-GPM-SLH': ["latentHeating"],
 
 
-
-
-
-#-----------------------------------------------------------------------------.
+# -----------------------------------------------------------------------------.
 
 
 def _dynamic_formatting_floats(float_array, colorscale="pysteps"):
@@ -506,10 +501,7 @@ def _dynamic_formatting_floats(float_array, colorscale="pysteps"):
     labels = []
     for label in float_array:
         if 0.1 <= label < 1:
-            if colorscale == "pysteps":
-                formatting = ",.2f"
-            else:
-                formatting = ",.1f"
+            formatting = ",.2f" if colorscale == "pysteps" else ",.1f"
         elif 0.01 <= label < 0.1:
             formatting = ",.2f"
         elif 0.001 <= label < 0.01:
@@ -529,7 +521,7 @@ def _dynamic_formatting_floats(float_array, colorscale="pysteps"):
     return labels
 
 
-#...--------------------------------------------------------------------------.
+# ...--------------------------------------------------------------------------.
 
 
 def get_colormap_setting(cbar_settings_name):
@@ -550,7 +542,7 @@ def get_colormap_setting(cbar_settings_name):
 
         # raise ValueError("{cbar_settings_name} cbar_settings  does not exist.")
 
-    #--------------------------------------------------------------------------.
+    # --------------------------------------------------------------------------.
     # Get cmap
     cmap_type = color_dict["cmap_type"]
     cmap_name = color_dict["cmap"]
@@ -564,9 +556,7 @@ def get_colormap_setting(cbar_settings_name):
         color_list = CMAP_DICT[cmap_name]["color_list"]
 
         # Get colormap
-        cmap = mpl.colors.LinearSegmentedColormap.from_list(
-            "cmap", color_list, len(clevs) - 1
-        )
+        cmap = mpl.colors.LinearSegmentedColormap.from_list("cmap", color_list, len(clevs) - 1)
 
     # ------------------------------------------------------------------------.
     # TODO: implement other cmap options
@@ -583,7 +573,7 @@ def get_colormap_setting(cbar_settings_name):
         # vmin and vmax to be defined
         raise NotImplementedError
 
-    #-------------------------------------------------------------------------.
+    # -------------------------------------------------------------------------.
     # Set norm if specified
     if color_dict.get("norm", None):
         if color_dict["norm"] == "SymLogNorm":
@@ -596,20 +586,18 @@ def get_colormap_setting(cbar_settings_name):
         else:
             raise NotImplementedError()
 
-    #-------------------------------------------------------------------------.
+    # -------------------------------------------------------------------------.
     # Define BoundaryNorm
     if clevs is not None:
         norm = mpl.colors.BoundaryNorm(clevs, cmap.N)
-        vmin = (
-            None  # cartopy and matplotlib complain if not None when norm is provided !
-        )
+        vmin = None  # cartopy and matplotlib complain if not None when norm is provided !
         vmax = None
         ticks = clevs
     else:
         ticks = None
         # vmin and vmax to be defined
 
-    #-------------------------------------------------------------------------.
+    # -------------------------------------------------------------------------.
     # Define ticklabels
     # - Generate color level strings with correct amount of decimal places
     if clevs is not None:
@@ -618,14 +606,12 @@ def get_colormap_setting(cbar_settings_name):
     else:
         ticklabels = None
 
-    #-------------------------------------------------------------------------.
+    # -------------------------------------------------------------------------.
     # Set over, under and alpha
     # If not specified, do not set ---> Will fill with the first/last color value
     # If 'none' --> It will be depicted in white
     if color_dict.get("over_color", None):
-        cmap.set_over(
-            color=color_dict.get("over_color"), alpha=color_dict.get("over_alpha", None)
-        )
+        cmap.set_over(color=color_dict.get("over_color"), alpha=color_dict.get("over_alpha", None))
     if color_dict.get("over_color", None):
         cmap.set_under(
             color=color_dict.get("under_color"),
@@ -719,9 +705,7 @@ def get_colormap(ptype, units="mm/hr", colorscale="pysteps"):
         cbar_kwargs["extend"] = "max"
 
     elif ptype == "prob":
-        plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting(
-            "Precip_Probability"
-        )
+        plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("Precip_Probability")
         cbar_kwargs["extend"] = "neither"
     else:
         plot_kwargs = {
