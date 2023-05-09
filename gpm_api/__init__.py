@@ -6,7 +6,7 @@ Created on Mon Aug  3 11:22:04 2020
 """
 # import os
 # os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"  # noqa
-
+import gpm_api.accessor  # noqa
 from importlib.metadata import PackageNotFoundError, version
 
 from gpm_api.configs import define_gpm_api_configs as define_configs
