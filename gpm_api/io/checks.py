@@ -10,7 +10,7 @@ import numpy as np
 
 
 def is_not_empty(x):
-    return x
+    return bool(x)
 
 
 def is_empty(x):
