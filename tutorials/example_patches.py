@@ -5,13 +5,10 @@ Created on Wed Jan 11 12:00:18 2023
 @author: ghiggi
 """
 import datetime
-
 import numpy as np
-
 import gpm_api
 from gpm_api.patch.labels import xr_get_areas_labels
 
-base_dir = "/home/ghiggi/GPM"
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'
@@ -21,7 +18,6 @@ username = "gionata.ghiggi@epfl.ch"
 
 # Download the data
 # gpm_api.download(
-#     base_dir=base_dir,
 #     username=username,
 #     product=product,
 #     product_type=product_type,
@@ -37,7 +33,6 @@ username = "gionata.ghiggi@epfl.ch"
 
 # Load IMERG dataset
 ds = gpm_api.open_dataset(
-    base_dir=base_dir,
     product=product,
     product_type=product_type,
     version=version,

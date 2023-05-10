@@ -9,7 +9,6 @@ import datetime
 import gpm_api
 from gpm_api.utils.countries import get_country_extent
 
-base_dir = "/home/ghiggi/GPM"
 start_time = datetime.datetime.strptime("2020-07-05 02:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2020-07-05 06:00:00", "%Y-%m-%d %H:%M:%S")
 product = "2A-DPR"
@@ -19,7 +18,6 @@ username = "gionata.ghiggi@epfl.ch"
 
 # Download the data
 gpm_api.download(
-    base_dir=base_dir,
     username=username,
     product=product,
     product_type=product_type,
@@ -35,7 +33,6 @@ gpm_api.download(
 ####--------------------------------------------------------------------------.
 #### Load GPM DPR 2A product dataset (with group prefix)
 ds = gpm_api.open_dataset(
-    base_dir=base_dir,
     product=product,
     product_type=product_type,
     version=version,
@@ -68,7 +65,6 @@ variables = [
     "landSurfaceType",
 ]
 ds = gpm_api.open_dataset(
-    base_dir=base_dir,
     product=product,
     product_type=product_type,
     version=version,

@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 
 import gpm_api
 from gpm_api.utils.countries import get_country_extent
-from gpm_api.visualization.plot import get_colorbar_settings, plot_cartopy_background
+from gpm_api.utils.utils_cmap import get_colorbar_settings
+from gpm_api.visualization.plot import plot_cartopy_background
 
-base_dir = "/home/ghiggi/GPM"
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'
@@ -23,7 +23,6 @@ username = "gionata.ghiggi@epfl.ch"
 
 # Download the data
 gpm_api.download(
-    base_dir=base_dir,
     username=username,
     product=product,
     product_type=product_type,
@@ -38,7 +37,6 @@ gpm_api.download(
 
 # Load IMERG dataset
 ds = gpm_api.open_dataset(
-    base_dir=base_dir,
     product=product,
     product_type=product_type,
     version=version,

@@ -77,6 +77,9 @@ import numpy as np
 PRECIP_VALID_TYPES = ("intensity", "depth", "prob")
 PRECIP_VALID_UNITS = ("mm/h", "mm", "dBZ")
 
+####--------------------------------------------------------------------------.
+#### CMAP DICTIONARY 
+
 CMAP_DICT = {
     "IMERG_Solid": {
         "type": "hex",
@@ -106,6 +109,24 @@ CMAP_DICT = {
             "#ff9300",  # [5.0 - 10.0]
             "#ff0000",  # [10.0 - 20.0]
             "#c80000",  # [20.0 - 50.0]
+        ],
+    },
+    "GOES_CloudPhase": {
+        "type": "name",
+        "color_list": [
+            "lightblue",  # Clear Sky
+            "darkblue",   # Liquid
+            "lightgreen", # SC Liquid
+            "orange",     # Mixed
+            'white',      # Ice
+            'darkgray',   # Unknown
+        ],
+    },
+    "GOES_BinaryCloudMask": {
+        "type": "name",
+        "color_list": [
+            "lightblue",  # Clear Sky
+            "darkgray",  # Cloudy
         ],
     },
     "pysteps": {
@@ -173,6 +194,10 @@ CMAP_DICT = {
         / 255,  # convert to 0-1
     },
 }
+
+####--------------------------------------------------------------------------.
+#### GPM COLOR DICTIONARY 
+
 
 COLOR_DICT = {
     "IMERG_Solid": {
@@ -427,7 +452,6 @@ precip_variables = [
     "precipRateNearSurface",
     "precipRateESurface",
     "precipRateESurface2",
-    "precipRateNearSurface",
     # CORRA
     "precipTotRate",
     "nearSurfPrecipTotRate",
@@ -443,6 +467,8 @@ precip_variables = [
     "precipitationCal",
     "precipitationUncal",
     "IRprecipitation",
+    # GEO RRQPE 
+    "RRQPE"
 ]
 
 for var in precip_variables:
@@ -450,6 +476,124 @@ for var in precip_variables:
 
 COLOR_DICT["Tb"] = COLOR_DICT["Brightness_Temperature"]
 COLOR_DICT["Tc"] = COLOR_DICT["Brightness_Temperature"]
+
+####--------------------------------------------------------------------------.
+#### GOES DICTIONARY 
+
+
+GOES_DICT = {
+    "COD": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "viridis",
+        "cmap_type": "Colormap",
+        "vmin": 0,
+        "vmax": 50, 
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Cloud Optical Depth at 640 nm [-]",
+    },
+    "CPS": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "turbo_r",
+        "cmap_type": "Colormap",
+        "vmin": 0,
+        "vmax": 50,
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Cloud Particle Size [um]",
+    },
+    "CTH": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "viridis",
+        "cmap_type": "Colormap",
+        "vmin": 0,
+        "vmax": 15000,
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Cloud Top Height [m]",
+    },
+    "CTT": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "RdYlBu_r",
+        "cmap_type": "Colormap",
+        "vmin": 200,
+        "vmax": 300,
+        "extend": "both",
+        "extendfrac": 0.05,
+        "label": "Cloud Top Temperature [K]",
+    },
+    "CTP": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "RdYlBu_r",
+        "cmap_type": "Colormap",
+        "vmin": 100,
+        "vmax": 1000,
+        "extend": "both",
+        "extendfrac": 0.05,
+        "label": "Cloud Top Pressure [hPa]",
+    },
+    "Phase": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "GOES_CloudPhase",
+        "cmap_type": "Categorical",
+        "labels": ['Clear Sky', 'Liquid', 'SC Liquid', 'Mixed', 'Ice', 'Unknown'],
+    },
+    "CM": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "GOES_BinaryCloudMask",
+        "cmap_type": "Categorical",
+        "labels": ['Clear Sky', 'Cloudy'],
+    },
+}
+COLOR_DICT.update(GOES_DICT) 
+
+# ABI Reflectance channels (C01-C06)
+reflectance_channels = ["C" + str(i).zfill(2) for i in range(1, 7)] 
+
+for channel in reflectance_channels: 
+    GOES_DICT[channel] = {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "gray",
+        "cmap_type": "Colormap",
+        "vmin": 0,
+        "vmax": 100,
+        "extend": "neither",
+        "extendfrac": 0.05,
+        "label": "Reflectance [%]",
+    }
+ 
+
+# ABI BT channels (C07-C17)
+bt_channels = ["C" + str(i).zfill(2) for i in range(7, 17)] 
+for channel in bt_channels: 
+    GOES_DICT[channel] = {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "RdYlBu_r",
+        "cmap_type": "Colormap",
+        "vmin": 200,
+        "vmax": 300,
+        "extend": "both",
+        "extendfrac": 0.05,
+        "label": "Brightness Temperature [K]",
+    }
+
+
+
+
+
+####--------------------------------------------------------------------------.
+#### Final color dictionary
+
+COLOR_DICT.update(GOES_DICT)
 
 # Reflectivity
 # "2A-DPR":
@@ -521,7 +665,7 @@ def _dynamic_formatting_floats(float_array, colorscale="pysteps"):
     return labels
 
 
-# ...--------------------------------------------------------------------------.
+# --------------------------------------------------------------------------.
 
 
 def get_colormap_setting(cbar_settings_name):
@@ -543,11 +687,16 @@ def get_colormap_setting(cbar_settings_name):
         # raise ValueError("{cbar_settings_name} cbar_settings  does not exist.")
 
     # --------------------------------------------------------------------------.
-    # Get cmap
+    # Get cmap info 
     cmap_type = color_dict["cmap_type"]
     cmap_name = color_dict["cmap"]
-    # Get colorbar levels (if available)
     clevs = color_dict.get("levels", None)
+    vmin = color_dict.get("vmin", None)
+    vmax = color_dict.get("vmax", None)
+    
+    # Initialize cbar_kwargs
+    cbar_kwargs = {} 
+    
     # ------------------------------------------------------------------------.
     if cmap_type == "LinearSegmented":
         # TODO: Check level is a list > 2, length + 1 than color_list
@@ -557,7 +706,37 @@ def get_colormap_setting(cbar_settings_name):
 
         # Get colormap
         cmap = mpl.colors.LinearSegmentedColormap.from_list("cmap", color_list, len(clevs) - 1)
-
+    
+    # ------------------------------------------------------------------------.
+    elif cmap_type == "Categorical":
+        # Get color list
+        color_list = CMAP_DICT[cmap_name]["color_list"]
+        
+        # Get class labels 
+        labels = color_dict.get("labels", None)
+        
+        # Check validity 
+        if labels is None: 
+            raise ValueError(f"If cmap_type is {cmap_type}, 'labels' list is required.")
+        if not isinstance(labels, list): 
+            raise ValueError("'labels' must be a list.") 
+        if len(color_list) != len(labels):
+            raise ValueError("'labels' must have same length as the 'color_list'.") 
+        
+        # Define colormap and colorbar settings 
+        nlabels = len(labels)
+        cmap = mpl.colors.ListedColormap(color_list)
+        
+        # Define norms 
+        norm_bins = np.arange(-1, nlabels)+.5
+        norm = mpl.colors.BoundaryNorm(norm_bins, nlabels)
+        
+        # Update cbar_kwargs 
+        fmt = mpl.ticker.FuncFormatter(lambda x, pos: labels[norm(x)])
+        tickz = norm_bins[:-1]+ .5
+        cbar_kwargs["format"] = fmt
+        cbar_kwargs["ticks"] = tickz
+        
     # ------------------------------------------------------------------------.
     # TODO: implement other cmap options
     elif cmap_type == "Colormap":
@@ -628,7 +807,7 @@ def get_colormap_setting(cbar_settings_name):
 
     # ------------------------------------------------------------------------.
     #### Set cbar kwargs
-    cbar_kwargs = {
+    default_cbar_kwargs = {
         "ticks": color_dict.get("ticks", ticks),
         "spacing": color_dict.get("spacing", "uniform"),  # or proportional
         "extend": color_dict.get("extend", "neither"),
@@ -639,6 +818,8 @@ def get_colormap_setting(cbar_settings_name):
         "ticklocation": color_dict.get("ticklocation", "auto"),
         "shrink": color_dict.get("ticklocation", 1),
     }
+    default_cbar_kwargs.update(cbar_kwargs)
+    
     # format
     # 'orientation':'horizontal'
     # 'aspect':40,
@@ -669,53 +850,114 @@ def get_colormap_setting(cbar_settings_name):
         "vmax": vmax,
     }
     # ------------------------------------------------------------------------.
-    return plot_kwargs, cbar_kwargs, ticklabels
+    return plot_kwargs, default_cbar_kwargs, ticklabels
+
+
+def get_colorbar_settings(name, plot_kwargs={}, cbar_kwargs={}):
+    try:
+        default_plot_kwargs, default_cbar_kwargs, default_ticklabels = get_colormap_setting(name)
+        default_cbar_kwargs["ticklabels"] = None
+    except:
+        default_plot_kwargs = {}
+        default_cbar_kwargs = {}
+        
+    # If the default is a categorical colormap 
+    # --> TODO: Set all to none   
+    
+
+    # If the default is a segmented colormap (with ticks and ticklabels)
+    if default_cbar_kwargs.get("ticks", None) is not None:
+        # If specifying a custom vmin, vmax, norm or cmap args, remove  the defaults
+        # - The discrete colorbar makes no sense anymore
+        if np.any(np.isin(["vmin", "vmax", "norm", "cmap"], list(plot_kwargs.keys()))):
+            default_cbar_kwargs.pop("ticks", None)
+            default_cbar_kwargs.pop("ticklabels", None)
+            default_plot_kwargs.pop("cmap", None)
+            default_plot_kwargs.pop("norm", None)
+            default_plot_kwargs.pop("vmin", None)
+            default_plot_kwargs.pop("vmax", None)
+
+    # If cmap is a string, retrieve colormap
+    if isinstance(plot_kwargs.get("cmap", None), str):
+        plot_kwargs["cmap"] = plt.get_cmap(plot_kwargs["cmap"])
+
+    # Update defaults with custom kwargs
+    default_plot_kwargs.update(plot_kwargs)
+    default_cbar_kwargs.update(cbar_kwargs)
+
+    # Return the kwargs
+    plot_kwargs = default_plot_kwargs
+    cbar_kwargs = default_cbar_kwargs
+
+    # Remove vmin, vmax
+    # --> vmin and vmax is not accepted by PolyCollection
+    # --> create norm or modify norm accordigly
+    norm = plot_kwargs.get("norm", None)
+    if norm is None:
+        norm = mpl.colors.Normalize(
+            vmin=plot_kwargs.pop("vmin", None), vmax=plot_kwargs.pop("vmax", None)
+        )
+        plot_kwargs["norm"] = norm
+    else:
+        if "vmin" in plot_kwargs:
+            if plot_kwargs["vmin"] is None:
+                _ = plot_kwargs.pop("vmin")
+            else:
+                plot_kwargs["norm"].vmin = plot_kwargs.pop("vmin")
+
+        if "vmax" in plot_kwargs:
+            if plot_kwargs["vmax"] is None:
+                _ = plot_kwargs.pop("vmax")
+            else:
+                plot_kwargs["norm"].vmax = plot_kwargs.pop("vmax")
+
+    return (plot_kwargs, cbar_kwargs)
 
 
 ####---------------------------------------------------------------------------.
-def get_colormap(ptype, units="mm/hr", colorscale="pysteps"):
-    """Function to generate a colormap (cmap) and norm.
-    Parameters
-    ----------
-    ptype : {'intensity', 'depth', 'prob'}, optional
-        Type of the map to plot: 'intensity' = precipitation intensity field,
-        'depth' = precipitation depth (accumulation) field,
-        'prob' = exceedance probability field.
-    units : {'mm/hr', 'mm', 'dBZ'}, optional
-        Units of the input array. If ptype is 'prob', this specifies the unit of
-        the intensity threshold.
-    colorscale : {'pysteps', 'STEPS-BE', 'BOM-RF3'}, optional
-        Which colorscale to use. Applicable if units is 'mm/hr', 'mm' or 'dBZ'.
+# def get_colormap(ptype, units="mm/hr", colorscale="pysteps"):
+#     """Function to generate a colormap (cmap) and norm.
+#     Parameters
+#     ----------
+#     ptype : {'intensity', 'depth', 'prob'}, optional
+#         Type of the map to plot: 'intensity' = precipitation intensity field,
+#         'depth' = precipitation depth (accumulation) field,
+#         'prob' = exceedance probability field.
+#     units : {'mm/hr', 'mm', 'dBZ'}, optional
+#         Units of the input array. If ptype is 'prob', this specifies the unit of
+#         the intensity threshold.
+#     colorscale : {'pysteps', 'STEPS-BE', 'BOM-RF3'}, optional
+#         Which colorscale to use. Applicable if units is 'mm/hr', 'mm' or 'dBZ'.
 
-    Returns
-    -------
-    cmap : Colormap instance
-        colormap
-    norm : matplotlibcolors.Normalize object
-        Colors norm
-    clevs: list(float)
-        List of precipitation values defining the color limits.
-    clevs_str: list(str)
-        List of precipitation values defining the color limits (with correct
-        number of decimals).
-    """
-    if ptype in ["intensity", "depth"]:
-        cbar_settings_name = colorscale + "_" + units
-        plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting(cbar_settings_name)
-        cbar_kwargs["extend"] = "max"
+#     Returns
+#     -------
+#     cmap : Colormap instance
+#         colormap
+#     norm : matplotlibcolors.Normalize object
+#         Colors norm
+#     clevs: list(float)
+#         List of precipitation values defining the color limits.
+#     clevs_str: list(str)
+#         List of precipitation values defining the color limits (with correct
+#         number of decimals).
+#     """
+#     if ptype in ["intensity", "depth"]:
+#         cbar_settings_name = colorscale + "_" + units
+#         plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting(cbar_settings_name)
+#         cbar_kwargs["extend"] = "max"
 
-    elif ptype == "prob":
-        plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("Precip_Probability")
-        cbar_kwargs["extend"] = "neither"
-    else:
-        plot_kwargs = {
-            "cmap": plt.cm.get_cmap("jet"),
-            "norm": mpl.colors.Normalize(),
-        }
-        cbar_kwargs = {}
-        ticklabels = None
+#     elif ptype == "prob":
+#         plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("Precip_Probability")
+#         cbar_kwargs["extend"] = "neither"
+#     else:
+#         plot_kwargs = {
+#             "cmap": plt.cm.get_cmap("jet"),
+#             "norm": mpl.colors.Normalize(),
+#         }
+#         cbar_kwargs = {}
+#         ticklabels = None
 
-    return plot_kwargs, cbar_kwargs, ticklabels
+#     return plot_kwargs, cbar_kwargs, ticklabels
 
 
 ####---------------------------------------------------------------------------.

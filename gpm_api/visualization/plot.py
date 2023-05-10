@@ -13,18 +13,10 @@ from matplotlib.collections import PolyCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage import binary_dilation
 
-from gpm_api.utils.utils_cmap import get_colormap_setting
 
 ### TODO: Add xarray + cartopy  (xr_carto) (xr_mpl)
 # _plot_cartopy_xr_imshow
 # _plot_cartopy_xr_pcolormesh
-
-
-# TODO: modify ticklabels in all get_colorbar_settings in  grid and orbit
-# def get_colorbar_settings(name):
-#     # TODO: to customize as function of da.name
-#     plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting("pysteps_mm/hr")
-#     return (plot_kwargs, cbar_kwargs, ticklabels)
 
 
 def _preprocess_figure_args(ax, fig_kwargs={}, subplot_kwargs={}):
@@ -46,64 +38,6 @@ def _preprocess_subplot_kwargs(subplot_kwargs):
     if "projection" not in subplot_kwargs:
         subplot_kwargs["projection"] = ccrs.PlateCarree()
     return subplot_kwargs
-
-
-def get_colorbar_settings(name, plot_kwargs={}, cbar_kwargs={}):
-    # TODO: to customize as function of da.name
-    try:
-        default_plot_kwargs, default_cbar_kwargs, default_ticklabels = get_colormap_setting(name)
-        default_cbar_kwargs["ticklabels"] = None
-    except:
-        default_plot_kwargs = {}
-        default_cbar_kwargs = {}
-
-    # If the default is a segmented colormap (with ticks and ticklabels)
-    if default_cbar_kwargs.get("ticks", None) is not None:
-        # If specifying a custom vmin, vmax, norm or cmap args, remove  the defaults
-        # - The discrete colorbar makes no sense anymore
-        if np.any(np.isin(["vmin", "vmax", "norm", "cmap"], list(plot_kwargs.keys()))):
-            default_cbar_kwargs.pop("ticks", None)
-            default_cbar_kwargs.pop("ticklabels", None)
-            default_plot_kwargs.pop("cmap", None)
-            default_plot_kwargs.pop("norm", None)
-            default_plot_kwargs.pop("vmin", None)
-            default_plot_kwargs.pop("vmax", None)
-
-    # If cmap is a string, retrieve colormap
-    if isinstance(plot_kwargs.get("cmap", None), str):
-        plot_kwargs["cmap"] = plt.get_cmap(plot_kwargs["cmap"])
-
-    # Update defaults with custom kwargs
-    default_plot_kwargs.update(plot_kwargs)
-    default_cbar_kwargs.update(cbar_kwargs)
-
-    # Return the kwargs
-    plot_kwargs = default_plot_kwargs
-    cbar_kwargs = default_cbar_kwargs
-
-    # Remove vmin, vmax
-    # --> vmin and vmax is not accepted by PolyCollection
-    # --> create norm or modify norm accordigly
-    norm = plot_kwargs.get("norm", None)
-    if norm is None:
-        norm = mpl.colors.Normalize(
-            vmin=plot_kwargs.pop("vmin", None), vmax=plot_kwargs.pop("vmax", None)
-        )
-        plot_kwargs["norm"] = norm
-    else:
-        if "vmin" in plot_kwargs:
-            if plot_kwargs["vmin"] is None:
-                _ = plot_kwargs.pop("vmin")
-            else:
-                plot_kwargs["norm"].vmin = plot_kwargs.pop("vmin")
-
-        if "vmax" in plot_kwargs:
-            if plot_kwargs["vmax"] is None:
-                _ = plot_kwargs.pop("vmax")
-            else:
-                plot_kwargs["norm"].vmax = plot_kwargs.pop("vmax")
-
-    return (plot_kwargs, cbar_kwargs)
 
 
 def get_extent(da, x="lon", y="lat"):

@@ -15,13 +15,13 @@ from gpm_api.utils.checks import (
     check_is_spatial_2d,
     get_slices_regular,
 )
+from gpm_api.utils.utils_cmap import get_colorbar_settings
 from gpm_api.visualization.plot import (
     _plot_cartopy_pcolormesh,
     #  _plot_mpl_imshow,
     _plot_xr_imshow,
     _preprocess_figure_args,
     _preprocess_subplot_kwargs,
-    get_colorbar_settings,
     plot_cartopy_background,
 )
 
