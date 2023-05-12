@@ -113,12 +113,22 @@ def check_time(time):
         datetime.datetime object.
 
     """
-    if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, str)):
+    if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, np.ndarray, str)):
         raise TypeError(
             "Specify time with datetime.datetime objects or a "
             "string of format 'YYYY-MM-DD hh:mm:ss'."
         )
-    # If np.datetime, convert to datetime.datetime
+    # If numpy array with datetime64 (and size=1)
+    if isinstance(time, np.ndarray):
+        if np.issubdtype(time.dtype, np.datetime64):
+            if time.size == 1:
+                time = time.astype("datetime64[s]").tolist()
+            else: 
+                raise ValueError("Expecting a single timestep!")
+        else: 
+            raise ValueError("The numpy array does not have a np.datetime64 dtype!")
+            
+    # If np.datetime64, convert to datetime.datetime
     if isinstance(time, np.datetime64):
         time = time.astype("datetime64[s]").tolist()
     # If datetime.date, convert to datetime.datetime
