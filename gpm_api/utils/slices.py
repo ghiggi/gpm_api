@@ -368,6 +368,12 @@ def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
     # Get slice size
     slice_size = get_slice_size(slc)
 
+    # If min_size is larger than allowable size, raise error
+    if min_size > (max_stop - min_start):
+        raise ValueError(
+            f"'min_size' {min_size} is too large to generate a slice between {min_start} and {max_stop}."
+        )
+
     # If slice size larger than min_size, return the slice
     if slice_size >= min_size:
         return slc
@@ -443,3 +449,37 @@ def enlarge_slices(list_slices, min_size, valid_shape):
 
 
 ###----------------------------------------------------------------------------.
+#### Tools for slice creation
+
+
+def get_slice_around_index(index, size, min_start=0, max_stop=np.inf):
+    """
+    Get a slice object of `size` around `index` value.
+
+    If size is larger than (max_stop-min_start), raise an error.
+
+    Parameters
+    ----------
+    index : int
+        The index value around which to retrieve the slice.
+    min_size : min_size
+        The desired size of the slice around the index.
+    min_start : int, optional
+       The default is np.inf.
+       The minimum value for the start of the new slice.
+       The default is 0.
+    max_stop : int
+        The maximum value for the stop of the new slice.
+
+    Returns
+    -------
+    slice
+        The new slice object with a size of at least min_size and respecting the left and right bounds.
+
+    """
+
+    index_slc = slice(index, index + 1)
+    slc = enlarge_slice(index_slc, min_size=size, min_start=min_start, max_stop=max_stop)
+    if slc == index_slc:
+        raise ValueError("'size' {size} is to large to be between {min_start} and {max_stop}.")
+    return slc
