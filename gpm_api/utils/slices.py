@@ -18,6 +18,8 @@ def get_list_slices_from_indices(indices):
     Example:
         [0,1,2,4,5,8] --> [slices(0,3),slice(4,6), slice(8,9)]
     """
+    if isinstance(indices, (int, float)):
+        indices = [indices]
     # Checks
     if len(indices) == 0:
         list_slices = []
