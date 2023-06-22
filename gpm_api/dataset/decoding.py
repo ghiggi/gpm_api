@@ -193,11 +193,11 @@ def apply_custom_decoding(ds, product):
                                                 2 : Bright Band detected by Ku only
                                                 3 : Bright Band detected by DFRm only
                                             """
-    if ds.attrs.get("TotalQualityCode"):
-        TotalQualityCode = ds.attrs.get("TotalQualityCode")
-        ds["TotalQualityCode"] = xr.DataArray(
-            np.repeat(TotalQualityCode, ds.dims["along_track"]), dims=["along_track"]
-        )
+    # if ds.attrs.get("TotalQualityCode"):
+    #     TotalQualityCode = ds.attrs.get("TotalQualityCode")
+    #     ds["TotalQualityCode"] = xr.DataArray(
+    #         np.repeat(TotalQualityCode, ds.dims["along_track"]), dims=["along_track"]
+    #     )
 
     # Correct for misreported _FillValue
     if "surfacePrecipitation" in dataset_vars:
