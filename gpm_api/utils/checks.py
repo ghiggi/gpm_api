@@ -105,22 +105,18 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
         List of slice object to select contiguous granules.
     """
 
-    if is_grid(xr_obj):
-        # TODO: use granule_id when gpm_api modified to include it also for GRID product
-        return get_slices_regular_time(xr_obj, tolerance=None, min_size=min_size)
-
-    if is_orbit(xr_obj):
-        # Get number of scans
-        n_scans = xr_obj["along_track"].shape[0]
-        # Define behaviour if less than 2 scan along track
+    if is_grid(xr_obj) or is_orbit(xr_obj):
+        # Get number of scans/timesteps
+        n_scans = xr_obj["gpm_granule_id"].shape[0]
+        # Define behaviour if less than 2 scans/timesteps
         # - If n_scans 0, slice(0, 0) could return empty array
         # - If n_scans 1, slice(0, 1) could return the single scan
         # --> Here we decide to return an empty list !
-        if n_scans < 2:
+        if n_scans < min_size:
             list_slices = []
             return list_slices
 
-        # Get boolean array indicating if the next scan is same or next granule
+        # Get boolean array indicating if the next scan/timesteps is same or next granule
         bool_arr = _is_contiguous_granule(xr_obj["gpm_granule_id"].data)
 
         # If granules are missing present, get the slices with non-missing granules

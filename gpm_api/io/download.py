@@ -363,7 +363,7 @@ def _convert_disk_to_pps_fpath(filepath):
 
 def convert_disk_to_pps_filepaths(filepaths):
     """
-    Convert disk filepaths to PPS filepaths.
+    Convert GPM filename or filepaths to PPS filepaths.
 
     Parameters
     ----------
@@ -759,8 +759,10 @@ def redownload_from_filepaths(
 
     # Get corrupted filepaths
     l_corrupted = get_corrupted_filepaths(filepaths)
+
     # Remove corrupted filepaths
     remove_corrupted_filepaths(filepaths=l_corrupted, verbose=verbose)
+
     # Retry download if retry > 1 as input argument
     if len(l_corrupted) > 0 and retry > 1:
         l_corrupted = redownload_from_filepaths(
@@ -773,35 +775,4 @@ def redownload_from_filepaths(
             retry=retry - 1,
         )
 
-    ### Old single process, slow
-    # for fpath in filepaths:
-    #     # Extract file information from filepath
-    #     info_dict = get_info_from_filepath(fpath)
-    #     start_time = info_dict["start_time"]
-    #     end_time = info_dict["end_time"]
-    #     list_dirs = fpath.split(os.path.sep)
-    #     product = list_dirs[-5]
-    #     version = int(list_dirs[-7][2])
-    #     product_type = list_dirs[-8]
-    #     base_dir = os.path.join(os.path.sep, *list_dirs[0:-8])
-    #     # Redownload the file
-    #     l_corrupted_fpath = download_data(
-    #         base_dir=base_dir,
-    #         username=username,
-    #         product=product,
-    #         start_time=start_time,
-    #         end_time=end_time,
-    #         product_type=product_type,
-    #         version=version,
-    #         n_threads=1,
-    #         transfer_tool=transfer_tool,
-    #         progress_bar=progress_bar,
-    #         force_download=force_download,
-    #         check_integrity=True,
-    #         remove_corrupted=True,
-    #         verbose=verbose,
-    #         retry=retry-1,
-    #     )
-    #     if len(l_corrupted_fpath) != 0:
-    #         l_corrupted.append(l_corrupted_fpath[0])
     return l_corrupted
