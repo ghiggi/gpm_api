@@ -55,6 +55,7 @@ def _mask_buffer(mask, footprint):
 
 
 def _check_array(arr):
+    """Check array and return a numpy array."""
     shape = arr.shape
     if len(shape) != 2:
         raise ValueError("Expecting a 2D array.")
@@ -67,55 +68,77 @@ def _check_array(arr):
 
 
 def _no_labels_result(arr):
+    """Define results for array without labels."""
     labels = np.zeros(arr.shape)
     n_labels = 0
-    counts = []
-    return labels, n_labels, counts
+    values = []
+    return labels, n_labels, values
 
 
-def check_sort_by(value):
-    valid_values = ["area", "max", "min", "sum", "mean", "median", "sd"]
-    if not isinstance(value, str):
-        raise TypeError(f"'sort_by' must be a string. Valid values are: {valid_values} .")
-    if value not in valid_values:
-        raise TypeError(f"Valid 'sort_by' values are: {valid_values}.")
+def check_sort_by(stats):
+    """Check 'sort_by' argument."""
+    if not (callable(stats) or isinstance(stats, str)):
+        raise TypeError("'sort_by' must be a string or a function.")
+    if isinstance(stats, str):
+        valid_stats = [
+            "area",
+            "maximum",
+            "mininum",
+            "mean",
+            "median",
+            "sum",
+            "standard_deviation",
+            "variance",
+        ]
+        if stats not in valid_stats:
+            raise ValueError(f"Valid 'sort_by' values are: {valid_stats}.")
+
+
+def _check_stats(stats):
+    """Check 'stats' argument."""
+    if not (callable(stats) or isinstance(stats, str)):
+        raise TypeError("'stats' must be a string or a function.")
+    if isinstance(stats, str):
+        valid_stats = [
+            "area",
+            "maximum",
+            "mininum",
+            "mean",
+            "median",
+            "sum",
+            "standard_deviation",
+            "variance",
+        ]
+        if stats not in valid_stats:
+            raise ValueError(f"Valid 'stats' values are: {valid_stats}.")
+    # TODO: check stats function works on a dummy array (reduce to single value)
+    return stats
 
 
 def _get_label_value_stats(arr, label_arr, label_indices=None, stats="area"):
     """Compute label value statistics over which to later sort on.
 
-    If labels_indices is None, it compute the statistic for each label.
+    If label_indices is None, by default would return the stats of the entire array
+    If label_indices is 0, return nan
+    If label_indices is not inside label_arr, return 0
     """
-    # For custom function:
-    # https://image.dask.org/en/latest/dask_image.ndmeasure.html#dask_image.ndmeasure.labeled_comprehension
-    # Note:
-    # - if label_indices None, by default would return the stats of the entire array
-    # - if label_indices is 0, return nan
-    # - If label_indices is not inside label_arr, return 0
-
+    # Check stats argument and label indices
+    stats = _check_stats(stats)
     if label_indices is None:
         label_indices = np.unique(label_arr)
-
-    if stats == "area":
-        values = dask_image.ndmeasure.area(image=arr, label_image=label_arr, index=label_indices)
-    elif stats == "max":
-        values = dask_image.ndmeasure.maximum(image=arr, label_image=label_arr, index=label_indices)
-    elif stats == "min":
-        values = dask_image.ndmeasure.minimum(image=arr, label_image=label_arr, index=label_indices)
-    elif stats == "mean":
-        values = dask_image.ndmeasure.mean(image=arr, label_image=label_arr, index=label_indices)
-    elif stats == "median":
-        values = dask_image.ndmeasure.median(image=arr, label_image=label_arr, index=label_indices)
-    elif stats == "sum":
-        values = dask_image.ndmeasure.sum_labels(
-            image=arr, label_image=label_arr, index=label_indices
-        )
-    elif stats == "sd":
-        values = dask_image.ndmeasure.standard_deviation(
-            image=arr, label_image=label_arr, index=label_indices
+    # Compute labels stats values
+    if callable(stats):
+        values = dask_image.ndmeasure.labeled_comprehension(
+            image=arr,
+            label_image=label_arr,
+            index=label_indices,
+            func=stats,
+            out_dtype=float,
+            pass_positions=False,
         )
     else:
-        raise NotImplementedError()
+        func = getattr(dask_image.ndmeasure, stats)
+        values = func(image=arr, label_image=label_arr, index=label_indices)
     # Compute values
     values = values.compute()
     # Return values
@@ -232,7 +255,51 @@ def get_areas_labels(
     sort_by="area",
     sort_decreasing=True,
 ):
-    # footprint: The neighborhood expressed as a 2-D array of 1’s and 0’s.
+    """
+    Function deriving the labels array and associated labels info.
+
+    Parameters
+    ----------
+    arr : TYPE
+        DESCRIPTION.
+    min_value_threshold : float, optional
+        The minimum value to define the interior of a label.
+        The default is -np.inf.
+    max_value_threshold : float, optional
+        The maximum value to define the interior of a label.
+        The default is np.inf.
+    min_area_threshold : float, optional
+        The minimum number of connected pixels to be defined as a label.
+        The default is 1.
+    max_area_threshold : float, optional
+        The maximum number of connected pixels to be defined as a label.
+        The default is np.inf.
+    footprint : (int, np.ndarray or None), optional
+        This argument enables to dilate the mask derived after applying
+        min_value_threshold and max_value_threshold.
+        If footprint = 0 or None, no dilation occur.
+        If footprint is a positive integer, it create a disk(footprint)
+        If footprint is a 2D array, it must represent the neighborhood expressed
+        as a 2-D array of 1’s and 0’s.
+        The default is None (no dilation).
+    sort_by : (callable or str), optional
+        A function or statistics to define the order of the labels.
+        Valid string statistics are "area", "maximum", "mininum", "mean",
+        "median", "sum", "standard_deviation", "variance".
+        The default is "area".
+    sort_decreasing : bool, optional
+        If True, sort labels by decreasing 'sort_by' value.
+        The default is True.
+
+    Returns
+    -------
+    labels_arr, np.ndarray
+        Label array. 0 values corresponds to no label.
+    n_labels, int
+        Number of labels in the labels array.
+    values, np.arrays
+        Array of length n_labels with the stats values associated to each label.
+    """
     # ---------------------------------.
     # TODO: this could be extended to work with dask >2D array
     # - dask_image.ndmeasure.label  https://image.dask.org/en/latest/dask_image.ndmeasure.html
@@ -296,6 +363,9 @@ def get_areas_labels(
         stats=sort_by,
         sort_decreasing=sort_decreasing,
     )
+    # ---------------------------------.
+    # TODO: optionally here calculate a list of label_stats
+    # -> values would be a n_label_stats x n_labels array !
 
     # ---------------------------------.
     # Relabel labels array (from 1 to n_labels)
@@ -316,9 +386,56 @@ def xr_get_areas_labels(
     sort_by="area",
     sort_decreasing=True,
 ):
+    """
+    Function deriving the labels array and associated labels info.
+
+    Parameters
+    ----------
+    data_array : xr.DataArray
+        DataArray object.
+    min_value_threshold : float, optional
+        The minimum value to define the interior of a label.
+        The default is -np.inf.
+    max_value_threshold : float, optional
+        The maximum value to define the interior of a label.
+        The default is np.inf.
+    min_area_threshold : float, optional
+        The minimum number of connected pixels to be defined as a label.
+        The default is 1.
+    max_area_threshold : float, optional
+        The maximum number of connected pixels to be defined as a label.
+        The default is np.inf.
+    footprint : (int, np.ndarray or None), optional
+        This argument enables to dilate the mask derived after applying
+        min_value_threshold and max_value_threshold.
+        If footprint = 0 or None, no dilation occur.
+        If footprint is a positive integer, it create a disk(footprint)
+        If footprint is a 2D array, it must represent the neighborhood expressed
+        as a 2-D array of 1’s and 0’s.
+        The default is None (no dilation).
+    sort_by : (callable or str), optional
+        A function or statistics to define the order of the labels.
+        Valid string statistics are "area", "maximum", "mininum", "mean",
+        "median", "sum", "standard_deviation", "variance".
+        The default is "area".
+    sort_decreasing : bool, optional
+        If True, sort labels by decreasing 'sort_by' value.
+        The default is True.
+
+    Returns
+    -------
+    labels_arr, xr.DataArray
+        Label DataArray. 0 values corresponds to no label.
+        The DataArray name is defined as "labels_{sort_by}".
+    n_labels, int
+        Number of labels in the labels array.
+    values, np.arrays
+        Array of length n_labels with the stats values associated to each label.
+    """
     # Extract data from DataArray
     if not isinstance(data_array, xr.DataArray):
         raise TypeError("Expecting xr.DataArray.")
+
     # Get labels
     labels_arr, n_labels, values = get_areas_labels(
         arr=data_array.data,
@@ -367,6 +484,51 @@ def label_xarray_object(
     sort_decreasing=True,
     label_name="label",
 ):
+    """
+    Compute labels and and add as a coordinates to an xarray object.
+
+    Parameters
+    ----------
+    xr_obj : (xr.DataArray or xr.Dataset)
+        xarray object.
+    variable : str, optional
+        Dataset variable to exploit to derive the labels array.
+        Must be specified only if the input object is an xr.Dataset.
+    min_value_threshold : float, optional
+        The minimum value to define the interior of a label.
+        The default is -np.inf.
+    max_value_threshold : float, optional
+        The maximum value to define the interior of a label.
+        The default is np.inf.
+    min_area_threshold : float, optional
+        The minimum number of connected pixels to be defined as a label.
+        The default is 1.
+    max_area_threshold : float, optional
+        The maximum number of connected pixels to be defined as a label.
+        The default is np.inf.
+    footprint : (int, np.ndarray or None), optional
+        This argument enables to dilate the mask derived after applying
+        min_value_threshold and max_value_threshold.
+        If footprint = 0 or None, no dilation occur.
+        If footprint is a positive integer, it create a disk(footprint)
+        If footprint is a 2D array, it must represent the neighborhood expressed
+        as a 2-D array of 1’s and 0’s.
+        The default is None (no dilation).
+    sort_by : (callable or str), optional
+        A function or statistics to define the order of the labels.
+        Valid string statistics are "area", "maximum", "mininum", "mean",
+        "median", "sum", "standard_deviation", "variance".
+        The default is "area".
+    sort_decreasing : bool, optional
+        If True, sort labels by decreasing 'sort_by' value.
+        The default is True.
+
+    Returns
+    -------
+    xr_obj : (xr.DataArray or xr.Dataset)
+        xarray object with the new label coordinate.
+        In the label coordinate, non-labels values are set to np.nan.
+    """
     # Check xarray input
     _check_xr_obj(xr_obj=xr_obj, variable=variable)
 
@@ -388,9 +550,18 @@ def label_xarray_object(
             "No patch available. You might want to change the patch generator parameters."
         )
 
+    # Set labels values == 0 to np.nan  (useful for plotting)
     da_labels = da_labels.where(da_labels > 0)
 
     # Assign label to xr.DataArray  coordinate
     xr_obj = xr_obj.assign_coords({label_name: da_labels})
 
+    return xr_obj
+
+
+def highlight_label(xr_obj, label_name, label_id):
+    """Set all labels values to 0 except for 'label_id'."""
+    label_arr = xr_obj[label_name].data
+    label_arr[label_arr != label_id] = 0
+    xr_obj[label_name].data = label_arr
     return xr_obj

@@ -6,7 +6,7 @@ Created on Wed Oct 19 19:40:12 2022
 """
 import numpy as np
 
-from gpm_api.patch.labels import label_xarray_object
+from gpm_api.patch.labels import highlight_label, label_xarray_object
 from gpm_api.utils.slices import (
     enlarge_slices,
     get_slice_from_idx_bounds,
@@ -52,6 +52,7 @@ def _is_natural_numbers(arr):
 
 
 def _check_label_arr(label_arr):
+    """Check label_arr."""
     # Note: If label array is all zero or nan, labels_id will be []
 
     # Put label array in memory
@@ -70,6 +71,7 @@ def _check_label_arr(label_arr):
 
 
 def _check_labels_id(labels_id, label_arr):
+    """Check labels_id."""
     # Check labels_id type
     if not isinstance(labels_id, (type(None), list, np.ndarray)):
         raise TypeError("labels_id must be None or a list or a np.array.")
@@ -102,7 +104,7 @@ def _check_patch_size(patch_size, array_shape):
     ----------
     patch_size : (None, int, float, list or tuple)
         The size of the patch to extract from the array.
-        If None, it set a patch size 2 all directions.
+        If None, it set a patch size of 2 in all directions.
         If int or float, the patch is a hypercube of size patch_size.
         If list or tuple, the patch has the shape specified by the elements of the list or tuple.
         The patch size must be equal or larger than 2, but smaller than the corresponding array shape.
@@ -114,7 +116,6 @@ def _check_patch_size(patch_size, array_shape):
     patch_size (None, tuple)
         The shape of the patch.
     """
-
     n_dims = len(array_shape)
     if patch_size is None:
         patch_size = 2
@@ -170,23 +171,34 @@ def _check_padding(padding, array_shape):
 
 def _get_labels_bbox_slices(arr):
     """
-        Compute the bounding box slices of non-zero elements in a n-dimensional numpy array.
+    Compute the bounding box slices of non-zero elements in a n-dimensional numpy array.
 
-        Parameters
-        ----------
-        arr : np.ndarray
-            n-dimensional numpy array.
-    .
-        Returns
-        -------
-        list_slices : list
-            List of slices to extract the region with non-zero elements in the input array.
+    Parameters
+    ----------
+    arr : np.ndarray
+        n-dimensional numpy array.
+
+    Returns
+    -------
+    list_slices : list
+        List of slices to extract the region with non-zero elements in the input array.
     """
     ndims = arr.ndim
     coords = np.nonzero(arr)
     list_slices = [
         get_slice_from_idx_bounds(np.min(coords[i]), np.max(coords[i])) for i in range(ndims)
     ]
+    return list_slices
+
+
+def _get_patch_list_slices(label_arr, label_id, padding, min_patch_size):
+    """Get patch subsetting isel dictionary for a given label."""
+    # Get label bounding box slices
+    list_slices = _get_labels_bbox_slices(label_arr == label_id)
+    # Apply padding to the slices
+    list_slices = pad_slices(list_slices, padding=padding, valid_shape=label_arr.shape)
+    # Increase slices to match min_patch_size
+    list_slices = enlarge_slices(list_slices, min_size=min_patch_size, valid_shape=label_arr.shape)
     return list_slices
 
 
@@ -200,7 +212,7 @@ def get_labeled_object_patches(
     highlight_label_id=True,
 ):
     """
-    Create a generator extracting patches around labels.
+    Create a generator extracting patches around labels (from a prelabeled xr.Dataset).
 
     Only one parameter between n_patches and labels_id can be specified.
     If n_patches=None and labels_id=None are both None, it returns a patch for each label.
@@ -263,29 +275,17 @@ def get_labeled_object_patches(
 
     # Extract patch around the label
     for label_id in labels_id[0:n_patches]:
-
-        # Get label bounding box slices
-        list_slices = _get_labels_bbox_slices(label_arr == label_id)
-
-        # Apply padding to the slices
-        list_slices = pad_slices(list_slices, padding=padding, valid_shape=label_arr.shape)
-
-        # Increase slices to match min_patch_size
-        list_slices = enlarge_slices(
-            list_slices, min_size=min_patch_size, valid_shape=label_arr.shape
+        # Extract patch list_slice
+        list_slices = _get_patch_list_slices(
+            label_arr=label_arr, label_id=label_id, padding=padding, min_patch_size=min_patch_size
         )
-
-        # Create subsetting dictionary
-        isel_dict = {dim: slc for dim, slc in zip(dims, list_slices)}
-
         # Extract xarray patch around label
+        isel_dict = {dim: slc for dim, slc in zip(dims, list_slices)}
         xr_obj_patch = xr_obj.isel(isel_dict)
 
-        # Set label array to 0 except for label_id
+        # If asked, set label array to 0 except for label_id
         if highlight_label_id:
-            patch_label_arr = xr_obj_patch[label_name].data
-            patch_label_arr[patch_label_arr != label_id] = 0
-            xr_obj_patch[label_name].data = patch_label_arr
+            xr_obj_patch = highlight_label(xr_obj_patch, label_name=label_name, label_id=label_id)
 
         # Return the patch around the label
         yield xr_obj_patch
@@ -306,6 +306,68 @@ def labels_patch_generator(
     padding=None,
     min_patch_size=None,
 ):
+    """
+    Create a generator extracting patches around sensible regions of an xr.Dataset.
+
+    The function first derives the labels array, and then it extract patches for n_patches labels.
+    If n_patches=None it returns a patch for each label.
+    The patch minimum size is defined by min_patch_size, which default to 2 in all dimensions.
+    If the naive label patch size is smaller than min_patch_size, the patch is enlarged to have
+    size equal to min_patch_size.
+
+    The output patches are not guaranteed to have equal size !
+
+    Parameters
+    ----------
+    xr_obj : (xr.Dataset or xr.DataArray)
+        xarray object.
+    variable : str, optional
+        Dataset variable to exploit to derive the labels.
+        Must be specified only if the input object is an xr.Dataset.
+    min_value_threshold : float, optional
+        The minimum value to define the interior of a label.
+        The default is -np.inf.
+    max_value_threshold : float, optional
+        The maximum value to define the interior of a label.
+        The default is np.inf.
+    min_area_threshold : float, optional
+        The minimum number of connected pixels to be defined as a label.
+        The default is 1.
+    max_area_threshold : float, optional
+        The maximum number of connected pixels to be defined as a label.
+        The default is np.inf.
+    footprint : (int, np.ndarray or None), optional
+        This argument enables to dilate the mask derived after applying
+        min_value_threshold and max_value_threshold.
+        If footprint = 0 or None, no dilation occur.
+        If footprint is a positive integer, it create a disk(footprint)
+        If footprint is a 2D array, it must represent the neighborhood expressed
+        as a 2-D array of 1’s and 0’s.
+        The default is None (no dilation).
+    sort_by : (callable or str), optional
+        A function or statistics to define the order of the labels.
+        Valid string statistics are "area", "maximum", "mininum", "mean",
+        "median", "sum", "standard_deviation", "variance".
+        The default is "area".
+    sort_decreasing : bool, optional
+        If True, sort labels by decreasing 'sort_by' value.
+        The default is True.
+    n_patches : int, optional
+        Number of patches to extract. The default is None (all).
+    padding : (int, tuple), optional
+        The padding to apply in each direction.
+        If None, it applies 0 padding in every dimension.
+        The default is None.
+    min_patch_size : (int, tuple), optional
+        The minimum size of the patch to extract.
+        If None (default) it set a minimum size of 2 in all dimensions.
+
+    Yields
+    ------
+    (xr.Dataset or xr.DataArray)
+        A xarray object patch.
+
+    """
     # Retrieve labeled xarray object
     xr_obj = label_xarray_object(
         xr_obj,
