@@ -6,13 +6,11 @@ Created on Sat Dec 10 18:42:28 2022
 """
 import cartopy
 import cartopy.crs as ccrs
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import PolyCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage import binary_dilation
-
 
 ### TODO: Add xarray + cartopy  (xr_carto) (xr_mpl)
 # _plot_cartopy_xr_imshow

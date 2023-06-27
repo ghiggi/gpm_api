@@ -9,6 +9,7 @@ import os
 import subprocess
 
 import dask
+import numpy as np
 import pandas as pd
 
 from gpm_api.configs import get_gpm_password, get_gpm_username
@@ -23,6 +24,28 @@ from gpm_api.io.checks import (
 )
 from gpm_api.io.directories import get_pps_directory
 from gpm_api.io.filter import filter_filepaths
+from gpm_api.io.info import get_version_from_filepaths
+
+
+def _check_correct_version(filepaths, product, version):
+    """Check correct file version.
+
+    If 'version' is the last version, we retrieve data from 'gpmalldata' directory.
+    But many products are not available to the last version.
+    So to archive data correctly on the user side, we check that the file version
+    actually match the asked version, and otherwise we suggest the last available version.
+    """
+    file_versions = np.unique(get_version_from_filepaths(filepaths, integer=True)).tolist()
+    if len(file_versions) > 1:
+        raise ValueError(
+            f"Multiple file versions found: {file_versions}. Please report their occurence !"
+        )
+    file_version = file_versions[0]
+    if file_version != version:
+        raise ValueError(
+            f"The last available version for {product} product is version {file_version} !"
+        )
+    return filepaths
 
 
 def _get_pps_file_list(username, password, url_file_list, product, date, version, verbose=True):
@@ -194,6 +217,9 @@ def _find_pps_daily_filepaths(
     )
     if is_empty(filepaths):
         return []
+    ## -----------------------------------------------------------------------.
+    ## Check correct version
+    filepaths = _check_correct_version(filepaths=filepaths, product=product, version=version)
 
     ##------------------------------------------------------------------------.
     # Filter the GPM daily file list (for product, start_time & end time)

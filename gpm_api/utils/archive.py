@@ -138,7 +138,7 @@ def check_file_integrity(
     ##---------------------------------------------------------------------.
     # Check that files have been downloaded  on disk
     if len(filepaths) == 0:
-        raise ValueError("Requested files are not found on disk. Please download them before.")
+        raise ValueError("No files found on disk. Please download them before.")
 
     ##---------------------------------------------------------------------.
     # Loop over files and list file that can't be opened
@@ -462,7 +462,7 @@ def check_no_duplicated_files(
     ##---------------------------------------------------------------------.
     # Check that files have been downloaded  on disk
     if len(filepaths) == 0:
-        raise ValueError("Requested files are not found on disk. Please download them before.")
+        raise ValueError("No files found on disk. Please download them before.")
     ##---------------------------------------------------------------------.
     # Retrieve granule id from filename
     filepaths = np.array(filepaths)
@@ -658,7 +658,7 @@ def check_archive_completness(
     ##---------------------------------------------------------------------.
     # Check that files have been downloaded on disk
     if len(filepaths) == 0:
-        raise ValueError("Requested files are not found on disk. Please download them before.")
+        raise ValueError("No files found on disk. Please download them before.")
 
     ##---------------------------------------------------------------------.
     # Check that the specified time period is covered

@@ -123,11 +123,11 @@ def check_time(time):
         if np.issubdtype(time.dtype, np.datetime64):
             if time.size == 1:
                 time = time.astype("datetime64[s]").tolist()
-            else: 
+            else:
                 raise ValueError("Expecting a single timestep!")
-        else: 
+        else:
             raise ValueError("The numpy array does not have a np.datetime64 dtype!")
-            
+
     # If np.datetime64, convert to datetime.datetime
     if isinstance(time, np.datetime64):
         time = time.astype("datetime64[s]").tolist()

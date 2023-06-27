@@ -588,7 +588,7 @@ def open_dataset(
     ##------------------------------------------------------------------------.
     # Check that files have been downloaded on disk
     if len(filepaths) == 0:
-        raise ValueError("Requested files are not found on disk. Please download them before.")
+        raise ValueError("No files found on disk. Please download them before.")
 
     # Check same version
     # - Filter by version make no sense because gpm_api version != filename version

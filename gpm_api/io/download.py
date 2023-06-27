@@ -10,6 +10,7 @@ import datetime
 import ftplib
 import os
 import subprocess
+import warnings
 
 import pandas as pd
 from tqdm import tqdm
@@ -34,6 +35,7 @@ from gpm_api.utils.archive import (
     remove_corrupted_filepaths,
 )
 from gpm_api.utils.utils_string import subset_list_by_boolean
+from gpm_api.utils.warnings import GPMDownloadWarning
 
 ### Currently we open a connection for every file
 ### We might want to launch wget in parallel directly
@@ -434,6 +436,7 @@ def _download_daily_data(
     progress_bar=True,
     force_download=False,
     verbose=True,
+    warn_missing_files=True,
 ):
     """
     Download GPM data from NASA servers using curl or wget.
@@ -508,8 +511,9 @@ def _download_daily_data(
     )
     # -------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
-    if is_empty(pps_filepaths):
-        # print("No data found on PPS on Date", Date, "for product", product)
+    if is_empty(pps_filepaths) and warn_missing_files:
+        msg = f"No data found on PPS on date {date} for product {product}"
+        warnings.warn(msg, GPMDownloadWarning)
         return None
 
     # -------------------------------------------------------------------------.
@@ -633,7 +637,12 @@ def download_data(
 
     # -------------------------------------------------------------------------.
     # Loop over dates and download the files
-    for date in dates:
+    for i, date in enumerate(dates):
+        if i == 0:
+            warn_missing_files = False
+        else:
+            warn_missing_files = True
+
         _ = _download_daily_data(
             base_dir=base_dir,
             username=username,
@@ -649,11 +658,12 @@ def download_data(
             progress_bar=progress_bar,
             force_download=force_download,
             verbose=verbose,
+            warn_missing_files=warn_missing_files,
         )
 
     # -------------------------------------------------------------------------.
     if verbose:
-        print(f"Download of available GPM {product} product completed.")
+        print(f"The available GPM {product} product files are on disk.")
     if check_integrity:
         l_corrupted = check_file_integrity(
             base_dir=base_dir,
@@ -666,10 +676,10 @@ def download_data(
             verbose=verbose,
         )
         if verbose:
-            print("Checking integrity of GPM files completed.")
-        if retry > 0 and remove_corrupted:
+            print("Integrity checking of GPM files has completed.")
+        if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
             if verbose:
-                print("Attempt to redownload the corrupted files.")
+                print("Start attempts to redownload the corrupted files.")
             l_corrupted = redownload_from_filepaths(
                 filepaths=l_corrupted,
                 username=username,
@@ -679,7 +689,13 @@ def download_data(
                 verbose=verbose,
                 retry=retry,
             )
-        return l_corrupted
+            if verbose:
+                if len(l_corrupted) == 0:
+                    print("All corrupted files have been redownloaded successively.")
+                else:
+                    print("Some corrupted files couldn't been redownloaded.")
+                    print("Returning the list of corrupted files.")
+                    return l_corrupted
     return None
 
 
