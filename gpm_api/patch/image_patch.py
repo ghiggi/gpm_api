@@ -13,22 +13,33 @@ Created on Fri Jan 13 16:41:17 2023
 # ximage.plot_label_patches()  [LABEL PATCHES]
 
 ####--------------------------------------------------------------------------.
-###########################
-#### Image-Extraction #####
-###########################
-#### LabelsPatchGenerator
-# Around Label point:
-#     - Centroid , Center of Mass] [REQUIRE LABEL]
-#     - Min, Max[OPTIONAL LABEL, BUT COULD BE USED TO MASK OUTSIDE LABEL]
+#################################
+#### Label-Patch Extraction #####
+#################################
+## Single Patch
+# Around Label        (heterogenous patch size)
+# - padding
+# - minimum size
 
-# Over image/ labels bbox
+# Around Label point  (fixed size)
+# - Centroid , Center of Mass, Min, Max,
+# - Custom Function (return row, col idx)
+# --> If point close to boundaries, expand on other valid directions
+# --> Option flagging if respected or not !
+
+# Multiple Patches    (fixed_size)
+# - Around labels bbox
+# - Around convex hull
 # --> Sliding
 # --> Tiling / Splitting
 # --> RandomSampling (number)
 # --> BlockSampling  (number)
 
+
 ####--------------------------------------------------------------------------.
-#### Tiling/Sliding/Sampling
+#######################################
+#### Image Tiling/Sliding/Sampling ####
+#######################################
 # xarray patch sampling
 # - sampling: RandomSampling, BlockSampling
 # - number_patches
@@ -94,6 +105,7 @@ Created on Fri Jan 13 16:41:17 2023
 # cucim.skimage.util.view_as_blocks
 # - no overlap allowed
 # - https://docs.rapids.ai/api/cucim/stable/api/#cucim.skimage.util.view_as_blocks
+
 
 # pytorch fold/unfold
 # --> https://pytorch.org/docs/stable/generated/torch.nn.Fold.html

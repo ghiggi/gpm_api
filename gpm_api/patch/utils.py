@@ -9,7 +9,6 @@ import itertools
 import numpy as np
 import pandas as pd
 from scipy.ndimage import find_objects
-from scipy.ndimage.measurements import center_of_mass
 
 from gpm_api.patch.labels import get_areas_labels
 from gpm_api.utils.slices import (
@@ -21,15 +20,6 @@ from gpm_api.utils.slices import (
 # Matlotlib extent: (xmin, xmax, ymin, ymax)
 # Cartopy extent: (xmin, xmax, ymin, ymax)
 # GPM-API extent: (xmin, xmax, ymin, ymax)
-
-####--------------------------------------------------------------------------.
-
-
-def get_row_col_slice_centroid(row_slice, col_slice):
-    row = int((row_slice.start + row_slice.stop - 1) / 2)
-    col = int((col_slice.start + col_slice.stop - 1) / 2)
-    return row, col
-
 
 ####--------------------------------------------------------------------------.
 #### Patch splitter
@@ -68,9 +58,16 @@ def split_large_objects_slices(objects_slices, patch_size):
 
 
 ####-------------------------------------------------------------------------.
-##########################
-#### Patch Extraction ####
-##########################
+#######################################
+#### Patch Extraction Arount Point ####
+#######################################
+
+
+def get_row_col_slice_centroid(row_slice, col_slice):
+    row = int((row_slice.start + row_slice.stop - 1) / 2)
+    col = int((col_slice.start + col_slice.stop - 1) / 2)
+    return row, col
+
 
 # get_patch_slices_around_point
 def get_patch_slices_around(row, col, patch_size, image_shape):
@@ -153,7 +150,6 @@ def get_patch_per_label(
 
     # ---------------------------------.
     # Retrieve image shape
-    image_shape = labels.shape
 
     # ---------------------------------.
     # Get bounding box slices for each label
@@ -212,37 +208,33 @@ def get_patch_per_label(
 
             # ---------------------------------.
             # Retrieve ideal patch center
-            if centered_on == "max":
-                row, col = np.where(tmp_intensity == np.nanmax(tmp_intensity))
-                row = r_slice.start + row[0]
-                col = c_slice.start + col[0]
-            elif centered_on == "min":
-                row, col = np.where(tmp_intensity == np.nanmin(tmp_intensity))
-                row = r_slice.start + row[0]
-                col = c_slice.start + col[0]
-            elif centered_on == "centroid":
-                row, col = get_row_col_slice_centroid(row_slice=r_slice, col_slice=c_slice)
-            elif centered_on == "center_of_mass":
-                row, col = center_of_mass(tmp_label_mask)
-                row = int(row)
-                col = int(col)
-                row = r_slice.start + row
-                col = c_slice.start + col
-            else:
-                raise NotImplementedError("")
+            # if centered_on == "max":
+            #     row, col = np.where(tmp_intensity == np.nanmax(tmp_intensity))
+            #     row = r_slice.start + row[0]
+            #     col = c_slice.start + col[0]
+            # elif centered_on == "min":
+            #     row, col = np.where(tmp_intensity == np.nanmin(tmp_intensity))
+            #     row = r_slice.start + row[0]
+            #     col = c_slice.start + col[0]
+            # elif centered_on == "centroid":
+            #     row, col = get_row_col_slice_centroid(row_slice=r_slice, col_slice=c_slice)
+            # elif centered_on == "center_of_mass":
+            #     row, col = center_of_mass(tmp_label_mask)
+            #     row = int(row)
+            #     col = int(col)
+            #     row = r_slice.start + row
+            #     col = c_slice.start + col
+            # else:
+            #     raise NotImplementedError("")
 
-            # ---------------------------------.
-            # Retrieve actual patch
-            row_slice, col_slice = get_patch_slices_around(row, col, patch_size, image_shape)
+            # # ---------------------------------.
+            # # Retrieve actual patch
+            # row_slice, col_slice = get_patch_slices_around(row, col, patch_size, image_shape)
             # assert get_slice_size(col_slice) == 128
             # print(get_slice_size(col_slice))
+            list_slices = None
             # Append to list
-            list_patch_slices.append((row_slice, col_slice))
-
-    # ---------------------------------.
-    # Postprocessing list_patch_slices
-    # TODO: with shapely?
-    # - distance between centroids ---> group ...
+            list_patch_slices.append(list_slices)
 
     # ---------------------------------.
     # Compute patch statistics

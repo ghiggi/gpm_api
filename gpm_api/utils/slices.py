@@ -282,12 +282,11 @@ def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
     padding : int
         Padding to be applied to the slice.
     min_start : int, optional
-       The default is np.inf.
        The minimum value for the start of the new slice.
        The default is 0.
     max_stop : int
         The maximum value for the stop of the new slice.
-
+        The default is np.inf.
     Returns
     -------
     list_slices : TYPE
@@ -355,12 +354,11 @@ def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
     min_size : min_size
         The desired minimum size of the new slice.
     min_start : int, optional
-       The default is np.inf.
        The minimum value for the start of the new slice.
        The default is 0.
     max_stop : int
         The maximum value for the stop of the new slice.
-
+        The default is np.inf.
     Returns
     -------
     slice

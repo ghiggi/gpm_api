@@ -9,6 +9,7 @@ import numpy as np
 from gpm_api.patch.labels import highlight_label, label_xarray_object
 from gpm_api.utils.slices import (
     enlarge_slices,
+    get_slice_around_index,
     get_slice_from_idx_bounds,
     pad_slices,
 )
@@ -20,6 +21,10 @@ from gpm_api.utils.slices import (
 # gpm_api accessor
 # - gpm_api.label_object
 # - gpm_api.labels_patch_generator
+
+
+# Future
+# - get_patches_from_labels (splitting, sliding on label bbox)
 
 ####--------------------------------------------------------------------------.
 #######################################
@@ -96,7 +101,7 @@ def _check_labels_id(labels_id, label_arr):
     return labels_id
 
 
-def _check_patch_size(patch_size, array_shape):
+def _check_patch_size(patch_size, array_shape, default_value):
     """
     Check the validity of the patch_size argument based on the array_shape.
 
@@ -118,7 +123,7 @@ def _check_patch_size(patch_size, array_shape):
     """
     n_dims = len(array_shape)
     if patch_size is None:
-        patch_size = 2
+        patch_size = default_value
     elif isinstance(patch_size, (int, float)):
         patch_size = tuple([patch_size] * n_dims)
     elif isinstance(patch_size, (list, tuple)) and len(patch_size) == n_dims:
@@ -135,6 +140,7 @@ def _check_patch_size(patch_size, array_shape):
     return patch_size
 
 
+####--------------------------------------------------------------------------.
 def _check_padding(padding, array_shape):
     """
     Check the validity of the padding argument based on the array_shape.
@@ -173,6 +179,11 @@ def _get_labels_bbox_slices(arr):
     """
     Compute the bounding box slices of non-zero elements in a n-dimensional numpy array.
 
+    Assume that only one unique non-zero elements values is present in the array.
+    Assume that NaN and Inf have been replaced by zeros.
+
+    Other implementations: scipy.ndimage.find_objects
+
     Parameters
     ----------
     arr : np.ndarray
@@ -191,8 +202,8 @@ def _get_labels_bbox_slices(arr):
     return list_slices
 
 
-def _get_patch_list_slices(label_arr, label_id, padding, min_patch_size):
-    """Get patch subsetting isel dictionary for a given label."""
+def _get_patch_list_slices_around_label(label_arr, label_id, padding, min_patch_size):
+    """Get list_slices to extract patch around a label."""
     # Get label bounding box slices
     list_slices = _get_labels_bbox_slices(label_arr == label_id)
     # Apply padding to the slices
@@ -226,7 +237,7 @@ def get_labeled_object_patches(
     ----------
     xr_obj : xr.Dataset
         xr.Dataset with a label array named label_bame.
-    label_name : TYPE
+    label_name : str
         Name of the variable/coordinate representing the label array.
     n_patches : int, optional
         Number of patches to extract. The default is None.
@@ -234,6 +245,10 @@ def get_labeled_object_patches(
         List of labels for which to extract the patch.
         If None, it extracts the patch by label order (1, 2, 3, ...)
         The default is None.
+    highlight_label_id : (bool), optional
+        If True, the laben_name array of each patch is modified to contain only
+        the label_id used to select the patch.
+
     min_patch_size : (int, tuple), optional
         The minimum size of the patch to extract.
         If None (default) it set a minimum size of 2 in all dimensions.
@@ -241,9 +256,6 @@ def get_labeled_object_patches(
         The padding to apply in each direction.
         If None, it applies 0 padding in every dimension.
         The default is None.
-    highlight_label_id : (bool), optional
-        If True, the laben_name array of each patch is modified to contain only
-        the label_id used to select the patch.
 
     Yields
     ------
@@ -261,7 +273,7 @@ def get_labeled_object_patches(
         raise ValueError("Specify either n_patches or labels_id.")
     label_arr = _check_label_arr(label_arr)  # ouput is np.array
     labels_id = _check_labels_id(labels_id=labels_id, label_arr=label_arr)
-    min_patch_size = _check_patch_size(min_patch_size, array_shape=shape)
+    min_patch_size = _check_patch_size(min_patch_size, array_shape=shape, default_value=2)
     padding = _check_padding(padding, array_shape=shape)
 
     # If no labels, no patch to extract
@@ -276,7 +288,7 @@ def get_labeled_object_patches(
     # Extract patch around the label
     for label_id in labels_id[0:n_patches]:
         # Extract patch list_slice
-        list_slices = _get_patch_list_slices(
+        list_slices = _get_patch_list_slices_around_label(
             label_arr=label_arr, label_id=label_id, padding=padding, min_patch_size=min_patch_size
         )
         # Extract xarray patch around label
@@ -289,6 +301,276 @@ def get_labeled_object_patches(
 
         # Return the patch around the label
         yield xr_obj_patch
+
+
+####--------------------------------------------------------------------------.
+def _check_callable_centered_on(centered_on):
+    """Check validity of callable centered_on."""
+    input_shape = (2, 3)
+    arr = np.zeros(input_shape)
+    point = centered_on(arr)
+    if not isinstance(point, (tuple, type(None))):
+        raise ValueError(
+            "The 'centered_on' function should return a point coordinates tuple or None."
+        )
+    if len(point) != len(input_shape):
+        raise ValueError(
+            "The 'centered_on' function should return point coordinates having same dimensions has input array."
+        )
+    for c, max_value in zip(point, input_shape):
+        if c < 0:
+            raise ValueError("The point coordinate must be a positive integer.")
+        if c >= max_value:
+            raise ValueError("The point coordinate must be inside the array shape.")
+        if np.isnan(c):
+            raise ValueError("The point coordinate must not be np.nan.")
+    try:
+        point = centered_on(arr * np.nan)
+        if point is not None:
+            raise ValueError(
+                "The 'centered_on' function should return None if the input array is a np.nan ndarray."
+            )
+    except:
+        raise ValueError("The 'centered_on' function should be able to deal with a np.nan ndarray.")
+
+
+def _check_centered_on(centered_on):
+    """Check valid centered_on to identify a point in an array."""
+    if not (callable(centered_on) or isinstance(centered_on, str)):
+        raise TypeError("'centered_on' must be a string or a function.")
+    if isinstance(centered_on, str):
+        valid_centered_on = [
+            "max",
+            "min",
+            "centroid",
+            "center_of_mass",
+        ]
+        if centered_on not in valid_centered_on:
+            raise ValueError(f"Valid 'centered_on' values are: {valid_centered_on}.")
+
+    if callable(centered_on):
+        _check_callable_centered_on(centered_on)
+    return centered_on
+
+
+def _get_point_centroid(arr):
+    """Get the coordinate of label bounding box center.
+
+    It assumes that the array has been cropped around the label.
+    It returns None if all values are non-finite (i.e. np.nan).
+    """
+    if np.all(~np.isfinite(arr)):
+        return None
+    centroid = np.array(arr.shape) / 2.0
+    centroid = tuple(centroid.tolist())
+    return centroid
+
+
+def get_point_with_max_value(arr):
+    """Get point with maximum value."""
+    point = np.argwhere(arr == np.nanmax(arr))
+    if len(point) == 0:
+        point = None
+    else:
+        point = tuple(point[0].tolist())
+    return point
+
+
+def get_point_with_min_value(arr):
+    """Get point with minimum value."""
+    point = np.argwhere(arr == np.nanmin(arr))
+    if len(point) == 0:
+        point = None
+    else:
+        point = tuple(point[0].tolist())
+    return point
+
+
+def get_point_center_of_mass(arr, integer_index=True):
+    """Get the coordinate of the label center of mass.
+
+    It uses all cells which have finite values.
+    If 0 value should be a non-label area, mask before with np.nan.
+    It returns None if all values are non-finite (i.e. np.nan).
+    """
+    indices = np.argwhere(np.isfinite(arr))
+    if len(indices):
+        return None
+    center_of_mass = np.nanmean(indices, axis=0)
+    if integer_index:
+        center_of_mass = center_of_mass.astype(int)
+    center_of_mass = tuple(center_of_mass.tolist())
+    return center_of_mass
+
+
+def _find_point(arr, centered_on="max"):
+    """Find a specific point coordinate of the array.
+
+    If the coordinate can't be find, return None.
+    """
+    if centered_on == "max":
+        point = get_point_with_max_value(arr)
+    elif centered_on == "min":
+        point = get_point_with_min_value(arr)
+    elif centered_on == "centroid":
+        point = _get_point_centroid(arr)
+    elif centered_on == "center_of_mass":
+        point = get_point_center_of_mass(arr)
+    else:  # callable centered_on
+        point = centered_on(arr)
+    return point
+
+
+def _get_patch_list_slices_around_label_point(
+    label_arr, label_id, variable_arr, patch_size, centered_on="max"
+):
+    """Get list_slices to extract patch around a label point.
+
+    Assume label_arr must match variable_arr shape.
+    Assume patch_size shape must match variable_arr shape .
+    """
+    # Subset variable_arr around label
+    list_slices = _get_labels_bbox_slices(label_arr == label_id)
+    label_subset_arr = label_arr[tuple(list_slices)]
+    variable_subset_arr = variable_arr[tuple(list_slices)]
+    variable_subset_arr = np.asarray(variable_subset_arr)  # if dask, make numpy
+    # Mask variable arr outside the label
+    variable_subset_arr[label_subset_arr != label_id] = np.nan
+    # Find point of subset array
+    point_subset_arr = _find_point(arr=variable_subset_arr, centered_on=centered_on)
+    # Define patch list_slices
+    if point_subset_arr is not None:
+        # Find point in original array
+        point = [slc.start + c for slc, c in zip(list_slices, point_subset_arr)]
+        # Find patch list slices
+        patch_list_slices = [
+            get_slice_around_index(p, size=size, min_start=0, max_stop=shape)
+            for p, size, shape in zip(point, patch_size, variable_arr.shape)
+        ]
+        # TODO: also return a flag if the p midpoint is conserved (by +/- 1) or not
+    else:
+        patch_list_slices = None
+    return patch_list_slices
+
+
+def get_patch_from_labels(
+    xr_obj,
+    label_name,
+    patch_size,
+    variable=None,
+    n_patches=None,
+    labels_id=None,
+    highlight_label_id=True,
+    centered_on="max",
+):
+    """
+    Create a generator extracting a patch around a point of each label (from a prelabeled xr.Dataset).
+
+    Only one parameter between n_patches and labels_id can be specified.
+    If n_patches=None and labels_id=None are both None, it returns a patch for each label.
+    The patch size is defined by default to 49x49 in all dimensions.
+
+    The way to define the point around which to extract the patch is given by the
+    'centered_on' argument. If the identified point is close to an array boundariy, the patch
+    is expand in the other valid directions
+
+    The output patches are guaranteed to have equal size !
+
+    Parameters
+    ----------
+    xr_obj : xr.Dataset
+        xr.Dataset with a label array named label_bame.
+    label_name : str
+        Name of the variable/coordinate representing the label array.
+    variable : str, optional
+        Dataset variable to use to identify the patch center.
+        This is required only for centered_on='max', 'min' or the custom function.
+    n_patches : int, optional
+        Number of patches to extract. The default is None.
+    labels_id : list, optional
+        List of labels for which to extract the patch.
+        If None, it extracts the patch by label order (1, 2, 3, ...)
+        The default is None.
+    highlight_label_id : (bool), optional
+        If True, the laben_name array of each patch is modified to contain only
+        the label_id used to select the patch.
+    patch_size : (int, tuple), optional
+        The size of the patch to extract.
+        If None (the default) is set to 49x49.
+    centered_on : (str, callable), optional
+        The centered_on to identify the center point around which to extract the patch.
+        Valid pre-implemented centered_ons are 'max','min','centroid','center_of_mass'.
+        The default is 'max'.
+        If centered_on is 'max', 'min' or a custom function, variable must be specified.
+        If centered_on is a custom function, it must:
+            - return None if all array values are non-finite (i.e np.nan)
+            - return a tuple with same length as the array shape.
+
+    Yields
+    ------
+    (xr.Dataset or xr.DataArray)
+        A xarray object patch.
+
+    """
+    # TODO: Add option that returns a flag if the point center is
+    # the actual identified one, or was close to the boundary !
+
+    # Get variable array
+    variable_arr = xr_obj[variable].data
+
+    # Get label array information
+    label_arr = xr_obj[label_name].data
+    dims = xr_obj[label_name].dims
+    shape = label_arr.shape
+
+    # Check input arguments
+    if n_patches is not None and labels_id is not None:
+        raise ValueError("Specify either n_patches or labels_id.")
+    label_arr = _check_label_arr(label_arr)  # output is np.array !
+    labels_id = _check_labels_id(labels_id=labels_id, label_arr=label_arr)
+    patch_size = _check_patch_size(patch_size, array_shape=shape, default_value=49)
+
+    # TODO:
+    # - check_variable_arr match label_arr
+    # - If centered_on is 'max', 'min' or a custom function, variable must be specified.
+
+    # If no labels, no patch to extract
+    n_labels = len(labels_id)
+    if n_labels == 0:
+        raise ValueError("No labels available.")
+        # yield None # TODO: DEFINE CORRECT BEHAVIOUR
+
+    # If n_patches is None --> n_patches = n_labels, else min(n_patches, n_labels)
+    n_patches = min(n_patches, n_labels) if n_patches else n_labels
+
+    # Extract patch around the label
+    for label_id in labels_id[0:n_patches]:
+
+        # Extract patch list_slice
+        list_slices = _get_patch_list_slices_around_label_point(
+            label_arr=label_arr,
+            label_id=label_id,
+            variable_arr=variable_arr,
+            patch_size=patch_size,
+            centered_on=centered_on,
+        )
+
+        if list_slices is None:
+            continue  # to next label
+
+        # Extract xarray patch around label
+        isel_dict = {dim: slc for dim, slc in zip(dims, list_slices)}
+        xr_obj_patch = xr_obj.isel(isel_dict)
+
+        # If asked, set label array to 0 except for label_id
+        if highlight_label_id:
+            xr_obj_patch = highlight_label(xr_obj_patch, label_name=label_name, label_id=label_id)
+
+        # Return the patch around the label
+        yield xr_obj_patch
+
+
+####--------------------------------------------------------------------------.
 
 
 def labels_patch_generator(
