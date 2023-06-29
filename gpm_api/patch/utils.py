@@ -36,6 +36,7 @@ def split_large_object_slices(object_slices, patch_size):
     for slc, max_size in zip(object_slices, patch_size):
         size = get_slice_size(slc)
         if size > max_size:
+            # Here tiling/sliding
             idxs = np.arange(slc.start, slc.stop - 1, max_size)  # start idxs
             l_slc = [slice(idxs[i], idxs[i + 1]) for i in range(len(idxs) - 1)]
             l_slc.append(slice(idxs[-1], slc.stop))
@@ -50,10 +51,9 @@ def split_large_object_slices(object_slices, patch_size):
 
 
 def split_large_objects_slices(objects_slices, patch_size):
-    l_object_slices = []
-    for object_slices in objects_slices:
-        l_slices = split_large_object_slices(object_slices, patch_size)
-        l_object_slices.extend(l_slices)
+    l_object_slices = [
+        split_large_object_slices(object_slices, patch_size) for object_slices in objects_slices
+    ]
     return l_object_slices
 
 

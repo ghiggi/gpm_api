@@ -561,6 +561,7 @@ def label_xarray_object(
 
 def highlight_label(xr_obj, label_name, label_id):
     """Set all labels values to 0 except for 'label_id'."""
+    xr_obj = xr_obj.copy(deep=True)  # required otherwise overwrite original data
     label_arr = xr_obj[label_name].data
     label_arr[label_arr != label_id] = 0
     xr_obj[label_name].data = label_arr

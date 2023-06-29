@@ -275,6 +275,8 @@ def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
     """
     Increase/decrease the slice with the padding argument.
 
+    Does not ensure that all output slices have same size.
+
     Parameters
     ----------
     slc : slice
@@ -483,3 +485,129 @@ def get_slice_around_index(index, size, min_start=0, max_stop=np.inf):
     if slc == index_slc:
         raise ValueError("'size' {size} is to large to be between {min_start} and {max_stop}.")
     return slc
+
+
+###----------------------------------------------------------------------------.
+#### Tools for slice tiling/sliding
+
+
+def get_tiling_slices(
+    start,
+    stop,
+    slice_size,
+    stride=0,
+    buffer=0,
+    include_last=True,
+    ensure_slice_size=False,
+    min_start=None,
+    max_stop=None,
+):
+    """
+    Create a tiling list of slices.
+
+    Parameters
+    ----------
+    start : int
+        Slice start.
+    stop : int
+        slice stop.
+    slice_size : int
+        Slice size.
+    stride : int, optional
+        Step size between slices.
+        If 0 (the default), contiguous/touching slices.
+        If positive stride make slices to not overlap and not touch
+        If negative stride make slices to overlap.
+    buffer:
+        The default is 0.
+        Value by which to enlarge a slice on each side.
+        If stride=0 and buffer is positive, it corresponds to
+        the amount of overlap between each tile.
+        The final slice size should be slice_size + buffer.
+        Depending on min_start and max_stop values, buffering might cause
+        border slices to not have same sizes.
+    include_last : bool, optional
+        Whether to include the last slice if not match slice_size.
+        The default is True.
+    ensure_slice_size : False, optional
+        Used only if include_last is True.
+        If False, the last slice does not have size 'slice_size'.
+        If True,  the last slice is enlarged to have 'slice_size', by
+        tentatively expanded the slice on both sides (accounting for min_start and max_stop).
+    min_start: int, optional
+        The minimum value that the first slice start value can have (when applying striding or buffering).
+        If None (the default), assumed to be equal to start.
+    max_stop: int, optional
+        Maximum value that the last slice stop value can have (when applying striding or buffering).
+        If None (the default), assumed to be equal to stop.
+
+    Returns
+    -------
+    slices : list
+        List of slices.
+
+    """
+    # Check arguments
+    if min_start is None:
+        min_start = start
+    if max_stop is None:
+        max_stop = stop
+    if buffer < 0:
+        if abs(buffer) >= int(slice_size / 2):
+            raise ValueError(
+                "The negative buffer absolute value is larger than half of the slice_size."
+            )
+    if slice_size <= 0:
+        raise ValueError("slice_size must be a positive non-zero integer.")
+
+    # Define tile start locations
+    steps = slice_size + stride
+    idxs = np.arange(start, stop, steps)
+    slices = [slice(idxs[i], idxs[i + 1]) for i in range(len(idxs) - 1)]
+
+    # Define last slice
+    if include_last and idxs[-1] != stop:
+        last_slice = slice(idxs[-1], stop)
+        if ensure_slice_size:
+            last_slice = enlarge_slice(
+                last_slice, min_size=slice_size, min_start=min_start, max_stop=max_stop
+            )
+
+        slices.append(last_slice)
+
+    # Buffer the slices
+    slices = [
+        pad_slice(slc, padding=buffer, min_start=min_start, max_stop=max_stop) for slc in slices
+    ]
+
+    return slices
+
+
+def get_tiles_list_slices(
+    list_slices, arr_shape, kernel_size, stride, buffer, include_last, ensure_slice_size
+):
+    """Return the tiles list of slices of a initial list of slices."""
+    import itertools
+
+    l_iterables = []
+    for i in range(len(list_slices)):
+        slice_size = kernel_size[i]
+        max_stop = arr_shape[i]
+        slc = list_slices[i]
+        start = slc.start
+        stop = slc.stop
+        slices = get_tiling_slices(
+            start=start,
+            stop=stop,
+            slice_size=slice_size,
+            stride=stride[i],
+            buffer=buffer[i],
+            include_last=include_last,
+            ensure_slice_size=ensure_slice_size,
+            min_start=0,
+            max_stop=max_stop,
+        )
+        l_iterables.append(slices)
+
+    tiles_list_slices = list(itertools.product(*l_iterables))
+    return tiles_list_slices

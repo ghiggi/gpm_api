@@ -32,6 +32,8 @@ Created on Fri Jan 13 16:41:17 2023
 # - Around convex hull
 # --> Sliding
 # --> Tiling / Splitting
+
+
 # --> RandomSampling (number)
 # --> BlockSampling  (number)
 
@@ -71,6 +73,13 @@ Created on Fri Jan 13 16:41:17 2023
 # --> https://figshare.com/articles/presentation/Xbatcher_-_A_Python_Package_That_Simplifies_Feeding_Xarray_Data_Objects_to_Machine_Learning_Libraries/22264072/1
 
 # Patch coordinate (0,0), (0,1), ...
+
+# https://numpy.org/doc/stable/reference/generated/numpy.lib.stride_tricks.as_strided.html
+# https://numpy.org/doc/stable/reference/generated/numpy.lib.stride_tricks.sliding_window_view.html
+
+# Merge Overalap Patches
+# - Keep buffer informationm trim govern behaviour
+# - https://github.com/Mr-TalhaIlyas/EMPatches/blob/main/scripts/empatches.py#L127
 
 ####--------------------------------------------------------------------------.
 # tiler
