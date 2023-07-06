@@ -311,6 +311,7 @@ def _plot_xr_imshow(
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
+    plt.title(da.name)
     if add_colorbar and ticklabels is not None:
         p.colorbar.ax.set_yticklabels(ticklabels)
     return p

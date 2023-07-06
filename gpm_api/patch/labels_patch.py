@@ -363,7 +363,7 @@ def get_point_center_of_mass(arr, integer_index=True):
     It returns None if all values are non-finite (i.e. np.nan).
     """
     indices = np.argwhere(np.isfinite(arr))
-    if len(indices):
+    if len(indices) == 0:
         return None
     center_of_mass = np.nanmean(indices, axis=0)
     if integer_index:
@@ -687,7 +687,7 @@ def get_labeled_object_patches(
     # Check input arguments
     if n_patches is not None and labels_id is not None:
         raise ValueError("Specify either n_patches or labels_id.")
-    label_arr = _check_label_arr(label_arr)  # ouput is np.array
+    label_arr = _check_label_arr(label_arr)  # output is np.array
     labels_id = _check_labels_id(labels_id=labels_id, label_arr=label_arr)
     min_patch_size = _check_patch_size(min_patch_size, array_shape=shape, default_value=2)
     padding = _check_padding(padding, array_shape=shape)
@@ -840,7 +840,7 @@ def get_patch_from_labels(
 #### TODO: UPDATE TO USE THIS
 
 
-def get_patches_from_labels(
+def _get_patches_isel_dict_from_labels(
     xr_obj,
     label_name,
     patch_size,
@@ -848,8 +848,7 @@ def get_patches_from_labels(
     # Output options
     n_patches=None,
     labels_id=None,
-    highlight_label_id=True,
-    return_xarray=True,
+    grouped_by_labels_id=False,
     # (Tile) label patch extraction
     padding=None,
     centered_on="max",  # TODO: default None for backward compatibility
@@ -862,104 +861,7 @@ def get_patches_from_labels(
     stride=0,  # 0 or 1: define terminology
     include_last=True,
     ensure_slice_size=True,
-    #
 ):
-    """
-    Routines to extract patches around labels.
-
-    Several options are implemented.
-
-    split
-    - centered_on = "centroid" (tiling around labels bbox)
-    - centered_on = "center_of_mass" (better coverage around label)
-
-    slide
-    - centered_on = "center_of_mass" (better coverage around label) (further data coverage)
-
-
-    Create a generator extracting a patch around a point of each label (from a prelabeled xr.Dataset).
-
-    Only one parameter between n_patches and labels_id can be specified.
-    If n_patches=None and labels_id=None are both None, it returns a patch for each label.
-    The patch size is defined by default to 49x49 in all dimensions.
-
-    The way to define the point around which to extract the patch is given by the
-    'centered_on' argument. If the identified point is close to an array boundariy, the patch
-    is expand in the other valid directions
-
-    The output patches are guaranteed to have equal size !
-
-    Create a generator extracting patches around labels (from a prelabeled xr.Dataset).
-
-    Only one parameter between n_patches and labels_id can be specified.
-    If n_patches=None and labels_id=None are both None, it returns a patch for each label.
-    The patch minimum size is defined by min_patch_size, which default to 2 in all dimensions.
-    If the naive label patch size is smaller than min_patch_size, the patch is enlarged to have
-    size equal to min_patch_size.
-
-    The output patches are not guaranteed to have equal size !
-
-    Parameters
-    ----------
-    xr_obj : xr.Dataset
-        xr.Dataset with a label array named label_bame.
-    label_name : str
-        Name of the variable/coordinate representing the label array.
-    patch_size : (int, tuple)
-        The dimensions of the n-dimensional patch to extract.
-        If the centered_on method (see below) is specified, all output patches
-        are ensured to have sthe ame shape.
-        If 'centered_on' is None (default), the patch_size argument only
-        defined the minimum n-dimensional shape of the output patches.
-    n_patches : int, optional
-        Number of patches to extract.
-        If None (the default) extract all patches given the
-        specified patch extraction criteria.
-    labels_id : list, optional
-        List of labels for which to extract the patch.
-        If None, it extracts the patch by label order (1, 2, 3, ...)
-        The default is None.
-    highlight_label_id : (bool), optional
-        If True, the laben_name array of each patch is modified to contain only
-        the label_id used to select the patch.
-
-    variable : str, optional
-        Dataset variable to use to identify the patch center when centered_on is defined.
-        This is required only for centered_on='max', 'min' or the custom function.
-    padding : (int, tuple), optional
-        The padding to apply in each direction around a label prior
-        to tiling/sliding or direct patch extraction.
-        If None, it applies 0 padding in every dimension.
-        The default is None.
-    centered_on : (str, callable), optional
-        If None, the default, it extract the patches around the (padded) bounding box
-        of the label.
-        If None, the output patch sizes are only ensured to have a minimum patch_size,
-        and will likely be of different size.
-        Otherwise, if the centered_on method is specified, the output patches
-        are ensured to have common patch size.
-
-        The centered_on method characterize the way the center point of the patch is defined.
-        Valid pre-implemented centered_on methods are 'max','min','centroid','center_of_mass'.
-        The default is 'max'.
-        If centered_on is 'max', 'min' or a custom function, variable must be specified.
-        If centered_on is a custom function, it must:
-            - return None if all array values are non-finite (i.e np.nan)
-            - return a tuple with same length as the array shape.
-
-    TODO
-    - Tiling/sliding arguments
-
-    Yields
-    ------
-    (xr.Dataset or xr.DataArray)
-        A xarray object patch.
-
-    """
-
-    """
-    (splitting, sliding on label bbox)
-    """
     # TODO:
     # - arguments based on dict with {dim:}
     # - If not specified, equivalent to default (or all dimensions)
@@ -1024,7 +926,6 @@ def get_patches_from_labels(
 
     # -------------------------------------------------------------------------.
     # Extract patch(es) around the label
-    dict_slices = {}
     for label_id in labels_id[0:n_patches]:
 
         # Subset label_arr around the given label
@@ -1079,29 +980,206 @@ def get_patches_from_labels(
         # Retrieve patches isel_dictionaries
         patches_isel_dicts = get_list_isel_dicts(patches_list_slices, dims=dims)
 
-        # Record patches isel dictionaries
-        if not return_xarray:
-            dict_slices[label_id] = patches_isel_dicts
-            continue
+        # ---------------------------------------------------------------------.
+        # Return isel_dicts
+        if grouped_by_labels_id:
+            yield label_id, patches_isel_dicts
+        else:
+            for isel_dict in patches_isel_dicts:
+                yield label_id, isel_dict
 
-        # --------------------------------------------------------------------.
-        # Extract the patches
-        for isel_dict in patches_isel_dicts:
-            xr_obj_patch = _extract_xr_patch(
-                xr_obj=xr_obj,
-                isel_dict=isel_dict,
-                label_name=label_name,
-                label_id=label_id,
-                highlight_label_id=highlight_label_id,
-            )
-            # TODO: Compute statistics
+        # ---------------------------------------------------------------------.
 
-            # Return the patch around the label
-            yield xr_obj_patch
 
-    # If return_xarray=False, the function return a dictionary with the slices.
-    if not return_xarray:
-        return dict_slices
+def get_patches_isel_dict_from_labels(
+    xr_obj,
+    label_name,
+    patch_size,
+    variable=None,
+    # Output options
+    n_patches=None,
+    labels_id=None,
+    # (Tile) label patch extraction
+    padding=None,
+    centered_on="max",  # TODO: default None for backward compatibility
+    debug=False,
+    # Label Tiling/sliding options
+    tiling=False,
+    sliding=False,
+    kernel_size=None,
+    buffer=0,
+    stride=0,  # 0 or 1: define terminology
+    include_last=True,
+    ensure_slice_size=True,
+):
+    gen = _get_patches_isel_dict_from_labels(
+        xr_obj=xr_obj,
+        label_name=label_name,
+        patch_size=patch_size,
+        variable=variable,
+        n_patches=n_patches,
+        labels_id=labels_id,
+        grouped_by_labels_id=True,
+        # Settings
+        tiling=tiling,
+        sliding=sliding,
+        padding=padding,
+        kernel_size=kernel_size,
+        buffer=buffer,
+        stride=stride,
+        centered_on=centered_on,
+        debug=debug,
+        include_last=include_last,
+        ensure_slice_size=ensure_slice_size,
+    )
+    dict_isel_dicts = {int(label_id): list_isel_dicts for label_id, list_isel_dicts in gen}
+    return dict_isel_dicts
+
+
+def get_patches_from_labels(
+    xr_obj,
+    label_name,
+    patch_size,
+    variable=None,
+    # Output options
+    n_patches=None,
+    labels_id=None,
+    highlight_label_id=True,
+    # (Tile) label patch extraction
+    padding=None,
+    centered_on="max",  # TODO: default None for backward compatibility
+    debug=False,
+    # Label Tiling/sliding options
+    tiling=False,
+    sliding=False,
+    kernel_size=None,
+    buffer=0,
+    stride=0,  # 0 or 1: define terminology
+    include_last=True,
+    ensure_slice_size=True,
+    #
+):
+    """
+    Routines to extract patches around labels.
+
+    Create a generator extracting (from a prelabeled xr.Dataset) a patch around:
+
+    - a label point
+    - a label bounding box
+
+    If 'centered_on' is specified, output patches are guaranteed to have equal shape !
+    If 'centered_on' is not specified, output patches are guaranteed to have only have a minimum shape !
+
+    If you want to extract the patch around the label bounding box, 'centered_on'
+    must not be specified.
+
+    If you want to extract the patch around a label point, the 'centered_on'
+    method must be specified. If the identified point is close to an array boundariy,
+    the patch is expanded toward the valid directions.
+
+    Tiling or sliding enables to split/slide over each label and extract multiple patch
+    for each tile.
+
+    tiling=True
+    - centered_on = "centroid" (tiling around labels bbox)
+    - centered_on = "center_of_mass" (better coverage around label)
+
+    sliding=True
+    - centered_on = "center_of_mass" (better coverage around label) (further data coverage)
+
+    Only one parameter between n_patches and labels_id can be specified.
+
+    Parameters
+    ----------
+    xr_obj : xr.Dataset
+        xr.Dataset with a label array named label_bame.
+    label_name : str
+        Name of the variable/coordinate representing the label array.
+    patch_size : (int, tuple)
+        The dimensions of the n-dimensional patch to extract.
+        If the centered_on method (see below) is specified, all output patches
+        are ensured to have sthe ame shape.
+        If 'centered_on' is None (default), the patch_size argument only
+        defined the minimum n-dimensional shape of the output patches.
+    n_patches : int, optional
+        Number of patches to extract.
+        If None (the default) extract all patches given the
+        specified patch extraction criteria.
+    labels_id : list, optional
+        List of labels for which to extract the patch.
+        If None, it extracts the patch by label order (1, 2, 3, ...)
+        The default is None.
+    highlight_label_id : (bool), optional
+        If True, the laben_name array of each patch is modified to contain only
+        the label_id used to select the patch.
+
+    variable : str, optional
+        Dataset variable to use to identify the patch center when centered_on is defined.
+        This is required only for centered_on='max', 'min' or the custom function.
+    padding : (int, tuple), optional
+        The padding to apply in each direction around a label prior
+        to tiling/sliding or direct patch extraction.
+        If None, it applies 0 padding in every dimension.
+        The default is None.
+    centered_on : (str, callable), optional
+        If None, the default, it extract the patches around the (padded) bounding box
+        of the label.
+        If None, the output patch sizes are only ensured to have a minimum patch_size,
+        and will likely be of different size.
+        Otherwise, if the centered_on method is specified, the output patches
+        are ensured to have common patch size.
+
+        The centered_on method characterize the way the center point of the patch is defined.
+        Valid pre-implemented centered_on methods are 'max','min','centroid','center_of_mass'.
+        The default is 'max'.
+        If centered_on is 'max', 'min' or a custom function, variable must be specified.
+        If centered_on is a custom function, it must:
+            - return None if all array values are non-finite (i.e np.nan)
+            - return a tuple with same length as the array shape.
+
+    TODO
+    - Tiling/sliding arguments
+
+    Yields
+    ------
+    (xr.Dataset or xr.DataArray)
+        A xarray object patch.
+
+    """
+    # Define patches isel dictionary generator
+    patches_isel_dicts_gen = _get_patches_isel_dict_from_labels(
+        xr_obj=xr_obj,
+        label_name=label_name,
+        patch_size=patch_size,
+        variable=variable,
+        n_patches=n_patches,
+        labels_id=labels_id,
+        grouped_by_labels_id=False,
+        # Settings
+        tiling=tiling,
+        sliding=sliding,
+        padding=padding,
+        kernel_size=kernel_size,
+        buffer=buffer,
+        stride=stride,
+        centered_on=centered_on,
+        debug=debug,
+        include_last=include_last,
+        ensure_slice_size=ensure_slice_size,
+    )
+
+    # Extract the patches
+    for label_id, isel_dict in patches_isel_dicts_gen:
+        xr_obj_patch = _extract_xr_patch(
+            xr_obj=xr_obj,
+            label_name=label_name,
+            isel_dict=isel_dict,
+            label_id=label_id,
+            highlight_label_id=highlight_label_id,
+        )
+
+        # Return the patch around the label
+        yield label_id, xr_obj_patch
 
 
 ####--------------------------------------------------------------------------.
@@ -1163,7 +1241,7 @@ def labels_patch_generator(
         The default is None (no dilation).
     sort_by : (callable or str), optional
         A function or statistics to define the order of the labels.
-        Valid string statistics are "area", "maximum", "mininum", "mean",
+        Valid string statistics are "area", "maximum", "minimum", "mean",
         "median", "sum", "standard_deviation", "variance".
         The default is "area".
     sort_decreasing : bool, optional

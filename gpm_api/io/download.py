@@ -13,7 +13,6 @@ import subprocess
 import warnings
 
 import pandas as pd
-from tqdm import tqdm
 
 from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
 from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
@@ -66,13 +65,13 @@ def curl_cmd(server_path, disk_path, username, password):
     # Base command: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
     # - -4: handle IPV6 connections
     # - v : verbose
-    # --fail : fail silently on server errors. Allow to deal better with failed attemps
+    # --fail : fail silently on server errors. Allow to deal better with failed attempts
     #           Return error > 0 when the request fails
     # --silent: hides the progress and error
     # --retry 10: retry 10 times
     # --retry-delay 5: with 5 secs delays
     # --retry-max-time 60*10: total time before it's considered failed
-    # --connect-timeout 20: limits time curl spend trying to connect ot the host to 20 secs
+    # --connect-timeout 20: limits time curl spend trying to connect to the host to 20 secs
     # --get url: specify the url
     # -o : write to file instead of stdout
     # Important note
@@ -160,6 +159,8 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
     -------
     List of commands which didn't complete.
     """
+    from tqdm import tqdm
+
     if n_threads < 1:
         n_threads = 1
     n_threads = min(n_threads, 10)
@@ -244,6 +245,8 @@ def _download_with_ftlib(server_path, disk_path, username, password):
 
 
 def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
+    from tqdm import tqdm
+
     # Download file concurrently
     n_files = len(server_paths)
     with tqdm(total=n_files) as pbar, concurrent.futures.ThreadPoolExecutor(
@@ -468,9 +471,9 @@ def _download_daily_data(
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
-        Wheter to display progress. The default is True.
+        Whether to display progress. The default is True.
     transfer_tool : str, optional
-        Wheter to use curl or wget for data download. The default is "curl".
+        Whether to use curl or wget for data download. The default is "curl".
     force_download : boolean, optional
         Whether to redownload data if already existing on disk. The default is False.
     verbose : bool, optional
@@ -575,9 +578,9 @@ def download_data(
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
-        Wheter to display progress. The default is True.
+        Whether to display progress. The default is True.
     transfer_tool : str, optional
-        Wheter to use curl or wget for data download. The default is "curl".
+        Whether to use curl or wget for data download. The default is "curl".
     force_download : boolean, optional
         Whether to redownload data if already existing on disk. The default is False.
     verbose : bool, optional
@@ -720,9 +723,9 @@ def redownload_from_filepaths(
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
-        Wheter to display progress. The default is True.
+        Whether to display progress. The default is True.
     transfer_tool : str, optional
-        Wheter to use curl or wget for data download. The default is "curl".
+        Whether to use curl or wget for data download. The default is "curl".
     verbose : bool, optional
         Whether to print processing details. The default is False.
     retry : int, optional,

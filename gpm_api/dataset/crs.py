@@ -8,7 +8,6 @@ Created on Tue Mar  7 17:27:48 2023
 import warnings
 
 import numpy as np
-import pyproj
 import xarray as xr
 from xarray import Variable
 
@@ -610,6 +609,8 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
     ds : xarray.Dataset
         Dataset with CF-compliant CRS information.
     """
+    import pyproj
+
     ds = remove_existing_crs_info(ds)
     ds = set_dataset_single_crs(
         ds=ds, crs=crs, grid_mapping_name=grid_mapping_name, inplace=inplace
@@ -660,6 +661,8 @@ def _get_crs_coordinates(xr_obj):
 
 def _get_list_pyproj_crs(xr_obj):
     """Return a list of pyproj specified CRS."""
+    import pyproj
+
     list_crs_names = _get_crs_coordinates(xr_obj)
     if len(list_crs_names) == 0:
         raise ValueError("No CRS coordinate in the dataset.")

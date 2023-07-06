@@ -489,6 +489,7 @@ def get_slice_around_index(index, size, min_start=0, max_stop=np.inf):
 
 ###----------------------------------------------------------------------------.
 #### Tools for slice tiling/sliding
+# TODO: implement sliding
 
 
 def get_tiling_slices(

@@ -21,3 +21,10 @@ repos:
     rev: v0.3.8
     hooks:
     - id: blackdoc
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+    -   id: codespell
+        types_or: [python, markdown]
+        additional_dependencies: [tomli]

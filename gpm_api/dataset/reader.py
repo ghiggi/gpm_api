@@ -9,7 +9,6 @@ import warnings
 
 import h5py
 import numpy as np
-import pyproj
 import xarray as xr
 
 from gpm_api.configs import get_gpm_base_dir
@@ -76,8 +75,10 @@ def reshape_dataset(ds):
 
 def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
     """Finalize GPM dataset."""
+    import pyproj
+
     ##------------------------------------------------------------------------.
-    # Tranpose to have (y, x) dimension order
+    # Transpose to have (y, x) dimension order
     ds = reshape_dataset(ds)
 
     ##------------------------------------------------------------------------.
@@ -391,7 +392,7 @@ def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=
 
 
 def _is_valid_granule(filepath):
-    """Chech the GPM HDF file is readable, not corrupted and not EMPTY."""
+    """Check the GPM HDF file is readable, not corrupted and not EMPTY."""
     # Try loading the HDF granule file
     try:
         with h5py.File(filepath, "r", locking=False, swmr=SWMR) as hdf:
@@ -407,7 +408,7 @@ def _is_valid_granule(filepath):
                 "This is a gpm_api bug. `find_GPM_files` should not have returned this filepath."
             )
         elif "lock" in error_str:
-            msg = "Unfortunately, HDF locking is occuring."
+            msg = "Unfortunately, HDF locking is occurring."
             msg += "Export the environment variable HDF5_USE_FILE_LOCKING = 'FALSE' into your environment (i.e. in the .bashrc).\n"  # noqa
             msg += f"The error is: '{error_str}'."
             raise ValueError(msg)
@@ -533,7 +534,7 @@ def open_dataset(
         GPM version of the data to retrieve if product_type = 'RS'.
         GPM data readers currently support version 4, 5, 6 and 7.
     chunks : str, list, optional
-        Chunck size for dask. The default is 'auto'.
+        Chunk size for dask. The default is 'auto'.
         Alternatively provide a list (with length equal to 'variables') specifying
         the chunk size option for each variable.
     decode_cf: bool, optional

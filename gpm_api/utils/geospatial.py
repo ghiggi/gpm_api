@@ -9,6 +9,11 @@ import xarray as xr
 
 from gpm_api.utils.slices import get_list_slices_from_indices
 
+# Shapely bounds: (xmin, ymin, xmax, ymax)
+# Matlotlib extent: (xmin, xmax, ymin, ymax)
+# Cartopy extent: (xmin, xmax, ymin, ymax)
+# GPM-API extent: (xmin, xmax, ymin, ymax)
+
 #### TODO:
 # - croup_around(point, distance)
 # - get_extent_around(point, distance)
@@ -229,7 +234,7 @@ def is_spatial_2d(xr_obj):
         return True
     elif set(xr_obj.dims) == set(
         ("lat", "lon")
-    ):  # TOOD: Enforce latitude, longitude (i.e. with IMERG)
+    ):  # TODO: Enforce latitude, longitude (i.e. with IMERG)
         return True
     else:
         return False
