@@ -19,11 +19,9 @@ end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S"
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'
 product_type = "RS"
 version = 6
-username = "gionata.ghiggi@epfl.ch"
 
 # Download the data
 gpm_api.download(
-    username=username,
     product=product,
     product_type=product_type,
     version=version,
@@ -173,10 +171,10 @@ da = ds[variable].isel(time=0)
 da.gpm_api.plot_patches(
     min_value_threshold=3,
     min_area_threshold=5,
-    sort_by="max",  # area
+    sort_by="maximum",
     sort_decreasing=True,
     n_patches=4,
-    min_patch_size=(50, 50),
+    patch_size=(50, 50),
     padding=5,
     interpolation="nearest",
 )
@@ -186,10 +184,10 @@ ds.isel(time=0).gpm_api.plot_patches(
     variable=variable,  # this is required for xr.Dataset !
     min_value_threshold=3,
     min_area_threshold=5,
-    sort_by="max",  # area
+    sort_by="maximum",
     sort_decreasing=True,
     n_patches=10,
-    min_patch_size=(20, 20),
+    patch_size=(20, 20),
     padding=1,
     interpolation="nearest",
 )

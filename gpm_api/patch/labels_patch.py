@@ -4,51 +4,51 @@ Created on Wed Oct 19 19:40:12 2022
 
 @author: ghiggi
 """
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 
 from gpm_api.patch.labels import highlight_label, label_xarray_object
 from gpm_api.utils.slices import (
     enlarge_slices,
+    get_nd_partitions_list_slices,
     get_slice_around_index,
     get_slice_from_idx_bounds,
-    get_tiles_list_slices,  # TODO: better name
     pad_slices,
 )
 
 #### Note
 # - labels_patch_generator available as ds.gpm_api.labels_patch_generator
-# - get_labeled_object_patches used in gpm_api/visualization.labels
+# - get_patches_from_labels used in gpm_api/visualization.labels
 
 # gpm_api accessor
 # - gpm_api.label_object
 # - gpm_api.labels_patch_generator
 
-
+# -----------------------------------------------------------------------------.
 #### TODOs
-# - Case where tiling kernel_size larger or equal to label_bbox
-# -->  Tiling slices only when label_bbox_size > patch_size?
-# - Implement sliding
-# - Define stride behaviour.
-#   For tiling, stride=0 means no spacing between tiles
-#   For sliding, stride=1 means move by steps of 1. stride=0 in sliding means infinite loop !
-# - Implement definition of patch_size, padding, stride, buffer by integers or dictionary only !
-# - Implement defaults when some dimensions are not specified
-# - Patch_size -1 ...means original array dimension
-# - Stride, padding, buffer --> 0 means do nothing (but for sliding stride=0 problematic)
-# - Implement dilate option (to subset pixel within tiles).
-#   --> slice(start, stop, step=dilate) ... with patch_size redefined at start to patch_size*dilate
-#   --> Need updates of enlarge slcies, pad_slices utilities (but first test current usage !)
-# - Option to mask outside labels !
-# - Improve tiles_list_slices
+# - Option to bound min_start and max_stop to labels bbox
+# - Improve partitions_list_slices
 #   --> Change start and stop (if allowed by min_start and max_stop)
 #       to be divisible by patch_size + stride ...
+# - Add option that returns a flag if the point center is the actual identified one,
+#   or was close to the boundary !
 
+# - Check case where tiling kernel_size larger or equal to label_bbox
+# - Option: partition_only_on_label_bbox_patch_size_exceedance
 
-## Image tiling
+# -----------------------------------------------------------------------------.
+# - Implement dilate option (to subset pixel within partitions).
+#   --> slice(start, stop, step=dilate) ... with patch_size redefined at start to patch_size*dilate
+#   --> Need updates of enlarge slcies, pad_slices utilities (but first test current usage !)
+
+# -----------------------------------------------------------------------------.
+
+## Image sliding/tiling reconstruction
 # - get_index_overlapping_slices
-
-# trim: bool, keyword only
+# - trim: bool, keyword only
 #   Whether or not to trim stride elements from each block after calling the map function.
 #   Set this to False if your mapping function already does this for you.
 #   This for when merging !
@@ -56,9 +56,33 @@ from gpm_api.utils.slices import (
 ####--------------------------------------------------------------------------.
 
 
-def _is_natural_numbers(arr):
+def are_all_integers(arr, negative_allowed=True):
     """
-    Check if all values in the input numpy array are natural numbers (positive integers or positive floats)
+    Check if all values in the input numpy array are integers.
+
+    Parameters
+    ----------
+    arr : (list, tuple, np.ndarray)
+       List, tuple or array of values to be checked.
+    negative_allowed: bool, optional
+        If False, return True only for integers >=1 (natural numbers)
+
+    Returns
+    -------
+    bool
+        True if all values in the array are integers, False otherwise.
+
+    """
+    is_integer = np.isclose(arr, np.round(arr), atol=1e-12, rtol=1e-12)
+    if negative_allowed:
+        return bool(np.all(is_integer))
+    else:
+        return bool(np.all(np.logical_and(np.greater(arr, 0), is_integer)))
+
+
+def are_all_natural_numbers(arr):
+    """
+    Check if all values in the input numpy array are natural numbers (>1).
 
     Parameters
     ----------
@@ -68,20 +92,45 @@ def _is_natural_numbers(arr):
     Returns
     -------
     bool
-        True if all values in the array are natural numbers, False otherwise..
+        True if all values in the array are natural numbers. False otherwise.
 
     """
-    # TODO: does not work correctly. See TODOs below.
-    return bool(
-        np.all(
-            np.logical_and(
-                np.greater(arr, 0), np.isclose(arr, np.round(arr), atol=1e-12, rtol=1e-12)
+    return are_all_integers(arr, negative_allowed=False)
+
+
+def _ensure_is_dict_argument(arg, dims, arg_name):
+    """Ensure argument is a dictionary with same order as dims."""
+    if isinstance(arg, (int, float)):
+        arg = {dim: arg for dim in dims}
+    if isinstance(arg, (list, tuple)):
+        if len(arg) != len(dims):
+            raise ValueError(f"{arg_name} must match the number of dimensions of the label array.")
+        arg = dict(zip(dims, arg))
+    if isinstance(arg, dict):
+        dict_dims = np.array(list(arg))
+        unvalid_dims = dict_dims[np.isin(dict_dims, dims, invert=True)].tolist()
+        if len(unvalid_dims) > 0:
+            raise ValueError(
+                f"{arg_name} must not contain dimensions {unvalid_dims}. It expects only {dims}."
             )
-        )
-    )
+        missing_dims = np.array(dims)[np.isin(dims, dict_dims, invert=True)].tolist()
+        if len(missing_dims) > 0:
+            raise ValueError(f"{arg_name} must contain also dimensions {missing_dims}")
+    else:
+        type_str = type(arg)
+        raise TypeError(f"Unrecognized type {type_str} for argument {arg_name}.")
+    # Reorder as function of dims
+    arg = {dim: arg[dim] for dim in dims}
+    return arg
 
 
-def _check_label_arr(label_arr):
+def _replace_full_dimension_flag_value(arg, shape):
+    """Replace -1 values with the corresponding dimension shape."""
+    arg = {dim: shape[i] if value == -1 else value for i, (dim, value) in enumerate(arg.items())}
+    return arg
+
+
+def check_label_arr(label_arr):
     """Check label_arr."""
     # Note: If label array is all zero or nan, labels_id will be []
 
@@ -94,17 +143,19 @@ def _check_label_arr(label_arr):
 
     # Check labels_id are natural number >= 1
     valid_labels = np.unique(label_arr[~np.isnan(label_arr)])
-    if not _is_natural_numbers(valid_labels):
+    if not are_all_natural_numbers(valid_labels):
         raise ValueError("The label array contains non positive natural numbers.")
 
     return label_arr
 
 
-def _check_labels_id(labels_id, label_arr):
+def check_labels_id(labels_id, label_arr):
     """Check labels_id."""
     # Check labels_id type
-    if not isinstance(labels_id, (type(None), list, np.ndarray)):
+    if not isinstance(labels_id, (type(None), int, list, np.ndarray)):
         raise TypeError("labels_id must be None or a list or a np.array.")
+    if isinstance(labels_id, int):
+        labels_id = [labels_id]
     # Get list of valid labels
     valid_labels = np.unique(label_arr[~np.isnan(label_arr)])
     # If labels_id is None, assign the valid_labels
@@ -116,158 +167,245 @@ def _check_labels_id(labels_id, label_arr):
     # Check labels_id are natural number >= 1
     if np.any(labels_id == 0):
         raise ValueError("labels id must not contain the 0 value.")
-    if not _is_natural_numbers(labels_id):
+    if not are_all_natural_numbers(labels_id):
         raise ValueError("labels id must be positive natural numbers.")
     # Check labels_id are number present in the label_arr
     unvalid_labels = labels_id[~np.isin(labels_id, valid_labels)]
     if unvalid_labels.size != 0:
         unvalid_labels = unvalid_labels.astype(int)
         raise ValueError(f"The following labels id are not valid: {unvalid_labels}")
+    # If no labels, no patch to extract
+    n_labels = len(labels_id)
+    if n_labels == 0:
+        raise ValueError("No labels available.")
     return labels_id
 
 
-def _check_patch_size(patch_size, array_shape, default_value):
+def check_patch_size(patch_size, dims, shape):
     """
-    Check the validity of the patch_size argument based on the array_shape.
+    Check the validity of the patch_size argument based on the array shape.
 
     Parameters
     ----------
-    patch_size : (None, int, float, list or tuple)
+    patch_size : (int, list, tuple, dict)
         The size of the patch to extract from the array.
-        If None, it set a patch size of 2 in all directions.
-        If int or float, the patch is a hypercube of size patch_size.
-        If list or tuple, the patch has the shape specified by the elements of the list or tuple.
-        The patch size must be equal or larger than 2, but smaller than the corresponding array shape.
-    array_shape : tuple
+        If int or float, the patch is a hypercube of size patch_size across all dimensions.
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, it must have has keys all array dimensions.
+        The value -1 can be used to specify the full array dimension shape.
+        Otherwise, only positive integers values (>1) are accepted.
+    dims : tuple
+        The names of the array dimensions.
+    shape : tuple
         The shape of the array.
 
     Returns
     -------
-    patch_size (None, tuple)
+    patch_size : dict
         The shape of the patch.
     """
-    n_dims = len(array_shape)
-    if patch_size is None:
-        patch_size = default_value
-    elif isinstance(patch_size, (int, float)):
-        patch_size = tuple([patch_size] * n_dims)
-    elif isinstance(patch_size, (list, tuple)) and len(patch_size) == n_dims:
-        if not _is_natural_numbers(patch_size):  # [0,1,..., Inf)
-            raise ValueError("Invalid patch size. Must be composed of natural numbers.")
-        # Check patch size is smaller than array shape
-        idx_valid = [x <= max_val for x, max_val in zip(patch_size, array_shape)]
-        if not all(idx_valid):
-            raise ValueError(f"The maximum patch size is {array_shape}")
-    else:
-        raise ValueError(
-            f"Invalid patch size. Should be None, int, float, list or tuple of length {n_dims}."
-        )
+    patch_size = _ensure_is_dict_argument(patch_size, dims=dims, arg_name="patch_size")
+    patch_size = _replace_full_dimension_flag_value(patch_size, shape)
+    # Check natural number
+    for dim, value in patch_size.items():
+        if not are_all_natural_numbers(value):
+            raise ValueError(
+                "Invalid 'patch_size' values. They must be only positive integer values."
+            )
+    # Check patch size is smaller than array shape
+    idx_valid = [value <= max_value for value, max_value in zip(patch_size.values(), shape)]
+    max_allowed_patch_size = {dim: value for dim, value in zip(dims, shape)}
+    if not all(idx_valid):
+        raise ValueError(f"The maximum allowed patch_size values are {max_allowed_patch_size}")
     return patch_size
 
 
-def _check_stride(stride, array_shape):
+def check_kernel_size(kernel_size, dims, shape):
     """
-    Check the validity of the stride argument based on the array_shape.
+    Check the validity of the kernel_size argument based on the array shape.
 
     Parameters
     ----------
-    stride : (None, int, float, list or tuple)
-        The size of the stride to apply to the array.
-        If None, no striding is assumed.
-        If int or float, equal stride is set on each dimension of the array.
-        If list or tuple, the stride has the shape specified by the elements of the list or tuple.
-    array_shape : tuple
+    kernel_size : (int, list, tuple, dict)
+        The size of the kernel to extract from the array.
+        If int or float, the kernel is a hypercube of size patch_size across all dimensions.
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, it must have has keys all array dimensions.
+        The value -1 can be used to specify the full array dimension shape.
+        Otherwise, only positive integers values (>1) are accepted.
+    dims : tuple
+        The names of the array dimensions.
+    shape : tuple
         The shape of the array.
 
     Returns
     -------
-    stride tuple
-        The stride to apply on each dimension.
+    kernel_size : dict
+        The shape of the kernel.
     """
-    n_dims = len(array_shape)
-    if stride is None:
-        stride = 0
-    elif isinstance(stride, (int, float)):
-        stride = tuple([stride] * n_dims)
-    elif isinstance(stride, (list, tuple)) and len(stride) == n_dims:
-        pass
-        # if not _is_natural_numbers(stride): # TODO: can be negative !
-        #     raise ValueError("Invalid stride. Must be composed of natural numbers.")
-    else:
-        raise ValueError(
-            f"Invalid stride. Should be None, int, float, list or tuple of length {n_dims}."
-        )
-    return stride
+    kernel_size = _ensure_is_dict_argument(kernel_size, dims=dims, arg_name="kernel_size")
+    kernel_size = _replace_full_dimension_flag_value(kernel_size, shape)
+    # Check natural number
+    for dim, value in kernel_size.items():
+        if not are_all_natural_numbers(value):
+            raise ValueError(
+                "Invalid 'kernel_size' values. They must be only positive integer values."
+            )
+    # Check patch size is smaller than array shape
+    idx_valid = [value <= max_value for value, max_value in zip(kernel_size.values(), shape)]
+    max_allowed_kernel_size = {dim: value for dim, value in zip(dims, shape)}
+    if not all(idx_valid):
+        raise ValueError(f"The maximum allowed patch_size values are {max_allowed_kernel_size}")
+    return kernel_size
 
 
-def _check_buffer(buffer, array_shape):
+def check_buffer(buffer, dims, shape):
     """
-    Check the validity of the buffer argument based on the array_shape.
+    Check the validity of the buffer argument based on the array shape.
 
     Parameters
     ----------
-    buffer : (None, int, float, list or tuple)
+    buffer : (int, float, list, tuple or dict)
         The size of the buffer to apply to the array.
-        If None, no buffer is assumed.
         If int or float, equal buffer is set on each dimension of the array.
-        If list or tuple, the buffer has the shape specified by the elements of the list or tuple.
-    array_shape : tuple
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, it must have has keys all array dimensions.
+    dims : tuple
+        The names of the array dimensions.
+    shape : tuple
         The shape of the array.
 
     Returns
     -------
-    buffer tuple
+    buffer : dict
         The buffer to apply on each dimension.
     """
-    n_dims = len(array_shape)
-    if buffer is None:
-        buffer = 0
-    elif isinstance(buffer, (int, float)):
-        buffer = tuple([buffer] * n_dims)
-    elif isinstance(buffer, (list, tuple)) and len(buffer) == n_dims:
-        pass
-        # if not _is_natural_numbers(buffer): # TODO: can be negative !
-        #     raise ValueError("Invalid buffer. Must be composed of natural numbers.")
-    else:
-        raise ValueError(
-            f"Invalid buffer. Should be None, int, float, list or tuple of length {n_dims}."
-        )
+    buffer = _ensure_is_dict_argument(buffer, dims=dims, arg_name="buffer")
+    for dim, value in buffer.items():
+        if not are_all_integers(value):
+            raise ValueError("Invalid 'buffer' values. They must be only integer values.")
     return buffer
 
 
-def _check_padding(padding, array_shape):
+def check_padding(padding, dims, shape):
     """
-    Check the validity of the padding argument based on the array_shape.
+    Check the validity of the padding argument based on the array shape.
 
     Parameters
     ----------
-    padding : (None, int, float, list or tuple)
+    padding : (int, float, list, tuple or dict)
         The size of the padding to apply to the array.
         If None, zero padding is assumed.
         If int or float, equal padding is set on each dimension of the array.
-        If list or tuple, the padding has the shape specified by the elements of the list or tuple.
-    array_shape : tuple
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, it must have has keys all array dimensions.
+    dims : tuple
+        The names of the array dimensions.
+    shape : tuple
         The shape of the array.
 
     Returns
     -------
-    padding tuple
+    padding : dict
         The padding to apply on each dimension.
     """
-    n_dims = len(array_shape)
-    if padding is None:
-        padding = 0
-    elif isinstance(padding, (int, float)):
-        padding = tuple([padding] * n_dims)
-    elif isinstance(padding, (list, tuple)) and len(padding) == n_dims:
-        pass
-        # if not _is_natural_numbers(padding): # TODO: can be negative !
-        #     raise ValueError("Invalid padding. Must be composed of natural numbers.")
-    else:
-        raise ValueError(
-            f"Invalid padding. Should be None, int, float, list or tuple of length {n_dims}."
-        )
+    padding = _ensure_is_dict_argument(padding, dims=dims, arg_name="padding")
+    for dim, value in padding.items():
+        if not are_all_integers(value):
+            raise ValueError("Invalid 'padding' values. They must be only integer values.")
     return padding
+
+
+def _check_n_patches_per_partition(n_patches_per_partition, centered_on):
+    """
+    Check the number of patches to extract from each partition.
+
+    It is used only if centered_on is a callable or 'random'
+
+    Parameters
+    ----------
+    n_patches_per_partition : int
+        Number of patches to extract from each partition.
+    centered_on : (str, callable)
+        Method to extract the patch around a label point.
+
+    Returns
+    -------
+    n_patches_per_partition: int
+       The number of patches to extract from each partition.
+    """
+    if n_patches_per_partition < 1:
+        raise ValueError("n_patches_per_partitions must be a positive integer.")
+    if isinstance(centered_on, str):
+        if centered_on not in ["random"]:
+            if n_patches_per_partition > 1:
+                raise ValueError(
+                    "Only the pre-implemented centered_on='random' method allow n_patches_per_partition values > 1."
+                )
+    return n_patches_per_partition
+
+
+def _check_n_patches_per_label(n_patches_per_label, n_patches_per_partition):
+    if n_patches_per_label < n_patches_per_partition:
+        raise ValueError("n_patches_per_label must be equal or larger to n_patches_per_partition.")
+    return n_patches_per_label
+
+
+def check_partitioning_method(partitioning_method):
+    """Check partitioning method."""
+    if not isinstance(partitioning_method, (str, type(None))):
+        raise TypeError("'partitioning_method' must be either a string or None.")
+    if isinstance(partitioning_method, str):
+        valid_methods = ["sliding", "tiling"]
+        if partitioning_method not in valid_methods:
+            raise ValueError(f"Valid 'partitioning_method' are {valid_methods}")
+    return partitioning_method
+
+
+def check_stride(stride, dims, shape, partitioning_method):
+    """
+    Check the validity of the stride argument based on the array shape.
+
+    Parameters
+    ----------
+    stride : (None, int, float, list, tuple, dict)
+        The size of the stride to apply to the array.
+        If None, no striding is assumed.
+        If int or float, equal stride is set on each dimension of the array.
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, it must have has keys all array dimensions.
+    dims : tuple
+        The names of the array dimensions.
+    shape : tuple
+        The shape of the array.
+    partitioning_method: (None, str)
+        The optional partitioning method (tiling or sliding) to use.
+
+    Returns
+    -------
+    stride : dict
+        The stride to apply on each dimension.
+    """
+    if partitioning_method is None:
+        return None
+    # Set default arguments
+    if stride is None:
+        if partitioning_method == "tiling":
+            stride = 0
+        else:  # sliding
+            stride = 1
+    stride = _ensure_is_dict_argument(stride, dims=dims, arg_name="stride")
+    if partitioning_method == "tiling":
+        for dim, value in stride.items():
+            if not are_all_integers(value):
+                raise ValueError("Invalid 'stride' values. They must be only integer values.")
+    else:  # sliding
+        for dim, value in stride.items():
+            if not are_all_natural_numbers(value):
+                raise ValueError(
+                    "Invalid 'stride' values. They must be only positive integer (>=1) values."
+                )
+    return stride
 
 
 def _check_callable_centered_on(centered_on):
@@ -300,9 +438,9 @@ def _check_callable_centered_on(centered_on):
         raise ValueError("The 'centered_on' function should be able to deal with a np.nan ndarray.")
 
 
-def _check_centered_on(centered_on):
+def check_centered_on(centered_on):
     """Check valid centered_on to identify a point in an array."""
-    if not (callable(centered_on) or isinstance(centered_on, (str, type(None)))):
+    if not (callable(centered_on) or isinstance(centered_on, str)):
         raise TypeError("'centered_on' must be a string or a function.")
     if isinstance(centered_on, str):
         valid_centered_on = [
@@ -310,6 +448,8 @@ def _check_centered_on(centered_on):
             "min",
             "centroid",
             "center_of_mass",
+            "random",
+            "label_bbox",  # unfixed patch_size
         ]
         if centered_on not in valid_centered_on:
             raise ValueError(f"Valid 'centered_on' values are: {valid_centered_on}.")
@@ -317,6 +457,31 @@ def _check_centered_on(centered_on):
     if callable(centered_on):
         _check_callable_centered_on(centered_on)
     return centered_on
+
+
+def _get_variable_arr(xr_obj, variable, centered_on):
+    if isinstance(xr_obj, xr.DataArray):
+        variable_arr = xr_obj.data
+        return variable_arr
+    else:
+        if centered_on is not None:
+            if variable is None and (centered_on in ["max", "min"] or callable(centered_on)):
+                raise ValueError("'variable' must be specified if 'centered_on' is specified.")
+        if variable is not None:
+            variable_arr = xr_obj[variable].data
+        else:
+            variable_arr = None
+    return variable_arr
+
+
+def _check_variable_arr(variable_arr, label_arr):
+    """Check variable array validity."""
+    if variable_arr is not None:
+        if variable_arr.shape != label_arr.shape:
+            raise ValueError(
+                "Arrays corresponding to 'variable' and 'label_name' must have same shape."
+            )
+    return variable_arr
 
 
 ####--------------------------------------------------------------------------.
@@ -333,6 +498,16 @@ def _get_point_centroid(arr):
     centroid = np.array(arr.shape) / 2.0
     centroid = tuple(centroid.tolist())
     return centroid
+
+
+def get_point_random(arr):
+    """Get random point with finite value."""
+    is_finite = np.isfinite(arr)
+    if np.all(~is_finite):
+        return None
+    points = np.argwhere(is_finite)
+    random_point = random.choice(points)
+    return random_point
 
 
 def get_point_with_max_value(arr):
@@ -385,6 +560,8 @@ def _find_point(arr, centered_on="max"):
         point = _get_point_centroid(arr)
     elif centered_on == "center_of_mass":
         point = get_point_center_of_mass(arr)
+    elif centered_on == "random":
+        point = get_point_random(arr)
     else:  # callable centered_on
         point = centered_on(arr)
     return point
@@ -418,7 +595,11 @@ def _get_labels_bbox_slices(arr):
 
 
 def _get_patch_list_slices_around_label_point(
-    label_arr, label_id, variable_arr, patch_size, centered_on="max"
+    label_arr,
+    label_id,
+    variable_arr,
+    patch_size,
+    centered_on,
 ):
     """Get list_slices to extract patch around a label point.
 
@@ -463,44 +644,71 @@ def _get_patch_list_slices_around_label(label_arr, label_id, padding, min_patch_
     return list_slices
 
 
-def _get_patches_from_tiles_list_slices(
-    tiles_list_slices,
+def get_patch_list_slices(label_arr, label_id, variable_arr, patch_size, centered_on, padding):
+    """Get patch n-dimensional list slices."""
+    if not callable(centered_on) and centered_on == "label_bbox":
+        list_slices = _get_patch_list_slices_around_label(
+            label_arr=label_arr, label_id=label_id, padding=padding, min_patch_size=patch_size
+        )
+    else:
+        list_slices = _get_patch_list_slices_around_label_point(
+            label_arr=label_arr,
+            label_id=label_id,
+            variable_arr=variable_arr,
+            patch_size=patch_size,
+            centered_on=centered_on,
+        )
+    return list_slices
+
+
+def _get_masked_arrays(label_arr, variable_arr, partition_list_slices):
+    """Mask labels and variable arrays outside the partitions area."""
+    masked_partition_label_arr = np.zeros(label_arr.shape) * np.nan
+    masked_partition_label_arr[tuple(partition_list_slices)] = label_arr[
+        tuple(partition_list_slices)
+    ]
+    if variable_arr is not None:
+        masked_partition_variable_arr = np.zeros(variable_arr.shape) * np.nan
+        masked_partition_variable_arr[tuple(partition_list_slices)] = variable_arr[
+            tuple(partition_list_slices)
+        ]
+    return masked_partition_label_arr, masked_partition_variable_arr
+
+
+def get_patches_from_partitions_list_slices(
+    partitions_list_slices,
     label_arr,
     variable_arr,
     label_id,
     patch_size,
     centered_on,
+    n_patches_per_partition,
     padding,
 ):
-    """Return patches list slices from list of tiles list_slices."""
-    patches_list_slices = []
-    for tile_list_slices in tiles_list_slices:
-        if centered_on is not None:
-            # Mask labels outside the tile area
-            # - TODO: renamed to masked .. since not subsetted
-            tile_label_arr = np.zeros(label_arr.shape) * np.nan
-            tile_label_arr[tuple(tile_list_slices)] = label_arr[tuple(tile_list_slices)]
+    """Return patches list slices from list of partitions list_slices.
 
-            # Extract patch list_slice
-            patch_list_slices = _get_patch_list_slices_around_label_point(
-                label_arr=tile_label_arr,
-                variable_arr=variable_arr,
+    n_patches_per_partition is 1 unless centered_on is 'random' or a callable.
+    """
+    patches_list_slices = []
+    for partition_list_slices in partitions_list_slices:
+        masked_label_arr, masked_variable_arr = _get_masked_arrays(
+            label_arr=label_arr,
+            variable_arr=variable_arr,
+            partition_list_slices=partition_list_slices,
+        )
+        n = 0
+        while n < n_patches_per_partition:
+            patch_list_slices = get_patch_list_slices(
+                label_arr=masked_label_arr,
+                variable_arr=masked_variable_arr,
                 label_id=label_id,
                 patch_size=patch_size,
                 centered_on=centered_on,
-            )
-        else:
-            # Extract patch list_slice
-            patch_list_slices = _get_patch_list_slices_around_label(
-                label_arr=label_arr,
-                label_id=label_id,
                 padding=padding,
-                min_patch_size=patch_size,
             )
-        # Append patch list slices
-        if patch_list_slices is not None:
-            patches_list_slices.append(patch_list_slices)
-    # Return patches list_slices
+            if patch_list_slices is not None:
+                n += 1
+                patches_list_slices.append(patch_list_slices)
     return patches_list_slices
 
 
@@ -542,22 +750,26 @@ def plot_rectangle_from_list_slices(ax, list_slices, edgecolor="red", facecolor=
     return ax
 
 
-def plot_2d_label_tiles_boundaries(
-    tiles_list_slices, label_arr, edgecolor="red", facecolor="None", **kwargs
+def plot_2d_label_partitions_boundaries(
+    partitions_list_slices, label_arr, edgecolor="red", facecolor="None", **kwargs
 ):
-    """Plot tiles from 2D list slices."""
+    """Plot partitions from 2D list slices."""
     # Define plot limits
-    xmin = min([patch_list_slices[1].start for patch_list_slices in tiles_list_slices])
-    xmax = max([patch_list_slices[1].stop for patch_list_slices in tiles_list_slices])
-    ymin = min([patch_list_slices[0].start for patch_list_slices in tiles_list_slices])
-    ymax = max([patch_list_slices[0].stop for patch_list_slices in tiles_list_slices])
+    xmin = min([patch_list_slices[1].start for patch_list_slices in partitions_list_slices])
+    xmax = max([patch_list_slices[1].stop for patch_list_slices in partitions_list_slices])
+    ymin = min([patch_list_slices[0].start for patch_list_slices in partitions_list_slices])
+    ymax = max([patch_list_slices[0].stop for patch_list_slices in partitions_list_slices])
 
     # Plot patches boundaries
     fig, ax = plt.subplots()
     ax.imshow(label_arr, origin="upper")
-    for tile_list_slices in tiles_list_slices:
+    for partition_list_slices in partitions_list_slices:
         _ = plot_rectangle_from_list_slices(
-            ax=ax, list_slices=tile_list_slices, edgecolor=edgecolor, facecolor=facecolor, **kwargs
+            ax=ax,
+            list_slices=partition_list_slices,
+            edgecolor=edgecolor,
+            facecolor=facecolor,
+            **kwargs,
         )
     # Set plot limits
     ax.set_xlim(xmin - 5, xmax + 5)
@@ -626,347 +838,116 @@ def plot_2d_label_patches_boundaries(patches_list_slices, label_arr):
 
 
 ####--------------------------------------------------------------------------.
-#### TODO: DEPRECATE
-
-
-def get_labeled_object_patches(
-    xr_obj,
-    label_name,
-    n_patches=None,
-    labels_id=None,
-    padding=None,
-    min_patch_size=None,
-    highlight_label_id=True,
-):
-    """
-    Create a generator extracting patches around labels (from a prelabeled xr.Dataset).
-
-    Only one parameter between n_patches and labels_id can be specified.
-    If n_patches=None and labels_id=None are both None, it returns a patch for each label.
-    The patch minimum size is defined by min_patch_size, which default to 2 in all dimensions.
-    If the naive label patch size is smaller than min_patch_size, the patch is enlarged to have
-    size equal to min_patch_size.
-
-    The output patches are not guaranteed to have equal size !
-
-    Parameters
-    ----------
-    xr_obj : xr.Dataset
-        xr.Dataset with a label array named label_bame.
-    label_name : str
-        Name of the variable/coordinate representing the label array.
-    n_patches : int, optional
-        Number of patches to extract. The default is None.
-    labels_id : list, optional
-        List of labels for which to extract the patch.
-        If None, it extracts the patch by label order (1, 2, 3, ...)
-        The default is None.
-    highlight_label_id : (bool), optional
-        If True, the laben_name array of each patch is modified to contain only
-        the label_id used to select the patch.
-
-    min_patch_size : (int, tuple), optional
-        The minimum size of the patch to extract.
-        If None (default) it set a minimum size of 2 in all dimensions.
-    padding : (int, tuple), optional
-        The padding to apply in each direction.
-        If None, it applies 0 padding in every dimension.
-        The default is None.
-
-    Yields
-    ------
-    (xr.Dataset or xr.DataArray)
-        A xarray object patch.
-
-    """
-    # Get label array information
-    label_arr = xr_obj[label_name].data
-    dims = xr_obj[label_name].dims
-    shape = label_arr.shape
-
-    # Check input arguments
-    if n_patches is not None and labels_id is not None:
-        raise ValueError("Specify either n_patches or labels_id.")
-    label_arr = _check_label_arr(label_arr)  # output is np.array
-    labels_id = _check_labels_id(labels_id=labels_id, label_arr=label_arr)
-    min_patch_size = _check_patch_size(min_patch_size, array_shape=shape, default_value=2)
-    padding = _check_padding(padding, array_shape=shape)
-
-    # If no labels, no patch to extract
-    n_labels = len(labels_id)
-    if n_labels == 0:
-        raise ValueError("No labels available.")
-        # yield None # TODO: DEFINE CORRECT BEHAVIOUR
-
-    # If n_patches is None --> n_patches = n_labels, else min(n_patches, n_labels)
-    n_patches = min(n_patches, n_labels) if n_patches else n_labels
-
-    # Extract patch around the label
-    for label_id in labels_id[0:n_patches]:
-        # Extract patch list_slice
-        list_slices = _get_patch_list_slices_around_label(
-            label_arr=label_arr, label_id=label_id, padding=padding, min_patch_size=min_patch_size
-        )
-        # Extract xarray patch around label
-        isel_dict = {dim: slc for dim, slc in zip(dims, list_slices)}
-        xr_obj_patch = xr_obj.isel(isel_dict)
-
-        # If asked, set label array to 0 except for label_id
-        if highlight_label_id:
-            xr_obj_patch = highlight_label(xr_obj_patch, label_name=label_name, label_id=label_id)
-
-        # Return the patch around the label
-        yield xr_obj_patch
-
-
-def get_patch_from_labels(
-    xr_obj,
-    label_name,
-    patch_size,
-    variable=None,
-    n_patches=None,
-    labels_id=None,
-    highlight_label_id=True,
-    centered_on="max",
-):
-    """
-    Create a generator extracting a patch around a point of each label (from a prelabeled xr.Dataset).
-
-    Only one parameter between n_patches and labels_id can be specified.
-    If n_patches=None and labels_id=None are both None, it returns a patch for each label.
-    The patch size is defined by default to 49x49 in all dimensions.
-
-    The way to define the point around which to extract the patch is given by the
-    'centered_on' argument. If the identified point is close to an array boundariy, the patch
-    is expand in the other valid directions
-
-    The output patches are guaranteed to have equal size !
-
-    Parameters
-    ----------
-    xr_obj : xr.Dataset
-        xr.Dataset with a label array named label_bame.
-    label_name : str
-        Name of the variable/coordinate representing the label array.
-    variable : str, optional
-        Dataset variable to use to identify the patch center.
-        This is required only for centered_on='max', 'min' or the custom function.
-    n_patches : int, optional
-        Number of patches to extract. The default is None.
-    labels_id : list, optional
-        List of labels for which to extract the patch.
-        If None, it extracts the patch by label order (1, 2, 3, ...)
-        The default is None.
-    highlight_label_id : (bool), optional
-        If True, the laben_name array of each patch is modified to contain only
-        the label_id used to select the patch.
-    patch_size : (int, tuple), optional
-        The size of the patch to extract.
-        If None (the default) is set to 49x49.
-    centered_on : (str, callable), optional
-        The centered_on to identify the center point around which to extract the patch.
-        Valid pre-implemented centered_ons are 'max','min','centroid','center_of_mass'.
-        The default is 'max'.
-        If centered_on is 'max', 'min' or a custom function, variable must be specified.
-        If centered_on is a custom function, it must:
-            - return None if all array values are non-finite (i.e np.nan)
-            - return a tuple with same length as the array shape.
-
-    Yields
-    ------
-    (xr.Dataset or xr.DataArray)
-        A xarray object patch.
-
-    """
-    # TODO: Add option that returns a flag if the point center is
-    # the actual identified one, or was close to the boundary !
-
-    # Get variable array
-    variable_arr = xr_obj[variable].data
-
-    # Get label array information
-    label_arr = xr_obj[label_name].data
-    dims = xr_obj[label_name].dims
-    shape = label_arr.shape
-
-    # Check input arguments
-    if n_patches is not None and labels_id is not None:
-        raise ValueError("Specify either n_patches or labels_id.")
-    label_arr = _check_label_arr(label_arr)  # output is np.array !
-    labels_id = _check_labels_id(labels_id=labels_id, label_arr=label_arr)
-    patch_size = _check_patch_size(patch_size, array_shape=shape, default_value=49)
-
-    # TODO:
-    # - check_variable_arr match label_arr
-    # - If centered_on is 'max', 'min' or a custom function, variable must be specified.
-
-    # If no labels, no patch to extract
-    n_labels = len(labels_id)
-    if n_labels == 0:
-        raise ValueError("No labels available.")
-        # yield None # TODO: DEFINE CORRECT BEHAVIOUR
-
-    # If n_patches is None --> n_patches = n_labels, else min(n_patches, n_labels)
-    n_patches = min(n_patches, n_labels) if n_patches else n_labels
-
-    # Extract patch around the label
-    for label_id in labels_id[0:n_patches]:
-
-        # Extract patch list_slice
-        list_slices = _get_patch_list_slices_around_label_point(
-            label_arr=label_arr,
-            label_id=label_id,
-            variable_arr=variable_arr,
-            patch_size=patch_size,
-            centered_on=centered_on,
-        )
-
-        if list_slices is None:
-            continue  # to next label
-
-        # Extract xarray patch around label
-        isel_dict = {dim: slc for dim, slc in zip(dims, list_slices)}
-        xr_obj_patch = xr_obj.isel(isel_dict)
-
-        # If asked, set label array to 0 except for label_id
-        if highlight_label_id:
-            xr_obj_patch = highlight_label(xr_obj_patch, label_name=label_name, label_id=label_id)
-
-        # Return the patch around the label
-        yield xr_obj_patch
-
-
-####--------------------------------------------------------------------------.
 #### TODO: UPDATE TO USE THIS
 
 
-def _get_patches_isel_dict_from_labels(
+def _get_patches_isel_dict_generator(
     xr_obj,
     label_name,
     patch_size,
     variable=None,
     # Output options
-    n_patches=None,
+    n_patches=np.Inf,
+    n_labels=None,
     labels_id=None,
     grouped_by_labels_id=False,
     # (Tile) label patch extraction
-    padding=None,
-    centered_on="max",  # TODO: default None for backward compatibility
+    padding=0,
+    centered_on="max",
+    n_patches_per_label=np.Inf,
+    n_patches_per_partition=1,
     debug=False,
-    # Label Tiling/sliding options
-    tiling=False,
-    sliding=False,
+    # Label Tiling/Sliding Options
+    partitioning_method=None,
+    n_partitions_per_label=None,
     kernel_size=None,
     buffer=0,
-    stride=0,  # 0 or 1: define terminology
+    stride=None,
     include_last=True,
     ensure_slice_size=True,
 ):
-    # TODO:
-    # - arguments based on dict with {dim:}
-    # - If not specified, equivalent to default (or all dimensions)
-
     # Get label array information
     label_arr = xr_obj[label_name].data
     dims = xr_obj[label_name].dims
     shape = label_arr.shape
 
     # Check input arguments
-    if n_patches is not None and labels_id is not None:
-        raise ValueError("Specify either n_patches or labels_id.")
-    if tiling and sliding:
-        raise ValueError("Only one between 'tiling' and 'sliding' can be both set to True.")
+    if n_labels is not None and labels_id is not None:
+        raise ValueError("Specify either n_labels or labels_id.")
     if kernel_size is None:
         kernel_size = patch_size
 
-    patch_size = _check_patch_size(
-        patch_size, array_shape=shape, default_value=2
-    )  # TODO: remove defaults
-    kernel_size = _check_patch_size(
-        kernel_size, array_shape=shape, default_value=2
-    )  # TODO: remove defaults
-    buffer = _check_buffer(buffer, array_shape=shape)
-    stride = _check_stride(stride, array_shape=shape)
-    centered_on = _check_centered_on(centered_on)
-    padding = _check_padding(padding, array_shape=shape)
+    patch_size = check_patch_size(patch_size, dims, shape)
+    buffer = check_buffer(buffer, dims, shape)
+    padding = check_padding(padding, dims, shape)
 
-    # Check variable is defined when required
-    # - TODO: centered_on='max', 'min' or the custom function
-    # - TODO: add for stats computations
-    if centered_on is not None:
-        if variable is None:
-            raise ValueError("'variable' must be specified if 'center_on' is specified.")
+    partitioning_method = check_partitioning_method(partitioning_method)
+    stride = check_stride(stride, dims, shape, partitioning_method)
+    kernel_size = check_kernel_size(kernel_size, dims, shape)
 
-    # Get variable array
-    if variable is not None:
-        variable_arr = xr_obj[variable].data
-    else:
-        variable_arr = None
+    centered_on = check_centered_on(centered_on)
+    n_patches_per_partition = _check_n_patches_per_partition(n_patches_per_partition, centered_on)
+    n_patches_per_label = _check_n_patches_per_label(n_patches_per_label, n_patches_per_partition)
 
-    # Check label array validity
-    label_arr = _check_label_arr(label_arr)  # output is np.array !
-    labels_id = _check_labels_id(labels_id=labels_id, label_arr=label_arr)
+    label_arr = check_label_arr(label_arr)  # output is np.array !
+    labels_id = check_labels_id(labels_id=labels_id, label_arr=label_arr)
+    variable_arr = _get_variable_arr(xr_obj, variable, centered_on)  # if required
+    variable_arr = _check_variable_arr(variable_arr, label_arr)
 
-    # Check variable array validity
-    if variable_arr is not None:
-        if variable_arr.shape != label_arr.shape:
-            raise ValueError(
-                "Arrays corresponding to 'variable' and 'label_name' must have same shape."
-            )
-
-    # If no labels, no patch to extract
-    n_labels = len(labels_id)
-    if n_labels == 0:
-        raise ValueError("No labels available.")
-
-    # Define number of patches to extract
-    # TODO: here we could count ... and return None when reached
-    # - If n_patches is None --> n_patches = n_labels, else min(n_patches, n_labels)
-    n_patches = min(n_patches, n_labels) if n_patches else n_labels
+    # Define number of labels from which to extract patches
+    available_n_labels = len(labels_id)
+    n_labels = min(available_n_labels, n_labels) if n_labels else available_n_labels
 
     # -------------------------------------------------------------------------.
     # Extract patch(es) around the label
-    for label_id in labels_id[0:n_patches]:
+    patch_counter = 0
+    for label_id in labels_id[0:n_labels]:
 
         # Subset label_arr around the given label
         label_bbox_slices = _get_labels_bbox_slices(label_arr == label_id)
 
         # Apply padding to the label bounding box
         label_bbox_slices = pad_slices(
-            label_bbox_slices, padding=padding, valid_shape=label_arr.shape
+            label_bbox_slices, padding=padding.values(), valid_shape=label_arr.shape
         )
 
         # --------------------------------------------------------------------.
-        # Retrieve tiles list_slices
-        if tiling or sliding:
-            # TODO: implement sliding
-            tiles_list_slices = get_tiles_list_slices(
+        # Retrieve partitions list_slices
+        if partitioning_method is not None:
+            partitions_list_slices = get_nd_partitions_list_slices(
                 label_bbox_slices,
                 arr_shape=label_arr.shape,
+                method=partitioning_method,
                 kernel_size=kernel_size,
                 stride=stride,
                 buffer=buffer,
                 include_last=include_last,
                 ensure_slice_size=ensure_slice_size,
             )
+            if n_partitions_per_label is not None:
+                n_to_select = min(len(partitions_list_slices), n_partitions_per_label)
+                partitions_list_slices = partitions_list_slices[0:n_to_select]
         else:
-            tiles_list_slices = [label_bbox_slices]
+            partitions_list_slices = [label_bbox_slices]
 
         # --------------------------------------------------------------------.
         # If debug=True, plot tile (or label bbox) boundaries
         if debug and label_arr.ndim == 2:
-            fig = plot_2d_label_tiles_boundaries(tiles_list_slices, label_arr, edgecolor="black")
+            fig = plot_2d_label_partitions_boundaries(
+                partitions_list_slices, label_arr, edgecolor="black"
+            )
 
         # --------------------------------------------------------------------.
-        # Retrieve patches list_slices from tiles list slices
-        patches_list_slices = _get_patches_from_tiles_list_slices(
-            tiles_list_slices=tiles_list_slices,
+        # Retrieve patches list_slices from partitions list slices
+        patches_list_slices = get_patches_from_partitions_list_slices(
+            partitions_list_slices=partitions_list_slices,
             label_arr=label_arr,
             variable_arr=variable_arr,
             label_id=label_id,
-            patch_size=patch_size,
+            patch_size=patch_size.values(),
             centered_on=centered_on,
-            padding=padding,
+            n_patches_per_partition=n_patches_per_partition,
+            padding=padding.values(),
         )
 
         # If debug=True, plot patches boundaries
@@ -979,13 +960,21 @@ def _get_patches_isel_dict_from_labels(
         # ---------------------------------------------------------------------.
         # Retrieve patches isel_dictionaries
         patches_isel_dicts = get_list_isel_dicts(patches_list_slices, dims=dims)
+        n_to_select = min(len(patches_isel_dicts), n_patches_per_label)
+        patches_isel_dicts = patches_isel_dicts[0:n_to_select]
 
         # ---------------------------------------------------------------------.
         # Return isel_dicts
         if grouped_by_labels_id:
+            patch_counter += 1
+            if patch_counter > n_patches:
+                break
             yield label_id, patches_isel_dicts
         else:
             for isel_dict in patches_isel_dicts:
+                patch_counter += 1
+                if patch_counter > n_patches:
+                    break
                 yield label_id, isel_dict
 
         # ---------------------------------------------------------------------.
@@ -997,40 +986,47 @@ def get_patches_isel_dict_from_labels(
     patch_size,
     variable=None,
     # Output options
-    n_patches=None,
+    n_patches=np.Inf,
+    n_labels=None,
     labels_id=None,
-    # (Tile) label patch extraction
-    padding=None,
-    centered_on="max",  # TODO: default None for backward compatibility
-    debug=False,
-    # Label Tiling/sliding options
-    tiling=False,
-    sliding=False,
+    # Label Patch Extraction Settings
+    centered_on="max",
+    padding=0,
+    n_patches_per_label=np.Inf,
+    n_patches_per_partition=1,
+    # Label Tiling/Sliding Options
+    partitioning_method=None,
+    n_partitions_per_label=None,
     kernel_size=None,
     buffer=0,
-    stride=0,  # 0 or 1: define terminology
+    stride=None,
     include_last=True,
     ensure_slice_size=True,
+    debug=False,
 ):
-    gen = _get_patches_isel_dict_from_labels(
+    gen = _get_patches_isel_dict_generator(
         xr_obj=xr_obj,
         label_name=label_name,
         patch_size=patch_size,
         variable=variable,
         n_patches=n_patches,
+        n_labels=n_labels,
         labels_id=labels_id,
         grouped_by_labels_id=True,
-        # Settings
-        tiling=tiling,
-        sliding=sliding,
+        # Patch extraction options
+        centered_on=centered_on,
         padding=padding,
+        n_patches_per_label=n_patches_per_label,
+        n_patches_per_partition=n_patches_per_partition,
+        # Tiling/Sliding settings
+        partitioning_method=partitioning_method,
+        n_partitions_per_label=n_partitions_per_label,
         kernel_size=kernel_size,
         buffer=buffer,
         stride=stride,
-        centered_on=centered_on,
-        debug=debug,
         include_last=include_last,
         ensure_slice_size=ensure_slice_size,
+        debug=debug,
     )
     dict_isel_dicts = {int(label_id): list_isel_dicts for label_id, list_isel_dicts in gen}
     return dict_isel_dicts
@@ -1042,22 +1038,24 @@ def get_patches_from_labels(
     patch_size,
     variable=None,
     # Output options
-    n_patches=None,
+    n_patches=np.Inf,
+    n_labels=None,
     labels_id=None,
     highlight_label_id=True,
-    # (Tile) label patch extraction
-    padding=None,
-    centered_on="max",  # TODO: default None for backward compatibility
-    debug=False,
-    # Label Tiling/sliding options
-    tiling=False,
-    sliding=False,
+    # Label Patch Extraction Options
+    centered_on="max",
+    padding=0,
+    n_patches_per_label=np.Inf,
+    n_patches_per_partition=1,
+    # Label Tiling/Sliding Options
+    partitioning_method=None,
+    n_partitions_per_label=None,
     kernel_size=None,
     buffer=0,
-    stride=0,  # 0 or 1: define terminology
+    stride=None,
     include_last=True,
     ensure_slice_size=True,
-    #
+    debug=False,
 ):
     """
     Routines to extract patches around labels.
@@ -1097,48 +1095,106 @@ def get_patches_from_labels(
         Name of the variable/coordinate representing the label array.
     patch_size : (int, tuple)
         The dimensions of the n-dimensional patch to extract.
-        If the centered_on method (see below) is specified, all output patches
-        are ensured to have sthe ame shape.
-        If 'centered_on' is None (default), the patch_size argument only
+        Only positive values (>1) are allowed.
+        The value -1 can be used to specify the full array dimension shape.
+        If the centered_on method is not 'label_bbox', all output patches
+        are ensured to have the ame shape.
+        Otherwise, if 'centered_on'='label_bbox', the patch_size argument defines
         defined the minimum n-dimensional shape of the output patches.
+        If int, the value is applied to all label array dimensions.
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, the dictionary must have has keys the label array dimensions.
     n_patches : int, optional
-        Number of patches to extract.
-        If None (the default) extract all patches given the
+        Maximum number of patches to extract.
+        The default (np.Inf) enable to extract all available patches allowed by the
         specified patch extraction criteria.
     labels_id : list, optional
         List of labels for which to extract the patch.
-        If None, it extracts the patch by label order (1, 2, 3, ...)
+        If None, it extracts the patches by label order (1, 2, 3, ...)
         The default is None.
+    n_labels : int, optional
+        The number of labels for which extract patches.
+        If None (the default), it extract patches for all labels.
+        This argument can be specified only if labels_id is unspecified !
     highlight_label_id : (bool), optional
         If True, the laben_name array of each patch is modified to contain only
         the label_id used to select the patch.
-
     variable : str, optional
         Dataset variable to use to identify the patch center when centered_on is defined.
         This is required only for centered_on='max', 'min' or the custom function.
-    padding : (int, tuple), optional
-        The padding to apply in each direction around a label prior
-        to tiling/sliding or direct patch extraction.
-        If None, it applies 0 padding in every dimension.
-        The default is None.
-    centered_on : (str, callable), optional
-        If None, the default, it extract the patches around the (padded) bounding box
-        of the label.
-        If None, the output patch sizes are only ensured to have a minimum patch_size,
-        and will likely be of different size.
-        Otherwise, if the centered_on method is specified, the output patches
-        are ensured to have common patch size.
 
-        The centered_on method characterize the way the center point of the patch is defined.
-        Valid pre-implemented centered_on methods are 'max','min','centroid','center_of_mass'.
-        The default is 'max'.
-        If centered_on is 'max', 'min' or a custom function, variable must be specified.
+    centered_on : (str, callable), optional
+        The centered_on method characterize the point around which the patch is extracted.
+        Valid pre-implemented centered_on methods are 'label_bbox', 'max', 'min',
+        'centroid', 'center_of_mass', 'random'.
+        The default method is 'max'.
+
+        If 'label_bbox' it extract the patches around the (padded) bounding box of the label.
+        If 'label_bbox',the output patch sizes are only ensured to have a minimum patch_size,
+        and will likely be of different size.
+        Otherwise, the other methods guarantee that the output patches have a common shape.
+
+        If centered_on is 'max', 'min' or a custom function, the 'variable' must be specified.
         If centered_on is a custom function, it must:
             - return None if all array values are non-finite (i.e np.nan)
             - return a tuple with same length as the array shape.
-
-    TODO
-    - Tiling/sliding arguments
+    padding : (int, tuple, dict), optional
+        The padding to apply in each direction around a label prior to
+        partitioning (tiling/sliding) or direct patch extraction.
+        The default, 0, applies 0 padding in every dimension.
+        Negative padding values are allowed !
+        If int, the value is applied to all label array dimensions.
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, the dictionary must have has keys the label array dimensions.
+    n_patches_per_label: int, optional
+        The maximum number of patches to extract for each label.
+        The default (np.Inf) enables to extract all the available patches per label.
+        n_patches_per_label must be larger than n_patches_per_partition !
+    n_patches_per_partition, int, optional
+        The maximum number of patches to extract from each label partition.
+        The default values is 1.
+        This method can be specified only if centered_on='random' or a callable.
+    method : str
+        Whether to retrieve 'tiling' or 'sliding' slices.
+        If 'tiling', partition start slices are separated by stride + kernel_size
+        If 'sliding', partition start slices are separated by stride.
+    stride : (int, tuple, dict), optional
+        If partitioning_method is 'sliding'', default stride is set to 1.
+        If partitioning_method is 'tiling', default stride is set to 0.
+        Step size between slices.
+        When 'tiling', a positive stride make partition slices to not overlap and not touch,
+        while a negative stride make partition slices to overlap by 'stride' amount.
+        If stride is 0, the partition slices are contiguous (no spacing between partitions).
+        When 'sliding', only a positive stride (>= 1) is allowed.
+        If int, the value is applied to all label array dimensions.
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, the dictionary must have has keys the label array dimensions.
+    kernel_size: (int, tuple, dict), optional
+        The shape of the desired partitions.
+        Only positive values (>1) are allowed.
+        The value -1 can be used to specify the full array dimension shape.
+        If int, the value is applied to all label array dimensions.
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, the dictionary must have has keys the label array dimensions.
+    buffer: (int, tuple, dict), optional
+        The default is 0.
+        Value by which to enlarge a partition on each side.
+        The final partition size should be kernel_size + buffer.
+        If 'tiling' and stride=0, a positive buffer value corresponds to
+        the amount of overlap between each partition.
+        Depending on min_start and max_stop values, buffering might cause
+        border partitions to not have same sizes.
+        If int, the value is applied to all label array dimensions.
+        If list or tuple, the length must match the number of dimensions of the array.
+        If a dict, the dictionary must have has keys the label array dimensions.
+    include_last : bool, optional
+        Whether to include the last partition if it does not match the kernel_size.
+        The default is True.
+    ensure_slice_size : False, optional
+        Used only if include_last is True.
+        If False, the last partition will not have the specified kernel_size.
+        If True,  the last partition is enlarged to the specified kernel_size by
+        tentatively expandinf it on both sides (accounting for min_start and max_stop).
 
     Yields
     ------
@@ -1147,25 +1203,29 @@ def get_patches_from_labels(
 
     """
     # Define patches isel dictionary generator
-    patches_isel_dicts_gen = _get_patches_isel_dict_from_labels(
+    patches_isel_dicts_gen = _get_patches_isel_dict_generator(
         xr_obj=xr_obj,
         label_name=label_name,
         patch_size=patch_size,
         variable=variable,
         n_patches=n_patches,
+        n_labels=n_labels,
         labels_id=labels_id,
         grouped_by_labels_id=False,
-        # Settings
-        tiling=tiling,
-        sliding=sliding,
+        # Label Patch Extraction Options
+        centered_on=centered_on,
         padding=padding,
+        n_patches_per_label=n_patches_per_label,
+        n_patches_per_partition=n_patches_per_partition,
+        # Tiling/Sliding Options
+        partitioning_method=partitioning_method,
+        n_partitions_per_label=n_partitions_per_label,
         kernel_size=kernel_size,
         buffer=buffer,
         stride=stride,
-        centered_on=centered_on,
-        debug=debug,
         include_last=include_last,
         ensure_slice_size=ensure_slice_size,
+        debug=debug,
     )
 
     # Extract the patches
@@ -1188,7 +1248,9 @@ def get_patches_from_labels(
 
 def labels_patch_generator(
     xr_obj,
+    patch_size,
     variable=None,
+    # Label Options
     min_value_threshold=-np.inf,
     max_value_threshold=np.inf,
     min_area_threshold=1,
@@ -1196,21 +1258,29 @@ def labels_patch_generator(
     footprint=None,
     sort_by="area",
     sort_decreasing=True,
-    # Patch settings
-    n_patches=None,
-    padding=None,
-    min_patch_size=None,
+    # Patch Output options
+    n_patches=np.Inf,
+    n_labels=None,
+    labels_id=None,
+    highlight_label_id=True,
+    # Label Patch Extraction Options
+    centered_on="max",
+    padding=0,
+    n_patches_per_label=np.Inf,
+    n_patches_per_partition=1,
+    # Label Tiling/Sliding Options
+    partitioning_method=None,
+    n_partitions_per_label=None,
+    kernel_size=None,
+    buffer=0,
+    stride=None,
+    include_last=True,
+    ensure_slice_size=True,
 ):
     """
     Create a generator extracting patches around sensible regions of an xr.Dataset.
 
     The function first derives the labels array, and then it extract patches for n_patches labels.
-    If n_patches=None it returns a patch for each label.
-    The patch minimum size is defined by min_patch_size, which default to 2 in all dimensions.
-    If the naive label patch size is smaller than min_patch_size, the patch is enlarged to have
-    size equal to min_patch_size.
-
-    The output patches are not guaranteed to have equal size !
 
     Parameters
     ----------
@@ -1247,15 +1317,8 @@ def labels_patch_generator(
     sort_decreasing : bool, optional
         If True, sort labels by decreasing 'sort_by' value.
         The default is True.
-    n_patches : int, optional
-        Number of patches to extract. The default is None (all).
-    padding : (int, tuple), optional
-        The padding to apply in each direction.
-        If None, it applies 0 padding in every dimension.
-        The default is None.
-    min_patch_size : (int, tuple), optional
-        The minimum size of the patch to extract.
-        If None (default) it set a minimum size of 2 in all dimensions.
+
+    TODO: add label patch generator options
 
     Yields
     ------
@@ -1278,12 +1341,29 @@ def labels_patch_generator(
     )
 
     # Define the patch generator
-    patch_gen = get_labeled_object_patches(
+    patch_gen = get_patches_from_labels(
         xr_obj,
         label_name="label",
+        patch_size=patch_size,
+        variable=variable,
+        # Output options
         n_patches=n_patches,
+        n_labels=n_labels,
+        labels_id=labels_id,
+        highlight_label_id=highlight_label_id,
+        # Patch extraction Options
         padding=padding,
-        min_patch_size=min_patch_size,
+        centered_on=centered_on,
+        n_patches_per_label=n_patches_per_label,
+        n_patches_per_partition=n_patches_per_partition,
+        # Tiling/Sliding Options
+        partitioning_method=partitioning_method,
+        n_partitions_per_label=n_partitions_per_label,
+        kernel_size=kernel_size,
+        buffer=buffer,
+        stride=stride,
+        include_last=include_last,
+        ensure_slice_size=ensure_slice_size,
     )
 
     return patch_gen

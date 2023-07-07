@@ -139,6 +139,8 @@ exclude = [
     "venv",
 ]
 
+[tool.codespell]
+    ignore-words-list = 'nD'
 
 [tool.coverage]
     [tool.coverage.run]

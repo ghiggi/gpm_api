@@ -203,24 +203,42 @@ class GPM_Base_Accessor:
 
     def labels_patch_generator(
         self,
+        patch_size,
         variable=None,
         min_value_threshold=0.1,
         max_value_threshold=np.inf,
         min_area_threshold=1,
         max_area_threshold=np.inf,
+        # Label Options
         footprint=None,
         sort_by="area",
         sort_decreasing=True,
-        n_patches=None,
-        padding=None,
-        min_patch_size=None,
+        # Patch Output options
+        n_patches=np.Inf,
+        n_labels=None,
+        labels_id=None,
+        highlight_label_id=True,
+        # Label Patch Extraction Options
+        centered_on="max",
+        padding=0,
+        n_patches_per_label=np.Inf,
+        n_patches_per_partition=1,
+        # Label Tiling/Sliding Options
+        partitioning_method=None,
+        n_partitions_per_label=None,
+        kernel_size=None,
+        buffer=0,
+        stride=None,
+        include_last=True,
+        ensure_slice_size=True,
     ):
         from gpm_api.patch.labels_patch import labels_patch_generator
 
         gen = labels_patch_generator(
             self._obj,
+            patch_size=patch_size,
             variable=variable,
-            # Labels options
+            # Label Options
             min_value_threshold=min_value_threshold,
             max_value_threshold=max_value_threshold,
             min_area_threshold=min_area_threshold,
@@ -228,12 +246,103 @@ class GPM_Base_Accessor:
             footprint=footprint,
             sort_by=sort_by,
             sort_decreasing=sort_decreasing,
-            # Patch options
+            # Output options
             n_patches=n_patches,
+            n_labels=n_labels,
+            labels_id=labels_id,
+            highlight_label_id=highlight_label_id,
+            # Patch extraction Options
             padding=padding,
-            min_patch_size=min_patch_size,
+            centered_on=centered_on,
+            n_patches_per_label=n_patches_per_label,
+            n_patches_per_partition=n_patches_per_partition,
+            # Tiling/Sliding Options
+            partitioning_method=partitioning_method,
+            n_partitions_per_label=n_partitions_per_label,
+            kernel_size=kernel_size,
+            buffer=buffer,
+            stride=stride,
+            include_last=include_last,
+            ensure_slice_size=ensure_slice_size,
         )
         return gen
+
+    def plot_patches(
+        self,
+        patch_size,
+        variable=None,
+        # Label options
+        min_value_threshold=-np.inf,
+        max_value_threshold=np.inf,
+        min_area_threshold=1,
+        max_area_threshold=np.inf,
+        footprint=None,
+        sort_by="area",
+        sort_decreasing=True,
+        # Patch Output options
+        n_patches=np.Inf,
+        n_labels=None,
+        labels_id=None,
+        highlight_label_id=True,
+        # Label Patch Extraction Options
+        centered_on="max",
+        padding=0,
+        n_patches_per_label=np.Inf,
+        n_patches_per_partition=1,
+        # Label Tiling/Sliding Options
+        partitioning_method=None,
+        n_partitions_per_label=None,
+        kernel_size=None,
+        buffer=0,
+        stride=None,
+        include_last=True,
+        ensure_slice_size=True,
+        # Plot options
+        add_colorbar=True,
+        interpolation="nearest",
+        fig_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.labels import plot_patches
+
+        plot_patches(
+            xr_obj=self._obj,
+            variable=variable,
+            patch_size=patch_size,
+            # Label Options
+            min_value_threshold=min_value_threshold,
+            max_value_threshold=max_value_threshold,
+            min_area_threshold=min_area_threshold,
+            max_area_threshold=max_area_threshold,
+            footprint=footprint,
+            sort_by=sort_by,
+            sort_decreasing=sort_decreasing,
+            # Output options
+            n_patches=n_patches,
+            n_labels=n_labels,
+            labels_id=labels_id,
+            highlight_label_id=highlight_label_id,
+            # Patch extraction Options
+            padding=padding,
+            centered_on=centered_on,
+            n_patches_per_label=n_patches_per_label,
+            n_patches_per_partition=n_patches_per_partition,
+            # Tiling/Sliding Options
+            partitioning_method=partitioning_method,
+            n_partitions_per_label=n_partitions_per_label,
+            kernel_size=kernel_size,
+            buffer=buffer,
+            stride=stride,
+            include_last=include_last,
+            ensure_slice_size=ensure_slice_size,
+            # Plot options
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
 
 
 @xr.register_dataset_accessor("gpm_api")
@@ -310,47 +419,6 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
         return p
-
-    def plot_patches(
-        self,
-        variable,
-        min_value_threshold=-np.inf,
-        max_value_threshold=np.inf,
-        min_area_threshold=1,
-        max_area_threshold=np.inf,
-        footprint=None,
-        sort_by="area",
-        sort_decreasing=True,
-        n_patches=None,
-        min_patch_size=None,
-        padding=None,
-        add_colorbar=True,
-        interpolation="nearest",
-        fig_kwargs={},
-        cbar_kwargs={},
-        **plot_kwargs,
-    ):
-        from gpm_api.visualization.labels import plot_patches
-
-        data_array = self._obj[variable]
-        plot_patches(
-            data_array=data_array,
-            min_value_threshold=min_value_threshold,
-            max_value_threshold=max_value_threshold,
-            min_area_threshold=min_area_threshold,
-            max_area_threshold=max_area_threshold,
-            footprint=footprint,
-            sort_by=sort_by,
-            sort_decreasing=sort_decreasing,
-            n_patches=n_patches,
-            min_patch_size=min_patch_size,
-            padding=padding,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
 
 
 @xr.register_dataarray_accessor("gpm_api")
@@ -462,42 +530,3 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
         return p
-
-    def plot_patches(
-        self,
-        min_value_threshold=0.1,
-        max_value_threshold=np.inf,
-        min_area_threshold=1,
-        max_area_threshold=np.inf,
-        footprint=None,
-        sort_by="area",
-        sort_decreasing=True,
-        n_patches=None,
-        min_patch_size=None,
-        padding=None,
-        add_colorbar=True,
-        interpolation="nearest",
-        fig_kwargs={},
-        cbar_kwargs={},
-        **plot_kwargs,
-    ):
-        from gpm_api.visualization.labels import plot_patches
-
-        plot_patches(
-            data_array=self._obj,
-            min_value_threshold=min_value_threshold,
-            max_value_threshold=max_value_threshold,
-            min_area_threshold=min_area_threshold,
-            max_area_threshold=max_area_threshold,
-            footprint=footprint,
-            sort_by=sort_by,
-            sort_decreasing=sort_decreasing,
-            n_patches=n_patches,
-            min_patch_size=min_patch_size,
-            padding=padding,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )

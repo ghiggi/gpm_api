@@ -7,10 +7,10 @@ Created on Thu Jan 12 12:04:17 2023
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 
 from gpm_api.patch.labels import redefine_label_array
-from gpm_api.patch.labels_patch import get_labeled_object_patches, labels_patch_generator
-from gpm_api.utils.checks import check_is_xarray_dataarray
+from gpm_api.patch.labels_patch import get_patches_from_labels, labels_patch_generator
 from gpm_api.visualization.plot import plot_image
 
 # TODO:
@@ -83,13 +83,31 @@ def plot_label(
     return p
 
 
+# TODO: this plot labels ! Rename it !
 def plot_label_patches(
     xr_obj,
     label_name,
-    n_patches=None,
+    patch_size,
+    variable=None,
+    # Output options
+    n_patches=np.Inf,
+    n_labels=None,
     labels_id=None,
-    padding=None,
-    min_patch_size=None,
+    highlight_label_id=True,
+    # Label Patch Extraction Options
+    centered_on="max",
+    padding=0,
+    n_patches_per_label=np.Inf,
+    n_patches_per_partition=1,
+    # Label Tiling/Sliding Options
+    partitioning_method=None,
+    n_partitions_per_label=None,
+    kernel_size=None,
+    buffer=0,
+    stride=None,
+    include_last=True,
+    ensure_slice_size=True,
+    # Plot options
     add_colorbar=True,
     interpolation="nearest",
     cmap="Paired",
@@ -102,13 +120,29 @@ def plot_label_patches(
         raise ValueError("'cbar_kwargs' can not be specified when plotting labels.")
 
     # Define the patch generator
-    patch_gen = get_labeled_object_patches(
+    patch_gen = get_patches_from_labels(
         xr_obj,
         label_name=label_name,
+        patch_size=patch_size,
+        variable=variable,
+        # Output options
         n_patches=n_patches,
+        n_labels=n_labels,
         labels_id=labels_id,
+        highlight_label_id=highlight_label_id,
+        # Patch extraction Options
         padding=padding,
-        min_patch_size=min_patch_size,
+        centered_on=centered_on,
+        n_patches_per_label=n_patches_per_label,
+        n_patches_per_partition=n_patches_per_partition,
+        # Tiling/Sliding Options
+        partitioning_method=partitioning_method,
+        n_partitions_per_label=n_partitions_per_label,
+        kernel_size=kernel_size,
+        buffer=buffer,
+        stride=stride,
+        include_last=include_last,
+        ensure_slice_size=ensure_slice_size,
     )
     # Plot patches
     # list_da = list(patch_gen)
@@ -126,11 +160,12 @@ def plot_label_patches(
     return
 
 
-# TODO: rename with something label_patches
-# - And modify previous function ?
-# - add variable arguments and accept xarray object !
+# TODO: rename with something like plot_label_patches --> when label not yet defined
 def plot_patches(
-    data_array,
+    xr_obj,
+    patch_size,
+    variable=None,
+    # Label options
     min_value_threshold=-np.inf,
     max_value_threshold=np.inf,
     min_area_threshold=1,
@@ -138,20 +173,41 @@ def plot_patches(
     footprint=None,
     sort_by="area",
     sort_decreasing=True,
-    n_patches=None,
-    min_patch_size=None,
-    padding=None,
+    # Patch Output options
+    n_patches=np.Inf,
+    n_labels=None,
+    labels_id=None,
+    highlight_label_id=True,
+    # Label Patch Extraction Options
+    centered_on="max",
+    padding=0,
+    n_patches_per_label=np.Inf,
+    n_patches_per_partition=1,
+    # Label Tiling/Sliding Options
+    partitioning_method=None,
+    n_partitions_per_label=None,
+    kernel_size=None,
+    buffer=0,
+    stride=None,
+    include_last=True,
+    ensure_slice_size=True,
+    # Plot options
     add_colorbar=True,
     interpolation="nearest",
     fig_kwargs={},
     cbar_kwargs={},
     **plot_kwargs,
 ):
-    check_is_xarray_dataarray(data_array)
+    if isinstance(xr_obj, xr.Dataset):
+        if variable is None:
+            raise ValueError("'variable' must be specified when plotting xr.Dataset patches.")
 
     # Define generator
-    gpm_da_patch_gen = labels_patch_generator(
-        xr_obj=data_array,
+    patch_gen = labels_patch_generator(
+        xr_obj=xr_obj,
+        patch_size=patch_size,
+        variable=variable,
+        # Label Options
         min_value_threshold=min_value_threshold,
         max_value_threshold=max_value_threshold,
         min_area_threshold=min_area_threshold,
@@ -159,16 +215,34 @@ def plot_patches(
         footprint=footprint,
         sort_by=sort_by,
         sort_decreasing=sort_decreasing,
+        # Output options
         n_patches=n_patches,
-        min_patch_size=min_patch_size,
+        n_labels=n_labels,
+        labels_id=labels_id,
+        highlight_label_id=highlight_label_id,
+        # Patch extraction Options
         padding=padding,
+        centered_on=centered_on,
+        n_patches_per_label=n_patches_per_label,
+        n_patches_per_partition=n_patches_per_partition,
+        # Tiling/Sliding Options
+        partitioning_method=partitioning_method,
+        n_partitions_per_label=n_partitions_per_label,
+        kernel_size=kernel_size,
+        buffer=buffer,
+        stride=stride,
+        include_last=include_last,
+        ensure_slice_size=ensure_slice_size,
     )
 
     # Plot patches
-    for da in gpm_da_patch_gen:
+    for label_id, xr_patch in patch_gen:
+        if isinstance(xr_patch, xr.Dataset):
+            xr_patch = xr_patch[variable]
         try:
+            print(plot_kwargs)
             plot_image(
-                da,
+                xr_patch,
                 interpolation=interpolation,
                 add_colorbar=add_colorbar,
                 fig_kwargs=fig_kwargs,

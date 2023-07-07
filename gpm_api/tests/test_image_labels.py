@@ -150,6 +150,23 @@ xr_obj = da.gpm_api.label_object(
 # Plot the patches around the labels
 n_patches = 10
 label_name = "label"
+patch_size = (100, 100)
+highlight_label_id = False
+labels_id = None
+n_labels = None
+centered_on = "label_bbox"
+padding = 0
+n_patches_per_partition = 1
+n_patches_per_label = np.Inf
+partitioning_method = None
+n_partitions_per_label = None
+kernel_size = (None,)
+buffer = 0
+stride = None
+include_last = True
+ensure_slice_size = True
+debug = True
+
 add_colorbar = True
 interpolation = "nearest"
 cmap = "Paired"
@@ -158,7 +175,27 @@ fig_kwargs = {}
 plot_label_patches(
     xr_obj,
     label_name=label_name,
+    patch_size=patch_size,
+    variable=variable,
+    # Output options
     n_patches=n_patches,
+    n_labels=n_labels,
+    labels_id=labels_id,
+    highlight_label_id=highlight_label_id,
+    # Patch extraction Options
+    padding=padding,
+    centered_on=centered_on,
+    n_patches_per_label=n_patches_per_label,
+    n_patches_per_partition=n_patches_per_partition,
+    # Tiling/Sliding Options
+    partitioning_method=partitioning_method,
+    n_partitions_per_label=n_partitions_per_label,
+    kernel_size=kernel_size,
+    buffer=buffer,
+    stride=stride,
+    include_last=include_last,
+    ensure_slice_size=ensure_slice_size,
+    # Plotting Options
     add_colorbar=add_colorbar,
     interpolation=interpolation,
     cmap=cmap,

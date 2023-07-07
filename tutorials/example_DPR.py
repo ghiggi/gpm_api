@@ -14,11 +14,9 @@ end_time = datetime.datetime.strptime("2020-07-05 06:00:00", "%Y-%m-%d %H:%M:%S"
 product = "2A-DPR"
 product_type = "RS"
 version = 7
-username = "gionata.ghiggi@epfl.ch"
 
 # Download the data
 gpm_api.download(
-    username=username,
     product=product,
     product_type=product_type,
     version=version,
@@ -155,9 +153,10 @@ da.gpm_api.plot_patches(
     min_value_threshold=10,
     min_area_threshold=5,
     footprint=3,
-    sort_by="max",  # "area"
+    sort_by="maximum",
     sort_decreasing=True,
     n_patches=10,
-    min_patch_size=(48, 20),
+    patch_size=(49, 49),
+    centered_on="max",
     interpolation="nearest",
 )

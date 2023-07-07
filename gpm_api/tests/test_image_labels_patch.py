@@ -58,12 +58,32 @@ da = ds[variable].isel(time=0)
 #     # variable=variable,
 #     min_value_threshold=3,
 #     min_area_threshold=5,
-#     sort_by="max",  # area
+#     sort_by="maximum",  # area
 #     sort_decreasing=True,
 #     n_patches=10,
-#     padding=0,
-#     min_patch_size=(20, 20),
+#     # Output options
+#     label_name=label_name,
+#     patch_size=(20, 20)
+#     n_patches=n_patches,
+#     n_labels=n_labels,
+#     labels_id=labels_id,
+#     highlight_label_id=highlight_label_id,
+#     # Patch extraction Options
+#     padding=padding,
+#     centered_on=centered_on,
+#     n_patches_per_label=n_patches_per_label,
+#     n_patches_per_partition=n_patches_per_partition,
+#     # Tiling/Sliding Options
+#     partitioning_method=partitioning_method,
+#     n_partitions_per_label=n_partitions_per_label,
+#     kernel_size=kernel_size,
+#     buffer=buffer,
+#     stride=stride,
+#     include_last=include_last,
+#     ensure_slice_size=ensure_slice_size,
+#     debug=debug,
 # )
+
 # list_patch = list(patch_gen)
 
 
@@ -72,7 +92,7 @@ da = ds[variable].isel(time=0)
 import numpy as np
 
 from gpm_api.patch.labels import label_xarray_object
-from gpm_api.patch.labels_patch import get_labeled_object_patches
+from gpm_api.patch.labels_patch import get_patches_from_labels
 from gpm_api.visualization.labels import plot_label
 
 # Args labels
@@ -100,18 +120,48 @@ xr_obj = label_xarray_object(
 
 # Build a generator returning patches around rainy areas
 n_patches = 20
+patch_size = (100, 100)
+n_labels = None
 labels_id = None
-padding = None
-min_patch_size = (100, 100)
 highlight_label_id = False
+centered_on = "label_bbox"
+padding = 0
+n_patches_per_label = np.Inf
+n_patches_per_partition = 1
+partitioning_method = None
+n_partitions_per_label = None
+kernel_size = None
+buffer = 0
+stride = None
+include_last = True
+ensure_slice_size = True
+debug = True
 
 
-da_patch_gen = get_labeled_object_patches(
+da_patch_gen = get_patches_from_labels(
     xr_obj,
     label_name=label_name,
+    patch_size=patch_size,
+    variable=variable,
+    # Output options
     n_patches=n_patches,
-    min_patch_size=min_patch_size,
+    n_labels=n_labels,
+    labels_id=labels_id,
     highlight_label_id=highlight_label_id,
+    # Patch extraction Options
+    padding=padding,
+    centered_on=centered_on,
+    n_patches_per_label=n_patches_per_label,
+    n_patches_per_partition=n_patches_per_partition,
+    # Tiling/Sliding Options
+    partitioning_method=partitioning_method,
+    n_partitions_per_label=n_partitions_per_label,
+    kernel_size=kernel_size,
+    buffer=buffer,
+    stride=stride,
+    include_last=include_last,
+    ensure_slice_size=ensure_slice_size,
+    debug=debug,
 )
 
 list_patch = list(da_patch_gen)

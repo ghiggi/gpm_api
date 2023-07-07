@@ -16,11 +16,10 @@ end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S"
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'
 product_type = "RS"
 version = 6
-username = "gionata.ghiggi@epfl.ch"
+
 
 # Download the data
 # gpm_api.download(
-#     username=username,
 #     product=product,
 #     product_type=product_type,
 #     version=version,
@@ -82,11 +81,16 @@ da_labels, n_labels, values = xr_get_areas_labels(
 
 
 patch_gen = da.gpm_api.labels_patch_generator(
+    # Label Options
     min_value_threshold=min_value_threshold,
     min_area_threshold=min_area_threshold,
     footprint=footprint,
-    sort_by="max",  # area
+    sort_by="maximum",  # area
     sort_decreasing=True,
+    # Patch Output options
     n_patches=10,
+    patch_size=(49, 49),
+    # Label Patch Extraction Options
+    centered_on="max",
 )
 list_patch = list(patch_gen)

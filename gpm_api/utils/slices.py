@@ -492,11 +492,74 @@ def get_slice_around_index(index, size, min_start=0, max_stop=np.inf):
 # TODO: implement sliding
 
 
-def get_tiling_slices(
+def _check_buffer(buffer, slice_size):
+    if buffer < 0:
+        if abs(buffer) >= int(slice_size / 2):
+            raise ValueError(
+                "The negative buffer absolute value is larger than half of the slice_size."
+            )
+    return buffer
+
+
+def _check_slice_size(slice_size):
+    if slice_size <= 0:
+        raise ValueError("slice_size must be a positive non-zero integer.")
+    return slice_size
+
+
+def _check_method(method):
+    if not isinstance(method, str):
+        raise TypeError("'method' must be a string.")
+    valid_methods = ["sliding", "tiling"]
+    if method not in valid_methods:
+        raise ValueError(f"The only valid 'method' are {valid_methods}.")
+    return method
+
+
+def _check_min_start(min_start, start):
+    if min_start is None:
+        min_start = start
+    if min_start > start:
+        raise ValueError("'min_start' can not be larger than 'start'.")
+    return min_start
+
+
+def _check_max_stop(max_stop, stop):
+    if max_stop is None:
+        max_stop = stop
+    if max_stop < stop:
+        raise ValueError("'max_stop' can not be smaller than 'stop'.")
+    return max_stop
+
+
+def _check_stride(stride, method):
+    # TODO: check is an integer !
+    if method == "sliding":
+        if stride is None:
+            stride = 1
+        if stride < 1:
+            raise ValueError("When sliding, 'stride' must be equal or larger than 1.")
+    else:  # tiling
+        if stride is None:
+            stride = 0
+    return stride
+
+
+def _get_partitioning_idxs(start, stop, stride, slice_size, method):
+    if method == "tiling":
+        steps = slice_size + stride
+    else:  # sliding
+        steps = stride
+    idxs = np.arange(start, stop + 1, steps)
+    return idxs
+
+
+def get_partitions_slices(
     start,
     stop,
     slice_size,
-    stride=0,
+    method,
+    stride=None,
     buffer=0,
     include_last=True,
     ensure_slice_size=False,
@@ -504,7 +567,7 @@ def get_tiling_slices(
     max_stop=None,
 ):
     """
-    Create a tiling list of slices.
+    Create 1D partitioning list of slices.
 
     Parameters
     ----------
@@ -514,11 +577,18 @@ def get_tiling_slices(
         slice stop.
     slice_size : int
         Slice size.
+    method : str
+        Whether to retrieve 'tiling' or 'sliding' slices.
+        If 'tiling', start slices are separated by stride+slice_size
+        If 'sliding', start slices are separated by stride.
     stride : int, optional
         Step size between slices.
-        If 0 (the default), contiguous/touching slices.
-        If positive stride make slices to not overlap and not touch
-        If negative stride make slices to overlap.
+        When 'tiling', the default is 0
+        When 'sliding', the default is 1.
+        When 'tiling', a positive stride make slices to not overlap and not touch,
+        while a negative stride make slices to overlap by 'stride' amount. If stride is 0,
+        the slices are contiguous (touch).
+        When 'sliding', only a positive stride (>= 1) is allowed.
     buffer:
         The default is 0.
         Value by which to enlarge a slice on each side.
@@ -536,10 +606,10 @@ def get_tiling_slices(
         If True,  the last slice is enlarged to have 'slice_size', by
         tentatively expanded the slice on both sides (accounting for min_start and max_stop).
     min_start: int, optional
-        The minimum value that the first slice start value can have (when applying striding or buffering).
+        The minimum value that the slices start value can have (after i.e. buffering).
         If None (the default), assumed to be equal to start.
     max_stop: int, optional
-        Maximum value that the last slice stop value can have (when applying striding or buffering).
+        Maximum value that the slices stop value can have (after i.e. buffering).
         If None (the default), assumed to be equal to stop.
 
     Returns
@@ -549,22 +619,19 @@ def get_tiling_slices(
 
     """
     # Check arguments
-    if min_start is None:
-        min_start = start
-    if max_stop is None:
-        max_stop = stop
-    if buffer < 0:
-        if abs(buffer) >= int(slice_size / 2):
-            raise ValueError(
-                "The negative buffer absolute value is larger than half of the slice_size."
-            )
-    if slice_size <= 0:
-        raise ValueError("slice_size must be a positive non-zero integer.")
+    slice_size = _check_slice_size(slice_size)
+    method = _check_method(method)
+    stride = _check_stride(stride, method)
+    buffer = _check_buffer(buffer, slice_size)
+    min_start = _check_min_start(min_start, start)
+    max_stop = _check_max_stop(max_stop, stop)
 
-    # Define tile start locations
-    steps = slice_size + stride
-    idxs = np.arange(start, stop, steps)
-    slices = [slice(idxs[i], idxs[i + 1]) for i in range(len(idxs) - 1)]
+    # Define slices
+    slice_step = 1  # TODO: modify for dilation together with slice_size
+    idxs = _get_partitioning_idxs(
+        start=start, stop=stop, stride=stride, slice_size=slice_size, method=method
+    )
+    slices = [slice(idxs[i], idxs[i + 1], slice_step) for i in range(len(idxs) - 1)]
 
     # Define last slice
     if include_last and idxs[-1] != stop:
@@ -573,7 +640,6 @@ def get_tiling_slices(
             last_slice = enlarge_slice(
                 last_slice, min_size=slice_size, min_start=min_start, max_stop=max_stop
             )
-
         slices.append(last_slice)
 
     # Buffer the slices
@@ -584,10 +650,10 @@ def get_tiling_slices(
     return slices
 
 
-def get_tiles_list_slices(
-    list_slices, arr_shape, kernel_size, stride, buffer, include_last, ensure_slice_size
+def get_nd_partitions_list_slices(
+    list_slices, arr_shape, method, kernel_size, stride, buffer, include_last, ensure_slice_size
 ):
-    """Return the tiles list of slices of a initial list of slices."""
+    """Return the n-dimensional partitions list of slices of a initial list of slices."""
     import itertools
 
     l_iterables = []
@@ -597,10 +663,11 @@ def get_tiles_list_slices(
         slc = list_slices[i]
         start = slc.start
         stop = slc.stop
-        slices = get_tiling_slices(
+        slices = get_partitions_slices(
             start=start,
             stop=stop,
             slice_size=slice_size,
+            method=method,
             stride=stride[i],
             buffer=buffer[i],
             include_last=include_last,
