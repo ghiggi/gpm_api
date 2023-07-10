@@ -23,6 +23,8 @@ from gpm_api.utils.slices import (
 
 ORBIT_TIME_TOLERANCE = np.timedelta64(3, "s")
 
+# raise ValueError("Unrecognized GPM xarray object.") has decorator check?
+
 
 def check_is_xarray(x):
     if not isinstance(x, (xr.DataArray, xr.Dataset)):
@@ -92,6 +94,9 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
 
     The minimum size of the output slices is 2.
 
+    Note: for GRID (i.e. IMERG) products, it checks for regular timesteps !
+    Note: No granule_id is provided for GRID products
+
     Parameters
     ----------
     xr_obj : (xr.Dataset, xr.DataArray)
@@ -104,8 +109,9 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
     list_slices : list
         List of slice object to select contiguous granules.
     """
-
-    if is_grid(xr_obj) or is_orbit(xr_obj):
+    if is_grid(xr_obj):
+        return get_slices_regular_time(xr_obj, tolerance=None, min_size=min_size)
+    if is_orbit(xr_obj):
         # Get number of scans/timesteps
         n_scans = xr_obj["gpm_granule_id"].shape[0]
         # Define behaviour if less than 2 scans/timesteps

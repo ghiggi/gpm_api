@@ -460,6 +460,7 @@ def check_centered_on(centered_on):
 
 
 def _get_variable_arr(xr_obj, variable, centered_on):
+    """Get variable array (in memory)."""
     if isinstance(xr_obj, xr.DataArray):
         variable_arr = xr_obj.data
         return variable_arr
@@ -468,7 +469,8 @@ def _get_variable_arr(xr_obj, variable, centered_on):
             if variable is None and (centered_on in ["max", "min"] or callable(centered_on)):
                 raise ValueError("'variable' must be specified if 'centered_on' is specified.")
         if variable is not None:
-            variable_arr = xr_obj[variable].data
+            variable_arr = np.asanyarray(xr_obj[variable].data)  # in memory
+
         else:
             variable_arr = None
     return variable_arr

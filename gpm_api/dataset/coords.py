@@ -50,9 +50,11 @@ def get_orbit_coords(hdf, scan_mode):
 
 
 def get_grid_coords(hdf, scan_mode):
-    """Get coordinates from Grid objects."""
+    """Get coordinates from Grid objects.
+
+    IMERG and GRID products does not have GranuleNumber!
+    """
     hdf_attr = hdf5_file_attrs(hdf)
-    granule_id = hdf_attr["FileHeader"]["GranuleNumber"]
     lon = hdf[scan_mode]["lon"][:]
     lat = hdf[scan_mode]["lat"][:]
     time = hdf_attr["FileHeader"]["StartGranuleDateTime"][:-1]
@@ -63,8 +65,6 @@ def get_grid_coords(hdf, scan_mode):
         "time": time,
         "lon": lon,
         "lat": lat,
-        "gpm_id": (["time"], granule_id),
-        "gpm_granule_id": (["time"], granule_id),
     }
     return coords
 

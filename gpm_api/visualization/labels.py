@@ -240,7 +240,6 @@ def plot_patches(
         if isinstance(xr_patch, xr.Dataset):
             xr_patch = xr_patch[variable]
         try:
-            print(plot_kwargs)
             plot_image(
                 xr_patch,
                 interpolation=interpolation,

@@ -191,7 +191,10 @@ def _get_granule_dataset(
     # Create single xr.Dataset
     ds = xr.merge(list_ds)
     # Assign coords
-    ds = ds.assign_coords(coords)
+    # - Silece warning related to datetime precision
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ds = ds.assign_coords(coords)
     # Assign global attributes
     ds.attrs = attrs
     # Remove list_ds
