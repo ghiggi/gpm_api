@@ -355,7 +355,7 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
     list_discontinuous_slices = get_slices_non_regular_time(xr_obj, tolerance=tolerance)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
-        # Retrieve discontinous timesteps interval
+        # Retrieve discontinuous timesteps interval
         timesteps = _get_timesteps(xr_obj)
         list_discontinuous = [timesteps[slc] for slc in list_discontinuous_slices]
         first_problematic_timestep = list_discontinuous[0][0]
@@ -591,7 +591,7 @@ def check_contiguous_scans(xr_obj, verbose=True):
     list_discontinuous_slices = get_slices_non_contiguous_scans(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
-        # Retrieve discontinous timesteps interval
+        # Retrieve discontinuous timesteps interval
         timesteps = _get_timesteps(xr_obj)
         list_discontinuous = [
             (timesteps[slc][0], timesteps[slc][-1]) for slc in list_discontinuous_slices
@@ -625,7 +625,7 @@ def has_contiguous_scans(xr_obj):
 
 
 def _is_non_valid_geolocation(xr_obj):
-    """Return a boolean array indicating if the geolocation is unvalid."""
+    """Return a boolean array indicating if the geolocation is invalid."""
     bool_arr = np.isnan(xr_obj["lon"])
     return bool_arr
 
@@ -644,7 +644,7 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
     The minimum size of the output slices is 2.
 
     If at a given cross-track index, there are always wrong geolocation,
-    it discards such cross-track index(es) before indentifying the along-track slices.
+    it discards such cross-track index(es) before identifying the along-track slices.
 
     Parameters
     ----------
@@ -663,19 +663,19 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
     if is_grid(xr_obj):
         raise ValueError("For GRID products, geolocation is expected to be valid.")
     if is_orbit(xr_obj):
-        # - Get unvalid coordinates
-        unvalid_coords = _is_non_valid_geolocation(xr_obj)
-        # - Identify cross-track index that along-track are always unvalid
-        idx_cross_track_not_all_unvalid = np.where(~unvalid_coords.all("along_track"))[0]
-        # - If all unvalid, return empty list
-        if len(idx_cross_track_not_all_unvalid) == 0:
+        # - Get invalid coordinates
+        invalid_coords = _is_non_valid_geolocation(xr_obj)
+        # - Identify cross-track index that along-track are always invalid
+        idx_cross_track_not_all_invalid = np.where(~invalid_coords.all("along_track"))[0]
+        # - If all invalid, return empty list
+        if len(idx_cross_track_not_all_invalid) == 0:
             list_slices = []
             return list_slices
-        # - Select only cross-track index that are not all unvalid along-track
-        unvalid_coords = unvalid_coords.isel(cross_track=idx_cross_track_not_all_unvalid)
-        # - Now identify scans across which there are still unvalid coordinates
-        unvalid_scans = unvalid_coords.any(dim="cross_track")
-        valid_scans = ~unvalid_scans
+        # - Select only cross-track index that are not all invalid along-track
+        invalid_coords = invalid_coords.isel(cross_track=idx_cross_track_not_all_invalid)
+        # - Now identify scans across which there are still invalid coordinates
+        invalid_scans = invalid_coords.any(dim="cross_track")
+        valid_scans = ~invalid_scans
         # - Now identify valid along-track slices
         list_slices = get_list_slices_from_bool_arr(
             valid_scans, include_false=False, skip_consecutive_false=True
@@ -694,7 +694,7 @@ def get_slices_non_valid_geolocation(xr_obj):
     The minimum size of the output slices is 2.
 
     If at a given cross-track index, there are always wrong geolocation,
-    it discards such cross-track index(es) before indentifying the along-track slices.
+    it discards such cross-track index(es) before identifying the along-track slices.
 
     Parameters
     ----------
@@ -725,19 +725,19 @@ def check_valid_geolocation(xr_obj, verbose=True):
         xarray object.
 
     """
-    list_unvalid_slices = get_slices_non_valid_geolocation(xr_obj)
-    n_unvalid_scan_slices = len(list_unvalid_slices)
-    if n_unvalid_scan_slices > 0:
+    list_invalid_slices = get_slices_non_valid_geolocation(xr_obj)
+    n_invalid_scan_slices = len(list_invalid_slices)
+    if n_invalid_scan_slices > 0:
         # Retrieve timesteps interval with non valid geolocation
         timesteps = _get_timesteps(xr_obj)
-        list_unvalid = [(timesteps[slc][0], timesteps[slc][-1]) for slc in list_unvalid_slices]
-        first_problematic_timestep = list_unvalid[0][0]
+        list_invalid = [(timesteps[slc][0], timesteps[slc][-1]) for slc in list_invalid_slices]
+        first_problematic_timestep = list_invalid[0][0]
         # Print non-contiguous scans
         if verbose:
-            for start, stop in list_unvalid:
+            for start, stop in list_invalid:
                 print(f"- Missing scans between {start} and {stop}")
         # Raise error and highlight first non-contiguous scan
-        msg = f"There are {n_unvalid_scan_slices} swath portions with non-valid geolocation."
+        msg = f"There are {n_invalid_scan_slices} swath portions with non-valid geolocation."
         msg += f"The first occur at {first_problematic_timestep}."
         raise ValueError(msg)
     return
@@ -746,9 +746,9 @@ def check_valid_geolocation(xr_obj, verbose=True):
 def has_valid_geolocation(xr_obj):
     """Checks GPM object has valid geolocation."""
     if is_orbit(xr_obj):
-        list_unvalid_slices = get_slices_non_valid_geolocation(xr_obj)
-        n_unvalid_scan_slices = len(list_unvalid_slices)
-        return n_unvalid_scan_slices == 0
+        list_invalid_slices = get_slices_non_valid_geolocation(xr_obj)
+        n_invalid_scan_slices = len(list_invalid_slices)
+        return n_invalid_scan_slices == 0
     if is_grid(xr_obj):
         return True
     else:
@@ -798,9 +798,9 @@ def apply_on_valid_geolocation(function):
 
 
 def _replace_0_values(x):
-    """Replace 0 values with previous left non-zero occuring values.
+    """Replace 0 values with previous left non-zero occurring values.
 
-    If the array start with 0, it take the first non-zero occuring values
+    If the array start with 0, it take the first non-zero occurring values
     """
     # Check inputs
     x = np.array(x)
@@ -840,7 +840,7 @@ def _get_non_wobbling_lats(lats, threshold=100):
 def get_slices_non_wobbling_swath(xr_obj, threshold=100):
     """Return the along-track slices along which the swath is not wobbling.
 
-    For wobbling, we define the occurence of changes in latitude directions
+    For wobbling, we define the occurrence of changes in latitude directions
     in less than `threshold` scans.
     The function extract the along-track boundary on both swath sides and
     identify where the change in orbit direction occurs.
@@ -863,7 +863,7 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
 def get_slices_wobbling_swath(xr_obj, threshold=100):
     """Return the along-track slices along which the swath is wobbling.
 
-    For wobbling, we define the occurence of changes in latitude directions
+    For wobbling, we define the occurrence of changes in latitude directions
     in less than `threshold` scans.
     The function extract the along-track boundary on both swath sides and
     identify where the change in orbit direction occurs.

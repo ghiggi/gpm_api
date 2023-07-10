@@ -155,12 +155,12 @@ def check_start_end_time(start_time, end_time):
     end_time = check_time(end_time)
     # Check start_time and end_time are chronological
     if start_time > end_time:
-        raise ValueError("Provide start_time occuring before of end_time.")
+        raise ValueError("Provide start_time occurring before of end_time.")
     # Check start_time and end_time are in the past
     if start_time > datetime.datetime.utcnow():
-        raise ValueError("Provide a start_time occuring in the past.")
+        raise ValueError("Provide a start_time occurring in the past.")
     if end_time > datetime.datetime.utcnow():
-        raise ValueError("Provide a end_time occuring in the past.")
+        raise ValueError("Provide a end_time occurring in the past.")
     return (start_time, end_time)
 
 
@@ -194,7 +194,7 @@ def check_scan_mode(scan_mode, product, version):
 
 def check_bbox(bbox):
     """
-    Check correctnes of bounding box.
+    Check correctness of bounding box.
     bbox format: [lon_0, lon_1, lat_0, lat_1]
     bbox should be provided with longitude between -180 and 180, and latitude
     between -90 and 90.

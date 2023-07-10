@@ -55,16 +55,16 @@ def infill_invalid_coords(xr_obj):
 
     It assumes that the invalid pixel variables are already masked to NaN.
     """
-    # TODO: unvalid pixel coordinates should be masked by full transparency !
+    # TODO: invalid pixel coordinates should be masked by full transparency !
 
     from gpm_api.utils.checks import _is_non_valid_geolocation
 
-    # Retrieve array indicated unvalid geolocation
+    # Retrieve array indicated invalid geolocation
     mask = _is_non_valid_geolocation(xr_obj).data
     # Retrieve lon and lat array
     lon = xr_obj["lon"].data
     lat = xr_obj["lat"].data
-    # Replace unvalid coordinates with closer valid values
+    # Replace invalid coordinates with closer valid values
     lon_dummy = lon.copy()
     lon_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), lon[~mask])
     lat_dummy = lat.copy()
@@ -109,7 +109,7 @@ def _call_over_contiguous_scans(function):
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
 
-            # Retrive contiguous data array
+            # Retrieve contiguous data array
             tmp_da = da.isel(along_track=slc)
 
             # Replace invalid coordinate with closer value

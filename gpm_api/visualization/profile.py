@@ -122,7 +122,7 @@ def get_transect_slices(
     required_dims = set(["along_track", "cross_track", "range"])
     if not dims.issuperset(required_dims):
         raise ValueError(f"Requires xarray object with dimensions {required_dims}")
-    # - Verifiy valid input combination
+    # - Verify valid input combination
     # --> If input xr.Dataset and variable, lat and lon not specified, raise Error
     if isinstance(obj, xr.Dataset) and lat is None and lon is None and variable is None:
         raise ValueError(

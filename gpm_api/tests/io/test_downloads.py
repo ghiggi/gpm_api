@@ -13,7 +13,7 @@ import gpm_api
 from gpm_api.io.products import GPM_NRT_products, GPM_RS_products
 
 ##----------------------------------------------------------------------------.
-### Donwload data
+### Download data
 base_dir = "/home/ghiggi/tmp"
 username = "gionata.ghiggi@epfl.ch"
 

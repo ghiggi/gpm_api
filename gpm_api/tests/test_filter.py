@@ -32,7 +32,7 @@ _filter_filepath(filepath, product=None, version=5, start_time=None, end_time=No
 
 # Test imerg filtering
 # - First should be discarded
-# - Second should be mantained
+# - Second should be maintained
 import datetime
 
 start_time = datetime.datetime.strptime("2019-07-12 11:00:00", "%Y-%m-%d %H:%M:%S")

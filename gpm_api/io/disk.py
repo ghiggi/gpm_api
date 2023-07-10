@@ -142,7 +142,7 @@ def _find_daily_filepaths(
 
     ##-------------------------------------------------------------------------.
     # Print an optional message if daily data are not available
-    # - This message should be removed in future becasue can pop up when granule is in previous day
+    # - This message should be removed in future because can pop up when granule is in previous day
     if is_empty(filepaths):
         # if verbose:
         #     version_str = str(int(version))

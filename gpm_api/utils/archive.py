@@ -434,7 +434,7 @@ def download_monthly_data(
 
 ####--------------------------------------------------------------------------.
 ##########################
-#### Data completness ####
+#### Data completeness ####
 ##########################
 
 
@@ -468,7 +468,7 @@ def check_no_duplicated_files(
     filepaths = np.array(filepaths)
     granule_ids = get_granule_from_filepaths(filepaths)
 
-    # Count granule ids occurence
+    # Count granule ids occurrence
     ids, counts = np.unique(granule_ids, return_counts=True)
 
     # Get duplicated indices
@@ -575,7 +575,7 @@ def get_time_period_with_missing_files(filepaths):
     return list_missing
 
 
-def check_archive_completness(
+def check_archive_completeness(
     product,
     start_time,
     end_time,
@@ -616,7 +616,7 @@ def check_archive_completness(
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     transfer_tool : str, optional
-        Wheter to use curl or wget for data download. The default is "wget".
+        Whether to use curl or wget for data download. The default is "wget".
     verbose : bool, optional
         Whether to print processing details. The default is False.
     base_dir : str, optional

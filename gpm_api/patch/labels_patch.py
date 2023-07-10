@@ -108,10 +108,10 @@ def _ensure_is_dict_argument(arg, dims, arg_name):
         arg = dict(zip(dims, arg))
     if isinstance(arg, dict):
         dict_dims = np.array(list(arg))
-        unvalid_dims = dict_dims[np.isin(dict_dims, dims, invert=True)].tolist()
-        if len(unvalid_dims) > 0:
+        invalid_dims = dict_dims[np.isin(dict_dims, dims, invert=True)].tolist()
+        if len(invalid_dims) > 0:
             raise ValueError(
-                f"{arg_name} must not contain dimensions {unvalid_dims}. It expects only {dims}."
+                f"{arg_name} must not contain dimensions {invalid_dims}. It expects only {dims}."
             )
         missing_dims = np.array(dims)[np.isin(dims, dict_dims, invert=True)].tolist()
         if len(missing_dims) > 0:
@@ -170,10 +170,10 @@ def check_labels_id(labels_id, label_arr):
     if not are_all_natural_numbers(labels_id):
         raise ValueError("labels id must be positive natural numbers.")
     # Check labels_id are number present in the label_arr
-    unvalid_labels = labels_id[~np.isin(labels_id, valid_labels)]
-    if unvalid_labels.size != 0:
-        unvalid_labels = unvalid_labels.astype(int)
-        raise ValueError(f"The following labels id are not valid: {unvalid_labels}")
+    invalid_labels = labels_id[~np.isin(labels_id, valid_labels)]
+    if invalid_labels.size != 0:
+        invalid_labels = invalid_labels.astype(int)
+        raise ValueError(f"The following labels id are not valid: {invalid_labels}")
     # If no labels, no patch to extract
     n_labels = len(labels_id)
     if n_labels == 0:

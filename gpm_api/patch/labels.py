@@ -83,7 +83,7 @@ def check_sort_by(stats):
         valid_stats = [
             "area",
             "maximum",
-            "mininum",
+            "minimum",
             "mean",
             "median",
             "sum",
@@ -102,7 +102,7 @@ def _check_stats(stats):
         valid_stats = [
             "area",
             "maximum",
-            "mininum",
+            "minimum",
             "mean",
             "median",
             "sum",
@@ -171,19 +171,19 @@ def _vec_translate(arr, my_dict):
     return np.vectorize(my_dict.__getitem__)(arr)
 
 
-def get_labels_with_requested_occurence(label_arr, vmin, vmax):
-    "Get label indices with requested occurence."
-    # Compute label occurence
-    label_indices, label_occurence = np.unique(label_arr, return_counts=True)
+def get_labels_with_requested_occurrence(label_arr, vmin, vmax):
+    "Get label indices with requested occurrence."
+    # Compute label occurrence
+    label_indices, label_occurrence = np.unique(label_arr, return_counts=True)
 
     # Remove label 0 and associate pixel count if present
     if label_indices[0] == 0:
         label_indices = label_indices[1:]
-        label_occurence = label_occurence[1:]
-    # Get index with required occurence
-    valid_area_indices = np.where(np.logical_and(label_occurence >= vmin, label_occurence <= vmax))[
-        0
-    ]
+        label_occurrence = label_occurrence[1:]
+    # Get index with required occurrence
+    valid_area_indices = np.where(
+        np.logical_and(label_occurrence >= vmin, label_occurrence <= vmax)
+    )[0]
     # Return list of valid label indices
     label_indices = label_indices[valid_area_indices] if len(valid_area_indices) > 0 else []
     return label_indices
@@ -284,7 +284,7 @@ def get_areas_labels(
         The default is None (no dilation).
     sort_by : (callable or str), optional
         A function or statistics to define the order of the labels.
-        Valid string statistics are "area", "maximum", "mininum", "mean",
+        Valid string statistics are "area", "maximum", "minimum", "mean",
         "median", "sum", "standard_deviation", "variance".
         The default is "area".
     sort_decreasing : bool, optional
@@ -329,12 +329,12 @@ def get_areas_labels(
     label_arr = label_image(mask)  # 0.977-1.37 ms
 
     # mask = mask.astype(int)
-    # labels, num_features = dask_label_image(mask) # THIS WORK in ND dimensions
+    # labels, num_features = dask_label_image(mask) # THIS WORK in n-dimensions
     # %time labels = labels.compute()    # 5-6.5 ms
 
     # ---------------------------------.
-    # Count initial label occurence
-    label_indices, label_occurence = np.unique(label_arr, return_counts=True)
+    # Count initial label occurrence
+    label_indices, label_occurrence = np.unique(label_arr, return_counts=True)
     n_initial_labels = len(label_indices)
     if n_initial_labels == 1:  # only 0 label
         return _no_labels_result(arr)
@@ -348,7 +348,7 @@ def get_areas_labels(
 
     # ---------------------------------.
     # Filter label by area
-    label_indices = get_labels_with_requested_occurence(
+    label_indices = get_labels_with_requested_occurrence(
         label_arr=label_arr, vmin=min_area_threshold, vmax=max_area_threshold
     )
     if len(label_indices) == 0:
@@ -415,7 +415,7 @@ def xr_get_areas_labels(
         The default is None (no dilation).
     sort_by : (callable or str), optional
         A function or statistics to define the order of the labels.
-        Valid string statistics are "area", "maximum", "mininum", "mean",
+        Valid string statistics are "area", "maximum", "minimum", "mean",
         "median", "sum", "standard_deviation", "variance".
         The default is "area".
     sort_decreasing : bool, optional
@@ -516,7 +516,7 @@ def label_xarray_object(
         The default is None (no dilation).
     sort_by : (callable or str), optional
         A function or statistics to define the order of the labels.
-        Valid string statistics are "area", "maximum", "mininum", "mean",
+        Valid string statistics are "area", "maximum", "minimum", "mean",
         "median", "sum", "standard_deviation", "variance".
         The default is "area".
     sort_decreasing : bool, optional

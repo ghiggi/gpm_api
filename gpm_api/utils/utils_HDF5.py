@@ -74,7 +74,7 @@ def parse_HDF5_GPM_attributes(x, parser=parse_attr_string):
         # If attr is a string
         elif isinstance(attr, str):
             attr_dict[item] = parser(attr)
-        # If a compressed string [with lot of attributes separeted by \n ...
+        # If a compressed string [with lot of attributes separated by \n ...
         elif isinstance(attr, numpy.bytes_):
             # Decode
             attr_str = attr.decode("UTF-8", errors="ignore").split("\n")  # Always create a list

@@ -18,5 +18,5 @@ Created on Wed Jan 11 12:34:50 2023
 # - Precess with respect to the planes of their initial orbit
 # - Inclination > 90°
 # - Example:
-#   - sun syncronous orbits: A-Train
+#   - sun synchronous orbits: A-Train
 #   - MetOP-A, B, NOAA ...

@@ -54,7 +54,7 @@ Created on Mon Nov 29 16:33:35 2021
 # ListedColormap, which produces a discrete colormap,
 # dir(matplotlib.colors)
 
-# # Continous colormap
+# # Continuous colormap
 # cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", color_list)
 # norm = mpl.colors.Normalize(vmin, vmax)
 

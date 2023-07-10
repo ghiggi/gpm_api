@@ -121,7 +121,7 @@ def _preprocess_hdf_group(ds, variables, group, prefix_group):
         variables_subset = variables[np.isin(variables, list(ds.data_vars))]
         ds = ds[variables_subset]
 
-    # Remove unuseful variables
+    # Remove useless variables
     ds = _remove_dummy_variables(ds)
 
     # Prefix variables with group name

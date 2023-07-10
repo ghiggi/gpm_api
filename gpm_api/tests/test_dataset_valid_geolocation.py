@@ -47,7 +47,7 @@ ds[variable].gpm_api.plot_map()
 # 3. Implement missing coordinates checks
 # 4. Test get_contiguous_scan_slices when missing coordinates
 # 4. Test plotting for missing coordinates ---> mask !
-#   --> No unvalid coordinates
+#   --> No invalid coordinates
 #   --> Mask for plotting
 #   --> Do not mask for crop
 

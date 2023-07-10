@@ -8,7 +8,7 @@ Created on Thu Jan 19 16:19:22 2023
 import datetime
 
 from gpm_api.utils.archive import (
-    check_archive_completness,
+    check_archive_completeness,
     check_file_integrity,
     check_no_duplicated_files,
 )
@@ -46,7 +46,7 @@ check_file_integrity(
     verbose=True,
 )
 
-check_archive_completness(
+check_archive_completeness(
     base_dir=base_dir,
     product=product,
     start_time=start_time,
@@ -61,7 +61,7 @@ check_archive_completness(
 )
 
 # TODO: SIMPLIFY periods by unique dates?
-# --> call download_daily_data instead in check_archive_completness
+# --> call download_daily_data instead in check_archive_completeness
 list_missing_periods = [
     ([datetime.datetime(2022, 2, 2, 22, 17, 44)], [datetime.datetime(2022, 2, 23, 1, 5, 7)]),
     ([datetime.datetime(2022, 2, 26, 7, 45, 58)], [datetime.datetime(2022, 2, 26, 9, 18, 33)]),

@@ -151,7 +151,7 @@ def get_disk_directory(base_dir, product, product_type, date, version):
 
 def get_pps_nrt_product_dir(product, date):
     """
-    Retrieve the NASA PPS server directory stucture where NRT data are stored.
+    Retrieve the NASA PPS server directory structure where NRT data are stored.
 
     Parameters
     ----------
@@ -256,7 +256,7 @@ def get_pps_nrt_product_dir(product, date):
 
 def get_pps_rs_product_dir(product, date, version):
     """
-    Retrieve the NASA PPS server directory stucture where RS data are stored.
+    Retrieve the NASA PPS server directory structure where RS data are stored.
 
     Parameters
     ----------

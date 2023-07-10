@@ -17,7 +17,7 @@ Created on Fri Jan 13 16:41:17 2023
 #### Label-Patch Extraction #####
 #################################
 ## Single Patch
-# Around Label        (heterogenous patch size)
+# Around Label        (heterogeneous patch size)
 # - padding
 # - minimum size
 

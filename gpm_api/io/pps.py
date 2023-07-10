@@ -38,7 +38,7 @@ def _check_correct_version(filepaths, product, version):
     file_versions = np.unique(get_version_from_filepaths(filepaths, integer=True)).tolist()
     if len(file_versions) > 1:
         raise ValueError(
-            f"Multiple file versions found: {file_versions}. Please report their occurence !"
+            f"Multiple file versions found: {file_versions}. Please report their occurrence !"
         )
     file_version = file_versions[0]
     if file_version != version:
@@ -67,7 +67,7 @@ def _get_pps_file_list(username, password, url_file_list, product, date, version
     date : datetime
         Single date for which to retrieve the data.
     verbose : bool, optional
-        Default is False. Wheter to specify when data are not available for a specific date.
+        Default is False. Whether to specify when data are not available for a specific date.
     """
     # Ensure url_file_list ends with "/"
     if url_file_list[-1] != "/":
@@ -87,7 +87,7 @@ def _get_pps_file_list(username, password, url_file_list, product, date, version
         version_str = str(int(version))
         print("The PPS server is currently unavailable.")
         print(
-            f"This occured when searching for product {product} (V0{version_str}) at date {date}."
+            f"This occurred when searching for product {product} (V0{version_str}) at date {date}."
         )
         raise ValueError("Sorry for the incovenience.")
 

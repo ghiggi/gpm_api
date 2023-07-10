@@ -66,13 +66,13 @@ list_slices = get_discontiguous_scan_slices(ds)
 ds.isel(along_track=list_slices[0])["gpm_id"]  # at granule change
 ds.isel(along_track=list_slices[0]).gpm_api.plot_map(variable=variable)
 
-slice_problem_occurence = list_slices[0]
-print(slice_problem_occurence)
-da = ds[variable].isel(along_track=slice_problem_occurence)  # size 2
+slice_problem_occurrence = list_slices[0]
+print(slice_problem_occurrence)
+da = ds[variable].isel(along_track=slice_problem_occurrence)  # size 2
 get_contiguous_scan_slices(da)  # not possible to discern if only 2 scans
 p = da.gpm_api.plot_map_mesh(edgecolors="r")
 
-slice_enlarged = slice(slice_problem_occurence.start - 1, slice_problem_occurence.stop + 1)
+slice_enlarged = slice(slice_problem_occurrence.start - 1, slice_problem_occurrence.stop + 1)
 print(slice_enlarged)
 da = ds[variable].isel(along_track=slice_enlarged)  # size 4
 get_contiguous_scan_slices(da)  # 0-1 ... and 2-3
