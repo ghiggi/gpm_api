@@ -25,6 +25,6 @@ repos:
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.4
     hooks:
-    -   id: codespell
-        types_or: [python, markdown]
-        additional_dependencies: [tomli]
+    - id: codespell
+      types_or: [python, markdown]
+      additional_dependencies: [tomli]
