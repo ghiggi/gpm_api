@@ -8,6 +8,7 @@ import cartopy
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 from matplotlib.collections import PolyCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage import binary_dilation
@@ -302,6 +303,9 @@ def _plot_xr_imshow(
     """Plot imshow with xarray."""
     # --> BUG with colorbar: https://github.com/pydata/xarray/issues/7014
     ticklabels = cbar_kwargs.pop("ticklabels", None)
+    if not add_colorbar:
+        cbar_kwargs = {}
+
     p = da.plot.imshow(
         x=x,
         y=y,
@@ -449,3 +453,83 @@ def plot_map_mesh(
         raise ValueError("Can not plot. It's neither a GPM grid, neither a GPM orbit.")
     # Return mappable
     return p
+
+
+####--------------------------------------------------------------------------.
+
+
+def plot_labels(
+    dataarray,
+    max_n_labels=50,
+    add_colorbar=True,
+    interpolation="nearest",
+    cmap="Paired",
+    fig_kwargs={},
+    **plot_kwargs,
+):
+    """Plot labels.
+
+    The maximum allowed number of labels to plot is 'max_n_labels'.
+    """
+    from ximage.labels.labels import get_label_indices, redefine_label_array
+    from ximage.labels.plot_labels import get_label_colorbar_settings
+
+    from gpm_api.visualization.plot import plot_image
+
+    dataarray = dataarray.compute()
+    label_indices = get_label_indices(dataarray)
+    n_labels = len(label_indices)
+    if add_colorbar and n_labels > max_n_labels:
+        msg = f"""The array currently contains {n_labels} labels
+        and 'max_n_labels' is set to {max_n_labels}. The colorbar is not displayed!"""
+        print(msg)
+        add_colorbar = False
+    # Relabel array from 1 to ... for plotting
+    dataarray = redefine_label_array(dataarray, label_indices=label_indices)
+    # Replace 0 with nan
+    dataarray = dataarray.where(dataarray > 0)
+    # Define appropriate colormap
+    plot_kwargs, cbar_kwargs = get_label_colorbar_settings(label_indices, cmap="Paired")
+    # Plot image
+    p = plot_image(
+        dataarray,
+        interpolation=interpolation,
+        add_colorbar=add_colorbar,
+        cbar_kwargs=cbar_kwargs,
+        fig_kwargs=fig_kwargs,
+        **plot_kwargs,
+    )
+    return p
+
+
+def plot_patches(
+    patch_gen,
+    variable=None,
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
+):
+    """Plot patches."""
+    from gpm_api.visualization.plot import plot_image
+
+    # Plot patches
+    for label_id, xr_patch in patch_gen:
+        if isinstance(xr_patch, xr.Dataset):
+            if variable is None:
+                raise ValueError("'variable' must be specified when plotting xr.Dataset patches.")
+            xr_patch = xr_patch[variable]
+        try:
+            plot_image(
+                xr_patch,
+                interpolation=interpolation,
+                add_colorbar=add_colorbar,
+                fig_kwargs=fig_kwargs,
+                cbar_kwargs=cbar_kwargs,
+                **plot_kwargs,
+            )
+            plt.show()
+        except:
+            pass
+    return

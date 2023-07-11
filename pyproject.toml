@@ -54,13 +54,12 @@ requires-python = ">=3.8"
 dynamic = ["version"]
 
 [project.optional-dependencies]
-image = ["dask-image", "scikit-image"]
+image = ["ximage"]
 dev = ["pre-commit",
        "black", "black[jupyter]", "blackdoc", "ruff",
        "pytest", "pytest-cov", "pytest-mock", "pydantic",
        "pip-tools", "bumpver", "twine",
        "setuptools>=61.0.0", "wheel",
-       "dask-image", "scikit-image",
        "sphinx", "sphinx-gallery", "sphinx_rtd_theme", "nbsphinx"]
 
 [project.urls]
