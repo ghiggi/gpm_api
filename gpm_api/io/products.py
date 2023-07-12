@@ -43,7 +43,9 @@ from gpm_api.utils.yaml import read_yaml_file
 ### Product changes:
 # In V05, GPROF products are available as 2A-CLIM and 2A
 # In V06, GPROF is not available !
-# In V07 RS, GPROF is available only as 2A-CLIM (except for 2A.GPM.GMI)
+# In V07 RS, GPROF is available only as 2A-CLIM (except for 2A.GPM.GMI) on PPS
+# In V07 RS, GPROF is available (mostly) as 2A-CLIM and 2A on GES DISC
+# --> AMSUB and SSMI (F08-15) only with CLIM product on GES DISC
 # In V07 NRT, GPROF is available only as 2A
 
 # PRPS is available only in V06 (CLIM and no CLIM) (PMW Saphir)
@@ -113,7 +115,7 @@ def available_products(product_type=None, product_category=None, product_level=N
         check_product_level(product_level)
         products = [product for product in products if product_level == product[0:2]]
 
-    return products
+    return sorted(products)
 
 
 def available_scan_modes(product, version):
