@@ -490,9 +490,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id003
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id004
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/AMSR2
   pps_rs_dir: gprof
@@ -501,9 +501,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id005
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id006
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -512,9 +512,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id007
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id008
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -523,9 +523,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id009
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id010
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -534,9 +534,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id011
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id012
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -546,9 +546,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id013
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id014
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
@@ -558,9 +558,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id015
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id016
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
@@ -570,9 +570,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id017
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id018
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
@@ -646,9 +646,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id019
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id020
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/GMI
   pps_rs_dir: gprof
@@ -694,9 +694,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id021
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id022
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -706,9 +706,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id023
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id024
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
@@ -718,9 +718,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id025
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id026
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
@@ -729,9 +729,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id027
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id028
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -741,9 +741,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id029
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id030
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
@@ -764,9 +764,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id001
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id002
+  scan_modes_v7:
   - S1
   pps_nrt_dir: PRPS
   pps_rs_dir: prps
@@ -775,8 +775,10 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id001
-  scan_modes_v7: *id002
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: PRPS
   pps_rs_dir: prps
 2A-SSMI-F08:
@@ -784,9 +786,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id031
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id032
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -795,9 +797,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id033
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id034
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -806,9 +808,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id035
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id036
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -817,9 +819,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id037
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id038
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -828,9 +830,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id039
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id040
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -839,9 +841,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id041
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id042
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -851,9 +853,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id043
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id044
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
@@ -863,9 +865,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id045
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id046
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
@@ -875,9 +877,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id047
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id048
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
@@ -887,9 +889,9 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6: &id049
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id050
+  scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
@@ -898,9 +900,9 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: &id051
+  scan_modes_v6:
   - S1
-  scan_modes_v7: &id052
+  scan_modes_v7:
   - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
@@ -1000,8 +1002,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id003
-  scan_modes_v7: *id004
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/AMSR2
   pps_rs_dir: gprof
 2A-AMSRE-AQUA-CLIM:
@@ -1009,8 +1013,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id005
-  scan_modes_v7: *id006
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-AMSUB-NOAA15-CLIM:
@@ -1018,8 +1024,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id007
-  scan_modes_v7: *id008
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-AMSUB-NOAA16-CLIM:
@@ -1027,8 +1035,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id009
-  scan_modes_v7: *id010
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-AMSUB-NOAA17-CLIM:
@@ -1036,8 +1046,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id011
-  scan_modes_v7: *id012
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-ATMS-NOAA20-CLIM:
@@ -1045,8 +1057,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id013
-  scan_modes_v7: *id014
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
 2A-ATMS-NOAA21-CLIM:
@@ -1054,8 +1068,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id015
-  scan_modes_v7: *id016
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
 2A-ATMS-NPP-CLIM:
@@ -1063,8 +1079,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id017
-  scan_modes_v7: *id018
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
 2A-GMI-CLIM:
@@ -1072,8 +1090,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id019
-  scan_modes_v7: *id020
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/GMI
   pps_rs_dir: gprof
 2A-MHS-METOPA-CLIM:
@@ -1081,8 +1101,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id021
-  scan_modes_v7: *id022
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-MHS-METOPB-CLIM:
@@ -1090,8 +1112,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id023
-  scan_modes_v7: *id024
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
 2A-MHS-METOPC-CLIM:
@@ -1099,8 +1123,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id025
-  scan_modes_v7: *id026
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
 2A-MHS-NOAA18-CLIM:
@@ -1108,8 +1134,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id027
-  scan_modes_v7: *id028
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-MHS-NOAA19-CLIM:
@@ -1117,8 +1145,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id029
-  scan_modes_v7: *id030
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
 2A-SSMI-F08-CLIM:
@@ -1126,8 +1156,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id031
-  scan_modes_v7: *id032
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-SSMI-F10-CLIM:
@@ -1135,8 +1167,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id033
-  scan_modes_v7: *id034
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-SSMI-F11-CLIM:
@@ -1144,8 +1178,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id035
-  scan_modes_v7: *id036
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-SSMI-F13-CLIM:
@@ -1153,8 +1189,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id037
-  scan_modes_v7: *id038
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-SSMI-F14-CLIM:
@@ -1162,8 +1200,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id039
-  scan_modes_v7: *id040
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-SSMI-F15-CLIM:
@@ -1171,8 +1211,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id041
-  scan_modes_v7: *id042
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
 2A-SSMIS-F16-CLIM:
@@ -1180,8 +1222,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id043
-  scan_modes_v7: *id044
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
 2A-SSMIS-F17-CLIM:
@@ -1189,8 +1233,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id045
-  scan_modes_v7: *id046
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
 2A-SSMIS-F18-CLIM:
@@ -1198,8 +1244,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id047
-  scan_modes_v7: *id048
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
 2A-SSMIS-F19-CLIM:
@@ -1207,8 +1255,10 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id049
-  scan_modes_v7: *id050
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
 2A-TMI-CLIM:
@@ -1216,7 +1266,9 @@ IMERG-LR:
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: *id051
-  scan_modes_v7: *id052
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
   pps_nrt_dir: null
   pps_rs_dir: gprof
