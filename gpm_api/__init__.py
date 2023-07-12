@@ -4,11 +4,11 @@ Created on Mon Aug  3 11:22:04 2020
 
 @author: ghiggi
 """
-# import os
-# os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"  # noqa
-import gpm_api.accessor  # noqa
+import os
 from importlib.metadata import PackageNotFoundError, version
 
+# os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"  # noqa
+import gpm_api.accessor  # noqa
 from gpm_api.configs import define_gpm_api_configs as define_configs
 from gpm_api.configs import read_gpm_api_configs as read_configs
 from gpm_api.dataset.reader import (
@@ -27,7 +27,11 @@ from gpm_api.utils.checks import (
     check_valid_geolocation,
 )
 
+_root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+
 __all__ = [
+    "_root_path",
     "define_configs",
     "read_configs",
     "available_products",

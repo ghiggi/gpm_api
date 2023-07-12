@@ -1,0 +1,969 @@
+1A-GMI:
+  pattern: 1A.GPM.GMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S4
+  - S5
+  scan_modes_v7:
+  - S1
+  - S2
+  - S4
+  - S5
+  pps_nrt_dir: null
+  pps_rs_dir: 1A
+1A-TMI:
+  pattern: 1A.TRMM.TMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  pps_nrt_dir: null
+  pps_rs_dir: 1A
+1B-GMI:
+  pattern: 1B.GPM.GMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  scan_modes_v7:
+  - S1
+  - S2
+  pps_nrt_dir: GMI1B
+  pps_rs_dir: 1B
+1B-Ka:
+  pattern: GPMCOR_KAR*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - HS
+  - MS
+  scan_modes_v7:
+  - HS
+  - MS
+  pps_nrt_dir: null
+  pps_rs_dir: 1B
+1B-Ku:
+  pattern: GPMCOR_KUR*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - NS
+  scan_modes_v7:
+  - FS
+  pps_nrt_dir: null
+  pps_rs_dir: 1B
+1B-PR:
+  pattern: 1B.TRMM.PR*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - NS
+  scan_modes_v7:
+  - FS
+  pps_nrt_dir: null
+  pps_rs_dir: 1B
+1B-TMI:
+  pattern: 1B.TRMM.TMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  pps_nrt_dir: null
+  pps_rs_dir: 1B
+1C-AMSR2-GCOMW1:
+  pattern: 1C.GCOMW1.AMSR2.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  - S5
+  - S6
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  - S5
+  - S6
+  pps_nrt_dir: 1C/AMSR2
+  pps_rs_dir: 1C
+1C-AMSRE-AQUA:
+  pattern: 1C.AQUA.AMSRE.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6: ''
+  scan_modes_v7: ''
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-AMSUB-NOAA15:
+  pattern: 1C.NOAA15.AMSUB.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-AMSUB-NOAA16:
+  pattern: 1C.NOAA16.AMSUB.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-AMSUB-NOAA17:
+  pattern: 1C.NOAA17.AMSUB.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-ATMS-NOAA20:
+  pattern: 1C.NOAA20.ATMS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: 1C/ATMS
+  pps_rs_dir: 1C
+1C-ATMS-NPP:
+  pattern: 1C.NPP.ATMS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: 1C/ATMS
+  pps_rs_dir: 1C
+1C-GMI:
+  pattern: 1C.GPM.GMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  scan_modes_v7:
+  - S1
+  - S2
+  pps_nrt_dir: 1C/GMI
+  pps_rs_dir: 1C
+1C-MHS-METOPA:
+  pattern: 1C.METOPA.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-MHS-METOPB:
+  pattern: 1C.METOPB.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: 1C/MHS
+  pps_rs_dir: 1C
+1C-MHS-METOPC:
+  pattern: 1C.METOPC.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: 1C/MHS
+  pps_rs_dir: 1C
+1C-MHS-NOAA18:
+  pattern: 1C.NOAA18.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-MHS-NOAA19:
+  pattern: 1C.NOAA19.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: 1C/MHS
+  pps_rs_dir: 1C
+1C-SAPHIR-MT1:
+  pattern: 1C.MT1.SAPHIR.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: 1C/SAPHIR
+  pps_rs_dir: 1C
+1C-SSMI-F08:
+  pattern: 1C.F08.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-SSMI-F10:
+  pattern: 1C.F10.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-SSMI-F11:
+  pattern: 1C.F11.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-SSMI-F13:
+  pattern: 1C.F13.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-SSMI-F14:
+  pattern: 1C.F14.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-SSMI-F15:
+  pattern: 1C.F15.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-SSMIS-F16:
+  pattern: 1C.F16.SSMIS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: 1C/SSMIS
+  pps_rs_dir: 1C
+1C-SSMIS-F17:
+  pattern: 1C.F17.SSMIS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: 1C/SSMIS
+  pps_rs_dir: 1C
+1C-SSMIS-F18:
+  pattern: 1C.F18.SSMIS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: 1C/SSMIS
+  pps_rs_dir: 1C
+1C-SSMIS-F19:
+  pattern: 1C.F19.SSMIS.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+1C-TMI:
+  pattern: 1C.TRMM.TMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  pps_nrt_dir: null
+  pps_rs_dir: 1C
+2A-AMSR2-GCOMW1:
+  pattern: 2A.GCOMW1.AMSR2.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/AMSR2
+  pps_rs_dir: gprof
+2A-AMSRE-AQUA:
+  pattern: 2A.AQUA.AMSRE.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-AMSUB-NOAA15:
+  pattern: 2A.AMSUB.NOAA15.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-AMSUB-NOAA16:
+  pattern: 2A.AMSUB.NOAA16.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-AMSUB-NOAA17:
+  pattern: 2A.AMSUB.NOAA17.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-ATMS-NOAA20:
+  pattern: 2A.NOAA20.ATMS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/ATMS
+  pps_rs_dir: gprof
+2A-ATMS-NPP:
+  pattern: 2A.NPP.ATMS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/ATMS
+  pps_rs_dir: gprof
+2A-DPR:
+  pattern: 2A.GPM.DPR.V\d-*
+  product_category: RADAR
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - NS
+  - MS
+  - HS
+  scan_modes_v7:
+  - FS
+  - HS
+  pps_nrt_dir: radar/DprL2
+  pps_rs_dir: radar
+2A-ENV-DPR:
+  pattern: 2A-ENV.GPM.DPR.V*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - NS
+  - MS
+  - HS
+  scan_modes_v7:
+  - FS
+  - HS
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2A-ENV-Ka:
+  pattern: 2A-ENV.GPM.Ka.V*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - HS
+  - MS
+  scan_modes_v7:
+  - HS
+  - FS
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2A-ENV-Ku:
+  pattern: 2A-ENV.GPM.Ku.V*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - NS
+  scan_modes_v7:
+  - FS
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2A-ENV-PR:
+  pattern: 2A-ENV.TRMM.PR.V*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - NS
+  scan_modes_v7:
+  - FS
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2A-GMI:
+  pattern: 2A.GPM.GMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/GMI
+  pps_rs_dir: gprof
+2A-GPM-SLH:
+  pattern: 2A.GPM.DPR.GPM-SLH*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - Swath
+  scan_modes_v7:
+  - Swath
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2A-Ka:
+  pattern: 2A.GPM.Ka.V*
+  product_category: RADAR
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - HS
+  - MS
+  scan_modes_v7:
+  - HS
+  - FS
+  pps_nrt_dir: radar/KaL2
+  pps_rs_dir: radar
+2A-Ku:
+  pattern: 2A.GPM.Ku.V*
+  product_category: RADAR
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - NS
+  scan_modes_v7:
+  - FS
+  pps_nrt_dir: radar/KuL2
+  pps_rs_dir: radar
+2A-MHS-METOPA:
+  pattern: 2A.METOPA.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-MHS-METOPB:
+  pattern: 2A.METOPB.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/MHS
+  pps_rs_dir: gprof
+2A-MHS-METOPC:
+  pattern: 2A.METOPC.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/MHS
+  pps_rs_dir: gprof
+2A-MHS-NOAA18:
+  pattern: 2A.NOAA18.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-MHS-NOAA19:
+  pattern: 2A.NOAA19.MHS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/MHS
+  pps_rs_dir: gprof
+2A-PR:
+  pattern: 2A.TRMM.PR.V\d-*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - NS
+  scan_modes_v7:
+  - FS
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2A-SAPHIR-MT1:
+  pattern: 2A.SAPHIR.MT1.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: PRPS
+  pps_rs_dir: prps
+2A-SAPHIR-MT1-CLIM:
+  pattern: 2A-CLIM.SAPHIR.MT1.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: prps
+2A-SSMI-F08:
+  pattern: 2A.F08.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-SSMI-F10:
+  pattern: 2A.F10.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-SSMI-F11:
+  pattern: 2A.F11.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-SSMI-F13:
+  pattern: 2A.F13.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-SSMI-F14:
+  pattern: 2A.F14.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-SSMI-F15:
+  pattern: 2A.F15.SSMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-SSMIS-F16:
+  pattern: 2A.F16.SSMIS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/SSMIS
+  pps_rs_dir: gprof
+2A-SSMIS-F17:
+  pattern: 2A.F17.SSMIS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/SSMIS
+  pps_rs_dir: gprof
+2A-SSMIS-F18:
+  pattern: 2A.F18.SSMIS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/SSMIS
+  pps_rs_dir: gprof
+2A-SSMIS-F19:
+  pattern: 2A.F19.SSMIS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/SSMIS
+  pps_rs_dir: gprof
+2A-TMI:
+  pattern: 2A.TMI.TRMM.*
+  product_category: PMW
+  product_types:
+  - RS
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: null
+  pps_rs_dir: gprof
+2A-TRMM-SLH:
+  pattern: 2A.TRMM.PR.TRMM-SLH*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - Swath
+  scan_modes_v7:
+  - Swath
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2B-GPM-CORRA:
+  pattern: 2B.GPM.DPRGMI.CORRA*
+  product_category: CMB
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - KuKaGMI
+  - KuGMI
+  scan_modes_v7:
+  - KuKaGMI
+  - KuGMI
+  pps_nrt_dir: combine
+  pps_rs_dir: radar
+2B-GPM-CSH:
+  pattern: 2B.GPM.DPRGMI.2HCSHv*
+  product_category: CMB
+  product_types:
+  - RS
+  scan_modes_v6:
+  - Swath
+  scan_modes_v7:
+  - Swath
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2B-TRMM-CORRA:
+  pattern: 2B.TRMM.PRTMI.CORRA*
+  product_category: CMB
+  product_types:
+  - RS
+  scan_modes_v6:
+  - KuTMI
+  scan_modes_v7:
+  - KuTMI
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+2B-TRMM-CSH:
+  pattern: 2B.TRMM.PRTMI.2HCSHv*
+  product_category: CMB
+  product_types:
+  - RS
+  scan_modes_v6:
+  - Swath
+  scan_modes_v7:
+  - Swath
+  pps_nrt_dir: null
+  pps_rs_dir: radar
+IMERG-ER:
+  pattern: 3B-HHR-E.MS.MRG*
+  product_category: IMERG
+  product_types:
+  - NRT
+  scan_modes_v6:
+  - Grid
+  scan_modes_v7:
+  - Grid
+  pps_nrt_dir: imerg/early
+  pps_rs_dir: null
+IMERG-FR:
+  pattern: 3B-HHR.MS.MRG.*
+  product_category: IMERG
+  product_types:
+  - RS
+  scan_modes_v6:
+  - Grid
+  scan_modes_v7:
+  - Grid
+  pps_nrt_dir: null
+  pps_rs_dir: imerg
+IMERG-LR:
+  pattern: 3B-HHR-L.MS.MRG*
+  product_category: IMERG
+  product_types:
+  - NRT
+  scan_modes_v6:
+  - Grid
+  scan_modes_v7:
+  - Grid
+  pps_nrt_dir: imerg/late
+  pps_rs_dir: null

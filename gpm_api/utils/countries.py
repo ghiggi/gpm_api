@@ -7,7 +7,7 @@ Created on Sat Dec 10 16:10:52 2022
 import difflib
 import os
 
-import yaml
+from gpm_api.utils.yaml import read_yaml_file
 
 
 def extend_lonlat_extent(extent, x):
@@ -44,8 +44,7 @@ def get_country_extent_dictionary():
     # Define file with extents dictionary
     countries_extent_fpath = os.path.join(base_dir, "etc/country_extent.yaml")
     # Read the data from the YAML file
-    with open(countries_extent_fpath) as infile:
-        countries_extent_dict = yaml.load(infile, Loader=yaml.FullLoader)
+    countries_extent_dict = read_yaml_file(countries_extent_fpath)
     return countries_extent_dict
 
 
