@@ -6,13 +6,15 @@ Created on Mon Aug 17 18:23:58 2020
 @author: ghiggi
 """
 import datetime
+from gpm_api.io.pps import _find_pps_daily_filepaths
+from gpm_api.io.disk import _find_daily_filepaths, find_filepaths
 
-from gpm_api.io.find import (
-    find_daily_GPM_disk_filepaths,
-    find_daily_GPM_PPS_filepaths,
-    find_GPM_files,
-)
 
+### VERY OLD CODE... FUNCTION ARGUMENT HAVE CHANGED
+# date=date,
+# start_hhmmss=start_hhmmss,
+# end_hhmmss=end_hhmmss,
+# --> start_time, end_time
 ##----------------------------------------------------------------------------.
 base_dir = "/home/ghiggi/tmp"
 username = "gionata.ghiggi@epfl.ch"
@@ -41,7 +43,7 @@ end_hhmmss = datetime.time.fromisoformat("23:59:00")
 date = datetime.date.fromisoformat("2014-08-09")
 product_type = "RS"
 
-(server_paths, disk_paths) = find_daily_GPM_PPS_filepaths(
+(server_paths, disk_paths) = _find_pps_daily_filepaths(
     username=username,
     base_dir=base_dir,
     product=product,
@@ -50,12 +52,11 @@ product_type = "RS"
     end_hhmmss=end_hhmmss,
     product_type=product_type,
     version=version,
-    flag_first_date=True,
 )
 print(server_paths)
 print(disk_paths)
 
-find_daily_GPM_disk_filepaths(
+_find_daily_filepaths(
     base_dir=base_dir,
     product=product,
     date=date,
@@ -70,7 +71,7 @@ find_daily_GPM_disk_filepaths(
 date = datetime.date.fromisoformat("2020-08-16")
 product_type = "NRT"
 
-(server_paths, disk_paths) = find_daily_GPM_PPS_filepaths(
+(server_paths, disk_paths) = _find_pps_daily_filepaths(
     username=username,
     base_dir=base_dir,
     product=product,
@@ -79,12 +80,11 @@ product_type = "NRT"
     date=date,
     start_hhmmss=start_hhmmss,
     end_hhmmss=end_hhmmss,
-    flag_first_date=True,
 )
 print(server_paths)
 print(disk_paths)
 
-find_daily_GPM_disk_filepaths(
+_find_daily_filepaths(
     base_dir=base_dir,
     product=product,
     date=date,
@@ -95,10 +95,10 @@ find_daily_GPM_disk_filepaths(
     flag_first_date=True,
 )
 
-### find_GPM_files()
+### find_filepaths()
 start_time = datetime.datetime.fromisoformat("2020-08-15 00:00:00")
 end_time = datetime.datetime.fromisoformat("2020-08-17 00:00:00")
-find_GPM_files(
+find_filepaths(
     base_dir=base_dir,
     product=product,
     start_time=start_time,

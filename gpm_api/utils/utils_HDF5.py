@@ -56,7 +56,7 @@ def parse_attr_string(s):
     return s
 
 
-def parse_HDF5_GPM_attributes(x, parser=parse_attr_string):
+def parse_hdf5_gpm_attrs(x, parser=parse_attr_string):
     """
     Parse attributes of hdf objects
     parser: function parsing strings
@@ -268,18 +268,18 @@ def hdf5_datasets_dtype(hdf):
 # Attributes
 def hdf5_objects_attrs(hdf, parser=parse_attr_string):
     dict_hdf = hdf5_objects(hdf)
-    return {k: parse_HDF5_GPM_attributes(v, parser=parser) for k, v in dict_hdf.items()}
+    return {k: parse_hdf5_gpm_attrs(v, parser=parser) for k, v in dict_hdf.items()}
 
 
 def hdf5_groups_attrs(hdf, parser=parse_attr_string):
     dict_hdf = hdf5_groups(hdf)
-    return {k: parse_HDF5_GPM_attributes(v, parser=parser) for k, v in dict_hdf.items()}
+    return {k: parse_hdf5_gpm_attrs(v, parser=parser) for k, v in dict_hdf.items()}
 
 
 def hdf5_datasets_attrs(hdf, parser=parse_attr_string):
     dict_hdf = hdf5_datasets(hdf)
-    return {k: parse_HDF5_GPM_attributes(v, parser=parser) for k, v in dict_hdf.items()}
+    return {k: parse_hdf5_gpm_attrs(v, parser=parser) for k, v in dict_hdf.items()}
 
 
 def hdf5_file_attrs(hdf, parser=parse_attr_string):
-    return parse_HDF5_GPM_attributes(hdf, parser=parser)
+    return parse_hdf5_gpm_attrs(hdf, parser=parser)

@@ -163,33 +163,3 @@ ds_continent = ds.gpm_api.crop_by_continent("Australia")
 ds_continent[variable].isel(time=0).gpm_api.plot_map()
 
 ####--------------------------------------------------------------------------.
-#### Plot Patches
-# - It expects a single timestep
-
-# - Either pass a xr.DataArray
-da = ds[variable].isel(time=0)
-da.gpm_api.plot_patches(
-    min_value_threshold=3,
-    min_area_threshold=5,
-    sort_by="maximum",
-    sort_decreasing=True,
-    n_patches=4,
-    patch_size=(50, 50),
-    padding=5,
-    interpolation="nearest",
-)
-
-# - Or xr.Dataset
-ds.isel(time=0).gpm_api.plot_patches(
-    variable=variable,  # this is required for xr.Dataset !
-    min_value_threshold=3,
-    min_area_threshold=5,
-    sort_by="maximum",
-    sort_decreasing=True,
-    n_patches=10,
-    patch_size=(20, 20),
-    padding=1,
-    interpolation="nearest",
-)
-
-####--------------------------------------------------------------------------.

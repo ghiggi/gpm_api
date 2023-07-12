@@ -6,11 +6,8 @@ Created on Sun Aug 14 13:52:46 2022
 @author: ghiggi
 """
 import datetime
-
 import gpm_api
-from gpm_api.io.products import (
-    GPM_PMW_1C_RS_pattern_dict,
-)
+
 
 base_dir = "/home/ghiggi"
 username = "gionata.ghiggi@epfl.ch"
@@ -49,16 +46,15 @@ products = [
 ]
 products = ["2B-TRMM-CORRA", "2B-TRMM-CSH", "2A-TRMM-SLH", "1B-TMI", "1C-TMI", "2A-ENV-PR", "2A-PR"]
 
-products = list(GPM_PMW_1C_RS_pattern_dict())
+products = gpm_api.available_products(product_category="CMB")
+products = gpm_api.available_products(product_category="IMERG")
+products = gpm_api.available_products(product_category="RADAR")
+products = gpm_api.available_products(product_category="PMW")
 
-# 1C PMW
+
 start_time = datetime.datetime.strptime("2018-07-01 08:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2018-07-01 09:00:00", "%Y-%m-%d %H:%M:%S")
-products = list(GPM_PMW_1C_RS_pattern_dict())
-
 product_type = "RS"
-
-# product = "2A-DPR"
 
 #### Download products
 for product in products:

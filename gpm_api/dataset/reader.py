@@ -408,7 +408,7 @@ def _is_valid_granule(filepath):
         error_str = str(e)
         if not os.path.exists(filepath):
             raise ValueError(
-                "This is a gpm_api bug. `find_GPM_files` should not have returned this filepath."
+                "This is a gpm_api bug. `find_filepaths` should not have returned this filepath."
             )
         elif "lock" in error_str:
             msg = "Unfortunately, HDF locking is occurring."

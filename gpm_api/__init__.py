@@ -17,8 +17,7 @@ from gpm_api.dataset.reader import (
 )
 from gpm_api.io.disk import find_filepaths as find_files
 from gpm_api.io.download import download_data as download
-from gpm_api.io.products import available_products
-from gpm_api.io.scan_modes import available_scan_modes
+from gpm_api.io.products import available_products, available_scan_modes
 from gpm_api.utils.archive import download_daily_data, download_monthly_data
 from gpm_api.utils.checks import (
     check_contiguous_scans,

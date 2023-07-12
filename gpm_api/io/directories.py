@@ -4,17 +4,16 @@ Created on Thu Oct 13 16:48:22 2022
 
 @author: ghiggi
 """
-
-##----------------------------------------------------------------------------.
 import datetime
 import os
 
-from gpm_api.io import get_info_dict
-from gpm_api.io.checks import check_base_dir, check_product_type, check_version
-from gpm_api.io.products import (
-    GPM_IMERG_NRT_products,
-    GPM_RS_products,
+from gpm_api.io.checks import (
+    check_base_dir,
+    check_product_type,
+    check_product_validity,
+    check_version,
 )
+from gpm_api.io.products import available_products, get_info_dict
 
 ####--------------------------------------------------------------------------.
 ####################
@@ -149,7 +148,7 @@ def get_pps_nrt_product_dir(product, date):
     """
     folder_name = _get_pps_nrt_product_folder_name(product)
     # Specify the directory structure
-    if product in GPM_IMERG_NRT_products():
+    if product in available_products(product_type="NRT", product_category="IMERG"):
         dir_structure = os.path.join(folder_name, datetime.datetime.strftime(date, "%Y%m"))
     else:
         dir_structure = folder_name
@@ -171,10 +170,7 @@ def get_pps_rs_product_dir(product, date, version):
         GPM version of the data to retrieve if product_type = 'RS'.
     """
     check_version(version)
-
-    # Check product validity
-    if product not in GPM_RS_products():
-        raise ValueError("Please specify a valid NRT product. See GPM_RS_products().")
+    check_product_validity(product, product_type="RS")
 
     # Retrieve NASA server folder name for RS
     folder_name = _get_pps_rs_product_folder_name(product)

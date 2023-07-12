@@ -176,6 +176,24 @@
   - S4
   pps_nrt_dir: 1C/ATMS
   pps_rs_dir: 1C
+1C-ATMS-NOAA21:
+  pattern: 1C.NOAA21.ATMS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  pps_nrt_dir: 1C/ATMS
+  pps_rs_dir: 1C
 1C-ATMS-NPP:
   pattern: 1C.NPP.ATMS.*
   product_category: PMW
@@ -524,6 +542,18 @@
   pps_rs_dir: gprof
 2A-ATMS-NOAA20:
   pattern: 2A.NOAA20.ATMS.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  scan_modes_v7:
+  - S1
+  pps_nrt_dir: GPROF/ATMS
+  pps_rs_dir: gprof
+2A-ATMS-NOAA21:
+  pattern: 2A.NOAA21.ATMS.*
   product_category: PMW
   product_types:
   - RS

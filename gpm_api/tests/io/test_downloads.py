@@ -5,24 +5,20 @@ Created on Mon Aug 17 11:54:23 2020
 
 @author: ghiggi
 """
-import datetime
-
-import numpy as np
-
 import gpm_api
-from gpm_api.io.products import GPM_NRT_products, GPM_RS_products
+import datetime
+import numpy as np
 
 ##----------------------------------------------------------------------------.
 ### Download data
 base_dir = "/home/ghiggi/tmp"
 username = "gionata.ghiggi@epfl.ch"
 
-
 ##-----------------------------------------------------------------------------.
 ## Retrieve RS data
 version = 7
 product_type = "RS"
-products = GPM_RS_products()  # GPM_products(product_type)
+products = gpm_api.available_products(product_type="RS")()
 
 # Only GPM
 start_time = datetime.datetime.strptime("2020-08-09 15:00:00", "%Y-%m-%d %H:%M:%S")
@@ -49,7 +45,7 @@ for product in products:
 ## Retrieve NRT data
 version = 6
 product_type = "NRT"
-products = GPM_NRT_products()  # GPM_products(product_type)
+products = gpm_api.available_products(product_type="NRT")
 
 date = datetime.date.fromisoformat("2020-08-17")
 
