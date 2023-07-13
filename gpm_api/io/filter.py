@@ -20,7 +20,7 @@ from gpm_api.io.info import (
     get_start_end_time_from_filepaths,
     get_version_from_filepaths,
 )
-from gpm_api.io.patterns import GPM_products_pattern_dict
+from gpm_api.io.products import get_products_pattern_dict
 from gpm_api.utils.utils_string import str_subset
 
 
@@ -97,7 +97,7 @@ def _filter_filepath(filepath, product=None, version=None, start_time=None, end_
     # Filter by product
     # - TODO with info_dict once we have dictionary mapping patterns to filepath product acronyms
     if product is not None:
-        gpm_pattern_dict = GPM_products_pattern_dict()
+        gpm_pattern_dict = get_products_pattern_dict()
         filepath = str_subset(filepath, gpm_pattern_dict[product])
         if filepath is None:
             return None
@@ -215,11 +215,11 @@ def filter_by_product(filepaths, product, product_type="RS"):
 
     # -------------------------------------------------------------------------.
     # Retrieve GPM filename dictionary
-    GPM_dict = GPM_products_pattern_dict()
+    patterns_dict = get_products_pattern_dict()
 
     # -------------------------------------------------------------------------.
     # Subset by specific product
-    filepaths = str_subset(filepaths, GPM_dict[product])
+    filepaths = str_subset(filepaths, patterns_dict[product])
 
     # -------------------------------------------------------------------------.
     # Return valid filepaths

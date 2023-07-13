@@ -6,7 +6,7 @@ Created on Thu Oct 13 15:22:34 2022
 @author: ghiggi
 """
 import datetime
-
+import gpm_api
 from gpm_api.io.checks import (
     check_date,
     check_product,
@@ -17,14 +17,13 @@ from gpm_api.io.filter import (
     filter_by_time,
 )
 from gpm_api.io.pps import find_pps_daily_filepaths
-from gpm_api.io.products import GPM_products
 
 # -------------------------------------------------------------------------.
 base_dir = "/home/ghiggi/tmp"
 username = "gionata.ghiggi@epfl.ch"
 version = 7
 product_type = "RS"
-products = GPM_products(product_type)
+products = gpm_api.available_products(product_type=product_type)
 
 date = datetime.date.fromisoformat("2020-08-17")
 

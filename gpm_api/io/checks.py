@@ -90,9 +90,44 @@ def check_product(product, product_type):
 
 def check_product_type(product_type):
     if not isinstance(product_type, str):
-        raise ValueError("Please specify the product_type as 'RS' or 'NRT'.")
+        raise ValueError("Please specify the product_type as a string..")
     if product_type not in ["RS", "NRT"]:
         raise ValueError("Please specify the product_type as 'RS' or 'NRT'.")
+
+
+def check_product_category(product_category):
+    if not isinstance(product_category, str):
+        raise ValueError("Please specify the product_category as a string.")
+    valid_values = ["RADAR", "PMW", "CMB", "IMERG"]
+    if product_category not in valid_values:
+        raise ValueError(
+            f"{product_category} is an invalid product_category. Valid values are {valid_values}."
+        )
+
+
+def check_product_level(product_level):
+    if not isinstance(product_level, str):
+        raise ValueError("Please specify the product_level as a string.")
+    valid_values = ["1A", "1B", "1C", "2A", "2B"]
+    if product_level not in valid_values:
+        raise ValueError(
+            f"{product_level} is an invalid product_level. Currently accepted values are {valid_values}."
+        )
+
+
+def check_product_validity(product, product_type=None):
+    """Check product validity."""
+    from gpm_api.io.products import available_products  # circular otherwise
+
+    if product not in available_products(product_type=product_type):
+        if product_type is None:
+            raise ValueError(
+                f"The {product} product is not available. See gpm_api.available_products()."
+            )
+        else:
+            raise ValueError(
+                f"The {product} product is not available as {product_type} product_type."
+            )
 
 
 def check_time(time):
@@ -168,7 +203,7 @@ def check_scan_mode(scan_mode, product, version):
     """Checks the validity of scan_mode."""
     # -------------------------------------------------------------------------.
     # Get valid scan modes
-    from gpm_api.io.scan_modes import available_scan_modes
+    from gpm_api.io.products import available_scan_modes
 
     scan_modes = available_scan_modes(product, version)
 

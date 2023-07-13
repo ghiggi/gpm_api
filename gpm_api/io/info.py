@@ -10,7 +10,7 @@ import re
 
 import numpy as np
 
-from gpm_api.io.patterns import GPM_products_pattern_dict
+from gpm_api.io.products import get_products_pattern_dict
 
 ####---------------------------------------------------------------------------
 ########################
@@ -28,7 +28,7 @@ JAXA_FNAME_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_
 ##########################
 
 
-def _parse_GPM_fname(fname):
+def _parse_gpm_fname(fname):
     from trollsift import Parser
 
     # Retrieve information from filename
@@ -57,7 +57,7 @@ def _parse_GPM_fname(fname):
     return info_dict
 
 
-def _parse_JAXA_fname(fname):
+def _parse_jaxa_fname(fname):
     from trollsift import Parser
 
     p = Parser(JAXA_FNAME_PATTERN)
@@ -98,10 +98,10 @@ def _parse_JAXA_fname(fname):
 def _get_info_from_filename(fname):
     """Retrieve file information dictionary from filename."""
     try:
-        info_dict = _parse_GPM_fname(fname)
+        info_dict = _parse_gpm_fname(fname)
     except ValueError:
         try:
-            info_dict = _parse_JAXA_fname(fname)
+            info_dict = _parse_jaxa_fname(fname)
         except:
             raise ValueError(f"{fname} can not be parsed. Report the issue.")
 
@@ -135,8 +135,8 @@ def get_key_from_filepaths(fpaths, key):
 #### Product and version information ####
 #########################################
 def get_product_from_filepath(filepath):
-    GPM_dict = GPM_products_pattern_dict()
-    for product, pattern in GPM_dict.items():
+    patterns_dict = get_products_pattern_dict()
+    for product, pattern in patterns_dict.items():
         if re.search(pattern, filepath):
             return product
     else:
