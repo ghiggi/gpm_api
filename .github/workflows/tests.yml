@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apt install libgeos-dev
+          sudo apt install libgeos-dev
           pip install -U pip
           pip install -e .[ximage,dev]
           if echo ${{ matrix.experimental }} | grep -c "true"
