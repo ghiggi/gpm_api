@@ -7,6 +7,7 @@ Created on Wed Aug 17 09:30:29 2022
 import numpy as np
 import xarray as xr
 
+from gpm_api.checks import is_grid, is_orbit
 from gpm_api.utils.slices import get_list_slices_from_indices
 
 # Shapely bounds: (xmin, ymin, xmax, ymax)
@@ -17,6 +18,7 @@ from gpm_api.utils.slices import get_list_slices_from_indices
 #### TODO:
 # - croup_around(point, distance)
 # - get_extent_around(point, distance)
+# - rename file crop.py?
 
 
 def unwrap_longitude_degree(x, period=360):
@@ -201,45 +203,6 @@ def crop(xr_obj, extent):
 
 
 ####---------------------------------------------------------------------------.
-#### TODO MOVE TO utils.checks !!!
-
-
-def is_orbit(xr_obj):
-    # TODO: --> MOVED TO gpm_api.dataset
-    """Check whether the GPM xarray object is an orbit."""
-    return "along_track" in list(xr_obj.dims)
-
-
-def is_grid(xr_obj):
-    # TODO: --> MOVED TO gpm_api.dataset
-    """Check whether the GPM xarray object is a grid."""
-    return bool("longitude" in list(xr_obj.dims) or "lon" in list(xr_obj.dims))
-
-
-def is_spatial_2d(xr_obj):
-    """Check whether the GPM xarray object is a 2D fields.
-
-    It returns True if the object has only two spatial dimensions.
-    The xarray object is squeezed before testing, so that (i.e. time)
-    dimension of size 1 are "removed".
-    """
-    # Remove i.e. time/range dimension if len(1)
-    xr_obj = xr_obj.squeeze()
-    # Check if spatial 2D fields
-    if set(xr_obj.dims) == set(("cross_track", "along_track")):
-        return True
-    elif set(xr_obj.dims) == set(("y", "x")):
-        return True
-    elif set(xr_obj.dims) == set(("latitude", "longitude")):
-        return True
-    elif set(xr_obj.dims) == set(
-        ("lat", "lon")
-    ):  # TODO: Enforce latitude, longitude (i.e. with IMERG)
-        return True
-    else:
-        return False
-
-
 #### TODO MOVE TO pyresample accessor !!!
 
 

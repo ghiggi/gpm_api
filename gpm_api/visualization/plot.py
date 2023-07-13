@@ -334,7 +334,7 @@ def plot_map(
     **plot_kwargs,
 ):
 
-    from gpm_api.utils.geospatial import is_grid, is_orbit
+    from gpm_api.checks import is_grid, is_orbit
 
     from .grid import plot_grid_map
     from .orbit import plot_orbit_map
@@ -379,7 +379,7 @@ def plot_image(
     **plot_kwargs,
 ):
     # figsize, dpi, subplot_kw only used if ax is None
-    from gpm_api.utils.geospatial import is_grid, is_orbit
+    from gpm_api.checks import is_grid, is_orbit
     from gpm_api.visualization.grid import plot_grid_image
     from gpm_api.visualization.orbit import plot_orbit_image
 
@@ -422,7 +422,7 @@ def plot_map_mesh(
 ):
     # Interpolation only for grid objects
     # figsize, dpi, subplot_kw only used if ax is None
-    from gpm_api.utils.geospatial import is_grid, is_orbit
+    from gpm_api.checks import is_grid, is_orbit
 
     # from .grid import plot_grid_mesh
     from .orbit import plot_orbit_mesh

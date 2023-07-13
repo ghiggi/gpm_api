@@ -6,7 +6,11 @@ Created on Thu Jun 22 15:01:43 2023
 """
 import re
 
+# TODO: write dict in a config YAML file ?
+
+
 DIM_DICT = {
+    # 2A-DPR
     "nscan": "along_track",
     "nray": "cross_track",
     "npixel": "cross_track",
@@ -19,9 +23,12 @@ DIM_DICT = {
     "nbinHS": "range",
     "nbinFS": "range",
     "nfreq": "frequency",
-    # PMW 1B-TMI
-    "npixelev1": "cross_track",
-    "npixelev2": "cross_track",
+    "nDSD": "DSD_params",
+    # 2B-GPM-CORRA
+    "nBnPSD": "range",  # 88 bins (250 m each bin)
+    # "nBnEnv": "nBnEnv",
+    "nemiss": "frequency_gmi",
+    "nKuKa": "frequency_dpr",
     # PMW 1B-GMI (V7)
     "npix1": "cross_track",  # PMW (i.e. GMI)
     "npix2": "cross_track",  # PMW (i.e. GMI)
@@ -32,22 +39,48 @@ DIM_DICT = {
     # PMW 1C-GMI (V7)
     "npixel1": "cross_track",
     "npixel2": "cross_track",
-    # PMW 1A-GMI and 1C-GMI (V7)
+    # PMW 1A and 1C-GMI (V7)
     "nscan1": "along_track",
     "nscan2": "along_track",
+    "nscan3": "along_track",
+    "nscan4": "along_track",
+    "nscan5": "along_track",
+    "nscan6": "along_track",
+    "npixelev1": "cross_track",
+    "npixelev2": "cross_track",
+    "npixelev3": "cross_track",
+    "npixelev4": "cross_track",
+    "npixelev5": "cross_track",
+    "npixelev6": "cross_track",
     "nchannel1": "channel",
     "nchannel2": "channel",
+    "nchannel3": "channel",
+    "nchannel4": "channel",
+    "nchannel5": "channel",
+    "nchannel6": "channel",
     # PMW 1A-GMI (V7)
     "npixelev": "cross_track",
     "npixelht": "cross_track",
     "npixelcs": "cross_track",
     "npixelfr": "cross_track",  # S4 mode
-    # 2A-DPR, 2A-Ku, 2A-Ka
-    "nDSD": "DSD_params",
-    # nBnPSD --> "range" in CORRA --> 88, 250 M interval
-    # "nfreqHI":
+    # nfreqHI
     # nlayer --> in CSH, SLH --> converted to height in decoding
 }
+
+SPATIAL_DIMS = [
+    "along_track",
+    "cross_track",
+    "lat",
+    "lon",  # choose whether to use instead latitude/longitude
+    "latitude",
+    "longitude",
+    "x",
+    "y",  # compatibility with satpy/gpm_geo i.e.
+]
+VERTICAL_DIMS = ["range", "nBnEnv"]
+FREQUENCY_DIMS = ["channel", "frequency", "frequency_gmi", "frequency_dpr"]
+GRID_SPATIAL_DIMS = ("lon", "lat")
+ORBIT_SPATIAL_DIMS = ("cross_track", "along_track")
 
 
 def _decode_dimensions(ds):

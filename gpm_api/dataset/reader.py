@@ -45,14 +45,6 @@ SWMR = False  # HDF options
 #################################
 #### GPM Dataset Conventions ####
 #################################
-def is_orbit(xr_obj):
-    """Check whether the GPM xarray object is an orbit."""
-    return "along_track" in list(xr_obj.dims)
-
-
-def is_grid(xr_obj):
-    """Check whether the GPM xarray object is a grid."""
-    return bool("longitude" in list(xr_obj.dims) or "lon" in list(xr_obj.dims))
 
 
 def reshape_dataset(ds):
@@ -63,7 +55,7 @@ def reshape_dataset(ds):
     For GPM GRID objects:  (..., time, lat, lon)
     For GPM ORBIT objects: (cross_track, along_track, ...)
     """
-    if is_grid(ds):
+    if "lat" in ds.dims:
         ds = ds.transpose(..., "lat", "lon")
     else:
         if "cross_track" in ds.dims:

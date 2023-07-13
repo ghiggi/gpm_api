@@ -60,21 +60,51 @@ class GPM_Base_Accessor:
 
     @property
     def is_orbit(self):
-        from gpm_api.utils.geospatial import is_orbit
+        from gpm_api.checks import is_orbit
 
         return is_orbit(self._obj)
 
     @property
     def is_grid(self):
-        from gpm_api.utils.geospatial import is_grid
+        from gpm_api.checks import is_grid
 
         return is_grid(self._obj)
 
     @property
     def is_spatial_2d(self):
-        from gpm_api.utils.geospatial import is_spatial_2d
+        from gpm_api.checks import is_spatial_2d
 
         return is_spatial_2d(self._obj)
+
+    @property
+    def is_spatial_3d(self):
+        from gpm_api.checks import is_spatial_3d
+
+        return is_spatial_3d(self._obj)
+
+    @property
+    def variables(self):
+        from gpm_api.checks import get_dataset_variables
+
+        return get_dataset_variables(self._obj, sort=True)
+
+    @property
+    def spatial_2d_variables(self):
+        from gpm_api.checks import get_spatial_2d_variables
+
+        return get_spatial_2d_variables(self._obj)
+
+    @property
+    def spatial_3d_variables(self):
+        from gpm_api.checks import get_spatial_3d_variables
+
+        return get_spatial_3d_variables(self._obj)
+
+    @property
+    def frequency_variables(self):
+        from gpm_api.checks import get_frequency_variables
+
+        return get_frequency_variables(self._obj)
 
     @property
     def is_regular(self):

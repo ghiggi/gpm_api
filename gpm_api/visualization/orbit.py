@@ -10,9 +10,9 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 
+from gpm_api.checks import check_is_spatial_2d
 from gpm_api.utils.checks import (
     check_contiguous_scans,
-    check_is_spatial_2d,
     get_slices_regular,
 )
 from gpm_api.utils.utils_cmap import get_colorbar_settings

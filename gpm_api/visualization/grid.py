@@ -7,7 +7,7 @@ Created on Sat Dec 10 19:13:34 2022
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
-from gpm_api.utils.checks import check_is_spatial_2d
+from gpm_api.checks import check_is_spatial_2d
 from gpm_api.utils.utils_cmap import get_colorbar_settings
 from gpm_api.visualization.plot import (
     _plot_cartopy_imshow,

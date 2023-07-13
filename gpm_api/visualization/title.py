@@ -61,7 +61,7 @@ def get_dataset_title(
         Title of the Dataset.
 
     """
-    from gpm_api.utils.geospatial import is_orbit
+    from gpm_api.checks import is_orbit
 
     # Get GPM product name
     product = ds.attrs.get("gpm_api_product", "")
@@ -120,7 +120,7 @@ def get_dataarray_title(
         Title of the DataArray.
 
     """
-    from gpm_api.utils.geospatial import is_orbit
+    from gpm_api.checks import is_orbit
 
     # Get variable name
     variable = da.name

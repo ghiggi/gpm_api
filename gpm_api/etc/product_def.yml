@@ -121,8 +121,20 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6: ''
-  scan_modes_v7: ''
+  scan_modes_v6:
+  - S1
+  - S2
+  - S3
+  - S4
+  - S5
+  - S6
+  scan_modes_v7:
+  - S1
+  - S2
+  - S3
+  - S4
+  - S5
+  - S6
   pps_nrt_dir: null
   pps_rs_dir: 1C
 1C-AMSUB-NOAA15:

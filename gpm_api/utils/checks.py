@@ -8,9 +8,14 @@ import functools
 
 import numpy as np
 import pandas as pd
-import xarray as xr
 
-from gpm_api.utils.geospatial import is_grid, is_orbit
+from gpm_api.checks import (
+    check_is_orbit,
+    is_grid,
+    is_orbit,
+)
+
+# check_is_grid,
 from gpm_api.utils.slices import (
     get_list_slices_from_bool_arr,
     list_slices_difference,
@@ -23,41 +28,7 @@ from gpm_api.utils.slices import (
 
 ORBIT_TIME_TOLERANCE = np.timedelta64(3, "s")
 
-# raise ValueError("Unrecognized GPM xarray object.") has decorator check?
-
-
-def check_is_xarray(x):
-    if not isinstance(x, (xr.DataArray, xr.Dataset)):
-        raise TypeError("Expecting a xr.Dataset or xr.DataArray.")
-
-
-def check_is_xarray_dataarray(x):
-    if not isinstance(x, xr.DataArray):
-        raise TypeError("Expecting a xr.DataArray.")
-
-
-def check_is_xarray_dataset(x):
-    if not isinstance(x, xr.Dataset):
-        raise TypeError("Expecting a xr.Dataset.")
-
-
-def check_is_orbit(xr_obj):
-    "Check is a GPM orbit object."
-    if not is_orbit(xr_obj):
-        raise ValueError("Expecting a GPM ORBIT object.")
-
-
-def check_is_grid(xr_obj):
-    "Check is a GPM grid object."
-    if not is_grid(xr_obj):
-        raise ValueError("Expecting a GPM GRID object.")
-
-
-def check_is_spatial_2d(da):
-    from .geospatial import is_spatial_2d
-
-    if not is_spatial_2d(da):
-        raise ValueError("Expecting a 2D GPM field.")
+# TODO: raise ValueError("Unrecognized GPM xarray object.") has decorator check?
 
 
 ####--------------------------------------------------------------------------.
@@ -162,7 +133,7 @@ def check_contiguous_granules(xr_obj):
 
 def has_contiguous_granules(xr_obj):
     """Checks GPM object is composed of consecutive granules."""
-    from gpm_api.utils.geospatial import is_grid, is_orbit
+    from gpm_api.checks import is_grid, is_orbit
 
     if is_orbit(xr_obj):
         return bool(np.all(_is_contiguous_granule(xr_obj["gpm_granule_id"].data)))
@@ -174,7 +145,7 @@ def has_contiguous_granules(xr_obj):
 
 def has_missing_granules(xr_obj):
     """Checks GPM object has missing granules."""
-    from gpm_api.utils.geospatial import is_grid, is_orbit
+    from gpm_api.checks import is_grid, is_orbit
 
     if is_orbit(xr_obj):
         return bool(np.any(~_is_contiguous_granule(xr_obj["gpm_granule_id"].data)))
@@ -199,7 +170,7 @@ def _get_timesteps(xr_obj):
 
 def _infer_time_tolerance(xr_obj):
     """Infer time interval tolerance between timesteps."""
-    from gpm_api.utils.geospatial import is_grid, is_orbit
+    from gpm_api.checks import is_grid, is_orbit
 
     # For GPM ORBIT objects, use the ORBIT_TIME_TOLERANCE
     if is_orbit(xr_obj):
@@ -887,7 +858,7 @@ def is_regular(xr_obj):
     For GPM ORBITS, it checks that the scans are contiguous.
     For GPM GRID, it checks that the timesteps are regularly spaced.
     """
-    from gpm_api.utils.geospatial import is_grid, is_orbit
+    from gpm_api.checks import is_grid, is_orbit
 
     if is_orbit(xr_obj):
         return has_contiguous_scans(xr_obj)
@@ -922,7 +893,7 @@ def get_slices_regular(xr_obj, min_size=None):
     list_slices : list
         List of slice object to select regular portions.
     """
-    from gpm_api.utils.geospatial import is_grid, is_orbit
+    from gpm_api.checks import is_grid, is_orbit
 
     if is_orbit(xr_obj):
         min_size = 2 if min_size is None else min_size
