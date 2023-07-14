@@ -4,6 +4,7 @@ Created on Thu Oct 13 11:13:15 2022
 
 @author: ghiggi
 """
+import functools
 import os
 
 from gpm_api.io.checks import (
@@ -61,6 +62,7 @@ from gpm_api.utils.yaml import read_yaml_file
 ####--------------------------------------------------------------------------.
 
 
+@functools.lru_cache(maxsize=None)
 def get_info_dict():
     """Get product info dictionary."""
     from gpm_api import _root_path
