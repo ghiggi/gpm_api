@@ -139,7 +139,7 @@ exclude = [
 ]
 
 [tool.codespell]
-    ignore-words-list = 'nD'
+    ignore-words-list = "ges,nd"
 
 [tool.coverage]
     [tool.coverage.run]
