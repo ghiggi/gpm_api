@@ -43,7 +43,7 @@ end_hhmmss = datetime.time.fromisoformat("23:59:00")
 date = datetime.date.fromisoformat("2014-08-09")
 product_type = "RS"
 
-(server_paths, disk_paths) = _find_pps_daily_filepaths(
+server_paths, available_version = _find_pps_daily_filepaths(
     username=username,
     base_dir=base_dir,
     product=product,
@@ -54,7 +54,7 @@ product_type = "RS"
     version=version,
 )
 print(server_paths)
-print(disk_paths)
+
 
 _find_daily_filepaths(
     base_dir=base_dir,
@@ -71,7 +71,7 @@ _find_daily_filepaths(
 date = datetime.date.fromisoformat("2020-08-16")
 product_type = "NRT"
 
-(server_paths, disk_paths) = _find_pps_daily_filepaths(
+server_paths, available_version = _find_pps_daily_filepaths(
     username=username,
     base_dir=base_dir,
     product=product,
@@ -82,7 +82,6 @@ product_type = "NRT"
     end_hhmmss=end_hhmmss,
 )
 print(server_paths)
-print(disk_paths)
 
 _find_daily_filepaths(
     base_dir=base_dir,

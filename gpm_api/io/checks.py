@@ -75,7 +75,7 @@ def check_groups(groups):
 def check_version(version):
     if not isinstance(version, int):
         raise ValueError("Please specify the GPM version with an integer between 5 and 7.")
-    if version not in [5, 6, 7]:
+    if version not in [4, 5, 6, 7]:
         raise ValueError("Download/Reading have been implemented only for GPM versions 5, 6 and 7.")
 
 

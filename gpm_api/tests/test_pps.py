@@ -20,7 +20,7 @@ product_type = "RS"
 verbose = True
 parallel = True
 
-filepaths = _find_pps_daily_filepaths(
+filepaths, available_version = _find_pps_daily_filepaths(
     username=username,
     product=product,
     product_type=product_type,

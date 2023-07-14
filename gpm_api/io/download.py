@@ -27,7 +27,7 @@ from gpm_api.io.checks import (
 )
 from gpm_api.io.directories import get_disk_directory, get_pps_directory
 from gpm_api.io.info import get_info_from_filepath, get_start_time_from_filepaths
-from gpm_api.io.pps import _find_pps_daily_filepaths  # , find_pps_filepaths
+from gpm_api.io.pps import _find_pps_daily_filepaths
 from gpm_api.utils.archive import (
     check_file_integrity,
     get_corrupted_filepaths,
@@ -36,9 +36,10 @@ from gpm_api.utils.archive import (
 from gpm_api.utils.utils_string import subset_list_by_boolean
 from gpm_api.utils.warnings import GPMDownloadWarning
 
-### Currently we open a connection for every file
-### We might want to launch wget in parallel directly
-### - And then loop by day or month to display progress
+### Notes
+# - Currently we open a connection for every file
+# --> Maybe we can improve on that (open once, and then ask many stuffs)
+# - Is it possible to download entire directories (instead of per-file?)
 
 ## For https connection, it requires Authorization header: <type><credentials>
 # - type: "Basic"
@@ -504,7 +505,7 @@ def _download_daily_data(
 
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
-    pps_filepaths = _find_pps_daily_filepaths(
+    pps_filepaths, available_version = _find_pps_daily_filepaths(
         username=username,
         password=password,
         product=product,
@@ -515,22 +516,23 @@ def _download_daily_data(
         end_time=end_time,
         verbose=verbose,
     )
-
-    disk_filepaths = convert_pps_to_disk_filepaths(
-        pps_filepaths=pps_filepaths,
-        base_dir=base_dir,
-        product=product,
-        product_type=product_type,
-        version=version,
-    )
-
     # -------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
     if is_empty(pps_filepaths):
         if warn_missing_files:
             msg = f"No data found on PPS on date {date} for product {product}"
             warnings.warn(msg, GPMDownloadWarning)
-        return []
+        return [], available_version
+
+    # -------------------------------------------------------------------------.
+    # Define disk filepaths
+    disk_filepaths = convert_pps_to_disk_filepaths(
+        pps_filepaths=pps_filepaths,
+        base_dir=base_dir,
+        product=product,
+        product_type=product_type,
+        version=available_version[0],
+    )
 
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
@@ -540,7 +542,7 @@ def _download_daily_data(
         force_download=force_download,
     )
     if is_empty(pps_filepaths):
-        return [-1]  # flag for already on disk
+        return [-1], available_version  # flag for already on disk
 
     # -------------------------------------------------------------------------.
     # Retrieve commands
@@ -553,10 +555,67 @@ def _download_daily_data(
         progress_bar=progress_bar,
         verbose=verbose,
     )
-    return status
+    return status, available_version
 
 
-##-----------------------------------------------------------------------------.
+def _check_file_completness(
+    base_dir,
+    product,
+    start_time,
+    end_time,
+    version,
+    product_type,
+    remove_corrupted,
+    verbose,
+    username,
+    transfer_tool,
+    retry,
+    n_threads,
+    progress_bar,
+):
+    """Check for file completeness."""
+    l_corrupted = check_file_integrity(
+        base_dir=base_dir,
+        product=product,
+        start_time=start_time,
+        end_time=end_time,
+        version=version,
+        product_type=product_type,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
+    )
+    if verbose:
+        print("Integrity checking of GPM files has completed.")
+    if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
+        if verbose:
+            print("Start attempts to redownload the corrupted files.")
+        l_corrupted = redownload_from_filepaths(
+            filepaths=l_corrupted,
+            username=username,
+            n_threads=n_threads,
+            transfer_tool=transfer_tool,
+            progress_bar=progress_bar,
+            verbose=verbose,
+            retry=retry,
+        )
+        if verbose:
+            if len(l_corrupted) == 0:
+                print("All corrupted files have been redownloaded successively.")
+            else:
+                print("Some corrupted files couldn't been redownloaded.")
+                print("Returning the list of corrupted files.")
+    return l_corrupted
+
+
+def flatten_list(nested_list):
+    """Flatten a nested list into a single-level list."""
+    return (
+        [item for sublist in nested_list for item in sublist]
+        if isinstance(nested_list, list)
+        else [nested_list]
+    )
+
+
 def download_data(
     product,
     start_time,
@@ -656,14 +715,15 @@ def download_data(
 
     # -------------------------------------------------------------------------.
     # Loop over dates and download the files
-    status = []
+    list_status = []
+    list_versions = []
     for i, date in enumerate(dates):
         if i == 0:
             warn_missing_files = False
         else:
             warn_missing_files = True
 
-        status += _download_daily_data(
+        status, available_version = _download_daily_data(
             base_dir=base_dir,
             username=username,
             password=password,
@@ -680,29 +740,37 @@ def download_data(
             verbose=verbose,
             warn_missing_files=warn_missing_files,
         )
+        list_status += status
+        list_versions += available_version
 
     # -------------------------------------------------------------------------.
     # Check download status
     # - -1 if all daily files are already on disk
     # - 0  download failed
     # - 1  download success
-    no_remote_files = len(status) == 0
+    # Test: status = [-1,-1,-1] --> All on disk
+    # Test: status = [] --> No data available
+    status = list_status
     status = np.array(status)
+    no_remote_files = len(status) == 0
     all_already_on_disk = np.all(status == -1).item()
     n_remote_files = np.logical_or(status == 0, status == 1).sum().item()
     n_failed = np.sum(status == 0).item()
     n_downloads = np.sum(status == 1).item()
-    # - No files available to download
+
+    # - Return None if no files are available for download
     if no_remote_files:
         print("No files are available for download !")
         return None
+    # - Pass if all files are already on disk
+    if all_already_on_disk:
+        if verbose:
+            print(f"All the available GPM {product} product files are already on disk.")
+        pass
     # - Files available but all download failed
-    if n_failed == n_remote_files:
+    elif n_failed == n_remote_files:
         print(f"{n_failed} files were available, but the download failed !")
         return None
-    # - All files already on disk
-    if all_already_on_disk:
-        print(f"All the available GPM {product} product files are already on disk.")
     else:
         if verbose:
             if n_failed != 0:
@@ -717,38 +785,35 @@ def download_data(
                 )
 
     # -------------------------------------------------------------------------.
+    # Check downloaded versions
+    versions = np.unique(list_versions).tolist()
+    if len(versions) > 1:
+        msg = f"Multiple GPM {product} product file versions ({versions}) have been download."
+        warnings.warn(msg, GPMDownloadWarning)
+
+    # -------------------------------------------------------------------------.
     if check_integrity:
-        l_corrupted = check_file_integrity(
-            base_dir=base_dir,
-            product=product,
-            start_time=start_time,
-            end_time=end_time,
-            version=version,
-            product_type=product_type,
-            remove_corrupted=remove_corrupted,
-            verbose=verbose,
-        )
-        if verbose:
-            print("Integrity checking of GPM files has completed.")
-        if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
-            if verbose:
-                print("Start attempts to redownload the corrupted files.")
-            l_corrupted = redownload_from_filepaths(
-                filepaths=l_corrupted,
-                username=username,
-                n_threads=n_threads,
-                transfer_tool=transfer_tool,
-                progress_bar=progress_bar,
+        l_corrupted = [
+            _check_file_completness(
+                base_dir=base_dir,
+                product=product,
+                start_time=start_time,
+                end_time=end_time,
+                version=version,
+                product_type=product_type,
+                remove_corrupted=remove_corrupted,
                 verbose=verbose,
+                username=username,
+                transfer_tool=transfer_tool,
                 retry=retry,
+                n_threads=n_threads,
+                progress_bar=progress_bar,
             )
-            if verbose:
-                if len(l_corrupted) == 0:
-                    print("All corrupted files have been redownloaded successively.")
-                else:
-                    print("Some corrupted files couldn't been redownloaded.")
-                    print("Returning the list of corrupted files.")
-                    return l_corrupted
+            for version in versions
+        ]
+        l_corrupted = flatten_list(l_corrupted)
+        if len(l_corrupted) == 0:
+            return l_corrupted
     return None
 
 

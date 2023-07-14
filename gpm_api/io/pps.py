@@ -7,6 +7,7 @@ Created on Thu Oct 13 17:45:37 2022
 import datetime
 import os
 import subprocess
+import warnings
 
 import dask
 import numpy as np
@@ -25,6 +26,18 @@ from gpm_api.io.checks import (
 from gpm_api.io.directories import get_pps_directory
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.info import get_version_from_filepaths
+from gpm_api.utils.warnings import GPMDownloadWarning
+
+VERSION_WARNING = True
+
+
+def flatten_list(nested_list):
+    """Flatten a nested list into a single-level list."""
+    return (
+        [item for sublist in nested_list for item in sublist]
+        if isinstance(nested_list, list)
+        else [nested_list]
+    )
 
 
 def _check_correct_version(filepaths, product, version):
@@ -35,21 +48,24 @@ def _check_correct_version(filepaths, product, version):
     So to archive data correctly on the user side, we check that the file version
     actually match the asked version, and otherwise we download the last available version.
     """
+    global VERSION_WARNING  # To just warn once. Maybe to be defined at each download call
+
     if len(filepaths) == 0:
         return filepaths, version
 
-    file_versions = np.unique(get_version_from_filepaths(filepaths, integer=True)).tolist()
-    if len(file_versions) > 1:
+    files_versions = np.unique(get_version_from_filepaths(filepaths, integer=True)).tolist()
+    if len(files_versions) > 1:
         raise ValueError(
-            f"Multiple file versions found: {file_versions}. Please report their occurrence !"
+            f"Multiple file versions found: {files_versions}. Please report their occurrence !"
         )
-    file_version = file_versions[0]
-    if file_version != version:
-        # TODO: --> RAISE WARNING AND DOWNLOAD LAST AVAILABLE VERSION !
-        raise ValueError(
-            f"The last available version for {product} product is version {file_version} !"
-        )
-    return filepaths, file_version
+    files_version = files_versions[0]
+    if files_version != version:
+        if VERSION_WARNING:
+            VERSION_WARNING = False
+            msg = f"The last available version for {product} product is version {files_version}! "
+            msg += f"Starting the download of version {files_version}."
+            warnings.warn(msg, GPMDownloadWarning)
+    return filepaths, files_version
 
 
 def _get_pps_file_list(username, password, url_file_list, product, date, version, verbose=True):
@@ -220,7 +236,7 @@ def _find_pps_daily_filepaths(
         verbose=verbose,
     )
     if is_empty(filepaths):
-        return []
+        return [], []
     ##------------------------------------------------------------------------.
     # Filter the GPM daily file list (for product, start_time & end time)
     filepaths = filter_filepaths(
@@ -231,14 +247,15 @@ def _find_pps_daily_filepaths(
         start_time=start_time,
         end_time=end_time,
     )
+    if is_empty(filepaths):
+        return [], []
 
     ## -----------------------------------------------------------------------.
-    ## Check correct version and return available version
-    # TODO: adapt downstream code to return also available_version
+    ## Check correct version and return the available version
     filepaths, available_version = _check_correct_version(
         filepaths=filepaths, product=product, version=version
     )
-    return filepaths
+    return filepaths, [available_version]
 
 
 ##-----------------------------------------------------------------------------.
@@ -330,8 +347,8 @@ def find_pps_filepaths(
             list_delayed.append(del_op)
         # Get filepaths list for each date
         list_filepaths = dask.compute(*list_delayed)
-        # Flat the list
-        filepaths = [item for sublist in list_filepaths for item in sublist]
+        list_filepaths = [tpl[0] for tpl in list_filepaths]
+        filepaths = flatten_list(list_filepaths)
     else:
         # TODO list
         # - start_time and end_time filtering could be done only on first and last iteration
@@ -339,7 +356,7 @@ def find_pps_filepaths(
         #   and the searched granule is in previous day directory
         list_filepaths = []
         for date in dates:
-            filepaths = _find_pps_daily_filepaths(
+            filepaths, _ = _find_pps_daily_filepaths(
                 username=username,
                 password=password,
                 version=version,
@@ -351,7 +368,8 @@ def find_pps_filepaths(
                 verbose=verbose,
             )
             list_filepaths += filepaths
-        filepaths = list_filepaths
+        filepaths = flatten_list(list_filepaths)
+
     # -------------------------------------------------------------------------.
     # Return filepaths
     filepaths = sorted(filepaths)
