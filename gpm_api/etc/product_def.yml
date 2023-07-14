@@ -929,6 +929,17 @@
   - Swath
   pps_nrt_dir: null
   pps_rs_dir: radar
+2B-GPM-CSAT:
+  pattern: 2B.CSATGPM.COIN*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - null
+  scan_modes_v7:
+  - null
+  pps_nrt_dir: null
+  pps_rs_dir: radar
 2B-GPM-CORRA:
   pattern: 2B.GPM.DPRGMI.CORRA*
   product_category: CMB

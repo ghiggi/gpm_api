@@ -226,7 +226,7 @@ def filter_by_product(filepaths, product, product_type="RS"):
     return filepaths
 
 
-def filter_by_time(filepaths, start_time, end_time):
+def filter_by_time(filepaths, start_time=None, end_time=None):
     """
     Filter filepaths by start_time and end_time.
 

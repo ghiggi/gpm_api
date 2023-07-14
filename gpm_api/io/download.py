@@ -4,14 +4,14 @@ Created on Mon Aug 15 00:18:33 2022
 
 @author: ghiggi
 """
-
-import concurrent.futures
 import datetime
 import ftplib
 import os
 import subprocess
 import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import numpy as np
 import pandas as pd
 
 from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
@@ -44,6 +44,7 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 # - type: "Basic"
 # - credientials: <...>
 # --> "--header='Authorization: Basic Z2lvbmF0YS5naGlnZ2lAZXBmbC5jaDpnaW9uYXRhLmdoaWdnaUBlcGZsLmNo' "
+
 
 ##----------------------------------------------------------------------------.
 #############################
@@ -141,8 +142,57 @@ def wget_cmd(server_path, disk_path, username, password):
             server_path,
         ]
     )
-    # -------------------------------------------------------------------------.
     return cmd
+
+
+def _get_commands_futures(executor, commands):
+    """Submit commands and return futures dictionary."""
+    dict_futures = {
+        executor.submit(
+            subprocess.check_call,
+            cmd,
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ): (i, cmd)
+        for i, cmd in enumerate(commands)
+    }
+    return dict_futures
+
+
+def _get_list_failing_commands(dict_futures, pbar=None):
+    """List commands that failed.
+
+    pbar is a tqdm progress bar.
+    """
+    l_cmd_error = []
+    for future in as_completed(dict_futures.keys()):
+        if pbar:
+            pbar.update(1)  # Update the progress bar
+        # Collect all commands that caused problems
+        if future.exception() is not None:
+            index, cmd = dict_futures[future]
+            l_cmd_error.append(cmd)
+    return l_cmd_error
+
+
+def _get_list_status_commands(dict_futures, pbar=None):
+    """Return a list with the status of the command execution.
+
+    A value of 1 means that the command executed successively.
+    A value of 0 means that the command execution failed.
+
+    pbar is a tqdm progress bar.
+    """
+    n_futures = len(dict_futures)
+    status = [1] * n_futures
+    for future in as_completed(dict_futures.keys()):
+        if pbar:
+            pbar.update(1)  # Update the progress bar
+        index, cmd = dict_futures[future]
+        if future.exception() is not None:
+            status[index] = 0
+    return status
 
 
 def run(commands, n_threads=10, progress_bar=True, verbose=True):
@@ -165,58 +215,54 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
         n_threads = 1
     n_threads = min(n_threads, 10)
     n_cmds = len(commands)
-    ##------------------------------------------------------------------------.
+
     # Run with progress bar
-    if progress_bar is True:
-        with tqdm(total=n_cmds) as pbar, concurrent.futures.ThreadPoolExecutor(
-            max_workers=n_threads
-        ) as executor:
-            dict_futures = {
-                executor.submit(
-                    subprocess.check_call,
-                    cmd,
-                    shell=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                ): cmd
-                for cmd in commands
-            }
-            # List cmds that didn't work
-            l_cmd_error = []
-            for future in concurrent.futures.as_completed(dict_futures.keys()):
-                pbar.update(1)  # Update the progress bar
-                # Collect all commands that caused problems
-                if future.exception() is not None:
-                    l_cmd_error.append(dict_futures[future])
-    ##------------------------------------------------------------------------.
+    if progress_bar:
+        with tqdm(total=n_cmds) as pbar, ThreadPoolExecutor(max_workers=n_threads) as executor:
+            dict_futures = _get_commands_futures(executor, commands)
+            status = _get_list_status_commands(dict_futures, pbar=pbar)
+
     # Run without progress bar
     else:
         if (n_threads == 1) and (verbose is True):
-            # print("Here")
-            # print(commands)
-            _ = [subprocess.run(cmd, shell=True) for cmd in commands]
-            l_cmd_error = []
+            results = [subprocess.run(cmd, shell=True) for cmd in commands]
+            status = [result.returncode == 0 for result in results]
         else:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=n_threads) as executor:
+            with ThreadPoolExecutor(max_workers=n_threads) as executor:
                 # Run commands and list those didn't work
-                dict_futures = {
-                    executor.submit(
-                        subprocess.check_call,
-                        cmd,
-                        shell=True,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    ): cmd
-                    for cmd in commands
-                }
-                # List cmds that didn't work
-                l_cmd_error = []
-                for future in concurrent.futures.as_completed(dict_futures.keys()):
-                    # Collect all commands that caused problems
-                    if future.exception() is not None:
-                        l_cmd_error.append(dict_futures[future])
+                dict_futures = _get_commands_futures(executor, commands)
+                status = _get_list_status_commands(dict_futures)
 
-    return l_cmd_error
+    return status
+
+
+def _download_files(
+    src_fpaths,
+    dst_fpaths,
+    username,
+    password,
+    transfer_tool="wget",
+    n_threads=4,
+    progress_bar=True,
+    verbose=False,
+):
+
+    if transfer_tool == "curl":
+        list_cmd = [
+            curl_cmd(src_path, dst_path, username, username)
+            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+        ]
+    elif transfer_tool == "wget":
+        list_cmd = [
+            wget_cmd(src_path, dst_path, username, username)
+            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+        ]
+    else:
+        raise NotImplementedError("Download is available with 'wget' or 'curl'.")
+    # -------------------------------------------------------------------------.
+    ## Download the data (in parallel)
+    status = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
+    return status
 
 
 def _download_with_ftlib(server_path, disk_path, username, password):
@@ -249,9 +295,7 @@ def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
 
     # Download file concurrently
     n_files = len(server_paths)
-    with tqdm(total=n_files) as pbar, concurrent.futures.ThreadPoolExecutor(
-        max_workers=n_threads
-    ) as executor:
+    with tqdm(total=n_files) as pbar, ThreadPoolExecutor(max_workers=n_threads) as executor:
         dict_futures = {
             executor.submit(
                 _download_with_ftlib,
@@ -263,41 +307,8 @@ def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
             for server_path, disk_path in zip(server_paths, disk_paths)
         }
         # List cmds that didn't work
-        l_cmd_error = []
-        for future in concurrent.futures.as_completed(dict_futures.keys()):
-            pbar.update(1)  # Update the progress bar
-            # Collect all commands that caused problems
-            if future.exception() is not None:
-                l_cmd_error.append(dict_futures[future])
-
-
-def _download_files(
-    src_fpaths,
-    dst_fpaths,
-    username,
-    password,
-    transfer_tool="wget",
-    n_threads=4,
-    progress_bar=True,
-    verbose=False,
-):
-
-    if transfer_tool == "curl":
-        list_cmd = [
-            curl_cmd(src_path, dst_path, username, username)
-            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
-        ]
-    elif transfer_tool == "wget":
-        list_cmd = [
-            wget_cmd(src_path, dst_path, username, username)
-            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
-        ]
-    else:
-        raise NotImplementedError("Download is available with 'wget' or 'curl'.")
-    # -------------------------------------------------------------------------.
-    ## Download the data (in parallel)
-    bad_cmds = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
-    return bad_cmds
+        l_cmd_error = _get_list_failing_commands(dict_futures, pbar)
+    return l_cmd_error
 
 
 ####--------------------------------------------------------------------------.
@@ -512,12 +523,14 @@ def _download_daily_data(
         product_type=product_type,
         version=version,
     )
+
     # -------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
-    if is_empty(pps_filepaths) and warn_missing_files:
-        msg = f"No data found on PPS on date {date} for product {product}"
-        warnings.warn(msg, GPMDownloadWarning)
-        return None
+    if is_empty(pps_filepaths):
+        if warn_missing_files:
+            msg = f"No data found on PPS on date {date} for product {product}"
+            warnings.warn(msg, GPMDownloadWarning)
+        return []
 
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
@@ -526,9 +539,12 @@ def _download_daily_data(
         server_paths=pps_filepaths,
         force_download=force_download,
     )
+    if is_empty(pps_filepaths):
+        return [-1]  # flag for already on disk
+
     # -------------------------------------------------------------------------.
     # Retrieve commands
-    bad_cmds = _download_files(
+    status = _download_files(
         src_fpaths=pps_filepaths,
         dst_fpaths=disk_filepaths,
         username=username,
@@ -537,7 +553,7 @@ def _download_daily_data(
         progress_bar=progress_bar,
         verbose=verbose,
     )
-    return bad_cmds
+    return status
 
 
 ##-----------------------------------------------------------------------------.
@@ -640,13 +656,14 @@ def download_data(
 
     # -------------------------------------------------------------------------.
     # Loop over dates and download the files
+    status = []
     for i, date in enumerate(dates):
         if i == 0:
             warn_missing_files = False
         else:
             warn_missing_files = True
 
-        _ = _download_daily_data(
+        status += _download_daily_data(
             base_dir=base_dir,
             username=username,
             password=password,
@@ -665,8 +682,41 @@ def download_data(
         )
 
     # -------------------------------------------------------------------------.
-    if verbose:
-        print(f"The available GPM {product} product files are on disk.")
+    # Check download status
+    # - -1 if all daily files are already on disk
+    # - 0  download failed
+    # - 1  download success
+    no_remote_files = len(status) == 0
+    status = np.array(status)
+    all_already_on_disk = np.all(status == -1).item()
+    n_remote_files = np.logical_or(status == 0, status == 1).sum().item()
+    n_failed = np.sum(status == 0).item()
+    n_downloads = np.sum(status == 1).item()
+    # - No files available to download
+    if no_remote_files:
+        print("No files are available for download !")
+        return None
+    # - Files available but all download failed
+    if n_failed == n_remote_files:
+        print(f"{n_failed} files were available, but the download failed !")
+        return None
+    # - All files already on disk
+    if all_already_on_disk:
+        print(f"All the available GPM {product} product files are already on disk.")
+    else:
+        if verbose:
+            if n_failed != 0:
+                print(f"The download of {n_failed} files failed.")
+            if n_downloads > 0:
+                print(f"{n_downloads} files has been download.")
+            if n_remote_files == n_downloads:
+                print(f"All the available GPM {product} product files are now on disk.")
+            else:
+                print(
+                    f"Not all the available GPM {product} product files are on disk. Retry the download !"
+                )
+
+    # -------------------------------------------------------------------------.
     if check_integrity:
         l_corrupted = check_file_integrity(
             base_dir=base_dir,
