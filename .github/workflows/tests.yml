@@ -44,18 +44,19 @@ jobs:
         run: |
           coverage run -m pytest
 
-      - name: CodeCov
-
+      - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         if: matrix.coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Generate coverage report
+      - name: Generate coverage report in lcov format
         if: matrix.coverage
         run: |
           coverage lcov -o coverage/lcov.info
 
       - name: Coveralls Parallel
-        uses: coverallsapp/github-action@v1
+        uses: coverallsapp/github-action@v2
         if: matrix.coverage
         with:
           parallel: true
@@ -66,6 +67,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Coveralls Finished
-      uses: coverallsapp/github-action@v1
+      uses: coverallsapp/github-action@v2
       with:
         parallel-finished: true
