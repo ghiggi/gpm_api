@@ -17,16 +17,16 @@ from gpm_api.io.filter import (
     filter_by_time,
 )
 from gpm_api.io.pps import find_pps_daily_filepaths
+from gpm_api.configs import get_gpm_base_dir, get_gpm_username
 
 # -------------------------------------------------------------------------.
-base_dir = "/home/ghiggi/tmp"
-username = "gionata.ghiggi@epfl.ch"
+base_dir = get_gpm_base_dir()
+username = get_gpm_username()
 version = 7
 product_type = "RS"
 products = gpm_api.available_products(product_type=product_type)
 
 date = datetime.date.fromisoformat("2020-08-17")
-
 start_time = datetime.datetime.strptime("2020-08-17 00:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2020-08-17 04:00:00", "%Y-%m-%d %H:%M:%S")
 
@@ -39,8 +39,7 @@ force_download = False
 date = check_date(date)
 check_product_type(product_type=product_type)
 check_product(product=product, product_type=product_type)
-start_hhmmss = datetime.datetime.strftime(start_time, "%H%M%S")
-end_hhmmss = datetime.datetime.strftime(end_time, "%H%M%S")
+
 
 # -------------------------------------------------------------------------.
 ## Retrieve the list of files available on NASA PPS server
@@ -51,13 +50,12 @@ end_hhmmss = datetime.datetime.strftime(end_time, "%H%M%S")
     product_type=product_type,
     version=version,
     date=date,
-    start_hhmmss=start_hhmmss,
-    end_hhmmss=end_hhmmss,
+    start_time=start_time,
+    end_time=end_time,
     flag_first_date=flag_first_date,
     verbose=verbose,
 )
 
-
 # -------------------------------------------------------------------------.
-filter_by_time(pps_fpaths, date, start_hhmmss, end_hhmmss)
+filter_by_time(pps_fpaths, date, start_time, end_time)
 filter_by_product(pps_fpaths, product=product)

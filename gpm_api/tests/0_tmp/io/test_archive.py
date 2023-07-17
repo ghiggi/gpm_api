@@ -6,14 +6,14 @@ Created on Thu Jan 19 16:19:22 2023
 @author: ghiggi
 """
 import datetime
-
+from gpm_api.configs import get_gpm_base_dir
 from gpm_api.utils.archive import (
     check_archive_completeness,
     check_file_integrity,
     check_no_duplicated_files,
 )
 
-base_dir = "/ltenas8/data/GPM"
+base_dir = get_gpm_base_dir()
 product_type = "RS"
 product = "2A-DPR"
 version = 7

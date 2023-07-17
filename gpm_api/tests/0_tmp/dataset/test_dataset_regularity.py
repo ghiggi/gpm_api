@@ -11,8 +11,6 @@ import numpy as np
 
 import gpm_api
 
-base_dir = "/home/ghiggi"
-
 #### Define analysis time period
 start_time = datetime.datetime.strptime("2020-08-01 12:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2020-08-10 12:00:00", "%Y-%m-%d %H:%M:%S")
@@ -22,7 +20,6 @@ product_type = "RS"
 variable = "surfacePrecipitation"
 
 ds = gpm_api.open_dataset(
-    base_dir=base_dir,
     product=product,
     start_time=start_time,
     end_time=end_time,

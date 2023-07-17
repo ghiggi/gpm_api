@@ -9,6 +9,8 @@ import numpy as np
 import pyproj
 import xarray as xr
 
+### TODO: WAIT TO TEST CRS FUNCTIONS BECAUSE WE MIGHT DEPEND ON GEOXARRAY FOR THAT
+
 
 def create_dummy_swath_ds():
     # Define dataset

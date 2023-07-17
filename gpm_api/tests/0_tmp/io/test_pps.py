@@ -62,7 +62,6 @@ import datetime
 
 from gpm_api.io.pps import find_pps_filepaths
 
-base_dir = "/home/ghiggi/GPM"
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'

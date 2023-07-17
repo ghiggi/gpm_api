@@ -85,6 +85,9 @@ packages = ["gpm_api"] # explicitly list the packages in modules
 download_daily_gpm_data="gpm_api.scripts.download_daily_gpm_data:download_daily_gpm_data"
 download_monthly_gpm_data="gpm_api.scripts.download_monthly_gpm_data:download_monthly_gpm_data"
 
+[tool.pytest.ini_options]
+addopts = "--ignore=gpm_api/tests/0_tmp/"
+
 [tool.black]
 line-length = 100
 # skip-string-normalization = true

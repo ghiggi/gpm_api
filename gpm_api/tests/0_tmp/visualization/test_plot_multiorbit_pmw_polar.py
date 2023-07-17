@@ -9,8 +9,6 @@ import datetime
 
 import gpm_api
 
-base_dir = "/home/ghiggi"
-
 #### Define analysis time period
 start_time = datetime.datetime.strptime("2020-08-01 12:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2020-08-02 12:00:00", "%Y-%m-%d %H:%M:%S")
@@ -19,12 +17,10 @@ end_time = datetime.datetime.strptime("2020-08-02 12:00:00", "%Y-%m-%d %H:%M:%S"
 product = "2A-MHS-METOPB"
 product = "2A-SSMIS-F17"
 
-
 product_type = "RS"
 variable = "surfacePrecipitation"
 
 ds = gpm_api.open_dataset(
-    base_dir=base_dir,
     product=product,
     start_time=start_time,
     end_time=end_time,
@@ -40,7 +36,6 @@ ds = gpm_api.open_dataset(
 # gpm_api.check_regular_timesteps(ds) # BAD INDICATOR !
 # gpm_api.check_contiguous_scans(ds)
 # ds.gpm_api.get_contiguous_scan_slices()
-
 
 ds = ds.compute()
 ds1 = ds

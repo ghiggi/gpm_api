@@ -14,10 +14,8 @@ from gpm_api.io.download import curl_cmd, download_data, run, wget_cmd
 
 ####-------------------------------------------------------------------------.
 #### Test gpm_api.download function
-base_dir = "/home/ghiggi/GPM"
 product = "2A-DPR"
 product_type = "RS"
-username = "gionata.ghiggi@epfl.ch"
 start_time = datetime.datetime(2020, 7, 5, 0, 2, 0)
 end_time = datetime.datetime(2020, 7, 6, 0, 4, 0)
 version = 7
@@ -32,8 +30,6 @@ transfer_tool = "curl"  # works
 transfer_tool = "wget"  # buggy ... especially with lot of threads
 
 l_corrupted = download_data(
-    base_dir=base_dir,
-    username=username,
     product=product,
     start_time=start_time,
     end_time=end_time,
@@ -84,6 +80,7 @@ from gpm_api.io.download import (
 )
 from gpm_api.io.pps import find_pps_filepaths
 
+base_dir = ""  # TBD
 username = "gionata.ghiggi@epfl.ch"
 password = "gionata.ghiggi@epfl.ch"
 n_threads = 4

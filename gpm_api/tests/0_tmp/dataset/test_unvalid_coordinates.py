@@ -6,21 +6,17 @@ Created on Wed Mar  1 11:23:49 2023
 @author: ghiggi
 """
 import os
-
-os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 import gpm_api
 
 # import warnings
 # warnings.filterwarnings("ignore")
 
 #### Load GPM Swath
-gpm_base_dir = "/ltenas8/data/GPM"
 product_type = "RS"
 product = "2A-DPR"
 variables = ["precipRateNearSurface", "dataQuality", "SCorientation"]
 version = 7
 scan_mode = "FS"
-base_dir = gpm_base_dir
 chunks = "auto"  # otherwise concatenating datasets is very slow !
 groups = None
 decode_cf = False

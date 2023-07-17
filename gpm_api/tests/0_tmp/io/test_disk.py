@@ -6,12 +6,10 @@ Created on Fri Dec  9 15:46:47 2022
 @author: ghiggi
 """
 import datetime
-
 from gpm_api.io.disk import _find_daily_filepaths, find_filepaths
+from gpm_api.configs import get_gpm_base_dir
 
-filepaths = "/home/ghiggi/GPM/RS/V07/RADAR/2A-DPR/2020/07/05/"
-
-base_dir = "/home/ghiggi/GPM"
+base_dir = get_gpm_base_dir()
 product = "2A-DPR"
 date = datetime.date(2020, 7, 5)  # OK
 # date = datetime.date(2020, 7, 3) # NO
