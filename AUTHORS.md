@@ -1,4 +1,4 @@
-# GPM-API
+# Project contributors
 
 GPM-API is available on [GitHub](https://github.com/ghiggi/gpm_api) and was created by following people.
 

@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
     "nbsphinx",
+    "sphinx_mdinclude",
 ]
 
 
