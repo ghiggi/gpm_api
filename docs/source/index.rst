@@ -6,6 +6,7 @@
 Welcome to GPM-API's documentation!
 ===================================
 
+The GPM-API is still in development. Feel free to try it out and to report issues or to suggest changes.
 
 Documentation
 =============
@@ -14,6 +15,18 @@ Documentation
    :maxdepth: 2
 
    installation
+   quickstart
+   contributors_guidelines
+   maintainers_guidelines
+   authors
+
+Tutorials and Examples
+======================
+
+.. toctree::
+   :maxdepth: 2
+
+   tutorials/download
 
 
 .. toctree::
