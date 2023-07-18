@@ -39,16 +39,17 @@ classifiers = [
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
     "xarray",
-    "h5py",
+    "xarray-datatree",
+    "h5py", # TO DISCARD IN FUTURE
     "netcdf4",
     "dask",
-    "pyresample",
-    "trollsift",
-    "cartopy>=0.20.0",  # should be installed with conda to avoid GEOS compatibility issues.
-     # "curl", can be installed with conda.  Make it optional in the code.
     "wget",
     "tqdm",
     "click",
+    "trollsift",
+    "pyresample", # TO MAKE OPTIONAL
+    "cartopy>=0.20.0",  # TO MAKE OPTIONAL
+     # "curl", can be installed with conda.  Make it optional in the code.
 ]
 requires-python = ">=3.8"
 dynamic = ["version"]
