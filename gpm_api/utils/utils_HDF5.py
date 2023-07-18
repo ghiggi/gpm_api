@@ -46,6 +46,8 @@ def parse_attr_string(s):
     # If still a comma in a string --> Convert into a list
     if isinstance(s, str) and str_detect(s, ","):
         s = s.split(",")
+    if isinstance(s, str) and str_detect(s, "\n"):
+        s = s.split("\n")
     # If the character can be a number, convert it
     if isinstance(s, str) and str_isinteger(s):
         s = int(float(s))  # prior float because '0.0000' otherwise crash

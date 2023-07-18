@@ -236,6 +236,10 @@ def find_filepaths(
         )
         list_filepaths += filepaths
     # -------------------------------------------------------------------------.
+    # Check unique version
+    # - TODO, warning if same integer but different letter
+    # - TODO: error if different integer
+
     # Return filepaths
     filepaths = sorted(list_filepaths)
     return filepaths

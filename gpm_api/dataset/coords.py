@@ -1,37 +1,40 @@
 #!/usr/bin/env python3
 """
-Created on Thu Jun 22 14:57:11 2023
+Created on Tue Jul 18 17:08:55 2023
 
 @author: ghiggi
 """
 import numpy as np
 import pandas as pd
 
-from gpm_api.utils.utils_HDF5 import hdf5_file_attrs
+from gpm_api.dataset.attrs import decode_string
 
 
-def _parse_hdf_gpm_scantime(h):
+def _get_orbit_scan_time(dt, scan_mode):
     """Return timesteps array."""
+    ds = dt[scan_mode]["ScanTime"].compute()
     df = pd.DataFrame(
         {
-            "year": h["Year"][:],
-            "month": h["Month"][:],
-            "day": h["DayOfMonth"][:],
-            "hour": h["Hour"][:],
-            "minute": h["Minute"][:],
-            "second": h["Second"][:],
+            "year": ds["Year"].data,
+            "month": ds["Month"].data,
+            "day": ds["DayOfMonth"].data,
+            "hour": ds["Hour"].data,
+            "minute": ds["Minute"].data,
+            "second": ds["Second"].data,
         }
     )
     return pd.to_datetime(df).to_numpy()
 
 
-def get_orbit_coords(hdf, scan_mode):
-    """Get coordinates from Swath objects."""
-    hdf_attr = hdf5_file_attrs(hdf)
-    granule_id = hdf_attr["FileHeader"]["GranuleNumber"]
-    lon = hdf[scan_mode]["Longitude"][:]
-    lat = hdf[scan_mode]["Latitude"][:]
-    time = _parse_hdf_gpm_scantime(hdf[scan_mode]["ScanTime"])
+def get_orbit_coords(dt, scan_mode):
+    """Get coordinates from Orbit objects."""
+    attrs = decode_string(dt.attrs["FileHeader"])
+    granule_id = attrs["GranuleNumber"]
+
+    lon = np.asanyarray(dt[scan_mode]["Longitude"].data)
+    lat = np.asanyarray(dt[scan_mode]["Latitude"].data)
+    # lst = dt[scan_mode]["sunLocalTime"].data.compute()
+    time = _get_orbit_scan_time(dt, scan_mode)
     n_along_track, n_cross_track = lon.shape
     granule_id = np.repeat(granule_id, n_along_track)
     along_track_id = np.arange(n_along_track)
@@ -49,15 +52,15 @@ def get_orbit_coords(hdf, scan_mode):
     return coords
 
 
-def get_grid_coords(hdf, scan_mode):
+def get_grid_coords(dt, scan_mode):
     """Get coordinates from Grid objects.
 
     IMERG and GRID products does not have GranuleNumber!
     """
-    hdf_attr = hdf5_file_attrs(hdf)
-    lon = hdf[scan_mode]["lon"][:]
-    lat = hdf[scan_mode]["lat"][:]
-    time = hdf_attr["FileHeader"]["StartGranuleDateTime"][:-1]
+    attrs = decode_string(dt.attrs["FileHeader"])
+    lon = np.asanyarray(dt[scan_mode]["lon"])
+    lat = np.asanyarray(dt[scan_mode]["lat"])
+    time = attrs["StartGranuleDateTime"][:-1]
     time = np.array(
         np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1
     )  # TODO: document why + 30 min

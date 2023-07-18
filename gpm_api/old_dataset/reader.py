@@ -12,11 +12,10 @@ import numpy as np
 import xarray as xr
 
 from gpm_api.configs import get_gpm_base_dir
-from gpm_api.dataset.attrs import add_history, get_granule_attrs
-from gpm_api.dataset.coords import get_coords, set_coords_attrs
+from gpm_api.dataset.attrs import add_history
+from gpm_api.dataset.coords import set_coords_attrs
 from gpm_api.dataset.crs import set_dataset_crs
 from gpm_api.dataset.decoding import apply_custom_decoding, decode_dataset
-from gpm_api.dataset.group import _get_hdf_groups, _open_hdf_group
 from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_base_dir,
@@ -28,6 +27,9 @@ from gpm_api.io.checks import (
 )
 from gpm_api.io.disk import find_filepaths
 from gpm_api.io.info import get_product_from_filepath, get_version_from_filepath
+from gpm_api.old_dataset.attrs import get_granule_attrs
+from gpm_api.old_dataset.coords import get_coords
+from gpm_api.old_dataset.group import _get_hdf_groups, _open_hdf_group
 from gpm_api.utils.checks import has_missing_granules, is_regular
 from gpm_api.utils.time import (
     ensure_time_validity,

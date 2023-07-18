@@ -7,7 +7,7 @@ Created on Thu Jun 22 15:09:26 2023
 import numpy as np
 import xarray as xr
 
-from gpm_api.dataset.dimensions import assign_dataset_dimensions
+from gpm_api.old_dataset.dimensions import assign_dataset_dimensions
 from gpm_api.utils.utils_HDF5 import hdf5_datasets, hdf5_groups
 
 

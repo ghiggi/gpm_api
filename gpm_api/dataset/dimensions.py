@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """
-Created on Thu Jun 22 15:01:43 2023
+Created on Tue Jul 18 17:14:16 2023
 
 @author: ghiggi
 """
-import re
-
-# TODO: write dict in a config YAML file ?
-
+import numpy as np
 
 DIM_DICT = {
     # 2A-DPR
@@ -83,46 +80,82 @@ GRID_SPATIAL_DIMS = ("lon", "lat")
 ORBIT_SPATIAL_DIMS = ("cross_track", "along_track")
 
 
-def _decode_dimensions(ds):
-    """Decode dimensions."""
-    list(ds.dims)
-    dataset_vars = list(ds.data_vars)
+# TODO: read dictionary from yaml config
+
+
+def _has_a_phony_dim(xr_obj):
+    """Check if the xarray object has a phony_dim_<number> dimension."""
+    return np.any([dim.startswith("phony_dim") for dim in list(xr_obj.dims)]).item()
+
+
+def _get_dataarray_dim_dict(da):
+    """Return a dictionary mapping each DataArray phony_dim to the actual dimension name."""
+    dim_dict = {}
+    dim_names_str = da.attrs.get("DimensionNames", None)
+    if dim_names_str is not None:
+        dim_names = dim_names_str.split(",")
+        for dim, new_dim in zip(list(da.dims), dim_names):
+            dim_dict[dim] = new_dim
+    return dim_dict
+
+
+def _get_dataset_dim_dict(ds):
+    """Return a dictionary mapping each Dataset phony_dim to the actual dimension name."""
     rename_dim_dict = {}
-    for var in dataset_vars:
-        da = ds[var]
-        dim_names_str = da.attrs.get("DimensionNames", None)
-        if dim_names_str is not None:
-            dim_names = dim_names_str.split(",")
-            for dim, new_dim in zip(list(da.dims), dim_names):
-                if dim not in rename_dim_dict:
-                    rename_dim_dict[dim] = new_dim
-                else:
-                    if rename_dim_dict[dim] == new_dim:
-                        pass
-                    else:  # when more variable share same dimension length (and same phony_dim_<n>)
-                        ds[var] = ds[var].rename({dim: new_dim})
-    if len(rename_dim_dict) > 0:
-        ds = ds.rename_dims(rename_dim_dict)
-    return ds
+    for var in list(ds.data_vars):
+        rename_dim_dict.update(_get_dataarray_dim_dict(ds[var]))
+    return rename_dim_dict
 
 
-def assign_dataset_dimensions(ds):
-    """Assign standard dimension names to xarray Dataset."""
-    dataset_dims = list(ds.dims)
-
-    # Do not assign dimension name if already exists (i.e. IMERG)
-    if not re.match("phony_dim", dataset_dims[0]):
-        return ds
-
-    # Get dimension name from DimensionNames attribute
-    ds = _decode_dimensions(ds)
-
-    # Switch dimensions to gpm_api standard dimension names
-    ds_dims = list(ds.dims)
+def _get_datatree_dim_dict(dt):
+    """Return a dictionary mapping each DataTree phony_dim to the actual dimension name."""
     rename_dim_dict = {}
-    for dim in ds_dims:
+    for group in dt.groups:
+        ds = dt[group]
+        if _has_a_phony_dim(ds):
+            rename_dim_dict.update(_get_dataset_dim_dict(ds))
+    return rename_dim_dict
+
+
+def _get_gpm_api_dims_dict(ds):
+    """Get dictionary to rename dimensions following gpm-api defaults."""
+    rename_dim_dict = {}
+    for dim in list(ds.dims):
         new_dim = DIM_DICT.get(dim, None)
-        if new_dim:
+        if new_dim is not None:
             rename_dim_dict[dim] = new_dim
-    ds = ds.rename_dims(rename_dim_dict)
+    return rename_dim_dict
+
+
+def _rename_dataset_dimensions(ds, use_api_defaults=True):
+    """Rename xr.Dataset dimension to the actual dimension names.
+
+    The actual dimensions names are retrieved from the DataArrays DimensionNames attribute.
+    The dimension renaming is performed at each Dataset level.
+    If use_api_defaults is True (the default), it sets the GPM-API dimension names.
+    """
+    if _has_a_phony_dim(ds):
+        ds = ds.rename_dims(_get_dataset_dim_dict(ds))
+    if use_api_defaults:
+        ds = ds.rename_dims(_get_gpm_api_dims_dict(ds))
     return ds
+
+
+def _rename_datatree_dimensions(dt, use_api_defaults=True):
+    """Rename datatree dimension to the actual dimension names.
+
+    The actual dimensions names are retrieved from the DataArrays DimensionNames attribute.
+    The dimension renaming is performed at each Dataset level.
+    If use_api_defaults is True (the default), it sets the GPM-API dimension names.
+    """
+    # TODO: report reproducible issue on datatree repo ...
+    # --> dt[group].rename_dims(dim_dict) does not work
+    # --> dt.rename_dims(dim_dict) does work only at node level !
+    dt = dt.copy()  # otherwise rename input dt
+    for group in dt.groups:
+        ds = dt[group]
+        if _has_a_phony_dim(ds):
+            dt[group].ds = dt[group].ds.rename_dims(_get_dataset_dim_dict(ds))
+        if use_api_defaults:
+            dt[group].ds = dt[group].ds.rename_dims(_get_gpm_api_dims_dict(ds))
+    return dt
