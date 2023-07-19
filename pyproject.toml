@@ -59,7 +59,7 @@ image = ["ximage"]
 dev = ["pre-commit",
        "black[jupyter]", "blackdoc", "codespell", "ruff",
        "pytest", "pytest-cov", "pytest-mock", "pydantic",
-       "pip-tools", "bumpver", "twine",
+       "pytest-watcher", "pip-tools", "bumpver", "twine",
        "setuptools>=61.0.0", "wheel",
        "sphinx", "sphinx-gallery", "sphinx_rtd_theme", "nbsphinx", "sphinx_mdinclude"]
 
@@ -87,7 +87,7 @@ download_daily_gpm_data="gpm_api.scripts.download_daily_gpm_data:download_daily_
 download_monthly_gpm_data="gpm_api.scripts.download_monthly_gpm_data:download_monthly_gpm_data"
 
 [tool.pytest.ini_options]
-addopts = "--ignore=gpm_api/tests/0_tmp/"
+addopts = "--ignore=gpm_api/tests/0_tmp/ --cov --cov-report term-missing"
 
 [tool.black]
 line-length = 100
