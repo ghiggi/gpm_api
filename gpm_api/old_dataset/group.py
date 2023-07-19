@@ -145,10 +145,10 @@ def _open_hdf_group(
     hdf_group = scan_mode + "/" + group
 
     # If chunks is None, read in memory and close connection
-    # - But read with chunks="auto" to read just variables of interest !
+    # - But read with chunks={} to read just variables of interest !
     if chunks is None:
         with xr.open_dataset(
-            filepath, engine=engine, mode="r", group=hdf_group, decode_cf=decode_cf, chunks="auto"
+            filepath, engine=engine, mode="r", group=hdf_group, decode_cf=decode_cf, chunks={}
         ) as ds:
             ds = _preprocess_hdf_group(
                 ds=ds, variables=variables, group=group, prefix_group=prefix_group

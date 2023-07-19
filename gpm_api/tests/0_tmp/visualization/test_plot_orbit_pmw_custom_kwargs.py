@@ -30,7 +30,7 @@ ds = gpm_api.open_dataset(
     variables=variable,
     # scan_mode="S1",
     product_type=product_type,
-    chunks="auto",
+    chunks={},
     prefix_group=False,
 )
 

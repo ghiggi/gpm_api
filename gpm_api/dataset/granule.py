@@ -162,7 +162,7 @@ def _open_granule(
     groups=None,
     variables=None,
     decode_cf=False,
-    chunks="auto",
+    chunks={},
     prefix_group=True,
 ):
     """Open granule file into xarray Dataset."""
