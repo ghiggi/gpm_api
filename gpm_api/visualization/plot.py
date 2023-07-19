@@ -4,6 +4,8 @@ Created on Sat Dec 10 18:42:28 2022
 
 @author: ghiggi
 """
+import inspect
+
 import cartopy
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -16,6 +18,10 @@ from scipy.ndimage import binary_dilation
 ### TODO: Add xarray + cartopy  (xr_carto) (xr_mpl)
 # _plot_cartopy_xr_imshow
 # _plot_cartopy_xr_pcolormesh
+
+
+def is_generator(obj):
+    return inspect.isgeneratorfunction(obj) or inspect.isgenerator(obj)
 
 
 def _preprocess_figure_args(ax, fig_kwargs={}, subplot_kwargs={}):
@@ -411,8 +417,11 @@ def plot_image(
     return p
 
 
+####--------------------------------------------------------------------------.
+
+
 def plot_map_mesh(
-    da,
+    xr_obj,
     ax=None,
     edgecolors="k",
     linewidth=0.1,
@@ -422,15 +431,15 @@ def plot_map_mesh(
 ):
     # Interpolation only for grid objects
     # figsize, dpi, subplot_kw only used if ax is None
-    from gpm_api.checks import is_grid, is_orbit
+    from gpm_api.checks import is_orbit  # is_grid
 
-    # from .grid import plot_grid_mesh
+    from .grid import plot_grid_mesh
     from .orbit import plot_orbit_mesh
 
     # Plot orbit
-    if is_orbit(da):
+    if is_orbit(xr_obj):
         p = plot_orbit_mesh(
-            da=da,
+            da=xr_obj["lat"],
             ax=ax,
             edgecolors=edgecolors,
             linewidth=linewidth,
@@ -438,28 +447,55 @@ def plot_map_mesh(
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
-    # Plot grid
-    elif is_grid(da):
-        raise NotImplementedError("Not yet implemented.")
-        #     p = plot_grid_mesh(
-        #         da=da,
-        #         ax=ax,
-        #         edgecolors=edgecolors,
-        #         subplot_kw=subplot_kw,
-        #         figsize=figsize,
-        #         dpi=dpi,
-        #     )
-        # else:
-        raise ValueError("Can not plot. It's neither a GPM grid, neither a GPM orbit.")
+    else:  # Plot grid
+        p = plot_grid_mesh(
+            xr_obj=xr_obj,
+            ax=ax,
+            edgecolors=edgecolors,
+            linewidth=linewidth,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
     # Return mappable
+    return p
+
+
+def plot_map_mesh_centroids(
+    xr_obj,
+    ax=None,
+    c="r",
+    s=1,
+    fig_kwargs={},
+    subplot_kwargs={},
+    **plot_kwargs,
+):
+    """Plot GPM orbit granule mesh centroids in a cartographic map."""
+    # - Check inputs
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+
+    # - Initialize figure
+    if ax is None:
+        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
+        # - Add cartopy background
+        ax = plot_cartopy_background(ax)
+
+    # Plot centroids
+    lon = xr_obj["lon"].data
+    lat = xr_obj["lat"].data
+    p = ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
+
+    # - Return mappable
     return p
 
 
 ####--------------------------------------------------------------------------.
 
 
-def plot_labels(
-    dataarray,
+def _plot_labels(
+    xr_obj,
+    label_name=None,
     max_n_labels=50,
     add_colorbar=True,
     interpolation="nearest",
@@ -475,6 +511,14 @@ def plot_labels(
     from ximage.labels.plot_labels import get_label_colorbar_settings
 
     from gpm_api.visualization.plot import plot_image
+
+    if isinstance(xr_obj, xr.Dataset):
+        dataarray = xr_obj[label_name]
+    else:
+        if label_name is not None:
+            dataarray = xr_obj[label_name]
+        else:
+            dataarray = xr_obj
 
     dataarray = dataarray.compute()
     label_indices = get_label_indices(dataarray)
@@ -499,6 +543,43 @@ def plot_labels(
         fig_kwargs=fig_kwargs,
         **plot_kwargs,
     )
+    return p
+
+
+def plot_labels(
+    obj,  # Dataset, DataArray or generator
+    label_name=None,
+    max_n_labels=50,
+    add_colorbar=True,
+    interpolation="nearest",
+    cmap="Paired",
+    fig_kwargs={},
+    **plot_kwargs,
+):
+    if is_generator(obj):
+        for label_id, xr_obj in obj:
+            p = _plot_labels(
+                xr_obj=xr_obj,
+                label_name=label_name,
+                max_n_labels=max_n_labels,
+                add_colorbar=add_colorbar,
+                interpolation=interpolation,
+                cmap=cmap,
+                fig_kwargs=fig_kwargs,
+                **plot_kwargs,
+            )
+            plt.show()
+    else:
+        p = _plot_labels(
+            xr_obj=obj,
+            label_name=label_name,
+            max_n_labels=max_n_labels,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            cmap=cmap,
+            fig_kwargs=fig_kwargs,
+            **plot_kwargs,
+        )
     return p
 
 

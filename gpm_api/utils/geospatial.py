@@ -28,6 +28,29 @@ def unwrap_longitude_degree(x, period=360):
     return (x + mod) % (2 * mod) - mod
 
 
+def get_extent(xr_obj, padding=0):
+    """Get geographic extent.
+
+    The extent follows the matplotlib/cartopy format (xmin, xmax, ymin, ymax)
+    The padding tuple is expected to follow the format (x, y)
+    """
+    if isinstance(padding, (int, float)):
+        padding = (padding, padding)
+    elif isinstance(padding, (tuple, list)):
+        if len(padding) != 2:
+            raise ValueError("Expecting a padding (x, y) tuple of length 2.")
+    else:
+        raise TypeError("Accepted padding type are int, float, list or tuple.")
+    lon = xr_obj["lon"].data
+    lat = xr_obj["lat"].data
+    lon_min = max(-180, np.nanmin(lon).item() - padding[0])
+    lon_max = min(180, np.nanmax(lon).item() + padding[0])
+    lat_min = max(-90, np.nanmin(lat).item() - padding[1])
+    lat_max = min(90, np.nanmax(lat).item() + padding[1])
+    extent = tuple([lon_min, lon_max, lat_min, lat_max])
+    return extent
+
+
 def crop_by_country(xr_obj, name):
     """
     Crop an xarray object based on the specified country name.

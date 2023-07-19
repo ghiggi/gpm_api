@@ -16,6 +16,12 @@ class GPM_Base_Accessor:
             )
         self._obj = xarray_obj
 
+    def extent(self, padding=0):
+        """Return the geographic extent (bbox) of the object."""
+        from gpm_api.utils.geospatial import get_extent
+
+        return get_extent(self._obj, padding=padding)
+
     def crop(self, extent):
         """Crop xarray object by bounding box."""
         from gpm_api.utils.geospatial import crop
@@ -197,10 +203,48 @@ class GPM_Base_Accessor:
         p = plot_transect_line(self._obj, ax=ax, color=color)
         return p
 
-    def plot_swath_lines(self, ax=None, **kwargs):
+    def plot_swath_lines(self, ax=None, linestyle="--", color="k", **kwargs):
         from gpm_api.visualization.orbit import plot_swath_lines
 
-        p = plot_swath_lines(self._obj, ax=ax, **kwargs)
+        p = plot_swath_lines(self._obj, ax=ax, linestyle=linestyle, color=color, **kwargs)
+        return p
+
+    def plot_map_mesh(
+        self,
+        ax=None,
+        edgecolors="k",
+        linewidth=0.1,
+        fig_kwargs={},
+        subplot_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.plot import plot_map_mesh
+
+        p = plot_map_mesh(
+            xr_obj=self._obj,
+            ax=ax,
+            edgecolors=edgecolors,
+            linewidth=linewidth,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
+        return p
+
+    def plot_map_mesh_centroids(
+        self, ax=None, c="r", s=1, fig_kwargs={}, subplot_kwargs={}, **plot_kwargs
+    ):
+        from gpm_api.visualization.plot import plot_map_mesh_centroids
+
+        p = plot_map_mesh_centroids(
+            self._obj,
+            ax=ax,
+            c=c,
+            s=s,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
         return p
 
 
@@ -340,29 +384,6 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-        return p
-
-    def plot_map_mesh(
-        self,
-        ax=None,
-        edgecolors="k",
-        linewidth=0.1,
-        fig_kwargs={},
-        subplot_kwargs={},
-        **plot_kwargs,
-    ):
-        from gpm_api.visualization.plot import plot_map_mesh
-
-        da = self._obj
-        p = plot_map_mesh(
-            ax=ax,
-            da=da,
-            edgecolors=edgecolors,
-            linewidth=linewidth,
-            fig_kwargs=fig_kwargs,
-            subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
         return p

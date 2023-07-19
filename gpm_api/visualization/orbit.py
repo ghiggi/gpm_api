@@ -26,7 +26,7 @@ from gpm_api.visualization.plot import (
 )
 
 
-def plot_swath_lines(ds, ax=None, **kwargs):
+def plot_swath_lines(ds, ax=None, linestyle="--", color="k", **kwargs):
     """Plot GPM orbit granule swath lines."""
     # - 0.0485 to account for 2.5 km from pixel center
     # TODO: adapt based on bin length (changing for each sensor) --> FUNCTION
@@ -43,11 +43,23 @@ def plot_swath_lines(ds, ax=None, **kwargs):
     # - Plot swath line
     lon = ds["lon"].transpose("cross_track", "along_track").data
     lat = ds["lat"].transpose("cross_track", "along_track").data
-    ax.plot(lon[0, :] + 0.0485, lat[0, :], transform=ccrs.Geodetic(), **kwargs)
-    ax.plot(lon[-1, :] - 0.0485, lat[-1, :], transform=ccrs.Geodetic(), **kwargs)
-
-    # ax.plot(da['lon'][:, 0] + 0.0485, da['lat'][:,0],'--k')
-    # ax.plot(da['lon'][:,-1] - 0.0485, da['lat'][:,-1],'--k')
+    p = ax.plot(
+        lon[0, :] + 0.0485,
+        lat[0, :],
+        transform=ccrs.Geodetic(),
+        linestyle=linestyle,
+        color=color,
+        **kwargs,
+    )
+    p = ax.plot(
+        lon[-1, :] - 0.0485,
+        lat[-1, :],
+        transform=ccrs.Geodetic(),
+        linestyle=linestyle,
+        color=color,
+        **kwargs,
+    )
+    return p
 
 
 def infill_invalid_coords(xr_obj):
@@ -91,6 +103,7 @@ def _call_over_contiguous_scans(function):
 
         # Get data array (first position)
         da = args[0] if len(args) > 0 else kwargs.get("da")
+
         # Get axis
         ax = args[1] if len(args) > 1 else kwargs.get("ax")
 
@@ -201,7 +214,6 @@ def plot_orbit_mesh(
 ):
     """Plot GPM orbit granule mesh in a cartographic map."""
     # - Check inputs
-    check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
     # - Initialize figure
@@ -217,11 +229,10 @@ def plot_orbit_mesh(
     plot_kwargs["edgecolors"] = (edgecolors,)
     plot_kwargs["linewidth"] = (linewidth,)
     plot_kwargs["antialiased"] = True
-    print(plot_kwargs)
     # - Add variable field with cartopy
     p = _plot_cartopy_pcolormesh(
-        ax=ax,
         da=da,
+        ax=ax,
         x="lon",
         y="lat",
         plot_kwargs=plot_kwargs,
