@@ -4,12 +4,36 @@ Created on Mon Aug 15 00:12:47 2022
 
 @author: ghiggi
 """
+import functools
+import os
 import warnings
 
 import numpy as np
 import xarray as xr
 
 from gpm_api.utils.warnings import GPM_Warning
+from gpm_api.utils.yaml import read_yaml_file
+
+####--------------------------------------------------------------------------.
+#### PMW utils
+
+
+@functools.lru_cache(maxsize=None)
+def get_pmw_frequency_dict():
+    """Get PMW info dictionary."""
+    from gpm_api import _root_path
+
+    fpath = os.path.join(_root_path, "gpm_api", "etc", "pmw_frequency.yml")
+    return read_yaml_file(fpath)
+
+
+@functools.lru_cache(maxsize=None)
+def get_pmw_frequency(sensor, scan_mode):
+    """Get product info dictionary."""
+    pmw_dict = get_pmw_frequency_dict()
+    pmw_frequency = pmw_dict[sensor][scan_mode]
+    return pmw_frequency
+
 
 ####--------------------------------------------------------------------------.
 #### Attributes cleaning
@@ -143,7 +167,7 @@ def ensure_valid_coords(ds, raise_error=False):
     return ds
 
 
-def apply_custom_decoding(ds, product):
+def apply_custom_decoding(ds, product, scan_mode):
     # Ensure valid coordinates
     if "cross_track" in list(ds.dims):
         ds = ensure_valid_coords(ds, raise_error=False)
@@ -156,16 +180,69 @@ def apply_custom_decoding(ds, product):
     # Clean attributes
     ds = clean_dataarrays_attrs(ds, product)
 
-    # Add coordinates
-    if product == "2A-DPR" and "frequency" in list(ds.dims):
-        ds = ds.assign_coords({"frequency": ["Ku", "Ka"]})
+    #### 1C-PMW
+    if product.startswith("1C"):
+        if "pmw_frequency" in list(ds.dims):
+            pmw_frequency = get_pmw_frequency(sensor=product.split("-")[1], scan_mode=scan_mode)
+            ds = ds.assign_coords({"pmw_frequency": pmw_frequency})
 
-    if product in ["2A-DPR", "2A-Ku", "2A-Ka"] and "paramDSD" in list(ds):
-        ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
+    #### RADAR
+    if product == "2A-DPR":
+        if "radar_frequency" in list(ds.dims):
+            ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
 
-    if product in ["2A-DPR", "2A-Ku", "2A-Ka"] and "height" in list(ds):
-        ds = ds.set_coords("height")
+    if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR"]:
+        if "paramDSD" in list(ds):
+            ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
+        if "height" in list(ds):
+            ds = ds.set_coords("height")
 
+    # Range spacing
+    # - V6 and V7: 1BKu 260 bins NS and MS, 130 at HS
+    # V7
+    if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2PR", "2B-GPM-CORRA", "2B-TRMM-CORRA"]:
+        if "range" in list(ds.dims):
+            if scan_mode in ["HS", "KuKaGMI", "KuGMI", "KuTMI"]:
+                range_values = np.arange(0, 88 * 250, step=250)
+                ds = ds.assign_coords({"range": range_values})
+            if scan_mode in ["FS", "MS"]:
+                range_values = np.arange(0, 176 * 125, step=125)
+                ds = ds.assign_coords({"range": range_values})
+            if scan_mode == "NS":
+                if product == "2B-GPM-CORRA":
+                    range_values = np.arange(0, 88 * 250, step=250)
+                    ds = ds.assign_coords({"range": range_values})
+                else:
+                    range_values = np.arange(0, 176 * 125, step=125)
+                    ds = ds.assign_coords({"range": range_values})
+
+    #### 2B-GPM-CORRA
+    if product == "2B-GPM-CORRA":
+        if "pmw_frequency" in list(ds.dims):
+            pmw_frequency = [
+                "10V",
+                "10H",
+                "19V",
+                "19H",
+                "23V",
+                "37V",
+                "37H",
+                "89V",
+                "89H",
+                "165V",
+                "165H",
+                "183V3",
+                "183V7",
+            ]
+            ds = ds.assign_coords({"pmw_frequency": pmw_frequency})
+        if scan_mode == "KuKaGMI" or scan_mode == "NS":
+            if "radar_frequency" in list(ds.dims):
+                ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
+        if "range" in list(ds.dims):
+            range_values = np.arange(0, 88 * 250, step=250)
+            ds = ds.assign_coords({"range": range_values})
+
+    #### SLH and CSH
     if product in ["2A-GPM-SLH", "2B-GPM-CSH"] and "nlayer" in list(ds.dims):
         # Fixed heights for 2HSLH and 2HCSH
         # - FileSpec v7: p.2395, 2463

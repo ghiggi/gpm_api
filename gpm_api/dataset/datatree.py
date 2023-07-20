@@ -15,7 +15,7 @@ from gpm_api.dataset.dimensions import _rename_datatree_dimensions
 # --> gpm_api.open_dataset(datatree=False)  # or if multiple scan_modes provided
 
 
-def _open_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True):
+def open_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True):
     """Open HDF5 in datatree object.
 
     - chunks={} --> Lazy map to dask.array

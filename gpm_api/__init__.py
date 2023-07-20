@@ -12,6 +12,7 @@ import gpm_api.accessor  # noqa
 from gpm_api.configs import define_gpm_api_configs as define_configs
 from gpm_api.configs import read_gpm_api_configs as read_configs
 from gpm_api.dataset.dataset import open_dataset
+from gpm_api.dataset.datatree import open_datatree
 from gpm_api.dataset.granule import open_granule
 
 # from gpm_api.old_dataset.reader import (
@@ -44,6 +45,7 @@ __all__ = [
     "find_files",
     "open_granule",
     "open_dataset",
+    "open_datatree",
     "check_regular_time",
     "check_contiguous_scans",
     "check_valid_geolocation",

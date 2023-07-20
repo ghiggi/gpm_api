@@ -72,10 +72,10 @@ def get_grid_coords(dt, scan_mode):
     return coords
 
 
-def get_coords(hdf, scan_mode):
+def get_coords(dt, scan_mode):
     """Get coordinates from GPM objects."""
     coords = (
-        get_grid_coords(hdf, scan_mode) if scan_mode == "Grid" else get_orbit_coords(hdf, scan_mode)
+        get_grid_coords(dt, scan_mode) if scan_mode == "Grid" else get_orbit_coords(dt, scan_mode)
     )
     return coords
 

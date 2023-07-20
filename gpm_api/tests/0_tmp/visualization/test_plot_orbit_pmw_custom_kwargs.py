@@ -47,7 +47,7 @@ ds = ds1
 # -----------------------------------------------------------------------------.
 
 
-da = ds[variable].isel(channel=8)
+da = ds[variable].isel(pmw_frequency=8)
 print(da.attrs["LongName"])
 
 da.gpm_api.plot_map()

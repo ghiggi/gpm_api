@@ -62,28 +62,46 @@ def plot_swath_lines(ds, ax=None, linestyle="--", color="k", **kwargs):
     return p
 
 
-def infill_invalid_coords(xr_obj):
+def infill_invalid_coords(xr_obj, mask_variables=True):
     """Replace invalid coordinates with closer valid location.
 
-    It assumes that the invalid pixel variables are already masked to NaN.
+    This operation is required to plot with pcolormesh.
+    If mask_variables is True (the default) sets invalid pixel variables to NaN.
+
+    Return tuple with 'sanitized' xr_obj and a mask with the valid coordinates.
     """
-    # TODO: invalid pixel coordinates should be masked by full transparency !
+    from gpm_api.utils.checks import _is_valid_geolocation
 
-    from gpm_api.utils.checks import _is_non_valid_geolocation
+    # Copy object
+    xr_obj = xr_obj.copy()
 
-    # Retrieve array indicated invalid geolocation
-    mask = _is_non_valid_geolocation(xr_obj).data
-    # Retrieve lon and lat array
-    lon = xr_obj["lon"].data
-    lat = xr_obj["lat"].data
-    # Replace invalid coordinates with closer valid values
-    lon_dummy = lon.copy()
-    lon_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), lon[~mask])
-    lat_dummy = lat.copy()
-    lat_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), lat[~mask])
-    xr_obj["lon"].data = lon_dummy
-    xr_obj["lat"].data = lat_dummy
-    return xr_obj
+    # Retrieve pixel with valid/invalid geolocation
+    xr_valid_mask = _is_valid_geolocation(xr_obj)  # True=Valid, False=Invalid
+    xr_valid_mask.name = "valid_geolocation_mask"
+
+    np_valid_mask = xr_valid_mask.data  # True=Valid, False=Invalid
+    np_unvalid_mask = ~np_valid_mask  # True=Invalid, False=Valid
+
+    # If there are invalid pixels, replace invalid coordinates with closer valid values
+    if np.any(np_unvalid_mask):
+        lon = np.asanyarray(xr_obj["lon"].data)
+        lat = np.asanyarray(xr_obj["lat"].data)
+        lon_dummy = lon.copy()
+        lon_dummy[np_unvalid_mask] = np.interp(
+            np.flatnonzero(np_unvalid_mask), np.flatnonzero(np_valid_mask), lon[np_valid_mask]
+        )
+        lat_dummy = lat.copy()
+        lat_dummy[np_unvalid_mask] = np.interp(
+            np.flatnonzero(np_unvalid_mask), np.flatnonzero(np_valid_mask), lat[np_valid_mask]
+        )
+        xr_obj["lon"].data = lon_dummy
+        xr_obj["lat"].data = lat_dummy
+
+    # Mask variables if asked
+    if mask_variables:
+        xr_obj = xr_obj.where(xr_valid_mask)
+
+    return xr_obj, xr_valid_mask
 
 
 # TODO: plot swath polygon
@@ -128,7 +146,8 @@ def _call_over_contiguous_scans(function):
             # Replace invalid coordinate with closer value
             # - This might be necessary for some products
             #   having all the outer swath invalid coordinates
-            # tmp_da = infill_invalid_coords(tmp_da)
+            # - An example is the 2B-GPM-CORRA
+            tmp_da, tmp_da_valid_mask = infill_invalid_coords(tmp_da, mask_variables=True)
 
             # Define  temporary kwargs
             tmp_kwargs = user_kwargs.copy()
@@ -138,6 +157,17 @@ def _call_over_contiguous_scans(function):
             else:
                 tmp_kwargs["ax"] = p.axes
 
+            # Define alpha to make invalid coordinates transparent
+            # --> cartopy.pcolormesh currently bug when providing a alpha array :(
+            # TODO: Open an issue on that !
+
+            # tmp_valid_mask = tmp_da_valid_mask.data
+            # if not np.all(tmp_valid_mask):
+            #     alpha = tmp_valid_mask.astype(int)  # 0s and 1s
+            #     if "alpha" in tmp_kwargs:
+            #         alpha = tmp_kwargs["alpha"] * alpha
+            #     tmp_kwargs["alpha"] = alpha
+
             # Set colorbar to False for all except last iteration
             # --> Avoid drawing multiple colorbars
             if i != len(list_slices) - 1 and "add_colorbar" in user_kwargs:
@@ -145,6 +175,7 @@ def _call_over_contiguous_scans(function):
 
             # Before function call
             p = function(**tmp_kwargs)
+            # p.set_alpha(alpha)
 
         return p
 

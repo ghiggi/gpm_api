@@ -47,6 +47,11 @@ def get_extent(xr_obj, padding=0):
     lon_max = min(180, np.nanmax(lon).item() + padding[0])
     lat_min = max(-90, np.nanmin(lat).item() - padding[1])
     lat_max = min(90, np.nanmax(lat).item() + padding[1])
+
+    if lon_min > lon_max:
+        raise NotImplementedError(
+            "The object cross the dateline. The extent can't be currently be defined."
+        )
     extent = tuple([lon_min, lon_max, lat_min, lat_max])
     return extent
 
@@ -125,9 +130,12 @@ def get_crop_slices_by_extent(xr_obj, extent):
         )
         if idx_col.size == 0:
             raise ValueError("No data inside the provided bounding box.")
-        # Retrieve list of along_track slices
+
+        # Retrieve list of along_track slices isel_dict
         list_slices = get_list_slices_from_indices(idx_col)
-        return list_slices
+        list_isel_dicts = [{"along_track": slc} for slc in list_slices]
+        return list_isel_dicts
+
     elif is_grid(xr_obj):
         lon = xr_obj["lon"].data
         lat = xr_obj["lat"].data
@@ -138,8 +146,8 @@ def get_crop_slices_by_extent(xr_obj, extent):
             raise ValueError("No data inside the provided bounding box.")
         lat_slices = get_list_slices_from_indices(idx_row)[0]
         lon_slices = get_list_slices_from_indices(idx_col)[0]
-        slices_dict = {"lon": lon_slices, "lat": lat_slices}
-        return slices_dict
+        isel_dict = {"lon": lon_slices, "lat": lat_slices}
+        return isel_dict
     else:
         raise NotImplementedError("")
 
@@ -202,19 +210,18 @@ def crop(xr_obj, extent):
 
     """
     # TODO: Check extent
-
     if is_orbit(xr_obj):
         # - Subset only along_track
-        list_slices = get_crop_slices_by_extent(xr_obj, extent)
-        if len(list_slices) > 1:
+        list_isel_dicts = get_crop_slices_by_extent(xr_obj, extent)
+        if len(list_isel_dicts) > 1:
             raise ValueError(
                 "The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !."
             )
-        xr_obj_subset = xr_obj.isel(along_track=list_slices[0])
+        xr_obj_subset = xr_obj.isel(list_isel_dicts[0])
 
     elif is_grid(xr_obj):
-        slice_dict = get_crop_slices_by_extent(xr_obj, extent)
-        xr_obj_subset = xr_obj.isel(slice_dict)
+        isel_dict = get_crop_slices_by_extent(xr_obj, extent)
+        xr_obj_subset = xr_obj.isel(isel_dict)
     else:
         orbit_dims = ("cross_track", "along_track")
         grid_dims = ("lon", "lat")

@@ -596,13 +596,19 @@ def has_contiguous_scans(xr_obj):
 
 
 def _is_non_valid_geolocation(xr_obj):
-    """Return a boolean array indicating if the geolocation is invalid."""
+    """Return a boolean array indicating if the geolocation is invalid.
+
+    True = Invalid, False = Valid
+    """
     bool_arr = np.isnan(xr_obj["lon"])
     return bool_arr
 
 
 def _is_valid_geolocation(xr_obj):
-    """Return a boolean array indicating if the geolocation is valid."""
+    """Return a boolean array indicating if the geolocation is valid.
+
+    True = Valid, False = Invalid
+    """
     bool_arr = ~np.isnan(xr_obj["lon"])
     return bool_arr
 

@@ -233,7 +233,7 @@ def _open_granule(
     ###-----------------------------------------------------------------------.
     ### Clean attributes, decode variables
     # Apply custom processing
-    ds = apply_custom_decoding(ds, product)
+    ds = apply_custom_decoding(ds, product, scan_mode)
 
     # Apply CF decoding
     if decode_cf:

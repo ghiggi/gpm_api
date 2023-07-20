@@ -110,11 +110,9 @@ def _get_scan_mode_dataset(
     decode_cf=False,
 ):
     """Retrieve scan mode xr.Dataset."""
-    from gpm_api.dataset.datatree import _open_datatree
+    from gpm_api.dataset.datatree import open_datatree
 
-    dt = _open_datatree(
-        filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True
-    )
+    dt = open_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True)
 
     # Retrieve granule info
     coords, attrs, groups, variables = _get_scan_mode_info(
@@ -191,7 +189,7 @@ def _open_granule(
     ###-----------------------------------------------------------------------.
     ### Clean attributes, decode variables
     # Apply custom processing
-    ds = apply_custom_decoding(ds, product)
+    ds = apply_custom_decoding(ds, product, scan_mode)
 
     # Remove coords and dimensions not exploited by data variables
     ds = remove_unused_var_dims(ds)

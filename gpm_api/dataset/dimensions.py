@@ -19,20 +19,19 @@ DIM_DICT = {
     "nbinMS": "range",
     "nbinHS": "range",
     "nbinFS": "range",
-    "nfreq": "frequency",
+    "nfreq": "radar_frequency",
     "nDSD": "DSD_params",
     # 2B-GPM-CORRA
-    "nBnPSD": "range",  # 88 bins (250 m each bin)
+    "nBnPSD": "range",  # V7 88 bins (250 m each bin)
+    "nBnPSDhi": "range",  # V6 88 bins (250 m each bin)
     # "nBnEnv": "nBnEnv",
-    "nemiss": "frequency_gmi",
-    "nKuKa": "frequency_dpr",
+    "nemiss": "pmw_frequency",
+    "nKuKa": "radar_frequency",
     # PMW 1B-GMI (V7)
     "npix1": "cross_track",  # PMW (i.e. GMI)
     "npix2": "cross_track",  # PMW (i.e. GMI)
-    "nfreq1": "frequency",
-    "nfreq2": "frequency",
-    "nchan1": "channel",
-    "nchan2": "channel",
+    "nchan1": "pmw_frequency",
+    "nchan2": "pmw_frequency",
     # PMW 1C-GMI (V7)
     "npixel1": "cross_track",
     "npixel2": "cross_track",
@@ -49,12 +48,12 @@ DIM_DICT = {
     "npixelev4": "cross_track",
     "npixelev5": "cross_track",
     "npixelev6": "cross_track",
-    "nchannel1": "channel",
-    "nchannel2": "channel",
-    "nchannel3": "channel",
-    "nchannel4": "channel",
-    "nchannel5": "channel",
-    "nchannel6": "channel",
+    "nchannel1": "pmw_frequency",
+    "nchannel2": "pmw_frequency",
+    "nchannel3": "pmw_frequency",
+    "nchannel4": "pmw_frequency",
+    "nchannel5": "pmw_frequency",
+    "nchannel6": "pmw_frequency",
     # PMW 1A-GMI (V7)
     "npixelev": "cross_track",
     "npixelht": "cross_track",
@@ -75,7 +74,7 @@ SPATIAL_DIMS = [
     "y",  # compatibility with satpy/gpm_geo i.e.
 ]
 VERTICAL_DIMS = ["range", "nBnEnv"]
-FREQUENCY_DIMS = ["channel", "frequency", "frequency_gmi", "frequency_dpr"]
+FREQUENCY_DIMS = ["radar_frequency", "pmw_frequency"]
 GRID_SPATIAL_DIMS = ("lon", "lat")
 ORBIT_SPATIAL_DIMS = ("cross_track", "along_track")
 
