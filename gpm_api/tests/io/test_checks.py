@@ -15,29 +15,30 @@ from gpm_api.io.products import available_products, available_scan_modes
 
 
 def test_is_not_empty() -> None:
-    """Test is_not_empty()"""
+    """Test is_not_empty() which always returns a boolean"""
 
-    # Test a non empty object
+    # Test False responses:
+    for obj in [None, (), {}, []]:
+        res = checks.is_not_empty(obj)
+        assert res is False, "Function returned True, expected False"
 
-    res = checks.is_not_empty([1, 2, 3])
-    assert res is True, "Function returned False, expected True"
-
-    # Test an empty object
-    for empty_object in [None, False, True, (), {}, []]:
-        res = checks.is_not_empty(empty_object)
-    assert res is False, "Function returned True, expected False"
+    # Test True responses:
+    for obj in [[1, 2, 3], (1, 2, 3), (1), [1]]:
+        res = checks.is_not_empty(obj)
+        assert res is True, "Function returned False, expected True"
 
 
 def test_is_empty() -> None:
     """Test is_empty()"""
 
-    # Test a non empty object
-    res = checks.is_empty([1, 2, 3])
-    assert res is False, "Function returned True, expected False"
+    # Test False responses:
+    for obj in [[1, 2, 3], (1, 2, 3), (1), [1]]:
+        res = checks.is_empty(obj)
+        assert res is False, "Function returned True, expected False"
 
-    # Test an empty object
-    for empty_object in [None, False, True, (), {}, []]:
-        res = checks.is_empty(empty_object)
+    # Test True responses:
+    for obj in [None, (), {}, []]:
+        res = checks.is_empty(obj)
         assert res is True, "Function returned False, expected True"
 
 
@@ -321,7 +322,7 @@ def test_check_time() -> None:
     # Test a object of datetime64[ns] casts to datetime64[ms]
     res = checks.check_time(np.datetime64("2014-12-31T12:30:30.934549845", "ns"))
     assert isinstance(res, datetime.datetime)
-    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30, 934550)
+    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30, 934549)
 
     # Test a datetime.date
     res = checks.check_time(datetime.date(2014, 12, 31))

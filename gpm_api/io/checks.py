@@ -157,15 +157,15 @@ def check_time(time):
     if isinstance(time, np.ndarray):
         if np.issubdtype(time.dtype, np.datetime64):
             if time.size == 1:
-                time = time.astype("datetime64[s]").tolist()
+                time = time.astype("datetime64[us]").tolist()
             else:
                 raise ValueError("Expecting a single timestep!")
         else:
             raise ValueError("The numpy array does not have a np.datetime64 dtype!")
 
-    # If np.datetime64, convert to datetime.datetime
+    # If np.datetime64, convert to datetime.datetime with microsecond precision
     if isinstance(time, np.datetime64):
-        time = time.astype("datetime64[s]").tolist()
+        time = time.astype("datetime64[us]").tolist()
     # If datetime.date, convert to datetime.datetime
     if not isinstance(time, (datetime.datetime, str)):
         time = datetime.datetime(time.year, time.month, time.day, 0, 0, 0)
