@@ -178,8 +178,12 @@ def check_time(time):
 
 
 def check_date(date):
+    if date is None:
+        raise ValueError("date cannot be None")
     if not isinstance(date, (datetime.date, datetime.datetime)):
-        raise ValueError("date must be a datetime object")
+        # Use check_time to convert to datetime.datetime
+        datetime_obj = check_time(date)
+        return datetime_obj.date()
     if isinstance(date, datetime.datetime):
         date = date.date()
     return date
@@ -225,25 +229,3 @@ def check_scan_mode(scan_mode, product, version):
 
     # -------------------------------------------------------------------------.
     return scan_mode
-
-
-def check_bbox(bbox):
-    """
-    Check correctness of bounding box.
-    bbox format: [lon_0, lon_1, lat_0, lat_1]
-    bbox should be provided with longitude between -180 and 180, and latitude
-    between -90 and 90.
-    """
-    if bbox is None:
-        return bbox
-    # If bbox provided
-    if not (isinstance(bbox, list) and len(bbox) == 4):
-        raise ValueError("Provide valid bbox [lon_0, lon_1, lat_0, lat_1]")
-    if bbox[2] > 90 or bbox[2] < -90 or bbox[3] > 90 or bbox[3] < -90:
-        raise ValueError("Latitude is defined between -90 and 90")
-    # Try to be sure that longitude is specified between -180 and 180
-    if bbox[0] > 180 or bbox[1] > 180:
-        print("bbox should be provided with longitude between -180 and 180")
-        bbox[0] = bbox[0] - 180
-        bbox[1] = bbox[1] - 180
-    return bbox
