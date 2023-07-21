@@ -112,6 +112,22 @@ def infill_invalid_coords(xr_obj, mask_variables=True):
 # da.gpm_api.pyresample_area.outer_boundary.sides ..
 
 
+def _remove_invalid_outer_cross_track(xr_obj):
+    """Remove outer crosstrack scans if geolocation is always missing."""
+    lon = np.asanyarray(xr_obj["lon"].transpose("cross_track", "along_track"))
+    isna = np.all(np.isnan(lon), axis=1)
+    if isna[0] or isna[-1]:
+        # Find the index where the first False value occurs
+        start_index = np.argmax(isna is False)
+        # Find the index where the first False value occurs (from the end)
+        end_index = len(isna) - np.argmax(isna[::-1] is False)
+        # Define slice
+        slc = slice(start_index, end_index)
+        # Subset object
+        xr_obj = xr_obj.isel({"cross_track": slc})
+    return xr_obj
+
+
 def _call_over_contiguous_scans(function):
     """Decorator to call the plotting function multiple times only over contiguous scans intervals."""
 
@@ -142,6 +158,9 @@ def _call_over_contiguous_scans(function):
 
             # Retrieve contiguous data array
             tmp_da = da.isel(along_track=slc)
+
+            # Remove outer cross-track indices if all without coordinates
+            tmp_da = _remove_invalid_outer_cross_track(tmp_da)
 
             # Replace invalid coordinate with closer value
             # - This might be necessary for some products
