@@ -2,21 +2,4 @@ name: gpm_api
 channels:
   - conda-forge
 dependencies:
-  - xarray
-  - xarray-datatree
-  - h5py", # TO DISCARD IN FUTU
-  - netcdf4
-  - dask
-  - wget
-  - tqdm
-  - click
-  - trollsift
-  - pyresample", # TO MAKE OPTION
-  - cartopy>=0.20.0",  # TO MAKE OPTION
-  # image
-  - ximage
-  # testing
-  - pytest
-  - pytest-cov
-  - pytest-mock
-  - pydantic
+  - cartopy>=0.20.0

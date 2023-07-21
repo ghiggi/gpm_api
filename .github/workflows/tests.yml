@@ -34,23 +34,27 @@ jobs:
           python-version: ${{ matrix.python-version }}
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Install dependencies
-        run: |
-          sudo apt install libgeos-dev
-          pip install -U pip
-          pip install -e .[ximage,dev]
-          if echo ${{ matrix.experimental }} | grep -c "true"
-          then
-            pip --disable-pip-version-check list --outdated --format=json | python -c "import json, sys; print('\n'.join([x['name'] for x in json.load(sys.stdin)]))" | xargs -n1 pip install -U
-          fi
-        shell: bash
-        if: matrix.os == 'ubuntu-latest'
-
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: "./environment.yml"
         if: matrix.os == 'windows-latest'
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt install libgeos-dev
+        if: matrix.os == 'linux-latest'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -e .[image,dev]
+
+      - name: Update dependencies
+        run: |
+          pip --disable-pip-version-check list --outdated --format=json | python -c "import json, sys; print('\n'.join([x['name'] for x in json.load(sys.stdin)]))" | xargs -n1 pip install -U
+        shell: bash
+        if: matrix.experimental
 
       - name: Test with pytest
         run: |
