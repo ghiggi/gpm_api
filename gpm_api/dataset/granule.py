@@ -94,7 +94,7 @@ def _get_flattened_scan_mode_dataset(dt, scan_mode, groups, variables=None, pref
             group = ""
         else:
             ds = dt[scan_mode][group].to_dataset()
-        ds = _process_group_dataset(ds, group, variables, prefix_group=False)
+        ds = _process_group_dataset(ds, group, variables, prefix_group=prefix_group)
         list_ds.append(ds)
     ds = xr.merge(list_ds)
     return ds
