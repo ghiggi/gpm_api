@@ -43,7 +43,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt install libgeos-dev
-        if: matrix.os == 'linux-latest'
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Install Python dependencies
         run: |
