@@ -180,6 +180,10 @@ def apply_custom_decoding(ds, product, scan_mode):
     # Clean attributes
     ds = clean_dataarrays_attrs(ds, product)
 
+    #### Convert sunLocalTime to hourly timedelta
+    if "sunLocalTime" in ds:
+        ds["sunLocalTime"] = ds["sunLocalTime"] / 10**9 / 60 / 60
+
     #### 1C-PMW
     if product.startswith("1C"):
         if "pmw_frequency" in list(ds.dims):
