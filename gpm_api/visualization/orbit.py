@@ -26,6 +26,39 @@ from gpm_api.visualization.plot import (
 )
 
 
+def plot_swath(ds, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **kwargs):
+    """Plot GPM orbit granule."""
+    from shapely import Polygon
+
+    # TODO: swath_def.plot() one day ...
+    # - iterate by descending/ascending blocks
+    # - ensure ccw boundary
+
+    # Retrieve polygon
+    swath_def = ds.gpm_api.pyresample_area
+    boundary = swath_def.boundary(force_clockwise=True)
+    polygon = Polygon(boundary.vertices[::-1])
+
+    # - Initialize figure
+    subplot_kwargs = kwargs.get("subplot_kwargs", {})
+    fig_kwargs = kwargs.get("fig_kwargs", {})
+    if ax is None:
+        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
+        # - Add cartopy background
+        ax = plot_cartopy_background(ax)
+
+    p = ax.add_geometries(
+        [polygon],
+        crs=ccrs.Geodetic(),
+        facecolor=facecolor,
+        edgecolor=edgecolor,
+        alpha=alpha,
+        **kwargs,
+    )
+    return p
+
+
 def plot_swath_lines(ds, ax=None, linestyle="--", color="k", **kwargs):
     """Plot GPM orbit granule swath lines."""
     # - 0.0485 to account for 2.5 km from pixel center
@@ -59,7 +92,7 @@ def plot_swath_lines(ds, ax=None, linestyle="--", color="k", **kwargs):
         color=color,
         **kwargs,
     )
-    return p
+    return p[0]
 
 
 def infill_invalid_coords(xr_obj, mask_variables=True):
@@ -236,7 +269,7 @@ def plot_orbit_map(
 
     # - Add swath lines
     if add_swath_lines:
-        plot_swath_lines(da, ax=ax, linestyle="--", color="black")
+        p = plot_swath_lines(da, ax=ax, linestyle="--", color="black")
 
     # - Add variable field with cartopy
     p = _plot_cartopy_pcolormesh(
