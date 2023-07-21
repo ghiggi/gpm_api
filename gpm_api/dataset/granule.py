@@ -230,7 +230,7 @@ def open_granule(
     variables=None,
     decode_cf=False,
     chunks={},
-    prefix_group=True,
+    prefix_group=False,
     use_gpm_api_defaults=True,
 ):
     """

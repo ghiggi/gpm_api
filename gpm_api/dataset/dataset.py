@@ -133,7 +133,7 @@ def open_dataset(
     product_type="RS",
     chunks={},
     decode_cf=True,
-    prefix_group=True,
+    prefix_group=False,
     verbose=False,
     base_dir=None,
 ):
