@@ -36,9 +36,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: Set up micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: "./environment.yml"
+          micromamba-version: "latest"
         if: matrix.os == 'windows-latest'
 
       - name: Install Linux dependencies
