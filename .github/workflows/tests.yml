@@ -47,7 +47,7 @@ jobs:
         if: matrix.os == "ubuntu-latest"
 
       - name: Set up micromamba
-        uses: uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: "./environment.yml"
         if: matrix.os == "windows-latest"
