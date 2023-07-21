@@ -461,7 +461,18 @@ COLOR_DICT = {
         "cmap": "YlGnBu",
         "cmap_type": "Colormap",
         "vmin": 0.1,  # kg/m2
-        # "vmax": 3000, # 3000
+        "vmax": 1,  # 3000
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Cloud Liquid Water Path [$kg \\ m^{-2}$]",
+    },
+    "cloudLiquidWaterPath": {
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.1,  # kg/m2
+        "vmax": 1,  # 3000
         "extend": "max",
         "extendfrac": 0.05,
         "label": "Cloud Liquid Water Path [$kg \\ m^{-2}$]",
