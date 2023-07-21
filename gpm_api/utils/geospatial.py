@@ -236,6 +236,50 @@ def crop(xr_obj, extent):
 #### TODO MOVE TO pyresample accessor !!!
 
 
+def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
+    """Remap data from one dataset to another one."""
+    from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
+
+    # Retrieve source and destination area
+    src_area = src_ds.gpm_api.pyresample_area
+    dst_area = dst_ds.gpm_api.pyresample_area
+
+    # Rename dimensions to x, y for pyresample compatibility
+    if src_ds.gpm_api.is_orbit:
+        src_ds = src_ds.swap_dims({"cross_track": "y", "along_track": "x"})
+    else:
+        src_ds = src_ds.swap_dims({"lat": "y", "lon": "x"})
+
+    # Define resampler
+    resampler = KDTreeNearestXarrayResampler(src_area, dst_area)
+    resampler.precompute(radius_of_influence=radius_of_influence)
+
+    # Retrieve valid variables
+    variables = [var for var in src_ds.data_vars if set(src_ds[var].dims).issuperset({"x", "y"})]
+
+    # Remap DataArrays
+    da_dict = {var: resampler.resample(src_ds[var], fill_value=fill_value) for var in variables}
+
+    # Create Dataset
+    ds = xr.Dataset(da_dict)
+
+    # Set correct dimensions
+    if dst_ds.gpm_api.is_orbit:
+        ds = ds.swap_dims({"y": "cross_track", "x": "along_track"})
+    else:
+        ds = ds.swap_dims({"y": "lat", "x": "lon"})
+
+    # Add relevant coordinates of dst_ds
+    dst_available_coords = list(dst_ds.coords)
+    useful_coords = []
+    for coord in dst_available_coords:
+        if np.all(np.isin(dst_ds[coord].dims, ds.dims)):
+            useful_coords.append(coord)
+    dict_coords = {coord: dst_ds[coord] for coord in useful_coords}
+    ds = ds.assign_coords(dict_coords)
+    return ds
+
+
 def get_pyresample_area(xr_obj):
     """It returns the corresponding pyresample area."""
     from pyresample import SwathDefinition
