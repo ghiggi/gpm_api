@@ -410,3 +410,10 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
         return p
+
+    def integrate_profile_concentration(self, name, scale_factor=None, units=None):
+        from gpm_api.utils.manipulations import integrate_profile_concentration
+
+        return integrate_profile_concentration(
+            self._obj, name=name, scale_factor=scale_factor, units=units
+        )
