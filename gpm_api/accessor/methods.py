@@ -64,6 +64,14 @@ class GPM_Base_Accessor:
 
         return get_pyresample_area(self._obj)
 
+    def remap_on(self, dst_ds, radius_of_influence=20000, fill_value=np.nan):
+        """Remap data from one dataset to another one."""
+        from gpm_api.utils.geospatial import remap
+
+        return remap(
+            self._obj, dst_ds=dst_ds, radius_of_influence=radius_of_influence, fill_value=fill_value
+        )
+
     @property
     def is_orbit(self):
         from gpm_api.checks import is_orbit
@@ -201,6 +209,14 @@ class GPM_Base_Accessor:
         from gpm_api.visualization.profile import plot_transect_line
 
         p = plot_transect_line(self._obj, ax=ax, color=color)
+        return p
+
+    def plot_swath(self, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **kwargs):
+        from gpm_api.visualization.orbit import plot_swath
+
+        p = plot_swath(
+            self._obj, ax=ax, facecolor=facecolor, edgecolor=edgecolor, alpha=alpha, **kwargs
+        )
         return p
 
     def plot_swath_lines(self, ax=None, linestyle="--", color="k", **kwargs):
