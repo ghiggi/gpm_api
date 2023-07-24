@@ -49,6 +49,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip list
+          micromamba list
           pip install -U pip
           pip install -e .[image,dev]
 
