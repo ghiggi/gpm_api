@@ -48,18 +48,10 @@ jobs:
           sudo apt install libgeos-dev
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Install Python dependencies (Linux)
+      - name: Install Python dependencies
         run: |
           pip install -U pip
           pip install -e .[image,dev]
-
-      - name: Install Python dependencies (Windows)
-        run: |
-          micromamba list
-          pip list
-          pip install -U pip
-          pip install -e .[image,dev]
-        shell: pwsh
 
       - name: Update dependencies
         run: |
