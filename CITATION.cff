@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+title: GPM-API
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Gionata
+    family-names: Ghiggi
+    email: gionata.ghiggi@epfl.ch
+    affiliation: EFPL
+    orcid: 'https://orcid.org/0000-0002-0818-0865'
+repository-code: 'https://github.com/ghiggi/gpm_api'
+license: MIT
