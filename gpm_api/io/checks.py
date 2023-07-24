@@ -32,7 +32,7 @@ def check_base_dir(base_dir):
         Base directory where the GPM directory is located.
     """
     # Check base_dir does not end with /
-    if base_dir[-1] == "/":
+    if base_dir[-1] == os.path.sep:
         base_dir = base_dir[0:-1]
     # Retrieve last folder name
     dir_name = os.path.basename(base_dir)
@@ -180,13 +180,10 @@ def check_time(time):
 def check_date(date):
     if date is None:
         raise ValueError("date cannot be None")
-    if not isinstance(date, (datetime.date, datetime.datetime)):
-        # Use check_time to convert to datetime.datetime
-        datetime_obj = check_time(date)
-        return datetime_obj.date()
-    if isinstance(date, datetime.datetime):
-        date = date.date()
-    return date
+
+    # Use check_time to convert to datetime.datetime
+    datetime_obj = check_time(date)
+    return datetime_obj.date()
 
 
 def check_start_end_time(start_time, end_time):

@@ -9,6 +9,7 @@ Created on Mon Jul 17 15:41:14 2023
 import pytest
 import datetime
 import numpy as np
+import os
 import platform
 from gpm_api.io import checks
 from gpm_api.io.products import available_products, available_scan_modes
@@ -57,9 +58,8 @@ def test_check_base_dir() -> None:
     res = checks.check_base_dir("/home/user/gpm/GPM")
     assert res == "/home/user/gpm", "GPM is not removed"
 
-    # # Check windows path
-    # res = checks.check_base_dir("C:\\home\\user\\gpm\\GPM")
-    # assert res == "C:\\home\\user\\gpm", "GPM is not removed"
+    res = checks.check_base_dir(f"{os.path.join(os.getcwd(), 'home', 'user', 'gpm')}{os.path.sep}")
+    assert res == os.path.join(os.getcwd(), "home", "user", "gpm"), "Leading slash is not removed"
 
 
 def test_check_filepaths() -> None:
@@ -67,8 +67,18 @@ def test_check_filepaths() -> None:
 
     # Create list of unique filepaths (may not reflect real files)
     filepaths = [
-        "/home/user/gpm/2A.GPM.DPR.V8-20180723.20141231-S003429-E020702.004384.V06A.HDF5",
-        "/home/user/gpm/2A.GPM.DPR.V8-20180723.20180603-S003429-E020702.004384.V06A.HDF5",
+        os.path.join(
+            "home",
+            "user",
+            "gpm",
+            "2A.GPM.DPR.V8-20180723.20141231-S003429-E020702.004384.V06A.HDF5",
+        ),
+        os.path.join(
+            "home",
+            "user",
+            "gpm",
+            "2A.GPM.DPR.V8-20180723.20180603-S003429-E020702.004384.V06A.HDF5",
+        ),
     ]
 
     res = checks.check_filepaths(filepaths)
