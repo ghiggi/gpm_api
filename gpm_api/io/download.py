@@ -61,7 +61,7 @@ def curl_cmd(server_path, disk_path, username, password):
     # -------------------------------------------------------------------------.
     # Replace ftps with ftp to make curl work !!!
     # - curl expects ftp:// and not ftps://
-    server_path = server_path.replace("ftps", "ftp", 1)
+    server_path = server_path.replace("ftps://", "ftp://", 1)
     # -------------------------------------------------------------------------.
     ## Define command to run
     # Base command: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
@@ -247,7 +247,6 @@ def _download_files(
     progress_bar=True,
     verbose=False,
 ):
-
     if transfer_tool == "curl":
         list_cmd = [
             curl_cmd(src_path, dst_path, username, username)
