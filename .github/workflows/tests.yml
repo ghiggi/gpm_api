@@ -39,6 +39,8 @@ jobs:
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: "./environment.yml"
+        init-shell: >-
+          powershell
         if: matrix.os == 'windows-latest'
 
       - name: Install Linux dependencies
@@ -46,12 +48,18 @@ jobs:
           sudo apt install libgeos-dev
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies (Linux)
         run: |
-          pip list
-          micromamba list
           pip install -U pip
           pip install -e .[image,dev]
+
+      - name: Install Python dependencies (Windows)
+        run: |
+          micromamba list
+          pip list
+          pip install -U pip
+          pip install -e .[image,dev]
+        shell: pwsh
 
       - name: Update dependencies
         run: |
