@@ -79,7 +79,7 @@ To install the project in editable mode :
 
 .. code-block:: bash
 
-	pip install -e .[image,dev]
+	pip install -e ".[image,dev]"
 
 
 
