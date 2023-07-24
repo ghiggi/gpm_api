@@ -18,7 +18,7 @@ Installation for standard users
 pip-based installation
 ..............................
 
-GPI-API is available from the `Python Packaging Index (PyPI) <https://pypi.org/>`__ as follow:
+GPM-API is available from the `Python Packaging Index (PyPI) <https://pypi.org/>`__ as follow:
 
 
 .. code-block:: bash
@@ -26,9 +26,31 @@ GPI-API is available from the `Python Packaging Index (PyPI) <https://pypi.org/>
    pip install gpm_api
 
 
-Prior installation of GPM-API, to avoid `GEOS <https://libgeos.org/>`_ library version incompatibilities when
-installing the Cartopy package, we highly suggest to install first Cartopy using ``conda install cartopy>=0.21.0``.
-Alternatively, on Linux, you can install GEOS using your package manager (e.g. ``apt install libgeos-dev``).
+Dependencies
+============
+
+GPM-API depends on the ``cartopy`` Python package, which relies on the `GEOS <https://libgeos.org/>`_ library for its installation.
+
+Linux
+.....
+
+On Linux, prior to the installation of GPM-API, you can install GEOS using your package manager (e.g. ``apt install libgeos-dev``). Then, install ``gpm_api`` using ``pip`` (see above).
+
+Windows
+.......
+
+On Windows, the simplest method is to install Cartopy from the `conda-forge <https://conda-forge.org/>`_ channel using for example
+
+.. code-block:: bash
+
+   conda install cartopy>=0.20.0
+
+Alternatively, if you are not using ``conda`` as an environment manager, there are `unofficial already-build Cartopy wheels <https://www.lfd.uci.edu/~gohlke/pythonlibs/#cartopy>`_. Download the wheel corresponding to your system (see `naming scheme <https://docs.fileformat.com/compression/whl/>`_) and run
+
+.. code-block:: bash
+
+   pip install cartopy-0.xx.x-cp3x-cp3xm-win_xxxxx.whl
+
 
 
 
@@ -36,7 +58,7 @@ Installation for contributors
 ================================
 
 
-The latest GPI-API stable version is available on the GitHub repository `GPI-API <https://github.com/ghiggi/gpm_api>`_.
+The latest GPM-API stable version is available on the GitHub repository `GPM-API <https://github.com/ghiggi/gpm_api>`_.
 
 Clone the repository from GitHub
 .........................................
@@ -77,7 +99,7 @@ root:
 The pre-commit hooks are scripts executed automatically in every commit
 to identify simple code quality issues. When an issue is identified
 (the pre-commit script exits with non-zero status), the hook aborts the
-commit and prints the error. Currently, GPI-API tests that the
+commit and prints the error. Currently, GPM-API tests that the
 code to be committed complies with `black’s  <https://github.com/psf/black>`__ format style
 and the `ruff <https://github.com/charliermarsh/ruff>`__ linter.
 
@@ -93,7 +115,7 @@ The latter is recommended since it indicates if the commit contained any formatt
 Virtual environment
 ==================================
 
-While not mandatory, utilizing a virtual environment when installing GPI-API is recommended. Using a virtual environment for installing packages provides isolation of dependencies, easier package management, easier maintenance, improved security, and improved development workflow.
+While not mandatory, utilizing a virtual environment when installing GPM-API is recommended. Using a virtual environment for installing packages provides isolation of dependencies, easier package management, easier maintenance, improved security, and improved development workflow.
 
 
 
@@ -106,8 +128,7 @@ To set up a virtual environment, follow these steps :
 		.. code-block:: bash
 
 		   python -m venv gpm-api-dev
-		   cd gpm-api-dev/Scripts
-		   activate
+		   .\gpm-api-dev\Scripts\activate
 
 
 	* Mac/Linux: Create a virtual environment with venv:
@@ -127,18 +148,18 @@ To set up a virtual environment, follow these steps :
 
 			conda create --name gpm-api-dev python=3.9 --no-default-packages
 
-	* Activate the GPI-API conda environment:
+	* Activate the GPM-API conda environment:
 
 		.. code-block:: bash
 
 			conda activate gpm-api-dev
 
 
-Run GPI-API on Jupyter Notebooks
+Run GPM-API on Jupyter Notebooks
 ==================================
 
-If you want to run GPI-API on a `Jupyter Notebook <https://jupyter.org/>`__,
-you have to take care to set up the IPython kernel environment where GPI-API is installed.
+If you want to run GPM-API on a `Jupyter Notebook <https://jupyter.org/>`__,
+you have to take care to set up the IPython kernel environment where GPM-API is installed.
 
 For example, if your conda/virtual environment is named `gpm-api-dev`, run:
 
