@@ -39,8 +39,8 @@ jobs:
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: "./environment.yml"
-        init-shell: >-
-          powershell
+          init-shell: >-
+            powershell
         if: matrix.os == 'windows-latest'
 
       - name: Install Linux dependencies
