@@ -40,6 +40,11 @@ jobs:
           fi
         shell: bash
 
+      - name: Add annotations import for Python 3.8
+        if: ${{ matrix.python-version == '3.8' }}
+        run: |
+          find . -name "test_*.py" -exec sed -i '1s/^/from __future__ import annotations\n/' {} +
+
       - name: Test with pytest
         run: |
           coverage run -m pytest
