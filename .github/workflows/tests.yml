@@ -48,6 +48,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
+          pip list
           pip install -U pip
           pip install -e .[image,dev]
 
