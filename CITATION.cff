@@ -10,7 +10,6 @@ authors:
     email: gionata.ghiggi@epfl.ch
     affiliation: EFPL
     orcid: 'https://orcid.org/0000-0002-0818-0865'
-  - given-names: Randy
     family-names: Chase
     email: randy.chase12@gmail.com
 repository-code: 'https://github.com/ghiggi/gpm_api'
