@@ -1,14 +1,15 @@
 import pytest
 import datetime
 import os
+from typing import List
 from pytest_mock import MockerFixture
 from gpm_api.io import directories as dir
 from gpm_api.io.products import available_products, get_info_dict
 
 
 def test_get_product_category(
-    products: list[str],
-    product_categories: list[str],
+    products: List[str],
+    product_categories: List[str],
 ) -> None:
     """Test that the product category is in the list of product categories."""
     for product in products:
@@ -27,9 +28,9 @@ def test_get_product_category(
 
 
 def test_get_disk_dir_pattern(
-    products: list[str],
-    product_types: list[str],
-    versions: list[int],
+    products: List[str],
+    product_types: List[str],
+    versions: List[int],
 ) -> None:
     """Test that the disk directory pattern is correct."""
 
@@ -59,9 +60,9 @@ def test_get_disk_dir_pattern(
 
 
 def test_get_disk_directory(
-    products: list[str],
-    product_types: list[str],
-    versions: list[int],
+    products: List[str],
+    product_types: List[str],
+    versions: List[int],
 ) -> None:
     """Test that the disk directory is correct."""
 
@@ -104,7 +105,7 @@ def test_get_disk_directory(
                         )
 
 
-def test_get_pps_nrt_product_dir(products: list[str]) -> None:
+def test_get_pps_nrt_product_dir(products: List[str]) -> None:
     """Test NRT product type folder name
 
     Depends on gpm_api.io.directories._get_pps_nrt_product_folder_name()

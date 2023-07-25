@@ -2,7 +2,7 @@ import pytest
 import os
 import datetime
 import ftplib
-from typing import Any
+from typing import Any, List, Dict
 from pytest_mock.plugin import MockerFixture
 from gpm_api.io import download as dl
 from gpm_api.io.products import available_products
@@ -11,7 +11,7 @@ from gpm_api.io.products import available_products
 def test_construct_curl_cmd(
     username: str,
     password: str,
-    server_paths: list[str],
+    server_paths: List[str],
     tmpdir: str,
 ) -> None:
     """Test that the curl command constructor works as expected
@@ -66,7 +66,7 @@ def test_construct_curl_cmd(
 def test_construct_wget_cmd(
     username: str,
     password: str,
-    server_paths: list[str],
+    server_paths: List[str],
     tmpdir: str,
 ) -> None:
     """Test that the wget command constructor works as expected
@@ -115,11 +115,11 @@ def test_construct_wget_cmd(
 # May be better to test child functions... (get_disk_directory, get_start_time_from_filepaths)
 
 # def test_convert_pps_to_disk_filepaths(
-#     server_paths: list[str],
-#     products: list[str],
-#     product_categories: list[str],
-#     product_types: list[str],
-#     versions: list[int],
+#     server_paths: List[str],
+#     products: List[str],
+#     product_categories: List[str],
+#     product_types: List[str],
+#     versions: List[int],
 #     tmpdir: str,
 # ) -> None:
 #     """Test that the PPS filepaths are correctly converted to disk filepaths"""
@@ -199,7 +199,7 @@ def test_construct_wget_cmd(
 
 def test_download_with_ftplib(
     mocker: MockerFixture,
-    server_paths: dict[str, dict[str, Any]],
+    server_paths: Dict[str, Dict[str, Any]],
     username: str,
     password: str,
     tmpdir: str,

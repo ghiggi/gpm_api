@@ -11,6 +11,7 @@ import datetime
 import numpy as np
 import os
 import platform
+from typing import List
 from gpm_api.io import checks
 from gpm_api.io.products import available_products, available_scan_modes
 
@@ -159,7 +160,7 @@ def test_check_groups() -> None:
 
 
 def test_check_version(
-    versions: list[int],
+    versions: List[int],
 ) -> None:
     """Test check_version()
 
@@ -190,7 +191,7 @@ def test_check_version(
 
 
 def test_check_product(
-    product_types: list[str],
+    product_types: List[str],
 ) -> None:
     """Test check_product()
 
@@ -212,7 +213,7 @@ def test_check_product(
 
 
 def test_check_product_type(
-    product_types: list[str],
+    product_types: List[str],
 ) -> None:
     """Test check_product_type()"""
 
@@ -230,7 +231,7 @@ def test_check_product_type(
 
 
 def test_check_product_category(
-    product_categories: list[str],
+    product_categories: List[str],
 ) -> None:
     """Test check_product_category()"""
 
@@ -253,7 +254,7 @@ def test_check_product_category(
 
 
 def test_check_product_level(
-    product_levels: list[str],
+    product_levels: List[str],
 ) -> None:
     """Test check_product_level()"""
 
@@ -276,7 +277,7 @@ def test_check_product_level(
 
 
 def test_check_product_validity(
-    product_types: list[str],
+    product_types: List[str],
 ) -> None:
     """Test check_product_validity()"""
 
@@ -425,8 +426,8 @@ def test_check_start_end_time() -> None:
 
 
 def test_check_scan_mode(
-    versions: list[int],
-    products: list[str],
+    versions: List[int],
+    products: List[str],
 ) -> None:
     """Check scan mode is valid"""
 

@@ -1,10 +1,10 @@
 import pytest
 from gpm_api.io import info
-from typing import Any
+from typing import Any, Dict
 
 
 def test_get_start_time_from_filepaths(
-    server_paths: dict[str, dict[str, Any]],
+    server_paths: Dict[str, Dict[str, Any]],
 ) -> None:
     """Test that the start time is correctly extracted from filepaths"""
 
@@ -16,7 +16,7 @@ def test_get_start_time_from_filepaths(
 
 
 def test_get_end_time_from_filepaths(
-    server_paths: dict[str, dict[str, Any]],
+    server_paths: Dict[str, Dict[str, Any]],
 ) -> None:
     """Test that the end time is correctly extracted from filepaths"""
 
@@ -28,7 +28,7 @@ def test_get_end_time_from_filepaths(
 
 
 def test_get_version_from_filepaths(
-    server_paths: dict[str, dict[str, Any]],
+    server_paths: Dict[str, Dict[str, Any]],
 ) -> None:
     """Test that the version is correctly extracted from filepaths"""
 

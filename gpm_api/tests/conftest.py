@@ -1,11 +1,11 @@
 import pytest
 import datetime
-from typing import Any
+from typing import Any, List, Dict
 from gpm_api.io.products import get_info_dict, available_products
 
 
 @pytest.fixture
-def product_types() -> list[str]:
+def product_types() -> List[str]:
     """Return a list of all product types from the info dict"""
     product_types = []
     for product, props in get_info_dict().items():
@@ -17,14 +17,14 @@ def product_types() -> list[str]:
 
 
 @pytest.fixture
-def product_categories() -> list[str]:
+def product_categories() -> List[str]:
     """Return a list of product categories from the info dict"""
 
     return list(set([props["product_category"] for props in get_info_dict().values()]))
 
 
 @pytest.fixture
-def product_levels() -> list[str]:
+def product_levels() -> List[str]:
     """Return a list of product levels from the info dict"""
 
     # Available in gpm_api.io.checks.check_product_level()
@@ -32,7 +32,7 @@ def product_levels() -> list[str]:
 
 
 @pytest.fixture
-def versions() -> list[int]:
+def versions() -> List[int]:
     """Return a list of versions"""
 
     # Available in gpm_api.io.checks.check_version()
@@ -40,7 +40,7 @@ def versions() -> list[int]:
 
 
 @pytest.fixture
-def products() -> list[str]:
+def products() -> List[str]:
     """Return a list of all products regardless of type"""
 
     return available_products()
@@ -67,7 +67,7 @@ def password() -> str:
 
 
 @pytest.fixture
-def server_paths() -> dict[str, dict[str, Any]]:
+def server_paths() -> Dict[str, Dict[str, Any]]:
     """Return a list of probable GPM server paths"""
 
     # Not validated to be real paths but follow the structure
