@@ -35,16 +35,14 @@ jobs:
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: "./environment.yml"
+          environment-file: "ci/environment.yml"
           create-args: >-
             python=${{ matrix.python-version }}
           init-shell: >-
             bash
-            powershell
 
-      - name: Install Python dependencies
+      - name: Install package
         run: |
-          pip install -U pip
           pip install -e .[image,dev]
 
       - name: Update dependencies
