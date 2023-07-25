@@ -29,12 +29,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-        if: matrix.os == 'ubuntu-latest'
-
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
@@ -42,13 +36,8 @@ jobs:
           create-args: >-
             python=${{ matrix.python-version }}
           init-shell: >-
+            bash
             powershell
-        if: matrix.os == 'windows-latest'
-
-      - name: Install Linux dependencies
-        run: |
-          sudo apt install libgeos-dev
-        if: matrix.os == 'ubuntu-latest'
 
       - name: Install Python dependencies
         run: |
