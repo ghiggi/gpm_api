@@ -10,20 +10,20 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         experimental: [false]
         include:
           - os: "ubuntu-latest"
-            python-version: "3.10"
+            python-version: "3.11"
             experimental: true
 
           - os: "ubuntu-latest"
-            python-version: "3.10"
+            python-version: "3.11"
             experimental: false
             coverage: true
 
           - os: "windows-latest"
-            python-version: ""
+            python-version: "3.11"
             experimental: false
 
     steps:
@@ -39,6 +39,8 @@ jobs:
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: "./environment.yml"
+          create-args: >-
+            python=${{ matrix.python-version }}
           init-shell: >-
             powershell
         if: matrix.os == 'windows-latest'
