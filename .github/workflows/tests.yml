@@ -3,7 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   tests:
-    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', experimental' || '' }}
+    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', latest deps' || '' }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -35,7 +35,7 @@ jobs:
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: "ci/environment.yml"
+          environment-file: ${{ matrix.experimental && 'ci/environment.yml' || 'ci/environment_latest.yml' }}
           create-args: >-
             python=${{ matrix.python-version }}
           init-shell: >-
@@ -44,11 +44,6 @@ jobs:
       - name: Install package
         run: |
           pip install -e .[image,dev]
-
-      - name: Update dependencies
-        run: |
-          pip --disable-pip-version-check list --outdated --format=json | python -c "import json, sys; print('\n'.join([x['name'] for x in json.load(sys.stdin)]))" | xargs -n1 pip install -U
-        if: matrix.experimental
 
       - name: Test with pytest
         run: |
