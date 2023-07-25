@@ -7,9 +7,9 @@ Created on Thu Jan 19 16:19:22 2023
 """
 import datetime
 from gpm_api.configs import get_gpm_base_dir
+from gpm_api.io.data_integrity import check_archive_integrity
 from gpm_api.utils.archive import (
     check_archive_completeness,
-    check_file_integrity,
     check_no_duplicated_files,
 )
 
@@ -35,7 +35,7 @@ check_no_duplicated_files(
     verbose=True,
 )
 
-check_file_integrity(
+check_archive_integrity(
     base_dir=base_dir,
     product=product,
     start_time=start_time,

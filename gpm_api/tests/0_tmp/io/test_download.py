@@ -10,7 +10,7 @@ import time
 
 import numpy as np
 
-from gpm_api.io.download import curl_cmd, download_data, run, wget_cmd
+from gpm_api.io.download import curl_cmd, download_archive, run, wget_cmd
 
 ####-------------------------------------------------------------------------.
 #### Test gpm_api.download function
@@ -29,7 +29,7 @@ n_threads = 4
 transfer_tool = "curl"  # works
 transfer_tool = "wget"  # buggy ... especially with lot of threads
 
-l_corrupted = download_data(
+l_corrupted = download_archive(
     product=product,
     start_time=start_time,
     end_time=end_time,
@@ -242,7 +242,7 @@ print(cmd)
 
 #### ------------------------------------------------------------------------
 #### Test download monthly data
-from gpm_api.utils.archive import download_monthly_data
+from gpm_api.io.download import download_monthly_data
 
 base_dir = "/home/ghiggi/GPM"
 product = "2A-DPR"

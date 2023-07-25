@@ -83,8 +83,10 @@ packages = ["gpm_api"] # explicitly list the packages in modules
 # include = ["io", "..."]
 
 [project.scripts]
-download_daily_gpm_data="gpm_api.scripts.download_daily_gpm_data:download_daily_gpm_data"
-download_monthly_gpm_data="gpm_api.scripts.download_monthly_gpm_data:download_monthly_gpm_data"
+download_gpm_daily_data="gpm_api.scripts.download_gpm_daily_data:download_gpm_daily_data"
+download_gpm_monthly_data="gpm_api.scripts.download_gpm_monthly_data:download_gpm_monthly_data"
+download_gpm_files="gpm_api.scripts.download_gpm_files:download_gpm_files"
+
 
 [tool.pytest.ini_options]
 addopts = "--ignore=gpm_api/tests/0_tmp/"
