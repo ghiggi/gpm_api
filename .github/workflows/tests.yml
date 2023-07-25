@@ -5,6 +5,9 @@ jobs:
   tests:
     name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', experimental' || '' }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
 
     strategy:
       fail-fast: false
@@ -39,24 +42,14 @@ jobs:
             bash
             powershell
 
-      - name: Install package (Linux)
+      - name: Install Python dependencies
         run: |
           pip install -U pip
           pip install -e .[image,dev]
-        shell: bash -el {0}
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-
-      - name: Install package (Windows)
-        run: |
-          pip install -U pip
-          pip install -e .[image,dev]
-        shell: pwsh
-        if: ${{ matrix.os == 'windows-latest' }}
 
       - name: Update dependencies
         run: |
           pip --disable-pip-version-check list --outdated --format=json | python -c "import json, sys; print('\n'.join([x['name'] for x in json.load(sys.stdin)]))" | xargs -n1 pip install -U
-        shell: bash
         if: matrix.experimental
 
       - name: Test with pytest
