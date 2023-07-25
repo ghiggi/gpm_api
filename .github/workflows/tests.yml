@@ -35,7 +35,7 @@ jobs:
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: ${{ matrix.experimental && 'ci/environment.yml' || 'ci/environment_latest.yml' }}
+          environment-file: ${{ matrix.experimental && 'ci/environment_latest.yml' || 'ci/environment.yml' }}
           create-args: >-
             python=${{ matrix.python-version }}
           init-shell: >-
