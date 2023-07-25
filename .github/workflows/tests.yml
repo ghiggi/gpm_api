@@ -39,11 +39,19 @@ jobs:
             bash
             powershell
 
-      - name: Install Python dependencies
+      - name: Install package (Linux)
         run: |
           pip install -U pip
           pip install -e .[image,dev]
-        shell: ${{ matrix.os == 'ubuntu-latest' && 'bash -el {0}' || 'pwsh' }}
+        shell: bash -el {0}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+
+      - name: Install package (Windows)
+        run: |
+          pip install -U pip
+          pip install -e .[image,dev]
+        shell: pwsh
+        if: ${{ matrix.os == 'windows-latest' }}
 
       - name: Update dependencies
         run: |
