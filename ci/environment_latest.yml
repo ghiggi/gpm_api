@@ -10,7 +10,6 @@ dependencies:
   - pyresample
   - tqdm
   - trollsift
-  - wget
   - xarray
   - xarray-datatree
   # testing
