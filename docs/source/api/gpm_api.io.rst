@@ -12,6 +12,14 @@ gpm\_api.io.checks module
    :undoc-members:
    :show-inheritance:
 
+gpm\_api.io.data\_integrity module
+----------------------------------
+
+.. automodule:: gpm_api.io.data_integrity
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 gpm\_api.io.directories module
 ------------------------------
 

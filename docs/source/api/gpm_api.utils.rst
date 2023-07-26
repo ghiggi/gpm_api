@@ -52,6 +52,14 @@ gpm\_api.utils.geospatial module
    :undoc-members:
    :show-inheritance:
 
+gpm\_api.utils.manipulations module
+-----------------------------------
+
+.. automodule:: gpm_api.utils.manipulations
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 gpm\_api.utils.slices module
 ----------------------------
 
@@ -64,6 +72,14 @@ gpm\_api.utils.time module
 --------------------------
 
 .. automodule:: gpm_api.utils.time
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gpm\_api.utils.timing module
+----------------------------
+
+.. automodule:: gpm_api.utils.timing
    :members:
    :undoc-members:
    :show-inheritance:

@@ -17,6 +17,14 @@ Subpackages
 Submodules
 ----------
 
+gpm\_api.checks module
+----------------------
+
+.. automodule:: gpm_api.checks
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 gpm\_api.configs module
 -----------------------
 

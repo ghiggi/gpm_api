@@ -59,3 +59,20 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["static"]
+
+
+# -- Automatically run apidoc to generate rst from code ----------------------
+# https://github.com/readthedocs/readthedocs.org/issues/1139
+def run_apidoc(_):
+    from sphinx.ext.apidoc import main
+
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+    cur_dir = os.path.abspath(os.path.dirname(__file__))
+
+    module_dir = os.path.join(cur_dir, "..", "..", "gpm_api")
+    output_dir = os.path.join(cur_dir, "api")
+    main(["-f", "-o", output_dir, module_dir])
+
+
+def setup(app):
+    app.connect("builder-inited", run_apidoc)
