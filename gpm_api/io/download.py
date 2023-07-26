@@ -1013,6 +1013,8 @@ def download_archive(
     for i, date in enumerate(dates):
         if i == 0:
             warn_missing_files = False
+        elif i == (len(dates) - 1) and date == end_time:
+            warn_missing_files = False
         else:
             warn_missing_files = True
 
