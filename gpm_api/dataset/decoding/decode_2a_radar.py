@@ -211,8 +211,9 @@ def decode_product(ds):
 
     # Preprocess other variables
     # --> Split 3D field in 2D fields
-    if "precipWaterIntegrated" in ds and not ds[variable].attrs.get("gpm_api_decoded", False):
-        print(ds["precipWaterIntegrated"])
+    if "precipWaterIntegrated" in ds and not ds["precipWaterIntegrated"].attrs.get(
+        "gpm_api_decoded", False
+    ):
         ds["precipWaterIntegrated_Liquid"] = ds["precipWaterIntegrated"].isel({"LS": 0})
         ds["precipWaterIntegrated_Solid"] = ds["precipWaterIntegrated"].isel({"LS": 1})
         ds = ds.drop_vars(names="precipWaterIntegrated")
