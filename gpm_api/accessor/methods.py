@@ -72,6 +72,18 @@ class GPM_Base_Accessor:
             self._obj, dst_ds=dst_ds, radius_of_influence=radius_of_influence, fill_value=fill_value
         )
 
+    def get_variable_at_bin(self, bin, variable=None):
+        """Retrieve variable values at specific range bins."""
+        from gpm_api.utils.manipulations import get_variable_at_bin
+
+        return get_variable_at_bin(self._obj, bin=bin, variable=None)
+
+    def get_height_at_bin(self, bin):
+        """Retrieve height values at specific range bins."""
+        from gpm_api.utils.manipulations import get_height_at_bin
+
+        return get_height_at_bin(self._obj, bin=bin)
+
     @property
     def is_orbit(self):
         from gpm_api.checks import is_orbit
@@ -338,6 +350,18 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
         return p
+
+    def available_retrievals(self):
+        """Available GPM-API retrievals for that GPM product."""
+        from gpm_api.dataset.retrievals.routines import available_retrievals
+
+        return available_retrievals(self._obj)
+
+    def retrieve(self, name):
+        """Retrieve a GPM-API variable."""
+        from gpm_api.dataset.retrievals.routines import get_retrieval_variable
+
+        return get_retrieval_variable(self._obj, retrieval=name)
 
 
 @xr.register_dataarray_accessor("gpm_api")
