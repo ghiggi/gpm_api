@@ -126,7 +126,7 @@ def _check_valid_variables(variables, dataset_variables):
     """Check valid variables."""
     idx_subset = np.where(np.isin(variables, dataset_variables, invert=True))[0]
     if len(idx_subset) > 0:
-        wrong_variables = variables[idx_subset].tolist()
+        wrong_variables = np.array(variables)[idx_subset].tolist()
         raise ValueError(f"The following variables are not available: {wrong_variables}.")
     return variables
 
@@ -135,7 +135,7 @@ def _check_valid_groups(groups, available_groups):
     """Check valid groups."""
     idx_subset = np.where(np.isin(groups, available_groups, invert=True))[0]
     if len(idx_subset) > 0:
-        wrong_groups = groups[idx_subset].tolist()
+        wrong_groups = np.array(groups)[idx_subset].tolist()
         raise ValueError(f"The following groups are not available: {wrong_groups}.")
     return groups
 
@@ -167,6 +167,7 @@ def _get_relevant_groups_variables(dt, scan_mode, variables=None, groups=None):
             variables = variables.tolist()
         # Add mandatory variables
         variables = _add_mandatory_variables(variables, available_variables)
+
         # Check variables validity
         variables = _check_valid_variables(variables, available_variables)
         # Get groups subset
