@@ -101,6 +101,10 @@ def get_variable_at_bin(xr_obj, bin, variable=None):
     da = da_variable.isel({"range": da_bin})
     # Mask values at nan bins
     da = da.where(~da_is_nan)
+    # Set original chunks if input DataArray is dask-backed
+    # - This avoid later need of unify_chunks when converting to dataframe
+    if hasattr(da_variable.data, "chunks"):
+        da = da.chunk(da_variable.chunks)
     return da
 
 
