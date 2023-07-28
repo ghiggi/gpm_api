@@ -5,6 +5,7 @@ Created on Mon Aug 15 00:18:13 2022
 @author: ghiggi
 """
 import datetime
+import glob
 import os
 
 import pandas as pd
@@ -20,7 +21,7 @@ from gpm_api.io.checks import (
     check_version,
     is_empty,
 )
-from gpm_api.io.directories import get_disk_directory
+from gpm_api.io.directories import get_disk_directory, get_disk_product_directory
 from gpm_api.io.filter import filter_filepaths
 
 ####--------------------------------------------------------------------------.
@@ -67,6 +68,43 @@ def _get_disk_daily_filepaths(base_dir, product, product_type, date, version, ve
     # Retrieve the filepaths
     filepaths = [os.path.join(dir_path, filename) for filename in filenames]
 
+    return filepaths
+
+
+def get_disk_filepaths(product, product_type, version, base_dir=None):
+    """
+    Retrieve all GPM filepaths on the local disk directory for a specific product.
+
+    Parameters
+    ----------
+    product : str
+        GPM product acronym. See gpm_api.available_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+    version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'.
+    verbose : bool, optional
+        Whether to print processing details. The default is True.
+    base_dir : str
+        The base directory where to store GPM data.
+    """
+    # Retrieve the directory on disk where the data are stored
+    base_dir = get_gpm_base_dir(base_dir)
+    product_dir = get_disk_product_directory(
+        base_dir=base_dir,
+        product=product,
+        product_type=product_type,
+        version=version,
+    )
+
+    # Check if the folder exists
+    if not os.path.exists(product_dir):
+        return []
+
+    # Retrieve the filepaths
+    glob_pattern = os.path.join(product_dir, "*", "*", "*", "*")
+
+    filepaths = glob.glob(glob_pattern)
     return filepaths
 
 
