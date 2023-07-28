@@ -24,7 +24,7 @@ def open_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True):
     - chunks="auto" --> datatree fails !
     - chunks=None --> lazy map to numpy.array
     """
-    dt = datatree.open_datatree(filepath, engine="netcdf4", chunks=chunks, decode_cf=False)
+    dt = datatree.open_datatree(filepath, engine="netcdf4", chunks=chunks, decode_cf=decode_cf)
     # Assign dimension names
     dt = _rename_datatree_dimensions(dt, use_api_defaults=use_api_defaults)
     return dt

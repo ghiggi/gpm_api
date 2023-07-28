@@ -5,6 +5,7 @@ Created on Tue Jul 18 17:14:16 2023
 @author: ghiggi
 """
 import numpy as np
+import xarray as xr
 
 DIM_DICT = {
     # 2A-DPR
@@ -126,6 +127,13 @@ def _get_gpm_api_dims_dict(ds):
     return rename_dim_dict
 
 
+def _rename_datarray_dimensions(da):
+    """Rename DataArray dimensions."""
+    if _has_a_phony_dim(da):
+        da = da.rename(_get_dataarray_dim_dict(da))
+    return da
+
+
 def _rename_dataset_dimensions(ds, use_api_defaults=True):
     """Rename xr.Dataset dimension to the actual dimension names.
 
@@ -133,8 +141,8 @@ def _rename_dataset_dimensions(ds, use_api_defaults=True):
     The dimension renaming is performed at each Dataset level.
     If use_api_defaults is True (the default), it sets the GPM-API dimension names.
     """
-    if _has_a_phony_dim(ds):
-        ds = ds.rename_dims(_get_dataset_dim_dict(ds))
+    dict_da = {var: _rename_datarray_dimensions(ds[var]) for var in ds.data_vars}
+    ds = xr.Dataset(dict_da, attrs=ds.attrs)
     if use_api_defaults:
         ds = ds.rename_dims(_get_gpm_api_dims_dict(ds))
     return ds
@@ -144,6 +152,9 @@ def _rename_datatree_dimensions(dt, use_api_defaults=True):
     """Rename datatree dimension to the actual dimension names.
 
     The actual dimensions names are retrieved from the DataArrays DimensionNames attribute.
+    The renaming is performed at the DataArray level because DataArrays sharing same dimension
+    size (but semantic different dimension) are given the same phony_dim_number within xr.Dataset !
+
     The dimension renaming is performed at each Dataset level.
     If use_api_defaults is True (the default), it sets the GPM-API dimension names.
     """
@@ -152,9 +163,6 @@ def _rename_datatree_dimensions(dt, use_api_defaults=True):
     # --> dt.rename_dims(dim_dict) does work only at node level !
     dt = dt.copy()  # otherwise rename input dt
     for group in dt.groups:
-        ds = dt[group]
-        if _has_a_phony_dim(ds):
-            dt[group].ds = dt[group].ds.rename_dims(_get_dataset_dim_dict(ds))
-        if use_api_defaults:
-            dt[group].ds = dt[group].ds.rename_dims(_get_gpm_api_dims_dict(ds))
+        dt[group].ds = _rename_dataset_dimensions(dt[group], use_api_defaults=use_api_defaults)
+
     return dt
