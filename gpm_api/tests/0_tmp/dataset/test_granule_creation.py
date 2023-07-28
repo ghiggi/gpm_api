@@ -61,7 +61,11 @@ dt = datatree.open_datatree(
 scan_modes = _get_available_scan_modes(dt)
 scan_mode = scan_modes[index]
 
-dt = open_datatree(filepath)
+dt = open_datatree(filepath, use_api_defaults=False)
+dt
+
+dt = open_datatree(filepath, use_api_defaults=True)
+dt
 
 ds = _get_scan_mode_dataset(
     filepath, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
