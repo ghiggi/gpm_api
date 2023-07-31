@@ -7,7 +7,6 @@ Created on Tue Nov  1 11:24:29 2022
 import datetime
 import warnings
 
-import dask
 import numpy as np
 
 from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
@@ -80,6 +79,7 @@ def get_product_temporal_coverage(
     # Timing notes
     # - Usually it takes about 3 seconds per call
     # - With 8 cores, 50 calls takes about 40 secs
+    import dask
 
     # --------------------------------------------------------------------------.
     product_type = "RS"
