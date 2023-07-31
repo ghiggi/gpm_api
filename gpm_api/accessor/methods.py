@@ -72,6 +72,35 @@ class GPM_Base_Accessor:
             self._obj, dst_ds=dst_ds, radius_of_influence=radius_of_influence, fill_value=fill_value
         )
 
+    def collocate(
+        self,
+        product,
+        product_type="RS",
+        version=7,
+        scan_modes=None,
+        variables=None,
+        groups=None,
+        verbose=True,
+        chunks={},
+    ):
+        """Collocate another product on the dataset.
+
+        It assumes that along all the input dataset, there is an approximate collocated product.
+        """
+        from gpm_api.utils.collocation import collocate_product
+
+        return collocate_product(
+            self._obj,
+            product=product,
+            product_type=product_type,
+            version=version,
+            scan_modes=scan_modes,
+            variables=variables,
+            groups=groups,
+            verbose=verbose,
+            chunks=chunks,
+        )
+
     def get_variable_at_bin(self, bin, variable=None):
         """Retrieve variable values at specific range bins."""
         from gpm_api.utils.manipulations import get_variable_at_bin
@@ -164,23 +193,27 @@ class GPM_Base_Accessor:
 
     @property
     def start_time(self):
+        from gpm_api.io.checks import check_time
+
         if "time" in self._obj.coords:
             start_time = self._obj["time"].values[0]
         elif "gpm_time" in self._obj.coords:
             start_time = self._obj["gpm_time"].values[0]
         else:
             raise ValueError("Time coordinate not found")
-        return start_time
+        return check_time(start_time)
 
     @property
     def end_time(self):
+        from gpm_api.io.checks import check_time
+
         if "time" in self._obj.coords:
             end_time = self._obj["time"].values[-1]
         elif "gpm_time" in self._obj.coords:
             end_time = self._obj["gpm_time"].values[-1]
         else:
             raise ValueError("Time coordinate not found")
-        return end_time
+        return check_time(end_time)
 
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm_api.utils.time import subset_by_time

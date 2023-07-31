@@ -214,13 +214,19 @@ def decode_product(ds):
     if "precipWaterIntegrated" in ds and not ds["precipWaterIntegrated"].attrs.get(
         "gpm_api_decoded", False
     ):
+        ds["precipWaterIntegrated"] = ds["precipWaterIntegrated"] / 1000
         ds["precipWaterIntegrated_Liquid"] = ds["precipWaterIntegrated"].isel({"LS": 0})
         ds["precipWaterIntegrated_Solid"] = ds["precipWaterIntegrated"].isel({"LS": 1})
         ds = ds.drop_vars(names="precipWaterIntegrated")
         ds["precipWaterIntegrated"] = (
             ds["precipWaterIntegrated_Liquid"] + ds["precipWaterIntegrated_Solid"]
         )
-        ds["precipWaterIntegrated_Liquid"].attrs["gpm_api_decoded"] = True
-        ds["precipWaterIntegrated_Solid"].attrs["gpm_api_decoded"] = True
-        ds["precipWaterIntegrated"].attrs["gpm_api_decoded"] = True
+        variables = [
+            "precipWaterIntegrated_Liquid",
+            "precipWaterIntegrated_Solid",
+            "precipWaterIntegrated",
+        ]
+        for var in variables:
+            ds[var].attrs["gpm_api_decoded"] = True
+            ds[var].attrs["units"] = "kg/m^2"
     return ds

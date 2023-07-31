@@ -444,18 +444,44 @@ COLOR_DICT = {
         "cmap_type": "LinearSegmented",
         "levels": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60],
     },
-    "rainWaterPath": {
+    "precipWaterIntegrated": {
+        "under_color": "none",
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "YlGnBu",
         "cmap_type": "Colormap",
-        "vmin": 0.5,  # kg/m2
+        "vmin": 0.1,  # kg/m2
+        "vmax": 20,  # 3000
+        "extend": "both",
+        "extendfrac": 0.05,
+        "label": "Total Precipitable Water [$kg \\ m^{-2}$]",
+    },
+    "totalWaterPath": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.1,  # kg/m2
+        "vmax": 20,  # 3000
+        "extend": "both",
+        "extendfrac": 0.05,
+        "label": "Total Precipitable Water [$kg \\ m^{-2}$]",
+    },
+    "rainWaterPath": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.1,  # kg/m2
         "vmax": 5,  # 3000
         "extend": "max",
         "extendfrac": 0.05,
         "label": "Rain Water Path [$kg \\ m^{-2}$]",
     },
     "cloudWaterPath": {
+        "under_color": "none",
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "YlGnBu",
@@ -467,6 +493,7 @@ COLOR_DICT = {
         "label": "Cloud Liquid Water Path [$kg \\ m^{-2}$]",
     },
     "cloudLiquidWaterPath": {
+        "under_color": "none",
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "YlGnBu",
@@ -478,6 +505,7 @@ COLOR_DICT = {
         "label": "Cloud Liquid Water Path [$kg \\ m^{-2}$]",
     },
     "liquidWaterPath": {
+        "under_color": "none",
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "YlGnBu",
@@ -489,6 +517,7 @@ COLOR_DICT = {
         "label": "Liquid Water Path [$kg \\ m^{-2}$]",
     },
     "iceWaterPath": {
+        "under_color": "none",
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "YlGnBu",
