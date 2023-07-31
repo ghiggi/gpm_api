@@ -68,7 +68,7 @@ dt = open_datatree(filepath, use_api_defaults=True)
 dt
 
 ds = _get_scan_mode_dataset(
-    filepath, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
+    dt, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
 )
 
 
@@ -118,5 +118,5 @@ coords, attrs, groups, variables = _get_scan_mode_info(dt, scan_mode, variables=
 
 
 ds = _get_scan_mode_dataset(
-    filepath, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
+    dt, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
 )

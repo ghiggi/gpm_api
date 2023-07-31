@@ -101,7 +101,7 @@ def _get_flattened_scan_mode_dataset(dt, scan_mode, groups, variables=None, pref
 
 
 def _get_scan_mode_dataset(
-    filepath,
+    dt,
     scan_mode,
     variables=None,
     groups=None,
@@ -110,10 +110,6 @@ def _get_scan_mode_dataset(
     decode_cf=False,
 ):
     """Retrieve scan mode xr.Dataset."""
-    from gpm_api.dataset.datatree import open_datatree
-
-    dt = open_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True)
-
     # Retrieve granule info
     coords, attrs, groups, variables = _get_scan_mode_info(
         dt=dt, scan_mode=scan_mode, variables=variables, groups=groups
@@ -129,8 +125,10 @@ def _get_scan_mode_dataset(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ds = ds.assign_coords(coords)
+
     # Assign global attributes
     ds.attrs = attrs
+
     return ds
 
 
@@ -164,6 +162,8 @@ def _open_granule(
     prefix_group=True,
 ):
     """Open granule file into xarray Dataset."""
+    from gpm_api.dataset.datatree import open_datatree
+
     # Get product and version
     product = get_product_from_filepath(filepath)
     version = get_version_from_filepath(filepath)
@@ -175,9 +175,12 @@ def _open_granule(
     # Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version)
 
+    # Open datatree
+    dt = open_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True)
+
     # Retrieve the granule dataset (without cf decoding)
     ds = _get_scan_mode_dataset(
-        filepath=filepath,
+        dt=dt,
         scan_mode=scan_mode,
         groups=groups,
         variables=variables,
@@ -185,6 +188,13 @@ def _open_granule(
         chunks=chunks,
         decode_cf=False,
     )
+
+    # Specify datatree closer
+    # TODO: implement datatree.close() and datatree._close in datatree repository
+    # --> datatree._close as iterator ?
+    # --> https://github.com/xarray-contrib/datatree/issues/93
+    # --> https://github.com/xarray-contrib/datatree/pull/114/files
+    ds.set_close(getattr(dt, "_close"))
 
     ###-----------------------------------------------------------------------.
     ### Clean attributes, decode variables
