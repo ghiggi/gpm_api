@@ -82,8 +82,12 @@ def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
     # - See Geolocation toolkit ATBD at
     #   https://gpm.nasa.gov/sites/default/files/document_files/GPMGeolocationToolkitATBDv2.1-2012-07-31.pdf
     # TODO: set_dataset_crs should be migrated to cf_xarray ideally
-    crs = pyproj.CRS(proj="longlat", ellps="WGS84")
-    ds = set_dataset_crs(ds, crs=crs, grid_mapping_name="crsWGS84", inplace=False)
+    try:
+        crs = pyproj.CRS(proj="longlat", ellps="WGS84")
+        ds = set_dataset_crs(ds, crs=crs, grid_mapping_name="crsWGS84", inplace=False)
+    except Exception:
+        msg = "The CRS coordinate is not set because the dataset variables does not have 2D spatial dimensions."
+        warnings.warn(msg, GPM_Warning)
 
     ##------------------------------------------------------------------------.
     # Add time encoding
