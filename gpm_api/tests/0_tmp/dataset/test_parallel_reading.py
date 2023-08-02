@@ -13,7 +13,6 @@ from gpm_api.io.disk import get_disk_filepaths
 from gpm_api.dataset.dataset import _open_valid_granules, _concat_datasets, _multi_file_closer
 from dask.distributed import Client, LocalCluster
 
-
 # client = Client(processes=True)
 
 # Create dask.distributed local cluster
