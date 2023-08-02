@@ -223,7 +223,7 @@ COLOR_DICT = {
         "label": "Precipitation intensity [$mm \\ hr^{-1}$]",
     },
     "GPM_Z": {
-        "bad_color": "gray",
+        "bad_color": "none",
         "bad_alpha": 0.5,
         "cmap": "Spectral_r",
         # 'cmap_n': 10,
@@ -235,8 +235,7 @@ COLOR_DICT = {
         "label": "Reflectivity [$dBZ$]",  # $Z_{e}$
     },
     "GPM_DFR": {
-        "bad_color": "gray",
-        "bad_alpha": 0.5,
+        "bad_color": "none",
         "cmap": "turbo",
         # 'cmap_n': 10,
         "cmap_type": "Colormap",
@@ -452,7 +451,7 @@ COLOR_DICT = {
         "cmap_type": "Colormap",
         "vmin": 0.1,  # kg/m2
         "vmax": 20,  # 3000
-        "extend": "both",
+        "extend": "max",
         "extendfrac": 0.05,
         "label": "Total Precipitable Water [$kg \\ m^{-2}$]",
     },
@@ -464,7 +463,7 @@ COLOR_DICT = {
         "cmap_type": "Colormap",
         "vmin": 0.1,  # kg/m2
         "vmax": 20,  # 3000
-        "extend": "both",
+        "extend": "max",
         "extendfrac": 0.05,
         "label": "Total Precipitable Water [$kg \\ m^{-2}$]",
     },
@@ -565,6 +564,16 @@ precip_variables = [
 
 for var in precip_variables:
     COLOR_DICT[var] = COLOR_DICT["pysteps_mm/hr"]
+
+reflectivity_variables = [
+    "zFactorFinalNearSurface",
+    "zFactorFinalESurface",
+    "zFactorFinalNearSurface",
+    "zFactorMeasured",
+    "zFactorFinal",
+]
+for var in reflectivity_variables:
+    COLOR_DICT[var] = COLOR_DICT["GPM_Z"]
 
 COLOR_DICT["Tb"] = COLOR_DICT["Brightness_Temperature"]
 COLOR_DICT["Tc"] = COLOR_DICT["Brightness_Temperature"]

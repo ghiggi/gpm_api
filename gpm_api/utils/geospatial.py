@@ -4,6 +4,8 @@ Created on Wed Aug 17 09:30:29 2022
 
 @author: ghiggi
 """
+import warnings
+
 import numpy as np
 import xarray as xr
 
@@ -258,7 +260,8 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     variables = [var for var in src_ds.data_vars if set(src_ds[var].dims).issuperset({"x", "y"})]
 
     # Remap DataArrays
-    da_dict = {var: resampler.resample(src_ds[var], fill_value=fill_value) for var in variables}
+    with warnings.catch_warnings(record=True):
+        da_dict = {var: resampler.resample(src_ds[var], fill_value=fill_value) for var in variables}
 
     # Create Dataset
     ds = xr.Dataset(da_dict)

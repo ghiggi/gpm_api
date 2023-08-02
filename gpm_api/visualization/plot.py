@@ -158,6 +158,7 @@ def plot_colorbar(p, ax, cbar_kwargs={}):
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     divider = make_axes_locatable(ax)
     cax = divider.new_horizontal(size="5%", pad=0.1, axes_class=plt.Axes)
+
     p.figure.add_axes(cax)
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
     if ticklabels is not None:
@@ -305,13 +306,18 @@ def _plot_xr_imshow(
     add_colorbar=True,
     plot_kwargs={},
     cbar_kwargs={},
+    xarray_colorbar=True,
 ):
-    """Plot imshow with xarray."""
+    """Plot imshow with xarray.
+
+    The colorbar is added with xarray to enable to display multiple colorbars
+    when calling this function multiple times on different fields with
+    different colorbars.
+    """
     # --> BUG with colorbar: https://github.com/pydata/xarray/issues/7014
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     if not add_colorbar:
         cbar_kwargs = {}
-
     p = da.plot.imshow(
         x=x,
         y=y,
@@ -324,6 +330,17 @@ def _plot_xr_imshow(
     plt.title(da.name)
     if add_colorbar and ticklabels is not None:
         p.colorbar.ax.set_yticklabels(ticklabels)
+    # p = da.plot.imshow(
+    #     x=x,
+    #     y=y,
+    #     ax=ax,
+    #     interpolation=interpolation,
+    #     add_colorbar=False,
+    #     **plot_kwargs,
+    # )
+    # plt.title(da.name)
+    # if add_colorbar:
+    #     _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     return p
 
 
