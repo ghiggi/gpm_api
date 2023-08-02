@@ -104,7 +104,7 @@ def get_disk_filepaths(product, product_type, version, base_dir=None):
     # Retrieve the filepaths
     glob_pattern = os.path.join(product_dir, "*", "*", "*", "*")
 
-    filepaths = glob.glob(glob_pattern)
+    filepaths = sorted(glob.glob(glob_pattern))
     return filepaths
 
 
