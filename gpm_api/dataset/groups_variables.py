@@ -6,6 +6,8 @@ Created on Tue Jul 18 17:11:09 2023
 """
 import numpy as np
 
+WISHED_COORDS = ["height", "dataQuality", "SCorientation"]
+
 
 def flatten_list(nested_list):
     flat_list = []
@@ -141,13 +143,16 @@ def _check_valid_groups(groups, available_groups):
 
 
 def _add_mandatory_variables(variables, available_variables):
-    """Add mandatory variables to 'variables'.
+    """Add wished coordinates to 'variables'.
 
     Currently it includes:
     - 'height' variable if available (for radar products)
+    - 'dataQuality' variable
+    - 'SCorientation' variable
     """
-    if "height" in available_variables:
-        variables = np.unique(np.append(variables, ["height"])).tolist()
+    wished_variables = [var for var in WISHED_COORDS if var in available_variables]
+    if len(wished_variables) >= 1:
+        variables = np.unique(np.append(variables, wished_variables)).tolist()
     return variables
 
 

@@ -87,6 +87,16 @@ def _add_radar_range_coordinate(ds, product, scan_mode):
     return ds
 
 
+def _add_wished_coordinates(ds):
+    """Add wished coordinates to the dataset."""
+    from gpm_api.dataset.groups_variables import WISHED_COORDS
+
+    for var in WISHED_COORDS:
+        if var in list(ds):
+            ds = ds.set_coords(var)
+    return ds
+
+
 def _add_radar_coordinates(ds, product, scan_mode):
     """Add range, height, radar_frequency, paramDSD coordinates to <RADAR> products."""
     if product == "2A-DPR":
@@ -95,8 +105,6 @@ def _add_radar_coordinates(ds, product, scan_mode):
     if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR"]:
         if "paramDSD" in list(ds):
             ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
-        if "height" in list(ds):
-            ds = ds.set_coords("height")
     # Add radar range
     ds = _add_radar_range_coordinate(ds, product, scan_mode)
     return ds
@@ -143,6 +151,9 @@ def set_coordinates(ds, product, scan_mode):
     if "range" in list(ds.dims):
         range_id = np.arange(ds.dims["range"])
         ds = ds.assign_coords({"gpm_range_id": ("range", range_id)})
+
+    # Add wished coordinates
+    ds = _add_wished_coordinates(ds)
 
     #### Convert sunLocalTime to hourly timedelta
     if "sunLocalTime" in ds:

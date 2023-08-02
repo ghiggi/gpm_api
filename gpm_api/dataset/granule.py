@@ -132,9 +132,18 @@ def _get_scan_mode_dataset(
     return ds
 
 
+def get_variables(ds):
+    """Retrieve the dataset variables."""
+    variables = list(ds.data_vars)
+    return variables
+
+
 def get_variables_dims(ds):
     """Retrieve the dimensions used by the xr.Dataset variables."""
-    dims = np.unique(np.concatenate([list(ds[var].dims) for var in ds.data_vars]))
+    variables = get_variables(ds)
+    if len(variables) == 0:
+        return []
+    dims = np.unique(np.concatenate([list(ds[var].dims) for var in variables]))
     return dims
 
 
@@ -201,8 +210,9 @@ def _open_granule(
     # Apply custom processing
     ds = apply_custom_decoding(ds, product, scan_mode)
 
-    # Remove coords and dimensions not exploited by data variables
-    ds = remove_unused_var_dims(ds)
+    # If there are dataset variables, remove coords and dimensions not exploited by data variables
+    if len(ds.data_vars) >= 1:
+        ds = remove_unused_var_dims(ds)
 
     ###-----------------------------------------------------------------------.
     ## Check swath time coordinate
