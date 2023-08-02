@@ -238,7 +238,7 @@ def open_granule(
     scan_mode=None,
     groups=None,
     variables=None,
-    decode_cf=False,
+    decode_cf=True,
     chunks={},
     prefix_group=False,
     use_gpm_api_defaults=True,
@@ -307,7 +307,7 @@ def open_granule(
         scan_mode=scan_mode,
         groups=groups,
         variables=variables,
-        decode_cf=decode_cf,
+        decode_cf=False,
         chunks=chunks,
         prefix_group=prefix_group,
     )
