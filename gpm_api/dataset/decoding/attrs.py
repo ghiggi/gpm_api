@@ -4,6 +4,7 @@ Created on Fri Jul 28 13:50:59 2023
 
 @author: ghiggi
 """
+import numpy as np
 
 
 def convert_string_to_number(string):
@@ -11,6 +12,16 @@ def convert_string_to_number(string):
         return int(string)
     else:
         return float(string)
+
+
+def ensure_dtype_name(dtype):
+    """Ensure the dtype is a string name.
+
+    This function convert numpy.dtype to the string name.
+    """
+    if isinstance(dtype, np.dtype):
+        dtype = dtype.name
+    return dtype
 
 
 def _format_dataarray_attrs(da, product=None):
@@ -51,10 +62,15 @@ def _format_dataarray_attrs(da, product=None):
     # Remove 'DimensionNames'
     attrs.pop("DimensionNames", None)
 
-    # Add source dtype from encoding
-    # print(da.name)
-    # print(da.encoding)
-    if da.encoding.get("dtype", False):
+    # Ensure encoding and source_dtype is a dtype string name
+    if "dtype" in da.encoding:
+        da.encoding["dtype"] = ensure_dtype_name(da.encoding["dtype"])
+
+    if "source_dtype" in attrs:
+        attrs["source_dtype"] = ensure_dtype_name(attrs["source_dtype"])
+
+    # Add source dtype from encoding if not present
+    if "source_dtype" not in attrs and "dtype" in da.encoding:
         attrs["source_dtype"] = da.encoding["dtype"]
 
     # Add gpm_api product name

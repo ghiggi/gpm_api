@@ -130,6 +130,24 @@ def decode_flagAnvil(xr_obj):
     return xr_obj
 
 
+def decode_zFactorMeasured(xr_obj):
+    """Decode the 2A-<RADAR> variable flagBB."""
+    xr_obj = get_data_array(xr_obj, variable="zFactorMeasured")
+    attrs = xr_obj.attrs
+    xr_obj = xr_obj.where(xr_obj >= -80)  # Make -29999 and -28888 -> NaN
+    xr_obj.attrs = attrs  # TODO: wrapper to keep attributes ?
+    return xr_obj
+
+
+def decode_attenuationNP(xr_obj):
+    """Decode the 2A-<RADAR> variable flagBB."""
+    xr_obj = get_data_array(xr_obj, variable="attenuationNP")
+    attrs = xr_obj.attrs
+    xr_obj = xr_obj.where(xr_obj >= 0)  # Make -19999.8 -> NaN
+    xr_obj.attrs = attrs  # TODO: wrapper to keep attributes ?
+    return xr_obj
+
+
 def decode_flagBB(xr_obj):
     """Decode the 2A-<RADAR> variable flagBB."""
     xr_obj = get_data_array(xr_obj, variable="flagBB")
@@ -202,6 +220,8 @@ def decode_product(ds):
         "phaseNearSurface",
         "phase",
         "landSurfaceType",
+        "attenuationNP",
+        "zFactorMeasured",
     ]
     # Decode such variables if present in the xarray object
     for variable in variables:

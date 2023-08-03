@@ -27,7 +27,7 @@ cluster = LocalCluster(
 Client(cluster)
 
 # micromamba install mpich hdf5=*=mpi* enable to then install libnetcdf with MPI
-# micromamba install libnetcdf=4.9.2=mpi*
+# micromamba install libnetcdf=*=mpi*
 # micromamba install netcdf4=*=mpi*
 
 # autoclose=True is set automatically to True in xarray backends

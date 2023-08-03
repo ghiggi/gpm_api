@@ -10,6 +10,7 @@ from gpm_api.dataset.attrs import add_history
 from gpm_api.dataset.coords import set_coords_attrs
 from gpm_api.dataset.crs import set_dataset_crs
 from gpm_api.dataset.decoding import decode_dataset
+from gpm_api.dataset.encoding import set_encoding
 from gpm_api.utils.time import (
     subset_by_time,
 )
@@ -100,6 +101,10 @@ def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
     # Add GPM-API global attributes
     ds = add_history(ds)
     ds.attrs["gpm_api_product"] = product
+
+    ##------------------------------------------------------------------------.
+    # Add coordinates and variables encoding
+    ds = set_encoding(ds)
 
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time
