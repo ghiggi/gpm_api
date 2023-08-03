@@ -6,6 +6,7 @@ Created on Wed Aug  2 12:11:11 2023
 """
 import os
 
+import dask
 import numpy as np
 
 from gpm_api.bucket.processing import (
@@ -101,9 +102,19 @@ def write_partitioned_parquet(
     write_parquet_dataset(df=df, parquet_fpath=parquet_fpath, partition_on=[xbin_name, ybin_name])
 
 
+def define_granule_bucket_fpath(bucket_base_dir, fpath):
+    """Define GPM Granule Parquet Dataset filepath."""
+    start_time = get_key_from_filepath(fpath, "start_time")
+    time_tree = get_time_tree(start_time)
+    time_dir = os.path.join(bucket_base_dir, time_tree)
+    os.makedirs(time_dir, exist_ok=True)
+    parquet_fpath = os.path.join(time_dir, os.path.basename(fpath) + ".parquet")
+    return parquet_fpath
+
+
 def write_granule_bucket(
-    fpath,
-    bucket_base_dir,
+    src_fpath,
+    dst_fpath,
     open_granule_kwargs={},
     preprocessing_function=None,
     ds_to_df_function=ds_to_df_function,
@@ -113,26 +124,19 @@ def write_granule_bucket(
     xbin_name="lonbin",
     ybin_name="latbin",
 ):
-
+    # Retrieve dataframe
     df = get_granule_dataframe(
-        fpath,
+        src_fpath,
         open_granule_kwargs=open_granule_kwargs,
         preprocessing_function=preprocessing_function,
         ds_to_df_function=ds_to_df_function,
         filtering_function=filtering_function,
     )
 
-    # Define granule Parquet filepath
-    start_time = get_key_from_filepath(fpath, "start_time")
-    time_tree = get_time_tree(start_time)
-    time_dir = os.path.join(bucket_base_dir, time_tree)
-    os.makedirs(time_dir, exist_ok=True)
-    parquet_fpath = os.path.join(time_dir, os.path.basename(fpath) + ".parquet")
-
     # Write Parquet Dataset
     write_partitioned_parquet(
         df=df,
-        parquet_fpath=parquet_fpath,
+        parquet_fpath=dst_fpath,
         xbin_size=xbin_size,
         ybin_size=ybin_size,
         xbin_name=xbin_name,
@@ -141,28 +145,31 @@ def write_granule_bucket(
 
 
 def _try_write_granule_bucket(
-    fpath,
-    bucket_base_dir,
+    src_fpath,
+    dst_fpath,
     open_granule_kwargs,
     preprocessing_function,
     filtering_function,
     xbin_size=15,
     ybin_size=15,
+    force=False,
 ):
     try:
-        _ = write_granule_bucket(
-            fpath=fpath,
-            bucket_base_dir=bucket_base_dir,
-            open_granule_kwargs=open_granule_kwargs,
-            preprocessing_function=preprocessing_function,
-            filtering_function=filtering_function,
-            xbin_size=xbin_size,
-            ybin_size=ybin_size,
-        )
+        # synchronous
+        with dask.config.set(scheduler="single-threaded"):
+            _ = write_granule_bucket(
+                src_fpath=src_fpath,
+                dst_fpath=dst_fpath,
+                open_granule_kwargs=open_granule_kwargs,
+                preprocessing_function=preprocessing_function,
+                filtering_function=filtering_function,
+                xbin_size=xbin_size,
+                ybin_size=ybin_size,
+            )
+            info = None
     except Exception as e:
-        print(f"An error occurred while processing {fpath}: {str(e)}")
-        pass
-    return None
+        info = src_fpath, str(e)
+    return info
 
 
 def write_granules_buckets(
@@ -174,11 +181,22 @@ def write_granules_buckets(
     xbin_size=15,
     ybin_size=15,
     parallel=True,
+    force=False,
     max_concurrent_tasks=None,
 ):
     import dask
 
     from gpm_api.utils.parallel import compute_list_delayed
+
+    src_dst_dict = {
+        src_fpath: define_granule_bucket_fpath(bucket_base_dir, src_fpath) for src_fpath in fpaths
+    }
+
+    if not force:
+        src_dst_dict = {src: dst for src, dst in src_dst_dict.items() if not os.path.exists(dst)}
+
+    if len(src_dst_dict) == 0:
+        return None
 
     if parallel:
         func = dask.delayed(_try_write_granule_bucket)
@@ -187,18 +205,23 @@ def write_granules_buckets(
 
     list_results = [
         func(
-            fpath=fpath,
-            bucket_base_dir=bucket_base_dir,
+            src_fpath=src_fpath,
+            dst_fpath=dst_fpath,
             open_granule_kwargs=open_granule_kwargs,
             preprocessing_function=preprocessing_function,
             filtering_function=filtering_function,
             xbin_size=xbin_size,
             ybin_size=ybin_size,
         )
-        for fpath in fpaths
+        for src_fpath, dst_fpath in src_dst_dict.items()
     ]
     if parallel:
         list_results = compute_list_delayed(list_results, max_concurrent_tasks=max_concurrent_tasks)
+
+    # Process results to detect errors
+    list_errors = [error_info for error_info in list_results if error_info is not None]
+    for src_fpath, error_str in list_errors:
+        print(f"An error occurred while processing {src_fpath}: {error_str}")
 
     return None
 
