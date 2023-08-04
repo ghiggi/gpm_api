@@ -297,6 +297,89 @@ def _plot_mpl_imshow(
     return p
 
 
+# def _get_colorbar_inset_axes_kwargs(p):
+#     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+#     colorbar_axes = p.colorbar.ax
+
+#     # Get the position and size of the colorbar axes in figure coordinates
+#     bbox = colorbar_axes.get_position()
+
+#     # Extract the width and height of the colorbar axes in figure coordinates
+#     width = bbox.x1 - bbox.x0
+#     height = bbox.y1 - bbox.y0
+
+#     # Get the location of the colorbar axes ('upper', 'lower', 'center', etc.)
+#     # This information will be used to set the 'loc' parameter of inset_axes
+#     loc = 'upper right'  # Modify this according to your preference
+
+#     # Get the transformation of the colorbar axes with respect to the image axes
+#     # This information will be used to set the 'bbox_transform' parameter of inset_axes
+#     bbox_transform = colorbar_axes.get_transform()
+
+#     # Calculate the coordinates of the colorbar axes relative to the image axes
+#     x0, y0 = bbox_transform.transform((bbox.x0, bbox.y0))
+#     x1, y1 = bbox_transform.transform((bbox.x1, bbox.y1))
+#     bbox_to_anchor = (x0, y0, x1 - x0, y1 - y0)
+
+
+def set_colorbar_fully_transparent(p):
+    # from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+    # colorbar_axes = p.colorbar.ax
+
+    # # Get the position and size of the colorbar axes in figure coordinates
+    # bbox = colorbar_axes.get_position()
+
+    # # Extract the width and height of the colorbar axes in figure coordinates
+    # width = bbox.x1 - bbox.x0
+    # height = bbox.y1 - bbox.y0
+
+    # # Get the location of the colorbar axes ('upper', 'lower', 'center', etc.)
+    # # This information will be used to set the 'loc' parameter of inset_axes
+    # loc = 'upper right'  # Modify this according to your preference
+
+    # # Get the transformation of the colorbar axes with respect to the image axes
+    # # This information will be used to set the 'bbox_transform' parameter of inset_axes
+    # bbox_transform = colorbar_axes.get_transform()
+
+    # # Calculate the coordinates of the colorbar axes relative to the image axes
+    # x0, y0 = bbox_transform.transform((bbox.x0, bbox.y0))
+    # x1, y1 = bbox_transform.transform((bbox.x1, bbox.y1))
+    # bbox_to_anchor = (x0, y0, x1 - x0, y1 - y0)
+
+    # # Create the inset axes using the retrieved parameters
+    # inset_ax = inset_axes(p.axes,
+    #                       width=width,
+    #                       height=height,
+    #                       loc=loc,
+    #                       bbox_to_anchor=bbox_to_anchor,
+    #                       bbox_transform=p.axes.transAxes,
+    #                       borderpad=0)
+
+    # Get the position of the colorbar
+    cbar_pos = p.colorbar.ax.get_position()
+
+    cbar_x, cbar_y = cbar_pos.x0, cbar_pos.y0
+    cbar_width, cbar_height = cbar_pos.width, cbar_pos.height
+
+    # Remove the colorbar
+    p.colorbar.ax.set_visible(False)
+
+    # Now plot an empty rectangle
+    fig = plt.gcf()
+    rect = plt.Rectangle(
+        (cbar_x, cbar_y),
+        cbar_width,
+        cbar_height,
+        transform=fig.transFigure,
+        facecolor="none",
+        edgecolor="none",
+    )
+
+    fig.patches.append(rect)
+
+
 def _plot_xr_imshow(
     ax,
     da,
@@ -307,6 +390,7 @@ def _plot_xr_imshow(
     plot_kwargs={},
     cbar_kwargs={},
     xarray_colorbar=True,
+    visible_colorbar=True,
 ):
     """Plot imshow with xarray.
 
@@ -330,6 +414,13 @@ def _plot_xr_imshow(
     plt.title(da.name)
     if add_colorbar and ticklabels is not None:
         p.colorbar.ax.set_yticklabels(ticklabels)
+
+    # Make the colorbar fully transparent with a smart trick ;)
+    # - TODO: this still cause issues when plotting 2 colorbars !
+    if add_colorbar and not visible_colorbar:
+        set_colorbar_fully_transparent(p)
+
+    # Add manually the colorbar
     # p = da.plot.imshow(
     #     x=x,
     #     y=y,
