@@ -110,3 +110,38 @@ def get_variable_at_bin(xr_obj, bin, variable=None):
 
 def get_height_at_bin(xr_obj, bin):
     return get_variable_at_bin(xr_obj, bin, variable="height")
+
+
+def get_range_slices_with_valid_data(xr_obj, variable):
+    """Get the 'range' slices with valid data."""
+    # Extract DataArray
+    da = _get_variable_dataarray(xr_obj, variable)
+    da = da.compute()
+
+    # Check has range dimension
+    dims = list(da.dims)
+    if "range" not in dims:
+        raise ValueError(f"The {variable} variable does not have the 'range' dimension.")
+
+    # Remove 'range' from dimensions over which to aggregate
+    dims.remove("range")
+
+    # Get bool array where there are some data (not all nan)
+    has_data = ~np.isnan(da).all(dim=dims)
+    has_data_arr = has_data.data
+
+    # Identify first and last True occurrence
+    n_bins = len(has_data)
+    first_true_index = np.argwhere(has_data_arr)[0]
+    last_true_index = n_bins - np.argwhere(has_data_arr[::-1])[0] - 1
+    if len(first_true_index) == 0:
+        raise ValueError(f"No valid data for variable {variable}.")
+    isel_dict = {"range": slice(first_true_index.item(), last_true_index.item() + 1)}
+    return isel_dict
+
+
+def select_range_with_valid_data(xr_obj, variable):
+    """Select the 'range' interval with valid data."""
+    isel_dict = get_range_slices_with_valid_data(xr_obj, variable)
+    # Susbet the xarray object
+    return xr_obj.isel(isel_dict)

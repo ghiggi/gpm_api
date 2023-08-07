@@ -113,6 +113,12 @@ class GPM_Base_Accessor:
 
         return get_height_at_bin(self._obj, bin=bin)
 
+    def select_range_with_valid_data(self, variable):
+        """Select the 'range' interval with valid data."""
+        from gpm_api.utils.manipulations import select_range_with_valid_data
+
+        return select_range_with_valid_data(self._obj, variable)
+
     @property
     def is_orbit(self):
         from gpm_api.checks import is_orbit
