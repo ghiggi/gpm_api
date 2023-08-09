@@ -16,6 +16,7 @@ from gpm_api.bucket.processing import (
 )
 from gpm_api.io.directories import get_time_tree
 from gpm_api.io.info import get_key_from_filepath
+from gpm_api.utils.dask import clean_memory, get_client
 
 
 def get_bin_partition(values, bin_size):
@@ -44,6 +45,8 @@ def get_bin_partition(values, bin_size):
 
 
 def write_parquet_dataset(df, parquet_fpath, partition_on, name_function=None):
+    # Note: Append currently works only when using fastparquet 
+    
     # Define default naming scheme
     if name_function is None:
 
@@ -166,10 +169,24 @@ def _try_write_granule_bucket(
                 xbin_size=xbin_size,
                 ybin_size=ybin_size,
             )
+            # If works, return None 
             info = None
     except Exception as e:
+        # Define tuple to return 
         info = src_fpath, str(e)
     return info
+
+
+
+def split_dict_in_blocks(dictionary, block_size):
+    dict_list = []
+    keys = list(dictionary.keys())
+    total_keys = len(keys)
+    for i in range(0, total_keys, block_size):
+        block_keys = keys[i:i+block_size]
+        block_dict = {key: dictionary[key] for key in block_keys}
+        dict_list.append(block_dict)
+    return dict_list
 
 
 def write_granules_buckets(
@@ -183,6 +200,7 @@ def write_granules_buckets(
     parallel=True,
     force=False,
     max_concurrent_tasks=None,
+    max_dask_total_tasks=500,
 ):
     import dask
 
@@ -197,31 +215,48 @@ def write_granules_buckets(
 
     if len(src_dst_dict) == 0:
         return None
-
-    if parallel:
-        func = dask.delayed(_try_write_granule_bucket)
-    else:
-        func = _try_write_granule_bucket
-
-    list_results = [
-        func(
-            src_fpath=src_fpath,
-            dst_fpath=dst_fpath,
-            open_granule_kwargs=open_granule_kwargs,
-            preprocessing_function=preprocessing_function,
-            filtering_function=filtering_function,
-            xbin_size=xbin_size,
-            ybin_size=ybin_size,
-        )
-        for src_fpath, dst_fpath in src_dst_dict.items()
-    ]
-    if parallel:
-        list_results = compute_list_delayed(list_results, max_concurrent_tasks=max_concurrent_tasks)
-
-    # Process results to detect errors
-    list_errors = [error_info for error_info in list_results if error_info is not None]
-    for src_fpath, error_str in list_errors:
-        print(f"An error occurred while processing {src_fpath}: {error_str}")
+    
+    # Split long list of files in blocks 
+    list_src_dst_dict = split_dict_in_blocks(src_dst_dict, block_size=max_dask_total_tasks)
+    
+    # Execute tasks by blocks to avoid dask overhead 
+    n_blocks = len(list_src_dst_dict)
+    
+    for i, src_dst_dict in enumerate(list_src_dst_dict):
+        print(f"Executing tasks block {i}/{n_blocks}")
+        
+        # Loop over granules 
+        if parallel:
+            func = dask.delayed(_try_write_granule_bucket)
+        else:
+            func = _try_write_granule_bucket
+    
+        list_results = [
+            func(
+                src_fpath=src_fpath,
+                dst_fpath=dst_fpath,
+                open_granule_kwargs=open_granule_kwargs,
+                preprocessing_function=preprocessing_function,
+                filtering_function=filtering_function,
+                xbin_size=xbin_size,
+                ybin_size=ybin_size,
+            )
+            for src_fpath, dst_fpath in src_dst_dict.items()
+        ]
+        # If delayed, execute the tasks 
+        if parallel:
+            list_results = compute_list_delayed(list_results, max_concurrent_tasks=max_concurrent_tasks)
+    
+        # Process results to detect errors
+        list_errors = [error_info for error_info in list_results if error_info is not None]
+        for src_fpath, error_str in list_errors:
+            print(f"An error occurred while processing {src_fpath}: {error_str}")
+            
+        # If parallel=True, retrieve client, clean the memory and restart 
+        if parallel: 
+            client = get_client()
+            clean_memory(client)
+            client.restart()
 
     return None
 

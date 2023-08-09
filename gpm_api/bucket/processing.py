@@ -140,20 +140,22 @@ def get_granule_dataframe(
     return df
 
 
+def _get_bin_meta_template(filepath, bin_name): 
+    from dask.dataframe.utils import make_meta
+    from gpm_api.bucket.readers import _read_parquet_bin_files
+    template_df = _read_parquet_bin_files([filepath], bin_name=bin_name)
+    meta = make_meta(template_df)
+    return meta 
+
+
 def merge_granule_buckets(
     bucket_base_dir,
-    partition_size="100MB",
+    bucket_fpath,
     xbin_name="lonbin",
     ybin_name="latbin",
 ):
-    from gpm_api.bucket.readers import read_bin_buckets_files
+    from gpm_api.bucket.readers import _read_parquet_bin_files
     from gpm_api.bucket.writers import write_parquet_dataset
-
-    # Define output Parquet Dataset filepath
-    # --> Try processing by year?
-    # --> Try processing whole?
-
-    bucket_fpath = "/tmp/geo1.parquet"
 
     # Identify all Parquet filepaths
     fpaths = get_parquet_fpaths(bucket_base_dir)
@@ -165,21 +167,22 @@ def merge_granule_buckets(
     n_geographic_bins = len(bin_path_dict)
     print(f"{n_geographic_bins} geographic bins to process.")
 
+    # Retrieve list of bins and associated filepaths 
+    list_bin_name = list(bin_path_dict.keys())
+    list_bin_fpaths = list(bin_path_dict.values())
+   
     # Read dataframes for each geographic bin
     print("Lazy reading of dataframe has started")
-    list_df = [
-        read_bin_buckets_files(bin_fpaths, partition_size=partition_size)
-        for bin_name, bin_fpaths in bin_path_dict.items()
-    ]
-
-    # Concatenate all dataframes together (lazily)
-    print("Concatenation of dataframe has started")
-    df = dd.concat(list_df, interleave_partitions=False)
-
-    # Write down the partitioned dataframe
+    meta = _get_bin_meta_template(list_bin_fpaths[0][0], bin_name=list_bin_name[0])
+    df = dd.from_map(_read_parquet_bin_files, list_bin_fpaths, list_bin_name, meta=meta)
+    
+    # Write Parquet Dataset
+    # --> TODO add row_group_size
     print("Parquet Dataset writing has started")
-    write_parquet_dataset(
-        df, parquet_fpath=bucket_fpath, partition_on=[xbin_name, ybin_name], name_function=None
-    )
-
+    xbin_name = "lonbin"
+    ybin_name = "latbin"
+    write_parquet_dataset(df=df,
+                          parquet_fpath=bucket_fpath, 
+                          partition_on=[xbin_name, ybin_name])
+    
     print("Parquet Dataset writing has completed")
