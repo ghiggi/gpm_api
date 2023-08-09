@@ -83,7 +83,7 @@ def _identify_error(e, filepath):
     return
 
 
-def _get_scheduler(get=None, collection=None) -> str | None:
+def _get_scheduler(get=None, collection=None):
     """Determine the dask scheduler that is being used.
 
     None is returned if no dask scheduler is active.
