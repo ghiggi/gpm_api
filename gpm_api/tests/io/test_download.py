@@ -112,91 +112,6 @@ def test_construct_wget_cmd(
         ), f"Folder {os.path.dirname(disk_path)} was not created"
 
 
-# May be better to test child functions... (get_disk_directory, get_start_time_from_filepaths)
-
-# def test_convert_pps_to_disk_filepaths(
-#     server_paths: List[str],
-#     products: List[str],
-#     product_categories: List[str],
-#     product_types: List[str],
-#     versions: List[int],
-#     tmpdir: str,
-# ) -> None:
-#     """Test that the PPS filepaths are correctly converted to disk filepaths"""
-
-#     base_dir = os.path.join(
-#         tmpdir,
-#         datetime.datetime.utcnow().isoformat(),
-#     )
-
-#     # for product_type in product_types:
-#     #     for product in available_products(product_type=product_type):
-#     #         for version in versions:
-#     disk_filepaths = dl.convert_pps_to_disk_filepaths(
-#         pps_filepaths=server_paths,
-#         base_dir=base_dir,
-#         product=product,
-#         product_type=product_type,
-#         version=version,
-#     )
-#     for i, server_path in enumerate(server_paths):
-#         # Remote URI scheme
-#         split_no_uri = server_path.split("://")[-1]
-
-#         _uri, _gpm, y, m, d, categ, file = split_no_uri.split("/")
-
-#         # Assertions assume the list order is identical
-#         if product_type == "RS":
-#             assert disk_filepaths[i] == os.path.join(
-#                 base_dir,
-#                 "GPM",
-#                 product_type,
-#                 f"V0{version}",
-#                 categ,
-#                 product,
-#                 y,
-#                 m,
-#                 d,
-#                 file,
-#             )
-#         elif product_type == "NRT":
-#             assert disk_filepaths[i] == os.path.join(
-#                 base_dir,
-#                 "GPM",
-#                 product_type,
-#                 categ,
-#                 product,
-#                 y,
-#                 m,
-#                 d,
-#                 file,
-#             )
-
-# def _download_with_ftlib(server_path, disk_path, username, password):
-#     # Infer hostname
-#     hostname = server_path.split("/", 3)[2]  # remove ftps:// and select host
-
-#     # Remove hostname from server_path
-#     server_path = server_path.split("/", 3)[3]
-
-#     # Connect to the FTP server using FTPS
-#     ftps = ftplib.FTP_TLS(hostname)
-
-#     # Login to the FTP server using the provided username and password
-#     ftps.login(username, password)  # /gpmdata base directory
-
-#     # Download the file from the FTP server
-#     try:
-#         with open(disk_path, "wb") as file:
-#             ftps.retrbinary(f"RETR {server_path}", file.write)
-#     except EOFError:
-#         return f"Impossible to download {server_path}"
-
-#     # Close the FTP connection
-#     ftps.close()
-#     return None
-
-
 def test_download_with_ftplib(
     mocker: MockerFixture,
     server_paths: Dict[str, Dict[str, Any]],
@@ -238,3 +153,124 @@ def test_download_with_ftplib(
     assert ftp_mock.called
 
     # TODO: Assert username/password are passed to ftp_mock.login (assert_called_with not working?)
+
+
+def test_download_file_private(
+    server_paths: Dict[str, Dict[str, Any]],
+    tmpdir: str,
+    mocker: MockerFixture,
+) -> None:
+    """Build curl/wget calls for download, but don't actually download anything
+
+    Uses tmpdir to create a unique path for each test and mocker to mock the
+    download function
+    """
+    # Don't actually download anything, so mock the run function
+    mocker.patch.object(dl, "run", autospec=True, return_value=None)
+
+    # Use server paths in fixture and try curl and wget
+    for server_path in server_paths:
+        disk_path = os.path.join(
+            tmpdir,
+            "test_download_file_private",
+            os.path.basename(server_path),
+        )
+        dl._download_files(
+            src_fpaths=[server_path],
+            dst_fpaths=[disk_path],
+            username="test",
+            password="test",
+            transfer_tool="curl",
+        )
+        dl._download_files(
+            src_fpaths=[server_path],
+            dst_fpaths=[disk_path],
+            username="test",
+            password="test",
+            transfer_tool="wget",
+        )
+
+        # Use non-existent transfer tool
+        with pytest.raises(NotImplementedError):
+            dl._download_files(
+                src_fpaths=[server_path],
+                dst_fpaths=[disk_path],
+                username="test",
+                password="test",
+                transfer_tool="fake",
+            )
+
+
+# def test_download_data(
+#     products: List[str],
+#     mocker: MockerFixture,
+# ):
+#     mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
+#     mocker.patch.object(
+#         dl, "_check_file_completness", autospec=True, return_value=[]
+#     )
+#     for product in products:
+#         res = dl.download_data(
+#             product=product,
+#             start_time=datetime.datetime(2022, 9, 7),
+#             end_time=datetime.datetime(2022, 9, 8),
+#             # product_type=product_type,
+#             # version=version,
+#             # n_threads=n_threads,
+#             # transfer_tool=transfer_tool,
+#             # progress_bar=progress_bar,
+#             # force_download=force_download,
+#             # check_integrity=check_integrity,
+#             # remove_corrupted=remove_corrupted,
+#             # verbose=verbose,
+#             # retry=retry,
+#             # base_dir=base_dir,
+#             # username=username,
+#             # password=password,
+#         )
+
+#         assert res is None
+
+
+#     def download_daily_data(
+#     product,
+#     year,
+#     month,
+#     day,
+#     product_type="RS",
+#     version=GPM_VERSION,
+#     n_threads=10,
+#     transfer_tool="curl",
+#     progress_bar=False,
+#     force_download=False,
+#     check_integrity=True,
+#     remove_corrupted=True,
+#     verbose=True,
+#     retry=1,
+#     base_dir=None,
+#     username=None,
+#     password=None,
+# ):
+#     from gpm_api.io.download import download_data
+
+#     start_time = datetime.date(year, month, day)
+#     end_time = start_time + relativedelta(days=1)
+
+#     l_corrupted = download_data(
+#         product=product,
+#         start_time=start_time,
+#         end_time=end_time,
+#         product_type=product_type,
+#         version=version,
+#         n_threads=n_threads,
+#         transfer_tool=transfer_tool,
+#         progress_bar=progress_bar,
+#         force_download=force_download,
+#         check_integrity=check_integrity,
+#         remove_corrupted=remove_corrupted,
+#         verbose=verbose,
+#         retry=retry,
+#         base_dir=base_dir,
+#         username=username,
+#         password=password,
+#     )

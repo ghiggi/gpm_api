@@ -130,3 +130,19 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
                 )
             else:
                 assert res == foldername
+
+
+# def test_get_pps_directory(
+#     products: List[str],
+#     product_types: List[str],
+# ) -> None:
+#     for product in products:
+#         for product_type in product_types:
+#             # Only work on NRT products
+#             if product in available_products(product_type=product_type):
+#                 # Dependent on dir forming private function
+#                 foldername = dir._get_pps_nrt_product_folder_name(product)
+
+#                 res = dir.get_pps_directory(product, product_type)
+#                 assert res == foldername
+#     pass
