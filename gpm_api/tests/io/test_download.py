@@ -201,6 +201,94 @@ def test_download_file_private(
             )
 
 
+def test_check_file_completeness(
+    server_paths: Dict[str, Dict[str, Any]],
+    mocker: MockerFixture,
+    tmpdir: str,
+) -> None:
+    # Assume files pass file integrity check by mocking return as empty
+    file_integrity_checker = mocker.patch.object(
+        dl, "check_file_integrity", autospec=True, return_value=[]
+    )
+
+    # Patch redownload function, assume all redownloaded files pass file integrity check
+    redownload_func = mocker.patch.object(dl, "redownload_from_filepaths", return_value=[])
+
+    for server_path, props in server_paths.items():
+        disk_path = os.path.join(
+            tmpdir,
+            "test_download_file_private",
+            os.path.basename(server_path),
+        )
+        res = dl._check_file_completness(
+            base_dir=None,
+            product=None,
+            start_time=None,
+            end_time=None,
+            version=None,
+            product_type=None,
+            remove_corrupted=None,
+            verbose=None,
+            username=None,
+            transfer_tool=None,
+            retry=0,
+            n_threads=1,
+            progress_bar=True,
+        )
+
+        assert res == []
+        assert file_integrity_checker.called
+        assert not redownload_func.called
+
+    # Attempt with corrupted files
+
+    for server_path, props in server_paths.items():
+        file_integrity_checker.return_value = [server_path]
+        redownload_func.return_value = []
+        disk_path = os.path.join(
+            tmpdir,
+            "test_download_file_private",
+            os.path.basename(server_path),
+        )
+        res = dl._check_file_completness(
+            base_dir=None,
+            product=None,
+            start_time=None,
+            end_time=None,
+            version=None,
+            product_type=None,
+            remove_corrupted=True,
+            verbose=True,
+            username=None,
+            transfer_tool=None,
+            retry=1,
+            n_threads=1,
+            progress_bar=True,
+        )
+        assert res == []
+        assert redownload_func.called
+
+        # Test that redownload_from_filepaths did not redownload the file
+        file_integrity_checker.return_value = [server_path]
+        redownload_func.return_value = [server_path]
+        res = dl._check_file_completness(
+            base_dir=None,
+            product=None,
+            start_time=None,
+            end_time=None,
+            version=None,
+            product_type=None,
+            remove_corrupted=True,
+            verbose=True,
+            username=None,
+            transfer_tool=None,
+            retry=1,
+            n_threads=1,
+            progress_bar=True,
+        )
+        assert len(res) == 1
+
+
 # def test_download_data(
 #     products: List[str],
 #     mocker: MockerFixture,
