@@ -2,6 +2,7 @@ from gpm_api.io import filter
 from typing import Dict, Any, List
 import datetime
 import pytest
+from pytest_mock.plugin import MockerFixture
 
 
 def test_granule_within_time() -> None:
@@ -52,6 +53,7 @@ def test_granule_within_time() -> None:
 def test_filter_filepaths(
     server_paths: Dict[str, Dict[str, Any]],
     products: Dict[str, Dict[str, Any]],
+    mocker: MockerFixture,
 ) -> None:
     """Test filter filepaths"""
 
@@ -59,7 +61,7 @@ def test_filter_filepaths(
     # Count and assert 2019 paths
     count_2019 = 0
     for server_path, props in server_paths.items():
-        if props["year"] == 2019 and props["product"] == "2A-DPR":
+        if props["year"] == 2019 and props["product"] == "2A-DPR" and props["version"] == 7:
             count_2019 += 1
 
     res = filter.filter_filepaths(
@@ -67,9 +69,62 @@ def test_filter_filepaths(
         product="2A-DPR",
         start_time=datetime.datetime(2019, 1, 1),
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+        version=7,
     )
 
     assert len(res) == count_2019
+
+    # Test None filepaths
+    res = filter.filter_filepaths(
+        filepaths=None,
+        product="2A-DPR",
+        start_time=datetime.datetime(2019, 1, 1),
+        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+        version=7,
+    )
+    assert res == []
+
+    # Test empty filepath list
+    res = filter.filter_filepaths(
+        filepaths=[],
+        product="2A-DPR",
+        start_time=datetime.datetime(2019, 1, 1),
+        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+        version=7,
+    )
+    assert res == []
+
+    # Test empty start time
+    count_until_2019 = 0
+    for server_path, props in server_paths.items():
+        if props["year"] == 2019:
+            count_until_2019 += 1
+    res = filter.filter_filepaths(
+        filepaths=list(server_paths.keys()),
+        product="2A-DPR",
+        start_time=None,
+        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+        version=7,
+    )
+
+    assert len(res) == count_until_2019
+
+    # Test empty end time (Error as time given (datetime.datetime.now())
+    # requires date to be less than now() in supportive
+    # function checks.check_start_end_time)
+    count_from_2019 = 0
+    for server_path, props in server_paths.items():
+        if props["year"] >= 2019:
+            count_from_2019 += 1
+
+    res = filter.filter_filepaths(
+        filepaths=list(server_paths.keys()),
+        product="2A-DPR",
+        start_time=datetime.datetime(2019, 1, 1),
+        end_time=None,
+        version=7,
+    )
+    assert len(res) == count_from_2019
 
 
 def test_filter_by_time(
@@ -143,11 +198,18 @@ def test_filter_by_product(
     server_paths: Dict[str, Dict[str, Any]],
     products: List[str],
 ) -> None:
+    """Test filter by product
+
+    Use predefined server_paths list to validate filter"""
+
+    # Check 2A-DPR
     products_2A_DPR = 0
     for server_path, props in server_paths.items():
-        # Check 2A-DPR
+        # Ensure exists in server_path list
         if props["product"] == "2A-DPR":
             products_2A_DPR += 1
+
+    assert products_2A_DPR > 0, "The test server_paths fixture does not contain expected value"
 
     filter.filter_by_product(
         filepaths=list(server_paths.keys()),
@@ -156,14 +218,48 @@ def test_filter_by_product(
 
     assert len(server_paths) == products_2A_DPR
 
+    # Test None filepath
+    assert (
+        filter.filter_by_product(
+            filepaths=None,
+            product="2A-DPR",
+        )
+        == []
+    )
 
-# for product in products:
-#     if product != "2A-DPR" and product not in [
-#         props["product"] for x, props in server_paths.items()
-#     ]:
-#         res = filter.filter_by_product(
-#             filepaths=list(server_paths.keys()),
-#             product=product,
-#         )
+    # Test empty filepaths
+    assert (
+        filter.filter_by_product(
+            filepaths=[],
+            product="2A-DPR",
+        )
+        == []
+    )
 
-#         assert res == []
+
+def test_filter_by_version(
+    server_paths: Dict[str, Dict[str, Any]],
+    versions: List[int],
+) -> None:
+    """Test filtering by version"""
+
+    # Test each version
+    for version in versions:
+        paths_with_matching_version = 0
+        for server_path, props in server_paths.items():
+            if props["version"] == version:
+                paths_with_matching_version += 1
+
+        # Only test if there are matching versions in server_paths
+        if paths_with_matching_version > 0:
+            res = filter.filter_by_version(list(server_paths.keys()), version)
+
+            assert len(res) == paths_with_matching_version
+
+        # Test None filepaths
+        res = filter.filter_by_version(None, version)
+        assert res == []
+
+        # Test empty filepaths list
+        res = filter.filter_by_version([], version)
+        assert res == []
