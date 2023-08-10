@@ -289,35 +289,69 @@ def test_check_file_completeness(
         assert len(res) == 1
 
 
-# def test_download_data(
-#     products: List[str],
-#     mocker: MockerFixture,
-# ):
-#     mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
-#     mocker.patch.object(
-#         dl, "_check_file_completness", autospec=True, return_value=[]
-#     )
-#     for product in products:
-#         res = dl.download_data(
-#             product=product,
-#             start_time=datetime.datetime(2022, 9, 7),
-#             end_time=datetime.datetime(2022, 9, 8),
-#             # product_type=product_type,
-#             # version=version,
-#             # n_threads=n_threads,
-#             # transfer_tool=transfer_tool,
-#             # progress_bar=progress_bar,
-#             # force_download=force_download,
-#             # check_integrity=check_integrity,
-#             # remove_corrupted=remove_corrupted,
-#             # verbose=verbose,
-#             # retry=retry,
-#             # base_dir=base_dir,
-#             # username=username,
-#             # password=password,
-#         )
+def test_download_data(
+    products: List[str],
+    product_types: List[str],
+    server_paths: Dict[str, Dict[str, Any]],
+    mocker: MockerFixture,
+    versions: List[str],
+):
+    """Test download_data function
 
-#         assert res is None
+    This test is somewhat redundant considering it is testing methods
+    bundled in another functions which need to be turned off in order to
+    test this function. However, it is useful to have a test that checks
+    the entire download process.
+
+    It may be useful as boilerplate to increase the number of tests here in the
+    future.
+    """
+
+    mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
+    mocker.patch.object(dl, "_check_file_completness", autospec=True, return_value=[])
+    mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
+    mocker.patch.object(dl, "run", autospec=True, return_value=None)
+    from gpm_api.io import info, pps
+
+    mocker.patch.object(
+        info,
+        "_get_info_from_filename",
+        autospec=True,
+        return_value={
+            "product": "2A-CLIM",
+            "product_type": "CLIM",
+            "start_time": datetime.datetime(2022, 9, 7, 12, 0, 0),
+            "end_time": datetime.datetime(2022, 9, 7, 12, 0, 0),
+            "version": "V06A",
+            "satellite": "GPM",
+            "granule_id": "2A-CLIM.GPM.GMI.XCAL2016-C.20220907-S120000-E120000.V06A.HDF5",
+        },
+    )
+    mocker.patch.object(
+        pps,
+        "_find_pps_daily_filepaths",
+        autospec=True,
+        return_value=(server_paths.keys(), versions),
+    )
+    # Assume files pass file integrity check by mocking return as empty
+    file_integrity_checker = mocker.patch.object(
+        dl, "check_file_integrity", autospec=True, return_value=[]
+    )
+
+    # Patch redownload function, assume all redownloaded files pass file integrity check
+    redownload_func = mocker.patch.object(dl, "redownload_from_filepaths", return_value=[])
+
+    for product in products:
+        for product_type in product_types:
+            if product in available_products(product_type=product_type):
+                res = dl.download_data(
+                    product=product,
+                    start_time=datetime.datetime(2022, 9, 7, 12, 0, 0),
+                    end_time=datetime.datetime(2022, 9, 8, 12, 0, 0),
+                    product_type=product_type,
+                )
+
+        assert res is None  # Assume data is downloaded
 
 
 #     def download_daily_data(
