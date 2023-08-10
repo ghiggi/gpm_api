@@ -149,7 +149,7 @@ def plot_cartopy_background(ax):
     return ax
 
 
-def plot_colorbar(p, ax, cbar_kwargs={}):
+def plot_colorbar(p, ax, cbar_kwargs={}, size="5%", pad=0.1):
     """Add a colorbar to a matplotlib/cartopy plot.
 
     p: matplotlib.image.AxesImage
@@ -157,7 +157,7 @@ def plot_colorbar(p, ax, cbar_kwargs={}):
     """
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     divider = make_axes_locatable(ax)
-    cax = divider.new_horizontal(size="5%", pad=0.1, axes_class=plt.Axes)
+    cax = divider.new_horizontal(size=size, pad=pad, axes_class=plt.Axes)
 
     p.figure.add_axes(cax)
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
