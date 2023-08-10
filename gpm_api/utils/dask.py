@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Wed Aug  9 10:30:36 2023
 
@@ -21,10 +20,9 @@ def clean_memory(client):
     See https://distributed.dask.org/en/latest/worker-memory.html#manually-trim-memory
     """
     client.run(trim_memory)
-    
 
-def get_client(): 
+
+def get_client():
     from dask.distributed import get_client
-    
-    return get_client()
 
+    return get_client()

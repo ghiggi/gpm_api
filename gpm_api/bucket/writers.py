@@ -45,8 +45,8 @@ def get_bin_partition(values, bin_size):
 
 
 def write_parquet_dataset(df, parquet_fpath, partition_on, name_function=None):
-    # Note: Append currently works only when using fastparquet 
-    
+    # Note: Append currently works only when using fastparquet
+
     # Define default naming scheme
     if name_function is None:
 
@@ -169,13 +169,12 @@ def _try_write_granule_bucket(
                 xbin_size=xbin_size,
                 ybin_size=ybin_size,
             )
-            # If works, return None 
+            # If works, return None
             info = None
     except Exception as e:
-        # Define tuple to return 
+        # Define tuple to return
         info = src_fpath, str(e)
     return info
-
 
 
 def split_dict_in_blocks(dictionary, block_size):
@@ -183,7 +182,7 @@ def split_dict_in_blocks(dictionary, block_size):
     keys = list(dictionary.keys())
     total_keys = len(keys)
     for i in range(0, total_keys, block_size):
-        block_keys = keys[i:i+block_size]
+        block_keys = keys[i : i + block_size]
         block_dict = {key: dictionary[key] for key in block_keys}
         dict_list.append(block_dict)
     return dict_list
@@ -215,22 +214,22 @@ def write_granules_buckets(
 
     if len(src_dst_dict) == 0:
         return None
-    
-    # Split long list of files in blocks 
+
+    # Split long list of files in blocks
     list_src_dst_dict = split_dict_in_blocks(src_dst_dict, block_size=max_dask_total_tasks)
-    
-    # Execute tasks by blocks to avoid dask overhead 
+
+    # Execute tasks by blocks to avoid dask overhead
     n_blocks = len(list_src_dst_dict)
-    
+
     for i, src_dst_dict in enumerate(list_src_dst_dict):
         print(f"Executing tasks block {i}/{n_blocks}")
-        
-        # Loop over granules 
+
+        # Loop over granules
         if parallel:
             func = dask.delayed(_try_write_granule_bucket)
         else:
             func = _try_write_granule_bucket
-    
+
         list_results = [
             func(
                 src_fpath=src_fpath,
@@ -243,17 +242,19 @@ def write_granules_buckets(
             )
             for src_fpath, dst_fpath in src_dst_dict.items()
         ]
-        # If delayed, execute the tasks 
+        # If delayed, execute the tasks
         if parallel:
-            list_results = compute_list_delayed(list_results, max_concurrent_tasks=max_concurrent_tasks)
-    
+            list_results = compute_list_delayed(
+                list_results, max_concurrent_tasks=max_concurrent_tasks
+            )
+
         # Process results to detect errors
         list_errors = [error_info for error_info in list_results if error_info is not None]
         for src_fpath, error_str in list_errors:
             print(f"An error occurred while processing {src_fpath}: {error_str}")
-            
-        # If parallel=True, retrieve client, clean the memory and restart 
-        if parallel: 
+
+        # If parallel=True, retrieve client, clean the memory and restart
+        if parallel:
             client = get_client()
             clean_memory(client)
             client.restart()

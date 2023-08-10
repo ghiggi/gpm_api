@@ -6,7 +6,7 @@ Created on Wed Aug  2 12:11:44 2023
 """
 import dask.dataframe as dd
 import pandas as pd
-import pyarrow as pa 
+import pyarrow as pa
 import pyarrow.parquet as pq
 
 
@@ -46,20 +46,19 @@ def read_partitioned_dataset(fpath, columns=None):
     return df
 
 
-def _read_parquet_bin_files(filepaths, bin_name): 
+def _read_parquet_bin_files(filepaths, bin_name):
     # Read the list of Parquet files
     datasets = [pq.ParquetDataset(filepath, split_row_groups=False) for filepath in filepaths]
     # Concatenate the datasets
     table = pa.concat_tables([dataset.read() for dataset in datasets])
     # Conversion to Pandas
-    df = table.to_pandas(types_mapper=pd.ArrowDtype, zero_copy_only=False) # TODO: make True 
-    # Add partitioning columns 
+    df = table.to_pandas(types_mapper=pd.ArrowDtype, zero_copy_only=False)  # TODO: make True
+    # Add partitioning columns
     partition_key_value_list = bin_name.split("|")
     for partition_str in partition_key_value_list:
         partition_column, value = partition_str.split("=")
-        df[partition_column] = pa.array([value]*len(df))
+        df[partition_column] = pa.array([value] * len(df))
     return df
-
 
 
 # def read_bin_buckets_files(bin_fpaths, columns=None, partition_size=None, split_row_group=False):
@@ -78,7 +77,7 @@ def _read_parquet_bin_files(filepaths, bin_name):
 #         ignore_metadata_file=False,  # True can slowdown a lot reading
 #         # Partitioning
 #         split_row_groups=split_row_group,
-#         # split_row_groups=False,  # False --> Each file a partition. 
+#         # split_row_groups=False,  # False --> Each file a partition.
 #         # Arrow options
 #         arrow_to_pandas=arrow_to_pandas,
 #     )
