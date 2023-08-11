@@ -6,12 +6,13 @@ from typing import Any, List, Dict
 from pytest_mock.plugin import MockerFixture
 from gpm_api.io import download as dl
 from gpm_api.io.products import available_products
+from gpm_api.utils.warnings import GPMDownloadWarning
 
 
 def test_construct_curl_cmd(
     username: str,
     password: str,
-    server_paths: List[str],
+    server_paths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
     """Test that the curl command constructor works as expected
@@ -66,7 +67,7 @@ def test_construct_curl_cmd(
 def test_construct_wget_cmd(
     username: str,
     password: str,
-    server_paths: List[str],
+    server_paths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
     """Test that the wget command constructor works as expected
@@ -259,45 +260,109 @@ def test_download_data(
         assert res is None  # Assume data is downloaded
 
 
-#     def download_daily_data(
-#     product,
-#     year,
-#     month,
-#     day,
-#     product_type="RS",
-#     version=GPM_VERSION,
-#     n_threads=10,
-#     transfer_tool="curl",
-#     progress_bar=False,
-#     force_download=False,
-#     check_integrity=True,
-#     remove_corrupted=True,
-#     verbose=True,
-#     retry=1,
-#     base_dir=None,
-#     username=None,
-#     password=None,
-# ):
-#     from gpm_api.io.download import download_data
+def test_download_daily_data_private(
+    tmpdir: str,
+    versions: List[str],
+    products: List[str],
+    product_types: List[str],
+    mocker: MockerFixture,
+) -> None:
+    """Test download_daily_data function
 
-#     start_time = datetime.date(year, month, day)
-#     end_time = start_time + relativedelta(days=1)
+    Tests only the ability for the function to run without errors. Does not
+    test the actual download process as communication with the server is
+    mocked.
+    """
 
-#     l_corrupted = download_data(
-#         product=product,
-#         start_time=start_time,
-#         end_time=end_time,
-#         product_type=product_type,
-#         version=version,
-#         n_threads=n_threads,
-#         transfer_tool=transfer_tool,
-#         progress_bar=progress_bar,
-#         force_download=force_download,
-#         check_integrity=check_integrity,
-#         remove_corrupted=remove_corrupted,
-#         verbose=verbose,
-#         retry=retry,
-#         base_dir=base_dir,
-#         username=username,
-#         password=password,
-#     )
+    # Patch download functions as to not actually download anything
+    mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
+    mocker.patch.object(dl, "run", autospec=True, return_value=None)
+    mocker.patch.object(dl, "_find_pps_daily_filepaths", autospec=True, return_value=([], versions))
+
+    # Mocking empty responses will cause a DownloadWarning. Test that it is raised
+    with pytest.warns(GPMDownloadWarning):
+        for version in versions:
+            for product_type in product_types:
+                for product in available_products(product_type=product_type):
+                    dl._download_daily_data(
+                        base_dir=tmpdir,
+                        username="test",
+                        password="test",
+                        date=datetime.datetime(2022, 9, 7, 12, 0, 0),
+                        version=version,
+                        product=product,
+                        product_type=product_type,
+                    )
+
+
+def test_download_files(
+    server_paths: Dict[str, Dict[str, Any]],
+    versions: List[str],
+    mocker: MockerFixture,
+) -> None:
+    """Test download_files function"""
+
+    # Mock called functions as to not download any data
+    mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
+    mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
+    mocker.patch.object(dl, "run", autospec=True, return_value=None)
+    mocker.patch.object(dl, "check_filepaths_integrity", autospec=True, return_value=[])
+
+    # Download a simple list of files
+    assert dl.download_files(filepaths=list(server_paths.keys())) == []
+
+    # Test that None filepaths returns None
+    assert dl.download_files(filepaths=None) is None
+
+    # Test that an empty list of filepaths returns None
+    assert dl.download_files(filepaths=[]) is None
+
+    # Test that a single filepath as a string also accepted as input
+    assert dl.download_files(filepaths=list(server_paths.keys())[0]) == []
+
+    # Test that filetypes other than a list are not accepted
+    with pytest.raises(TypeError):
+        for obj in [(), {}, 1, 1.0, "str", True]:
+            dl.download_files(filepaths=obj)
+
+
+def test_check_download_status(
+    products: List[str],
+) -> None:
+    """Test check_download_status function"""
+
+    for product in products:
+        assert dl._check_download_status([-1, -1, -1], product, True) is True  # All lready on disk
+        assert dl._check_download_status([0, 0, 0], product, True) is None  # All failed download
+        assert dl._check_download_status([1, 1, 1], product, True) is True  # All success download
+        assert dl._check_download_status([], product, True) is None  # No data available
+        assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
+
+
+def test_flatten_list() -> None:
+    """Test flattening nested lists into lists"""
+
+    assert dl.flatten_list([["single item"]]) == ["single item"]
+    assert dl.flatten_list([["double", "item"]]) == ["double", "item"]
+
+
+def test_convert_pps_to_disk_filepaths(
+    server_paths: Dict[str, Dict[str, Any]],
+    versions: List[str],
+    products: List[str],
+    product_types: List[str],
+    tmpdir: str,
+) -> None:
+    """Test convert_pps_to_disk_filepaths function"""
+
+    assert dl.convert_pps_to_disk_filepaths(
+        pps_filepaths=[
+            "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
+        ],
+        base_dir="/tmp",
+        product="2A-DPR",
+        product_type="RS",
+        version=7,
+    ) == [
+        "/tmp/GPM/RS/V07/RADAR/2A-DPR/2020/07/05/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
+    ]
