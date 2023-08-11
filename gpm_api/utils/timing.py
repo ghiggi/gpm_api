@@ -8,6 +8,7 @@ import datetime
 import time
 from time import perf_counter
 
+
 def print_elapsed_time(fn):
     def decorator(*args, **kwargs):
         start_time = time.perf_counter()

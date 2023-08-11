@@ -8,21 +8,23 @@ import os
 
 import dask
 
+from gpm_api.bucket.dataset import write_partitioned_dataset
+from gpm_api.bucket.processing import (
+    assign_spatial_partitions,
+    convert_ds_to_df,
+    ds_to_dask_df_function,
+    ds_to_pd_df_function,
+    get_granule_dataframe,
+)
+
 # from gpm_api.io.directories import get_time_tree
 # from gpm_api.io.info import get_key_from_filepath
 from gpm_api.utils.dask import clean_memory, get_client
-from gpm_api.bucket.dataset import write_partitioned_dataset
-from gpm_api.bucket.processing import (
-    convert_ds_to_df,
-    get_granule_dataframe,
-    assign_spatial_partitions,
-    ds_to_pd_df_function,
-    ds_to_dask_df_function,
-)
 from gpm_api.utils.timing import print_task_elapsed_time
 
 ####--------------------------------------------------------------------------.
 #### Single GPM Granule Routines
+
 
 def write_granule_bucket(
     src_fpath,
@@ -36,10 +38,10 @@ def write_granule_bucket(
     ybin_size=15,
     xbin_name="lonbin",
     ybin_name="latbin",
-    # Writer kwargs 
+    # Writer kwargs
     format="parquet",
     use_threads=True,
-    **writer_kwargs
+    **writer_kwargs,
 ):
     """Write a geographically partitioned Parquet Dataset.
 
@@ -48,7 +50,7 @@ def write_granule_bucket(
     - Partition by 5° degree pixels: 2592 directories (72*36)
     - Partition by 10° degree pixels: 648 directories (36*18)
     - Partition by 15° degree pixels: 288 directories (24*12)
-   
+
     """
     # Retrieve dataframe
     df = get_granule_dataframe(
@@ -58,34 +60,37 @@ def write_granule_bucket(
         ds_to_df_function=ds_to_df_function,
         filtering_function=filtering_function,
     )
-    
-    # Define partitioning columns names 
+
+    # Define partitioning columns names
     partitioning = [xbin_name, ybin_name]
-    
-    # Add partitioning columns 
-    df = assign_spatial_partitions(df=df, 
-                                   x_column="lat",
-                                   y_column="lon",
-                                   xbin_name=xbin_name, 
-                                   ybin_name=ybin_name,
-                                   xbin_size=xbin_size,
-                                   ybin_size=ybin_size)
-   
-            
+
+    # Add partitioning columns
+    df = assign_spatial_partitions(
+        df=df,
+        x_column="lat",
+        y_column="lon",
+        xbin_name=xbin_name,
+        ybin_name=ybin_name,
+        xbin_size=xbin_size,
+        ybin_size=ybin_size,
+    )
+
     # Define unique prefix name so to add files to the bucket archive
     # - This prevent risk of overwriting
     # - If df is pandas.dataframe -->  f"{fname_prefix}_" + "{i}.parquet"
     # - if df is a dask.dataframe -->  f"{fname_prefix}_dask.partition_{part_index}"
     fname_prefix = os.path.splitext(os.path.basename(src_fpath))[0]
-    
-    write_partitioned_dataset(df=df, 
-                              base_dir=bucket_base_dir, 
-                              fname_prefix=fname_prefix,
-                              partitioning=partitioning,
-                              format=format,
-                              use_threads=use_threads, 
-                              **writer_kwargs)
-    
+
+    write_partitioned_dataset(
+        df=df,
+        base_dir=bucket_base_dir,
+        fname_prefix=fname_prefix,
+        partitioning=partitioning,
+        format=format,
+        use_threads=use_threads,
+        **writer_kwargs,
+    )
+
 
 ####--------------------------------------------------------------------------.
 #### GPM Granules Routines
@@ -102,7 +107,7 @@ def _try_write_granule_bucket(
     ybin_size=15,
     xbin_name="lonbin",
     ybin_name="latbin",
-    # Writer kwargs 
+    # Writer kwargs
     format="parquet",
     use_threads=True,
     **writer_kwargs,
@@ -122,7 +127,7 @@ def _try_write_granule_bucket(
                 ybin_size=ybin_size,
                 xbin_name=xbin_name,
                 ybin_name=ybin_name,
-                # Writer kwargs 
+                # Writer kwargs
                 format=format,
                 use_threads=use_threads,
                 **writer_kwargs,
@@ -136,7 +141,7 @@ def _try_write_granule_bucket(
 
 
 def split_list_in_blocks(values, block_size):
-    list_blocks = [values[i : i + block_size]  for i in range(0, len(values), block_size)]
+    list_blocks = [values[i : i + block_size] for i in range(0, len(values), block_size)]
     return list_blocks
 
 
@@ -158,14 +163,13 @@ def write_granules_bucket(
     parallel=True,
     max_concurrent_tasks=None,
     max_dask_total_tasks=500,
-    # Writer kwargs 
+    # Writer kwargs
     format="parquet",
     use_threads=True,
     **writer_kwargs,
-    
 ):
     # TODO: force=True/False log which were processed so to skip reprocessing
-    
+
     import dask
 
     from gpm_api.utils.parallel import compute_list_delayed
@@ -198,14 +202,14 @@ def write_granules_bucket(
                 ybin_size=ybin_size,
                 xbin_name=xbin_name,
                 ybin_name=ybin_name,
-                # Writer kwargs 
+                # Writer kwargs
                 format=format,
                 use_threads=use_threads,
                 **writer_kwargs,
             )
             for src_fpath in block_fpaths
         ]
-    
+
         # If delayed, execute the tasks
         if parallel:
             list_results = compute_list_delayed(
@@ -221,15 +225,16 @@ def write_granules_bucket(
         if parallel:
             client = get_client()
             clean_memory(client)
-            client.restart() 
+            client.restart()
 
     return None
+
 
 ####--------------------------------------------------------------------------.
 #### Single GPM Granule Routines OLD
 
 
-# def write_parquet_dataset(df, parquet_fpath, partition_on, 
+# def write_parquet_dataset(df, parquet_fpath, partition_on,
 #                           name_function=None,
 #                           schema="infer",
 #                           compression="snappy",
@@ -290,15 +295,15 @@ def write_granules_bucket(
 #         ybin_name: get_bin_partition(df["lat"], bin_size=ybin_size),
 #     }
 #     df = df.assign(**partition_columns)
-    
+
 #     ## HERE IS DELICATE CODES ... NOT SURE IS THE OPTIMAL WAY YET !
 #     # Reorder DaskDataframe by partitioning columns
-#     # - The goal is to have each partitioning colum(s) values in a single partition
+#     # - The goal is to have each partitioning column(s) values in a single partition
 #     df = df.sort_values([xbin_name, ybin_name], npartitions="auto")
 
 #     # Define partition sizes
 #     # - Control the number and size of parquet files in each disk partition
-#     df = df.repartition(partition_size=partition_size) # maybe not needed 
+#     df = df.repartition(partition_size=partition_size) # maybe not needed
 
 #     # Write Parquet Dataset
 #     write_parquet_dataset(df=df, parquet_fpath=parquet_fpath, partition_on=[xbin_name, ybin_name])
@@ -389,7 +394,6 @@ def write_granules_bucket(
 #     return parquet_fpath
 
 
-
 # def write_granules_buckets(
 #     fpaths,
 #     bucket_base_dir,
@@ -462,7 +466,7 @@ def write_granules_bucket(
 #         if parallel:
 #             client = get_client()
 #             clean_memory(client)
-#             client.restart() 
+#             client.restart()
 
 #     return None
 
@@ -494,26 +498,29 @@ def write_dataset_bucket(
         ds_to_df_function=ds_to_df_function,
         filtering_function=filtering_function,
     )
-    
-    # Define partitioning columns names 
+
+    # Define partitioning columns names
     partitioning = [xbin_name, ybin_name]
-    
-    # Add partitioning columns 
-    df = assign_spatial_partitions(df=df, 
-                                   x_column="lat",
-                                   y_column="lon",
-                                   xbin_name=xbin_name, 
-                                   ybin_name=ybin_name,
-                                   xbin_size=xbin_size,
-                                   ybin_size=ybin_size)
-   
-            
-    # Write bucket 
-    write_partitioned_dataset(df=df, 
-                              base_dir=bucket_fpath, 
-                              partitioning=partitioning,
-                              format=format,
-                              use_threads=use_threads, 
-                              **writer_kwargs)
-    
+
+    # Add partitioning columns
+    df = assign_spatial_partitions(
+        df=df,
+        x_column="lat",
+        y_column="lon",
+        xbin_name=xbin_name,
+        ybin_name=ybin_name,
+        xbin_size=xbin_size,
+        ybin_size=ybin_size,
+    )
+
+    # Write bucket
+    write_partitioned_dataset(
+        df=df,
+        base_dir=bucket_fpath,
+        partitioning=partitioning,
+        format=format,
+        use_threads=use_threads,
+        **writer_kwargs,
+    )
+
     return None

@@ -4,12 +4,14 @@ Created on Wed Aug  2 12:14:51 2023
 
 @author: ghiggi
 """
-import time 
-import math 
+import math
+import time
+
 import dask
 import dask.dataframe as dd
-import xarray as xr
 import numpy as np
+import xarray as xr
+
 import gpm_api
 from gpm_api.bucket.io import get_parquet_fpaths, group_fpaths_by_bin
 from gpm_api.dataset.granule import remove_unused_var_dims
@@ -85,13 +87,13 @@ def ds_to_pd_df_function(ds):
     # Convert to pandas dataframe
     # - strings are converted to object !
     df = ds.to_dataframe(dim_order=None)
- 
+
     # Convert object columns to pyarrow string
     df = ensure_pyarrow_string_columns(df)
-    
-    # Remove MultiIndex 
+
+    # Remove MultiIndex
     df = df.reset_index()
-    
+
     # Drop unrequired columns (previous dataset dimensions)
     df = drop_undesired_columns(df)
     return df
@@ -132,7 +134,7 @@ def convert_ds_to_df(ds, preprocessing_function, ds_to_df_function, filtering_fu
     # Preprocess xarray Dataset
     if callable(preprocessing_function):
         ds = preprocessing_function(ds)
-        
+
     # Convert xarray Dataset to dask.Dataframe
     df = ds_to_df_function(ds)
 
@@ -181,20 +183,17 @@ def get_bin_partition(values, bin_size):
     """
     return bin_size * np.floor(values / bin_size)
 
+
 # bin_size = 10
 # values = np.array([-180,-176,-175, -174, -171, 170, 166])
 # get_bin_partition(values, bin_size)
 
 
-def assign_spatial_partitions(df, 
-                              xbin_name, 
-                              ybin_name,
-                              xbin_size, 
-                              ybin_size,
-                              x_column="lat",
-                              y_column="lon"): 
-    """Add partitioning bin columns to dataframe. 
-    
+def assign_spatial_partitions(
+    df, xbin_name, ybin_name, xbin_size, ybin_size, x_column="lat", y_column="lon"
+):
+    """Add partitioning bin columns to dataframe.
+
     Works for both dask.dataframe and pandas.dataframe.
     """
     # Add spatial partitions columns to dataframe
@@ -203,7 +202,7 @@ def assign_spatial_partitions(df,
         ybin_name: get_bin_partition(df[y_column], bin_size=ybin_size),
     }
     df = df.assign(**partition_columns)
-    return df 
+    return df
 
 
 def _convert_size_to_bytes(size_str):
@@ -224,32 +223,32 @@ def _convert_size_to_bytes(size_str):
     :return: The number of bytes represented by the string.
     """
     multipliers = {
-        'kilobyte':  1024,
-        'megabyte':  1024 ** 2,
-        'gigabyte':  1024 ** 3,
-        'terabyte':  1024 ** 4,
-        'petabyte':  1024 ** 5,
-        'exabyte':   1024 ** 6,
-        'zetabyte':  1024 ** 7,
-        'yottabyte': 1024 ** 8,
-        'kb': 1024,
-        'mb': 1024**2,
-        'gb': 1024**3,
-        'tb': 1024**4,
-        'pb': 1024**5,
-        'eb': 1024**6,
-        'zb': 1024**7,
-        'yb': 1024**8,
+        "kilobyte": 1024,
+        "megabyte": 1024**2,
+        "gigabyte": 1024**3,
+        "terabyte": 1024**4,
+        "petabyte": 1024**5,
+        "exabyte": 1024**6,
+        "zetabyte": 1024**7,
+        "yottabyte": 1024**8,
+        "kb": 1024,
+        "mb": 1024**2,
+        "gb": 1024**3,
+        "tb": 1024**4,
+        "pb": 1024**5,
+        "eb": 1024**6,
+        "zb": 1024**7,
+        "yb": 1024**8,
     }
 
     for suffix in multipliers:
-        size_str = size_str.lower().strip().strip('s')
+        size_str = size_str.lower().strip().strip("s")
         if size_str.lower().endswith(suffix):
-            return int(float(size_str[0:-len(suffix)]) * multipliers[suffix])
+            return int(float(size_str[0 : -len(suffix)]) * multipliers[suffix])
     else:
-        if size_str.endswith('b'):
+        if size_str.endswith("b"):
             size_str = size_str[0:-1]
-        elif size_str.endswith('byte'):
+        elif size_str.endswith("byte"):
             size_str = size_str[0:-4]
     return int(size_str)
 
@@ -277,24 +276,24 @@ def _convert_size_to_bytes(size_str):
 #             print("Converting '%s' to bytes..." % qa[0], end='')
 #             self.assertEqual(convert_size_to_bytes(qa[0]), qa[1])
 #             print('✓')
-            
-            
+
+
 def convert_size_to_bytes(size):
-    if not isinstance(size, (str, int)): 
+    if not isinstance(size, (str, int)):
         raise TypeError("Expecting a string (i.e. 200MB) or the integer number of bytes.")
-    if isinstance(size, int): 
-        return size 
-    try: 
+    if isinstance(size, int):
+        return size
+    try:
         size = _convert_size_to_bytes(size)
-    except Exception: 
+    except Exception:
         raise ValueError("Impossible to parse {size_str} to the number of bytes.")
-    return size  
+    return size
 
 
-def estimate_row_group_size(table, size='200MB'):
+def estimate_row_group_size(table, size="200MB"):
     """Estimate row_group_size parameter based on the desired row group memory size.
-    
-    row_group_size is a Parquet argument controlling the number of rows 
+
+    row_group_size is a Parquet argument controlling the number of rows
     in each Apache Parquet File Row Group.
     """
     memory_used = table.nbytes
@@ -327,48 +326,49 @@ def merge_granule_buckets(
     **writer_kwargs,
 ):
     """
-    Merge the per-granule bucket archive in a single  optimized archive !
+     Merge the per-granule bucket archive in a single  optimized archive !
 
-    Parameters
-    ----------
-    bucket_base_dir : str
-        Base directory of the per-granule bucket archive.
-    bucket_fpath : str
-        File path of the final bucket archive.
-    xbin_name : str, optional
-        Name of the binned column used to partition the data along the x dimension.
-        The default is "lonbin".
-    ybin_name : str, optional
-        Name of the binned column used to partition the data along the y dimension.
-        The default is "latbin".
-    row_group_size : TYPE, optional
-        Maximum number of rows in each written Parquet row group.
-        If specified as a string (i.e. "500 MB"), the equivalent row group size 
-        number is estimated. The default is "500MB".
-   compression : str, optional 
-        Specify the compression codec, either on a general basis or per-column. 
-        Valid values: {"none", "snappy", "gzip", "brotli", "lz4", "zstd"}.
-        The default is "snappy".
-    compression : int or dict, optional
-        Specify the compression level for a codec, either on a general basis or per-column. 
-        If None is passed, arrow selects the compression level for the compression codec in use. 
-        The compression level has a different meaning for each codec, so you have 
-        to read the pyArrow documentation of the codec you are using. 
-        The default is compression_level=None.
-    **writer_kwargs: dict
-        Other writer options passed to dask.Dataframe.to_parquet, pyarrow.parquet.write_table
-        and pyarrow.parquet.ParquetWriter.
-        More information available at: 
-         - https://docs.dask.org/en/stable/generated/dask.dataframe.to_parquet.html
-         - https://arrow.apache.org/docs/python/generated/pyarrow.parquet.write_table.html
-         - https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetWriter.html   
-    
-    Returns
-    -------
-    None.
+     Parameters
+     ----------
+     bucket_base_dir : str
+         Base directory of the per-granule bucket archive.
+     bucket_fpath : str
+         File path of the final bucket archive.
+     xbin_name : str, optional
+         Name of the binned column used to partition the data along the x dimension.
+         The default is "lonbin".
+     ybin_name : str, optional
+         Name of the binned column used to partition the data along the y dimension.
+         The default is "latbin".
+     row_group_size : TYPE, optional
+         Maximum number of rows in each written Parquet row group.
+         If specified as a string (i.e. "500 MB"), the equivalent row group size
+         number is estimated. The default is "500MB".
+    compression : str, optional
+         Specify the compression codec, either on a general basis or per-column.
+         Valid values: {"none", "snappy", "gzip", "brotli", "lz4", "zstd"}.
+         The default is "snappy".
+     compression : int or dict, optional
+         Specify the compression level for a codec, either on a general basis or per-column.
+         If None is passed, arrow selects the compression level for the compression codec in use.
+         The compression level has a different meaning for each codec, so you have
+         to read the pyArrow documentation of the codec you are using.
+         The default is compression_level=None.
+     **writer_kwargs: dict
+         Other writer options passed to dask.Dataframe.to_parquet, pyarrow.parquet.write_table
+         and pyarrow.parquet.ParquetWriter.
+         More information available at:
+          - https://docs.dask.org/en/stable/generated/dask.dataframe.to_parquet.html
+          - https://arrow.apache.org/docs/python/generated/pyarrow.parquet.write_table.html
+          - https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetWriter.html
+
+     Returns
+     -------
+     None.
 
     """
     from dask.dataframe.utils import make_meta
+
     from gpm_api.bucket.readers import _read_parquet_bin_files
     from gpm_api.bucket.writers import write_parquet_dataset
 
@@ -377,8 +377,8 @@ def merge_granule_buckets(
     t_i = time.time()
     fpaths = get_parquet_fpaths(bucket_base_dir)
     n_fpaths = len(fpaths)
-    t_f = time.time() 
-    t_elapsed = round(t_f - t_i, 0)/60
+    t_f = time.time()
+    t_elapsed = round(t_f - t_i, 0) / 60
     print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
     print(f"{n_fpaths} Parquet files to merge.")
 
@@ -391,13 +391,13 @@ def merge_granule_buckets(
     list_bin_name = list(bin_path_dict.keys())
     list_bin_fpaths = list(bin_path_dict.values())
 
-    # Define meta and row_group_size 
+    # Define meta and row_group_size
     template_fpath = list_bin_fpaths[0][0]
     template_bin_name = list_bin_name[0]
     template_table = _read_parquet_bin_files([template_fpath], bin_name=template_bin_name)
     meta = make_meta(template_table)
-    row_group_size = estimate_row_group_size(template_table, size=row_group_size)   
-    
+    row_group_size = estimate_row_group_size(template_table, size=row_group_size)
+
     # Read dataframes for each geographic bin
     print("Lazy reading of dataframe has started")
     df = dd.from_map(_read_parquet_bin_files, list_bin_fpaths, list_bin_name, meta=meta)
@@ -407,11 +407,13 @@ def merge_granule_buckets(
     print("Parquet Dataset writing has started")
     xbin_name = "lonbin"
     ybin_name = "latbin"
-    write_parquet_dataset(df=df, parquet_fpath=bucket_fpath, 
-                          partition_on=[xbin_name, ybin_name],
-                          row_group_size=row_group_size, 
-                          compression=compression,
-                          compression_level=compression_level, 
-                          **writer_kwargs,
-                          )
+    write_parquet_dataset(
+        df=df,
+        parquet_fpath=bucket_fpath,
+        partition_on=[xbin_name, ybin_name],
+        row_group_size=row_group_size,
+        compression=compression,
+        compression_level=compression_level,
+        **writer_kwargs,
+    )
     print("Parquet Dataset writing has completed")

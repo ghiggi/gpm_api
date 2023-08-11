@@ -16,7 +16,9 @@ def _read_parquet_bin_files(filepaths, bin_name):
     # Concatenate the datasets
     table = pa.concat_tables([dataset.read() for dataset in datasets])
     # Conversion to Pandas
-    df = table.to_pandas(types_mapper=pd.ArrowDtype, zero_copy_only=False)  # TODO: make True one day
+    df = table.to_pandas(
+        types_mapper=pd.ArrowDtype, zero_copy_only=False
+    )  # TODO: make True one day
     # Add partitioning columns
     partition_key_value_list = bin_name.split("|")
     for partition_str in partition_key_value_list:
@@ -25,7 +27,7 @@ def _read_parquet_bin_files(filepaths, bin_name):
     return df
 
 
-#### Unused and to move away ... maybe in dataset.py ... 
+#### Unused and to move away ... maybe in dataset.py ...
 def _get_arrow_to_pandas_defaults():
     arrow_to_pandas = {
         "zero_copy_only": False,  # Default is False. If True, raise error if doing copies
