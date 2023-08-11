@@ -223,7 +223,7 @@ COLOR_DICT = {
         "label": "Precipitation intensity [$mm \\ hr^{-1}$]",
     },
     "GPM_Z": {
-        "bad_color": "gray",
+        "bad_color": "none",
         "bad_alpha": 0.5,
         "cmap": "Spectral_r",
         # 'cmap_n': 10,
@@ -235,8 +235,7 @@ COLOR_DICT = {
         "label": "Reflectivity [$dBZ$]",  # $Z_{e}$
     },
     "GPM_DFR": {
-        "bad_color": "gray",
-        "bad_alpha": 0.5,
+        "bad_color": "none",
         "cmap": "turbo",
         # 'cmap_n': 10,
         "cmap_type": "Colormap",
@@ -444,24 +443,116 @@ COLOR_DICT = {
         "cmap_type": "LinearSegmented",
         "levels": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60],
     },
+    "precipWaterIntegrated": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.1,  # kg/m2
+        "vmax": 20,  # 3000
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Total Precipitable Water [$kg \\ m^{-2}$]",
+    },
+    "totalWaterPath": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.1,  # kg/m2
+        "vmax": 20,  # 3000
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Total Precipitable Water [$kg \\ m^{-2}$]",
+    },
+    "rainWaterPath": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.1,  # kg/m2
+        "vmax": 5,  # 3000
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Rain Water Path [$kg \\ m^{-2}$]",
+    },
+    "cloudWaterPath": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.1,  # kg/m2
+        "vmax": 1,  # 3000
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Cloud Liquid Water Path [$kg \\ m^{-2}$]",
+    },
+    "cloudLiquidWaterPath": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.1,  # kg/m2
+        "vmax": 1,  # 3000
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Cloud Liquid Water Path [$kg \\ m^{-2}$]",
+    },
+    "liquidWaterPath": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.5,  # kg/m2
+        # "vmax": 3000,
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Liquid Water Path [$kg \\ m^{-2}$]",
+    },
+    "iceWaterPath": {
+        "under_color": "none",
+        "bad_color": "gray",
+        "bad_alpha": 0.5,
+        "cmap": "YlGnBu",
+        "cmap_type": "Colormap",
+        "vmin": 0.5,  # kg/m2
+        "vmax": 10,  # 3000
+        "extend": "max",
+        "extendfrac": 0.05,
+        "label": "Ice Water Path [$kg \\ m^{-2}$]",
+    },
 }
 
+
 precip_variables = [
-    # DPR
+    # 2A-<RADAR>
     "precipRate",
     "precipRateNearSurface",
     "precipRateESurface",
     "precipRateESurface2",
-    # CORRA
+    "precipRateAve24",
+    # 2B-<RADAR>-CORRA
     "precipTotRate",
     "nearSurfPrecipTotRate",
+    "nearSurfPrecipLiqRate",
     "estimSurfPrecipTotRate",
     "OEestimSurfPrecipTotRate",
-    # 2A PMW
+    "estimSurfPrecipLiqRate",
+    "OEestimSurfPrecipLiqRate",
+    # 2A <PMW>
     "surfacePrecipitation",
-    # 2A-GPM-SLH
+    "mostLikelyPrecipitation",
+    "convectivePrecipitation",
+    "frozenPrecipitation",  # has really small values !
+    # 2A-<RADAR>-SLH
     "nearSurfacePrecipRate",
-    # 2B-GPM-CSH
+    # 2B-<RADAR>-CSH
     "surfacePrecipRate",
     # IMERG
     "precipitationCal",
@@ -474,8 +565,20 @@ precip_variables = [
 for var in precip_variables:
     COLOR_DICT[var] = COLOR_DICT["pysteps_mm/hr"]
 
+reflectivity_variables = [
+    "zFactorFinalNearSurface",
+    "zFactorFinalESurface",
+    "zFactorFinalNearSurface",
+    "zFactorMeasured",
+    "zFactorFinal",
+]
+for var in reflectivity_variables:
+    COLOR_DICT[var] = COLOR_DICT["GPM_Z"]
+
 COLOR_DICT["Tb"] = COLOR_DICT["Brightness_Temperature"]
 COLOR_DICT["Tc"] = COLOR_DICT["Brightness_Temperature"]
+COLOR_DICT["simulatedBrightTemp"] = COLOR_DICT["Brightness_Temperature"]
+
 
 ####--------------------------------------------------------------------------.
 #### GOES DICTIONARY

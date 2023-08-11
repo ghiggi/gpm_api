@@ -4,6 +4,8 @@ Created on Sat Dec 10 18:42:28 2022
 
 @author: ghiggi
 """
+import inspect
+
 import cartopy
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -16,6 +18,10 @@ from scipy.ndimage import binary_dilation
 ### TODO: Add xarray + cartopy  (xr_carto) (xr_mpl)
 # _plot_cartopy_xr_imshow
 # _plot_cartopy_xr_pcolormesh
+
+
+def is_generator(obj):
+    return inspect.isgeneratorfunction(obj) or inspect.isgenerator(obj)
 
 
 def _preprocess_figure_args(ax, fig_kwargs={}, subplot_kwargs={}):
@@ -143,7 +149,7 @@ def plot_cartopy_background(ax):
     return ax
 
 
-def plot_colorbar(p, ax, cbar_kwargs={}):
+def plot_colorbar(p, ax, cbar_kwargs={}, size="5%", pad=0.1):
     """Add a colorbar to a matplotlib/cartopy plot.
 
     p: matplotlib.image.AxesImage
@@ -151,7 +157,8 @@ def plot_colorbar(p, ax, cbar_kwargs={}):
     """
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     divider = make_axes_locatable(ax)
-    cax = divider.new_horizontal(size="5%", pad=0.1, axes_class=plt.Axes)
+    cax = divider.new_horizontal(size=size, pad=pad, axes_class=plt.Axes)
+
     p.figure.add_axes(cax)
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
     if ticklabels is not None:
@@ -290,6 +297,89 @@ def _plot_mpl_imshow(
     return p
 
 
+# def _get_colorbar_inset_axes_kwargs(p):
+#     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+#     colorbar_axes = p.colorbar.ax
+
+#     # Get the position and size of the colorbar axes in figure coordinates
+#     bbox = colorbar_axes.get_position()
+
+#     # Extract the width and height of the colorbar axes in figure coordinates
+#     width = bbox.x1 - bbox.x0
+#     height = bbox.y1 - bbox.y0
+
+#     # Get the location of the colorbar axes ('upper', 'lower', 'center', etc.)
+#     # This information will be used to set the 'loc' parameter of inset_axes
+#     loc = 'upper right'  # Modify this according to your preference
+
+#     # Get the transformation of the colorbar axes with respect to the image axes
+#     # This information will be used to set the 'bbox_transform' parameter of inset_axes
+#     bbox_transform = colorbar_axes.get_transform()
+
+#     # Calculate the coordinates of the colorbar axes relative to the image axes
+#     x0, y0 = bbox_transform.transform((bbox.x0, bbox.y0))
+#     x1, y1 = bbox_transform.transform((bbox.x1, bbox.y1))
+#     bbox_to_anchor = (x0, y0, x1 - x0, y1 - y0)
+
+
+def set_colorbar_fully_transparent(p):
+    # from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+    # colorbar_axes = p.colorbar.ax
+
+    # # Get the position and size of the colorbar axes in figure coordinates
+    # bbox = colorbar_axes.get_position()
+
+    # # Extract the width and height of the colorbar axes in figure coordinates
+    # width = bbox.x1 - bbox.x0
+    # height = bbox.y1 - bbox.y0
+
+    # # Get the location of the colorbar axes ('upper', 'lower', 'center', etc.)
+    # # This information will be used to set the 'loc' parameter of inset_axes
+    # loc = 'upper right'  # Modify this according to your preference
+
+    # # Get the transformation of the colorbar axes with respect to the image axes
+    # # This information will be used to set the 'bbox_transform' parameter of inset_axes
+    # bbox_transform = colorbar_axes.get_transform()
+
+    # # Calculate the coordinates of the colorbar axes relative to the image axes
+    # x0, y0 = bbox_transform.transform((bbox.x0, bbox.y0))
+    # x1, y1 = bbox_transform.transform((bbox.x1, bbox.y1))
+    # bbox_to_anchor = (x0, y0, x1 - x0, y1 - y0)
+
+    # # Create the inset axes using the retrieved parameters
+    # inset_ax = inset_axes(p.axes,
+    #                       width=width,
+    #                       height=height,
+    #                       loc=loc,
+    #                       bbox_to_anchor=bbox_to_anchor,
+    #                       bbox_transform=p.axes.transAxes,
+    #                       borderpad=0)
+
+    # Get the position of the colorbar
+    cbar_pos = p.colorbar.ax.get_position()
+
+    cbar_x, cbar_y = cbar_pos.x0, cbar_pos.y0
+    cbar_width, cbar_height = cbar_pos.width, cbar_pos.height
+
+    # Remove the colorbar
+    p.colorbar.ax.set_visible(False)
+
+    # Now plot an empty rectangle
+    fig = plt.gcf()
+    rect = plt.Rectangle(
+        (cbar_x, cbar_y),
+        cbar_width,
+        cbar_height,
+        transform=fig.transFigure,
+        facecolor="none",
+        edgecolor="none",
+    )
+
+    fig.patches.append(rect)
+
+
 def _plot_xr_imshow(
     ax,
     da,
@@ -299,13 +389,19 @@ def _plot_xr_imshow(
     add_colorbar=True,
     plot_kwargs={},
     cbar_kwargs={},
+    xarray_colorbar=True,
+    visible_colorbar=True,
 ):
-    """Plot imshow with xarray."""
+    """Plot imshow with xarray.
+
+    The colorbar is added with xarray to enable to display multiple colorbars
+    when calling this function multiple times on different fields with
+    different colorbars.
+    """
     # --> BUG with colorbar: https://github.com/pydata/xarray/issues/7014
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     if not add_colorbar:
         cbar_kwargs = {}
-
     p = da.plot.imshow(
         x=x,
         y=y,
@@ -318,6 +414,24 @@ def _plot_xr_imshow(
     plt.title(da.name)
     if add_colorbar and ticklabels is not None:
         p.colorbar.ax.set_yticklabels(ticklabels)
+
+    # Make the colorbar fully transparent with a smart trick ;)
+    # - TODO: this still cause issues when plotting 2 colorbars !
+    if add_colorbar and not visible_colorbar:
+        set_colorbar_fully_transparent(p)
+
+    # Add manually the colorbar
+    # p = da.plot.imshow(
+    #     x=x,
+    #     y=y,
+    #     ax=ax,
+    #     interpolation=interpolation,
+    #     add_colorbar=False,
+    #     **plot_kwargs,
+    # )
+    # plt.title(da.name)
+    # if add_colorbar:
+    #     _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     return p
 
 
@@ -411,8 +525,11 @@ def plot_image(
     return p
 
 
+####--------------------------------------------------------------------------.
+
+
 def plot_map_mesh(
-    da,
+    xr_obj,
     ax=None,
     edgecolors="k",
     linewidth=0.1,
@@ -422,15 +539,15 @@ def plot_map_mesh(
 ):
     # Interpolation only for grid objects
     # figsize, dpi, subplot_kw only used if ax is None
-    from gpm_api.checks import is_grid, is_orbit
+    from gpm_api.checks import is_orbit  # is_grid
 
-    # from .grid import plot_grid_mesh
+    from .grid import plot_grid_mesh
     from .orbit import plot_orbit_mesh
 
     # Plot orbit
-    if is_orbit(da):
+    if is_orbit(xr_obj):
         p = plot_orbit_mesh(
-            da=da,
+            da=xr_obj["lat"],
             ax=ax,
             edgecolors=edgecolors,
             linewidth=linewidth,
@@ -438,28 +555,55 @@ def plot_map_mesh(
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
-    # Plot grid
-    elif is_grid(da):
-        raise NotImplementedError("Not yet implemented.")
-        #     p = plot_grid_mesh(
-        #         da=da,
-        #         ax=ax,
-        #         edgecolors=edgecolors,
-        #         subplot_kw=subplot_kw,
-        #         figsize=figsize,
-        #         dpi=dpi,
-        #     )
-        # else:
-        raise ValueError("Can not plot. It's neither a GPM grid, neither a GPM orbit.")
+    else:  # Plot grid
+        p = plot_grid_mesh(
+            xr_obj=xr_obj,
+            ax=ax,
+            edgecolors=edgecolors,
+            linewidth=linewidth,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
     # Return mappable
+    return p
+
+
+def plot_map_mesh_centroids(
+    xr_obj,
+    ax=None,
+    c="r",
+    s=1,
+    fig_kwargs={},
+    subplot_kwargs={},
+    **plot_kwargs,
+):
+    """Plot GPM orbit granule mesh centroids in a cartographic map."""
+    # - Check inputs
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+
+    # - Initialize figure
+    if ax is None:
+        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
+        # - Add cartopy background
+        ax = plot_cartopy_background(ax)
+
+    # Plot centroids
+    lon = xr_obj["lon"].data
+    lat = xr_obj["lat"].data
+    p = ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
+
+    # - Return mappable
     return p
 
 
 ####--------------------------------------------------------------------------.
 
 
-def plot_labels(
-    dataarray,
+def _plot_labels(
+    xr_obj,
+    label_name=None,
     max_n_labels=50,
     add_colorbar=True,
     interpolation="nearest",
@@ -475,6 +619,14 @@ def plot_labels(
     from ximage.labels.plot_labels import get_label_colorbar_settings
 
     from gpm_api.visualization.plot import plot_image
+
+    if isinstance(xr_obj, xr.Dataset):
+        dataarray = xr_obj[label_name]
+    else:
+        if label_name is not None:
+            dataarray = xr_obj[label_name]
+        else:
+            dataarray = xr_obj
 
     dataarray = dataarray.compute()
     label_indices = get_label_indices(dataarray)
@@ -499,6 +651,43 @@ def plot_labels(
         fig_kwargs=fig_kwargs,
         **plot_kwargs,
     )
+    return p
+
+
+def plot_labels(
+    obj,  # Dataset, DataArray or generator
+    label_name=None,
+    max_n_labels=50,
+    add_colorbar=True,
+    interpolation="nearest",
+    cmap="Paired",
+    fig_kwargs={},
+    **plot_kwargs,
+):
+    if is_generator(obj):
+        for label_id, xr_obj in obj:
+            p = _plot_labels(
+                xr_obj=xr_obj,
+                label_name=label_name,
+                max_n_labels=max_n_labels,
+                add_colorbar=add_colorbar,
+                interpolation=interpolation,
+                cmap=cmap,
+                fig_kwargs=fig_kwargs,
+                **plot_kwargs,
+            )
+            plt.show()
+    else:
+        p = _plot_labels(
+            xr_obj=obj,
+            label_name=label_name,
+            max_n_labels=max_n_labels,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            cmap=cmap,
+            fig_kwargs=fig_kwargs,
+            **plot_kwargs,
+        )
     return p
 
 

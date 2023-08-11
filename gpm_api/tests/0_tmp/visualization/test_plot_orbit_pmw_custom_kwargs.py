@@ -30,7 +30,7 @@ ds = gpm_api.open_dataset(
     variables=variable,
     # scan_mode="S1",
     product_type=product_type,
-    chunks="auto",
+    chunks={},
     prefix_group=False,
 )
 
@@ -47,7 +47,7 @@ ds = ds1
 # -----------------------------------------------------------------------------.
 
 
-da = ds[variable].isel(channel=8)
+da = ds[variable].isel(pmw_frequency=8)
 print(da.attrs["LongName"])
 
 da.gpm_api.plot_map()

@@ -28,7 +28,7 @@ ds = gpm_api.open_dataset(
     version=7,
     variables=variable,
     product_type=product_type,
-    chunks="auto",
+    chunks={},
     decode_cf=True,
     prefix_group=False,
 )

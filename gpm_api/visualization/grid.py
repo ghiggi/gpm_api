@@ -198,3 +198,46 @@ def plot_grid_image(
     )
     # - Return mappable
     return p
+
+
+def plot_grid_mesh(
+    xr_obj,
+    ax=None,
+    edgecolors="k",
+    linewidth=0.1,
+    fig_kwargs={},
+    subplot_kwargs={},
+    **plot_kwargs,
+):
+    """Plot GPM grid mesh in a cartographic map."""
+    # - Check inputs
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+
+    # - Initialize figure
+    if ax is None:
+        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
+        # - Add cartopy background
+        ax = plot_cartopy_background(ax)
+
+    # - Select lat coordinate for plotting
+    da = xr_obj["lat"]
+
+    # - Define plot_kwargs to display only the mesh
+    plot_kwargs["facecolor"] = "none"
+    plot_kwargs["alpha"] = 1
+    plot_kwargs["edgecolors"] = (edgecolors,)
+    plot_kwargs["linewidth"] = (linewidth,)
+    plot_kwargs["antialiased"] = True
+
+    # - Add variable field with cartopy
+    p = _plot_grid_map_cartopy(
+        da=da,
+        ax=ax,
+        x="lon",
+        y="lat",
+        plot_kwargs=plot_kwargs,
+        add_colorbar=False,
+    )
+    # - Return mappable
+    return p

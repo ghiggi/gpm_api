@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
 from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
@@ -25,14 +26,23 @@ from gpm_api.io.checks import (
     check_version,
     is_empty,
 )
-from gpm_api.io.directories import get_disk_directory, get_pps_directory
-from gpm_api.io.info import get_info_from_filepath, get_start_time_from_filepaths
-from gpm_api.io.pps import _find_pps_daily_filepaths
-from gpm_api.utils.archive import (
-    check_file_integrity,
-    get_corrupted_filepaths,
-    remove_corrupted_filepaths,
+from gpm_api.io.data_integrity import (
+    check_archive_integrity,
+    check_filepaths_integrity,
 )
+from gpm_api.io.directories import (
+    get_disk_directory,
+    get_pps_directory_tree,
+    get_pps_servers,
+)
+from gpm_api.io.info import (
+    get_info_from_filepath,
+    get_product_from_filepath,
+    get_start_time_from_filepaths,
+    get_version_from_filepath,
+)
+from gpm_api.io.pps import _find_pps_daily_filepaths
+from gpm_api.utils.timing import print_elapsed_time
 from gpm_api.utils.utils_string import subset_list_by_boolean
 from gpm_api.utils.warnings import GPMDownloadWarning
 
@@ -43,7 +53,7 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 
 ## For https connection, it requires Authorization header: <type><credentials>
 # - type: "Basic"
-# - credientials: <...>
+# - credentials: <...>
 # --> "--header='Authorization: Basic Z2lvbmF0YS5naGlnZ2lAZXBmbC5jaDpnaW9uYXRhLmdoaWdnaUBlcGZsLmNo' "
 
 
@@ -185,6 +195,7 @@ def _get_list_status_commands(dict_futures, pbar=None):
 
     pbar is a tqdm progress bar.
     """
+    # TODO: maybe here capture (with -1) if the file does not exists !¨
     n_futures = len(dict_futures)
     status = [1] * n_futures
     for future in as_completed(dict_futures.keys()):
@@ -351,40 +362,40 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
 
 ####--------------------------------------------------------------------------.
 ###########################
-#### Download routines ####
+#### Filepaths utility ####
 ###########################
 
 
-def _convert_disk_to_pps_fpath(filepath):
-    """Convert a disk filepath into a PPS filepath."""
-    # Extract file information from filepath
+def get_pps_fpath_from_fname(filepath, product_type="RS"):
+    """Infer the PPS filepath from the file name."""
+    # Retrieve the filename
     filename = os.path.basename(filepath)
-    info_dict = get_info_from_filepath(filepath)
-    start_time = info_dict["start_time"]
-    date = start_time.date()
-    list_dirs = filepath.split(os.path.sep)
-    product = list_dirs[-5]
-    version = int(list_dirs[-7][2])
-    product_type = list_dirs[-8]
-    # base_dir = os.path.join(os.path.sep, *list_dirs[0:-8])
-
-    # Retrieve PPS filepath
-    url_data_server, url_file_list = get_pps_directory(
+    # Retrieve relevant info
+    info = get_info_from_filepath(filename)
+    product = get_product_from_filepath(filename)
+    version = get_version_from_filepath(filename)
+    date = info["start_time"].date()
+    # Retrieve PPS directory tree
+    dir_tree = get_pps_directory_tree(
         product=product, product_type=product_type, date=date, version=version
     )
-    dir_tree = os.path.join(*url_file_list.split(os.path.sep)[4:])
-    pps_filepath = os.path.join(url_data_server, dir_tree, filename)
-    return pps_filepath
+    # Retrieve PPS servers URLs
+    url_text_server, url_data_server = get_pps_servers(product_type)
+
+    # Define PPS filepath
+    fpath = os.path.join(url_data_server, dir_tree, filename)
+
+    return fpath
 
 
-def convert_disk_to_pps_filepaths(filepaths):
+def get_pps_fpaths_from_fnames(filepaths, product_type="RS"):
     """
-    Convert GPM filename or filepaths to PPS filepaths.
+    Convert GPM file names or file paths to PPS file paths.
 
     Parameters
     ----------
     filepaths : list
-        GPM file paths on disk.
+        GPM file names or file paths.
 
     Returns
     -------
@@ -392,8 +403,58 @@ def convert_disk_to_pps_filepaths(filepaths):
         List of file paths on PPS.
 
     """
-    pps_fpaths = [_convert_disk_to_pps_fpath(fpath) for fpath in filepaths]
+    pps_fpaths = [get_pps_fpath_from_fname(fpath, product_type) for fpath in filepaths]
     return pps_fpaths
+
+
+def get_disk_fpath_from_fname(filepath, base_dir, product_type="RS"):
+    """Infer the disk filepath from the file name."""
+    # Retrieve the filename
+    filename = os.path.basename(filepath)
+    # Retrieve relevant info
+    try:
+        info = get_info_from_filepath(filename)
+    except ValueError:
+        raise ValueError(f"Impossible to infer file information from '{filename}'")
+
+    product = get_product_from_filepath(filename)
+    version = get_version_from_filepath(filename)
+    date = info["start_time"].date()
+    # Define disk directory path
+    dir_tree = get_disk_directory(
+        base_dir=base_dir,
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
+    )
+    # Define disk file path
+    fpath = os.path.join(dir_tree, filename)
+    return fpath
+
+
+def get_disk_fpaths_from_fnames(filepaths, base_dir, product_type="RS"):
+    """
+    Convert GPM file names or file paths to disk file paths.
+
+    Parameters
+    ----------
+    filepaths : list
+        GPM file names or file paths.
+
+    Returns
+    -------
+    disk_filepaths : list
+        List of file paths on disk.
+
+    """
+
+    """Infer the disk filepaths from the file names."""
+    fpaths = [
+        get_disk_fpath_from_fname(fpath, base_dir=base_dir, product_type=product_type)
+        for fpath in filepaths
+    ]
+    return fpaths
 
 
 def convert_pps_to_disk_filepaths(pps_filepaths, base_dir, product, product_type, version):
@@ -430,9 +491,252 @@ def convert_pps_to_disk_filepaths(pps_filepaths, base_dir, product, product_type
             date=date,
             version=version,
         )
-        disk_filepath = disk_dir + "/" + os.path.basename(pps_filepath)
+        disk_filepath = os.path.join(disk_dir, os.path.basename(pps_filepath))
         disk_filepaths.append(disk_filepath)
     return disk_filepaths
+
+
+####--------------------------------------------------------------------------.
+###########################
+#### Download routines ####
+###########################
+
+
+def _ensure_files_completness(
+    filepaths,
+    product_type,
+    remove_corrupted,
+    verbose,
+    transfer_tool,
+    retry,
+    n_threads,
+    progress_bar,
+    base_dir,
+    username,
+    password,
+):
+    """Check file validity and attempt download if corrupted."""
+    l_corrupted = check_filepaths_integrity(
+        filepaths=filepaths, remove_corrupted=remove_corrupted, verbose=verbose
+    )
+    if verbose:
+        print("Integrity checking of GPM files has completed.")
+    if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
+        if verbose:
+            print("Start attempts to redownload the corrupted files.")
+        l_corrupted = download_files(
+            filepaths=l_corrupted,
+            product_type=product_type,
+            base_dir=base_dir,
+            username=username,
+            password=password,
+            force_download=True,
+            n_threads=n_threads,
+            transfer_tool=transfer_tool,
+            progress_bar=progress_bar,
+            verbose=verbose,
+            retry=retry - 1,
+        )
+        if verbose:
+            if len(l_corrupted) == 0:
+                print("All corrupted files have been redownloaded successively.")
+            else:
+                print("Some corrupted files couldn't been redownloaded.")
+                print("Returning the list of corrupted files.")
+    return l_corrupted
+
+
+def _ensure_archive_completness(
+    base_dir,
+    product,
+    start_time,
+    end_time,
+    version,
+    product_type,
+    remove_corrupted,
+    verbose,
+    username,
+    password,
+    transfer_tool,
+    retry,
+    n_threads,
+    progress_bar,
+):
+    """Check the archive completeness over the specified time period."""
+    l_corrupted = check_archive_integrity(
+        base_dir=base_dir,
+        product=product,
+        start_time=start_time,
+        end_time=end_time,
+        version=version,
+        product_type=product_type,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
+    )
+    if verbose:
+        print("Integrity checking of GPM files has completed.")
+    if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
+        if verbose:
+            print("Start attempts to redownload the corrupted files.")
+        l_corrupted = download_files(
+            filepaths=l_corrupted,
+            product_type=product_type,
+            base_dir=base_dir,
+            username=username,
+            password=password,
+            force_download=True,
+            n_threads=n_threads,
+            transfer_tool=transfer_tool,
+            progress_bar=progress_bar,
+            verbose=verbose,
+            retry=retry - 1,
+        )
+        if verbose:
+            if len(l_corrupted) == 0:
+                print("All corrupted files have been redownloaded successively.")
+            else:
+                print("Some corrupted files couldn't been redownloaded.")
+                print("Returning the list of corrupted files.")
+    return l_corrupted
+
+
+def download_files(
+    filepaths,
+    product_type="RS",
+    n_threads=4,
+    transfer_tool="curl",
+    force_download=False,
+    remove_corrupted=True,
+    progress_bar=False,
+    verbose=True,
+    retry=1,
+    base_dir=None,
+    username=None,
+    password=None,
+):
+    """
+    Download specific GPM files from NASA servers.
+
+    Parameters
+    ----------
+    filepaths: (str or list)
+        List of GPM file names to download.
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        The default is "RS".
+    n_threads : int, optional
+        Number of parallel downloads. The default is set to 10.
+    progress_bar : bool, optional
+        Whether to display progress. The default is True.
+    transfer_tool : str, optional
+        Whether to use curl or wget for data download. The default is "curl".
+    verbose : bool, optional
+        Whether to print processing details. The default is False.
+    force_download : boolean, optional
+        Whether to redownload data if already existing on disk. The default is False.
+    remove_corrupted : boolean, optional
+       Whether to remove the corrupted files.
+       By default is True.
+    retry : int, optional,
+        The number of attempts to redownload the corrupted files. The default is 1.
+    base_dir : str, optional
+        The path to the GPM base directory. If None, it use the one specified
+        in the GPM-API config file.
+        The default is None.
+    username: str, optional
+        Email address with which you registered on the NASA PPS.
+        If None, it uses the one specified in the GPM-API config file.
+        The default is None.
+    password: str, optional
+        Email address with which you registered on the NASA PPS.
+        If None, it uses the one specified in the GPM-API config file.
+        The default is None.
+
+    Returns
+    -------
+    l_corrupted : list
+        List of corrupted file paths.
+        If no corrupted files, returns an empty list.
+    """
+    # TODO:
+    # - providing inexisting file names currently behave as if the downloaded file
+    #   was corrupted
+    # - we should provide better error messages
+
+    # Check inputs
+    if isinstance(filepaths, type(None)):
+        return None
+    if isinstance(filepaths, str):
+        filepaths = [filepaths]
+    if not isinstance(filepaths, list):
+        raise TypeError("Expecting a list of file paths.")
+    if len(filepaths) == 0:
+        return None
+
+    # Retrieve GPM-API configs
+    base_dir = get_gpm_base_dir(base_dir)
+    username = get_gpm_username(username)
+    password = get_gpm_password(password)
+
+    # Print the number of files to download
+    if verbose:
+        n_files = len(filepaths)
+        print(f"Attempt to download {n_files} files.")
+
+    # Retrieve the PPS and disk file paths
+    disk_filepaths = get_disk_fpaths_from_fnames(
+        filepaths, base_dir=base_dir, product_type=product_type
+    )
+    pps_filepaths = get_pps_fpaths_from_fnames(filepaths, product_type=product_type)
+
+    # If force_download is False, select only data not present on disk
+    new_pps_filepaths, new_disk_filepaths = filter_download_list(
+        disk_paths=disk_filepaths,
+        server_paths=pps_filepaths,
+        force_download=force_download,
+    )
+    if is_empty(new_pps_filepaths):
+        if verbose:
+            print(f"The requested files are already on disk at {disk_filepaths}.")
+        return None
+
+    # Download files
+    _ = _download_files(
+        src_fpaths=new_pps_filepaths,
+        dst_fpaths=new_disk_filepaths,
+        username=username,
+        password=password,
+        n_threads=n_threads,
+        progress_bar=progress_bar,
+        transfer_tool=transfer_tool,
+        verbose=verbose,
+    )
+
+    # Get corrupted (and optionally removed) filepaths
+    l_corrupted = check_filepaths_integrity(
+        filepaths=new_disk_filepaths, remove_corrupted=remove_corrupted, verbose=verbose
+    )
+
+    # Retry download if retry > 1 as input argument
+    if len(l_corrupted) > 0 and retry > 1:
+        l_corrupted = download_files(
+            filepaths=l_corrupted,
+            product_type=product_type,
+            base_dir=base_dir,
+            username=username,
+            password=password,
+            force_download=force_download,
+            n_threads=n_threads,
+            transfer_tool=transfer_tool,
+            progress_bar=progress_bar,
+            verbose=verbose,
+            retry=retry - 1,
+        )
+    else:
+        if verbose:
+            print(f"The requested files are now available on disk at {new_disk_filepaths}.")
+
+    return l_corrupted
 
 
 def _download_daily_data(
@@ -445,7 +749,7 @@ def _download_daily_data(
     product_type,
     start_time=None,
     end_time=None,
-    n_threads=10,
+    n_threads=4,
     transfer_tool="curl",
     progress_bar=True,
     force_download=False,
@@ -557,53 +861,49 @@ def _download_daily_data(
     return status, available_version
 
 
-def _check_file_completness(
-    base_dir,
-    product,
-    start_time,
-    end_time,
-    version,
-    product_type,
-    remove_corrupted,
-    verbose,
-    username,
-    transfer_tool,
-    retry,
-    n_threads,
-    progress_bar,
-):
-    """Check for file completeness."""
-    l_corrupted = check_file_integrity(
-        base_dir=base_dir,
-        product=product,
-        start_time=start_time,
-        end_time=end_time,
-        version=version,
-        product_type=product_type,
-        remove_corrupted=remove_corrupted,
-        verbose=verbose,
-    )
-    if verbose:
-        print("Integrity checking of GPM files has completed.")
-    if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
+def _check_download_status(status, product, verbose):
+    """Check download status.
+
+    Status values:
+    - -1 if all daily files are already on disk
+    - 0  download failed
+    - 1  download success
+    Test: status = [-1,-1,-1] --> All on disk
+    Test: status = [] --> No data available
+    """
+    status = np.array(status)
+    no_remote_files = len(status) == 0
+    all_already_on_disk = np.all(status == -1).item()
+    n_remote_files = np.logical_or(status == 0, status == 1).sum().item()
+    n_failed = np.sum(status == 0).item()
+    n_downloads = np.sum(status == 1).item()
+
+    # - Return None if no files are available for download
+    if no_remote_files:
+        print("No files are available for download !")
+        return None
+    # - Pass if all files are already on disk
+    if all_already_on_disk:
         if verbose:
-            print("Start attempts to redownload the corrupted files.")
-        l_corrupted = redownload_from_filepaths(
-            filepaths=l_corrupted,
-            username=username,
-            n_threads=n_threads,
-            transfer_tool=transfer_tool,
-            progress_bar=progress_bar,
-            verbose=verbose,
-            retry=retry,
-        )
+            print(f"All the available GPM {product} product files are already on disk.")
+        pass
+    # - Files available but all download failed
+    elif n_failed == n_remote_files:
+        print(f"{n_failed} files were available, but the download failed !")
+        return None
+    else:
         if verbose:
-            if len(l_corrupted) == 0:
-                print("All corrupted files have been redownloaded successively.")
+            if n_failed != 0:
+                print(f"The download of {n_failed} files failed.")
+            if n_downloads > 0:
+                print(f"{n_downloads} files has been download.")
+            if n_remote_files == n_downloads:
+                print(f"All the available GPM {product} product files are now on disk.")
             else:
-                print("Some corrupted files couldn't been redownloaded.")
-                print("Returning the list of corrupted files.")
-    return l_corrupted
+                print(
+                    f"Not all the available GPM {product} product files are on disk. Retry the download !"
+                )
+    return True
 
 
 def flatten_list(nested_list):
@@ -615,13 +915,13 @@ def flatten_list(nested_list):
     )
 
 
-def download_data(
+def download_archive(
     product,
     start_time,
     end_time,
     product_type="RS",
     version=GPM_VERSION,
-    n_threads=10,
+    n_threads=4,
     transfer_tool="curl",
     progress_bar=False,
     force_download=False,
@@ -680,13 +980,6 @@ def download_data(
         Email address with which you registered on the NASA PPS.
         If None, it uses the one specified in the GPM-API config file.
         The default is None.
-
-    Returns
-    -------
-
-    boolean: int
-        0 if everything went fine.
-
     """
     # -------------------------------------------------------------------------.
     # Retrieve GPM-API configs
@@ -719,6 +1012,8 @@ def download_data(
     for i, date in enumerate(dates):
         if i == 0:
             warn_missing_files = False
+        elif i == (len(dates) - 1) and date == end_time:
+            warn_missing_files = False
         else:
             warn_missing_files = True
 
@@ -744,44 +1039,9 @@ def download_data(
 
     # -------------------------------------------------------------------------.
     # Check download status
-    # - -1 if all daily files are already on disk
-    # - 0  download failed
-    # - 1  download success
-    # Test: status = [-1,-1,-1] --> All on disk
-    # Test: status = [] --> No data available
-    status = list_status
-    status = np.array(status)
-    no_remote_files = len(status) == 0
-    all_already_on_disk = np.all(status == -1).item()
-    n_remote_files = np.logical_or(status == 0, status == 1).sum().item()
-    n_failed = np.sum(status == 0).item()
-    n_downloads = np.sum(status == 1).item()
-
-    # - Return None if no files are available for download
-    if no_remote_files:
-        print("No files are available for download !")
+    download_status = _check_download_status(status=list_status, product=product, verbose=verbose)
+    if download_status is None:
         return None
-    # - Pass if all files are already on disk
-    if all_already_on_disk:
-        if verbose:
-            print(f"All the available GPM {product} product files are already on disk.")
-        pass
-    # - Files available but all download failed
-    elif n_failed == n_remote_files:
-        print(f"{n_failed} files were available, but the download failed !")
-        return None
-    else:
-        if verbose:
-            if n_failed != 0:
-                print(f"The download of {n_failed} files failed.")
-            if n_downloads > 0:
-                print(f"{n_downloads} files has been download.")
-            if n_remote_files == n_downloads:
-                print(f"All the available GPM {product} product files are now on disk.")
-            else:
-                print(
-                    f"Not all the available GPM {product} product files are on disk. Retry the download !"
-                )
 
     # -------------------------------------------------------------------------.
     # Check downloaded versions
@@ -793,7 +1053,7 @@ def download_data(
     # -------------------------------------------------------------------------.
     if check_integrity:
         l_corrupted = [
-            _check_file_completness(
+            _ensure_archive_completness(
                 base_dir=base_dir,
                 product=product,
                 start_time=start_time,
@@ -803,6 +1063,7 @@ def download_data(
                 remove_corrupted=remove_corrupted,
                 verbose=verbose,
                 username=username,
+                password=password,
                 transfer_tool=transfer_tool,
                 retry=retry,
                 n_threads=n_threads,
@@ -816,96 +1077,95 @@ def download_data(
     return None
 
 
-####--------------------------------------------------------------------------.
-def redownload_from_filepaths(
-    filepaths,
-    n_threads=4,
-    transfer_tool="wget",
+@print_elapsed_time
+def download_daily_data(
+    product,
+    year,
+    month,
+    day,
+    product_type="RS",
+    version=GPM_VERSION,
+    n_threads=10,
+    transfer_tool="curl",
     progress_bar=False,
+    force_download=False,
+    check_integrity=True,
+    remove_corrupted=True,
     verbose=True,
     retry=1,
+    base_dir=None,
     username=None,
     password=None,
 ):
-    """
-    Redownload GPM files from the PPS archive.
+    from gpm_api.io.download import download_archive
 
-    Parameters
-    ----------
-    filepaths : list
-        List of disk filepaths.
-    n_threads : int, optional
-        Number of parallel downloads. The default is set to 10.
-    progress_bar : bool, optional
-        Whether to display progress. The default is True.
-    transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "curl".
-    verbose : bool, optional
-        Whether to print processing details. The default is False.
-    retry : int, optional,
-        The number of attempts to redownload the corrupted files. The default is 1.
-    username: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
-    password: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
+    start_time = datetime.date(year, month, day)
+    end_time = start_time + relativedelta(days=1)
 
-    Returns
-    -------
-    l_corrupted : list
-        List of remaining corrupted file paths.
-    """
-    if isinstance(filepaths, type(None)):
-        return None
-    if not isinstance(filepaths, list):
-        raise TypeError("Expecting a list of filepaths.")
-    if len(filepaths) == 0:
-        return None
-
-    # -------------------------------------------------------------------------.
-    # Retrieve GPM-API configs
-    username = get_gpm_username(username)
-    password = get_gpm_password(password)
-
-    # -------------------------------------------------------------------------.
-    # Attempt to redownload the corrupted files
-    if verbose:
-        n_files = len(filepaths)
-        print(f"Attempt to redownload {n_files}.")
-
-    # Retrieve the PPS file paths
-    pps_filepaths = convert_disk_to_pps_filepaths(filepaths)
-
-    # Download files
-    _ = _download_files(
-        src_fpaths=pps_filepaths,
-        dst_fpaths=filepaths,
+    l_corrupted = download_archive(
+        product=product,
+        start_time=start_time,
+        end_time=end_time,
+        product_type=product_type,
+        version=version,
+        n_threads=n_threads,
+        transfer_tool=transfer_tool,
+        progress_bar=progress_bar,
+        force_download=force_download,
+        check_integrity=check_integrity,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
+        retry=retry,
+        base_dir=base_dir,
         username=username,
         password=password,
-        n_threads=n_threads,
-        progress_bar=progress_bar,
-        verbose=verbose,
     )
-
-    # Get corrupted filepaths
-    l_corrupted = get_corrupted_filepaths(filepaths)
-
-    # Remove corrupted filepaths
-    remove_corrupted_filepaths(filepaths=l_corrupted, verbose=verbose)
-
-    # Retry download if retry > 1 as input argument
-    if len(l_corrupted) > 0 and retry > 1:
-        l_corrupted = redownload_from_filepaths(
-            filepaths=l_corrupted,
-            username=username,
-            n_threads=n_threads,
-            transfer_tool=transfer_tool,
-            progress_bar=progress_bar,
-            verbose=verbose,
-            retry=retry - 1,
-        )
-
     return l_corrupted
+
+
+@print_elapsed_time
+def download_monthly_data(
+    product,
+    year,
+    month,
+    product_type="RS",
+    version=GPM_VERSION,
+    n_threads=10,
+    transfer_tool="curl",
+    progress_bar=False,
+    force_download=False,
+    check_integrity=True,
+    remove_corrupted=True,
+    verbose=True,
+    retry=1,
+    base_dir=None,
+    username=None,
+    password=None,
+):
+    from gpm_api.io.download import download_archive
+
+    start_time = datetime.date(year, month, 1)
+    end_time = start_time + relativedelta(months=1)
+
+    l_corrupted = download_archive(
+        product=product,
+        start_time=start_time,
+        end_time=end_time,
+        product_type=product_type,
+        version=version,
+        n_threads=n_threads,
+        transfer_tool=transfer_tool,
+        progress_bar=progress_bar,
+        force_download=force_download,
+        check_integrity=check_integrity,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
+        retry=retry,
+        base_dir=base_dir,
+        username=username,
+        password=password,
+    )
+    return l_corrupted
+
+
+####--------------------------------------------------------------------------.

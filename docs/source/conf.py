@@ -53,9 +53,31 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
+html_title = "GPM-API"
+html_theme_options = {
+    "repository_url": "https://github.com/ghiggi/gpm_api",
+    "use_repository_button": True,
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["static"]
+
+
+# -- Automatically run apidoc to generate rst from code ----------------------
+# https://github.com/readthedocs/readthedocs.org/issues/1139
+def run_apidoc(_):
+    from sphinx.ext.apidoc import main
+
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+    cur_dir = os.path.abspath(os.path.dirname(__file__))
+
+    module_dir = os.path.join(cur_dir, "..", "..", "gpm_api")
+    output_dir = os.path.join(cur_dir, "api")
+    main(["-f", "-o", output_dir, module_dir])
+
+
+def setup(app):
+    app.connect("builder-inited", run_apidoc)

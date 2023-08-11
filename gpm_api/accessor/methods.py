@@ -16,6 +16,12 @@ class GPM_Base_Accessor:
             )
         self._obj = xarray_obj
 
+    def extent(self, padding=0):
+        """Return the geographic extent (bbox) of the object."""
+        from gpm_api.utils.geospatial import get_extent
+
+        return get_extent(self._obj, padding=padding)
+
     def crop(self, extent):
         """Crop xarray object by bounding box."""
         from gpm_api.utils.geospatial import crop
@@ -57,6 +63,61 @@ class GPM_Base_Accessor:
         from gpm_api.utils.geospatial import get_pyresample_area
 
         return get_pyresample_area(self._obj)
+
+    def remap_on(self, dst_ds, radius_of_influence=20000, fill_value=np.nan):
+        """Remap data from one dataset to another one."""
+        from gpm_api.utils.geospatial import remap
+
+        return remap(
+            self._obj, dst_ds=dst_ds, radius_of_influence=radius_of_influence, fill_value=fill_value
+        )
+
+    def collocate(
+        self,
+        product,
+        product_type="RS",
+        version=7,
+        scan_modes=None,
+        variables=None,
+        groups=None,
+        verbose=True,
+        chunks={},
+    ):
+        """Collocate another product on the dataset.
+
+        It assumes that along all the input dataset, there is an approximate collocated product.
+        """
+        from gpm_api.utils.collocation import collocate_product
+
+        return collocate_product(
+            self._obj,
+            product=product,
+            product_type=product_type,
+            version=version,
+            scan_modes=scan_modes,
+            variables=variables,
+            groups=groups,
+            verbose=verbose,
+            chunks=chunks,
+        )
+
+    def get_variable_at_bin(self, bin, variable=None):
+        """Retrieve variable values at specific range bins."""
+        from gpm_api.utils.manipulations import get_variable_at_bin
+
+        return get_variable_at_bin(self._obj, bin=bin, variable=None)
+
+    def get_height_at_bin(self, bin):
+        """Retrieve height values at specific range bins."""
+        from gpm_api.utils.manipulations import get_height_at_bin
+
+        return get_height_at_bin(self._obj, bin=bin)
+
+    def select_range_with_valid_data(self, variable):
+        """Select the 'range' interval with valid data."""
+        from gpm_api.utils.manipulations import select_range_with_valid_data
+
+        return select_range_with_valid_data(self._obj, variable)
 
     @property
     def is_orbit(self):
@@ -138,23 +199,27 @@ class GPM_Base_Accessor:
 
     @property
     def start_time(self):
+        from gpm_api.io.checks import check_time
+
         if "time" in self._obj.coords:
             start_time = self._obj["time"].values[0]
         elif "gpm_time" in self._obj.coords:
             start_time = self._obj["gpm_time"].values[0]
         else:
             raise ValueError("Time coordinate not found")
-        return start_time
+        return check_time(start_time)
 
     @property
     def end_time(self):
+        from gpm_api.io.checks import check_time
+
         if "time" in self._obj.coords:
             end_time = self._obj["time"].values[-1]
         elif "gpm_time" in self._obj.coords:
             end_time = self._obj["gpm_time"].values[-1]
         else:
             raise ValueError("Time coordinate not found")
-        return end_time
+        return check_time(end_time)
 
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm_api.utils.time import subset_by_time
@@ -197,10 +262,56 @@ class GPM_Base_Accessor:
         p = plot_transect_line(self._obj, ax=ax, color=color)
         return p
 
-    def plot_swath_lines(self, ax=None, **kwargs):
+    def plot_swath(self, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **kwargs):
+        from gpm_api.visualization.orbit import plot_swath
+
+        p = plot_swath(
+            self._obj, ax=ax, facecolor=facecolor, edgecolor=edgecolor, alpha=alpha, **kwargs
+        )
+        return p
+
+    def plot_swath_lines(self, ax=None, linestyle="--", color="k", **kwargs):
         from gpm_api.visualization.orbit import plot_swath_lines
 
-        p = plot_swath_lines(self._obj, ax=ax, **kwargs)
+        p = plot_swath_lines(self._obj, ax=ax, linestyle=linestyle, color=color, **kwargs)
+        return p
+
+    def plot_map_mesh(
+        self,
+        ax=None,
+        edgecolors="k",
+        linewidth=0.1,
+        fig_kwargs={},
+        subplot_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.plot import plot_map_mesh
+
+        p = plot_map_mesh(
+            xr_obj=self._obj,
+            ax=ax,
+            edgecolors=edgecolors,
+            linewidth=linewidth,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
+        return p
+
+    def plot_map_mesh_centroids(
+        self, ax=None, c="r", s=1, fig_kwargs={}, subplot_kwargs={}, **plot_kwargs
+    ):
+        from gpm_api.visualization.plot import plot_map_mesh_centroids
+
+        p = plot_map_mesh_centroids(
+            self._obj,
+            ax=ax,
+            c=c,
+            s=s,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
         return p
 
 
@@ -279,6 +390,18 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
         return p
 
+    def available_retrievals(self):
+        """Available GPM-API retrievals for that GPM product."""
+        from gpm_api.dataset.retrievals.routines import available_retrievals
+
+        return available_retrievals(self._obj)
+
+    def retrieve(self, name):
+        """Retrieve a GPM-API variable."""
+        from gpm_api.dataset.retrievals.routines import get_retrieval_variable
+
+        return get_retrieval_variable(self._obj, retrieval=name)
+
 
 @xr.register_dataarray_accessor("gpm_api")
 class GPM_DataArray_Accessor(GPM_Base_Accessor):
@@ -344,29 +467,6 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         )
         return p
 
-    def plot_map_mesh(
-        self,
-        ax=None,
-        edgecolors="k",
-        linewidth=0.1,
-        fig_kwargs={},
-        subplot_kwargs={},
-        **plot_kwargs,
-    ):
-        from gpm_api.visualization.plot import plot_map_mesh
-
-        da = self._obj
-        p = plot_map_mesh(
-            ax=ax,
-            da=da,
-            edgecolors=edgecolors,
-            linewidth=linewidth,
-            fig_kwargs=fig_kwargs,
-            subplot_kwargs=subplot_kwargs,
-            **plot_kwargs,
-        )
-        return p
-
     def plot_image(
         self,
         ax=None,
@@ -389,3 +489,10 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
         return p
+
+    def integrate_profile_concentration(self, name, scale_factor=None, units=None):
+        from gpm_api.utils.manipulations import integrate_profile_concentration
+
+        return integrate_profile_concentration(
+            self._obj, name=name, scale_factor=scale_factor, units=units
+        )

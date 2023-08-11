@@ -10,6 +10,7 @@ from gpm_api.dataset.attrs import add_history
 from gpm_api.dataset.coords import set_coords_attrs
 from gpm_api.dataset.crs import set_dataset_crs
 from gpm_api.dataset.decoding import decode_dataset
+from gpm_api.dataset.encoding import set_encoding
 from gpm_api.utils.time import (
     subset_by_time,
 )
@@ -82,8 +83,12 @@ def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
     # - See Geolocation toolkit ATBD at
     #   https://gpm.nasa.gov/sites/default/files/document_files/GPMGeolocationToolkitATBDv2.1-2012-07-31.pdf
     # TODO: set_dataset_crs should be migrated to cf_xarray ideally
-    crs = pyproj.CRS(proj="longlat", ellps="WGS84")
-    ds = set_dataset_crs(ds, crs=crs, grid_mapping_name="crsWGS84", inplace=False)
+    try:
+        crs = pyproj.CRS(proj="longlat", ellps="WGS84")
+        ds = set_dataset_crs(ds, crs=crs, grid_mapping_name="crsWGS84", inplace=False)
+    except Exception:
+        msg = "The CRS coordinate is not set because the dataset variables does not have 2D spatial dimensions."
+        warnings.warn(msg, GPM_Warning)
 
     ##------------------------------------------------------------------------.
     # Add time encoding
@@ -96,6 +101,10 @@ def finalize_dataset(ds, product, decode_cf, start_time=None, end_time=None):
     # Add GPM-API global attributes
     ds = add_history(ds)
     ds.attrs["gpm_api_product"] = product
+
+    ##------------------------------------------------------------------------.
+    # Add coordinates and variables encoding
+    ds = set_encoding(ds)
 
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time

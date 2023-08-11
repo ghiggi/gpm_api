@@ -203,7 +203,7 @@ def _open_granule(
     groups=None,
     variables=None,
     decode_cf=False,
-    chunks="auto",
+    chunks={},
     prefix_group=True,
 ):
     """Open granule file into xarray Dataset."""
@@ -233,7 +233,7 @@ def _open_granule(
     ###-----------------------------------------------------------------------.
     ### Clean attributes, decode variables
     # Apply custom processing
-    ds = apply_custom_decoding(ds, product)
+    ds = apply_custom_decoding(ds, product, scan_mode)
 
     # Apply CF decoding
     if decode_cf:
@@ -277,7 +277,7 @@ def open_granule(
     groups=None,
     variables=None,
     decode_cf=False,
-    chunks="auto",
+    chunks={},
     prefix_group=True,
 ):
     """
@@ -486,7 +486,7 @@ def open_dataset(
     scan_mode=None,
     version=GPM_VERSION,
     product_type="RS",
-    chunks="auto",
+    chunks={},
     decode_cf=True,
     prefix_group=True,
     verbose=False,

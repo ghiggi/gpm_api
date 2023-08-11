@@ -1,0 +1,24 @@
+name: gpm_api
+channels:
+  - conda-forge
+dependencies:
+  - cartopy>=0.20.0
+  - click
+  - dask
+  - h5py
+  - netcdf4
+  - pyresample
+  - tqdm
+  - trollsift
+  - xarray
+  - xarray-datatree
+  # testing
+  - pytest
+  - pytest-cov
+  - pytest-mock
+  - pydantic
+  - pip
+  - pip:
+    # image
+    - ximage
+    - pycolorbar

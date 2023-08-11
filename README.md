@@ -4,7 +4,7 @@
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/gpm_api.svg)](https://anaconda.org/conda-forge/gpm_api)
 [![Tests](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml/badge.svg)](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/ghiggi/gpm_api/badge.svg?branch=main)](https://coveralls.io/github/ghiggi/gpm_api?branch=main)
-[![Documentation Status](https://readthedocs.org/projects/gpm_api/badge/?version=latest)](https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/?badge=stable)
+[![Documentation Status](https://readthedocs.org/projects/gpm-api/badge/?version=latest)](https://gpm-api.readthedocs.io/en/latest/?badge=latest)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![License](https://img.shields.io/github/license/ghiggi/gpm_api)](https://github.com/ghiggi/gpm_api/blob/master/LICENSE)
 

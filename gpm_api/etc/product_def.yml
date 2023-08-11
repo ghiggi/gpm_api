@@ -238,6 +238,20 @@
   - S2
   pps_nrt_dir: 1C/GMI
   pps_rs_dir: 1C
+1C-GMI-R:
+  pattern: 1C-R.GPM.GMI.*
+  product_category: PMW
+  product_types:
+  - RS
+  - NRT
+  scan_modes_v6:
+  - S1
+  - S2
+  scan_modes_v7:
+  - S1
+  - S2
+  pps_nrt_dir: 1C/GMI
+  pps_rs_dir: 1CR
 1C-MHS-METOPA:
   pattern: 1C.METOPA.MHS.*
   product_category: PMW
@@ -940,6 +954,17 @@
   - null
   pps_nrt_dir: null
   pps_rs_dir: radar
+2B-TRMM-CSAT:
+  pattern: 2B.CSATTRMM.COIN*
+  product_category: RADAR
+  product_types:
+  - RS
+  scan_modes_v6:
+  - null
+  scan_modes_v7:
+  - null
+  pps_nrt_dir: null
+  pps_rs_dir: radar
 2B-GPM-CORRA:
   pattern: 2B.GPM.DPRGMI.CORRA*
   product_category: CMB
@@ -947,12 +972,23 @@
   - RS
   - NRT
   scan_modes_v6:
-  - KuKaGMI
-  - KuGMI
+  - NS
+  - MS
   scan_modes_v7:
   - KuKaGMI
   - KuGMI
   pps_nrt_dir: combine
+  pps_rs_dir: radar
+2B-TRMM-CORRA:
+  pattern: 2B.TRMM.PRTMI.CORRA*
+  product_category: CMB
+  product_types:
+  - RS
+  scan_modes_v6:
+  - NS
+  scan_modes_v7:
+  - KuTMI
+  pps_nrt_dir: null
   pps_rs_dir: radar
 2B-GPM-CSH:
   pattern: 2B.GPM.DPRGMI.2HCSHv*
@@ -963,17 +999,6 @@
   - Swath
   scan_modes_v7:
   - Swath
-  pps_nrt_dir: null
-  pps_rs_dir: radar
-2B-TRMM-CORRA:
-  pattern: 2B.TRMM.PRTMI.CORRA*
-  product_category: CMB
-  product_types:
-  - RS
-  scan_modes_v6:
-  - KuTMI
-  scan_modes_v7:
-  - KuTMI
   pps_nrt_dir: null
   pps_rs_dir: radar
 2B-TRMM-CSH:

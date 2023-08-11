@@ -5,20 +5,13 @@ Created on Tue Nov  1 11:24:29 2022
 @author: ghiggi
 """
 import datetime
-import os
-import time
 import warnings
 
-import dask
-import h5py
 import numpy as np
-from dateutil.relativedelta import relativedelta
 
 from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
 from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
-    check_base_dir,
-    check_product,
     check_start_end_time,
 )
 from gpm_api.io.disk import find_filepaths
@@ -30,136 +23,13 @@ from gpm_api.io.info import (
 from gpm_api.io.pps import find_pps_filepaths
 from gpm_api.utils.warnings import GPM_Warning
 
-
-####--------------------------------------------------------------------------.
-###########################
-#### Archiving utility ####
-###########################
-def print_elapsed_time(fn):
-    def decorator(*args, **kwargs):
-        start_time = time.perf_counter()
-        results = fn(*args, **kwargs)
-        end_time = time.perf_counter()
-        execution_time = end_time - start_time
-        timedelta_str = str(datetime.timedelta(seconds=execution_time))
-        print(f"Elapsed time: {timedelta_str} .", end="\n")
-        return results
-
-    return decorator
-
-
-####--------------------------------------------------------------------------.
-#########################
-#### Data corruption ####
-#########################
-def get_corrupted_filepaths(filepaths):
-    l_corrupted = []
-    for filepath in filepaths:
-        # Load hdf granule file
-        try:
-            hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
-            hdf.close()
-        except OSError:
-            l_corrupted.append(filepath)
-    return l_corrupted
-
-
-def remove_corrupted_filepaths(filepaths, verbose=True):
-    for filepath in filepaths:
-        if verbose:
-            print(f"{filepath} is corrupted and is being removed.")
-        os.remove(filepath)
-
-
-def check_file_integrity(
-    product,
-    start_time,
-    end_time,
-    version=GPM_VERSION,
-    product_type="RS",
-    remove_corrupted=True,
-    verbose=True,
-    base_dir=None,
-):
-    """
-    Check GPM granule file integrity over a given period.
-
-    If remove_corrupted=True, it removes the corrupted files.
-
-    Parameters
-    ----------
-    product : str
-        GPM product acronym.
-    start_time : datetime.datetime
-        Start time.
-    end_time : datetime.datetime
-        End time.
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
-        GPM data readers currently support version 4, 5, 6 and 7.
-    remove_corrupted : bool, optional
-        Whether to remove the corrupted files.
-        The default is True.
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
-
-    Returns
-    -------
-    filepaths, list
-        List of file paths which are corrupted.
-
-    """
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-
-    ##--------------------------------------------------------------------.
-    # Check base_dir
-    base_dir = check_base_dir(base_dir)
-    ## Check valid product and variables
-    check_product(product, product_type=product_type)
-    # Check valid start/end time
-    start_time, end_time = check_start_end_time(start_time, end_time)
-
-    ##--------------------------------------------------------------------.
-    # Find filepaths
-    filepaths = find_filepaths(
-        base_dir=base_dir,
-        version=version,
-        product=product,
-        product_type=product_type,
-        start_time=start_time,
-        end_time=end_time,
-        verbose=False,
-    )
-    ##---------------------------------------------------------------------.
-    # Check that files have been downloaded  on disk
-    if len(filepaths) == 0:
-        raise ValueError("No files found on disk. Please download them before.")
-
-    ##---------------------------------------------------------------------.
-    # Loop over files and list file that can't be opened
-    l_corrupted = get_corrupted_filepaths(filepaths)
-
-    ##---------------------------------------------------------------------.
-    # Report corrupted and remove if asked
-    if remove_corrupted:
-        remove_corrupted_filepaths(filepaths=l_corrupted, verbose=verbose)
-    else:
-        for filepath in l_corrupted:
-            print(f"{filepath} is corrupted.")
-
-    ##---------------------------------------------------------------------.
-    return l_corrupted
-
-
 ####--------------------------------------------------------------------------.
 #######################
 #### Data coverage ####
 #######################
+# TODO: this information should be provided by the etc/products.yaml
+
+
 def get_product_temporal_coverage(
     product,
     username,
@@ -209,6 +79,7 @@ def get_product_temporal_coverage(
     # Timing notes
     # - Usually it takes about 3 seconds per call
     # - With 8 cores, 50 calls takes about 40 secs
+    import dask
 
     # --------------------------------------------------------------------------.
     product_type = "RS"
@@ -336,106 +207,10 @@ def get_product_temporal_coverage(
 
 
 ####--------------------------------------------------------------------------.
-#######################
-#### Data download ####
-#######################
-
-
-@print_elapsed_time
-def download_daily_data(
-    product,
-    year,
-    month,
-    day,
-    product_type="RS",
-    version=GPM_VERSION,
-    n_threads=10,
-    transfer_tool="curl",
-    progress_bar=False,
-    force_download=False,
-    check_integrity=True,
-    remove_corrupted=True,
-    verbose=True,
-    retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
-):
-    from gpm_api.io.download import download_data
-
-    start_time = datetime.date(year, month, day)
-    end_time = start_time + relativedelta(days=1)
-
-    l_corrupted = download_data(
-        product=product,
-        start_time=start_time,
-        end_time=end_time,
-        product_type=product_type,
-        version=version,
-        n_threads=n_threads,
-        transfer_tool=transfer_tool,
-        progress_bar=progress_bar,
-        force_download=force_download,
-        check_integrity=check_integrity,
-        remove_corrupted=remove_corrupted,
-        verbose=verbose,
-        retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
-    )
-    return l_corrupted
-
-
-@print_elapsed_time
-def download_monthly_data(
-    product,
-    year,
-    month,
-    product_type="RS",
-    version=GPM_VERSION,
-    n_threads=10,
-    transfer_tool="curl",
-    progress_bar=False,
-    force_download=False,
-    check_integrity=True,
-    remove_corrupted=True,
-    verbose=True,
-    retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
-):
-    from gpm_api.io.download import download_data
-
-    start_time = datetime.date(year, month, 1)
-    end_time = start_time + relativedelta(months=1)
-
-    l_corrupted = download_data(
-        product=product,
-        start_time=start_time,
-        end_time=end_time,
-        product_type=product_type,
-        version=version,
-        n_threads=n_threads,
-        transfer_tool=transfer_tool,
-        progress_bar=progress_bar,
-        force_download=force_download,
-        check_integrity=check_integrity,
-        remove_corrupted=remove_corrupted,
-        verbose=verbose,
-        retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
-    )
-    return l_corrupted
-
-
-####--------------------------------------------------------------------------.
-##########################
+###########################
 #### Data completeness ####
-##########################
+###########################
+# TODO: move to io/archiving.py in future
 
 
 def check_no_duplicated_files(
@@ -633,7 +408,7 @@ def check_archive_completeness(
         The default is None.
     """
     ##--------------------------------------------------------------------.
-    from gpm_api.io.download import download_data
+    from gpm_api.io.download import download_archive
 
     # -------------------------------------------------------------------------.
     # Retrieve GPM-API configs
@@ -673,7 +448,7 @@ def check_archive_completeness(
         if download:  # and download=True
             # Attempt to download the missing data
             for s_time, e_time in list_missing_periods:
-                download_data(
+                download_archive(
                     base_dir=base_dir,
                     username=username,
                     version=version,
