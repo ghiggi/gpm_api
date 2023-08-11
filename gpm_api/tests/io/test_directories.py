@@ -77,8 +77,8 @@ def test_get_disk_directory(
                     base_dir,
                     product,
                     product_type,
-                    date,
                     version,
+                    date,
                 )
 
                 # Work only on product if product_type are compatible
@@ -119,7 +119,7 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
             # Dependent on dir forming private function
             foldername = dir._get_pps_nrt_product_folder_name(product)
 
-            res = dir.get_pps_nrt_product_dir(product, date)
+            res = dir._get_pps_nrt_product_dir(product, date)
             if product in available_products(
                 product_type="NRT",
                 product_category="IMERG",
