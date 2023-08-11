@@ -8,31 +8,6 @@ import numpy as np
 import pandas as pd
 
 
-def get_bin_partition(values, bin_size):
-    """
-    Compute the bins partitioning values.
-
-    Parameters
-    ----------
-    values : float or array-like
-        Values.
-    bin_size : float
-        Bin size.
-
-    Returns
-    -------
-    Bin value : float or array-like
-        DESCRIPTION.
-
-    """
-    return bin_size * np.floor(values / bin_size)
-
-
-# bin_size = 10
-# values = np.array([-180,-176,-175, -174, -171, 170, 166])
-# get_bin_partition(values, bin_size)
-
-
 def _get_bin_edges(vmin, vmax, size):
     """Get bin edges."""
     return np.arange(vmin, vmax + 1e-10, step=size)

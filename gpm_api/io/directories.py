@@ -67,9 +67,18 @@ def get_disk_dir_pattern(product, product_type, version):
     return dir_structure
 
 
-def get_disk_directory(base_dir, product, product_type, date, version):
+def get_time_tree(date):
+    """Get time tree path."""
+    year = date.strftime("%Y")
+    month = date.strftime("%m")
+    day = date.strftime("%d")
+    time_tree = os.path.join(year, month, day)
+    return time_tree
+
+
+def get_disk_product_directory(base_dir, product, product_type, version):
     """
-    Provide the disk repository path where the requested GPM data are stored/need to be saved.
+    Provide the disk product directory path where the requested GPM data are stored/need to be saved.
 
     Parameters
     ----------
@@ -79,30 +88,53 @@ def get_disk_directory(base_dir, product, product_type, date, version):
         GPM product name. See: gpm_api.available_products()
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    date : datetime.date
-        Single date for which to retrieve the data.
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
 
     Returns
     -------
 
+    product_dir : str
+        Product directory path where data are located.
+    """
+    base_dir = check_base_dir(base_dir)
+    product_dir_pattern = get_disk_dir_pattern(product, product_type, version)
+    product_dir = os.path.join(base_dir, product_dir_pattern)
+    return product_dir
+
+
+def get_disk_directory(base_dir, product, product_type, version, date):
+    """
+    Provide the disk repository path where the requested daily GPM data are stored/need to be saved.
+
+    Parameters
+    ----------
+    base_dir : str
+        The base directory where to store GPM data.
+    product : str
+        GPM product name. See: gpm_api.available_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+    version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'.
+    date : datetime.date
+        Single date for which to retrieve the data.
+
+    Returns
+    -------
+
     dir_path : str
-        Directory path where data are located.
+        Directory path where daily GPM data are located.
         If product_type == "RS": <base_dir>/GPM/RS/V0<version>/<product_category>/<product>/<YYYY>/<MM>/<DD>
         If product_type == "NRT": <base_dir>/GPM/NRT/<product_category>/<product>/<YYYY>/<MM>/<DD>
         <product_category> are: RADAR, PMW, CMB, IMERG.
 
     """
-    base_dir = check_base_dir(base_dir)
-    dir_structure = get_disk_dir_pattern(product, product_type, version)
-    dir_path = os.path.join(
-        base_dir,
-        dir_structure,
-        date.strftime("%Y"),
-        date.strftime("%m"),
-        date.strftime("%d"),
+    product_dir = get_disk_product_directory(
+        base_dir=base_dir, product=product, product_type=product_type, version=version
     )
+    time_tree = get_time_tree(date)
+    dir_path = os.path.join(product_dir, time_tree)
     return dir_path
 
 
@@ -132,7 +164,7 @@ def _get_pps_rs_product_folder_name(product):
     return folder_name
 
 
-def get_pps_nrt_product_dir(product, date):
+def _get_pps_nrt_product_dir(product, date):
     """
     Retrieve the NASA PPS server directory structure where NRT data are stored.
 
@@ -145,15 +177,15 @@ def get_pps_nrt_product_dir(product, date):
         Note: this is currently only needed when retrieving IMERG data.
     """
     folder_name = _get_pps_nrt_product_folder_name(product)
-    # Specify the directory structure
+    # Specify the directory tree
     if product in available_products(product_type="NRT", product_category="IMERG"):
-        dir_structure = os.path.join(folder_name, datetime.datetime.strftime(date, "%Y%m"))
+        directory_tree = os.path.join(folder_name, datetime.datetime.strftime(date, "%Y%m"))
     else:
-        dir_structure = folder_name
-    return dir_structure
+        directory_tree = folder_name
+    return directory_tree
 
 
-def get_pps_rs_product_dir(product, date, version):
+def _get_pps_rs_product_dir(product, date, version):
     """
     Retrieve the NASA PPS server directory structure where RS data are stored.
 
@@ -173,58 +205,70 @@ def get_pps_rs_product_dir(product, date, version):
     # Retrieve NASA server folder name for RS
     folder_name = _get_pps_rs_product_folder_name(product)
 
-    # Specify the directory structure for current RS version
+    # Specify the directory tree for current RS version
     if version == 7:
-        dir_structure = os.path.join(
+        directory_tree = os.path.join(
             "gpmdata",
             datetime.datetime.strftime(date, "%Y/%m/%d"),
             folder_name,
         )
 
-    # Specify the directory structure for old RS version
+    # Specify the directory tree for old RS version
     else:  #  version in [4, 5, 6]:
         version_str = "V0" + str(int(version))
-        dir_structure = os.path.join(
+        directory_tree = os.path.join(
             "gpmallversions",
             version_str,
             datetime.datetime.strftime(date, "%Y/%m/%d"),
             folder_name,
         )
 
-    # Return the directory structure
-    return dir_structure
+    # Return the directory tree
+    return directory_tree
 
 
-def _get_pps_nrt_dir(product, date, version):
-    """Retrieve the NASA PPS server directory paths where the GPM NRT data are listed and stored."""
-    # Specify servers
-    url_server_text = "https://jsimpsonhttps.pps.eosdis.nasa.gov/text"
-    url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov"
-    # url_data_server = 'ftps://jsimpsonftps.pps.eosdis.nasa.gov'
-    # Retrieve directory structure
-    dir_structure = get_pps_nrt_product_dir(product, date)
-    # Define url where data are listed
-    url_data_list = os.path.join(url_server_text, dir_structure)
-    # Return tuple
-    return (url_data_server, url_data_list)
+def get_pps_directory_tree(product, product_type, date, version):
+    """
+    Retrieve the NASA PPS server directory tree where the GPM data are stored.
+
+    Parameters
+    ----------
+    product : str
+        GPM product name. See: gpm_api.available_products() .
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+    date : datetime.date
+        Single date for which to retrieve the data.
+    version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'.
+
+    Returns
+    -------
+    directory_tree : str
+        DIrectory tree on the NASA PPS server where the data are stored.
+    """
+    check_product_type(product_type)
+    if product_type == "NRT":
+        return _get_pps_nrt_product_dir(product, date)
+    else:  # product_type == "RS"
+        return _get_pps_rs_product_dir(product, date, version)
 
 
-def _get_pps_rs_dir(product, date, version):
-    """Retrieve the NASA PPS server directory paths where the GPM RS data are listed and stored."""
-    ## Specify servers
-    url_server_text = "https://arthurhouhttps.pps.eosdis.nasa.gov/text"
-    url_data_server = "ftps://arthurhouftps.pps.eosdis.nasa.gov"
-    # Retrieve directory structure
-    dir_structure = get_pps_rs_product_dir(product, date, version)
-    # Define url where data are listed
-    url_data_list = os.path.join(url_server_text, dir_structure)
-    # Return tuple
-    return (url_data_server, url_data_list)
+def get_pps_servers(product_type):
+    """Return the url to the PPS servers."""
+    if product_type == "NRT":
+        url_text_server = "https://jsimpsonhttps.pps.eosdis.nasa.gov/text"
+        url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov"
+    else:
+        url_text_server = "https://arthurhouhttps.pps.eosdis.nasa.gov/text"
+        url_data_server = "ftps://arthurhouftps.pps.eosdis.nasa.gov"
+    return (url_text_server, url_data_server)
 
 
 def get_pps_directory(product, product_type, date, version):
     """
-    Retrieve the NASA PPS server directory paths where the GPM data are listed and stored.
+    Retrieve the NASA PPS server directory paths where the GPM data for
+    a specific date are listed and stored.
 
     The data list is retrieved using https.
     The data stored are retrieved using ftps.
@@ -249,7 +293,17 @@ def get_pps_directory(product, product_type, date, version):
 
     """
     check_product_type(product_type)
-    if product_type == "NRT":
-        return _get_pps_nrt_dir(product, date, version)
-    else:  # product_type == "RS"
-        return _get_pps_rs_dir(product, date, version)
+
+    # Retrieve servers URLs
+    url_text_server, url_data_server = get_pps_servers(product_type)
+
+    # Retrieve directory tree structure
+    dir_structure = get_pps_directory_tree(
+        product=product, product_type=product_type, date=date, version=version
+    )
+
+    # Define url where data are listed
+    url_data_list = os.path.join(url_text_server, dir_structure)
+
+    # Return tuple
+    return (url_data_server, url_data_list)

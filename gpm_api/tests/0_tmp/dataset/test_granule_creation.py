@@ -10,7 +10,7 @@ import datatree
 
 from gpm_api.dataset.attrs import decode_attrs, get_granule_attrs
 from gpm_api.dataset.coords import get_coords
-from gpm_api.dataset.datatree import _open_datatree
+from gpm_api.dataset.datatree import open_datatree
 from gpm_api.dataset.granule import (
     _get_scan_mode_info,
     _get_scan_mode_dataset,
@@ -61,10 +61,14 @@ dt = datatree.open_datatree(
 scan_modes = _get_available_scan_modes(dt)
 scan_mode = scan_modes[index]
 
-dt = _open_datatree(filepath)
+dt = open_datatree(filepath, use_api_defaults=False)
+dt
+
+dt = open_datatree(filepath, use_api_defaults=True)
+dt
 
 ds = _get_scan_mode_dataset(
-    filepath, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
+    dt, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
 )
 
 
@@ -114,5 +118,5 @@ coords, attrs, groups, variables = _get_scan_mode_info(dt, scan_mode, variables=
 
 
 ds = _get_scan_mode_dataset(
-    filepath, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
+    dt, scan_mode, variables=None, groups=None, prefix_group=False, chunks={}, decode_cf=False
 )

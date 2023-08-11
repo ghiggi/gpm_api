@@ -9,7 +9,6 @@ import os
 import subprocess
 import warnings
 
-import dask
 import numpy as np
 import pandas as pd
 
@@ -309,6 +308,8 @@ def find_pps_filepaths(
         List of GPM filepaths.
 
     """
+    import dask
+
     # -------------------------------------------------------------------------.
     # Retrieve GPM-API configs
     username = get_gpm_username(username)

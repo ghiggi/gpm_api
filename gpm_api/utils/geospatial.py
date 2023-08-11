@@ -4,6 +4,8 @@ Created on Wed Aug 17 09:30:29 2022
 
 @author: ghiggi
 """
+import warnings
+
 import numpy as np
 import xarray as xr
 
@@ -26,6 +28,34 @@ def unwrap_longitude_degree(x, period=360):
     x = np.asarray(x)
     mod = period / 2
     return (x + mod) % (2 * mod) - mod
+
+
+def get_extent(xr_obj, padding=0):
+    """Get geographic extent.
+
+    The extent follows the matplotlib/cartopy format (xmin, xmax, ymin, ymax)
+    The padding tuple is expected to follow the format (x, y)
+    """
+    if isinstance(padding, (int, float)):
+        padding = (padding, padding)
+    elif isinstance(padding, (tuple, list)):
+        if len(padding) != 2:
+            raise ValueError("Expecting a padding (x, y) tuple of length 2.")
+    else:
+        raise TypeError("Accepted padding type are int, float, list or tuple.")
+    lon = xr_obj["lon"].data
+    lat = xr_obj["lat"].data
+    lon_min = max(-180, np.nanmin(lon).item() - padding[0])
+    lon_max = min(180, np.nanmax(lon).item() + padding[0])
+    lat_min = max(-90, np.nanmin(lat).item() - padding[1])
+    lat_max = min(90, np.nanmax(lat).item() + padding[1])
+
+    if lon_min > lon_max:
+        raise NotImplementedError(
+            "The object cross the dateline. The extent can't be currently be defined."
+        )
+    extent = tuple([lon_min, lon_max, lat_min, lat_max])
+    return extent
 
 
 def crop_by_country(xr_obj, name):
@@ -102,9 +132,12 @@ def get_crop_slices_by_extent(xr_obj, extent):
         )
         if idx_col.size == 0:
             raise ValueError("No data inside the provided bounding box.")
-        # Retrieve list of along_track slices
+
+        # Retrieve list of along_track slices isel_dict
         list_slices = get_list_slices_from_indices(idx_col)
-        return list_slices
+        list_isel_dicts = [{"along_track": slc} for slc in list_slices]
+        return list_isel_dicts
+
     elif is_grid(xr_obj):
         lon = xr_obj["lon"].data
         lat = xr_obj["lat"].data
@@ -115,8 +148,8 @@ def get_crop_slices_by_extent(xr_obj, extent):
             raise ValueError("No data inside the provided bounding box.")
         lat_slices = get_list_slices_from_indices(idx_row)[0]
         lon_slices = get_list_slices_from_indices(idx_col)[0]
-        slices_dict = {"lon": lon_slices, "lat": lat_slices}
-        return slices_dict
+        isel_dict = {"lon": lon_slices, "lat": lat_slices}
+        return isel_dict
     else:
         raise NotImplementedError("")
 
@@ -179,19 +212,18 @@ def crop(xr_obj, extent):
 
     """
     # TODO: Check extent
-
     if is_orbit(xr_obj):
         # - Subset only along_track
-        list_slices = get_crop_slices_by_extent(xr_obj, extent)
-        if len(list_slices) > 1:
+        list_isel_dicts = get_crop_slices_by_extent(xr_obj, extent)
+        if len(list_isel_dicts) > 1:
             raise ValueError(
                 "The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !."
             )
-        xr_obj_subset = xr_obj.isel(along_track=list_slices[0])
+        xr_obj_subset = xr_obj.isel(list_isel_dicts[0])
 
     elif is_grid(xr_obj):
-        slice_dict = get_crop_slices_by_extent(xr_obj, extent)
-        xr_obj_subset = xr_obj.isel(slice_dict)
+        isel_dict = get_crop_slices_by_extent(xr_obj, extent)
+        xr_obj_subset = xr_obj.isel(isel_dict)
     else:
         orbit_dims = ("cross_track", "along_track")
         grid_dims = ("lon", "lat")
@@ -204,6 +236,51 @@ def crop(xr_obj, extent):
 
 ####---------------------------------------------------------------------------.
 #### TODO MOVE TO pyresample accessor !!!
+
+
+def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
+    """Remap data from one dataset to another one."""
+    from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
+
+    # Retrieve source and destination area
+    src_area = src_ds.gpm_api.pyresample_area
+    dst_area = dst_ds.gpm_api.pyresample_area
+
+    # Rename dimensions to x, y for pyresample compatibility
+    if src_ds.gpm_api.is_orbit:
+        src_ds = src_ds.swap_dims({"cross_track": "y", "along_track": "x"})
+    else:
+        src_ds = src_ds.swap_dims({"lat": "y", "lon": "x"})
+
+    # Define resampler
+    resampler = KDTreeNearestXarrayResampler(src_area, dst_area)
+    resampler.precompute(radius_of_influence=radius_of_influence)
+
+    # Retrieve valid variables
+    variables = [var for var in src_ds.data_vars if set(src_ds[var].dims).issuperset({"x", "y"})]
+
+    # Remap DataArrays
+    with warnings.catch_warnings(record=True):
+        da_dict = {var: resampler.resample(src_ds[var], fill_value=fill_value) for var in variables}
+
+    # Create Dataset
+    ds = xr.Dataset(da_dict)
+
+    # Set correct dimensions
+    if dst_ds.gpm_api.is_orbit:
+        ds = ds.swap_dims({"y": "cross_track", "x": "along_track"})
+    else:
+        ds = ds.swap_dims({"y": "lat", "x": "lon"})
+
+    # Add relevant coordinates of dst_ds
+    dst_available_coords = list(dst_ds.coords)
+    useful_coords = []
+    for coord in dst_available_coords:
+        if np.all(np.isin(dst_ds[coord].dims, ds.dims)):
+            useful_coords.append(coord)
+    dict_coords = {coord: dst_ds[coord] for coord in useful_coords}
+    ds = ds.assign_coords(dict_coords)
+    return ds
 
 
 def get_pyresample_area(xr_obj):

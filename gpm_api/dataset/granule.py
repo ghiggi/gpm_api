@@ -94,14 +94,14 @@ def _get_flattened_scan_mode_dataset(dt, scan_mode, groups, variables=None, pref
             group = ""
         else:
             ds = dt[scan_mode][group].to_dataset()
-        ds = _process_group_dataset(ds, group, variables, prefix_group=False)
+        ds = _process_group_dataset(ds, group, variables, prefix_group=prefix_group)
         list_ds.append(ds)
     ds = xr.merge(list_ds)
     return ds
 
 
 def _get_scan_mode_dataset(
-    filepath,
+    dt,
     scan_mode,
     variables=None,
     groups=None,
@@ -110,12 +110,6 @@ def _get_scan_mode_dataset(
     decode_cf=False,
 ):
     """Retrieve scan mode xr.Dataset."""
-    from gpm_api.dataset.datatree import _open_datatree
-
-    dt = _open_datatree(
-        filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True
-    )
-
     # Retrieve granule info
     coords, attrs, groups, variables = _get_scan_mode_info(
         dt=dt, scan_mode=scan_mode, variables=variables, groups=groups
@@ -131,14 +125,25 @@ def _get_scan_mode_dataset(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ds = ds.assign_coords(coords)
+
     # Assign global attributes
     ds.attrs = attrs
+
     return ds
+
+
+def get_variables(ds):
+    """Retrieve the dataset variables."""
+    variables = list(ds.data_vars)
+    return variables
 
 
 def get_variables_dims(ds):
     """Retrieve the dimensions used by the xr.Dataset variables."""
-    dims = np.unique(np.concatenate([list(ds[var].dims) for var in ds.data_vars]))
+    variables = get_variables(ds)
+    if len(variables) == 0:
+        return []
+    dims = np.unique(np.concatenate([list(ds[var].dims) for var in variables]))
     return dims
 
 
@@ -162,10 +167,12 @@ def _open_granule(
     groups=None,
     variables=None,
     decode_cf=False,
-    chunks="auto",
+    chunks={},
     prefix_group=True,
 ):
     """Open granule file into xarray Dataset."""
+    from gpm_api.dataset.datatree import open_datatree
+
     # Get product and version
     product = get_product_from_filepath(filepath)
     version = get_version_from_filepath(filepath)
@@ -177,9 +184,12 @@ def _open_granule(
     # Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version)
 
+    # Open datatree
+    dt = open_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True)
+
     # Retrieve the granule dataset (without cf decoding)
     ds = _get_scan_mode_dataset(
-        filepath=filepath,
+        dt=dt,
         scan_mode=scan_mode,
         groups=groups,
         variables=variables,
@@ -188,13 +198,21 @@ def _open_granule(
         decode_cf=False,
     )
 
+    # Specify datatree closer
+    # TODO: implement datatree.close() and datatree._close in datatree repository
+    # --> datatree._close as iterator ?
+    # --> https://github.com/xarray-contrib/datatree/issues/93
+    # --> https://github.com/xarray-contrib/datatree/pull/114/files
+    ds.set_close(getattr(dt, "_close"))
+
     ###-----------------------------------------------------------------------.
     ### Clean attributes, decode variables
     # Apply custom processing
-    ds = apply_custom_decoding(ds, product)
+    ds = apply_custom_decoding(ds, product, scan_mode)
 
-    # Remove coords and dimensions not exploited by data variables
-    ds = remove_unused_var_dims(ds)
+    # If there are dataset variables, remove coords and dimensions not exploited by data variables
+    if len(ds.data_vars) >= 1:
+        ds = remove_unused_var_dims(ds)
 
     ###-----------------------------------------------------------------------.
     ## Check swath time coordinate
@@ -230,9 +248,9 @@ def open_granule(
     scan_mode=None,
     groups=None,
     variables=None,
-    decode_cf=False,
+    decode_cf=True,
     chunks={},
-    prefix_group=True,
+    prefix_group=False,
     use_gpm_api_defaults=True,
 ):
     """
@@ -299,7 +317,7 @@ def open_granule(
         scan_mode=scan_mode,
         groups=groups,
         variables=variables,
-        decode_cf=decode_cf,
+        decode_cf=False,
         chunks=chunks,
         prefix_group=prefix_group,
     )

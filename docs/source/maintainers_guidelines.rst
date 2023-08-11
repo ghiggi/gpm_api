@@ -72,19 +72,16 @@ GPM-API’s documentation is built using Sphinx. All documentation lives in the 
 Manual documentation creation
 -----------------------------
 
-After editing the source files there the documentation can be generated locally:
+After editing the source files, the documentation can be generated locally:
 
 
 .. code-block:: bash
 
-	sphinx-build -b html source build
+	cd docs
+	make html
 
 
-The output of the previous command should be checked for warnings and errors. If the code is changed (new functions or classes) then the GPM-API documentation files should be regenerated before running the above command:
-
-.. code-block:: bash
-
-	sphinx-apidoc -f -o source/api .. ../setup.py
+The output of the previous command should be checked for warnings and errors. If the code is changed (new functions or classes), then the GPM-API documentation files located in ``docs/source/api`` are automatically regenerated.
 
 
 Automatic (Github) documentation creation

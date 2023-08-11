@@ -3,42 +3,47 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   tests:
-    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', experimental' || '' }}
+    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', latest deps' || '' }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
 
     strategy:
+      fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         experimental: [false]
         include:
           - os: "ubuntu-latest"
-            python-version: "3.10"
+            python-version: "3.11"
             experimental: true
 
           - os: "ubuntu-latest"
-            python-version: "3.10"
+            python-version: "3.11"
             experimental: false
             coverage: true
+
+          - os: "windows-latest"
+            python-version: "3.11"
+            experimental: false
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Set up micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          python-version: ${{ matrix.python-version }}
+          environment-file: ${{ matrix.experimental && 'ci/environment_latest.yml' || 'ci/environment.yml' }}
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: >-
+            bash
 
-      - name: Install dependencies
+      - name: Install package
         run: |
-          sudo apt install libgeos-dev
-          pip install -U pip
-          pip install -e .[ximage,dev]
-          if echo ${{ matrix.experimental }} | grep -c "true"
-          then
-            pip --disable-pip-version-check list --outdated --format=json | python -c "import json, sys; print('\n'.join([x['name'] for x in json.load(sys.stdin)]))" | xargs -n1 pip install -U
-          fi
-        shell: bash
+          pip install -e .[image,dev]
 
       - name: Test with pytest
         run: |

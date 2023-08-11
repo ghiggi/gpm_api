@@ -116,7 +116,7 @@ for filepath in filepaths:
         groups=groups,
         variables=variables,
         decode_cf=False,
-        chunks="auto",
+        chunks={},
         prefix_group=True,
     )
     print(ds)
@@ -172,7 +172,7 @@ for product in products:
         scan_mode=scan_mode,
         version=7,
         product_type="RS",
-        chunks="auto",
+        chunks={},
         decode_cf=False,
         prefix_group=True,
     )

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Created on Mon Mar 13 11:48:22 2023
+Created on Mon Mar 13 12:11:27 2023
 
 @author: ghiggi
 """
@@ -20,10 +20,9 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.argument("product", type=str)
 @click.argument("year", type=int)
 @click.argument("month", type=int)
-@click.argument("day", type=int)
 @click.option("--product_type", type=str, show_default=True, default="RS")
 @click.option("--version", type=int, show_default=True, default=GPM_VERSION)
-@click.option("--n_threads", type=int, default=2)
+@click.option("--n_threads", type=int, default=4)
 @click.option("--transfer_tool", type=str, default="curl")
 @click.option("--progress_bar", type=bool, default=False)
 @click.option("--force_download", type=bool, default=False)
@@ -34,14 +33,13 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.option("--base_dir", type=str, default=None)
 @click.option("--username", type=str, default=None)
 @click.option("--password", type=str, default=None)
-def download_daily_gpm_data(
+def download_gpm_monthly_data(
     product,
     year,
     month,
-    day,
     product_type="RS",
     version=GPM_VERSION,
-    n_threads=2,
+    n_threads=4,
     transfer_tool="curl",
     progress_bar=False,
     force_download=False,
@@ -53,14 +51,13 @@ def download_daily_gpm_data(
     username=None,
     password=None,
 ):
-    """Download the GPM product for a specific date."""
-    from gpm_api.utils.archive import download_daily_data
+    """Download the GPM product for a specific month."""
+    from gpm_api.io.download import download_monthly_data
 
-    _ = download_daily_data(
+    _ = download_monthly_data(
         product=product,
         year=year,
         month=month,
-        day=day,
         product_type=product_type,
         version=version,
         n_threads=n_threads,
@@ -80,4 +77,4 @@ def download_daily_gpm_data(
 
 
 if __name__ == "__main__":
-    download_daily_gpm_data()
+    download_gpm_monthly_data()

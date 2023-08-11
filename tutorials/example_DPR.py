@@ -137,10 +137,10 @@ p.axes.set_title(label=title)
 # - The extent must be specified following the cartopy and matplotlib convention
 # ---> extent = [lon_min, lon_max, lat_min, lat_max]
 extent = get_country_extent("United States")
-list_slices = ds.gpm_api.get_crop_slices_by_extent(extent)
-print(list_slices)
-for slc in list_slices:
-    da_subset = ds[variable].isel(along_track=slc)
+list_isel_dict = ds.gpm_api.get_crop_slices_by_extent(extent)
+print(list_isel_dict)
+for isel_dict in list_isel_dict:
+    da_subset = ds[variable].isel(isel_dict)
     slice_title = da_subset.gpm_api.title(add_timestep=True)
     p = da_subset.gpm_api.plot_map()
     p.axes.set_extent(extent)

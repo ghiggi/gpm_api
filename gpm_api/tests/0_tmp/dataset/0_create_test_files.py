@@ -8,7 +8,7 @@ Created on Wed Jul 19 10:12:06 2023
 import os
 import h5py
 import gpm_api
-from gpm_api.dataset.datatree import _open_datatree
+from gpm_api.dataset.datatree import open_datatree
 
 
 def copy_attributes(original, copy):
@@ -73,7 +73,7 @@ dst_file.close()
 # ------------------------------------------------------------------------------.
 ## Test it open correctly
 
-dt = _open_datatree(dst_file_path)
+dt = open_datatree(dst_file_path)
 dt.attrs
 dt["FS"].attrs
 dt["FS"]["SLV"].attrs
