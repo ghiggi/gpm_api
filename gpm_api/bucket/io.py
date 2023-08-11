@@ -6,6 +6,7 @@ Created on Wed Aug  2 16:10:28 2023
 """
 import glob
 import os
+import fnmatch
 
 
 def get_parquet_fpaths(
