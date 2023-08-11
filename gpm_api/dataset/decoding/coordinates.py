@@ -155,10 +155,15 @@ def set_coordinates(ds, product, scan_mode):
     # Add wished coordinates
     ds = _add_wished_coordinates(ds)
 
-    #### Convert sunLocalTime to hourly timedelta
-    if "sunLocalTime" in ds:
-        ds["sunLocalTime"] = ds["sunLocalTime"] / 10**9 / 60 / 60
-
+    # Convert sunLocalTime to float
+    dtype = ds["sunLocalTime"].data.dtype 
+    if dtype == "timedelta64[ns]":
+        ds["sunLocalTime"] = ds["sunLocalTime"].astype(int)/ 10**9 / 60 / 60
+    elif np.issubdtype(dtype, np.floating):
+        pass
+    else: 
+        raise ValueError("Expecting sunLocalTime as float or timedelta64[ns]")
+        
     #### PMW
     # - 1C products
     if product.startswith("1C"):
