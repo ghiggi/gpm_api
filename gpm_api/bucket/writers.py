@@ -33,6 +33,7 @@ def write_granule_bucket(
     preprocessing_function=None,
     ds_to_df_function=ds_to_pd_df_function,
     filtering_function=None,
+    precompute_granule=True,
     # Partitioning arguments
     xbin_size=15,
     ybin_size=15,
@@ -59,6 +60,7 @@ def write_granule_bucket(
         preprocessing_function=preprocessing_function,
         ds_to_df_function=ds_to_df_function,
         filtering_function=filtering_function,
+        precompute_granule=precompute_granule,
     )
 
     # Define partitioning columns names

@@ -125,11 +125,16 @@ def _check_is_callable_or_none(argument, argument_name):
         raise TypeError(f"{argument_name} must be a function (or None).")
 
 
-def convert_ds_to_df(ds, preprocessing_function, ds_to_df_function, filtering_function):
+def convert_ds_to_df(
+    ds, preprocessing_function, ds_to_df_function, filtering_function, precompute_granule=False
+):
     # Check inputs
     _check_is_callable_or_none(preprocessing_function, argument_name="preprocessing_function")
     _check_is_callable_or_none(ds_to_df_function, argument_name="ds_to_df_function")
     _check_is_callable_or_none(filtering_function, argument_name="filtering_function")
+
+    if precompute_granule:
+        ds = ds.compute()
 
     # Preprocess xarray Dataset
     if callable(preprocessing_function):
@@ -150,15 +155,18 @@ def get_granule_dataframe(
     preprocessing_function=None,
     ds_to_df_function=ds_to_dask_df_function,
     filtering_function=None,
+    precompute_granule=False,
 ):
     # Open granule
     ds = gpm_api.open_granule(fpath, **open_granule_kwargs)
 
+    # Convert to dataframe
     df = convert_ds_to_df(
         ds=ds,
         preprocessing_function=preprocessing_function,
         ds_to_df_function=ds_to_df_function,
         filtering_function=filtering_function,
+        precompute_granule=precompute_granule,
     )
 
     return df
