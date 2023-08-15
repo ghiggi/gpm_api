@@ -229,7 +229,7 @@ COLOR_DICT = {
         # 'cmap_n': 10,
         "cmap_type": "Colormap",
         "vmin": 10,
-        "vmax": 40,
+        "vmax": 50,
         "extend": "both",
         "extendfrac": 0.05,
         "label": "Reflectivity [$dBZ$]",  # $Z_{e}$

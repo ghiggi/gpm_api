@@ -188,6 +188,24 @@ def _is_spatial_3d_datarray(da, strict):
     return False
 
 
+def _is_transect_datarray(da, strict):
+    """Check if a DataArray is a spatial 3D array."""
+    spatial_dims = _get_available_spatial_dims(da)
+    if len(spatial_dims) != 1:
+        return False
+
+    vertical_dims = _get_available_vertical_dims(da)
+    if not vertical_dims:
+        return False
+    else:
+        if strict:
+            if len(da.dims) == 2:
+                return True
+        else:
+            return True
+    return False
+
+
 def _is_spatial_2d_dataset(ds, strict):
     """Check if all DataArrays of a xr.Dataset are spatial 2D array."""
     all_2d_spatial = np.all(
@@ -205,6 +223,17 @@ def _is_spatial_3d_dataset(ds, strict):
         [_is_spatial_3d_datarray(ds[var], strict=strict) for var in get_dataset_variables(ds)]
     ).item()
     if all_3d_spatial:
+        return True
+    else:
+        return False
+
+
+def _is_transect_dataset(ds, strict):
+    """Check if all DataArrays of a xr.Dataset are spatial profile array."""
+    all_profile_spatial = np.all(
+        [_is_transect_datarray(ds[var], strict=strict) for var in get_dataset_variables(ds)]
+    ).item()
+    if all_profile_spatial:
         return True
     else:
         return False
@@ -237,6 +266,17 @@ def is_spatial_3d(xr_obj, strict=True, squeeze=True):
         return _is_spatial_3d_datarray(xr_obj, strict=strict)
 
 
+def is_transect(xr_obj, strict=True, squeeze=True):
+    """Check if is spatial profile xarray object."""
+    check_is_xarray(xr_obj)
+    if squeeze:
+        xr_obj = xr_obj.squeeze()  # remove dimensions of size 1
+    if isinstance(xr_obj, xr.Dataset):
+        return _is_transect_dataset(xr_obj, strict=strict)
+    else:
+        return _is_transect_datarray(xr_obj, strict=strict)
+
+
 def check_is_spatial_2d(da, strict=True, squeeze=True):
     if not is_spatial_2d(da, strict=strict, squeeze=squeeze):
         raise ValueError("Expecting a 2D GPM field.")
@@ -245,6 +285,11 @@ def check_is_spatial_2d(da, strict=True, squeeze=True):
 def check_is_spatial_3d(da, strict=True, squeeze=True):
     if not is_spatial_3d(da, strict=strict, squeeze=squeeze):
         raise ValueError("Expecting a 3D GPM field.")
+
+
+def check_is_transect(da, strict=True, squeeze=True):
+    if not is_transect(da, strict=strict, squeeze=squeeze):
+        raise ValueError("Expecting a transect of a 3D GPM field.")
 
 
 def get_spatial_2d_variables(ds, strict=False, squeeze=True):

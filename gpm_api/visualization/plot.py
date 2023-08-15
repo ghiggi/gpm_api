@@ -435,6 +435,33 @@ def _plot_xr_imshow(
     return p
 
 
+def _plot_xr_pcolormesh(
+    ax,
+    da,
+    x,
+    y,
+    add_colorbar=True,
+    plot_kwargs={},
+    cbar_kwargs={},
+):
+    """Plot pcolormesh with xarray."""
+    ticklabels = cbar_kwargs.pop("ticklabels", None)
+    if not add_colorbar:
+        cbar_kwargs = {}
+    p = da.plot.pcolormesh(
+        x=x,
+        y=y,
+        ax=ax,
+        add_colorbar=add_colorbar,
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+    plt.title(da.name)
+    if add_colorbar and ticklabels is not None:
+        p.colorbar.ax.set_yticklabels(ticklabels)
+    return p
+
+
 ####--------------------------------------------------------------------------.
 def plot_map(
     da,

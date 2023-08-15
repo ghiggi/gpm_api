@@ -5,12 +5,18 @@ Created on Sat Dec 10 18:44:25 2022
 @author: ghiggi
 """
 import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
 import xarray as xr
 
+from gpm_api.checks import check_is_transect
 from gpm_api.utils.slices import ensure_is_slice, get_slice_size
-from gpm_api.utils.utils_cmap import get_colormap_setting
+from gpm_api.utils.utils_cmap import get_colorbar_settings
+from gpm_api.visualization.plot import (
+    _plot_xr_pcolormesh,
+    _preprocess_figure_args,
+)
 
 
 def optimize_transect_slices(
@@ -174,22 +180,6 @@ def get_transect_slices(
     return transect_slices
 
 
-def plot_profile(da_profile, colorscale=None, ylim=None, ax=None):
-    x_direction = da_profile["lon"].dims[0]
-    # Retrieve title
-    title = da_profile.gpm_api.title(time_idx=0, prefix_product=False, add_timestep=False)
-    # Retrieve colormap configs
-    plot_kwargs, cbar_kwargs, ticklabels = get_colormap_setting(colorscale)
-    # Plot
-    p = da_profile.plot.pcolormesh(
-        x=x_direction, y="height", ax=ax, cbar_kwargs=cbar_kwargs, **plot_kwargs
-    )
-    p.axes.set_title(title)
-    if ylim is not None:
-        p.axes.set_ylim(ylim)
-    return p
-
-
 def plot_transect_line(ds, ax, color="black"):
     # Check is a profile (lon and lat are 1D coords)
     if len(ds["lon"].shape) != 1:
@@ -212,3 +202,45 @@ def plot_transect_line(ds, ax, color="black"):
     lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
     ax.text(lon_r, lat_r, "R")
     ax.text(lon_l, lat_l, "L")
+
+
+def plot_transect(
+    da,
+    ax=None,
+    add_colorbar=True,
+    zoom=True,
+    fig_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
+):
+    """Plot GPM transect."""
+    # - Check inputs
+    check_is_transect(da)
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+
+    # - Initialize figure
+    if ax is None:
+        fig, ax = plt.subplots(**fig_kwargs)
+
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(
+        name=da.name, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    )
+
+    # - If zoom on height regions with data
+    if zoom:
+        da = da.gpm_api.slice_range_with_valid_data()
+
+    # - Plot with xarray
+    x_direction = da["lon"].dims[0]
+    p = _plot_xr_pcolormesh(
+        ax=ax,
+        da=da,
+        x=x_direction,
+        y="height",
+        add_colorbar=add_colorbar,
+        plot_kwargs=plot_kwargs,
+        cbar_kwargs=cbar_kwargs,
+    )
+    # - Return mappable
+    return p
