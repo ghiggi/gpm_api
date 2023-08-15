@@ -4,17 +4,15 @@ Created on Fri Jul 28 12:28:40 2023
 
 @author: ghiggi
 """
-from gpm_api.dataset.decoding.utils import get_data_array
 
 
-def decode_surfacePrecipitation(xr_obj):
+def decode_surfacePrecipitation(da):
     """Decode the 2A-<PMW> variable surfacePrecipitation.
 
     _FillValue is often reported as -9999.9, but in data the values are -9999.0 !
     """
-    xr_obj = get_data_array(xr_obj, variable="surfacePrecipitation")
-    xr_obj = xr_obj.where(xr_obj != -9999.0)
-    return xr_obj
+    da = da.where(da != -9999.0)
+    return da
 
 
 def _get_decoding_function(variable):

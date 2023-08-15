@@ -5,18 +5,6 @@ Created on Fri Jul 28 11:34:55 2023
 @author: ghiggi
 """
 import numpy as np
-import xarray as xr
-
-
-def get_data_array(xr_obj, variable):
-    if isinstance(xr_obj, xr.DataArray):
-        if xr_obj.name != variable:
-            print(f"Warning: the DataArray name is not '{variable}'!")
-    else:
-        if variable not in xr_obj:
-            raise ValueError(f"'{variable}' is not a variable of the xarray Dataset.")
-        xr_obj = xr_obj[variable]
-    return xr_obj
 
 
 def remap_numeric_array(arr, remapping_dict):
