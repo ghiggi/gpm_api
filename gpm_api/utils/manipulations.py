@@ -25,7 +25,7 @@ def integrate_profile_concentration(dataarray, name, scale_factor=None, units=No
     """Utility to convert LWC or IWC to LWP or IWP.
 
     Input data have unit g/m³.
-    Output data will have unit kg/m²
+    Output data will have unit kg/m² if scale_factor=1000
 
     height a list or array of corresponding heights for each level.
     """
@@ -66,7 +66,7 @@ def _get_bin_datarray(ds, bin):
         return ds[bin]
 
 
-def _get_variable_dataarray(xr_obj, variable):
+def get_variable_dataarray(xr_obj, variable):
     if not isinstance(xr_obj, (xr.DataArray, xr.Dataset)):
         raise TypeError("Expecting a xr.Dataset or xr.DataArray")
     if isinstance(xr_obj, xr.Dataset):
@@ -83,8 +83,10 @@ def get_variable_at_bin(xr_obj, bin, variable=None):
     Assume bin values goes from 1 to 176.
     """
     # TODO: check behaviour when bin has 4 dimensions (i.e. binRealSurface)
+    # TODO: slice_range_at_bin
+
     # Get variable dataarray
-    da_variable = _get_variable_dataarray(xr_obj, variable)
+    da_variable = get_variable_dataarray(xr_obj, variable)
     # Get the bin datarray
     da_bin = _get_bin_datarray(xr_obj, bin=bin)
     if da_bin.ndim >= 4:
@@ -112,10 +114,10 @@ def get_height_at_bin(xr_obj, bin):
     return get_variable_at_bin(xr_obj, bin, variable="height")
 
 
-def get_range_slices_with_valid_data(xr_obj, variable):
+def get_range_slices_with_valid_data(xr_obj, variable=None):
     """Get the 'range' slices with valid data."""
     # Extract DataArray
-    da = _get_variable_dataarray(xr_obj, variable)
+    da = get_variable_dataarray(xr_obj, variable)
     da = da.compute()
 
     # Check has range dimension
@@ -140,8 +142,184 @@ def get_range_slices_with_valid_data(xr_obj, variable):
     return isel_dict
 
 
-def select_range_with_valid_data(xr_obj, variable):
+def slice_range_with_valid_data(xr_obj, variable=None):
     """Select the 'range' interval with valid data."""
-    isel_dict = get_range_slices_with_valid_data(xr_obj, variable)
+    isel_dict = get_range_slices_with_valid_data(xr_obj, variable=variable)
     # Susbet the xarray object
     return xr_obj.isel(isel_dict)
+
+
+def get_range_slices_within_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.inf):
+    """Get the 'range' slices with data within a given data interval."""
+    # Extract DataArray
+    da = get_variable_dataarray(xr_obj, variable)
+    da = da.compute()
+
+    # Check has range dimension
+    dims = list(da.dims)
+    if "range" not in dims:
+        raise ValueError(f"The {variable} variable does not have the 'range' dimension.")
+
+    # Remove 'range' from dimensions over which to aggregate
+    dims.remove("range")
+
+    # Get bool array indicating where data are in the value interval
+    is_within_interval = np.logical_and(da >= vmin, da <= vmax)
+
+    # Identify first and last True occurrence
+    n_bins = len(da["range"])
+    first_true_index = is_within_interval.argmax(dim="range").min().item()
+    axis_idx = np.where(np.isin(list(da.dims), "range"))[0]
+    last_true_index = (
+        n_bins - 1 - np.flip(is_within_interval, axis=axis_idx).argmax(dim="range").min().item()
+    )
+    if len(first_true_index) == 0:
+        raise ValueError(f"No data within the requested value interval for variable {variable}.")
+    isel_dict = {"range": slice(first_true_index, last_true_index + 1)}
+    return isel_dict
+
+
+def slice_range_where_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.inf):
+    """Select the 'range' interval where values are within the [vmin, vmax] interval."""
+    isel_dict = get_range_slices_within_values(xr_obj, variable=variable, vmin=vmin, vmax=vmax)
+    return xr_obj.isel(isel_dict)
+
+
+def get_range_index_at_value(da, value):
+    """Retrieve index along the range dimension where the DataArray values is closest to value."""
+    idx = np.abs(da - value).argmin(dim="range").compute()
+    return idx
+
+
+def get_range_index_at_min(da, value):
+    """Retrieve index along the range dimension where the DataArray has max values."""
+    idx = da.argmin(dim="range").compute()
+    return idx
+
+
+def get_range_index_at_max(da, value):
+    """Retrieve index along the range dimension where the DataArray has minimum values values."""
+    idx = da.argmax(dim="range").compute()
+    return idx
+
+
+def slice_range_at_value(xr_obj, value, variable=None):
+    """Slice the 3D arrays where the variable values are close to value."""
+    da = get_variable_dataarray(xr_obj, variable=variable)
+    idx = get_range_index_at_value(da=da, value=value)
+    return xr_obj.isel({"range": idx})
+
+
+def slice_range_at_max_value(xr_obj, variable=None):
+    """Slice the 3D arrays where the variable values are at maximum."""
+    da = get_variable_dataarray(xr_obj, variable=variable)
+    idx = get_range_index_at_max(da=da)
+    return xr_obj.isel({"range": idx})
+
+
+def slice_range_at_min_value(xr_obj, variable=None):
+    """Slice the 3D arrays where the variable values are at minimum."""
+    da = get_variable_dataarray(xr_obj, variable=variable)
+    idx = get_range_index_at_min(da=da)
+    return xr_obj.isel({"range": idx})
+
+
+def slice_range_at_temperature(ds, temperature, variable_temperature="airTemperature"):
+    """Slice the 3D arrays along a specific isotherm."""
+    return slice_range_at_value(ds, variable=variable_temperature, value=temperature)
+
+
+def slice_range_at_height(xr_obj, height):
+    """Slice the 3D array at a given height."""
+    return slice_range_at_value(xr_obj, variable="height", value=height)
+
+
+def get_height_at_temperature(da_height, da_temperature, temperature):
+    """Retrieve height at a specific temperature."""
+    idx_desired_temperature = get_range_index_at_value(da_temperature, temperature)
+    da_height_desired_temperature = da_height.isel({"range": idx_desired_temperature})
+    return da_height_desired_temperature
+
+
+def get_xr_dims_dict(xr_obj):
+    """Get dimension dictionary."""
+    if isinstance(xr_obj, xr.DataArray):
+        return dict(zip(xr_obj.dims, xr_obj.shape))
+    elif isinstance(xr_obj, xr.Dataset):
+        return dict(xr_obj.dims)
+    else:
+        raise TypeError("Expecting xr.DataArray or xr.Dataset object")
+
+
+def get_range_axis(da):
+    """Get range dimension axis index."""
+    idx = np.where(np.isin(list(da.dims), "range"))[0].item()
+    return idx
+
+
+def get_dims_without(da, dims):
+    """Remove specified 'dims' for list of DataArray dimensions."""
+    data_dims = np.array(list(da.dims))
+    new_dims = data_dims[np.isin(data_dims, dims, invert=True)].tolist()
+    return new_dims
+
+
+def get_xr_shape(xr_obj, dims):
+    """Get xarray shape for specific dimensions."""
+    dims_dict = get_xr_dims_dict(xr_obj)
+    shape = [dims_dict[key] for key in dims]
+    return shape
+
+
+def create_bin_idx_data_array(xr_obj):
+    """Create a 3D DataArray with the bin index along the range dimension.
+
+    The GPM bin index start at 1 !
+    GPM bin index is equivalent to gpm_range_id + 1
+    """
+    dims = ["cross_track", "along_track", "range"]
+    shape = get_xr_shape(xr_obj, dims=dims)
+    bin_start = xr_obj["gpm_range_id"][0]
+    bin_end = xr_obj["gpm_range_id"][-1]
+    idx_bin = np.arange(bin_start + 1, bin_end + 1 + 1)
+    idx_bin = np.broadcast_to(idx_bin, shape)
+    da_idx_bin = xr.DataArray(idx_bin, dims=dims)
+    return da_idx_bin
+
+
+def get_bright_band_mask(ds):
+    """Retrieve bright band mask defined by binBBBottom and binBBTop.
+
+    The bin is numerated from top to bottom.
+    binBBTop has lower values than binBBBottom.
+    binBBBottom and binBBTop are 0 when bright band limit is not detected !
+    """
+    # Retrieve required DataArrays
+    da_bb_bottom = ds["binBBBottom"]
+    da_bb_top = ds["binBBTop"]
+    # Create 3D array with bin idex
+    da_idx_bin = create_bin_idx_data_array(ds)
+    # Identify bright band mask
+    da_bright_band = np.logical_and(da_idx_bin >= da_bb_top, da_idx_bin <= da_bb_bottom)
+    return da_bright_band
+
+
+def get_liquid_phase_mask(ds):
+    """Retrieve the mask of the liquid phase profile."""
+    da_height = ds["height"]
+    da_height_0 = ds["heightZeroDeg"]
+    da_mask = da_height < da_height_0
+    return da_mask
+
+
+def get_solid_phase_mask(ds):
+    """Retrieve the mask of the solid phase profile."""
+    da_height = ds["height"]
+    da_height_0 = ds["heightZeroDeg"]
+    da_mask = da_height >= da_height_0
+    return da_mask
+
+
+def select_radar_frequency(xr_obj, radar_frequency):
+    """Select data related to a specific radar frequency."""
+    return xr_obj.sel({"radar_frequency": radar_frequency})

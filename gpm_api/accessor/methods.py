@@ -101,6 +101,7 @@ class GPM_Base_Accessor:
             chunks=chunks,
         )
 
+    #### Profile utility
     def get_variable_at_bin(self, bin, variable=None):
         """Retrieve variable values at specific range bins."""
         from gpm_api.utils.manipulations import get_variable_at_bin
@@ -113,12 +114,43 @@ class GPM_Base_Accessor:
 
         return get_height_at_bin(self._obj, bin=bin)
 
-    def select_range_with_valid_data(self, variable):
+    def slice_range_with_valid_data(self, variable=None):
         """Select the 'range' interval with valid data."""
-        from gpm_api.utils.manipulations import select_range_with_valid_data
+        from gpm_api.utils.manipulations import slice_range_with_valid_data
 
-        return select_range_with_valid_data(self._obj, variable)
+        return slice_range_with_valid_data(self._obj, variable=variable)
 
+    def slice_range_where_values(self, variable=None, vmin=-np.inf, vmax=np.inf):
+        """Select the 'range' interval where values are within the [vmin, vmax] interval."""
+        from gpm_api.utils.manipulations import slice_range_where_values
+
+        return slice_range_where_values(self._obj, variable=variable, vmin=vmin, vmax=vmax)
+
+    def slice_range_at_height(self, height):
+        """Slice the 3D array at a given height."""
+        from gpm_api.utils.manipulations import slice_range_at_height
+
+        return slice_range_at_height(self._obj, height=height)
+
+    def slice_range_at_value(self, value, variable=None):
+        """Slice the 3D arrays where the variable values are close to value."""
+        from gpm_api.utils.manipulations import slice_range_at_value
+
+        return slice_range_at_value(self._obj, variable=variable, value=value)
+
+    def slice_range_at_max_value(self, variable=None):
+        """Slice the 3D arrays where the variable values are at maximum."""
+        from gpm_api.utils.manipulations import slice_range_at_max_value
+
+        return slice_range_at_max_value(self._obj, variable=variable)
+
+    def slice_range_at_min_value(self, variable=None):
+        """Slice the 3D arrays where the variable values are at minimum."""
+        from gpm_api.utils.manipulations import slice_range_at_min_value
+
+        return slice_range_at_min_value(self._obj, variable=variable)
+
+    #### Dataset utility
     @property
     def is_orbit(self):
         from gpm_api.checks import is_orbit
@@ -168,6 +200,31 @@ class GPM_Base_Accessor:
         return get_frequency_variables(self._obj)
 
     @property
+    def start_time(self):
+        from gpm_api.io.checks import check_time
+
+        if "time" in self._obj.coords:
+            start_time = self._obj["time"].values[0]
+        elif "gpm_time" in self._obj.coords:
+            start_time = self._obj["gpm_time"].values[0]
+        else:
+            raise ValueError("Time coordinate not found")
+        return check_time(start_time)
+
+    @property
+    def end_time(self):
+        from gpm_api.io.checks import check_time
+
+        if "time" in self._obj.coords:
+            end_time = self._obj["time"].values[-1]
+        elif "gpm_time" in self._obj.coords:
+            end_time = self._obj["gpm_time"].values[-1]
+        else:
+            raise ValueError("Time coordinate not found")
+        return check_time(end_time)
+
+    #### Dataset Quality Checks
+    @property
     def is_regular(self):
         from gpm_api.utils.checks import is_regular
 
@@ -197,30 +254,7 @@ class GPM_Base_Accessor:
 
         return has_valid_geolocation(self._obj)
 
-    @property
-    def start_time(self):
-        from gpm_api.io.checks import check_time
-
-        if "time" in self._obj.coords:
-            start_time = self._obj["time"].values[0]
-        elif "gpm_time" in self._obj.coords:
-            start_time = self._obj["gpm_time"].values[0]
-        else:
-            raise ValueError("Time coordinate not found")
-        return check_time(start_time)
-
-    @property
-    def end_time(self):
-        from gpm_api.io.checks import check_time
-
-        if "time" in self._obj.coords:
-            end_time = self._obj["time"].values[-1]
-        elif "gpm_time" in self._obj.coords:
-            end_time = self._obj["gpm_time"].values[-1]
-        else:
-            raise ValueError("Time coordinate not found")
-        return check_time(end_time)
-
+    #### Subsetting utility
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm_api.utils.time import subset_by_time
 
@@ -256,6 +290,7 @@ class GPM_Base_Accessor:
 
         return get_slices_regular(self._obj, min_size=min_size)
 
+    #### Plotting utility
     def plot_transect_line(self, ax=None, color="black"):
         from gpm_api.visualization.profile import plot_transect_line
 
@@ -390,17 +425,49 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
         return p
 
+    def plot_transect(
+        self,
+        variable,
+        ax=None,
+        add_colorbar=True,
+        zoom=True,
+        fig_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.profile import plot_transect
+
+        da = self._obj[variable]
+        p = plot_transect(
+            da,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            zoom=zoom,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+        return p
+
     def available_retrievals(self):
         """Available GPM-API retrievals for that GPM product."""
         from gpm_api.dataset.retrievals.routines import available_retrievals
 
         return available_retrievals(self._obj)
 
-    def retrieve(self, name):
+    def retrieve(self, name, **kwargs):
         """Retrieve a GPM-API variable."""
         from gpm_api.dataset.retrievals.routines import get_retrieval_variable
 
-        return get_retrieval_variable(self._obj, retrieval=name)
+        return get_retrieval_variable(self._obj, retrieval=name, **kwargs)
+
+    def slice_range_at_temperature(self, temperature, variable_temperature="airTemperature"):
+        """Slice the 3D arrays along a specific isotherm."""
+        from gpm_api.utils.manipulations import slice_range_at_temperature
+
+        return slice_range_at_temperature(
+            self._obj, temperature=temperature, variable_temperature=variable_temperature
+        )
 
 
 @xr.register_dataarray_accessor("gpm_api")
@@ -484,6 +551,29 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+        return p
+
+    def plot_transect(
+        self,
+        ax=None,
+        add_colorbar=True,
+        zoom=True,
+        fig_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.profile import plot_transect
+
+        da = self._obj
+        p = plot_transect(
+            da,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            zoom=zoom,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,

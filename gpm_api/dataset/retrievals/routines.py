@@ -72,7 +72,7 @@ def check_retrieval_validity(ds, retrieval):
         )
 
 
-def get_retrieval_variable(ds, retrieval):
+def get_retrieval_variable(ds, retrieval, **kwargs):
     """Compute the requested variable."""
     # Retrieve products
     product = _infer_product(ds)
@@ -81,8 +81,8 @@ def get_retrieval_variable(ds, retrieval):
     if product in available_products(product_category="RADAR", product_level="2A"):
         module_name = "gpm_api.dataset.retrievals.retrieval_2a_radar"
         check_retrieval_validity(ds, retrieval)
-        return _get_retrieval_function(module_name, retrieval)(ds)
+        return _get_retrieval_function(module_name, retrieval)(ds, **kwargs)
     if product in available_products(product_category="PMW", product_level="2A"):
         module_name = "gpm_api.dataset.retrievals.retrieval_2a_pmw"
         check_retrieval_validity(ds, retrieval)
-        return _get_retrieval_function(module_name, retrieval)(ds)
+        return _get_retrieval_function(module_name, retrieval)(ds, **kwargs)
