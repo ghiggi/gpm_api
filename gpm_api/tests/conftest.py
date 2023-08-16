@@ -4,6 +4,30 @@ from typing import Any, List, Dict, Tuple
 from gpm_api.io.products import get_info_dict, available_products
 import posixpath as pxp
 import ntpath as ntp
+import gpm_api.configs
+from unittest.mock import patch
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_configuration():
+    """Patch the user configuration for entire session
+
+    Doing this will retrieve the configuration from pytest memory and not
+    alter the local configuration in ~/.config_gpm_api.yml
+    """
+
+    mocked_configuration = {
+        "gpm_username": "testuser",
+        "gpm_password": "testuser",
+        "gpm_base_dir": "data",
+    }
+
+    with patch.object(
+        gpm_api.configs,
+        "read_gpm_api_configs",
+        return_value=mocked_configuration,
+    ):
+        yield
 
 
 @pytest.fixture
