@@ -52,7 +52,9 @@ def test_check_base_dir() -> None:
     # Check text entry for Unix/Windows
     if platform.system() == "Windows":
         res = checks.check_base_dir("C:\\Users\\user\\gpm")
-        assert res == ntp.join("C:", "Users", "user", "gpm"), "Windows path is not returned"
+        assert res == ntp.join(
+            "C:", os.path.sep, "Users", "user", "gpm"
+        ), "Windows path is not returned"
     else:
         res = checks.check_base_dir("/home/user/gpm")
         assert res == ptp.join(ptp.sep, "home", "user", "gpm"), "Unix path is not returned"

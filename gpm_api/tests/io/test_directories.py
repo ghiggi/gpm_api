@@ -49,13 +49,14 @@ def test_get_disk_dir_pattern(
                     product_category = dir.get_product_category(product)
                     if product_type == "NRT":
                         assert "V0" not in dir_pattern
-                        assert dir_pattern == f"GPM/{product_type}/{product_category}/{product}"
+                        assert dir_pattern == os.path.join(
+                            "GPM", product_type, product_category, product
+                        )
                     elif product_type == "RS":
                         assert str(version) in dir_pattern
                         # Literal
-                        assert (
-                            dir_pattern
-                            == f"GPM/{product_type}/V0{version}/{product_category}/{product}"
+                        assert dir_pattern == os.path.join(
+                            "GPM", product_type, f"V0{version}", product_category, product
                         )
 
 
@@ -89,7 +90,7 @@ def test_get_disk_directory(
                         assert "V0" not in dir_path
                         assert dir_path == os.path.join(
                             base_dir,
-                            f"GPM/{product_type}/{product_category}/{product}",
+                            os.path.join("GPM", product_type, product_category, product),
                             date.strftime("%Y"),
                             date.strftime("%m"),
                             date.strftime("%d"),
@@ -99,7 +100,9 @@ def test_get_disk_directory(
                         # Literal
                         assert dir_path == os.path.join(
                             base_dir,
-                            f"GPM/{product_type}/V0{version}/{product_category}/{product}",
+                            os.path.join(
+                                "GPM", product_type, f"V0{version}", product_category, product
+                            ),
                             date.strftime("%Y"),
                             date.strftime("%m"),
                             date.strftime("%d"),
