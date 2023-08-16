@@ -353,16 +353,30 @@ def test_convert_pps_to_disk_filepaths(
     product_types: List[str],
     tmpdir: str,
 ) -> None:
-    """Test convert_pps_to_disk_filepaths function"""
+    """Test convert_pps_to_disk_filepaths function
+
+    Parameters
+    """
 
     assert dl.convert_pps_to_disk_filepaths(
         pps_filepaths=[
             "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
         ],
-        base_dir="/tmp",
+        base_dir=str(tmpdir),
         product="2A-DPR",
         product_type="RS",
         version=7,
     ) == [
-        "/tmp/GPM/RS/V07/RADAR/2A-DPR/2020/07/05/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
+        os.path.join(
+            tmpdir,
+            "GPM",
+            "RS",
+            "V07",
+            "RADAR",
+            "2A-DPR",
+            "2020",
+            "07",
+            "05",
+            "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5",
+        )
     ]
