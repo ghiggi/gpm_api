@@ -1,7 +1,9 @@
 import pytest
 import datetime
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Tuple
 from gpm_api.io.products import get_info_dict, available_products
+import posixpath as pxp
+import ntpath as ntp
 
 
 @pytest.fixture
@@ -152,3 +154,145 @@ def server_paths() -> Dict[str, Dict[str, Any]]:
         },
         # TODO: Add more products with varying attributes ...
     }
+
+
+@pytest.fixture
+def local_filepaths() -> List[Tuple[str, ...]]:
+    """Returns a list of probable local filepath structures as a list"""
+
+    return [
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V05",
+            "PMW",
+            "1B-TMI",
+            "2014",
+            "07",
+            "01",
+            "1B.TRMM.TMI.Tb2017.20140701-S045751-E063013.094690.V05A.HDF5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V07",
+            "PMW",
+            "1B-TMI",
+            "2014",
+            "07",
+            "01",
+            "1B.TRMM.TMI.Tb2021.20140701-S063014-E080236.094691.V07A.HDF5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V07",
+            "PMW",
+            "1C-ATMS-NPP",
+            "2018",
+            "07",
+            "01",
+            "1C.NPP.ATMS.XCAL2019-V.20180701-S075948-E094117.034588.V07A.HDF5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V07",
+            "RADAR",
+            "2A-TRMM-SLH",
+            "2014",
+            "07",
+            "01",
+            "2A.TRMM.PR.TRMM-SLH.20140701-S080237-E093500.094692.V07A.HDF5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V07",
+            "RADAR",
+            "2A-ENV-PR",
+            "2014",
+            "07",
+            "01",
+            "2A-ENV.TRMM.PR.V9-20220125.20140701-S063014-E080236.094691.V07A.HDF5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V07",
+            "RADAR",
+            "1B-PR",
+            "2014",
+            "07",
+            "01",
+            "1B.TRMM.PR.V9-20210630.20140701-S080237-E093500.094692.V07A.HDF5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V07",
+            "RADAR",
+            "1B-Ku",
+            "2020",
+            "10",
+            "28",
+            "GPMCOR_KUR_2010280754_0927_037875_1BS_DUB_07A.h5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V07",
+            "RADAR",
+            "2A-DPR",
+            "2022",
+            "07",
+            "06",
+            "2A.GPM.DPR.V9-20211125.20220706-S043937-E061210.047456.V07A.HDF5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V07",
+            "CMB",
+            "2B-GPM-CORRA",
+            "2016",
+            "03",
+            "09",
+            "2B.GPM.DPRGMI.CORRA2022.20160309-S091322-E104552.011525.V07A.HDF5",
+        ),
+        (
+            "data",
+            "GPM",
+            "RS",
+            "V06",
+            "IMERG",
+            "IMERG-FR",
+            "2020",
+            "02",
+            "01",
+            "3B-HHR.MS.MRG.3IMERG.20200201-S180000-E182959.1080.V06B.HDF5",
+        ),
+    ]
+
+
+@pytest.fixture
+def local_filepaths_unix(local_filepaths) -> List[str]:
+    """Return the local filepath list as unix paths"""
+
+    return [pxp.join(*path) for path in local_filepaths]
+
+
+@pytest.fixture
+def local_filepaths_windows(local_filepaths) -> List[str]:
+    """Return the local filepath list as windows paths"""
+
+    return [ntp.join(*path) for path in local_filepaths]
