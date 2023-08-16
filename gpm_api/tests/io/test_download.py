@@ -23,7 +23,7 @@ def test_construct_curl_cmd(
     # Use datetime as path as to be unique to every test
     disk_path = os.path.join(
         tmpdir,
-        datetime.datetime.utcnow().isoformat(),
+        datetime.datetime.utcnow().isoformat().replace(":", "-"),
         "curl",
         "output_file.hdf5",
     )
@@ -78,7 +78,7 @@ def test_construct_wget_cmd(
     # Use datetime as path as to be unique to every test
     disk_path = os.path.join(
         tmpdir,
-        datetime.datetime.utcnow().isoformat(),
+        datetime.datetime.utcnow().isoformat().replace(":", "-"),
         "wget",
         "output_file.hdf5",
     )
