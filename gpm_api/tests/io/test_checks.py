@@ -11,6 +11,8 @@ import datetime
 import numpy as np
 import os
 import platform
+import ntpath as ntp
+import posixpath as ptp
 from typing import List
 from gpm_api.io import checks
 from gpm_api.io.products import available_products, available_scan_modes
@@ -47,20 +49,21 @@ def test_is_empty() -> None:
 def test_check_base_dir() -> None:
     """Check path constructor for base_dir"""
 
-    # Check leading slash is removed
-    res = checks.check_base_dir("/home/user/gpm/")
-    assert res == "/home/user/gpm", "Leading slash is not removed"
+    # Check text entry for Unix/Windows
+    if platform.system() == "Windows":
+        res = checks.check_base_dir("C:\\Users\\user\\gpm")
+        assert res == ntp.join("C:", "Users", "user", "gpm"), "Windows path is not returned"
+    else:
+        res = checks.check_base_dir("/home/user/gpm")
+        assert res == ptp.join(ptp.sep, "home", "user", "gpm"), "Unix path is not returned"
 
-    # Check leading slash is removed
-    res = checks.check_base_dir("/home/user/gpm")
-    assert res == "/home/user/gpm", "Leading slash is not removed"
+    # Check final slash is removed
+    res = checks.check_base_dir(f"{os.path.join(os.path.expanduser('~'), 'gpm')}{os.path.sep}")
+    assert res == os.path.join(os.path.expanduser("~"), "gpm"), "Leading slash is not removed"
 
     # Check if GPM, it is removed
-    res = checks.check_base_dir("/home/user/gpm/GPM")
-    assert res == "/home/user/gpm", "GPM is not removed"
-
-    res = checks.check_base_dir(f"{os.path.join(os.getcwd(), 'home', 'user', 'gpm')}{os.path.sep}")
-    assert res == os.path.join(os.getcwd(), "home", "user", "gpm"), "Leading slash is not removed"
+    res = checks.check_base_dir(os.path.join(os.path.join(os.path.expanduser("~"), "gpm", "GPM")))
+    assert res == os.path.join(os.path.join(os.path.expanduser("~"), "gpm")), "GPM is not removed"
 
 
 def test_check_filepaths() -> None:

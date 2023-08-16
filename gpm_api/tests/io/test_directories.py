@@ -63,12 +63,13 @@ def test_get_disk_directory(
     products: List[str],
     product_types: List[str],
     versions: List[int],
+    tmpdir,
 ) -> None:
     """Test that the disk directory is correct."""
 
     date = datetime.datetime.strptime("2021-01-01", "%Y-%m-%d").date()
 
-    base_dir = "/home/user/gpm_api_data"
+    base_dir = os.path.join(tmpdir, "gpm_api_data")
 
     for product in products:
         for product_type in product_types:
