@@ -468,6 +468,7 @@ def plot_map(
     ax=None,
     add_colorbar=True,
     add_swath_lines=True,  # used only for GPM orbit objects
+    add_background=True,
     interpolation="nearest",  # used only for GPM grid objects
     fig_kwargs={},
     subplot_kwargs={},
@@ -487,6 +488,7 @@ def plot_map(
             ax=ax,
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -499,6 +501,7 @@ def plot_map(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -560,6 +563,7 @@ def plot_map_mesh(
     ax=None,
     edgecolors="k",
     linewidth=0.1,
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
@@ -578,6 +582,7 @@ def plot_map_mesh(
             ax=ax,
             edgecolors=edgecolors,
             linewidth=linewidth,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -588,6 +593,7 @@ def plot_map_mesh(
             ax=ax,
             edgecolors=edgecolors,
             linewidth=linewidth,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -601,6 +607,7 @@ def plot_map_mesh_centroids(
     ax=None,
     c="r",
     s=1,
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
@@ -613,7 +620,9 @@ def plot_map_mesh_centroids(
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     # Plot centroids

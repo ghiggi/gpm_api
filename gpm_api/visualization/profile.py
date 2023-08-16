@@ -19,8 +19,8 @@ from gpm_api.visualization.plot import (
 )
 
 
-def optimize_transect_slices(
-    obj, transect_slices, trim_threshold, variable=None, left_pad=0, right_pad=0
+def _optimize_transect_slices(
+    xr_obj, transect_slices, trim_threshold, variable=None, left_pad=0, right_pad=0
 ):
     # --------------------------------------------------------------------------.
     # Check variable
@@ -29,7 +29,7 @@ def optimize_transect_slices(
     # --> Left and right padding make sense only when trim_threshold is provided
     # TODO: Min_length, max_length arguments
     # --------------------------------------------------------------------------.
-    if isinstance(obj, xr.Dataset) and variable is None:
+    if isinstance(xr_obj, xr.Dataset) and variable is None:
         raise ValueError("If providing a xr.Dataset, 'variable' must be specified.")
 
     # --------------------------------------------------------------------------.
@@ -43,33 +43,33 @@ def optimize_transect_slices(
     if along_track_size != 1 and cross_track_size != 1:
         raise ValueError("Either 'along_track' or 'cross_track' must have a slice of size 1.")
     # --------------------------------------------------------------------------.
-    # Get object transect
-    obj_transect = obj.isel(transect_slices)
+    # Get xr_object transect
+    xr_obj_transect = xr_obj.isel(transect_slices)
 
     # Retrieve transect dimension name
     transect_dim_name = "cross_track" if along_track_size == 1 else "along_track"
 
     # Transpose transect dimension to first dimension
-    obj_transect = obj_transect.transpose(transect_dim_name, ...)
+    xr_obj_transect = xr_obj_transect.transpose(transect_dim_name, ...)
 
     # --------------------------------------------------------------------------.
     # If xr.Dataset, get a DataArray
-    if isinstance(obj_transect, xr.Dataset):
-        obj_transect = obj_transect[variable]
+    if isinstance(xr_obj_transect, xr.Dataset):
+        xr_obj_transect = xr_obj_transect[variable]
 
     # --------------------------------------------------------------------------.
     # Get transect info
-    len_transect = len(obj_transect[transect_dim_name])
-    ndim_transect = obj_transect.ndim
+    len_transect = len(xr_obj_transect[transect_dim_name])
+    ndim_transect = xr_obj_transect.ndim
 
     # --------------------------------------------------------------------------.
     # Identify transect extent including all pixel/profiles with value above threshold
     # - Transect line
     if ndim_transect == 1:
-        idx_above_thr = np.where(obj_transect.data > trim_threshold)[0]
+        idx_above_thr = np.where(xr_obj_transect.data > trim_threshold)[0]
     else:  # 2D case (profile) or more ... (i.e. time or ensemble simulations)
         any_axis = tuple(np.arange(1, ndim_transect))
-        idx_above_thr = np.where(np.any(obj_transect.data > trim_threshold, axis=any_axis))[0]
+        idx_above_thr = np.where(np.any(xr_obj_transect.data > trim_threshold, axis=any_axis))[0]
 
     # --------------------------------------------------------------------------.
     # Check there are residual data along the transect
@@ -92,7 +92,7 @@ def optimize_transect_slices(
     # TODO: Ensure maximum transect size (centered around max?)
 
     # --------------------------------------------------------------------------.
-    # Retrieve obj_transect slices
+    # Retrieve xr_obj_transect slices
     if len(valid_idx) == 1:
         print(
             "Printing a single profile! To plot a longer profile transect increase `trim_threshold`."
@@ -114,23 +114,53 @@ def optimize_transect_slices(
 
 
 def get_transect_slices(
-    obj, direction="cross_track", lon=None, lat=None, variable=None, transect_kwargs={}
+    xr_obj, direction="cross_track", lon=None, lat=None, variable=None, transect_kwargs={}
 ):
+    """
+    Define transect isel dictionary slices.
+
+    If lon and lat are provided, it returns the transect closest to such point.
+    Otherwise, it returns the transect passing through the maximum value of 'variable'
+
+    Parameters
+    ----------
+    xr_obj : TYPE
+        DESCRIPTION.
+    direction : TYPE, optional
+        DESCRIPTION. The default is "cross_track".
+    lon : TYPE, optional
+        DESCRIPTION. The default is None.
+    lat : TYPE, optional
+        DESCRIPTION. The default is None.
+    variable : TYPE, optional
+        DESCRIPTION. The default is None.
+    transect_kwargs : TYPE, optional
+        DESCRIPTION. The default is {}.
+
+    Returns
+    -------
+    transect_slices : TYPE
+        DESCRIPTION.
+
+    """
     # TODO: add lon, lat argument ... --> variable and argmax used only if not specified
+    # TODO: implement diagonal transect ?
+    # TODO: enable a curvilinear track / trajectory
+
     # Variable need to be specified for xr.Dataset
     # -------------------------------------------------------------------------.
     # Checks
-    # - Object type
-    if not isinstance(obj, (xr.DataArray, xr.Dataset)):
-        raise TypeError("Expecting xr.DataArray or xr.Dataset object.")
+    # - xr_object type
+    if not isinstance(xr_obj, (xr.DataArray, xr.Dataset)):
+        raise TypeError("Expecting xr.DataArray or xr.Dataset xr_object.")
     # - Valid dimensions # --> TODO: check for each Datarray
-    dims = set(list(obj.dims))
+    dims = set(list(xr_obj.dims))
     required_dims = set(["along_track", "cross_track", "range"])
     if not dims.issuperset(required_dims):
-        raise ValueError(f"Requires xarray object with dimensions {required_dims}")
+        raise ValueError(f"Requires xarray xr_object with dimensions {required_dims}")
     # - Verify valid input combination
     # --> If input xr.Dataset and variable, lat and lon not specified, raise Error
-    if isinstance(obj, xr.Dataset) and lat is None and lon is None and variable is None:
+    if isinstance(xr_obj, xr.Dataset) and lat is None and lon is None and variable is None:
         raise ValueError(
             "Need to provide 'variable' if passing a xr.Dataset and not specifying 'lat' / 'lon'."
         )
@@ -145,13 +175,13 @@ def get_transect_slices(
 
     # Else derive center locating the maximum intensity
     else:
-        if isinstance(obj, xr.Dataset):
+        if isinstance(xr_obj, xr.Dataset):
             if variable is None:
                 raise ValueError("If providing a xr.Dataset, 'variable' must be specified.")
-            da_variable = obj[variable].compute()
-            obj[variable] = da_variable
+            da_variable = xr_obj[variable].compute()
+            xr_obj[variable] = da_variable
         else:
-            da_variable = obj.compute()
+            da_variable = xr_obj.compute()
 
         dict_argmax = da_variable.argmax(da_variable.dims)
         idx_along_track = dict_argmax["along_track"]
@@ -161,26 +191,58 @@ def get_transect_slices(
     # Get transect slices based on direction
     if direction == "along_track":
         transect_slices = {"cross_track": int(idx_cross_track.data)}
-        transect_slices["along_track"] = slice(0, len(obj["along_track"]))
+        transect_slices["along_track"] = slice(0, len(xr_obj["along_track"]))
     elif direction == "cross_track":
         transect_slices = {"along_track": int(idx_along_track.data)}
-        transect_slices["cross_track"] = slice(0, len(obj["cross_track"]))
-
+        transect_slices["cross_track"] = slice(0, len(xr_obj["cross_track"]))
     else:  # TODO: longest, or most_max
         raise NotImplementedError()
 
     # -------------------------------------------------------------------------.
     # Optimize transect extent
     if len(transect_kwargs) != 0:
-        transect_slices = optimize_transect_slices(
-            obj, transect_slices, variable=variable, **transect_kwargs
+        transect_slices = _optimize_transect_slices(
+            xr_obj, transect_slices, variable=variable, **transect_kwargs
         )
     # -------------------------------------------------------------------------.
     # Return transect slices
     return transect_slices
 
 
-def plot_transect_line(ds, ax, color="black"):
+def select_transect(
+    xr_obj,
+    direction="cross_track",
+    lon=None,
+    lat=None,
+    variable=None,
+    transect_kwargs={},
+    keep_only_valid_variables=True,
+):
+
+    # Identify transect isel_dict
+    transect_slices = get_transect_slices(
+        xr_obj,
+        direction=direction,
+        variable=variable,
+        lon=lon,
+        lat=lat,
+        transect_kwargs=transect_kwargs,
+    )
+    # Extract the transect dataset
+    if isinstance(xr_obj, xr.Dataset) and keep_only_valid_variables:
+        xr_obj = xr_obj.gpm_api.select_spatial_3d_variables()
+    xr_obj_transect = xr_obj.isel(transect_slices)
+    return xr_obj_transect
+
+
+def plot_transect_line(
+    ds,
+    ax,
+    add_direction=True,
+    text_kwargs={},
+    line_kwargs={},
+    **common_kwargs,
+):
     # Check is a profile (lon and lat are 1D coords)
     if len(ds["lon"].shape) != 1:
         raise ValueError("The xr.Dataset/xr.DataArray is not a profile.")
@@ -192,23 +254,24 @@ def plot_transect_line(ds, ax, color="black"):
     lat_startend = (start_lonlat[1], end_lonlat[1])
 
     # Draw line
-    ax.plot(lon_startend, lat_startend, transform=ccrs.Geodetic(), color=color)
+    ax.plot(lon_startend, lat_startend, transform=ccrs.Geodetic(), **line_kwargs, **common_kwargs)
 
-    # Add transect left and right side (when plotting profile)
-    g = pyproj.Geod(ellps="WGS84")
-    fwd_az, back_az, dist = g.inv(*start_lonlat, *end_lonlat, radians=False)
-    lon_r, lat_r, _ = g.fwd(*start_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
-    fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)
-    lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
-    ax.text(lon_r, lat_r, "R")
-    ax.text(lon_l, lat_l, "L")
+    # Add transect left and right side (when plotting transect)
+    if add_direction:
+        g = pyproj.Geod(ellps="WGS84")
+        fwd_az, back_az, dist = g.inv(*start_lonlat, *end_lonlat, radians=False)
+        lon_r, lat_r, _ = g.fwd(*start_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
+        fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)
+        lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
+        ax.text(lon_r, lat_r, "R", **text_kwargs, **common_kwargs)
+        ax.text(lon_l, lat_l, "L", **text_kwargs, **common_kwargs)
 
 
 def plot_transect(
     da,
     ax=None,
     add_colorbar=True,
-    zoom=True,
+    zoom=False,
     fig_kwargs={},
     cbar_kwargs={},
     **plot_kwargs,
@@ -227,9 +290,14 @@ def plot_transect(
         name=da.name, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
     )
 
-    # - If zoom on height regions with data
+    # - Select only vertical regions with data
     if zoom:
         da = da.gpm_api.slice_range_with_valid_data()
+
+    # - Define xlabel
+    spatial_dim = da.gpm_api.spatial_dimensions[0]
+    xlabel_dicts = {"cross_track": "Cross-Track", "along_track": "Along-Track"}
+    xlabel = xlabel_dicts[spatial_dim]
 
     # - Plot with xarray
     x_direction = da["lon"].dims[0]
@@ -242,5 +310,7 @@ def plot_transect(
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
     )
+    p.axes.set_xlabel(xlabel)
+    p.axes.set_ylabel("Height [m]")
     # - Return mappable
     return p

@@ -17,6 +17,32 @@ from gpm_api.utils.manipulations import (
     get_variable_dataarray,
 )
 
+### TODO: requirements Ku, Ka band ...
+
+
+def retrieve_dfrMeasured(ds):
+    """Retrieve measured DFR."""
+    da_z = ds["zFactorMeasured"]
+    da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
+    da_dfr.name = "dfrMeasured"
+    return da_dfr
+
+
+def retrieve_dfrFinal(ds):
+    """Retrieve final DFR."""
+    da_z = ds["zFactorFinal"]
+    da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
+    da_dfr.name = "dfrFinal"
+    return da_dfr
+
+
+def retrieve_dfrFinalNearSurface(ds):
+    """Retrieve final DFR near the surface."""
+    da_z = ds["zFactorFinalNearSurface"]
+    da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
+    da_dfr.name = "dfrFinalNearSurface"
+    return da_dfr
+
 
 def retrieve_heightClutterFreeBottom(ds):
     """Retrieve clutter height."""
@@ -237,7 +263,8 @@ def retrieve_VIL(ds, variable="zFactorFinal", radar_frequency="Ku"):
     z_avg_arr = (z_below + z_above) / 2
 
     # Clip reflectivity values at 56 dBZ
-    z_avg_arr = z_avg_arr.clip(max=10 ** (56 / 10))
+    vmax = 10 ** (56 / 10)
+    z_avg_arr = z_avg_arr.clip(max=vmax)
 
     # Compute VIL profile
     thickness_arr = np.broadcast_to(thickness_arr, z_avg_arr.shape)
@@ -452,9 +479,52 @@ def retrieve_POSH(ds):
     da_shi = retrieve_SHI(ds)
     # Retrieve POSH
     da_posh = 29 * np.log(da_shi / da_wt) + 50
-    da_posh = da_shi.clip(min=0, max=1).round(1)
+    da_posh = da_shi.clip(min=0, max=1).round(1) * 100
     # Add attributes
     da_posh.name = "POSH"
     da_posh.attrs["description"] = "Probability of Severe Hail"
     da_posh.attrs["units"] = "%"
     return da_posh
+
+
+def retrieve_POH(ds, method="Foote2005"):
+    """The Probability of Hail (POH) at the surface.
+
+    Based on EchoDepth45dBZ above melting layer.
+
+    No hail if EchoDepth45dBZ above melting layer < 1.65 km.
+    100% hail if EchoDepth45dBZ above melting layer > 5.5 / 5.8 km.
+    to 100% (hail; Δz > 5.5 km)
+
+    Reference:
+        - Foote et al., 2005. Hail metrics using conventional radar.
+
+    Output probabilities are rounded off to the nearest 10%, to avoid
+      conveying an unrealistic degree of precision.
+    """
+    da_echo_depth_45_solid = retrieve_EchoDepth(
+        ds,
+        threshold=45,
+        variable="zFactorFinal",
+        radar_frequency="Ku",
+        min_threshold=0,
+        mask_liquid_phase=True,
+    )
+    if method == "Foote2005":
+        da_echo_depth_45_solid = da_echo_depth_45_solid / 1000
+        da_poh = (
+            -1.20231
+            + 1.00184 * da_echo_depth_45_solid
+            - 0.17018 * da_echo_depth_45_solid * da_echo_depth_45_solid
+            + 0.01086 * da_echo_depth_45_solid * da_echo_depth_45_solid * da_echo_depth_45_solid
+        )
+        da_poh = da_poh.clip(0, 1).round(1) * 100
+    else:
+        raise NotImplementedError(f"Method {method} is not yet implemented.")
+
+    # Add attributes
+    da_poh.name = "POH"
+    da_poh.attrs["description"] = "Probability of Hail"
+    da_poh.attrs["units"] = "%"
+
+    return da_poh

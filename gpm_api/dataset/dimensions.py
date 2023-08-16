@@ -74,7 +74,7 @@ SPATIAL_DIMS = [
     "x",
     "y",  # compatibility with satpy/gpm_geo i.e.
 ]
-VERTICAL_DIMS = ["range", "nBnEnv"]
+VERTICAL_DIMS = ["range", "nBnEnv", "height"]
 FREQUENCY_DIMS = ["radar_frequency", "pmw_frequency"]
 GRID_SPATIAL_DIMS = ("lon", "lat")
 ORBIT_SPATIAL_DIMS = ("cross_track", "along_track")

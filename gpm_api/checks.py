@@ -190,11 +190,11 @@ def _is_spatial_3d_datarray(da, strict):
 
 def _is_transect_datarray(da, strict):
     """Check if a DataArray is a spatial 3D array."""
-    spatial_dims = _get_available_spatial_dims(da)
+    spatial_dims = list(_get_available_spatial_dims(da))
     if len(spatial_dims) != 1:
         return False
 
-    vertical_dims = _get_available_vertical_dims(da)
+    vertical_dims = list(_get_available_vertical_dims(da))
     if not vertical_dims:
         return False
     else:
@@ -312,7 +312,27 @@ def get_spatial_3d_variables(ds, strict=False, squeeze=True):
     return sorted(variables)
 
 
+def get_transect_variables(ds, strict=False, squeeze=True):
+    """Get list of xr.Dataset trasect variables."""
+    variables = [
+        var
+        for var in get_dataset_variables(ds)
+        if is_transect(ds[var], strict=strict, squeeze=squeeze)
+    ]
+    return sorted(variables)
+
+
 def get_frequency_variables(ds):
     """Get list of xr.Dataset variables with frequency-related dimension."""
     variables = [var for var in get_dataset_variables(ds) if _get_available_frequency_dims(ds[var])]
     return sorted(variables)
+
+
+def get_vertical_dimension(xr_obj):
+    """Return the name of the vertical dimension."""
+    return list(_get_available_vertical_dims(xr_obj))
+
+
+def get_spatial_dimensions(xr_obj):
+    """Return the name of the spatial dimensions."""
+    return list(_get_available_spatial_dims(xr_obj))

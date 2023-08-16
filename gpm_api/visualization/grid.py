@@ -24,6 +24,7 @@ def _plot_grid_map_cartopy(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     cbar_kwargs={},
@@ -38,7 +39,9 @@ def _plot_grid_map_cartopy(
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
@@ -72,6 +75,7 @@ def _plot_grid_map_facetgrid(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     cbar_kwargs={},
@@ -99,8 +103,9 @@ def _plot_grid_map_facetgrid(
     )
 
     # - Add cartopy background to each subplot
-    for ax in p.axs.flatten():
-        plot_cartopy_background(ax)
+    if add_background:
+        for ax in p.axs.flatten():
+            plot_cartopy_background(ax)
 
     # - Return mappable
     return p
@@ -111,6 +116,7 @@ def plot_grid_map(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     cbar_kwargs={},
@@ -124,6 +130,7 @@ def plot_grid_map(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -136,6 +143,7 @@ def plot_grid_map(
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -196,6 +204,8 @@ def plot_grid_image(
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
     )
+    p.axes.set_xlabel("Longitude")
+    p.axes.set_ylabel("Latitude")
     # - Return mappable
     return p
 
@@ -205,6 +215,7 @@ def plot_grid_mesh(
     ax=None,
     edgecolors="k",
     linewidth=0.1,
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
@@ -217,7 +228,9 @@ def plot_grid_mesh(
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     # - Select lat coordinate for plotting

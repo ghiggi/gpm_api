@@ -127,6 +127,18 @@ def get_pmw_frequency(sensor, scan_mode):
     return pmw_frequency
 
 
+def _parse_sun_local_time(ds):
+    """Ensure sunLocalTime to be in float type."""
+    dtype = ds["sunLocalTime"].data.dtype
+    if dtype == "timedelta64[ns]":
+        ds["sunLocalTime"] = ds["sunLocalTime"].astype(int) / 10**9 / 60 / 60
+    elif np.issubdtype(dtype, np.floating):
+        pass
+    else:
+        raise ValueError("Expecting sunLocalTime as float or timedelta64[ns]")
+    return ds
+
+
 def _add_1c_pmw_frequency(ds, product, scan_mode):
     """Add the 'pmw_frequency' coordinates to 1C-<PMW> products."""
     if "pmw_frequency" in list(ds.dims):
@@ -156,13 +168,8 @@ def set_coordinates(ds, product, scan_mode):
     ds = _add_wished_coordinates(ds)
 
     # Convert sunLocalTime to float
-    dtype = ds["sunLocalTime"].data.dtype
-    if dtype == "timedelta64[ns]":
-        ds["sunLocalTime"] = ds["sunLocalTime"].astype(int) / 10**9 / 60 / 60
-    elif np.issubdtype(dtype, np.floating):
-        pass
-    else:
-        raise ValueError("Expecting sunLocalTime as float or timedelta64[ns]")
+    if "sunLocalTime" in ds:
+        ds = _parse_sun_local_time(ds)
 
     #### PMW
     # - 1C products

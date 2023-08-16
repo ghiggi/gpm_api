@@ -267,7 +267,7 @@ COLOR_DICT = {
         "extend": "both",
         "label": "$N_w$ [$\\log{(mm^{-1} \\ m^{-3})}$]",
     },
-    "GPM_LatentHeating": {
+    "latentHeating": {
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "RdBu_r",
@@ -571,9 +571,14 @@ reflectivity_variables = [
     "zFactorFinalNearSurface",
     "zFactorMeasured",
     "zFactorFinal",
+    "REFC",
 ]
 for var in reflectivity_variables:
     COLOR_DICT[var] = COLOR_DICT["GPM_Z"]
+
+for var in ["dfrMeasured", "dfrFinal", "dfrFinalNearSurface"]:
+    COLOR_DICT[var] = COLOR_DICT["GPM_DFR"]
+
 
 COLOR_DICT["Tb"] = COLOR_DICT["Brightness_Temperature"]
 COLOR_DICT["Tc"] = COLOR_DICT["Brightness_Temperature"]
@@ -865,7 +870,8 @@ def get_colormap_setting(cbar_settings_name):
         cmap = mpl.colors.ListedColormap(color_list)
 
         # Define norms
-        norm_bins = np.arange(-1, nlabels) + 0.5
+        category_first_value = 9  # TODO: optional parameter
+        norm_bins = np.arange(category_first_value - 1, nlabels + category_first_value) + 0.5
         norm = mpl.colors.BoundaryNorm(norm_bins, nlabels)
 
         # Update cbar_kwargs
@@ -992,6 +998,7 @@ def get_colormap_setting(cbar_settings_name):
 
 
 def get_colorbar_settings(name, plot_kwargs={}, cbar_kwargs={}):
+    # Try: partial match if not found !
     try:
         default_plot_kwargs, default_cbar_kwargs, default_ticklabels = get_colormap_setting(name)
         default_cbar_kwargs["ticklabels"] = None

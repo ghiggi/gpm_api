@@ -26,7 +26,9 @@ from gpm_api.visualization.plot import (
 )
 
 
-def plot_swath(ds, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **kwargs):
+def plot_swath(
+    ds, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, add_background=True, **kwargs
+):
     """Plot GPM orbit granule."""
     from shapely import Polygon
 
@@ -45,7 +47,9 @@ def plot_swath(ds, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     p = ax.add_geometries(
@@ -240,6 +244,7 @@ def plot_orbit_map(
     ax=None,
     add_colorbar=True,
     add_swath_lines=True,
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     cbar_kwargs={},
@@ -254,7 +259,9 @@ def plot_orbit_map(
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
@@ -291,6 +298,7 @@ def plot_orbit_mesh(
     ax=None,
     edgecolors="k",
     linewidth=0.1,
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
@@ -303,7 +311,9 @@ def plot_orbit_mesh(
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     # - Define plot_kwargs to display only the mesh
@@ -371,5 +381,8 @@ def plot_orbit_image(
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
     )
+    p.axes.set_xlabel("Along-Track")
+    p.axes.set_ylabel("Cross-Track")
+
     # - Return mappable
     return p

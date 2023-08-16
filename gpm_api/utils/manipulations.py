@@ -8,6 +8,21 @@ import numpy as np
 import xarray as xr
 
 
+def _get_vertical_dim(da):
+    """Return the name of the vertical dimension."""
+    from gpm_api.checks import get_vertical_dimension
+
+    vertical_dimension = get_vertical_dimension(da)
+    variable = da.name
+    if len(vertical_dimension) == 0:
+        raise ValueError(f"The {variable} variable does not have a vertical dimension.")
+    if len(vertical_dimension) != 1:
+        raise ValueError("Only 1 vertical dimension allowed.")
+
+    vertical_dim = vertical_dimension[0]
+    return vertical_dim
+
+
 def _integrate_concentration(data, heights):
     # Compute the thickness of each level (difference between adjacent heights)
     thickness = np.diff(heights)
@@ -34,13 +49,14 @@ def integrate_profile_concentration(dataarray, name, scale_factor=None, units=No
             raise ValueError("Specify output 'units' when the scale_factor is applied.")
     # Compute integrated value
     data = dataarray.data.copy()
-    heights = np.asanyarray(dataarray["range"].data)
+    vertical_dim = _get_vertical_dim(dataarray)
+    heights = np.asanyarray(dataarray[vertical_dim].data)
     output = _integrate_concentration(data, heights)
     # Scale output value
     if scale_factor is not None:
         output = output / scale_factor
     # Create DataArray
-    da_path = dataarray.isel({"range": 0}).copy()
+    da_path = dataarray.isel({vertical_dim: 0}).copy()
     da_path.name = name
     da_path.data = output
     if scale_factor:
@@ -87,6 +103,7 @@ def get_variable_at_bin(xr_obj, bin, variable=None):
 
     # Get variable dataarray
     da_variable = get_variable_dataarray(xr_obj, variable)
+    vertical_dim = _get_vertical_dim(da_variable)
     # Get the bin datarray
     da_bin = _get_bin_datarray(xr_obj, bin=bin)
     if da_bin.ndim >= 4:
@@ -100,7 +117,7 @@ def get_variable_at_bin(xr_obj, bin, variable=None):
     # Set nan bin values temporary to 0
     da_bin = da_bin.where(~da_is_nan, 0).astype(int)
     # Retrieve values at bin
-    da = da_variable.isel({"range": da_bin})
+    da = da_variable.isel({vertical_dim: da_bin})
     # Mask values at nan bins
     da = da.where(~da_is_nan)
     # Set original chunks if input DataArray is dask-backed
@@ -115,18 +132,18 @@ def get_height_at_bin(xr_obj, bin):
 
 
 def get_range_slices_with_valid_data(xr_obj, variable=None):
-    """Get the 'range' slices with valid data."""
+    """Get the vertical ('range'/'height') slices with valid data."""
+
     # Extract DataArray
     da = get_variable_dataarray(xr_obj, variable)
     da = da.compute()
 
-    # Check has range dimension
-    dims = list(da.dims)
-    if "range" not in dims:
-        raise ValueError(f"The {variable} variable does not have the 'range' dimension.")
+    # Retrieve vertical dimension name
+    vertical_dim = _get_vertical_dim(da)
 
     # Remove 'range' from dimensions over which to aggregate
-    dims.remove("range")
+    dims = list(da.dims)
+    dims.remove(vertical_dim)
 
     # Get bool array where there are some data (not all nan)
     has_data = ~np.isnan(da).all(dim=dims)
@@ -138,7 +155,7 @@ def get_range_slices_with_valid_data(xr_obj, variable=None):
     last_true_index = n_bins - np.argwhere(has_data_arr[::-1])[0] - 1
     if len(first_true_index) == 0:
         raise ValueError(f"No valid data for variable {variable}.")
-    isel_dict = {"range": slice(first_true_index.item(), last_true_index.item() + 1)}
+    isel_dict = {vertical_dim: slice(first_true_index.item(), last_true_index.item() + 1)}
     return isel_dict
 
 
@@ -155,27 +172,28 @@ def get_range_slices_within_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.
     da = get_variable_dataarray(xr_obj, variable)
     da = da.compute()
 
-    # Check has range dimension
-    dims = list(da.dims)
-    if "range" not in dims:
-        raise ValueError(f"The {variable} variable does not have the 'range' dimension.")
+    # Retrieve vertical dimension name
+    vertical_dim = _get_vertical_dim(da)
 
     # Remove 'range' from dimensions over which to aggregate
-    dims.remove("range")
+    dims = list(da.dims)
+    dims.remove(vertical_dim)
 
     # Get bool array indicating where data are in the value interval
     is_within_interval = np.logical_and(da >= vmin, da <= vmax)
 
     # Identify first and last True occurrence
-    n_bins = len(da["range"])
-    first_true_index = is_within_interval.argmax(dim="range").min().item()
-    axis_idx = np.where(np.isin(list(da.dims), "range"))[0]
+    n_bins = len(da[vertical_dim])
+    first_true_index = is_within_interval.argmax(dim=vertical_dim).min().item()
+    axis_idx = np.where(np.isin(list(da.dims), vertical_dim))[0]
     last_true_index = (
-        n_bins - 1 - np.flip(is_within_interval, axis=axis_idx).argmax(dim="range").min().item()
+        n_bins
+        - 1
+        - np.flip(is_within_interval, axis=axis_idx).argmax(dim=vertical_dim).min().item()
     )
     if len(first_true_index) == 0:
         raise ValueError(f"No data within the requested value interval for variable {variable}.")
-    isel_dict = {"range": slice(first_true_index, last_true_index + 1)}
+    isel_dict = {vertical_dim: slice(first_true_index, last_true_index + 1)}
     return isel_dict
 
 
@@ -187,41 +205,47 @@ def slice_range_where_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.inf):
 
 def get_range_index_at_value(da, value):
     """Retrieve index along the range dimension where the DataArray values is closest to value."""
-    idx = np.abs(da - value).argmin(dim="range").compute()
+    vertical_dim = _get_vertical_dim(da)
+    idx = np.abs(da - value).argmin(dim=vertical_dim).compute()
     return idx
 
 
 def get_range_index_at_min(da, value):
     """Retrieve index along the range dimension where the DataArray has max values."""
-    idx = da.argmin(dim="range").compute()
+    vertical_dim = _get_vertical_dim(da)
+    idx = da.argmin(dim=vertical_dim).compute()
     return idx
 
 
 def get_range_index_at_max(da, value):
     """Retrieve index along the range dimension where the DataArray has minimum values values."""
-    idx = da.argmax(dim="range").compute()
+    vertical_dim = _get_vertical_dim(da)
+    idx = da.argmax(dim=vertical_dim).compute()
     return idx
 
 
 def slice_range_at_value(xr_obj, value, variable=None):
     """Slice the 3D arrays where the variable values are close to value."""
     da = get_variable_dataarray(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
     idx = get_range_index_at_value(da=da, value=value)
-    return xr_obj.isel({"range": idx})
+    return xr_obj.isel({vertical_dim: idx})
 
 
 def slice_range_at_max_value(xr_obj, variable=None):
     """Slice the 3D arrays where the variable values are at maximum."""
     da = get_variable_dataarray(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
     idx = get_range_index_at_max(da=da)
-    return xr_obj.isel({"range": idx})
+    return xr_obj.isel({vertical_dim: idx})
 
 
 def slice_range_at_min_value(xr_obj, variable=None):
     """Slice the 3D arrays where the variable values are at minimum."""
     da = get_variable_dataarray(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
     idx = get_range_index_at_min(da=da)
-    return xr_obj.isel({"range": idx})
+    return xr_obj.isel({vertical_dim: idx})
 
 
 def slice_range_at_temperature(ds, temperature, variable_temperature="airTemperature"):
@@ -236,8 +260,9 @@ def slice_range_at_height(xr_obj, height):
 
 def get_height_at_temperature(da_height, da_temperature, temperature):
     """Retrieve height at a specific temperature."""
+    vertical_dim = _get_vertical_dim(da_height)
     idx_desired_temperature = get_range_index_at_value(da_temperature, temperature)
-    da_height_desired_temperature = da_height.isel({"range": idx_desired_temperature})
+    da_height_desired_temperature = da_height.isel({vertical_dim: idx_desired_temperature})
     return da_height_desired_temperature
 
 
@@ -253,7 +278,8 @@ def get_xr_dims_dict(xr_obj):
 
 def get_range_axis(da):
     """Get range dimension axis index."""
-    idx = np.where(np.isin(list(da.dims), "range"))[0].item()
+    vertical_dim = _get_vertical_dim(da)
+    idx = np.where(np.isin(list(da.dims), vertical_dim))[0].item()
     return idx
 
 
@@ -277,7 +303,8 @@ def create_bin_idx_data_array(xr_obj):
     The GPM bin index start at 1 !
     GPM bin index is equivalent to gpm_range_id + 1
     """
-    dims = ["cross_track", "along_track", "range"]
+    vertical_dim = _get_vertical_dim(xr_obj)
+    dims = ["cross_track", "along_track", vertical_dim]
     shape = get_xr_shape(xr_obj, dims=dims)
     bin_start = xr_obj["gpm_range_id"][0]
     bin_end = xr_obj["gpm_range_id"][-1]
@@ -323,3 +350,27 @@ def get_solid_phase_mask(ds):
 def select_radar_frequency(xr_obj, radar_frequency):
     """Select data related to a specific radar frequency."""
     return xr_obj.sel({"radar_frequency": radar_frequency})
+
+
+def select_spatial_3d_variables(ds, strict=False, squeeze=True):
+    """Return xr.Dataset with only 3D spatial variables."""
+    from gpm_api.checks import get_spatial_3d_variables
+
+    variables = get_spatial_3d_variables(ds, strict=strict, squeeze=squeeze)
+    return ds[variables]
+
+
+def select_spatial_2d_variables(ds, strict=False, squeeze=True):
+    """Return xr.Dataset with only 2D spatial variables."""
+    from gpm_api.checks import get_spatial_2d_variables
+
+    variables = get_spatial_2d_variables(ds, strict=strict, squeeze=squeeze)
+    return ds[variables]
+
+
+def select_transect_variables(ds, strict=False, squeeze=True):
+    """Return xr.Dataset with only transect variables."""
+    from gpm_api.checks import get_transect_variables
+
+    variables = get_transect_variables(ds, strict=strict, squeeze=squeeze)
+    return ds[variables]
