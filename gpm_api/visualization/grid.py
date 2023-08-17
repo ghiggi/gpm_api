@@ -21,6 +21,8 @@ from gpm_api.visualization.plot import (
 
 def _plot_grid_map_cartopy(
     da,
+    x="lon",
+    y="lat",
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -59,8 +61,8 @@ def _plot_grid_map_cartopy(
     p = _plot_cartopy_imshow(
         ax=ax,
         da=da,
-        x="lon",
-        y="lat",
+        x=x,
+        y=y,
         interpolation=interpolation,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
@@ -72,6 +74,8 @@ def _plot_grid_map_cartopy(
 
 def _plot_grid_map_facetgrid(
     da,
+    x="lon",
+    y="lat",
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -94,6 +98,8 @@ def _plot_grid_map_facetgrid(
     # - Plot with FacetGrid
     p = plot_grid_image(
         da=da,
+        x=x,
+        y=y,
         ax=None,
         add_colorbar=add_colorbar,
         interpolation=interpolation,
@@ -113,6 +119,8 @@ def _plot_grid_map_facetgrid(
 
 def plot_grid_map(
     da,
+    x="lon",
+    y="lat",
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -124,9 +132,12 @@ def plot_grid_map(
 ):
     """Plot DataArray 2D field with cartopy."""
     # Plot FacetGrid with xarray imshow
+    # - TODO: add supertitle, better scale colorbar if cartopy axes !
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_grid_map_facetgrid(
             da=da,
+            x=x,
+            y=y,
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
@@ -140,6 +151,8 @@ def plot_grid_map(
     else:
         p = _plot_grid_map_cartopy(
             da=da,
+            x=x,
+            y=y,
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
@@ -155,6 +168,8 @@ def plot_grid_map(
 
 def plot_grid_image(
     da,
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -166,6 +181,12 @@ def plot_grid_image(
     # Check inputs
     # check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+
+    # - Define default x and y
+    # if x is None:
+    #     x = "lon"
+    # if y is None:
+    #     y = "lat"
 
     # Initialize figure
     if ax is None:
@@ -197,21 +218,26 @@ def plot_grid_image(
     p = _plot_xr_imshow(
         ax=ax,
         da=da,
-        x="lon",
-        y="lat",
+        x=x,
+        y=y,
         interpolation=interpolation,
         add_colorbar=add_colorbar,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
     )
-    p.axes.set_xlabel("Longitude")
-    p.axes.set_ylabel("Latitude")
+    print(p.axes)
+    if ax is not None:
+        ax.set_xlabel("Longitude")
+        ax.set_ylabel("Latitude")
+
     # - Return mappable
     return p
 
 
 def plot_grid_mesh(
     xr_obj,
+    x="lon",
+    y="lat",
     ax=None,
     edgecolors="k",
     linewidth=0.1,
@@ -234,7 +260,7 @@ def plot_grid_mesh(
         ax = plot_cartopy_background(ax)
 
     # - Select lat coordinate for plotting
-    da = xr_obj["lat"]
+    da = xr_obj[y]
 
     # - Define plot_kwargs to display only the mesh
     plot_kwargs["facecolor"] = "none"
@@ -247,8 +273,8 @@ def plot_grid_mesh(
     p = _plot_grid_map_cartopy(
         da=da,
         ax=ax,
-        x="lon",
-        y="lat",
+        x=x,
+        y=y,
         plot_kwargs=plot_kwargs,
         add_colorbar=False,
     )

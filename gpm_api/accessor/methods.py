@@ -468,6 +468,9 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         self,
         variable,
         ax=None,
+        x="lon",
+        y="lat",
+        rgb=False,
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
@@ -483,7 +486,10 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         p = plot_map(
             ax=ax,
             da=da,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
+            rgb=rgb,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
             interpolation=interpolation,
@@ -498,6 +504,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         self,
         variable,
         ax=None,
+        x=None,
+        y=None,
         add_colorbar=True,
         interpolation="nearest",
         fig_kwargs={},
@@ -510,6 +518,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         p = plot_image(
             da,
             ax=ax,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
@@ -603,10 +613,13 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     def plot_map(
         self,
         ax=None,
+        x="lon",
+        y="lat",
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
         interpolation="nearest",  # used only for GPM grid object
+        rgb=False,
         fig_kwargs={},
         subplot_kwargs={},
         cbar_kwargs={},
@@ -616,11 +629,14 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
 
         da = self._obj
         p = plot_map(
-            ax=ax,
             da=da,
+            ax=ax,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
+            rgb=rgb,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
@@ -632,6 +648,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     def plot_image(
         self,
         ax=None,
+        x=None,
+        y=None,
         add_colorbar=True,
         interpolation="nearest",
         fig_kwargs={},
@@ -644,6 +662,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         p = plot_image(
             da,
             ax=ax,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
