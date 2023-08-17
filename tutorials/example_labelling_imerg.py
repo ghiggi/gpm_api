@@ -11,7 +11,6 @@ import numpy as np
 import ximage  # noqa
 
 import gpm_api
-from gpm_api.visualization import plot_labels
 
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
@@ -80,6 +79,7 @@ xr_obj = da.ximage.label(
 
 # Plot full label array
 xr_obj[label_name].plot.imshow()  # 0 are plotted
+plt.show()
 
 # Plot label subsets with ximage
 xr_obj[label_name].ximage.plot_labels()
@@ -87,7 +87,7 @@ xr_obj[label_name].isel(lat=slice(0, 100), lon=slice(0, 100)).ximage.plot_labels
 xr_obj[label_name].isel(lat=slice(0, 500), lon=slice(0, 500)).ximage.plot_labels()
 
 # Plot label subsets with gpm_api (nice axis with orbit data)
-plot_labels(
+gpm_api.plot_labels(
     xr_obj[label_name],
     add_colorbar=True,
     interpolation="nearest",
@@ -130,7 +130,7 @@ patch_gen = xr_obj.ximage.label_patches(
 # list_da = list(patch_gen)
 # label_id, da = list_da[0]
 for label_id, da in patch_gen:
-    plot_labels(
+    p = gpm_api.plot_labels(
         da[label_name],
         add_colorbar=True,
         interpolation="nearest",

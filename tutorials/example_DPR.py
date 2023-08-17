@@ -147,16 +147,3 @@ for isel_dict in list_isel_dict:
     p.axes.set_title(label=slice_title)
 
 ####--------------------------------------------------------------------------.
-#### Plot precipitation patches
-da = ds[variable].isel(along_track=slice(0, 10000))
-da.gpm_api.plot_patches(
-    min_value_threshold=10,
-    min_area_threshold=5,
-    footprint=3,
-    sort_by="maximum",
-    sort_decreasing=True,
-    n_patches=10,
-    patch_size=(49, 49),
-    centered_on="max",
-    interpolation="nearest",
-)

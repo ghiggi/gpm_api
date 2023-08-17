@@ -14,7 +14,6 @@ import ximage  # noqa
 from matplotlib.colors import LogNorm
 
 import gpm_api
-from gpm_api.visualization import plot_labels, plot_patches
 
 ##----------------------------------------------------------------------------.
 #### Download data
@@ -64,18 +63,18 @@ p.axes.set_global()
 # --> label = 0 is rain below min_value_threshold
 label_name = "label_precip_max_intensity"
 da_precip = da_precip.ximage.label(min_value_threshold=1, label_name=label_name, sort_by="maximum")
-plot_labels(da_precip[label_name])
+gpm_api.plot_labels(da_precip[label_name])
 
 # # Select only label with maximum intensity (set other labels to np.nan)
 # da_precip[label_name] = da_precip[label_name].where(da_precip[label_name] == 1)
-# plot_labels(da_precip[label_name])
+# gpm_api.plot_labels(da_precip[label_name])
 
 ##----------------------------------------------------------------------------.
 #### Identify precipitation area sorted by maximum area
 # --> label = 0 is rain below min_value_threshold
 label_name = "label_precip_max_area"
 da_precip = da_precip.ximage.label(min_value_threshold=0.1, label_name=label_name, sort_by="area")
-plot_labels(da_precip[label_name])
+gpm_api.plot_labels(da_precip[label_name])
 
 ##----------------------------------------------------------------------------.
 #### Plot largest precipitating areas and associated labels
@@ -100,7 +99,7 @@ patch_gen = da_precip.ximage.label_patches(
     centered_on=centered_on,
     padding=padding,
 )
-plot_labels(patch_gen, label_name=label_name)
+gpm_api.plot_labels(patch_gen, label_name=label_name)
 
 # Plot patches (around each label)
 patch_gen = da_precip.ximage.label_patches(
@@ -114,7 +113,7 @@ patch_gen = da_precip.ximage.label_patches(
     padding=padding,
 )
 
-plot_patches(patch_gen, variable=variable, interpolation="bilinear")
+gpm_api.plot_patches(patch_gen, variable=variable, interpolation="bilinear")
 
 ##----------------------------------------------------------------------------.
 #### Plot most intense precipitating areas and associated labels
@@ -140,7 +139,7 @@ patch_gen = da_precip.ximage.label_patches(
     centered_on=centered_on,
     padding=padding,
 )
-plot_labels(patch_gen, label_name=label_name)
+gpm_api.plot_labels(patch_gen, label_name=label_name)
 
 # Plot patches (around each label)
 patch_gen = da_precip.ximage.label_patches(
@@ -155,7 +154,7 @@ patch_gen = da_precip.ximage.label_patches(
     padding=padding,
 )
 
-plot_patches(patch_gen, variable=variable, interpolation="bilinear")
+gpm_api.plot_patches(patch_gen, variable=variable, interpolation="bilinear")
 
 ##----------------------------------------------------------------------------.
 #### Retrieve list of patches
@@ -196,8 +195,11 @@ da_patch = da_precip.isel(label_patch_isel_dict)
 #### Plot mesh and centroids
 da_patch1 = da_patch.isel(along_track=slice(0, 20), cross_track=slice(0, 20))
 fig, ax = plt.subplots(subplot_kw=dict(projection=ccrs.PlateCarree()))
-p = da_patch1.gpm_api.plot_map_mesh(ax=ax)
-p = da_patch1.gpm_api.plot_map_mesh_centroids(ax=ax)
+p = da_patch1.gpm_api.plot_map_mesh(ax=ax, add_background=True)
+p = da_patch1.gpm_api.plot_map_mesh_centroids(ax=ax, add_background=False)
+bg_img = ax.stock_img()
+bg_img.set_alpha(0.5)
+p.axes.set_extent(da_patch1.gpm_api.extent(padding=0.1))
 
 ##----------------------------------------------------------------------------.
 #### Plot on PlateCarree()
@@ -237,6 +239,6 @@ np.invert(np.isnan(da1.values.flatten())).sum()
 
 ##----------------------------------------------------------------------------.
 ### Plot distribution
-da_precip.where(da_precip.values > 1).plot.hist(xlim=(1, 100), nbins=100)
+da_precip.where(da_precip.values > 1).plot.hist(xlim=(1, 100), bins=100)
 
 ##----------------------------------------------------------------------------.
