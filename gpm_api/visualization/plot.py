@@ -125,6 +125,38 @@ def get_masked_cells_polycollection(x, y, arr, mask, plot_kwargs):
     return coll
 
 
+def get_valid_pcolormesh_inputs(x, y, data):
+    """
+    Fill non-finite values with neighbour valid coordinates.
+
+    pcolormesh does not accept non-finite values in the coordinates.
+    This function:
+    - Infill NaN/Inf in lat/x with closest values
+    - Mask the corresponding pixels in the data that must not be displayed.
+    """
+    # TODO:
+    # - Combine mask if x, y and data are already masked !
+    # --> Add in plot_cartopy_pcolormesh !
+    # - Instead of np.interp, can use nearest neighbors or just 0 to speed up?
+
+    from skimage.morphology import dilation, square
+
+    # Retrieve mask of invalid coordinates
+    mask = np.logical_or(~np.isfinite(x), ~np.isfinite(y))
+
+    # If no invalid coordinates, return original data
+    if np.all(~mask):
+        return x, y, data
+
+    mask = dilation(mask, square(10))
+    data_masked = np.ma.masked_where(mask, data)
+    x_dummy = x.copy()
+    x_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), x[~mask])
+    y_dummy = y.copy()
+    y_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), y[~mask])
+    return x_dummy, y_dummy, data_masked
+
+
 ####--------------------------------------------------------------------------.
 def plot_cartopy_background(ax):
     """Plot cartopy background."""
@@ -155,6 +187,7 @@ def plot_colorbar(p, ax, cbar_kwargs={}, size="5%", pad=0.1):
     p: matplotlib.image.AxesImage
     ax:  cartopy.mpl.geoaxes.GeoAxesSubplot
     """
+    cbar_kwargs = cbar_kwargs.copy()  # otherwise pop ticklabels outside the function
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     divider = make_axes_locatable(ax)
     cax = divider.new_horizontal(size=size, pad=pad, axes_class=plt.Axes)
@@ -208,11 +241,33 @@ def _plot_cartopy_imshow(
     return p
 
 
+def _plot_rgb_pcolormesh(x, y, image, ax, **kwargs):
+    """Plot xarray RGB DataArray with non uniform-coordinates.
+
+    Matplotlib, cartopy and xarray pcolormesh currently does not support RGB(A) arrays.
+    This is a temporary workaround !
+    """
+    if image.shape[2] not in [3, 4]:
+        raise ValueError("Expecting RGB or RGB(A) arrays.")
+
+    colorTuple = image.reshape((image.shape[0] * image.shape[1], image.shape[2]))
+    im = ax.pcolormesh(
+        x,
+        y,
+        image[:, :, 1],  # dummy to work ...
+        color=colorTuple,
+        **kwargs,
+    )
+    # im.set_array(None)
+    return im
+
+
 def _plot_cartopy_pcolormesh(
     ax,
     da,
     x,
     y,
+    rgb=False,
     add_colorbar=True,
     plot_kwargs={},
     cbar_kwargs={},
@@ -228,10 +283,15 @@ def _plot_cartopy_pcolormesh(
     y = da[y].data
     arr = da.data
 
+    # - Ensure arguments
+    if rgb:
+        add_colorbar = False
+
     # - Mask cells crossing the antimeridian
     mask = get_antimeridian_mask(x, buffer=True)
     is_crossing_antimeridian = np.any(mask)
     if is_crossing_antimeridian:
+
         arr = np.ma.masked_where(mask, arr)
         # Sanitize cmap bad color to avoid cartopy bug
         if "cmap" in plot_kwargs:
@@ -242,17 +302,30 @@ def _plot_cartopy_pcolormesh(
             plot_kwargs["cmap"] = cmap
 
     # - Add variable field with cartopy
-    p = ax.pcolormesh(
-        x,
-        y,
-        arr,
-        transform=ccrs.PlateCarree(),
-        **plot_kwargs,
-    )
-    # - Add PolyCollection of QuadMesh cells crossing the antimeridian
-    if is_crossing_antimeridian:
-        coll = get_masked_cells_polycollection(x, y, arr.data, mask=mask, plot_kwargs=plot_kwargs)
-        p.axes.add_collection(coll)
+    if not rgb:
+        p = ax.pcolormesh(
+            x,
+            y,
+            arr,
+            transform=ccrs.PlateCarree(),
+            **plot_kwargs,
+        )
+        # - Add PolyCollection of QuadMesh cells crossing the antimeridian
+        if is_crossing_antimeridian:
+            coll = get_masked_cells_polycollection(
+                x, y, arr.data, mask=mask, plot_kwargs=plot_kwargs
+            )
+            p.axes.add_collection(coll)
+
+    # - Add RGB
+    else:
+        p = _plot_rgb_pcolormesh(x, y, arr, ax=ax, **plot_kwargs)
+        if is_crossing_antimeridian:
+            plot_kwargs["facecolors"] = arr.reshape((arr.shape[0] * arr.shape[1], arr.shape[2]))
+            coll = get_masked_cells_polycollection(
+                x, y, arr.data, mask=mask, plot_kwargs=plot_kwargs
+            )
+            p.axes.add_collection(coll)
 
     # - Set the extent
     # --> To be set in projection coordinates of crs !!!
@@ -435,12 +508,43 @@ def _plot_xr_imshow(
     return p
 
 
+def _plot_xr_pcolormesh(
+    ax,
+    da,
+    x,
+    y,
+    add_colorbar=True,
+    plot_kwargs={},
+    cbar_kwargs={},
+):
+    """Plot pcolormesh with xarray."""
+    ticklabels = cbar_kwargs.pop("ticklabels", None)
+    if not add_colorbar:
+        cbar_kwargs = {}
+    p = da.plot.pcolormesh(
+        x=x,
+        y=y,
+        ax=ax,
+        add_colorbar=add_colorbar,
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+    plt.title(da.name)
+    if add_colorbar and ticklabels is not None:
+        p.colorbar.ax.set_yticklabels(ticklabels)
+    return p
+
+
 ####--------------------------------------------------------------------------.
 def plot_map(
     da,
+    x="lon",
+    y="lat",
     ax=None,
     add_colorbar=True,
     add_swath_lines=True,  # used only for GPM orbit objects
+    add_background=True,
+    rgb=False,
     interpolation="nearest",  # used only for GPM grid objects
     fig_kwargs={},
     subplot_kwargs={},
@@ -457,9 +561,13 @@ def plot_map(
     if is_orbit(da):
         p = plot_orbit_map(
             da=da,
+            x=x,
+            y=y,
             ax=ax,
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
+            add_background=add_background,
+            rgb=rgb,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -469,9 +577,12 @@ def plot_map(
     elif is_grid(da):
         p = plot_grid_map(
             da=da,
+            x=x,
+            y=y,
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -485,6 +596,8 @@ def plot_map(
 
 def plot_image(
     da,
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -501,6 +614,8 @@ def plot_image(
     if is_orbit(da):
         p = plot_orbit_image(
             da=da,
+            x=x,
+            y=y,
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
@@ -512,6 +627,8 @@ def plot_image(
     elif is_grid(da):
         p = plot_grid_image(
             da=da,
+            x=x,
+            y=y,
             ax=ax,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
@@ -530,9 +647,12 @@ def plot_image(
 
 def plot_map_mesh(
     xr_obj,
+    x="lon",
+    y="lat",
     ax=None,
     edgecolors="k",
     linewidth=0.1,
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
@@ -547,10 +667,13 @@ def plot_map_mesh(
     # Plot orbit
     if is_orbit(xr_obj):
         p = plot_orbit_mesh(
-            da=xr_obj["lat"],
+            da=xr_obj[y],
             ax=ax,
+            x=x,
+            y=y,
             edgecolors=edgecolors,
             linewidth=linewidth,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -558,9 +681,12 @@ def plot_map_mesh(
     else:  # Plot grid
         p = plot_grid_mesh(
             xr_obj=xr_obj,
+            x=x,
+            y=y,
             ax=ax,
             edgecolors=edgecolors,
             linewidth=linewidth,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -571,9 +697,12 @@ def plot_map_mesh(
 
 def plot_map_mesh_centroids(
     xr_obj,
+    x="lon",
+    y="lat",
     ax=None,
     c="r",
     s=1,
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
@@ -586,12 +715,14 @@ def plot_map_mesh_centroids(
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     # Plot centroids
-    lon = xr_obj["lon"].data
-    lat = xr_obj["lat"].data
+    lon = xr_obj[x].data
+    lat = xr_obj[y].data
     p = ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
 
     # - Return mappable

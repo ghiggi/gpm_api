@@ -6,11 +6,11 @@ Created on Tue Jul 11 16:10:31 2023
 """
 import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import ximage  # noqa
 
 import gpm_api
-from gpm_api.visualization import plot_labels, plot_patches
 
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
@@ -78,12 +78,13 @@ xr_obj = da.ximage.label(
 
 # Plot full label array
 xr_obj[label_name].plot.imshow()  # 0 are plotted
+plt.show()
 
 # Plot label with ximage
 xr_obj[label_name].ximage.plot_labels()
 
 # Plot label with gpm_api
-plot_labels(xr_obj[label_name])
+gpm_api.plot_labels(xr_obj[label_name])
 
 # ----------------------------------------------------------------------------.
 ##################################
@@ -138,7 +139,7 @@ da_patch_gen = xr_obj.ximage.label_patches(
     verbose=verbose,
 )
 
-plot_patches(da_patch_gen, variable=variable, interpolation="nearest")
+gpm_api.plot_patches(da_patch_gen, variable=variable, interpolation="nearest")
 
 
 # list_patch = list(da_patch_gen)

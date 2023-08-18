@@ -101,6 +101,43 @@ class GPM_Base_Accessor:
             chunks=chunks,
         )
 
+    #### Transect utility
+    def define_transect_slices(
+        self, direction="cross_track", lon=None, lat=None, variable=None, transect_kwargs={}
+    ):
+        from gpm_api.visualization.profile import get_transect_slices
+
+        return get_transect_slices(
+            self._obj,
+            direction=direction,
+            variable=variable,
+            lon=lon,
+            lat=lat,
+            transect_kwargs=transect_kwargs,
+        )
+
+    def select_transect(
+        self,
+        direction="cross_track",
+        lon=None,
+        lat=None,
+        variable=None,
+        transect_kwargs={},
+        keep_only_valid_variables=True,
+    ):
+        from gpm_api.visualization.profile import select_transect
+
+        return select_transect(
+            self._obj,
+            direction=direction,
+            variable=variable,
+            lon=lon,
+            lat=lat,
+            transect_kwargs=transect_kwargs,
+            keep_only_valid_variables=keep_only_valid_variables,
+        )
+
+    #### Profile utility
     def get_variable_at_bin(self, bin, variable=None):
         """Retrieve variable values at specific range bins."""
         from gpm_api.utils.manipulations import get_variable_at_bin
@@ -113,12 +150,43 @@ class GPM_Base_Accessor:
 
         return get_height_at_bin(self._obj, bin=bin)
 
-    def select_range_with_valid_data(self, variable):
+    def slice_range_with_valid_data(self, variable=None):
         """Select the 'range' interval with valid data."""
-        from gpm_api.utils.manipulations import select_range_with_valid_data
+        from gpm_api.utils.manipulations import slice_range_with_valid_data
 
-        return select_range_with_valid_data(self._obj, variable)
+        return slice_range_with_valid_data(self._obj, variable=variable)
 
+    def slice_range_where_values(self, variable=None, vmin=-np.inf, vmax=np.inf):
+        """Select the 'range' interval where values are within the [vmin, vmax] interval."""
+        from gpm_api.utils.manipulations import slice_range_where_values
+
+        return slice_range_where_values(self._obj, variable=variable, vmin=vmin, vmax=vmax)
+
+    def slice_range_at_height(self, height):
+        """Slice the 3D array at a given height."""
+        from gpm_api.utils.manipulations import slice_range_at_height
+
+        return slice_range_at_height(self._obj, height=height)
+
+    def slice_range_at_value(self, value, variable=None):
+        """Slice the 3D arrays where the variable values are close to value."""
+        from gpm_api.utils.manipulations import slice_range_at_value
+
+        return slice_range_at_value(self._obj, variable=variable, value=value)
+
+    def slice_range_at_max_value(self, variable=None):
+        """Slice the 3D arrays where the variable values are at maximum."""
+        from gpm_api.utils.manipulations import slice_range_at_max_value
+
+        return slice_range_at_max_value(self._obj, variable=variable)
+
+    def slice_range_at_min_value(self, variable=None):
+        """Slice the 3D arrays where the variable values are at minimum."""
+        from gpm_api.utils.manipulations import slice_range_at_min_value
+
+        return slice_range_at_min_value(self._obj, variable=variable)
+
+    #### Dataset utility
     @property
     def is_orbit(self):
         from gpm_api.checks import is_orbit
@@ -144,29 +212,42 @@ class GPM_Base_Accessor:
         return is_spatial_3d(self._obj)
 
     @property
-    def variables(self):
-        from gpm_api.checks import get_dataset_variables
+    def start_time(self):
+        from gpm_api.io.checks import check_time
 
-        return get_dataset_variables(self._obj, sort=True)
-
-    @property
-    def spatial_2d_variables(self):
-        from gpm_api.checks import get_spatial_2d_variables
-
-        return get_spatial_2d_variables(self._obj)
-
-    @property
-    def spatial_3d_variables(self):
-        from gpm_api.checks import get_spatial_3d_variables
-
-        return get_spatial_3d_variables(self._obj)
+        if "time" in self._obj.coords:
+            start_time = self._obj["time"].values[0]
+        elif "gpm_time" in self._obj.coords:
+            start_time = self._obj["gpm_time"].values[0]
+        else:
+            raise ValueError("Time coordinate not found")
+        return check_time(start_time)
 
     @property
-    def frequency_variables(self):
-        from gpm_api.checks import get_frequency_variables
+    def end_time(self):
+        from gpm_api.io.checks import check_time
 
-        return get_frequency_variables(self._obj)
+        if "time" in self._obj.coords:
+            end_time = self._obj["time"].values[-1]
+        elif "gpm_time" in self._obj.coords:
+            end_time = self._obj["gpm_time"].values[-1]
+        else:
+            raise ValueError("Time coordinate not found")
+        return check_time(end_time)
 
+    @property
+    def vertical_dimension(self):
+        from gpm_api.checks import get_vertical_dimension
+
+        return get_vertical_dimension(self._obj)
+
+    @property
+    def spatial_dimensions(self):
+        from gpm_api.checks import get_spatial_dimensions
+
+        return get_spatial_dimensions(self._obj)
+
+    #### Dataset Quality Checks
     @property
     def is_regular(self):
         from gpm_api.utils.checks import is_regular
@@ -197,30 +278,7 @@ class GPM_Base_Accessor:
 
         return has_valid_geolocation(self._obj)
 
-    @property
-    def start_time(self):
-        from gpm_api.io.checks import check_time
-
-        if "time" in self._obj.coords:
-            start_time = self._obj["time"].values[0]
-        elif "gpm_time" in self._obj.coords:
-            start_time = self._obj["gpm_time"].values[0]
-        else:
-            raise ValueError("Time coordinate not found")
-        return check_time(start_time)
-
-    @property
-    def end_time(self):
-        from gpm_api.io.checks import check_time
-
-        if "time" in self._obj.coords:
-            end_time = self._obj["time"].values[-1]
-        elif "gpm_time" in self._obj.coords:
-            end_time = self._obj["gpm_time"].values[-1]
-        else:
-            raise ValueError("Time coordinate not found")
-        return check_time(end_time)
-
+    #### Subsetting utility
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm_api.utils.time import subset_by_time
 
@@ -256,17 +314,41 @@ class GPM_Base_Accessor:
 
         return get_slices_regular(self._obj, min_size=min_size)
 
-    def plot_transect_line(self, ax=None, color="black"):
+    #### Plotting utility
+    def plot_transect_line(
+        self, ax=None, add_direction=True, text_kwargs={}, line_kwargs={}, **common_kwargs
+    ):
         from gpm_api.visualization.profile import plot_transect_line
 
-        p = plot_transect_line(self._obj, ax=ax, color=color)
+        p = plot_transect_line(
+            self._obj,
+            ax=ax,
+            add_direction=add_direction,
+            text_kwargs=text_kwargs,
+            line_kwargs=line_kwargs,
+            **common_kwargs,
+        )
         return p
 
-    def plot_swath(self, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **kwargs):
+    def plot_swath(
+        self,
+        ax=None,
+        facecolor="orange",
+        edgecolor="black",
+        alpha=0.4,
+        add_background=True,
+        **kwargs,
+    ):
         from gpm_api.visualization.orbit import plot_swath
 
         p = plot_swath(
-            self._obj, ax=ax, facecolor=facecolor, edgecolor=edgecolor, alpha=alpha, **kwargs
+            self._obj,
+            ax=ax,
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            alpha=alpha,
+            add_background=add_background,
+            **kwargs,
         )
         return p
 
@@ -281,6 +363,7 @@ class GPM_Base_Accessor:
         ax=None,
         edgecolors="k",
         linewidth=0.1,
+        add_background=True,
         fig_kwargs={},
         subplot_kwargs={},
         **plot_kwargs,
@@ -292,6 +375,7 @@ class GPM_Base_Accessor:
             ax=ax,
             edgecolors=edgecolors,
             linewidth=linewidth,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -299,7 +383,14 @@ class GPM_Base_Accessor:
         return p
 
     def plot_map_mesh_centroids(
-        self, ax=None, c="r", s=1, fig_kwargs={}, subplot_kwargs={}, **plot_kwargs
+        self,
+        ax=None,
+        c="r",
+        s=1,
+        add_background=True,
+        fig_kwargs={},
+        subplot_kwargs={},
+        **plot_kwargs,
     ):
         from gpm_api.visualization.plot import plot_map_mesh_centroids
 
@@ -308,6 +399,7 @@ class GPM_Base_Accessor:
             ax=ax,
             c=c,
             s=s,
+            add_background=add_background,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -319,6 +411,40 @@ class GPM_Base_Accessor:
 class GPM_Dataset_Accessor(GPM_Base_Accessor):
     def __init__(self, xarray_obj):
         super().__init__(xarray_obj)
+
+    @property
+    def variables(self):
+        from gpm_api.checks import get_dataset_variables
+
+        return get_dataset_variables(self._obj, sort=True)
+
+    @property
+    def spatial_2d_variables(self):
+        from gpm_api.checks import get_spatial_2d_variables
+
+        return get_spatial_2d_variables(self._obj)
+
+    @property
+    def spatial_3d_variables(self):
+        from gpm_api.checks import get_spatial_3d_variables
+
+        return get_spatial_3d_variables(self._obj)
+
+    @property
+    def frequency_variables(self):
+        from gpm_api.checks import get_frequency_variables
+
+        return get_frequency_variables(self._obj)
+
+    def select_spatial_3d_variables(self, strict=False, squeeze=True):
+        from gpm_api.utils.manipulations import select_spatial_3d_variables
+
+        return select_spatial_3d_variables(self._obj, strict=strict, squeeze=squeeze)
+
+    def select_spatial_2d_variables(self, strict=False, squeeze=True):
+        from gpm_api.utils.manipulations import select_spatial_2d_variables
+
+        return select_spatial_2d_variables(self._obj, strict=strict, squeeze=squeeze)
 
     def title(
         self,
@@ -342,8 +468,12 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         self,
         variable,
         ax=None,
+        x="lon",
+        y="lat",
+        rgb=False,
         add_colorbar=True,
         add_swath_lines=True,
+        add_background=True,
         interpolation="nearest",  # used only for GPM grid object
         fig_kwargs={},
         subplot_kwargs={},
@@ -356,8 +486,12 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         p = plot_map(
             ax=ax,
             da=da,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
+            rgb=rgb,
             add_swath_lines=add_swath_lines,
+            add_background=add_background,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
@@ -370,6 +504,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         self,
         variable,
         ax=None,
+        x=None,
+        y=None,
         add_colorbar=True,
         interpolation="nearest",
         fig_kwargs={},
@@ -382,8 +518,34 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         p = plot_image(
             da,
             ax=ax,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+        return p
+
+    def plot_transect(
+        self,
+        variable,
+        ax=None,
+        add_colorbar=True,
+        zoom=True,
+        fig_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.profile import plot_transect
+
+        da = self._obj[variable]
+        p = plot_transect(
+            da,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            zoom=zoom,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
@@ -396,11 +558,19 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 
         return available_retrievals(self._obj)
 
-    def retrieve(self, name):
+    def retrieve(self, name, **kwargs):
         """Retrieve a GPM-API variable."""
         from gpm_api.dataset.retrievals.routines import get_retrieval_variable
 
-        return get_retrieval_variable(self._obj, retrieval=name)
+        return get_retrieval_variable(self._obj, retrieval=name, **kwargs)
+
+    def slice_range_at_temperature(self, temperature, variable_temperature="airTemperature"):
+        """Slice the 3D arrays along a specific isotherm."""
+        from gpm_api.utils.manipulations import slice_range_at_temperature
+
+        return slice_range_at_temperature(
+            self._obj, temperature=temperature, variable_temperature=variable_temperature
+        )
 
 
 @xr.register_dataarray_accessor("gpm_api")
@@ -443,9 +613,13 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     def plot_map(
         self,
         ax=None,
+        x="lon",
+        y="lat",
         add_colorbar=True,
         add_swath_lines=True,
+        add_background=True,
         interpolation="nearest",  # used only for GPM grid object
+        rgb=False,
         fig_kwargs={},
         subplot_kwargs={},
         cbar_kwargs={},
@@ -455,10 +629,14 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
 
         da = self._obj
         p = plot_map(
-            ax=ax,
             da=da,
+            ax=ax,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
+            add_background=add_background,
+            rgb=rgb,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
@@ -470,6 +648,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     def plot_image(
         self,
         ax=None,
+        x=None,
+        y=None,
         add_colorbar=True,
         interpolation="nearest",
         fig_kwargs={},
@@ -482,8 +662,33 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         p = plot_image(
             da,
             ax=ax,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
             interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+        return p
+
+    def plot_transect(
+        self,
+        ax=None,
+        add_colorbar=True,
+        zoom=True,
+        fig_kwargs={},
+        cbar_kwargs={},
+        **plot_kwargs,
+    ):
+        from gpm_api.visualization.profile import plot_transect
+
+        da = self._obj
+        p = plot_transect(
+            da,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            zoom=zoom,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,

@@ -51,25 +51,13 @@ def _add_cmb_range_coordinate(ds, product, scan_mode):
 def _add_cmb_coordinates(ds, product, scan_mode):
     """Set coordinates of 2B-GPM-CORRA product."""
     if "pmw_frequency" in list(ds.dims):
-        pmw_frequency = [
-            "10V",
-            "10H",
-            "19V",
-            "19H",
-            "23V",
-            "37V",
-            "37H",
-            "89V",
-            "89H",
-            "165V",
-            "165H",
-            "183V3",
-            "183V7",
-        ]
+        pmw_frequency = get_pmw_frequency_corra(product)
         ds = ds.assign_coords({"pmw_frequency": pmw_frequency})
+
     if scan_mode == "KuKaGMI" or scan_mode == "NS":
         if "radar_frequency" in list(ds.dims):
             ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
+
     ds = _add_cmb_range_coordinate(ds, product, scan_mode)
     return ds
 
@@ -127,6 +115,27 @@ def get_pmw_frequency(sensor, scan_mode):
     return pmw_frequency
 
 
+def get_pmw_frequency_corra(product):
+    if product == "2B-GPM-CORRA":
+        pmw_frequency = get_pmw_frequency("GMI", scan_mode="S1")
+        pmw_frequency = pmw_frequency + get_pmw_frequency("GMI", scan_mode="S2")
+    elif product == "2B-TRMM-CORRA":
+        pmw_frequency = get_pmw_frequency("TMI", scan_mode="S1")
+    return pmw_frequency
+
+
+def _parse_sun_local_time(ds):
+    """Ensure sunLocalTime to be in float type."""
+    dtype = ds["sunLocalTime"].data.dtype
+    if dtype == "timedelta64[ns]":
+        ds["sunLocalTime"] = ds["sunLocalTime"].astype(int) / 10**9 / 60 / 60
+    elif np.issubdtype(dtype, np.floating):
+        pass
+    else:
+        raise ValueError("Expecting sunLocalTime as float or timedelta64[ns]")
+    return ds
+
+
 def _add_1c_pmw_frequency(ds, product, scan_mode):
     """Add the 'pmw_frequency' coordinates to 1C-<PMW> products."""
     if "pmw_frequency" in list(ds.dims):
@@ -155,9 +164,9 @@ def set_coordinates(ds, product, scan_mode):
     # Add wished coordinates
     ds = _add_wished_coordinates(ds)
 
-    #### Convert sunLocalTime to hourly timedelta
+    # Convert sunLocalTime to float
     if "sunLocalTime" in ds:
-        ds["sunLocalTime"] = ds["sunLocalTime"] / 10**9 / 60 / 60
+        ds = _parse_sun_local_time(ds)
 
     #### PMW
     # - 1C products
@@ -169,7 +178,7 @@ def set_coordinates(ds, product, scan_mode):
         ds = _add_radar_coordinates(ds, product, scan_mode)
 
     #### CMB
-    if product == ["2B-GPM-CORRA", "2B-TRMM-CORRA"]:
+    if product in ["2B-GPM-CORRA", "2B-TRMM-CORRA"]:
         ds = _add_cmb_coordinates(ds, product, scan_mode)
 
     #### SLH and CSH products

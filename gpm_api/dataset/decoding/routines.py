@@ -31,7 +31,7 @@ def decode_dataset(ds):
     # Decode with xr.decode_cf
     with warnings.catch_warnings():
         warnings.simplefilter(action="ignore", category=FutureWarning)
-        ds = xr.decode_cf(ds)
+        ds = xr.decode_cf(ds, decode_timedelta=False)
 
     # Clean the DataArray attributes and encodings
     for var, da in ds.items():

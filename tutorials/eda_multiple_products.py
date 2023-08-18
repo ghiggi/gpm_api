@@ -193,7 +193,6 @@ for product, list_vars in product_var_dict.items():
             p.axes.set_title(title)
             plt.show()
 
-
 ####--------------------------------------------------------------------------.
 #### Compare 2A-GMI and 2B-GPM-CORRA rain, cloud, ice water paths
 

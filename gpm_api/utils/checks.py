@@ -595,21 +595,21 @@ def has_contiguous_scans(xr_obj):
 #############################
 
 
-def _is_non_valid_geolocation(xr_obj):
+def _is_non_valid_geolocation(xr_obj, x="lon"):
     """Return a boolean array indicating if the geolocation is invalid.
 
     True = Invalid, False = Valid
     """
-    bool_arr = np.isnan(xr_obj["lon"])
+    bool_arr = np.isnan(xr_obj[x])
     return bool_arr
 
 
-def _is_valid_geolocation(xr_obj):
+def _is_valid_geolocation(xr_obj, x="lon"):
     """Return a boolean array indicating if the geolocation is valid.
 
     True = Valid, False = Invalid
     """
-    bool_arr = ~np.isnan(xr_obj["lon"])
+    bool_arr = ~np.isnan(xr_obj[x])
     return bool_arr
 
 
@@ -641,7 +641,7 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
         raise ValueError("For GRID products, geolocation is expected to be valid.")
     if is_orbit(xr_obj):
         # - Get invalid coordinates
-        invalid_coords = _is_non_valid_geolocation(xr_obj)
+        invalid_coords = _is_non_valid_geolocation(xr_obj, x="lon")
         # - Identify cross-track index that along-track are always invalid
         idx_cross_track_not_all_invalid = np.where(~invalid_coords.all("along_track"))[0]
         # - If all invalid, return empty list

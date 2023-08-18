@@ -10,6 +10,24 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
+def _read_parquet_bin_files(filepaths, bin_name):
+    # Read the list of Parquet files
+    datasets = [pq.ParquetDataset(filepath, split_row_groups=False) for filepath in filepaths]
+    # Concatenate the datasets
+    table = pa.concat_tables([dataset.read() for dataset in datasets])
+    # Conversion to Pandas
+    df = table.to_pandas(
+        types_mapper=pd.ArrowDtype, zero_copy_only=False
+    )  # TODO: make True one day
+    # Add partitioning columns
+    partition_key_value_list = bin_name.split("|")
+    for partition_str in partition_key_value_list:
+        partition_column, value = partition_str.split("=")
+        df[partition_column] = pa.array([value] * len(df))
+    return df
+
+
+#### Unused and to move away ... maybe in dataset.py ...
 def _get_arrow_to_pandas_defaults():
     arrow_to_pandas = {
         "zero_copy_only": False,  # Default is False. If True, raise error if doing copies
@@ -46,21 +64,7 @@ def read_partitioned_dataset(fpath, columns=None):
     return df
 
 
-def _read_parquet_bin_files(filepaths, bin_name):
-    # Read the list of Parquet files
-    datasets = [pq.ParquetDataset(filepath, split_row_groups=False) for filepath in filepaths]
-    # Concatenate the datasets
-    table = pa.concat_tables([dataset.read() for dataset in datasets])
-    # Conversion to Pandas
-    df = table.to_pandas(types_mapper=pd.ArrowDtype, zero_copy_only=False)  # TODO: make True
-    # Add partitioning columns
-    partition_key_value_list = bin_name.split("|")
-    for partition_str in partition_key_value_list:
-        partition_column, value = partition_str.split("=")
-        df[partition_column] = pa.array([value] * len(df))
-    return df
-
-
+#### Deprecated
 # def read_bin_buckets_files(bin_fpaths, columns=None, partition_size=None, split_row_group=False):
 #     arrow_to_pandas = _get_arrow_to_pandas_defaults()
 #     df = dd.read_parquet(

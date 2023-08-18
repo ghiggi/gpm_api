@@ -300,21 +300,24 @@ def get_pyresample_area(xr_obj):
         # Ensure correct dimension order
         if "cross_track" in xr_obj.dims:
             xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
+            lons = xr_obj["lon"].values
+            lats = xr_obj["lat"].values
+            # This has been fixed in pyresample very likely
+            # --> otherwise ValueError 'ndarray is not C-contiguous' when resampling
+            # lons = np.ascontiguousarray(lons)
+            # lats = np.ascontiguousarray(lats)
+            lons = xr.DataArray(lons, dims=["y", "x"])
+            lats = xr.DataArray(lats, dims=["y", "x"])
+            swath_def = SwathDefinition(lons, lats)
         else:
-            raise ValueError("Can not derive SwathDefinition area without cross-track dimension.")
+            try:
+                from gpm_api.dataset.crs import get_pyresample_swath
 
-        lons = xr_obj["lon"].values
-        lats = xr_obj["lat"].values
-
-        # TODO: this might be needed
-        # - otherwise ValueError 'ndarray is not C-contiguous' when resampling
-        # lons = np.ascontiguousarray(lons)
-        # lats = np.ascontiguousarray(lats)
-
-        lons = xr.DataArray(lons, dims=["y", "x"])
-        lats = xr.DataArray(lats, dims=["y", "x"])
-        swath_def = SwathDefinition(lons, lats)
+                swath_def = get_pyresample_swath(xr_obj)
+            except Exception:
+                raise ValueError("Not a swath object.")
         return swath_def
+
     # If Grid Granule --> AreaDefinition
     elif is_grid(xr_obj):
         # Define AreaDefinition

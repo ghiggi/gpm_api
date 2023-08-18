@@ -14,11 +14,6 @@ from gpm_api.configs import read_gpm_api_configs as read_configs
 from gpm_api.dataset.dataset import open_dataset
 from gpm_api.dataset.datatree import open_datatree
 from gpm_api.dataset.granule import open_granule
-
-# from gpm_api.old_dataset.reader import (
-#     open_dataset,
-#     open_granule,
-# )
 from gpm_api.io.disk import find_filepaths as find_files
 from gpm_api.io.download import download_archive as download
 from gpm_api.io.download import (
@@ -33,6 +28,7 @@ from gpm_api.utils.checks import (
     check_regular_time,
     check_valid_geolocation,
 )
+from gpm_api.visualization.plot import plot_labels, plot_patches
 
 _root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -51,6 +47,8 @@ __all__ = [
     "open_granule",
     "open_dataset",
     "open_datatree",
+    "plot_labels",
+    "plot_patches",
     "check_regular_time",
     "check_contiguous_scans",
     "check_valid_geolocation",

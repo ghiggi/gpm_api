@@ -26,7 +26,9 @@ from gpm_api.visualization.plot import (
 )
 
 
-def plot_swath(ds, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **kwargs):
+def plot_swath(
+    ds, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, add_background=True, **kwargs
+):
     """Plot GPM orbit granule."""
     from shapely import Polygon
 
@@ -45,7 +47,9 @@ def plot_swath(ds, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     p = ax.add_geometries(
@@ -59,10 +63,11 @@ def plot_swath(ds, ax=None, facecolor="orange", edgecolor="black", alpha=0.4, **
     return p
 
 
-def plot_swath_lines(ds, ax=None, linestyle="--", color="k", **kwargs):
+def plot_swath_lines(ds, ax=None, x="lon", y="lat", linestyle="--", color="k", **kwargs):
     """Plot GPM orbit granule swath lines."""
     # - 0.0485 to account for 2.5 km from pixel center
     # TODO: adapt based on bin length (changing for each sensor) --> FUNCTION
+    # ds.gpm_api.pyresample_area ...
 
     # - Initialize figure
     subplot_kwargs = kwargs.get("subplot_kwargs", {})
@@ -74,8 +79,8 @@ def plot_swath_lines(ds, ax=None, linestyle="--", color="k", **kwargs):
         ax = plot_cartopy_background(ax)
 
     # - Plot swath line
-    lon = ds["lon"].transpose("cross_track", "along_track").data
-    lat = ds["lat"].transpose("cross_track", "along_track").data
+    lon = ds[x].transpose("cross_track", "along_track").data
+    lat = ds[y].transpose("cross_track", "along_track").data
     p = ax.plot(
         lon[0, :] + 0.0485,
         lat[0, :],
@@ -95,7 +100,7 @@ def plot_swath_lines(ds, ax=None, linestyle="--", color="k", **kwargs):
     return p[0]
 
 
-def infill_invalid_coords(xr_obj, mask_variables=True):
+def infill_invalid_coords(xr_obj, x="lon", y="lat", mask_variables=True):
     """Replace invalid coordinates with closer valid location.
 
     This operation is required to plot with pcolormesh.
@@ -109,7 +114,7 @@ def infill_invalid_coords(xr_obj, mask_variables=True):
     xr_obj = xr_obj.copy()
 
     # Retrieve pixel with valid/invalid geolocation
-    xr_valid_mask = _is_valid_geolocation(xr_obj)  # True=Valid, False=Invalid
+    xr_valid_mask = _is_valid_geolocation(xr_obj, x=x)  # True=Valid, False=Invalid
     xr_valid_mask.name = "valid_geolocation_mask"
 
     np_valid_mask = xr_valid_mask.data  # True=Valid, False=Invalid
@@ -117,8 +122,8 @@ def infill_invalid_coords(xr_obj, mask_variables=True):
 
     # If there are invalid pixels, replace invalid coordinates with closer valid values
     if np.any(np_unvalid_mask):
-        lon = np.asanyarray(xr_obj["lon"].data)
-        lat = np.asanyarray(xr_obj["lat"].data)
+        lon = np.asanyarray(xr_obj[x].data)
+        lat = np.asanyarray(xr_obj[y].data)
         lon_dummy = lon.copy()
         lon_dummy[np_unvalid_mask] = np.interp(
             np.flatnonzero(np_unvalid_mask), np.flatnonzero(np_valid_mask), lon[np_valid_mask]
@@ -127,8 +132,8 @@ def infill_invalid_coords(xr_obj, mask_variables=True):
         lat_dummy[np_unvalid_mask] = np.interp(
             np.flatnonzero(np_unvalid_mask), np.flatnonzero(np_valid_mask), lat[np_valid_mask]
         )
-        xr_obj["lon"].data = lon_dummy
-        xr_obj["lat"].data = lat_dummy
+        xr_obj[x].data = lon_dummy
+        xr_obj[y].data = lat_dummy
 
     # Mask variables if asked
     if mask_variables:
@@ -145,9 +150,9 @@ def infill_invalid_coords(xr_obj, mask_variables=True):
 # da.gpm_api.pyresample_area.outer_boundary.sides ..
 
 
-def _remove_invalid_outer_cross_track(xr_obj):
+def _remove_invalid_outer_cross_track(xr_obj, x="lon"):
     """Remove outer crosstrack scans if geolocation is always missing."""
-    lon = np.asanyarray(xr_obj["lon"].transpose("cross_track", "along_track"))
+    lon = np.asanyarray(xr_obj[x].transpose("cross_track", "along_track"))
     isna = np.all(np.isnan(lon), axis=1)
     if isna[0] or isna[-1]:
         # Find the index where the first False value occurs
@@ -174,40 +179,54 @@ def _call_over_contiguous_scans(function):
         # Get axis
         ax = args[1] if len(args) > 1 else kwargs.get("ax")
 
-        # - Check data array
-        check_is_spatial_2d(da)
+        # Check data validity
+        # TODO: improve for rgb=True
+        # TODO: Make independent of name of lon/lat, cross_track, along_track
+        rgb = kwargs.get("rgb", False)
+        if not rgb:
+            # - Check data array
+            check_is_spatial_2d(da)
 
-        # - Get slices with contiguous scans and valid geolocation
-        list_slices = get_slices_regular(da)
-        if len(list_slices) == 0:
-            return ValueError("No regular scans available. Impossible to plot.")
+            # - Get slices with contiguous scans and valid geolocation
+            list_slices = get_slices_regular(da)
+            if len(list_slices) == 0:
+                return ValueError("No regular scans available. Impossible to plot.")
+        else:
+            list_slices = [slice(0, None)]
 
         # - Define kwargs
         user_kwargs = kwargs.copy()
         p = None
+        x = user_kwargs["x"]
+        y = user_kwargs["y"]
 
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
 
-            # Retrieve contiguous data array
-            tmp_da = da.isel(along_track=slc)
+            if not rgb:
+                # Retrieve contiguous data array
+                tmp_da = da.isel({"along_track": slc})
 
-            # Remove outer cross-track indices if all without coordinates
-            tmp_da = _remove_invalid_outer_cross_track(tmp_da)
+                # Remove outer cross-track indices if all without coordinates
+                tmp_da = _remove_invalid_outer_cross_track(tmp_da, x=x)
+            else:
+                tmp_da = da
 
             # Replace invalid coordinate with closer value
             # - This might be necessary for some products
             #   having all the outer swath invalid coordinates
             # - An example is the 2B-GPM-CORRA
-            tmp_da, tmp_da_valid_mask = infill_invalid_coords(tmp_da, mask_variables=True)
+            tmp_da, tmp_da_valid_mask = infill_invalid_coords(tmp_da, x=x, y=y, mask_variables=True)
 
-            # Define  temporary kwargs
+            # Define temporary kwargs
             tmp_kwargs = user_kwargs.copy()
             tmp_kwargs["da"] = tmp_da
             if i == 0:
                 tmp_kwargs["ax"] = ax
+
             else:
                 tmp_kwargs["ax"] = p.axes
+                tmp_kwargs["add_background"] = False
 
             # Define alpha to make invalid coordinates transparent
             # --> cartopy.pcolormesh currently bug when providing a alpha array :(
@@ -238,8 +257,12 @@ def _call_over_contiguous_scans(function):
 def plot_orbit_map(
     da,
     ax=None,
+    x="lon",
+    y="lat",
     add_colorbar=True,
     add_swath_lines=True,
+    add_background=True,
+    rgb=False,
     fig_kwargs={},
     subplot_kwargs={},
     cbar_kwargs={},
@@ -247,14 +270,17 @@ def plot_orbit_map(
 ):
     """Plot GPM orbit granule in a cartographic map."""
     # - Check inputs
-    check_is_spatial_2d(da)
+    if not rgb:
+        check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
     # - Initialize figure
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
@@ -268,18 +294,20 @@ def plot_orbit_map(
         cbar_kwargs["label"] = f"{variable} [{unit}]"
 
     # - Add swath lines
-    if add_swath_lines:
+    # --> Fail if not cross_track, along_track dimension currently
+    if add_swath_lines and not rgb:
         p = plot_swath_lines(da, ax=ax, linestyle="--", color="black")
 
     # - Add variable field with cartopy
     p = _plot_cartopy_pcolormesh(
         ax=ax,
         da=da,
-        x="lon",
-        y="lat",
+        x=x,
+        y=y,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
         add_colorbar=add_colorbar,
+        rgb=rgb,
     )
     # - Return mappable
     return p
@@ -289,8 +317,11 @@ def plot_orbit_map(
 def plot_orbit_mesh(
     da,
     ax=None,
+    x="lon",
+    y="lat",
     edgecolors="k",
     linewidth=0.1,
+    add_background=True,
     fig_kwargs={},
     subplot_kwargs={},
     **plot_kwargs,
@@ -303,7 +334,9 @@ def plot_orbit_mesh(
     if ax is None:
         subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
         fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-        # - Add cartopy background
+
+    # - Add cartopy background
+    if add_background:
         ax = plot_cartopy_background(ax)
 
     # - Define plot_kwargs to display only the mesh
@@ -316,8 +349,8 @@ def plot_orbit_mesh(
     p = _plot_cartopy_pcolormesh(
         da=da,
         ax=ax,
-        x="lon",
-        y="lat",
+        x=x,
+        y=y,
         plot_kwargs=plot_kwargs,
         add_colorbar=False,
     )
@@ -327,6 +360,8 @@ def plot_orbit_mesh(
 
 def plot_orbit_image(
     da,
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -339,6 +374,12 @@ def plot_orbit_image(
     check_is_spatial_2d(da)
     check_contiguous_scans(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+
+    # - Define default x and y
+    # if x is None:
+    #     x = "along_track"
+    # if y is None:
+    #     y = "cross_track"
 
     # - Initialize figure
     if ax is None:
@@ -364,12 +405,15 @@ def plot_orbit_image(
     p = _plot_xr_imshow(
         ax=ax,
         da=da,
-        x="along_track",
-        y="cross_track",
+        x=x,
+        y=y,
         interpolation=interpolation,
         add_colorbar=add_colorbar,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
     )
+    p.axes.set_xlabel("Along-Track")
+    p.axes.set_ylabel("Cross-Track")
+
     # - Return mappable
     return p

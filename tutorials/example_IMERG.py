@@ -21,17 +21,17 @@ product_type = "RS"
 version = 6
 
 # Download the data
-gpm_api.download(
-    product=product,
-    product_type=product_type,
-    version=version,
-    start_time=start_time,
-    end_time=end_time,
-    force_download=False,
-    verbose=True,
-    progress_bar=True,
-    check_integrity=False,
-)
+# gpm_api.download(
+#     product=product,
+#     product_type=product_type,
+#     version=version,
+#     start_time=start_time,
+#     end_time=end_time,
+#     force_download=False,
+#     verbose=True,
+#     progress_bar=True,
+#     check_integrity=False,
+# )
 
 # Load IMERG dataset
 ds = gpm_api.open_dataset(

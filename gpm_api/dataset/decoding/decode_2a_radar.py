@@ -4,98 +4,78 @@ Created on Fri Jul 28 11:33:59 2023
 
 @author: ghiggi
 """
-from gpm_api.dataset.decoding.utils import get_data_array, remap_numeric_array
+import xarray as xr
+
+from gpm_api.dataset.decoding.utils import remap_numeric_array
 
 
-def decode_landSurfaceType(xr_obj, method="landSurfaceType"):
+def decode_landSurfaceType(da):
     """Decode the 2A-<RADAR> variable landSurfaceType."""
-    xr_obj = get_data_array(xr_obj, variable="landSurfaceType")
-    xr_obj = xr_obj.where(xr_obj >= 0)  # < 0 set to np.nan
-    xr_obj = xr_obj / 100
-    xr_obj = xr_obj.astype(int)
-    xr_obj.attrs["flag_values"] = [0, 1, 2, 3]
-    xr_obj.attrs["flag_meanings"] = ["Ocean", "Land", "Coast", "Inland Water"]
-    xr_obj.attrs["description"] = "Land Surface type"
-    return xr_obj
+    da = da.where(da >= 0)  # < 0 set to np.nan
+    da = da / 100
+    da = da.astype(int)
+    da.attrs["flag_values"] = [0, 1, 2, 3]
+    da.attrs["flag_meanings"] = ["Ocean", "Land", "Coast", "Inland Water"]
+    da.attrs["description"] = "Land Surface type"
+    return da
 
 
-def decode_phase(xr_obj):
+def decode_phase(da):
     """Decode the 2A-<RADAR> variable phase."""
-    xr_obj = get_data_array(xr_obj, variable="phase")
-    xr_obj = xr_obj / 100
-    xr_obj = xr_obj.astype(int)
-    xr_obj = xr_obj.where(xr_obj >= 0)  # < 0 set to np.nan
-    xr_obj.attrs["flag_values"] = [0, 1, 2]
-    xr_obj.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
-    xr_obj.attrs["description"] = "Precipitation phase state"
-    return xr_obj
+    da = da / 100
+    da = da.astype(int)
+    da = da.where(da >= 0)  # < 0 set to np.nan
+    da.attrs["flag_values"] = [0, 1, 2]
+    da.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
+    da.attrs["description"] = "Precipitation phase state"
+    return da
 
 
-def decode_phaseNearSurface(xr_obj):
+def decode_phaseNearSurface(da):
     """Decode the 2A-<RADAR> variable phaseNearSurface."""
-    xr_obj = get_data_array(xr_obj, variable="phaseNearSurface")
-    xr_obj = xr_obj / 100
-    xr_obj = xr_obj.astype(int)
-    xr_obj = xr_obj.where(xr_obj >= 0)  # < 0 set to np.nan
-    xr_obj.attrs["flag_values"] = [0, 1, 2]
-    xr_obj.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
-    xr_obj.attrs["description"] = "Precipitation phase state near the surface"
-    return xr_obj
+    da = da / 100
+    da = da.astype(int)
+    da = da.where(da >= 0)  # < 0 set to np.nan
+    da.attrs["flag_values"] = [0, 1, 2]
+    da.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
+    da.attrs["description"] = "Precipitation phase state near the surface"
+    return da
 
 
-def decode_flagPrecip(xr_obj):
+def decode_flagPrecip(da):
     """Decode the 2A-<RADAR> variable flagPrecip."""
-    xr_obj = get_data_array(xr_obj, variable="flagPrecip")
-    if xr_obj.attrs["gpm_api_product"] == "2A-DPR":
-        xr_obj.attrs["flag_values"] = [0, 1, 10, 11]
+    if da.attrs["gpm_api_product"] == "2A-DPR":
+        da.attrs["flag_values"] = [0, 1, 10, 11]
         # TODO: 2, 10, 12, 20, 21, 22 values also present
-        xr_obj.attrs["flag_meanings"] = [
+        da.attrs["flag_meanings"] = [
             "not detected by both Ku and Ka",
             "detected by Ka only",
             "detected by Ku only",
             "detected by both Ku and Ka",
         ]
     else:
-        xr_obj.attrs["flag_values"] = [0, 1]
-        xr_obj.attrs["flag_meanings"] = ["not detected", "detected"]
-    xr_obj.attrs["description"] = "Flag for precipitation detection"
-    return xr_obj
+        da.attrs["flag_values"] = [0, 1]
+        da.attrs["flag_meanings"] = ["not detected", "detected"]
+    da.attrs["description"] = "Flag for precipitation detection"
+    return da
 
 
-def decode_typePrecip(xr_obj, method="major_rain_type"):
-    """Decode the 2A-<RADAR> variable typePrecip."""
-    xr_obj = get_data_array(xr_obj, variable="typePrecip")
-    available_methods = ["major_rain_type"]
-    if method not in available_methods:
-        raise NotImplementedError(f"Implemented methods are {available_methods}")
-    # Decode typePrecip
-    # if method == "major_rain_type"
-    xr_obj = xr_obj / 10000000
-    xr_obj = xr_obj.astype(int)
-    xr_obj.attrs["flag_values"] = [0, 1, 2, 3]
-    xr_obj.attrs["flag_meanings"] = ["no rain", "stratiform", "convective", "other"]
-    xr_obj.attrs["description"] = "Precipitation type"
-    return xr_obj
-
-
-def decode_qualityTypePrecip(xr_obj):
+def decode_qualityTypePrecip(da):
     """Decode the 2A-<RADAR> variable qualityTypePrecip."""
-    xr_obj = get_data_array(xr_obj, variable="qualityTypePrecip")
-    xr_obj = xr_obj.where(xr_obj > 0, 0)
-    xr_obj.attrs["flag_values"] = [0, 1]
-    xr_obj.attrs["flag_meanings"] = ["no rain", "good"]
-    xr_obj.attrs["description"] = "Quality of the precipitation type"
-    return xr_obj
+    da = da.where(da > 0, 0)
+    da.attrs["flag_values"] = [0, 1]
+    da.attrs["flag_meanings"] = ["no rain", "good"]
+    da.attrs["description"] = "Quality of the precipitation type"
+    return da
 
 
-def decode_flagShallowRain(xr_obj):
+def decode_flagShallowRain(da):
     """Decode the 2A-<RADAR> variable flagShallowRain."""
-    xr_obj = get_data_array(xr_obj, variable="flagShallowRain")
-    xr_obj = xr_obj.where(xr_obj > -1112, 0)
+    da = da.where(da > -1112, 0)
     remapping_dict = {-1111: 0, 0: 1, 10: 2, 11: 3, 20: 4, 21: 5}
-    xr_obj.data = remap_numeric_array(xr_obj.data, remapping_dict)  # TODO
-    xr_obj.attrs["flag_values"] = list(remapping_dict.values())
-    xr_obj.attrs["flag_meanings"] = [
+    da.data = remap_numeric_array(da.data, remapping_dict)  # TODO
+    da.attrs["flag_values"] = list(remapping_dict.values())
+    da.attrs["flag_meanings"] = [
         "no rain",
         "no shallow rain",
         "Shallow isolated (maybe)",
@@ -103,96 +83,132 @@ def decode_flagShallowRain(xr_obj):
         "Shallow non-isolated (maybe)",
         "Shallow non-isolated (certain)",
     ]
-    xr_obj.attrs["description"] = "Type of shallow rain"
-    return xr_obj
+    da.attrs["description"] = "Type of shallow rain"
+    return da
 
 
-def decode_flagHeavyIcePrecip(xr_obj):
+def decode_flagHeavyIcePrecip(da):
     """Decode the 2A-<RADAR> variable flagHeavyIcePrecip."""
-    xr_obj = get_data_array(xr_obj, variable="flagHeavyIcePrecip")
-    xr_obj = xr_obj.where(xr_obj >= 1)  # make 0 nan
-    xr_obj.attrs["flag_values"] = [4, 8, 12, 16, 24, 32, 40]
-    xr_obj.attrs["flag_meanings"] = [""] * 6  # TODO
-    xr_obj.attrs[
+    da = da.where(da >= 1)  # make 0 nan
+    da.attrs["flag_values"] = [4, 8, 12, 16, 24, 32, 40]
+    da.attrs["flag_meanings"] = [""] * 6  # TODO
+    da.attrs[
         "description"
     ] = """Flag for detection of strong or severe precipitation accompanied
     by solid ice hydrometeors above the -10 degree C isotherm"""
-    return xr_obj
+    return da
 
 
-def decode_flagAnvil(xr_obj):
+def decode_flagAnvil(da):
     """Decode the 2A-<RADAR> variable flagAnvil."""
-    xr_obj = get_data_array(xr_obj, variable="flagAnvil")
-    xr_obj = xr_obj.where(xr_obj >= 1)  # make 0 nan
-    xr_obj.attrs["flag_values"] = [0, 1, 2]  # TODO: 2 is unknown
-    xr_obj.attrs["flag_meanings"] = ["not detected", "detected", "unknown"]
-    xr_obj.attrs["description"] = "Flago for anvil detection by the Ku-band radar"
-    return xr_obj
+    da = da.where(da >= 1)  # make 0 nan
+    da.attrs["flag_values"] = [0, 1, 2]  # TODO: 2 is unknown
+    da.attrs["flag_meanings"] = ["not detected", "detected", "unknown"]
+    da.attrs["description"] = "Flago for anvil detection by the Ku-band radar"
+    return da
 
 
-def decode_zFactorMeasured(xr_obj):
+def decode_zFactorMeasured(da):
     """Decode the 2A-<RADAR> variable flagBB."""
-    xr_obj = get_data_array(xr_obj, variable="zFactorMeasured")
-    attrs = xr_obj.attrs
-    xr_obj = xr_obj.where(xr_obj >= -80)  # Make -29999 and -28888 -> NaN
-    xr_obj.attrs = attrs  # TODO: wrapper to keep attributes ?
-    return xr_obj
+    da = da.where(da >= -80)  # Make -29999 and -28888 -> NaN
+    return da
 
 
-def decode_attenuationNP(xr_obj):
+def decode_attenuationNP(da):
     """Decode the 2A-<RADAR> variable flagBB."""
-    xr_obj = get_data_array(xr_obj, variable="attenuationNP")
-    attrs = xr_obj.attrs
-    xr_obj = xr_obj.where(xr_obj >= 0)  # Make -19999.8 -> NaN
-    xr_obj.attrs = attrs  # TODO: wrapper to keep attributes ?
-    return xr_obj
+    da = da.where(da >= 0)  # Make -19999.8 -> NaN
+    return da
 
 
-def decode_flagBB(xr_obj):
+def decode_flagBB(da):
     """Decode the 2A-<RADAR> variable flagBB."""
-    xr_obj = get_data_array(xr_obj, variable="flagBB")
-    xr_obj = xr_obj.where(xr_obj >= 0)  # make -1111 (no rain) nan
-    if xr_obj.attrs["gpm_api_product"] == "2A-DPR":
-        xr_obj.attrs["flag_values"] = [0, 1, 2, 3]
-        xr_obj.attrs["flag_meanings"] = [
+    da = da.where(da >= 0)  # make -1111 (no rain) nan
+    if da.attrs["gpm_api_product"] == "2A-DPR":
+        da.attrs["flag_values"] = [0, 1, 2, 3]
+        da.attrs["flag_meanings"] = [
             "not detected",
             "detected by Ku and DFRm",
             "detected by Ku only",
             "detected by DFRm only",
         ]
     else:
-        xr_obj.attrs["flag_values"] = [0, 1]
-        xr_obj.attrs["flag_meanings"] = ["not detected", "detected"]
+        da.attrs["flag_values"] = [0, 1]
+        da.attrs["flag_meanings"] = ["not detected", "detected"]
 
-    xr_obj.attrs["description"] = "Flag for bright band detection"
-    return xr_obj
+    da.attrs["description"] = "Flag for bright band detection"
+    return da
 
 
-def decode_flagSurfaceSnowfall(xr_obj):
+def decode_flagSurfaceSnowfall(da):
     """Decode the 2A-<RADAR> variable flagSurfaceSnowfall."""
-    xr_obj = get_data_array(xr_obj, variable="flagSurfaceSnowfall")
-    xr_obj.attrs["flag_values"] = [0, 1]
-    xr_obj.attrs["flag_meanings"] = ["no snow-cover", "snow-cover"]
-    xr_obj.attrs["description"] = "Flag for snow-cover"
-    return xr_obj
+    da.attrs["flag_values"] = [0, 1]
+    da.attrs["flag_meanings"] = ["no snow-cover", "snow-cover"]
+    da.attrs["description"] = "Flag for snow-cover"
+    return da
 
 
-def decode_flagHail(xr_obj):
+def decode_flagHail(da):
     """Decode the 2A-<RADAR> variable flagHail."""
-    xr_obj = get_data_array(xr_obj, variable="flagHail")
-    xr_obj.attrs["flag_values"] = [0, 1]
-    xr_obj.attrs["flag_meanings"] = ["not detected", "detected"]
-    xr_obj.attrs["description"] = "Flag for hail detection"
-    return xr_obj
+    da.attrs["flag_values"] = [0, 1]
+    da.attrs["flag_meanings"] = ["not detected", "detected"]
+    da.attrs["description"] = "Flag for hail detection"
+    return da
 
 
-def decode_flagGraupelHail(xr_obj):
+def decode_flagGraupelHail(da):
     """Decode the 2A-<RADAR> variable flagGraupelHail."""
-    xr_obj = get_data_array(xr_obj, variable="flagGraupelHail")
-    xr_obj.attrs["flag_values"] = [0, 1]
-    xr_obj.attrs["flag_meanings"] = ["not detected", "detected"]
-    xr_obj.attrs["description"] = "Flag for graupel hail detection "
-    return xr_obj
+    da.attrs["flag_values"] = [0, 1]
+    da.attrs["flag_meanings"] = ["not detected", "detected"]
+    da.attrs["description"] = "Flag for graupel hail detection "
+    return da
+
+
+def decode_widthBB(da):
+    """Decode the 2A-<RADAR> variable widthBB."""
+    da = da.where(da >= 0)  # -1111.1 is set to np.nan
+    return da
+
+
+def decode_heightBB(da):
+    """Decode the 2A-<RADAR> variable heightBB."""
+    da = da.where(da >= 0)  # -1111.1 is set to np.nan
+    return da
+
+
+def decode_binBBPeak(da):
+    """Decode the 2A-<RADAR> variable binBBPeak."""
+    da = da.where(da >= 0)  # -1111 is set to np.nan
+    return da
+
+
+def decode_binBBTop(da):
+    """Decode the 2A-<RADAR> variable binBBTop."""
+    da = da.where(da >= 0)  # -1111 is set to np.nan
+    return da
+
+
+def decode_binBBBottom(da):
+    """Decode the 2A-<RADAR> variable binBBBottom."""
+    da = da.where(da >= 0)  # -1111 is set to np.nan
+    return da
+
+
+def decode_binDFRmMLBottom(da):
+    """Decode the 2A-<RADAR> variable binDFRmMLBottom."""
+    da = da.where(da >= 0)  # -1111 is set to np.nan
+    return da
+
+
+def decode_binHeavyIcePrecipTop(da):
+    """Decode the 2A-<RADAR> variable binHeavyIcePrecipTop."""
+    da = da.where(da >= 0)  # -1111 is set to np.nan
+    return da
+
+
+def decode_binHeavyIcePrecipBottom(da):
+    """Decode the 2A-<RADAR> variable binHeavyIcePrecipBottom."""
+    da = da.where(da >= 0)  # -1111 is set to np.nan
+    return da
 
 
 def _get_decoding_function(variable):
@@ -214,7 +230,14 @@ def decode_product(ds):
         "flagHail",
         "flagGraupelHail",
         "flagSurfaceSnowfall",
-        # "TypePrecip",
+        "widthBB",
+        "heightBB",
+        "binBBPeak",
+        "binBBTop",
+        "binBBBottom",
+        "binDFRmMLBottom",
+        "binHeavyIcePrecipTop",
+        "binHeavyIcePrecipBottom",
         "qualityTypePrecip",
         "flagPrecip",
         "phaseNearSurface",
@@ -226,7 +249,8 @@ def decode_product(ds):
     # Decode such variables if present in the xarray object
     for variable in variables:
         if variable in ds and not ds[variable].attrs.get("gpm_api_decoded", False):
-            ds[variable] = _get_decoding_function(variable)(ds[variable])
+            with xr.set_options(keep_attrs=True):
+                ds[variable] = _get_decoding_function(variable)(ds[variable])
             ds[variable].attrs["gpm_api_decoded"] = True
 
     # Preprocess other variables
