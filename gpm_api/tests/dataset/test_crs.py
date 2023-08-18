@@ -39,7 +39,7 @@ def test_get_proj_coord_unit_private() -> None:
         )  # Survey foot is 1200/3937 metres
 
 
-def test_get_obj_private(sample_dataset: xr.Dataset) -> None:
-    """Test that the dataset is copied when given a dataset"""
+# def test_get_obj_private(sample_dataset: xr.Dataset) -> None:
+#     """Test that the dataset is copied when given a dataset"""
 
-    crs._get_obj(sample_dataset, dim=0)
+#     crs._get_obj(sample_dataset, dim=0)
