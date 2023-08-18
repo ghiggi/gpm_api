@@ -13,7 +13,7 @@ import numpy as np
 import xarray as xr
 
 import gpm_api
-from gpm_api.bucket.io import get_parquet_fpaths, group_fpaths_by_bin
+from gpm_api.bucket.io import get_fpaths_by_bin  # get_parquet_fpaths, group_fpaths_by_bin,
 from gpm_api.dataset.granule import remove_unused_var_dims
 from gpm_api.utils.timing import print_task_elapsed_time
 
@@ -380,20 +380,33 @@ def merge_granule_buckets(
     from gpm_api.bucket.readers import _read_parquet_bin_files
     from gpm_api.bucket.writers import write_parquet_dataset
 
-    # Identify all Parquet filepaths
+    # TODO: remove need of xbin_name and ybin_name  !
+    # --> Must be derived from source bucket !
+
+    # Identify Parquet filepaths for each bin
     print("Searching of Parquet files has started.")
     t_i = time.time()
-    fpaths = get_parquet_fpaths(bucket_base_dir)
-    n_fpaths = len(fpaths)
+    bin_path_dict = get_fpaths_by_bin(bucket_base_dir)
+    n_geographic_bins = len(bin_path_dict)
     t_f = time.time()
     t_elapsed = round(t_f - t_i, 0) / 60
     print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
-    print(f"{n_fpaths} Parquet files to merge.")
-
-    # Group filepaths by geographic bin
-    bin_path_dict = group_fpaths_by_bin(fpaths)
-    n_geographic_bins = len(bin_path_dict)
     print(f"{n_geographic_bins} geographic bins to process.")
+
+    # Identify all Parquet filepaths
+    # print("Searching of Parquet files has started.")
+    # t_i = time.time()
+    # fpaths = get_parquet_fpaths(bucket_base_dir)
+    # n_fpaths = len(fpaths)
+    # t_f = time.time()
+    # t_elapsed = round(t_f - t_i, 0) / 60
+    # print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
+    # print(f"{n_fpaths} Parquet files to merge.")
+
+    # # Group filepaths by geographic bin
+    # bin_path_dict = group_fpaths_by_bin(fpaths)
+    # n_geographic_bins = len(bin_path_dict)
+    # print(f"{n_geographic_bins} geographic bins to process.")
 
     # Retrieve list of bins and associated filepaths
     list_bin_name = list(bin_path_dict.keys())
@@ -411,17 +424,26 @@ def merge_granule_buckets(
     df = dd.from_map(_read_parquet_bin_files, list_bin_fpaths, list_bin_name, meta=meta)
 
     # Write Parquet Dataset
-    # --> TODO add row_group_size
     print("Parquet Dataset writing has started")
-    xbin_name = "lonbin"
-    ybin_name = "latbin"
+    partitioning = [xbin_name, ybin_name]
     write_parquet_dataset(
         df=df,
         parquet_fpath=bucket_fpath,
-        partition_on=[xbin_name, ybin_name],
+        partition_on=partitioning,
         row_group_size=row_group_size,
         compression=compression,
         compression_level=compression_level,
         **writer_kwargs,
     )
+
+    # TODO: Use write_partitioned_dataset instead !
+    # write_partitioned_dataset(
+    #     df=df,
+    #     base_dir,
+    #     partitioning,
+    #     fname_prefix="part",
+    #     format="parquet",
+    #     use_threads=True,
+    #     **writer_kwargs,
+    # )
     print("Parquet Dataset writing has completed")
