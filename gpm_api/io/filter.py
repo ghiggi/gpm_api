@@ -260,7 +260,7 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
     if start_time is None:
         start_time = datetime.datetime(1998, 1, 1, 0, 0, 0)  # GPM start mission
     if end_time is None:
-        end_time = datetime.datetime.now()  # Current time
+        end_time = datetime.datetime.utcnow()  # Current time
     start_time, end_time = check_start_end_time(start_time, end_time)
 
     # -------------------------------------------------------------------------.
