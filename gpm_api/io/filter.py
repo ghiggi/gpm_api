@@ -234,11 +234,10 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
     ----------
     filepaths : list
         List of filepaths.
-
     start_time : datetime.datetime
-        Start time
+        Start time. Will be set to GPM start mission time (1998-01-01) if None.
     end_time : datetime.datetime
-        End time.
+        End time. Will be set to current time (`datetime.datetime.utcnow()`) if None.
 
     Returns
     ----------
