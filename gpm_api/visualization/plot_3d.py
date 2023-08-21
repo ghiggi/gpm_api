@@ -5,7 +5,6 @@ Created on Fri Aug 18 15:34:19 2023
 @author: ghiggi
 """
 import numpy as np
-import pyvista as pv
 
 # TODO:
 # - Isosurface contour buggy at low reflectivity
@@ -16,6 +15,8 @@ import pyvista as pv
 
 def create_pyvista_2d_surface(data_array, spacing=(1, 1, 1), origin=(0, 0, 0)):
     """Create pyvista ImageData object from 2D xr.DataArray."""
+    import pyvista as pv
+
     dimensions = (data_array.shape[0], data_array.shape[1], 1)
     surf = pv.ImageData(
         dimensions=dimensions,
@@ -31,6 +32,8 @@ def create_pyvista_2d_surface(data_array, spacing=(1, 1, 1), origin=(0, 0, 0)):
 
 def create_pyvista_3d_volume(data_array, spacing=(1, 1, 0.25), origin=(0, 0, 0)):
     """Create pyvista ImageData object from 3D xr.DataArray."""
+    import pyvista as pv
+
     # Remove vertical areas without values
     data_array = data_array.gpm_api.slice_range_with_valid_data()
 
