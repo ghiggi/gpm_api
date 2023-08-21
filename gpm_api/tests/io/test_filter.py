@@ -178,10 +178,8 @@ def test_filter_by_time(
 
     assert len(res) == count_until_2019
 
-    # TODO: Investigate why this fails in GH Actions but passes locally (system time issue?)
-    # Test empty end time (Error as time given (datetime.datetime.now())
-    # requires date to be less than now() in supportive
-    # function checks.check_start_end_time)
+    # Test empty end time (should default to utcnow which will technically be
+    # in the past by the time it gets to the function)
     count_from_2019 = 0
     for server_path, props in server_paths.items():
         if props["year"] >= 2019:
