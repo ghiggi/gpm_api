@@ -17,15 +17,15 @@ def _read_parquet_bin_files(filepaths, bin_name):
     datasets = [pq.ParquetDataset(filepath, split_row_groups=False) for filepath in filepaths]
     # Concatenate the datasets
     table = pa.concat_tables([dataset.read() for dataset in datasets])
-    # Conversion to Pandas
-    df = table.to_pandas(
-        types_mapper=pd.ArrowDtype, zero_copy_only=False
-    )  # TODO: set zero_copy_only=True one day
     # Add partitioning columns
     partition_key_value_list = bin_name.split(os.path.sep)
     for partition_str in partition_key_value_list:
         partition_column, value = partition_str.split("=")
-        df[partition_column] = pa.array([value] * len(df))
+        table = table.add_column(0, partition_column, pa.array([value] * table.num_rows))
+    # Conversion to Pandas
+    df = table.to_pandas(
+        types_mapper=pd.ArrowDtype, zero_copy_only=False
+    )  # TODO: set zero_copy_only=True one day
     return df
 
 
