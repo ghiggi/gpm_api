@@ -10,8 +10,8 @@ import time
 import dask
 import dask.dataframe as dd
 import numpy as np
-import pandas as pd 
-import pyarrow as pa 
+import pandas as pd
+import pyarrow as pa
 import xarray as xr
 
 import gpm_api
@@ -308,7 +308,7 @@ def estimate_row_group_size(df, size="200MB"):
     """
     if isinstance(df, pa.Table):
         memory_used = df.nbytes
-    elif isinstance(df, pd.DataFrame): 
+    elif isinstance(df, pd.DataFrame):
         memory_used = df.memory_usage().sum()
     else:
         raise NotImplementedError("Unrecognized dataframe type")
@@ -396,7 +396,7 @@ def merge_granule_buckets(
     bin_path_dict = get_fpaths_by_bin(bucket_base_dir)
     n_geographic_bins = len(bin_path_dict)
     t_f = time.time()
-    t_elapsed = round((t_f - t_i)/60, 1)
+    t_elapsed = round((t_f - t_i) / 60, 1)
     print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
     print(f"{n_geographic_bins} geographic bins to process.")
 
@@ -410,15 +410,15 @@ def merge_granule_buckets(
     template_df_pd = _read_parquet_bin_files([template_fpath], bin_name=template_bin_name)
     meta = make_meta(template_df_pd)
     row_group_size = estimate_row_group_size(template_df_pd, size=row_group_size)
-    
+
     # TODO: debug
     # list_bin_names = list_bin_names[0:10]
     # list_bin_fpaths = list_bin_fpaths[0:10]
-    
+
     # Read dataframes for each geographic bin
     print("Lazy reading of dataframe has started")
     df = dd.from_map(_read_parquet_bin_files, list_bin_fpaths, list_bin_names, meta=meta)
-    
+
     # Write Parquet Dataset
     print("Parquet Dataset writing has started")
     partitioning = [xbin_name, ybin_name]

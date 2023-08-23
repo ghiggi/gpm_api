@@ -72,4 +72,3 @@ def get_fpaths_by_bin(base_dir, parallel=True):
             key, file_list = _get_parquet_file_list(bin_dir_path)
             results[key] = file_list
     return results
-
