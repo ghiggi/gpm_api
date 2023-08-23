@@ -133,6 +133,7 @@ def get_height_at_bin(xr_obj, bin):
 
 def get_range_slices_with_valid_data(xr_obj, variable=None):
     """Get the vertical ('range'/'height') slices with valid data."""
+    # TODO: maybe add option for minimum_number of valid_data !
 
     # Extract DataArray
     da = get_variable_dataarray(xr_obj, variable)
