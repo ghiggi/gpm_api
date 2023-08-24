@@ -321,6 +321,7 @@ def find_pps_filepaths(
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     start_time, end_time = check_start_end_time(start_time, end_time)
+
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
@@ -329,6 +330,11 @@ def find_pps_filepaths(
     end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
     date_range = pd.date_range(start=start_date, end=end_date, freq="D")
     dates = list(date_range.to_pydatetime())
+
+    # If NRT, all data lies in a single directory
+    if product_type == "NRT":
+        dates = [dates[0]]
+        parallel = False
     # -------------------------------------------------------------------------.
     # Loop over dates and retrieve available filepaths
     if parallel:
@@ -368,8 +374,9 @@ def find_pps_filepaths(
                 end_time=end_time,
                 verbose=verbose,
             )
+            # Concatenate filepaths
             list_filepaths += filepaths
-        filepaths = flatten_list(list_filepaths)
+        filepaths = list_filepaths
 
     # -------------------------------------------------------------------------.
     # Return filepaths
