@@ -269,11 +269,12 @@ def retrieve_VIL(ds, variable="zFactorFinal", radar_frequency="Ku"):
     # Compute VIL profile
     thickness_arr = np.broadcast_to(thickness_arr, z_avg_arr.shape)
     vil_profile_arr = (z_avg_arr ** (4 / 7)) * thickness_arr  # Takes 3.8 s seconds per granule
-
+ 
     # Compute VIL
     range_axis = get_range_axis(da)
     dims = get_dims_without(da, dims=["range"])
     scale_factor = 3.44 * 10**-6
+    vil_profile_arr[np.isnan(vil_profile_arr)] = 0 # because numpy.sum does not remove nan
     vil_arr = scale_factor * vil_profile_arr.sum(axis=range_axis)  # DataArray.sum is very slow !
     da_vil = xr.DataArray(vil_arr, dims=dims)
 
@@ -502,11 +503,14 @@ def retrieve_POH(ds, method="Foote2005"):
     Output probabilities are rounded off to the nearest 10%, to avoid
       conveying an unrealistic degree of precision.
     """
+    # TODO: add utility to set 0 where rainy area (instead of nan value)
+    variable="zFactorFinal"
+    radar_frequency="Ku"
     da_echo_depth_45_solid = retrieve_EchoDepth(
         ds,
         threshold=45,
-        variable="zFactorFinal",
-        radar_frequency="Ku",
+        variable=variable,
+        radar_frequency=radar_frequency,
         min_threshold=0,
         mask_liquid_phase=True,
     )
@@ -521,7 +525,7 @@ def retrieve_POH(ds, method="Foote2005"):
         da_poh = da_poh.clip(0, 1).round(1) * 100
     else:
         raise NotImplementedError(f"Method {method} is not yet implemented.")
-
+        
     # Add attributes
     da_poh.name = "POH"
     da_poh.attrs["description"] = "Probability of Hail"

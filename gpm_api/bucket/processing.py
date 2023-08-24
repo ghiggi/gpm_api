@@ -10,10 +10,12 @@ import time
 import dask
 import dask.dataframe as dd
 import numpy as np
+import pandas as pd
+import pyarrow as pa
 import xarray as xr
 
 import gpm_api
-from gpm_api.bucket.io import get_parquet_fpaths, group_fpaths_by_bin
+from gpm_api.bucket.io import get_fpaths_by_bin
 from gpm_api.dataset.granule import remove_unused_var_dims
 from gpm_api.utils.timing import print_task_elapsed_time
 
@@ -298,15 +300,20 @@ def convert_size_to_bytes(size):
     return size
 
 
-def estimate_row_group_size(table, size="200MB"):
+def estimate_row_group_size(df, size="200MB"):
     """Estimate row_group_size parameter based on the desired row group memory size.
 
     row_group_size is a Parquet argument controlling the number of rows
     in each Apache Parquet File Row Group.
     """
-    memory_used = table.nbytes
+    if isinstance(df, pa.Table):
+        memory_used = df.nbytes
+    elif isinstance(df, pd.DataFrame):
+        memory_used = df.memory_usage().sum()
+    else:
+        raise NotImplementedError("Unrecognized dataframe type")
     size_bytes = convert_size_to_bytes(size)
-    n_rows = len(table)
+    n_rows = len(df)
     memory_per_row = memory_used / n_rows
     row_group_size = math.floor(size_bytes / memory_per_row)
     return row_group_size
@@ -380,48 +387,61 @@ def merge_granule_buckets(
     from gpm_api.bucket.readers import _read_parquet_bin_files
     from gpm_api.bucket.writers import write_parquet_dataset
 
-    # Identify all Parquet filepaths
+    # TODO: remove need of xbin_name and ybin_name  !
+    # --> Must be derived from source bucket !
+
+    # Identify Parquet filepaths for each bin
     print("Searching of Parquet files has started.")
     t_i = time.time()
-    fpaths = get_parquet_fpaths(bucket_base_dir)
-    n_fpaths = len(fpaths)
-    t_f = time.time()
-    t_elapsed = round(t_f - t_i, 0) / 60
-    print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
-    print(f"{n_fpaths} Parquet files to merge.")
-
-    # Group filepaths by geographic bin
-    bin_path_dict = group_fpaths_by_bin(fpaths)
+    bin_path_dict = get_fpaths_by_bin(bucket_base_dir)
     n_geographic_bins = len(bin_path_dict)
+    t_f = time.time()
+    t_elapsed = round((t_f - t_i) / 60, 1)
+    print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
     print(f"{n_geographic_bins} geographic bins to process.")
 
     # Retrieve list of bins and associated filepaths
-    list_bin_name = list(bin_path_dict.keys())
+    list_bin_names = list(bin_path_dict.keys())
     list_bin_fpaths = list(bin_path_dict.values())
 
     # Define meta and row_group_size
     template_fpath = list_bin_fpaths[0][0]
-    template_bin_name = list_bin_name[0]
-    template_table = _read_parquet_bin_files([template_fpath], bin_name=template_bin_name)
-    meta = make_meta(template_table)
-    row_group_size = estimate_row_group_size(template_table, size=row_group_size)
+    template_bin_name = list_bin_names[0]
+    template_df_pd = _read_parquet_bin_files([template_fpath], bin_name=template_bin_name)
+    meta = make_meta(template_df_pd)
+    row_group_size = estimate_row_group_size(template_df_pd, size=row_group_size)
+
+    # TODO: debug
+    # list_bin_names = list_bin_names[0:10]
+    # list_bin_fpaths = list_bin_fpaths[0:10]
 
     # Read dataframes for each geographic bin
     print("Lazy reading of dataframe has started")
-    df = dd.from_map(_read_parquet_bin_files, list_bin_fpaths, list_bin_name, meta=meta)
+    df = dd.from_map(_read_parquet_bin_files, list_bin_fpaths, list_bin_names, meta=meta)
 
     # Write Parquet Dataset
-    # --> TODO add row_group_size
     print("Parquet Dataset writing has started")
-    xbin_name = "lonbin"
-    ybin_name = "latbin"
+    partitioning = [xbin_name, ybin_name]
     write_parquet_dataset(
         df=df,
         parquet_fpath=bucket_fpath,
-        partition_on=[xbin_name, ybin_name],
+        partition_on=partitioning,
         row_group_size=row_group_size,
         compression=compression,
         compression_level=compression_level,
         **writer_kwargs,
     )
+
+    # TODO: Use write_partitioned_dataset instead !
+    # --> https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
+    # --> https://arrow.apache.org/docs/python/generated/pyarrow.parquet.write_metadata.html
+    # write_partitioned_dataset(
+    #     df=df,
+    #     base_dir,
+    #     partitioning,
+    #     fname_prefix="part",
+    #     format="parquet",
+    #     use_threads=True,
+    #     **writer_kwargs,
+    # )
     print("Parquet Dataset writing has completed")
