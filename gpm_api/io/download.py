@@ -783,7 +783,6 @@ def _download_daily_data(
         GPM data readers are currently implemented only for GPM V06.
     username : str, optional
         Provide your email for login on GPM NASA servers.
-        Temporary default is "gionata.ghiggi@epfl.ch".
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
