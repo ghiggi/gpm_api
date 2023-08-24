@@ -17,11 +17,14 @@ from gpm_api.io.products import get_products_pattern_dict
 #### FNAME PATTERNS ####
 ########################
 # General pattern for all GPM products
-NASA_FNAME_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{granule_id}.{version}.{data_format}"  # noqa
+NASA_RS_FNAME_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{granule_id}.{version}.{data_format}"  # noqa
+NASA_NRT_FNAME_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{version}.{data_format}"  # noqa
+
 # General pattern for all JAXA products
 # - Pattern for 1B-Ku and 1B-Ka
 JAXA_FNAME_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_time:%H%M}_{granule_id}_{product_level:2s}{product_type}_{algorithm:s}_{version}.{data_format}"  # noqa
 
+fname = "2A.GPM.DPR.V920211125.20230814-S131128-E134127.V07B.RT-H5"
 ####---------------------------------------------------------------------------.
 ##########################
 #### Filename parsers ####
@@ -32,8 +35,14 @@ def _parse_gpm_fname(fname):
     from trollsift import Parser
 
     # Retrieve information from filename
-    p = Parser(NASA_FNAME_PATTERN)
-    info_dict = p.parse(fname)
+    try:
+        p = Parser(NASA_RS_FNAME_PATTERN)
+        info_dict = p.parse(fname)
+        product_type = "RS"
+    except ValueError:
+        p = Parser(NASA_NRT_FNAME_PATTERN)
+        info_dict = p.parse(fname)
+        product_type = "NRT"
 
     # Retrieve correct start_time and end_time
     start_date = info_dict["start_date"]
@@ -52,8 +61,8 @@ def _parse_gpm_fname(fname):
     info_dict["end_time"] = end_datetime
 
     # Cast granule_id to integer
-    info_dict["granule_id"] = int(info_dict["granule_id"])
-
+    if product_type == "RS":
+        info_dict["granule_id"] = int(info_dict["granule_id"])
     return info_dict
 
 

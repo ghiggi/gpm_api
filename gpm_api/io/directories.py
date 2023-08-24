@@ -258,7 +258,7 @@ def get_pps_servers(product_type):
     """Return the url to the PPS servers."""
     if product_type == "NRT":
         url_text_server = "https://jsimpsonhttps.pps.eosdis.nasa.gov/text"
-        url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov"
+        url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov/data"
     else:
         url_text_server = "https://arthurhouhttps.pps.eosdis.nasa.gov/text"
         url_data_server = "ftps://arthurhouftps.pps.eosdis.nasa.gov"

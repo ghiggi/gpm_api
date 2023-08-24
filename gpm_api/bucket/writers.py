@@ -235,49 +235,54 @@ def write_granules_bucket(
 ####--------------------------------------------------------------------------.
 #### Single GPM Granule Routines OLD
 
+# TODO: Currently used for final merging
+# --> Adapt code to use write_partitioned_dataset
+def write_parquet_dataset(
+    df,
+    parquet_fpath,
+    partition_on,
+    name_function=None,
+    schema="infer",
+    compression="snappy",
+    write_index=False,
+    custom_metadata=None,
+    write_metadata_file=True,  # create _metadata file
+    append=False,
+    overwrite=False,
+    ignore_divisions=False,
+    compute=True,
+    **writer_kwargs,
+):
+    # Note: Append currently works only when using fastparquet
 
-# def write_parquet_dataset(df, parquet_fpath, partition_on,
-#                           name_function=None,
-#                           schema="infer",
-#                           compression="snappy",
-#                           write_index=False,
-#                           custom_metadata=None,
-#                           write_metadata_file=True,  # enable writing the _metadata file
-#                           append=False,
-#                           overwrite=False,
-#                           ignore_divisions=False,
-#                           compute=True,
-#                           **writer_kwargs):
-#     # Note: Append currently works only when using fastparquet
+    # Define default naming scheme
+    if name_function is None:
 
-#     # Define default naming scheme
-#     if name_function is None:
+        def name_function(i):
+            return f"part.{i}.parquet"
 
-#         def name_function(i):
-#             return f"part.{i}.parquet"
-
-#     # Write Parquet Dataset
-#     df.to_parquet(
-#         parquet_fpath,
-#         engine="pyarrow",
-#         # Index option
-#         write_index=write_index,
-#         # Metadata
-#         custom_metadata=custom_metadata,
-#         write_metadata_file=write_metadata_file,  # enable writing the _metadata file
-#         # File structure
-#         name_function=name_function,
-#         partition_on=partition_on,
-#         # Encoding
-#         schema=schema,
-#         compression=compression,
-#         # Writing options
-#         append=append,
-#         overwrite=overwrite,
-#         ignore_divisions=ignore_divisions,
-#         compute=compute,
-#         **writer_kwargs
-#     )
+    # Write Parquet Dataset
+    df.to_parquet(
+        parquet_fpath,
+        engine="pyarrow",
+        # Index option
+        write_index=write_index,
+        # Metadata
+        custom_metadata=custom_metadata,
+        write_metadata_file=write_metadata_file,  # enable writing the _metadata file
+        # File structure
+        name_function=name_function,
+        partition_on=partition_on,
+        # Encoding
+        schema=schema,
+        compression=compression,
+        # Writing options
+        append=append,
+        overwrite=overwrite,
+        ignore_divisions=ignore_divisions,
+        compute=compute,
+        **writer_kwargs,
+    )
 
 
 # def write_partitioned_parquet(

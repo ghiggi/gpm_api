@@ -15,6 +15,7 @@ def _write_pd_partitioned_dataset(df, base_dir, fname_prefix, partitioning, **wr
     # Sanitize writer_kwargs
     _ = writer_kwargs.pop("create_dir", None)
     _ = writer_kwargs.pop("existing_data_behavior", None)
+    _ = writer_kwargs.pop("partitioning_flavor", None)
 
     # Define basename template
     basename_template = f"{fname_prefix}_" + "{i}.parquet"
@@ -29,6 +30,7 @@ def _write_pd_partitioned_dataset(df, base_dir, fname_prefix, partitioning, **wr
         base_dir=base_dir,
         basename_template=basename_template,
         partitioning=partitioning,
+        partitioning_flavor="hive",
         create_dir=True,
         existing_data_behavior="overwrite_or_ignore",
         **writer_kwargs,
