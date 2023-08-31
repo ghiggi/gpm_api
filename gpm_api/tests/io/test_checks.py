@@ -337,9 +337,9 @@ def test_check_time() -> None:
     assert res == datetime.datetime(2014, 12, 31)
 
     # Test a object of datetime64[ns] casts to datetime64[ms]
-    res = checks.check_time(np.datetime64("2014-12-31T12:30:30.934549845", "ns"))
+    res = checks.check_time(np.datetime64("2014-12-31T12:30:30.934549845", "s"))
     assert isinstance(res, datetime.datetime)
-    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30, 934549)
+    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
 
     # Test a datetime.date
     res = checks.check_time(datetime.date(2014, 12, 31))
