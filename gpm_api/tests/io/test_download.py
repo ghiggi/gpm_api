@@ -7,11 +7,10 @@ from pytest_mock.plugin import MockerFixture
 from gpm_api.io import download as dl
 from gpm_api.io.products import available_products
 from gpm_api.utils.warnings import GPMDownloadWarning
+from gpm_api import configs
 
 
 def test_construct_curl_cmd(
-    username: str,
-    password: str,
     server_paths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
@@ -38,12 +37,14 @@ def test_construct_curl_cmd(
         "--retry 5 --retry-delay 10 -n {server_path} -o {local_path}"
     )
 
+    gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
+
     for server_path in server_paths:
         path = dl.curl_cmd(
             server_path=server_path,
             disk_path=disk_path,
-            username=username,
-            password=password,
+            username=gpm_username,
+            password=gpm_password,
         )
 
         # Test against ftps -> ftp casting
@@ -52,8 +53,8 @@ def test_construct_curl_cmd(
             server_path = server_path.replace("ftps://", "ftp://", 1)
 
         assert path == curl_truth.format(
-            username=username,
-            password=password,
+            username=gpm_username,
+            password=gpm_password,
             server_path=server_path,
             local_path=disk_path,
         )
@@ -65,8 +66,8 @@ def test_construct_curl_cmd(
 
 
 def test_construct_wget_cmd(
-    username: str,
-    password: str,
+    # username: str,
+    # password: str,
     server_paths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
@@ -92,17 +93,19 @@ def test_construct_wget_cmd(
         "--tries=5 -O {local_path} {server_path}"
     )
 
+    gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
+
     for server_path in server_paths:
         path = dl.wget_cmd(
             server_path=server_path,
             disk_path=disk_path,
-            username=username,
-            password=password,
+            username=gpm_username,
+            password=gpm_password,
         )
-        print(path)
+
         assert path == wget_truth.format(
-            username=username,
-            password=password,
+            username=gpm_username,
+            password=gpm_password,
             server_path=server_path,
             local_path=disk_path,
         )
@@ -116,8 +119,6 @@ def test_construct_wget_cmd(
 def test_download_with_ftplib(
     mocker: MockerFixture,
     server_paths: Dict[str, Dict[str, Any]],
-    username: str,
-    password: str,
     tmpdir: str,
 ) -> None:
     ftp_mock = mocker.patch(
@@ -143,12 +144,12 @@ def test_download_with_ftplib(
                 os.path.basename(server_path),
             )
         )
-
+    gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
     dl.ftplib_download(
         server_paths=server_paths.keys(),
         disk_paths=server_paths,
-        username=username,
-        password=password,
+        username=gpm_username,
+        password=gpm_password,
     )
 
     assert ftp_mock.called

@@ -73,26 +73,6 @@ def products() -> List[str]:
 
 
 @pytest.fixture
-def username() -> str:
-    """Return a username
-
-    GPM uses an email address as username
-    """
-
-    return "testuser@example.com"
-
-
-@pytest.fixture
-def password() -> str:
-    """Return a password
-
-    GPM password is the username
-    """
-
-    return "testuser@example.com"
-
-
-@pytest.fixture
 def server_paths() -> Dict[str, Dict[str, Any]]:
     """Return a list of probable GPM server paths"""
 
