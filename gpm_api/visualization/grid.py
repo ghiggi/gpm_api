@@ -33,8 +33,10 @@ def _plot_grid_map_cartopy(
     **plot_kwargs,
 ):
     """Plot DataArray 2D field with cartopy."""
+    # TODO: allow PlateeCarree subset (--> update _plot_cartopy_imshow)
+
     # - Check inputs
-    check_is_spatial_2d(da)
+    check_is_spatial_2d(da)  # TODO: allow RGB !
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
     # - Initialize figure

@@ -125,7 +125,7 @@ def get_masked_cells_polycollection(x, y, arr, mask, plot_kwargs):
     return coll
 
 
-def get_valid_pcolormesh_inputs(x, y, data):
+def get_valid_pcolormesh_inputs(x, y, data, rgb=False):
     """
     Fill non-finite values with neighbour valid coordinates.
 
@@ -133,13 +133,11 @@ def get_valid_pcolormesh_inputs(x, y, data):
     This function:
     - Infill NaN/Inf in lat/x with closest values
     - Mask the corresponding pixels in the data that must not be displayed.
+
+    If RGB=True, the RGB channels is in the last dimension
     """
     # TODO:
-    # - Combine mask if x, y and data are already masked !
-    # --> Add in plot_cartopy_pcolormesh !
     # - Instead of np.interp, can use nearest neighbors or just 0 to speed up?
-
-    from skimage.morphology import dilation, square
 
     # Retrieve mask of invalid coordinates
     mask = np.logical_or(~np.isfinite(x), ~np.isfinite(y))
@@ -148,8 +146,17 @@ def get_valid_pcolormesh_inputs(x, y, data):
     if np.all(~mask):
         return x, y, data
 
-    mask = dilation(mask, square(10))
-    data_masked = np.ma.masked_where(mask, data)
+    # Dilate mask
+    # mask = dilation(mask, square(2))
+
+    # Mask the data
+    if rgb:
+        data_mask = np.broadcast_to(np.expand_dims(mask, axis=-1), data.shape)
+        data_masked = np.ma.masked_where(data_mask, data)
+    else:
+        data_masked = np.ma.masked_where(mask, data)
+
+    # TODO: should be done in XYZ?
     x_dummy = x.copy()
     x_dummy[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), x[~mask])
     y_dummy = y.copy()
@@ -211,9 +218,12 @@ def _plot_cartopy_imshow(
     cbar_kwargs={},
 ):
     """Plot imshow with cartopy."""
+    # TODO: allow to plot whatever projection (based on CRS) !
+    # TODO: allow to plot subset of PlateeCarree !
+
     # - Ensure image with correct dimensions orders
     da = da.transpose(y, x)
-    arr = da.data.compute()
+    arr = np.asanyarray(da.data)
 
     # - Derive extent
     extent = [-180, 180, -90, 90]  # TODO: Derive from data !!!!
@@ -276,6 +286,8 @@ def _plot_cartopy_pcolormesh(
 
     The function currently does not allow to zoom on regions across the antimeridian.
     The function mask scanning pixels which spans across the antimeridian.
+    If rgb=True, expect rgb dimension to be at last position.
+    x and y must represents longitude and latitudes.
     """
     # - Get x, y, and array to plot
     da = da.compute()
@@ -283,16 +295,26 @@ def _plot_cartopy_pcolormesh(
     y = da[y].data
     arr = da.data
 
+    # - Infill invalid value and add mask if necessary
+    x, y, arr = get_valid_pcolormesh_inputs(x, y, arr, rgb=rgb)
     # - Ensure arguments
     if rgb:
         add_colorbar = False
 
     # - Mask cells crossing the antimeridian
-    mask = get_antimeridian_mask(x, buffer=True)
-    is_crossing_antimeridian = np.any(mask)
+    # --> Here assume not invalid coordinates anymore
+    antimeridian_mask = get_antimeridian_mask(x, buffer=True)
+    is_crossing_antimeridian = np.any(antimeridian_mask)
     if is_crossing_antimeridian:
-
-        arr = np.ma.masked_where(mask, arr)
+        if np.ma.is_masked(arr):
+            if rgb:
+                data_mask = np.broadcast_to(np.expand_dims(antimeridian_mask, axis=-1), arr.shape)
+                combined_mask = np.logical_or(data_mask, antimeridian_mask)
+            else:
+                combined_mask = np.logical_or(arr.mask, antimeridian_mask)
+            arr = np.ma.masked_where(combined_mask, arr)
+        else:
+            arr = np.ma.masked_where(antimeridian_mask, arr)
         # Sanitize cmap bad color to avoid cartopy bug
         if "cmap" in plot_kwargs:
             cmap = plot_kwargs["cmap"]
@@ -313,7 +335,7 @@ def _plot_cartopy_pcolormesh(
         # - Add PolyCollection of QuadMesh cells crossing the antimeridian
         if is_crossing_antimeridian:
             coll = get_masked_cells_polycollection(
-                x, y, arr.data, mask=mask, plot_kwargs=plot_kwargs
+                x, y, arr.data, mask=antimeridian_mask, plot_kwargs=plot_kwargs
             )
             p.axes.add_collection(coll)
 
@@ -323,7 +345,7 @@ def _plot_cartopy_pcolormesh(
         if is_crossing_antimeridian:
             plot_kwargs["facecolors"] = arr.reshape((arr.shape[0] * arr.shape[1], arr.shape[2]))
             coll = get_masked_cells_polycollection(
-                x, y, arr.data, mask=mask, plot_kwargs=plot_kwargs
+                x, y, arr.data, mask=antimeridian_mask, plot_kwargs=plot_kwargs
             )
             p.axes.add_collection(coll)
 
@@ -353,7 +375,7 @@ def _plot_mpl_imshow(
     """Plot imshow with matplotlib."""
     # - Ensure image with correct dimensions orders
     da = da.transpose(y, x)
-    arr = da.data.compute()
+    arr = np.asanyarray(da.data)
 
     # - Add variable field with matplotlib
     p = ax.imshow(
@@ -553,9 +575,8 @@ def plot_map(
 ):
 
     from gpm_api.checks import is_grid, is_orbit
-
-    from .grid import plot_grid_map
-    from .orbit import plot_orbit_map
+    from gpm_api.visualization.grid import plot_grid_map
+    from gpm_api.visualization.orbit import plot_orbit_map
 
     # Plot orbit
     if is_orbit(da):
