@@ -133,7 +133,7 @@ def check_product_validity(product, product_type=None):
 def check_time(time):
     """Check time validity.
 
-    It returns a datetime.datetime object.
+    It returns a datetime.datetime object to seconds precision.
 
     Parameters
     ----------
@@ -145,7 +145,7 @@ def check_time(time):
     Returns
     -------
     time : datetime.datetime
-        datetime.datetime object.
+        datetime.datetime object
 
     """
     if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, np.ndarray, str)):
@@ -157,15 +157,15 @@ def check_time(time):
     if isinstance(time, np.ndarray):
         if np.issubdtype(time.dtype, np.datetime64):
             if time.size == 1:
-                time = time.astype("datetime64[us]").tolist()
+                time = time.astype("datetime64[s]").tolist()
             else:
                 raise ValueError("Expecting a single timestep!")
         else:
             raise ValueError("The numpy array does not have a np.datetime64 dtype!")
 
-    # If np.datetime64, convert to datetime.datetime with microsecond precision
+    # If np.datetime64, convert to datetime.datetime
     if isinstance(time, np.datetime64):
-        time = time.astype("datetime64[us]").tolist()
+        time = time.astype("datetime64[s]").tolist()
     # If datetime.date, convert to datetime.datetime
     if not isinstance(time, (datetime.datetime, str)):
         time = datetime.datetime(time.year, time.month, time.day, 0, 0, 0)
