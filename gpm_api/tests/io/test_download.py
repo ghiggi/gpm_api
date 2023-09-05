@@ -333,7 +333,7 @@ def test_check_download_status(
     """Test check_download_status function"""
 
     for product in products:
-        assert dl._check_download_status([-1, -1, -1], product, True) is True  # All lready on disk
+        assert dl._check_download_status([-1, -1, -1], product, True) is True  # All already on disk
         assert dl._check_download_status([0, 0, 0], product, True) is None  # All failed download
         assert dl._check_download_status([1, 1, 1], product, True) is True  # All success download
         assert dl._check_download_status([], product, True) is None  # No data available
