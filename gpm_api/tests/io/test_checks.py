@@ -14,6 +14,7 @@ import platform
 import ntpath as ntp
 import posixpath as ptp
 import pytz
+import pandas as pd
 from typing import List
 from gpm_api.io import checks
 from gpm_api.io.products import available_products, available_scan_modes
@@ -346,6 +347,26 @@ def test_check_time() -> None:
     assert isinstance(res, datetime.datetime)
     assert res == datetime.datetime(2014, 12, 31)
 
+    # Test a datetime object inside a numpy array
+    with pytest.raises(ValueError):
+        res = checks.check_time(np.array([datetime.datetime(2014, 12, 31, 12, 30, 30)]))
+        assert isinstance(res, datetime.datetime)
+        assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
+
+    # Test a pandas Timestamp object inside a numpy array
+    with pytest.raises(ValueError):
+        res = checks.check_time(np.array([pd.Timestamp("2014-12-31 12:30:30")]))
+        assert isinstance(res, datetime.datetime)
+        assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
+
+    # Test a pandas Timestamp object
+    res = checks.check_time(pd.Timestamp("2014-12-31 12:30:30"))
+    assert isinstance(res, datetime.datetime)
+    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
+
+    res = checks.check_time(np.datetime64("2014-12-31T12:30:30.934549845", "ns"))
+    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
+
     # Test a non isoformat string
     with pytest.raises(ValueError):
         checks.check_time("2014/12/31")
@@ -444,10 +465,22 @@ def test_check_start_end_time() -> None:
     # carry timezone information. This should fail if the check is done on utcnow()
     with pytest.raises(ValueError):
         for timezone in ["Europe/Zurich", "Australia/Melbourne"]:
+            # Remove timezone information
             checks.check_start_end_time(
                 datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
                 datetime.datetime.now(tz=pytz.timezone(timezone)).replace(tzinfo=None),
             )
+            # Keep timezone information, should throw exception
+            checks.check_start_end_time(
+                datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
+                datetime.datetime.now(tz=pytz.timezone(timezone)),
+            )
+
+    # This should pass as the time is in UTC
+    checks.check_start_end_time(
+        datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
+        datetime.datetime.now(tz=pytz.utc),
+    )
 
     # Do the same but in a timezone that is behind UTC (this should pass)
     for timezone in ["America/New_York", "America/Santiago"]:

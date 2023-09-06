@@ -174,10 +174,14 @@ def check_time(time):
             time = datetime.datetime.fromisoformat(time)
         except ValueError:
             raise ValueError("The time string must have format 'YYYY-MM-DD hh:mm:ss'")
-    # If datetime object carries timezone that is not UTC, raise error
 
-    if time.tzinfo is not None and time.tzinfo != datetime.timezone.utc:
-        raise ValueError("The datetime object must be in UTC timezone if timezone is given.")
+    # If datetime object carries timezone that is not UTC, raise error
+    if time.tzinfo is not None:
+        if str(time.tzinfo) != "UTC":
+            raise ValueError("The datetime object must be in UTC timezone if timezone is given.")
+        else:
+            # If UTC, strip timezone information
+            time = time.replace(tzinfo=None)
 
     return time
 
