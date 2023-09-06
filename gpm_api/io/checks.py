@@ -32,7 +32,7 @@ def check_base_dir(base_dir):
         Base directory where the GPM directory is located.
     """
     # Check base_dir does not end with /
-    if base_dir[-1] == "/":
+    if base_dir[-1] == os.path.sep:
         base_dir = base_dir[0:-1]
     # Retrieve last folder name
     dir_name = os.path.basename(base_dir)
@@ -133,7 +133,7 @@ def check_product_validity(product, product_type=None):
 def check_time(time):
     """Check time validity.
 
-    It returns a datetime.datetime object.
+    It returns a datetime.datetime object to seconds precision.
 
     Parameters
     ----------
@@ -145,7 +145,7 @@ def check_time(time):
     Returns
     -------
     time : datetime.datetime
-        datetime.datetime object.
+        datetime.datetime object
 
     """
     if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, np.ndarray, str)):
@@ -174,15 +174,25 @@ def check_time(time):
             time = datetime.datetime.fromisoformat(time)
         except ValueError:
             raise ValueError("The time string must have format 'YYYY-MM-DD hh:mm:ss'")
+
+    # If datetime object carries timezone that is not UTC, raise error
+    if time.tzinfo is not None:
+        if str(time.tzinfo) != "UTC":
+            raise ValueError("The datetime object must be in UTC timezone if timezone is given.")
+        else:
+            # If UTC, strip timezone information
+            time = time.replace(tzinfo=None)
+
     return time
 
 
 def check_date(date):
-    if not isinstance(date, (datetime.date, datetime.datetime)):
-        raise ValueError("date must be a datetime object")
-    if isinstance(date, datetime.datetime):
-        date = date.date()
-    return date
+    if date is None:
+        raise ValueError("date cannot be None")
+
+    # Use check_time to convert to datetime.datetime
+    datetime_obj = check_time(date)
+    return datetime_obj.date()
 
 
 def check_start_end_time(start_time, end_time):
@@ -225,25 +235,3 @@ def check_scan_mode(scan_mode, product, version):
 
     # -------------------------------------------------------------------------.
     return scan_mode
-
-
-def check_bbox(bbox):
-    """
-    Check correctness of bounding box.
-    bbox format: [lon_0, lon_1, lat_0, lat_1]
-    bbox should be provided with longitude between -180 and 180, and latitude
-    between -90 and 90.
-    """
-    if bbox is None:
-        return bbox
-    # If bbox provided
-    if not (isinstance(bbox, list) and len(bbox) == 4):
-        raise ValueError("Provide valid bbox [lon_0, lon_1, lat_0, lat_1]")
-    if bbox[2] > 90 or bbox[2] < -90 or bbox[3] > 90 or bbox[3] < -90:
-        raise ValueError("Latitude is defined between -90 and 90")
-    # Try to be sure that longitude is specified between -180 and 180
-    if bbox[0] > 180 or bbox[1] > 180:
-        print("bbox should be provided with longitude between -180 and 180")
-        bbox[0] = bbox[0] - 180
-        bbox[1] = bbox[1] - 180
-    return bbox

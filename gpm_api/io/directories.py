@@ -44,8 +44,6 @@ def get_disk_dir_pattern(product, product_type, version):
         GPM product name. See: gpm_api.available_products()
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    date : datetime.date
-        Single date for which to retrieve the data.
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
 
