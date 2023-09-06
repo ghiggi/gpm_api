@@ -60,8 +60,12 @@ def test_filter_filepaths(
     # Test year filtering
     # Count and assert 2019 paths
     count_2019 = 0
-    for server_path, props in server_paths.items():
-        if props["year"] == 2019 and props["product"] == "2A-DPR" and props["version"] == 7:
+    for server_path, info_dict in server_paths.items():
+        if (
+            info_dict["year"] == 2019
+            and info_dict["product"] == "2A-DPR"
+            and info_dict["version"] == 7
+        ):
             count_2019 += 1
 
     res = filter.filter_filepaths(
@@ -96,8 +100,8 @@ def test_filter_filepaths(
 
     # Test empty start time
     count_until_2019 = 0
-    for server_path, props in server_paths.items():
-        if props["year"] == 2019:
+    for server_path, info_dict in server_paths.items():
+        if info_dict["year"] == 2019:
             count_until_2019 += 1
     res = filter.filter_filepaths(
         filepaths=list(server_paths.keys()),
@@ -113,8 +117,8 @@ def test_filter_filepaths(
     # requires date to be less than now() in supportive
     # function checks.check_start_end_time)
     count_from_2019 = 0
-    for server_path, props in server_paths.items():
-        if props["year"] >= 2019:
+    for server_path, info_dict in server_paths.items():
+        if info_dict["year"] >= 2019:
             count_from_2019 += 1
 
     res = filter.filter_filepaths(
@@ -135,8 +139,8 @@ def test_filter_by_time(
     # Test year filtering
     # Count and assert 2019 paths
     count_2019 = 0
-    for server_path, props in server_paths.items():
-        if props["year"] == 2019:
+    for server_path, info_dict in server_paths.items():
+        if info_dict["year"] == 2019:
             count_2019 += 1
 
     res = filter.filter_by_time(
@@ -167,8 +171,8 @@ def test_filter_by_time(
 
     # Test empty start time
     count_until_2019 = 0
-    for server_path, props in server_paths.items():
-        if props["year"] == 2019:
+    for server_path, info_dict in server_paths.items():
+        if info_dict["year"] == 2019:
             count_until_2019 += 1
     res = filter.filter_by_time(
         filepaths=list(server_paths.keys()),
@@ -181,8 +185,8 @@ def test_filter_by_time(
     # Test empty end time (should default to utcnow which will technically be
     # in the past by the time it gets to the function)
     count_from_2019 = 0
-    for server_path, props in server_paths.items():
-        if props["year"] >= 2019:
+    for server_path, info_dict in server_paths.items():
+        if info_dict["year"] >= 2019:
             count_from_2019 += 1
 
     res = filter.filter_by_time(
@@ -202,9 +206,9 @@ def test_filter_by_product(
 
     # Check 2A-DPR
     products_2A_DPR = 0
-    for server_path, props in server_paths.items():
+    for server_path, info_dict in server_paths.items():
         # Ensure exists in server_path list
-        if props["product"] == "2A-DPR":
+        if info_dict["product"] == "2A-DPR":
             products_2A_DPR += 1
 
     assert products_2A_DPR > 0, "The test server_paths fixture does not contain expected value"
@@ -244,8 +248,8 @@ def test_filter_by_version(
     # Test each version
     for version in versions:
         paths_with_matching_version = 0
-        for server_path, props in server_paths.items():
-            if props["version"] == version:
+        for server_path, info_dict in server_paths.items():
+            if info_dict["version"] == version:
                 paths_with_matching_version += 1
 
         # Only test if there are matching versions in server_paths
