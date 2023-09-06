@@ -345,6 +345,8 @@ def test_flatten_list() -> None:
 
     assert dl.flatten_list([["single item"]]) == ["single item"]
     assert dl.flatten_list([["double", "item"]]) == ["double", "item"]
+    assert dl.flatten_list([]) == [], "Empty list should return empty list"
+    assert dl.flatten_list(["single item"]) == ["single item"], "Flat list should return same list"
 
 
 def test_convert_pps_to_disk_filepaths(
