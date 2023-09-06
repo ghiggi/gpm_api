@@ -364,6 +364,7 @@ def test_check_time() -> None:
     assert isinstance(res, datetime.datetime)
     assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
 
+    # Test automatic casting to seconds accuracy
     res = checks.check_time(np.datetime64("2014-12-31T12:30:30.934549845", "ns"))
     assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
 
