@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import h5py
 import os
@@ -5,6 +6,30 @@ from gpm_api import open_dataset
 from gpm_api.dataset.granule import _open_granule
 
 import xarray as xr
+
+
+class SaneEqualityArray(np.ndarray):
+    """Wrapper class for numpy array allowing deep equality tests on objects containing numpy arrays.
+
+    From https://stackoverflow.com/a/14276901
+    """
+
+    def __new__(cls, array):
+        """Create a new SaneEqualityArray from array only (instead of shape + type + array)."""
+
+        if isinstance(array, list):  # No need to wrap regular lists
+            return array
+
+        return np.asarray(array).view(cls)
+
+    def __eq__(self, other):
+        # Only use equal_nan for floats dtypes
+        equal_nan = np.issubdtype(self.dtype, np.floating)
+        return (
+            isinstance(other, np.ndarray)
+            and self.shape == other.shape
+            and np.array_equal(self, other, equal_nan=equal_nan)
+        )
 
 
 @pytest.fixture()
@@ -58,3 +83,7 @@ def sample_dataset() -> xr.Dataset:
     )
 
     return ds
+
+
+def pytest_configure():
+    pytest.SaneEqualityArray = SaneEqualityArray

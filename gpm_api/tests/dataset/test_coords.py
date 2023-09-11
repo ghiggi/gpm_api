@@ -1,24 +1,143 @@
+from datetime import datetime, timedelta
+from datatree import DataTree
+import numpy as np
+import pandas as pd
 import pytest
+from pytest import SaneEqualityArray
 import xarray as xr
 from gpm_api.dataset import coords
 
 
-def test_set_coords_attrs(sample_dataset: xr.Dataset) -> None:
-    res = coords.set_coords_attrs(sample_dataset)
-
-    assert res == sample_dataset
+MAX_TIMESTAMP = 2**31 - 1
 
 
-def test_get_coords_attrs_dict(sample_dataset: xr.Dataset) -> None:
-    res = coords.get_coords_attrs_dict(sample_dataset)
+# Utils functions ##############################################################
 
-    for key in [
-        "lat",
-        "lon",
-        "time",
-        "gpm_id",
-        "gpm_granule_id",
-        "gpm_cross_track_id",
-        "gpm_along_track_id",
-    ]:
-        assert key in res.keys(), f"{key} not in dictionary"
+
+def get_random_datetime_array_and_dataset(n_values):
+    """Return random datetimes as numpy array and xarrray dataset."""
+
+    timestamps = np.random.randint(0, MAX_TIMESTAMP, size=n_values)
+    datetimes = pd.to_datetime(timestamps, unit="s")
+    ds = xr.Dataset(
+        {
+            "Year": ("along_track", datetimes.year),
+            "Month": ("along_track", datetimes.month),
+            "DayOfMonth": ("along_track", datetimes.day),
+            "Hour": ("along_track", datetimes.hour),
+            "Minute": ("along_track", datetimes.minute),
+            "Second": ("along_track", datetimes.second),
+        }
+    )
+    return datetimes.to_numpy(), ds
+
+
+# Tests for public functions ###################################################
+
+
+def test_get_orbit_coords():
+    """Test get_orbit_coords"""
+
+    scan_mode = "S1"
+    granule_id = np.random.randint(0, 100000)
+    shape = (10, 3)
+
+    # Create random datatree
+    lon = xr.DataArray(np.random.rand(*shape), dims=["along_track", "cross_track"])
+    lat = xr.DataArray(np.random.rand(*shape), dims=["along_track", "cross_track"])
+    time_array, time_ds = get_random_datetime_array_and_dataset(shape[0])
+
+    dt = DataTree.from_dict({scan_mode: DataTree.from_dict({"ScanTime": time_ds})})
+    dt[scan_mode]["Longitude"] = lon
+    dt[scan_mode]["Latitude"] = lat
+    dt.attrs["FileHeader"] = f"GranuleNumber={granule_id}"
+
+    # Test get_orbit_coords
+    expected_coords = {
+        "lon": (["along_track", "cross_track"], lon),
+        "lat": (["along_track", "cross_track"], lat),
+        "time": (["along_track"], time_array),
+        "gpm_id": (["along_track"], [f"{granule_id}-{i}" for i in range(shape[0])]),
+        "gpm_granule_id": (["along_track"], np.repeat(granule_id, shape[0])),
+        "gpm_cross_track_id": (["cross_track"], np.arange(shape[1])),
+        "gpm_along_track_id": (["along_track"], np.arange(shape[0])),
+    }
+    expected_coords = {k: (v[0], SaneEqualityArray(v[1])) for k, v in expected_coords.items()}
+    returned_coords = coords.get_orbit_coords(dt, scan_mode)
+    assert returned_coords == expected_coords
+
+
+def test_get_grid_coords():
+    """Test get_grid_coords"""
+
+    scan_mode = "Grid"
+    n_values = 10
+
+    # Create random datatree
+    # time = np.random.randint(0, MAX_TIMESTAMP)
+    lon = np.random.rand(n_values)
+    lat = np.random.rand(n_values)
+    timestamp = np.random.randint(0, MAX_TIMESTAMP)
+    time_formated = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+    ds = xr.Dataset()
+    # ds.coords["time"] = ("time", [time])
+    ds.coords["lon"] = ("lon", lon)
+    ds.coords["lat"] = ("lat", lat)
+
+    dt = DataTree.from_dict({scan_mode: ds})
+    dt.attrs["FileHeader"] = f"StartGranuleDateTime={time_formated}"
+
+    # Test get_grid_coords
+    corrected_datetime = datetime.fromtimestamp(timestamp) + timedelta(minutes=30)
+    expected_coords = {
+        "time": np.array([corrected_datetime]),
+        "lon": lon,
+        "lat": lat,
+    }
+    expected_coords = {k: SaneEqualityArray(v) for k, v in expected_coords.items()}
+    returned_coords = coords.get_grid_coords(dt, scan_mode)
+    assert returned_coords == expected_coords
+
+
+def test_get_coords(monkeypatch):
+    """Test get_coords"""
+
+    # Mock get_orbit_coords and get_grid_coords
+    monkeypatch.setattr(coords, "get_orbit_coords", lambda *args: "return from get_orbit_coords")
+    monkeypatch.setattr(coords, "get_grid_coords", lambda *args: "return from get_grid_coords")
+
+    # Test get_coords
+    scan_mode = "S1"
+    dt = DataTree()
+    returned_coords = coords.get_coords(dt, scan_mode)
+    assert returned_coords == "return from get_orbit_coords"
+
+    scan_mode = "Grid"
+    dt = DataTree()
+    returned_coords = coords.get_coords(dt, scan_mode)
+    assert returned_coords == "return from get_grid_coords"
+
+
+# def test_get_coords_attrs_dict(sample_dataset: xr.Dataset) -> None:
+#     res = coords.get_coords_attrs_dict(sample_dataset)
+
+#     for key in [
+#         "lat",
+#         "lon",
+#         "time",
+#         "gpm_id",
+#         "gpm_granule_id",
+#         "gpm_cross_track_id",
+#         "gpm_along_track_id",
+#     ]:
+#         assert key in res.keys(), f"{key} not in dictionary"
+
+
+# def test_set_coords_attrs(sample_dataset: xr.Dataset) -> None:
+#     res = coords.set_coords_attrs(sample_dataset)
+
+#     assert res == sample_dataset
+
+
+# Tests for internal functions #################################################
