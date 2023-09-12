@@ -80,12 +80,6 @@ def get_coords(dt, scan_mode):
     return coords
 
 
-def _set_attrs_dict(ds, attrs_dict):
-    """Set dataset attributes for each attrs_dict key."""
-    for var in attrs_dict:
-        ds[var].attrs.update(attrs_dict[var])
-
-
 def _subset_dict_by_dataset(ds, dictionary):
     """Select the relevant dictionary key for a given dataset."""
     # Get dataset coords and variables
@@ -121,33 +115,43 @@ def get_coords_attrs_dict(ds):
         "coverage_content_type": "coordinate",
     }
 
-    attrs_dict["gpm_granule_id"] = {}
-    attrs_dict["gpm_granule_id"]["long_name"] = "GPM Granule ID"
-    attrs_dict["gpm_granule_id"]["description"] = "ID number of the GPM Granule"
-    attrs_dict["gpm_granule_id"]["coverage_content_type"] = "auxiliaryInformation"
+    attrs_dict["gpm_granule_id"] = {
+        "long_name": "GPM Granule ID",
+        "description": "ID number of the GPM Granule",
+        "coverage_content_type": "auxiliaryInformation",
+    }
 
     # Define general attributes for time coordinates
     attrs_dict["time"] = {"standard_name": "time", "coverage_content_type": "coordinate"}
 
     # Add description of GPM ORBIT coordinates
-    attrs_dict["gpm_cross_track_id"] = {}
-    attrs_dict["gpm_cross_track_id"]["long_name"] = "Cross-Track ID"
-    attrs_dict["gpm_cross_track_id"]["description"] = "Cross-Track ID."
-    attrs_dict["gpm_cross_track_id"]["coverage_content_type"] = "auxiliaryInformation"
+    attrs_dict["gpm_cross_track_id"] = {
+        "long_name": "Cross-Track ID",
+        "description": "Cross-Track ID.",
+        "coverage_content_type": "auxiliaryInformation",
+    }
 
-    attrs_dict["gpm_along_track_id"] = {}
-    attrs_dict["gpm_along_track_id"]["long_name"] = "Along-Track ID"
-    attrs_dict["gpm_along_track_id"]["description"] = "Along-Track ID."
-    attrs_dict["gpm_along_track_id"]["coverage_content_type"] = "auxiliaryInformation"
+    attrs_dict["gpm_along_track_id"] = {
+        "long_name": "Along-Track ID",
+        "description": "Along-Track ID.",
+        "coverage_content_type": "auxiliaryInformation",
+    }
 
-    attrs_dict["gpm_id"] = {}
-    attrs_dict["gpm_id"]["long_name"] = "Scan ID"
-    attrs_dict["gpm_id"]["description"] = "Scan ID. Format: '{gpm_granule_id}-{gpm_along_track_id}'"
-    attrs_dict["gpm_id"]["coverage_content_type"] = "auxiliaryInformation"
+    attrs_dict["gpm_id"] = {
+        "long_name": "Scan ID",
+        "description": "Scan ID. Format: '{gpm_granule_id}-{gpm_along_track_id}'",
+        "coverage_content_type": "auxiliaryInformation",
+    }
 
     # Select required attributes
     attrs_dict = _subset_dict_by_dataset(ds, attrs_dict)
     return attrs_dict
+
+
+def _set_attrs_dict(ds, attrs_dict):
+    """Set dataset attributes for each attrs_dict key."""
+    for var in attrs_dict:
+        ds[var].attrs.update(attrs_dict[var])
 
 
 def set_coords_attrs(ds):

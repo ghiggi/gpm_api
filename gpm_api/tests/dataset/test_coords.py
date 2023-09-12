@@ -119,25 +119,63 @@ def test_get_coords(monkeypatch):
     assert returned_coords == "return from get_grid_coords"
 
 
-# def test_get_coords_attrs_dict(sample_dataset: xr.Dataset) -> None:
-#     res = coords.get_coords_attrs_dict(sample_dataset)
+def test_get_coords_attrs_dict() -> None:
+    """Test get_coords_attrs_dict"""
 
-#     for key in [
-#         "lat",
-#         "lon",
-#         "time",
-#         "gpm_id",
-#         "gpm_granule_id",
-#         "gpm_cross_track_id",
-#         "gpm_along_track_id",
-#     ]:
-#         assert key in res.keys(), f"{key} not in dictionary"
+    # Test dataset with no matching attributes
+    ds = xr.Dataset()
+    returned_dict = coords.get_coords_attrs_dict(ds)
+    assert returned_dict == {}
+
+    # Test with one matching attribute in coords
+    ds = xr.Dataset()
+    ds.coords["lat"] = []
+    returned_dict = coords.get_coords_attrs_dict(ds)
+    assert "lat" in returned_dict
+    assert returned_dict["lat"] != {}
+
+    # Test with one matching attribute in data_vars
+    ds = xr.Dataset()
+    ds["lat"] = xr.DataArray([])
+    returned_dict = coords.get_coords_attrs_dict(ds)
+    assert "lat" in returned_dict
+    assert returned_dict["lat"] != {}
+
+    # Test with unrelevant attributes
+    ds = xr.Dataset()
+    ds.coords["unrelevant_1"] = []
+    ds["unrelevant_2"] = xr.DataArray([])
+    returned_dict = coords.get_coords_attrs_dict(ds)
+    assert returned_dict == {}
+
+    # Test all attributes
+    relevant_attributes = [
+        "lat",
+        "lon",
+        "gpm_granule_id",
+        "time",
+        "gpm_cross_track_id",
+        "gpm_along_track_id",
+        "gpm_id",
+    ]
+    ds = xr.Dataset()
+    for attribute in relevant_attributes:
+        ds.coords[attribute] = []
+
+    returned_dict = coords.get_coords_attrs_dict(ds)
+    for attribute in relevant_attributes:
+        assert attribute in returned_dict
+        assert returned_dict[attribute] != {}
 
 
-# def test_set_coords_attrs(sample_dataset: xr.Dataset) -> None:
-#     res = coords.set_coords_attrs(sample_dataset)
+def test_set_coords_attrs() -> None:
+    """Test set_coords_attrs"""
 
-#     assert res == sample_dataset
+    # Test dataset with one relevant attribute and one unrelevant attribute
+    ds = xr.Dataset()
+    ds["lat"] = xr.DataArray([])
+    ds["unrelevant"] = xr.DataArray([])
 
-
-# Tests for internal functions #################################################
+    returned_ds = coords.set_coords_attrs(ds)
+    assert returned_ds["lat"].attrs != {}
+    assert returned_ds["unrelevant"].attrs == {}
