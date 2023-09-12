@@ -40,8 +40,8 @@ def mock_configuration():
 def product_types() -> List[str]:
     """Return a list of all product types from the info dict"""
     product_types = []
-    for product, props in get_info_dict().items():
-        product_types += props["product_types"]
+    for product, info_dict in get_info_dict().items():
+        product_types += info_dict["product_types"]
 
     product_types = list(set(product_types))  # Dedup list
 
@@ -52,7 +52,7 @@ def product_types() -> List[str]:
 def product_categories() -> List[str]:
     """Return a list of product categories from the info dict"""
 
-    return list(set([props["product_category"] for props in get_info_dict().values()]))
+    return list(set([info_dict["product_category"] for info_dict in get_info_dict().values()]))
 
 
 @pytest.fixture
@@ -76,26 +76,6 @@ def products() -> List[str]:
     """Return a list of all products regardless of type"""
 
     return available_products()
-
-
-@pytest.fixture
-def username() -> str:
-    """Return a username
-
-    GPM uses an email address as username
-    """
-
-    return "testuser@example.com"
-
-
-@pytest.fixture
-def password() -> str:
-    """Return a password
-
-    GPM password is the username
-    """
-
-    return "testuser@example.com"
 
 
 @pytest.fixture

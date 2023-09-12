@@ -13,6 +13,8 @@ import os
 import platform
 import ntpath as ntp
 import posixpath as ptp
+import pytz
+import pandas as pd
 from typing import List
 from gpm_api.io import checks
 from gpm_api.io.products import available_products, available_scan_modes
@@ -336,14 +338,35 @@ def test_check_time() -> None:
     assert res == datetime.datetime(2014, 12, 31)
 
     # Test a object of datetime64[ns] casts to datetime64[ms]
-    res = checks.check_time(np.datetime64("2014-12-31T12:30:30.934549845", "ns"))
+    res = checks.check_time(np.datetime64("2014-12-31T12:30:30.934549845", "s"))
     assert isinstance(res, datetime.datetime)
-    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30, 934549)
+    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
 
     # Test a datetime.date
     res = checks.check_time(datetime.date(2014, 12, 31))
     assert isinstance(res, datetime.datetime)
     assert res == datetime.datetime(2014, 12, 31)
+
+    # Test a datetime object inside a numpy array
+    with pytest.raises(ValueError):
+        res = checks.check_time(np.array([datetime.datetime(2014, 12, 31, 12, 30, 30)]))
+        assert isinstance(res, datetime.datetime)
+        assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
+
+    # Test a pandas Timestamp object inside a numpy array
+    with pytest.raises(ValueError):
+        res = checks.check_time(np.array([pd.Timestamp("2014-12-31 12:30:30")]))
+        assert isinstance(res, datetime.datetime)
+        assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
+
+    # Test a pandas Timestamp object
+    res = checks.check_time(pd.Timestamp("2014-12-31 12:30:30"))
+    assert isinstance(res, datetime.datetime)
+    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
+
+    # Test automatic casting to seconds accuracy
+    res = checks.check_time(np.datetime64("2014-12-31T12:30:30.934549845", "ns"))
+    assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
 
     # Test a non isoformat string
     with pytest.raises(ValueError):
@@ -392,22 +415,32 @@ def test_check_start_end_time() -> None:
     """Check start and end time are valid"""
 
     # Test a string
-    res = checks.check_start_end_time("2014-12-31", "2015-01-01")
+    res = checks.check_start_end_time(
+        "2014-12-31",
+        "2015-01-01",
+    )
     assert isinstance(res, tuple)
 
     # Test the reverse for exception
     with pytest.raises(ValueError):
-        checks.check_start_end_time("2015-01-01", "2014-12-31")
+        checks.check_start_end_time(
+            "2015-01-01",
+            "2014-12-31",
+        )
 
     # Test a datetime object
     res = checks.check_start_end_time(
-        datetime.datetime(2014, 12, 31), datetime.datetime(2015, 1, 1)
+        datetime.datetime(2014, 12, 31),
+        datetime.datetime(2015, 1, 1),
     )
     assert isinstance(res, tuple)
 
     # Test the reverse datetime object for exception
     with pytest.raises(ValueError):
-        checks.check_start_end_time(datetime.datetime(2015, 1, 1), datetime.datetime(2014, 12, 31))
+        checks.check_start_end_time(
+            datetime.datetime(2015, 1, 1),
+            datetime.datetime(2014, 12, 31),
+        )
 
     # Test a datetime timestamp with h/m/s/ms
     res = checks.check_start_end_time(
@@ -428,6 +461,41 @@ def test_check_start_end_time() -> None:
             datetime.datetime(2125, 12, 31, 12, 30, 30, 300),
             datetime.datetime(2126, 1, 1, 12, 30, 30, 300),
         )
+
+    # Check a time that is generated in another timezone but does not directly
+    # carry timezone information. This should fail if the check is done on utcnow()
+    with pytest.raises(ValueError):
+        for timezone in ["Europe/Zurich", "Australia/Melbourne"]:
+            # Remove timezone information
+            checks.check_start_end_time(
+                datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
+                datetime.datetime.now(tz=pytz.timezone(timezone)).replace(tzinfo=None),
+            )
+            # Keep timezone information, should throw exception
+            checks.check_start_end_time(
+                datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
+                datetime.datetime.now(tz=pytz.timezone(timezone)),
+            )
+
+    # This should pass as the time is in UTC
+    checks.check_start_end_time(
+        datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
+        datetime.datetime.now(tz=pytz.utc),
+    )
+
+    # Do the same but in a timezone that is behind UTC (this should pass)
+    for timezone in ["America/New_York", "America/Santiago"]:
+        checks.check_start_end_time(
+            datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
+            datetime.datetime.now(tz=pytz.timezone(timezone)).replace(tzinfo=None),
+        )
+
+    # Test endtime in UTC. This should pass as UTC time generated in the test is slightly
+    # behind the current time tested in the function
+    checks.check_start_end_time(
+        datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
+        datetime.datetime.utcnow(),
+    )
 
 
 def test_check_scan_mode(

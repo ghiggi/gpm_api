@@ -907,6 +907,14 @@ def _check_download_status(status, product, verbose):
 
 def flatten_list(nested_list):
     """Flatten a nested list into a single-level list."""
+
+    # If list is already flat, return as is to avoid flattening to chars
+    if (
+        isinstance(nested_list, list)
+        and len(nested_list) == 1
+        and not isinstance(nested_list[0], list)
+    ):
+        return nested_list
     return (
         [item for sublist in nested_list for item in sublist]
         if isinstance(nested_list, list)
