@@ -3,7 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   tests:
-    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', latest deps' || '' }}
+    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', latest dependencies' || '' }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          coverage run -m pytest
+          pytest
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3

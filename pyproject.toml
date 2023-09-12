@@ -146,21 +146,3 @@ exclude = [
 
 [tool.codespell]
     ignore-words-list = "ges,nd"
-
-[tool.coverage]
-    [tool.coverage.run]
-    source = ["gpm_api"]
-    omit = [
-        "*dev*",
-        "*docs*",
-        "*tutorials*",
-        "*/gpm_api/tests*",
-        "*/gpm_api/cli*",
-    ]
-
-    [tool.coverage.report]
-    exclude_lines = [
-        "pragma: no cover",
-        "def __repr__",
-        "def __str__",
-    ]
