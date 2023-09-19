@@ -44,18 +44,18 @@ def test_unused_var_dims_and_remove():
     array = np.zeros(shape=(3,))
     dataarray = xr.DataArray(array, dims=["used_dim"])
     dataset = xr.Dataset(data_vars={"var": dataarray})
-    dataset = dataset.expand_dims(dim=["unused_dim"])
-    # TODO: this does not work, it adds the dimension to all variables. How can this be done?
+    dataset.coords["coord"] = xr.DataArray(array, dims=["unused_dim"])
+    # Note: using dataset.expand_dims does not work, as it adds the dimension to all variables.
 
-    # # Check list of unused dimensions
-    # expected_unused_dims = ["unused_dim"]
-    # returned_unused_dims = granule.unused_var_dims(dataset)
-    # assert returned_unused_dims == expected_unused_dims
+    # Check list of unused dimensions
+    expected_unused_dims = ["unused_dim"]
+    returned_unused_dims = granule.unused_var_dims(dataset)
+    assert returned_unused_dims == expected_unused_dims
 
-    # # Remove unused dimensions
-    # returned_dataset = granule.remove_unused_var_dims(dataset)
-    # expected_dims = ["used_dim"]
-    # assert list(returned_dataset.dims) == expected_dims
+    # Remove unused dimensions
+    returned_dataset = granule.remove_unused_var_dims(dataset)
+    expected_dims = ["used_dim"]
+    assert list(returned_dataset.dims) == expected_dims
 
 
 # Tests for internal functions #################################################
@@ -157,7 +157,7 @@ def test_get_scan_mode_info():  # TODO
     """Test _get_scan_mode_info"""
 
 
-def test_get_flattened_scan_mode_dataset():  # TODO
+def test_get_flattened_scan_mode_dataset():
     """Test _get_flattened_scan_mode_dataset"""
 
     da = xr.DataArray()
