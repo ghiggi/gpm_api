@@ -5,6 +5,7 @@ from gpm_api.io.products import get_info_dict, available_products
 import posixpath as pxp
 import ntpath as ntp
 import gpm_api.configs
+import os
 from unittest.mock import patch
 
 
@@ -19,7 +20,12 @@ def mock_configuration():
     mocked_configuration = {
         "gpm_username": "testuser",
         "gpm_password": "testuser",
-        "gpm_base_dir": "data",
+        "gpm_base_dir": os.path.join(
+            os.getcwd(),
+            "gpm_api",
+            "tests",
+            "resources",
+        ),
     }
 
     with patch.object(

@@ -33,7 +33,7 @@ def _prefix_dataset_group_variables(ds, group):
 
 
 def _remove_dummy_variables(ds):
-    """Return dummy variables from HDF dataset group."""
+    """Remove dummy variables from HDF dataset group."""
     dummy_variables = [
         "Latitude",
         "Longitude",
@@ -143,7 +143,7 @@ def get_variables_dims(ds):
     variables = get_variables(ds)
     if len(variables) == 0:
         return []
-    dims = np.unique(np.concatenate([list(ds[var].dims) for var in variables]))
+    dims = np.unique(np.concatenate([list(ds[var].dims) for var in variables])).tolist()
     return dims
 
 
