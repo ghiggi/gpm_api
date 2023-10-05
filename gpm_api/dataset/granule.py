@@ -87,6 +87,11 @@ def _get_scan_mode_info(dt, scan_mode, variables, groups):
 
 def _get_flattened_scan_mode_dataset(dt, scan_mode, groups, variables=None, prefix_group=False):
     """Retrieve scan mode dataset."""
+    # print(f"SCAN MODE: {scan_mode}")
+    # print(f"GROUPS: {groups}")
+    # print(f"DATATREE: {dt}")
+    # print(f"DATATREE SUBSET: {dt['FS']}")
+    # print(f"DATATREE SUBSET TO DATASET: {dt['FS'].to_dataset()}")
     list_ds = []
     for group in groups:
         if group == scan_mode:
@@ -94,9 +99,11 @@ def _get_flattened_scan_mode_dataset(dt, scan_mode, groups, variables=None, pref
             group = ""
         else:
             ds = dt[scan_mode][group].to_dataset()
+        # print(f"DATASET GROUP '{group}': {ds}")
         ds = _process_group_dataset(ds, group, variables, prefix_group=prefix_group)
         list_ds.append(ds)
     ds = xr.merge(list_ds)
+    # print(f"MERGED DATASET: {ds}")
     return ds
 
 

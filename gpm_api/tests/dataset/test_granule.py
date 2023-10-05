@@ -1,8 +1,16 @@
 import numpy as np
+import pandas as pd
 import xarray as xr
+import pytest
 from datatree import DataTree
+from datetime import datetime
 
-from gpm_api.dataset import granule
+from gpm_api.dataset import conventions, datatree, granule
+from gpm_api.dataset.conventions import finalize_dataset
+from gpm_api.utils.time import ensure_time_validity
+
+
+MAX_TIMESTAMP = 2**31 - 1
 
 
 # Tests for public functions ###################################################
@@ -56,6 +64,47 @@ def test_unused_var_dims_and_remove():
     returned_dataset = granule.remove_unused_var_dims(dataset)
     expected_dims = ["used_dim"]
     assert list(returned_dataset.dims) == expected_dims
+
+
+def test_open_granule(monkeypatch):
+    """Test open_granule"""
+
+    filepath = "RS/V07/RADAR/2A-DPR/2022/07/06/2A.GPM.DPR.V9-20211125.20220706-S043937-E061210.047456.V07A.HDF5"
+    scan_mode = "FS"
+
+    ds = xr.Dataset()
+    dt = DataTree.from_dict({scan_mode: ds})
+
+    # Mock units tested elsewhere
+    monkeypatch.setattr(
+        granule, "get_granule_attrs", lambda *args, **kwargs: {"attribute": "attribute_value"}
+    )
+    monkeypatch.setattr(granule, "get_coords", lambda *args, **kwargs: {"coord": "coord_value"})
+    monkeypatch.setattr(
+        granule, "_get_relevant_groups_variables", lambda *args, **kwargs: ([""], [])
+    )
+
+    def patch_ensure_time_validity(ds, *args, **kwargs):
+        ds.attrs["time_validated"] = True
+        return ds
+
+    monkeypatch.setattr(granule, "ensure_time_validity", patch_ensure_time_validity)
+
+    def patch_finalize_dataset(ds, *args, **kwargs):
+        ds.attrs["finalized"] = True
+        return ds
+
+    monkeypatch.setattr(granule, "finalize_dataset", patch_finalize_dataset)
+
+    # Mock datatree opening from filepath
+    monkeypatch.setattr(datatree, "open_datatree", lambda *args, **kwargs: dt)
+
+    returned_dataset = granule.open_granule(filepath)
+    expected_attribute_keys = ["attribute", "ScanMode", "time_validated", "finalized"]
+    expected_coordinate_keys = ["coord"]
+    assert isinstance(returned_dataset, xr.Dataset)
+    assert list(returned_dataset.attrs) == expected_attribute_keys
+    assert list(returned_dataset.coords) == expected_coordinate_keys
 
 
 # Tests for internal functions #################################################
@@ -153,10 +202,6 @@ def test_process_group_dataset():
     assert list(returned_dataset.data_vars) == expected_data_vars
 
 
-def test_get_scan_mode_info():  # TODO
-    """Test _get_scan_mode_info"""
-
-
 def test_get_flattened_scan_mode_dataset():
     """Test _get_flattened_scan_mode_dataset"""
 
@@ -207,5 +252,142 @@ def test_get_flattened_scan_mode_dataset():
     assert list(returned_dataset.data_vars) == expected_data_vars
 
 
-def test_get_scan_mode_dataset():  # TODO
-    """Test _get_scan_mode_dataset"""
+def test_ensure_time_validity():
+    """Test ensure_time_validity"""
+
+    def construct_dataset_and_check_validation(input_datetimes, expected_datetimes):
+        da = xr.DataArray(input_datetimes)
+        ds = xr.Dataset({"time": da})
+        returned_dataset = ensure_time_validity(ds)
+        assert np.array_equal(
+            returned_dataset.time.values, np.array(expected_datetimes, dtype="datetime64[ns]")
+        )
+
+    # Check with a single timestep
+    timestamps = [0]
+    datetimes = [datetime.fromtimestamp(t) for t in timestamps]
+    construct_dataset_and_check_validation(datetimes, datetimes)
+
+    # Check multiple timesteps without NaT (Not a Time)
+    timestamps = [0, 1, 2]
+    datetimes = [datetime.fromtimestamp(t) for t in timestamps]
+    construct_dataset_and_check_validation(datetimes, datetimes)
+
+    # Check multiple timesteps with NaT
+    timestamps = np.linspace(0, 20, 21)
+    datetimes = [datetime.fromtimestamp(t) for t in timestamps]
+    missing_slice = slice(5, 10)
+    datetimes_incomplete = datetimes.copy()
+    datetimes_incomplete[missing_slice] = [pd.NaT] * len(datetimes[missing_slice])
+    construct_dataset_and_check_validation(datetimes_incomplete, datetimes)
+
+    # Check with multiple holes
+    datetimes_incomplete = datetimes.copy()
+    for missing_slice in [slice(2, 7), slice(10, 15)]:
+        datetimes_incomplete[missing_slice] = [pd.NaT] * len(datetimes[missing_slice])
+    construct_dataset_and_check_validation(datetimes_incomplete, datetimes)
+
+    # Check with more than 10 consecutive missing timesteps
+    datetimes_incomplete = datetimes.copy()
+    missing_slice = slice(5, 16)
+    datetimes_incomplete[missing_slice] = [pd.NaT] * len(datetimes[missing_slice])
+    with pytest.raises(ValueError):
+        construct_dataset_and_check_validation(datetimes_incomplete, datetimes)
+
+
+def test_finalize_dataset(monkeypatch):
+    """Test finalize_dataset"""
+
+    # Check reshaping
+    da = xr.DataArray(np.random.rand(1, 1, 1), dims=("lat", "lon", "other"))
+    expected_dims = ("other", "lat", "lon")
+    time = [0]
+    ds = xr.Dataset({"var": da, "time": time})
+    ds = finalize_dataset(ds, "product", decode_cf=False)
+    assert ds["var"].dims == expected_dims
+
+    da = xr.DataArray(np.random.rand(1, 1, 1), dims=("other", "cross_track", "along_track"))
+    expected_dims = ("cross_track", "along_track", "other")
+    ds = xr.Dataset({"var": da, "time": time})
+    ds = finalize_dataset(ds, "product", decode_cf=False)
+    assert ds["var"].dims == expected_dims
+
+    da = xr.DataArray(np.random.rand(1, 1), dims=("other", "along_track"))
+    expected_dims = ("along_track", "other")
+    ds = xr.Dataset({"var": da, "time": time})
+    ds = finalize_dataset(ds, "product", decode_cf=False)
+    assert ds["var"].dims == expected_dims
+
+    # Check time subsetting
+    def mock_subset_by_time(ds, start_time, end_time):
+        ds.attrs["start_time"] = start_time
+        ds.attrs["end_time"] = end_time
+        return ds
+
+    monkeypatch.setattr(conventions, "subset_by_time", mock_subset_by_time)
+
+    ds = xr.Dataset({"var": da, "time": time})
+    start_time = datetime.fromtimestamp(np.random.randint(0, MAX_TIMESTAMP))
+    end_time = datetime.fromtimestamp(np.random.randint(0, MAX_TIMESTAMP))
+    ds = finalize_dataset(ds, "product", decode_cf=False, start_time=start_time, end_time=end_time)
+    assert ds.attrs["start_time"] == start_time
+    assert ds.attrs["end_time"] == end_time
+
+    # Check CF decoding
+    original_decode_cf = xr.decode_cf
+
+    def mock_decode_cf(ds, *args, **kwargs):
+        ds.attrs["decoded"] = True
+        return original_decode_cf(ds, *args, **kwargs)
+
+    monkeypatch.setattr(xr, "decode_cf", mock_decode_cf)
+
+    ds = xr.Dataset({"var": da, "time": time})
+    ds = finalize_dataset(ds, "product", decode_cf=True)
+    assert ds.attrs["decoded"]
+
+    # Check addition of attributes
+    def mock_set_coords_attrs(ds, *args, **kwargs):
+        ds.attrs["coords_attrs"] = True
+        return ds
+
+    monkeypatch.setattr(conventions, "set_coords_attrs", mock_set_coords_attrs)
+
+    def mock_add_history(ds, *args, **kwargs):
+        ds.attrs["history"] = True
+        return ds
+
+    monkeypatch.setattr(conventions, "add_history", mock_add_history)
+
+    ds = xr.Dataset({"var": da, "time": time})
+    ds = finalize_dataset(ds, "product", decode_cf=False)
+    assert ds.attrs["coords_attrs"]
+    assert ds.attrs["history"]
+    assert ds.attrs["gpm_api_product"] == "product"
+
+    # Check encoding information
+    def mock_set_encoding(ds, *args, **kwargs):
+        ds.attrs["encoding"] = True
+        return ds
+
+    monkeypatch.setattr(conventions, "set_encoding", mock_set_encoding)
+
+    ds = xr.Dataset({"var": da, "time": time})
+    ds = finalize_dataset(ds, "product", decode_cf=False)
+    expected_time_encoding = {
+        "units": "seconds since 1970-01-01 00:00:00",
+        "calendar": "proleptic_gregorian",
+    }
+    assert ds.attrs["encoding"]
+    assert ds["time"].encoding == expected_time_encoding
+
+    # Check CRS information
+    def mock_set_dataset_crs(ds, *args, **kwargs):
+        ds.attrs["crs"] = True
+        return ds
+
+    monkeypatch.setattr(conventions, "set_dataset_crs", mock_set_dataset_crs)
+
+    ds = xr.Dataset({"var": da, "time": time})
+    ds = finalize_dataset(ds, "product", decode_cf=False)
+    assert ds.attrs["crs"]
