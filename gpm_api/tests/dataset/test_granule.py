@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -105,6 +107,52 @@ def test_open_granule(monkeypatch):
     assert isinstance(returned_dataset, xr.Dataset)
     assert list(returned_dataset.attrs) == expected_attribute_keys
     assert list(returned_dataset.coords) == expected_coordinate_keys
+
+
+def test_open_granule_on_real_files():
+    """Test open_granule on real files.
+
+    Run `python generate_test_dataset_assets.py` to generate the test assets.
+    The expected assets directory structure is:
+    assets
+    ├── cut
+    │   ├── 1A.GPM.GMI.COUNT2021.20140304-S223658-E000925.000082.V07A.HDF5
+    │   └── ...
+    └── processed
+        ├── 1A.GPM.GMI.COUNT2021.20140304-S223658-E000925.000082.V07A
+        │   ├── S1.nc
+        │   ├── S2.nc
+        │   ├── S4.nc
+        │   └── S5.nc
+        └── ...
+    """
+
+    assets_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+    hdf5_dir_path = os.path.join(assets_dir_path, "cut")
+    processed_dir_path = os.path.join(assets_dir_path, "processed")
+
+    if not os.path.exists(hdf5_dir_path) or not os.path.exists(processed_dir_path):
+        pytest.skip(
+            "Datasets assets not found. Please run `python generate_test_dataset_assets.py`."
+        )
+
+    hdf5_filenames = os.listdir(hdf5_dir_path)
+
+    for hdf5_filename in hdf5_filenames:
+        hdf5_filepath = os.path.join(hdf5_dir_path, hdf5_filename)
+        base_name = os.path.splitext(hdf5_filename)[0]
+        netcdf_dir_path = os.path.join(processed_dir_path, base_name)
+        netcdf_filenames = os.listdir(netcdf_dir_path)
+        scan_modes = [os.path.splitext(netcdf_filename)[0] for netcdf_filename in netcdf_filenames]
+
+        for scan_mode in scan_modes:
+            ds = granule.open_granule(hdf5_filepath, scan_mode=scan_mode).compute()
+            expected_ds = xr.open_dataset(
+                os.path.join(netcdf_dir_path, f"{scan_mode}.nc")
+            ).compute()
+            del ds.attrs["history"]
+            del expected_ds.attrs["history"]
+            assert xr.testing.assert_identical(ds, expected_ds)
 
 
 # Tests for internal functions #################################################
