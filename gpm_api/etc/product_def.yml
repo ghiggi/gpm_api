@@ -15,6 +15,8 @@
   - S5
   pps_nrt_dir: null
   pps_rs_dir: 1A
+  start_date: 2014-03-04
+  end_date: null
 1A-TMI:
   pattern: 1A.TRMM.TMI.*
   product_category: PMW
@@ -30,6 +32,8 @@
   - S3
   pps_nrt_dir: null
   pps_rs_dir: 1A
+  start_date: 1997-12-07
+  end_date: 2015-04-08
 1B-GMI:
   pattern: 1B.GPM.GMI.*
   product_category: PMW
@@ -1034,6 +1038,8 @@ IMERG-FR:
   - Grid
   pps_nrt_dir: null
   pps_rs_dir: imerg
+  start_date: 2000-06-01
+  end_date: 2023-05-01
 IMERG-LR:
   pattern: 3B-HHR-L.MS.MRG*
   product_category: IMERG
