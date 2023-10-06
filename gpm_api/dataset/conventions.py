@@ -46,7 +46,7 @@ def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=
 def reshape_dataset(ds):
     """Define the dataset dimension order.
 
-    It ensure that the output dimension order is  (y, x)
+    It ensures that the output dimension order is  (y, x)
     This shape is expected by i.e. pyresample and matplotlib
     For GPM GRID objects:  (..., time, lat, lon)
     For GPM ORBIT objects: (cross_track, along_track, ...)

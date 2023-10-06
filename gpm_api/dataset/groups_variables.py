@@ -21,7 +21,7 @@ def flatten_list(nested_list):
 
 def _get_groups_path(dt):
     """Return the group path."""
-    return dt.groups
+    return list(dt.groups)
 
 
 def _get_groups_names(dt):
@@ -160,7 +160,7 @@ def _get_relevant_groups_variables(dt, scan_mode, variables=None, groups=None):
     """Get groups names that contains the variables of interest.
 
     If variables and groups is None, return all groups.
-    If only groups is specified, gpm_api will selects all variables for such groups.
+    If only groups is specified, gpm_api will select all variables for such groups.
     If only variables is specified, gpm_api selects all variables specified.
     If groups and variables are specified, it selects all variables of the specified 'groups'
     and the variables specified in 'variables'.
