@@ -5,9 +5,58 @@ Created on Thu Mar  9 11:46:07 2023
 @author: ghiggi
 """
 import os
+import platform
+import shutil
+from subprocess import Popen
 from typing import Dict
 
 import yaml
+
+
+def set_ges_disc_authentification(username, password):
+    """Create authentication files for access to the GES DISC Data Archive.
+
+    Follow the additional steps detailed at https://disc.gsfc.nasa.gov/earthdata-login
+    to enable access to the GES DISC HTTPS Data Archive.
+
+    The code snippet is taken from
+    https://disc.gsfc.nasa.gov/information/howto?title=How%20to%20Generate%20Earthdata%20Prerequisite%20Files
+
+    Parameters
+    ----------
+    username : str
+        EarthData login username.
+    password : TYPE
+        EarthData login password.
+
+    Returns
+    -------
+    None.
+
+    """
+    urs = "urs.earthdata.nasa.gov"  # Earthdata URL to call for authentication
+    home_dir_path = os.path.expanduser("~") + os.sep
+
+    with open(home_dir_path + ".netrc", "w") as file:
+        file.write(f"machine {urs} login {username} password {password}")
+        file.close()
+    with open(home_dir_path + ".urs_cookies", "w") as file:
+        file.write("")
+        file.close()
+    with open(home_dir_path + ".dodsrc", "w") as file:
+        file.write(f"HTTP.COOKIEJAR={home_dir_path}.urs_cookies\n")
+        file.write(f"HTTP.NETRC={home_dir_path}.netrc")
+        file.close()
+
+    print("Saved .netrc, .urs_cookies, and .dodsrc to:", home_dir_path)
+
+    # Set appropriate permissions for Linux/macOS
+    if platform.system() != "Windows":
+        Popen("chmod og-rw ~/.netrc", shell=True)
+    else:
+        # Copy dodsrc to working directory in Windows
+        shutil.copy2(home_dir_path + ".dodsrc", os.getcwd())
+        print("Copied .dodsrc to:", os.getcwd())
 
 
 def _read_yaml_file(fpath):
@@ -55,7 +104,7 @@ def define_gpm_api_configs(gpm_username: str, gpm_password: str, gpm_base_dir: s
     # Define path to .config_gpm_api.yaml file
     fpath = os.path.join(home_directory, ".config_gpm_api.yml")
 
-    # Write the config file
+    # Write the GPM-API config file
     _write_yaml_file(config_dict, fpath, sort_keys=False)
 
     print("The GPM-API config file has been written successfully!")

@@ -60,15 +60,12 @@ def list_files_to_download(products: dict) -> list[str]:
 
 def list_pps_filepaths(products: dict) -> list[str]:
     pps_filepaths = []
-
-    print("TODO: add start_date and end_date to all products")
     for product, product_info in products.items():
-        if "start_date" not in product_info:  # TODO: add start_date and end_date to all products
+        if "start_time" not in product_info:
             continue
-
         for product_type in product_info["product_types"]:
             pps_filepath = find_first_pps_filepath(
-                product, product_type, product_info["start_date"]
+                product, product_type, product_info["start_time"]
             )
             if pps_filepath is not None:
                 pps_filepaths.append(pps_filepath)
@@ -77,14 +74,13 @@ def list_pps_filepaths(products: dict) -> list[str]:
 
 
 def find_first_pps_filepath(
-    product: str, product_type: str, start_date: datetime.date
+    product: str, product_type: str, start_time: datetime.datetime
 ) -> str | None:
-    start_time = datetime.datetime(start_date.year, start_date.month, start_date.day)
     end_time = start_time + relativedelta(days=1)
 
     pps_filepaths = find_pps_filepaths(
         product,
-        start_time
+        start_time  # TODO: is + relativedelta necessary here?
         + relativedelta(days=1),  # gets extended to (start_time - 1 day) in find_pps_filepaths
         end_time,
         product_type=product_type,

@@ -13,25 +13,12 @@ from gpm_api.io.checks import (
     check_product_validity,
     check_version,
 )
-from gpm_api.io.products import available_products, get_info_dict
+from gpm_api.io.products import available_products, get_info_dict, get_product_category
 
 ####--------------------------------------------------------------------------.
 ####################
 #### LOCAL DISK ####
 ####################
-
-
-def get_product_category(product):
-    """Get the product_category of a GPM product.
-
-    The product_category is used to organize file on disk.
-    """
-    product_category = get_info_dict()[product].get("product_category", None)
-    if product_category is None:
-        raise ValueError(
-            f"The product_category for {product} product is not specified in the config files"
-        )
-    return product_category
 
 
 def get_disk_dir_pattern(product, product_type, version):

@@ -1,30 +1,8 @@
-import pytest
 import datetime
 import os
 from typing import List
-from pytest_mock import MockerFixture
 from gpm_api.io import directories as dir
-from gpm_api.io.products import available_products, get_info_dict
-
-
-def test_get_product_category(
-    products: List[str],
-    product_categories: List[str],
-) -> None:
-    """Test that the product category is in the list of product categories."""
-    for product in products:
-        assert dir.get_product_category(product) in product_categories
-
-    # If product_category is None, raise ValueError
-    def return_none():
-        yield None
-
-    # Add value to info dict to force a ValueError on None return
-    get_info_dict()["fake_product"] = {"product_category": None}
-    with pytest.raises(ValueError):
-        dir.get_product_category("fake_product")
-
-    get_info_dict().pop("fake_product")  # Remove fake value
+from gpm_api.io.products import available_products, get_product_category
 
 
 def test_get_disk_dir_pattern(
@@ -46,7 +24,7 @@ def test_get_disk_dir_pattern(
 
                 # Work only on product if product_type are compatible
                 if product in available_products(product_type=product_type):
-                    product_category = dir.get_product_category(product)
+                    product_category = get_product_category(product)
                     if product_type == "NRT":
                         assert "V0" not in dir_pattern
                         assert dir_pattern == os.path.join(
@@ -85,7 +63,7 @@ def test_get_disk_directory(
 
                 # Work only on product if product_type are compatible
                 if product in available_products(product_type=product_type):
-                    product_category = dir.get_product_category(product)
+                    product_category = get_product_category(product)
                     if product_type == "NRT":
                         assert "V0" not in dir_path
                         assert dir_path == os.path.join(

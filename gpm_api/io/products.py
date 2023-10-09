@@ -16,7 +16,7 @@ from gpm_api.io.checks import (
 )
 from gpm_api.utils.yaml import read_yaml_file
 
-### Notes and TODO list
+### Notes
 
 # product
 # - PMW: <product_level>-<sensor>-<satellite> # 2A-AMSUB-NOAA15, # 2A-AMSUB-NOAA15_CLIM
@@ -25,21 +25,17 @@ from gpm_api.utils.yaml import read_yaml_file
 # product_level:
 # - IMERG has no product level
 
-# - Download and reader for L3 product not yet implemented
-# --> https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/
 
-# info_dict --> additional future keys
-# - ges_disc_dir
-# - product_level ?  --> can be inferred by gpm-api product name also ...
-# - satellite   ?   --> not for IMERG
-# - sensor      ?   --> not for IMERG
+# info_dict
 # - start_time  (for time period of product)
 # - end_time    (for time period of product)
+
+# - satellite   ?   --> not for IMERG
+# - product_level ?  --> can be inferred by gpm-api product name also ...
 
 # scan_modes
 # "1A-GMI": has also S3 and gmi1aHeader but can't be processed
 # "1A-TMI": has also tmi1aHeader but can't be processed
-# "1C-AMSRE": scan_modes need to be specified
 
 ### Product changes:
 # In V05, GPROF products are available as 2A-CLIM and 2A
@@ -49,10 +45,7 @@ from gpm_api.utils.yaml import read_yaml_file
 # --> AMSUB and SSMI (F08-15) only with CLIM product on GES DISC
 # In V07 NRT, GPROF is available only as 2A
 
-# PRPS is available only in V06 (CLIM and no CLIM) (PMW Saphir)
-
-# --> Maybe some check on input should be done to facilitate users ...
-# --> Exploit available_products (with product_category and level asked to suggest valid alternatives?)
+# PRPS is available only in V06 (CLIM and no CLIM) (PMW SAPHIR)
 
 # The '2A-CLIM' products differ from the '2A' by the ancillary data they use.
 # '2A-CLIM' use ERA-Interim, 2A uses GANAL renalysis ?
@@ -139,3 +132,77 @@ def get_products_pattern_dict():
     products = available_products()
     pattern_dict = {product: info_dict[product]["pattern"] for product in products}
     return pattern_dict
+
+
+def get_product_category(product):
+    """Get the product_category of a GPM product.
+
+    The product_category is used to organize file on disk.
+    """
+    product_category = get_info_dict()[product].get("product_category", None)
+    if product_category is None:
+        raise ValueError(
+            f"The product_category for {product} product is not specified in the config files"
+        )
+    return product_category
+
+
+def get_product_level(product, short=False):
+    """Get the product_level of a GPM product."""
+    # TODO: 2A-CLIM, 2H (CSH, LSH), 3B-HH3, 3B-DAY
+    # TODO: Add product level into product.yaml ?
+    pattern = get_info_dict()[product].get("pattern", None).split(".")[0]
+    if "GPMCOR" in pattern:
+        product_level = "1B"
+    else:
+        product_level = pattern
+    if short:
+        product_level = product_level[0:2]
+    return product_level
+
+
+def is_trmm_product(product):
+    """Check if the product arises from the TRMM satellite."""
+    trmm_products = [
+        "1A-TMI",
+        "1B-TMI",
+        "1C-TMI",
+        "1B-PR",
+        "2A-TMI",
+        "2A-TMI-CLIM",
+        "2A-PR",
+        "2A-ENV-PR",  # ENV not available on GES DISC
+        "2B-TRMM-CSH",
+        "2A-TRMM-SLH",
+        "2B-TRMM-CORRA",
+    ]
+    if product in trmm_products:
+        return True
+    else:
+        return False
+
+
+def is_gpm_product(product):
+    """Check if the product arises from the GPM Core satellite."""
+    gpm_products = [
+        "1A-GMI",
+        "1B-GMI",
+        "1C-GMI",
+        "1B-Ka",
+        "1B-Ku",
+        "2A-GMI",
+        "2A-GMI-CLIM",
+        "2A-DPR",
+        "2A-Ka",
+        "2A-Ku",
+        "2A-ENV-DPR",
+        "2A-ENV-Ka",
+        "2A-ENV-Ku" "2B-GPM-CSH",
+        "2A-GPM-SLH",
+        "2B-GPM-CORRA",
+    ]
+    if product in gpm_products:
+        return True
+
+    else:
+        return False
