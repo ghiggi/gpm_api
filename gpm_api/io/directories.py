@@ -11,7 +11,7 @@ from gpm_api.io.checks import (
     check_base_dir,
     check_product_type,
     check_product_validity,
-    check_version,
+    check_product_version,
 )
 from gpm_api.io.products import available_products, get_info_dict, get_product_category
 
@@ -186,7 +186,7 @@ def _get_pps_rs_product_dir(product, date, version):
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
     """
-    check_version(version)
+    version = check_product_version(version, product)
     check_product_validity(product, product_type="RS")
 
     # Retrieve NASA server folder name for RS

@@ -22,8 +22,8 @@ from gpm_api.io.checks import (
     check_date,
     check_product,
     check_product_type,
+    check_product_version,
     check_start_end_time,
-    check_version,
     is_empty,
 )
 from gpm_api.io.data_integrity import (
@@ -998,7 +998,7 @@ def download_archive(
     ## Checks input arguments
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
-    check_version(version=version)
+    version = check_product_version(version, product)
     base_dir = check_base_dir(base_dir)
     start_time, end_time = check_start_end_time(start_time, end_time)
 
