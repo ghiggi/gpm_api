@@ -13,6 +13,7 @@ from gpm_api.io.checks import (
     check_product_type,
     check_product_validity,
     check_product_version,
+    check_version,
 )
 from gpm_api.utils.yaml import read_yaml_file
 
@@ -80,6 +81,7 @@ def available_products(
     product_type=None,
     product_category=None,
     product_level=None,
+    version=None,
 ):
     """
     Provide a list of all/NRT/RS GPM data for download.
@@ -125,6 +127,12 @@ def available_products(
     if product_level is not None:
         check_product_level(product_level)
         products = [product for product in products if product_level == product[0:2]]
+
+    if version is not None:
+        check_version(version)
+        products = [
+            product for product in products if version in info_dict[product]["available_versions"]
+        ]
 
     return sorted(products)
 
