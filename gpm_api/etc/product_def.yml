@@ -625,7 +625,7 @@
   pps_nrt_dir: GPROF/AMSR2
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFGCOMW1AMSR2
-  start_time: 2012-07-02 22:31:17
+  start_time: 2014-01-31 23:57:35
   end_time: null
   last_version: 5
 2A-ATMS-NOAA20:
@@ -643,6 +643,7 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA20ATMS
   start_time: 2017-11-29 04:46:18
   end_time: null
+  last_version: 5
 2A-ATMS-NOAA21:
   pattern: 2A.NOAA21.ATMS.*
   product_category: PMW
@@ -656,9 +657,8 @@
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA21ATMS
-  start_time: 2023-04-11 14:00:40
+  start_time: 2023-02-01 00:23:08
   end_time: null
-  last_version: 5
 2A-ATMS-NPP:
   pattern: 2A.NPP.ATMS.*
   product_category: PMW
@@ -672,7 +672,7 @@
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNPPATMS
-  start_time: 2011-11-08 20:04:11
+  start_time: 2014-01-31 23:41:54
   end_time: null
   last_version: 5
 2A-GMI:
@@ -703,7 +703,7 @@
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPAMHS
-  start_time: 2006-11-23 10:24:51
+  start_time: 2014-01-31 23:23:51
   end_time: 2019-12-23 22:37:47
   last_version: 5
 2A-MHS-METOPB:
@@ -719,7 +719,7 @@
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPBMHS
-  start_time: 2012-09-25 07:30:57
+  start_time: 2014-01-31 22:37:53
   end_time: null
   last_version: 5
 2A-MHS-METOPC:
@@ -750,7 +750,7 @@
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA18MHS
-  start_time: 2005-05-25 16:54:59
+  start_time: 2014-01-31 22:43:29
   end_time: 2018-10-20 19:58:16
 2A-MHS-NOAA19:
   pattern: 2A.NOAA19.MHS.*
@@ -765,7 +765,7 @@
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA19MHS
-  start_time: 2009-02-12 11:37:53
+  start_time: 2014-01-31 22:42:30
   end_time: null
   last_version: 5
 2A-SAPHIR-MT1:
@@ -781,7 +781,7 @@
   pps_nrt_dir: PRPS
   pps_rs_dir: prps
   ges_disc_dir: GPM_L2/GPM_2APRPSMT1SAPHIR
-  start_time: 2011-10-13 04:12:29
+  start_time: 2014-01-31 22:45:58
   end_time: 2022-01-01 00:13:27
   last_version: 6
 2A-SSMIS-F16:
@@ -797,7 +797,7 @@
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF16SSMIS
-  start_time: 2005-11-20 02:35:27
+  start_time: 2014-01-31 23:33:43
   end_time: null
   last_version: 5
 2A-SSMIS-F17:
@@ -813,7 +813,7 @@
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF17SSMIS
-  start_time: 2008-03-19 10:14:53
+  start_time: 2014-01-31 22:50:50
   end_time: null
   last_version: 5
 2A-SSMIS-F18:
@@ -829,7 +829,7 @@
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF18SSMIS
-  start_time: 2010-03-08 00:32:16
+  start_time: 2014-01-31 23:42:13
   end_time: null
   last_version: 5
 2A-SSMIS-F19:
