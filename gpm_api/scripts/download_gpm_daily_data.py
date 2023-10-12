@@ -9,8 +9,6 @@ import warnings
 
 import click
 
-from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
-
 warnings.filterwarnings("ignore")
 sys.tracebacklimit = 0  # avoid full traceback error if occur
 
@@ -22,7 +20,7 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.argument("month", type=int)
 @click.argument("day", type=int)
 @click.option("--product_type", type=str, show_default=True, default="RS")
-@click.option("--version", type=int, show_default=True, default=GPM_VERSION)
+@click.option("--version", type=int, show_default=True, default=None)
 @click.option("--n_threads", type=int, default=4)
 @click.option("--transfer_tool", type=str, default="curl")
 @click.option("--progress_bar", type=bool, default=False)
@@ -40,7 +38,7 @@ def download_gpm_daily_data(
     month,
     day,
     product_type="RS",
-    version=GPM_VERSION,
+    version=None,
     n_threads=4,
     transfer_tool="curl",
     progress_bar=False,

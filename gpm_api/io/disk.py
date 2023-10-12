@@ -11,7 +11,6 @@ import os
 import pandas as pd
 
 from gpm_api.configs import get_gpm_base_dir
-from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_base_dir,
     check_date,
@@ -198,7 +197,7 @@ def find_filepaths(
     start_time,
     end_time,
     product_type="RS",
-    version=GPM_VERSION,
+    version=None,
     verbose=True,
     base_dir=None,
 ):

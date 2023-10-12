@@ -16,7 +16,6 @@ from gpm_api.dataset.attrs import add_history
 from gpm_api.dataset.coords import set_coords_attrs
 from gpm_api.dataset.crs import set_dataset_crs
 from gpm_api.dataset.decoding import apply_custom_decoding, decode_dataset
-from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_base_dir,
     check_groups,
@@ -484,7 +483,7 @@ def open_dataset(
     variables=None,
     groups=None,  # TODO implement
     scan_mode=None,
-    version=GPM_VERSION,
+    version=None,
     product_type="RS",
     chunks={},
     decode_cf=True,
