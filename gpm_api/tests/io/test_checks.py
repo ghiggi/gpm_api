@@ -17,7 +17,7 @@ import pytz
 import pandas as pd
 from typing import List
 from gpm_api.io import checks
-from gpm_api.io.products import available_products, available_scan_modes
+from gpm_api.io.products import available_products, available_scan_modes, available_versions
 
 
 def test_is_not_empty() -> None:
@@ -499,13 +499,12 @@ def test_check_start_end_time() -> None:
 
 
 def test_check_scan_mode(
-    versions: List[int],
     products: List[str],
 ) -> None:
     """Check scan mode is valid"""
 
     for product in products:
-        for version in versions:
+        for version in available_versions(product):
             # Get available scan modes
             scan_modes = available_scan_modes(product, version)
 

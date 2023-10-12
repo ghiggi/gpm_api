@@ -18,13 +18,14 @@ end_time = datetime.datetime.strptime("2020-08-10 12:00:00", "%Y-%m-%d %H:%M:%S"
 product = "2A-GMI"
 product_type = "RS"
 variable = "surfacePrecipitation"
+version = None
 
 ds = gpm_api.open_dataset(
     product=product,
     start_time=start_time,
     end_time=end_time,
     # Optional
-    version=7,
+    version=version,
     variables=variable,
     product_type=product_type,
     chunks={},

@@ -17,6 +17,7 @@ end_time = datetime.datetime.strptime("2020-08-10 12:00:00", "%Y-%m-%d %H:%M:%S"
 product = "2A-SSMIS-F16"
 product_type = "RS"
 variable = "surfacePrecipitation"
+version = None
 
 ds = gpm_api.open_dataset(
     product=product,
@@ -24,7 +25,7 @@ ds = gpm_api.open_dataset(
     start_time=start_time,
     end_time=end_time,
     # Optional
-    version=7,
+    version=version,
     variables=variable,
     # decode_cf=True,
     chunks={},

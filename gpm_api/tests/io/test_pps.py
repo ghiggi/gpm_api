@@ -1,13 +1,12 @@
 from typing import Dict, Any, List
 from pytest_mock import MockerFixture
 from gpm_api.io import pps
-from gpm_api.io.products import available_products
+from gpm_api.io.products import available_products, available_versions
 
 
 def test_find_pps_daily_filepaths_private(
     mocker: MockerFixture,
     product_types: List[str],
-    versions: List[int],
     server_paths: Dict[str, Any],
 ) -> None:
     """Test the find_pps_daily_filepaths function."""
@@ -15,9 +14,9 @@ def test_find_pps_daily_filepaths_private(
     # Mock server call, with a return of empty data
     mocker.patch.object(pps, "_get_pps_daily_filepaths", return_value=[])
 
-    for version in versions:
-        for product_type in product_types:
-            for product in available_products(product_type=product_type):
+    for product_type in product_types:
+        for product in available_products(product_type=product_type):
+            for version in available_versions(product=product):
                 pps._find_pps_daily_filepaths(
                     username="test",
                     password="test",
@@ -28,7 +27,6 @@ def test_find_pps_daily_filepaths_private(
                 )
 
     # Return the curated server_path list
-
     mocker.patch.object(
         pps,
         "_get_pps_daily_filepaths",
@@ -42,7 +40,7 @@ def test_find_pps_daily_filepaths_private(
                 password="test",
                 date="2021-01-01",
                 product=product,
-                version=7,
+                version=None,
                 product_type=product_type,
             )
 
