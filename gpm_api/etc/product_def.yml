@@ -728,7 +728,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFGCOMW1AMSR2
   start_time: 2014-01-31 23:57:35
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-ATMS-NOAA20:
@@ -746,7 +745,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA20ATMS
   start_time: 2017-11-29 04:46:18
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-ATMS-NOAA21:
@@ -781,7 +779,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFNPPATMS
   start_time: 2014-01-31 23:41:54
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-GMI:
@@ -799,7 +796,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFGPMGMI
   start_time: 2014-03-04 17:59:32
   end_time: null
-  last_version: 7
   available_versions:
   - 7
 2A-MHS-METOPA:
@@ -816,7 +812,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPAMHS
   start_time: 2014-01-31 23:23:51
   end_time: 2019-12-23 22:37:47
-  last_version: 5
   available_versions:
   - 5
 2A-MHS-METOPB:
@@ -834,7 +829,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPBMHS
   start_time: 2014-01-31 22:37:53
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-MHS-METOPC:
@@ -852,7 +846,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPCMHS
   start_time: 2018-11-16 06:45:21
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-MHS-NOAA18:
@@ -886,7 +879,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA19MHS
   start_time: 2014-01-31 22:42:30
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-SAPHIR-MT1:
@@ -904,7 +896,6 @@
   ges_disc_dir: GPM_L2/GPM_2APRPSMT1SAPHIR
   start_time: 2014-01-31 22:45:58
   end_time: 2022-01-01 00:13:27
-  last_version: 6
   available_versions:
   - 6
 2A-SSMIS-F16:
@@ -922,7 +913,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFF16SSMIS
   start_time: 2014-01-31 23:33:43
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-SSMIS-F17:
@@ -940,7 +930,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFF17SSMIS
   start_time: 2014-01-31 22:50:50
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-SSMIS-F18:
@@ -958,7 +947,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFF18SSMIS
   start_time: 2014-01-31 23:42:13
   end_time: null
-  last_version: 5
   available_versions:
   - 5
 2A-SSMIS-F19:
@@ -976,7 +964,6 @@
   ges_disc_dir: GPM_L2/GPM_2AGPROFF19SSMIS
   start_time: 2014-12-18 14:05:14
   end_time: 2016-02-11 11:39:37
-  last_version: 5
   available_versions:
   - 5
 2A-AMSR2-GCOMW1-CLIM:
@@ -1213,7 +1200,6 @@
   ges_disc_dir: GPM_L2/GPM_2APRPSMT1SAPHIR_CLIM
   start_time: 2011-10-13 04:12:29
   end_time: 2022-01-01 00:13:27
-  last_version: 6
   available_versions:
   - 6
 2A-MHS-NOAA19-CLIM:
@@ -1716,7 +1702,6 @@ IMERG-ER:
   ges_disc_dir: GPM_L3/GPM_3IMERGHHE
   start_time: 2000-06-01 00:00:00
   end_time: null
-  last_version: 6
   available_versions:
   - 6
 IMERG-LR:
@@ -1733,7 +1718,6 @@ IMERG-LR:
   ges_disc_dir: GPM_L3/GPM_3IMERGHHL
   start_time: 2000-06-01 00:00:00
   end_time: null
-  last_version: 6
   available_versions:
   - 6
 IMERG-FR:
@@ -1750,7 +1734,6 @@ IMERG-FR:
   ges_disc_dir: GPM_L3/GPM_3IMERGHH
   start_time: 2000-06-01 00:00:00
   end_time: null
-  last_version: 7
   available_versions:
   - 6
   - 7
