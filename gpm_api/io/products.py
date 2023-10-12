@@ -64,7 +64,11 @@ def get_info_dict():
     return read_yaml_file(fpath)
 
 
-def available_products(product_type=None, product_category=None, product_level=None):
+def available_products(
+    product_type=None,
+    product_category=None,
+    product_level=None,
+):
     """
     Provide a list of all/NRT/RS GPM data for download.
 
