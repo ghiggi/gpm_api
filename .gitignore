@@ -7,7 +7,7 @@
 
 # Folders
 /dask-worker-space/
-gpm_api/tests/dataset/assets
+gpm_api/tests/dataset/test_granule_data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

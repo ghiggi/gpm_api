@@ -3,6 +3,7 @@ import h5py
 import os
 
 from dateutil.relativedelta import relativedelta
+from tqdm import tqdm
 
 from gpm_api.configs import get_gpm_username, get_gpm_password
 from gpm_api.dataset.granule import open_granule
@@ -10,31 +11,39 @@ from gpm_api.io import download, products
 from gpm_api.io.pps import find_pps_filepaths
 
 
-# Create asset directories #####################################################
+RAW_DIRNAME = "raw"
+CUT_DIRNAME = "cut"
+PROCESSED_DIRNAME = "processed"
+KEPT_PRODUCT_TYPES = ["RS"]
+SCAN_MODES_KEY = "scan_modes_v7"
 
 
-assets_dir_path = "assets"
-raw_assets_dir_path = os.path.join(assets_dir_path, "raw")
-cut_assets_dir_path = os.path.join(assets_dir_path, "cut")
-processed_assets_dir_path = os.path.join(assets_dir_path, "processed")
+# Create granule directories ###################################################
+
+
+# Create the granules directory
+granules_dir_path = "test_granule_data"
+os.makedirs(granules_dir_path, exist_ok=True)
 
 # Change current working directory to the directory of this script
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-# Create the assets directories
-for path in [assets_dir_path, raw_assets_dir_path, cut_assets_dir_path, processed_assets_dir_path]:
-    os.makedirs(path, exist_ok=True)
+
+# Download raw granules ########################################################
 
 
-# Download raw assets ##########################################################
+def download_raw_granules(products: dict) -> None:
+    print("Listing files to download...")
 
-
-def download_raw_assets(products: dict) -> list[str]:
     pps_filepaths = list_files_to_download(products)
     filenames = [pps_filepath.split("/")[-1] for pps_filepath in pps_filepaths]
-    local_filepaths = [os.path.join(raw_assets_dir_path, filename) for filename in filenames]
+    product_basenames = [os.path.splitext(filename)[0] for filename in filenames]
+    local_filepaths = [
+        os.path.join(granules_dir_path, product_basename, RAW_DIRNAME, product_basename + ".HDF5")
+        for product_basename in product_basenames
+    ]
 
-    print("Downloading raw assets...")
+    print("Downloading raw granules...")
 
     download._download_files(
         pps_filepaths,
@@ -52,7 +61,8 @@ def list_files_to_download(products: dict) -> list[str]:
     # Filter out files that have already been downloaded
     for pps_filepath in pps_filepaths:
         filename = pps_filepath.split("/")[-1]
-        if not os.path.exists(os.path.join(raw_assets_dir_path, filename)):
+        product_basename = os.path.splitext(filename)[0]
+        if not os.path.exists(os.path.join(granules_dir_path, product_basename, RAW_DIRNAME)):
             missing_pps_filepaths.append(pps_filepath)
 
     return missing_pps_filepaths
@@ -60,15 +70,24 @@ def list_files_to_download(products: dict) -> list[str]:
 
 def list_pps_filepaths(products: dict) -> list[str]:
     pps_filepaths = []
-    for product, product_info in products.items():
+
+    for product, product_info in tqdm(products.items()):
         if "start_time" not in product_info:
+            print(f"Skipping {product}: no start_time was provided")
             continue
+
         for product_type in product_info["product_types"]:
+            if product_type not in KEPT_PRODUCT_TYPES:
+                continue
+
             pps_filepath = find_first_pps_filepath(
                 product, product_type, product_info["start_time"]
             )
             if pps_filepath is not None:
                 pps_filepaths.append(pps_filepath)
+
+        if len(pps_filepaths) > 2:
+            break
 
     return pps_filepaths
 
@@ -80,8 +99,9 @@ def find_first_pps_filepath(
 
     pps_filepaths = find_pps_filepaths(
         product,
-        start_time  # TODO: is + relativedelta necessary here?
-        + relativedelta(days=1),  # gets extended to (start_time - 1 day) in find_pps_filepaths
+        start_time,
+        # start_time gets extended to (start_time - 1 day) in find_pps_filepaths.
+        # May produce "No data found" warning
         end_time,
         product_type=product_type,
     )
@@ -94,10 +114,10 @@ def find_first_pps_filepath(
 
 
 products = products.get_info_dict()
-filenames = download_raw_assets(products)
+download_raw_granules(products)
 
 
-# Cut raw assets ##############################################################
+# Cut raw granules #############################################################
 
 
 def _get_fixed_dimensions():
@@ -219,58 +239,69 @@ def create_test_hdf5(src_fpath, dst_fpath):
     dst_file.close()
 
 
-def cut_raw_assets():
-    filenames = os.listdir(raw_assets_dir_path)
+def cut_raw_granules():
+    product_basenames = os.listdir(granules_dir_path)
 
-    for filename in filenames:
-        print(f"Cutting {filename}")
-        raw_asset_filepath = os.path.join(raw_assets_dir_path, filename)
-        cut_asset_filepath = os.path.join(cut_assets_dir_path, filename)
+    for product_basename in product_basenames:
+        print(f"Cutting {product_basename}")
+        raw_filepath = os.path.join(
+            granules_dir_path, product_basename, RAW_DIRNAME, product_basename + ".HDF5"
+        )
+        cut_dir_path = os.path.join(granules_dir_path, product_basename, CUT_DIRNAME)
+        cut_filepath = os.path.join(cut_dir_path, product_basename + ".HDF5")
+        os.makedirs(cut_dir_path, exist_ok=True)
         try:
-            create_test_hdf5(raw_asset_filepath, cut_asset_filepath)
+            create_test_hdf5(raw_filepath, cut_filepath)
         except Exception as e:
-            print(f"Failed to cut {filename}: {e}")
+            print(f"Failed to cut {product_basename}: {e}")
 
 
-cut_raw_assets()
+cut_raw_granules()
 
 
-# Open assets with gpm_api and save as netCDF ##################################
+# Open granules with gpm_api and save as netCDF ################################
 
 
-def open_and_save_processed_assets(products: dict):
-    filenames = os.listdir(cut_assets_dir_path)
+def open_and_save_processed_granules(products: dict):
+    product_basenames = os.listdir(granules_dir_path)
 
     for product, product_info in products.items():
-        filename = find_filename_from_pattern(filenames, product_info["pattern"])
-        if filename is None:
+        if "start_time" not in product_info:
+            continue
+
+        product_basename = find_product_basename_from_pattern(
+            product_basenames, product_info["pattern"]
+        )
+        if product_basename is None:
             print(f"Could not find {product} file")
             continue
 
-        process_asset(filename, product_info["scan_modes_v7"])
+        process_granule(product_basename, product_info[SCAN_MODES_KEY])
 
 
-def find_filename_from_pattern(filenames: list[str], pattern: str) -> str | None:
-    for filename in filenames:
-        if pattern.rstrip("*").rstrip("\\d-") in filename:  # TODO: clarify specs of pattern
-            return filename
+def find_product_basename_from_pattern(product_basenames: list[str], pattern: str) -> str | None:
+    for product_basename in product_basenames:
+        if pattern.rstrip("*").rstrip("\\d-") in product_basename:  # TODO: clarify specs of pattern
+            return product_basename
 
     return None
 
 
-def process_asset(filename: str, scan_modes: list[str]):
-    asset_filepath = os.path.join(cut_assets_dir_path, filename)
-    processed_dir_path = os.path.join(processed_assets_dir_path, os.path.splitext(filename)[0])
+def process_granule(product_basename: str, scan_modes: list[str]):
+    granule_path = os.path.join(
+        granules_dir_path, product_basename, CUT_DIRNAME, product_basename + ".HDF5"
+    )
+    processed_dir_path = os.path.join(granules_dir_path, product_basename, PROCESSED_DIRNAME)
     os.makedirs(processed_dir_path, exist_ok=True)
 
     for scan_mode in scan_modes:
-        print(f"Processing {filename} with scan mode {scan_mode}")
-        processed_asset_filepath = os.path.join(processed_dir_path, f"{scan_mode}.nc")
+        print(f"Processing {product_basename} with scan mode {scan_mode}")
+        processed_granule_filepath = os.path.join(processed_dir_path, f"{scan_mode}.nc")
         try:
-            ds = open_granule(asset_filepath, scan_mode)
-            ds.to_netcdf(processed_asset_filepath)
+            ds = open_granule(granule_path, scan_mode)
+            ds.to_netcdf(processed_granule_filepath)
         except Exception as e:
-            print(f"Failed to process {filename} with scan mode {scan_mode}: {e}")
+            print(f"Failed to process {product_basename} with scan mode {scan_mode}: {e}")
 
 
-open_and_save_processed_assets(products)
+open_and_save_processed_granules(products)
