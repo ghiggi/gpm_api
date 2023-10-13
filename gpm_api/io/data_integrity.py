@@ -9,7 +9,6 @@ import os
 import h5py
 
 from gpm_api.configs import get_gpm_base_dir
-from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_base_dir,
     check_product,
@@ -73,7 +72,7 @@ def check_archive_integrity(
     product,
     start_time,
     end_time,
-    version=GPM_VERSION,
+    version=None,
     product_type="RS",
     remove_corrupted=True,
     verbose=True,

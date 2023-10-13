@@ -14,7 +14,6 @@ from gpm_api.configs import get_gpm_base_dir
 from gpm_api.dataset.attrs import decode_string
 from gpm_api.dataset.conventions import finalize_dataset
 from gpm_api.dataset.granule import _open_granule
-from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_base_dir,
     check_product,
@@ -241,7 +240,7 @@ def open_dataset(
     variables=None,
     groups=None,  # TODO implement
     scan_mode=None,
-    version=GPM_VERSION,
+    version=None,
     product_type="RS",
     chunks={},
     decode_cf=True,

@@ -234,10 +234,10 @@ def test_download_data(
             "product": "2A-CLIM",
             "product_type": "CLIM",
             "start_time": datetime.datetime(2022, 9, 7, 12, 0, 0),
-            "end_time": datetime.datetime(2022, 9, 7, 12, 0, 0),
-            "version": "V06A",
+            "end_time": datetime.datetime(2022, 9, 7, 13, 0, 0),
+            "version": "V07A",
             "satellite": "GPM",
-            "granule_id": "2A-CLIM.GPM.GMI.XCAL2016-C.20220907-S120000-E120000.V06A.HDF5",
+            "granule_id": "2A-CLIM.GPM.GMI.GPROF2021v1.20150301-S121433-E134706.005708.V07A.HDF5",
         },
     )
     mocker.patch.object(
@@ -246,8 +246,8 @@ def test_download_data(
         autospec=True,
         return_value=(server_paths.keys(), versions),
     )
-    # Assume files pass file integrity check by mocking return as empty
 
+    # Assume files pass file integrity check by mocking return as empty
     for product in products:
         for product_type in product_types:
             if product in available_products(product_type=product_type):

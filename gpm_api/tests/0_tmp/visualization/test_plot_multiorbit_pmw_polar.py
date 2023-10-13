@@ -25,7 +25,6 @@ ds = gpm_api.open_dataset(
     start_time=start_time,
     end_time=end_time,
     # Optional
-    version=7,
     variables=variable,
     product_type=product_type,
     chunks={},

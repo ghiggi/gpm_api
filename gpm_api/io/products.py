@@ -12,6 +12,7 @@ from gpm_api.io.checks import (
     check_product_level,
     check_product_type,
     check_product_validity,
+    check_product_version,
     check_version,
 )
 from gpm_api.utils.yaml import read_yaml_file
@@ -64,7 +65,24 @@ def get_info_dict():
     return read_yaml_file(fpath)
 
 
-def available_products(product_type=None, product_category=None, product_level=None):
+def available_versions(product):
+    """Provide a list with the available product versions."""
+    versions = get_info_dict()[product]["available_versions"]
+    return versions
+
+
+def get_last_product_version(product):
+    """Provide the most recent product version."""
+    version = available_versions(product)[-1]
+    return version
+
+
+def available_products(
+    product_type=None,
+    product_category=None,
+    product_level=None,
+    version=None,
+):
     """
     Provide a list of all/NRT/RS GPM data for download.
 
@@ -110,12 +128,18 @@ def available_products(product_type=None, product_category=None, product_level=N
         check_product_level(product_level)
         products = [product for product in products if product_level == product[0:2]]
 
+    if version is not None:
+        check_version(version)
+        products = [
+            product for product in products if version in info_dict[product]["available_versions"]
+        ]
+
     return sorted(products)
 
 
 def available_scan_modes(product, version):
     """Return the available scan_modes for a given product (and specific version)."""
-    check_version(version)
+    version = check_product_version(version, product)
     check_product_validity(product)
     info_dict = get_info_dict()
     if version == 7:

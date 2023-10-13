@@ -13,13 +13,12 @@ import numpy as np
 import pandas as pd
 
 from gpm_api.configs import get_gpm_password, get_gpm_username
-from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_date,
     check_product,
     check_product_type,
+    check_product_version,
     check_start_end_time,
-    check_version,
     is_empty,
 )
 from gpm_api.io.directories import get_pps_directory
@@ -265,7 +264,7 @@ def find_pps_filepaths(
     start_time,
     end_time,
     product_type="RS",
-    version=GPM_VERSION,
+    version=None,
     verbose=True,
     parallel=True,
     username=None,
@@ -317,7 +316,7 @@ def find_pps_filepaths(
 
     # -------------------------------------------------------------------------.
     ## Checks input arguments
-    check_version(version=version)
+    version = check_product_version(version, product)
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     start_time, end_time = check_start_end_time(start_time, end_time)

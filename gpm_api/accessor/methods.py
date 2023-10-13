@@ -76,7 +76,7 @@ class GPM_Base_Accessor:
         self,
         product,
         product_type="RS",
-        version=7,
+        version=None,
         scan_modes=None,
         variables=None,
         groups=None,

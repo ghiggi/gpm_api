@@ -157,7 +157,7 @@ scan_mode = None
 decode_cf = False
 chunks = "auto"
 prefix_group = False
-version = 7
+version = None
 
 for product in products:
     print(product)
@@ -170,7 +170,7 @@ for product in products:
         variables=variables,
         groups=groups,  # TODO implement
         scan_mode=scan_mode,
-        version=7,
+        version=version,
         product_type="RS",
         chunks={},
         decode_cf=False,

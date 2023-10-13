@@ -43,7 +43,7 @@ def collocate_product(
     ds,
     product,
     product_type="RS",
-    version=7,
+    version=None,
     scan_modes=None,
     variables=None,
     groups=None,

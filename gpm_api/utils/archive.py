@@ -9,7 +9,6 @@ import warnings
 import numpy as np
 
 from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
-from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_start_end_time,
 )
@@ -31,7 +30,7 @@ def check_no_duplicated_files(
     product,
     start_time,
     end_time,
-    version=GPM_VERSION,
+    version=None,
     product_type="RS",
     verbose=True,
 ):
@@ -167,7 +166,7 @@ def check_archive_completeness(
     product,
     start_time,
     end_time,
-    version=GPM_VERSION,
+    version=None,
     product_type="RS",
     download=True,
     transfer_tool="wget",

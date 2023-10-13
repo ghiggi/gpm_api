@@ -16,14 +16,13 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
-from gpm_api.io import GPM_VERSION  # CURRENT GPM VERSION
 from gpm_api.io.checks import (
     check_base_dir,
     check_date,
     check_product,
     check_product_type,
+    check_product_version,
     check_start_end_time,
-    check_version,
     is_empty,
 )
 from gpm_api.io.data_integrity import (
@@ -927,7 +926,7 @@ def download_archive(
     start_time,
     end_time,
     product_type="RS",
-    version=GPM_VERSION,
+    version=None,
     n_threads=4,
     transfer_tool="curl",
     progress_bar=False,
@@ -998,7 +997,7 @@ def download_archive(
     ## Checks input arguments
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
-    check_version(version=version)
+    version = check_product_version(version, product)
     base_dir = check_base_dir(base_dir)
     start_time, end_time = check_start_end_time(start_time, end_time)
 
@@ -1091,7 +1090,7 @@ def download_daily_data(
     month,
     day,
     product_type="RS",
-    version=GPM_VERSION,
+    version=None,
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,
@@ -1136,7 +1135,7 @@ def download_monthly_data(
     year,
     month,
     product_type="RS",
-    version=GPM_VERSION,
+    version=None,
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,

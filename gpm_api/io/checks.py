@@ -79,6 +79,19 @@ def check_version(version):
         raise ValueError("Download/Reading have been implemented only for GPM versions 5, 6 and 7.")
 
 
+def check_product_version(version, product):
+    from gpm_api.io.products import available_versions, get_last_product_version
+
+    if version is None:
+        version = get_last_product_version(product)
+    check_version(version)
+    # Check valid version for such product
+    valid_versions = available_versions(product)
+    if version not in valid_versions:
+        raise ValueError(f"Valid versions for product {product} are {valid_versions}.")
+    return version
+
+
 def check_product(product, product_type):
     from gpm_api.io.products import available_products
 
