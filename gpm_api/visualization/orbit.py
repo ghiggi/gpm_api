@@ -202,7 +202,6 @@ def _call_over_contiguous_scans(function):
 
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
-
             if not rgb:
                 # Retrieve contiguous data array
                 tmp_da = da.isel({"along_track": slc})

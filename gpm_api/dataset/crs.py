@@ -317,7 +317,6 @@ def _add_proj_coords_attrs(ds, crs) -> xr.Dataset:
 
     # If available, add attributes
     if x_dim is not None and y_dim is not None:
-
         # Retrieve existing coordinate attributes
         src_x_coord_attrs = dict(ds[x_dim].attrs)
         src_y_coord_attrs = dict(ds[y_dim].attrs)

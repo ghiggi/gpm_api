@@ -573,7 +573,6 @@ def plot_map(
     cbar_kwargs={},
     **plot_kwargs,
 ):
-
     from gpm_api.checks import is_grid, is_orbit
     from gpm_api.visualization.grid import plot_grid_map
     from gpm_api.visualization.orbit import plot_orbit_map

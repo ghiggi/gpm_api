@@ -144,7 +144,6 @@ def _get_granule_info(filepath, scan_mode, variables, groups):
     """Retrieve coordinates, attributes and valid variables and groups from the HDF file."""
     # Open HDF5 file
     with h5py.File(filepath, "r", locking=False, swmr=SWMR) as hdf:
-
         # Get coordinates
         coords = get_coords(hdf, scan_mode)
 

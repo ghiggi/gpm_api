@@ -218,7 +218,6 @@ def select_transect(
     transect_kwargs={},
     keep_only_valid_variables=True,
 ):
-
     # Identify transect isel_dict
     transect_slices = get_transect_slices(
         xr_obj,

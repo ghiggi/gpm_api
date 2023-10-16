@@ -235,6 +235,7 @@ def write_granules_bucket(
 ####--------------------------------------------------------------------------.
 #### Single GPM Granule Routines OLD
 
+
 # TODO: Currently used for final merging
 # --> Adapt code to use write_partitioned_dataset
 def write_parquet_dataset(
@@ -477,6 +478,7 @@ def write_parquet_dataset(
 
 #     return None
 
+
 ####--------------------------------------------------------------------------.
 #### GPM Datasets Routines
 @print_task_elapsed_time(prefix="Dataset Bucket Operation Terminated.")
@@ -498,7 +500,6 @@ def write_dataset_bucket(
     use_threads=True,
     **writer_kwargs,
 ):
-
     df = convert_ds_to_df(
         ds=ds,
         preprocessing_function=preprocessing_function,

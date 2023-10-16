@@ -80,7 +80,6 @@ def get_cut_lon_breaks_labels(bin_spacing):
 def pl_add_geographic_bins(
     df, xbin_column, ybin_column, bin_spacing, x_column="lon", y_column="lat"
 ):
-
     cut_lon_breaks, cut_lon_labels = get_cut_lon_breaks_labels(bin_spacing)
     cut_lat_breaks, cut_lat_labels = get_cut_lat_breaks_labels(bin_spacing)
     df = df.with_columns(
