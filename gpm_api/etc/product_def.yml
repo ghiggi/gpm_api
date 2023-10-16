@@ -1711,7 +1711,7 @@
   available_versions:
   - 4
   scan_modes:
-    V7:
+    V4:
     - null
 2B-TRMM-CSAT:
   pattern: 2B.CSATTRMM.COIN*
@@ -1724,7 +1724,7 @@
   available_versions:
   - 4
   scan_modes:
-    V7:
+    V4:
     - null
 2B-GPM-CORRA:
   pattern: 2B.GPM.DPRGMI.CORRA*
