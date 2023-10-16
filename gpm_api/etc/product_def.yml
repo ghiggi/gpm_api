@@ -21,6 +21,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S4
+  - S5
 1A-TMI:
   pattern: 1A.TRMM.TMI.*
   product_category: PMW
@@ -42,6 +47,10 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
 1B-GMI:
   pattern: 1B.GPM.GMI.*
   product_category: PMW
@@ -62,6 +71,9 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
 1B-Ka:
   pattern: GPMCOR_KAR*
   product_category: RADAR
@@ -81,6 +93,9 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - HS
+  - MS
 1B-Ku:
   pattern: GPMCOR_KUR*
   product_category: RADAR
@@ -98,6 +113,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - NS
 1B-PR:
   pattern: 1B.TRMM.PR*
   product_category: RADAR
@@ -115,6 +132,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - NS
 1B-TMI:
   pattern: 1B.TRMM.TMI.*
   product_category: PMW
@@ -136,6 +155,10 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
 1C-AMSR2-GCOMW1:
   pattern: 1C.GCOMW1.AMSR2.*
   product_category: PMW
@@ -164,6 +187,13 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
+  - S5
+  - S6
 1C-AMSRE-AQUA:
   pattern: 1C.AQUA.AMSRE.*
   product_category: PMW
@@ -191,6 +221,13 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
+  - S5
+  - S6
 1C-AMSUB-NOAA15:
   pattern: 1C.NOAA15.AMSUB.*
   product_category: PMW
@@ -208,6 +245,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-AMSUB-NOAA16:
   pattern: 1C.NOAA16.AMSUB.*
   product_category: PMW
@@ -225,6 +264,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-AMSUB-NOAA17:
   pattern: 1C.NOAA17.AMSUB.*
   product_category: PMW
@@ -242,6 +283,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-ATMS-NOAA20:
   pattern: 1C.NOAA20.ATMS.*
   product_category: PMW
@@ -266,6 +309,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-ATMS-NOAA21:
   pattern: 1C.NOAA21.ATMS.*
   product_category: PMW
@@ -313,6 +361,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-GMI:
   pattern: 1C.GPM.GMI.*
   product_category: PMW
@@ -333,6 +386,9 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
 1C-GMI-R:
   pattern: 1C-R.GPM.GMI.*
   product_category: PMW
@@ -353,6 +409,9 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
 1C-MHS-METOPA:
   pattern: 1C.METOPA.MHS.*
   product_category: PMW
@@ -370,6 +429,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-MHS-METOPB:
   pattern: 1C.METOPB.MHS.*
   product_category: PMW
@@ -388,6 +449,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-MHS-METOPC:
   pattern: 1C.METOPC.MHS.*
   product_category: PMW
@@ -406,6 +469,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-MHS-NOAA18:
   pattern: 1C.NOAA18.MHS.*
   product_category: PMW
@@ -423,6 +488,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-MHS-NOAA19:
   pattern: 1C.NOAA19.MHS.*
   product_category: PMW
@@ -441,6 +508,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-SAPHIR-MT1:
   pattern: 1C.MT1.SAPHIR.*
   product_category: PMW
@@ -459,6 +528,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 1C-SSMI-F08:
   pattern: 1C.F08.SSMI.*
   product_category: PMW
@@ -482,6 +553,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMI-F10:
   pattern: 1C.F10.SSMI.*
   product_category: PMW
@@ -505,6 +581,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMI-F11:
   pattern: 1C.F11.SSMI.*
   product_category: PMW
@@ -528,6 +609,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMI-F13:
   pattern: 1C.F13.SSMI.*
   product_category: PMW
@@ -551,6 +637,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMI-F14:
   pattern: 1C.F14.SSMI.*
   product_category: PMW
@@ -574,6 +665,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMI-F15:
   pattern: 1C.F15.SSMI.*
   product_category: PMW
@@ -597,6 +693,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMIS-F16:
   pattern: 1C.F16.SSMIS.*
   product_category: PMW
@@ -621,6 +722,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMIS-F17:
   pattern: 1C.F17.SSMIS.*
   product_category: PMW
@@ -645,6 +751,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMIS-F18:
   pattern: 1C.F18.SSMIS.*
   product_category: PMW
@@ -669,6 +780,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-SSMIS-F19:
   pattern: 1C.F19.SSMIS.*
   product_category: PMW
@@ -692,6 +808,11 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
+  - S4
 1C-TMI:
   pattern: 1C.TRMM.TMI.*
   product_category: PMW
@@ -713,6 +834,10 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
+  - S2
+  - S3
 2A-AMSR2-GCOMW1:
   pattern: 2A.GCOMW1.AMSR2.*
   product_category: PMW
@@ -730,6 +855,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-ATMS-NOAA20:
   pattern: 2A.NOAA20.ATMS.*
   product_category: PMW
@@ -747,6 +874,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-ATMS-NOAA21:
   pattern: 2A.NOAA21.ATMS.*
   product_category: PMW
@@ -781,6 +910,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-GMI:
   pattern: 2A.GPM.GMI.*
   product_category: PMW
@@ -799,6 +930,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-MHS-METOPA:
   pattern: 2A.METOPA.MHS.*
   product_category: PMW
@@ -815,6 +948,8 @@
   end_time: 2019-12-23 22:37:47
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-MHS-METOPB:
   pattern: 2A.METOPB.MHS.*
   product_category: PMW
@@ -832,6 +967,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-MHS-METOPC:
   pattern: 2A.METOPC.MHS.*
   product_category: PMW
@@ -849,6 +986,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-MHS-NOAA18:
   pattern: 2A.NOAA18.MHS.*
   product_category: PMW
@@ -865,6 +1004,8 @@
   end_time: 2018-10-20 19:58:16
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-MHS-NOAA19:
   pattern: 2A.NOAA19.MHS.*
   product_category: PMW
@@ -882,6 +1023,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-SAPHIR-MT1:
   pattern: 2A.SAPHIR.MT1.*
   product_category: PMW
@@ -916,6 +1059,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-SSMIS-F17:
   pattern: 2A.F17.SSMIS.*
   product_category: PMW
@@ -933,6 +1078,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-SSMIS-F18:
   pattern: 2A.F18.SSMIS.*
   product_category: PMW
@@ -950,6 +1097,8 @@
   end_time: null
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-SSMIS-F19:
   pattern: 2A.F19.SSMIS.*
   product_category: PMW
@@ -967,6 +1116,8 @@
   end_time: 2016-02-11 11:39:37
   available_versions:
   - 5
+  scan_modes_v5:
+  - S1
 2A-AMSR2-GCOMW1-CLIM:
   pattern: 2A-CLIM.GCOMW1.AMSR2.*
   product_category: PMW
@@ -984,6 +1135,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-AMSRE-AQUA-CLIM:
   pattern: 2A-CLIM.AQUA.AMSRE.*
   product_category: PMW
@@ -1001,6 +1154,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-AMSUB-NOAA15-CLIM:
   pattern: 2A-CLIM.NOAA15.AMSUB.*
   product_category: PMW
@@ -1018,6 +1173,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-AMSUB-NOAA16-CLIM:
   pattern: 2A-CLIM.NOAA16.AMSUB.*
   product_category: PMW
@@ -1035,6 +1192,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-AMSUB-NOAA17-CLIM:
   pattern: 2A-CLIM.NOAA17.AMSUB.*
   product_category: PMW
@@ -1052,6 +1211,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-ATMS-NOAA20-CLIM:
   pattern: 2A-CLIM.NOAA20.ATMS.*
   product_category: PMW
@@ -1069,6 +1230,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-ATMS-NOAA21-CLIM:
   pattern: 2A-CLIM.NOAA21.ATMS.*
   product_category: PMW
@@ -1102,6 +1265,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-GMI-CLIM:
   pattern: 2A-CLIM.GPM.GMI.*
   product_category: PMW
@@ -1119,6 +1284,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-MHS-METOPA-CLIM:
   pattern: 2A-CLIM.METOPA.MHS.*
   product_category: PMW
@@ -1136,6 +1303,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-MHS-METOPB-CLIM:
   pattern: 2A-CLIM.METOPB.MHS.*
   product_category: PMW
@@ -1153,6 +1322,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-MHS-METOPC-CLIM:
   pattern: 2A-CLIM.METOPC.MHS.*
   product_category: PMW
@@ -1170,6 +1341,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-MHS-NOAA18-CLIM:
   pattern: 2A-CLIM.NOAA18.MHS.*
   product_category: PMW
@@ -1187,6 +1360,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SAPHIR-MT1-CLIM:
   pattern: 2A-CLIM.SAPHIR.MT1.*
   product_category: PMW
@@ -1220,6 +1395,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMI-F08-CLIM:
   pattern: 2A-CLIM.F08.SSMI.*
   product_category: PMW
@@ -1237,6 +1414,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMI-F10-CLIM:
   pattern: 2A-CLIM.F10.SSMI.*
   product_category: PMW
@@ -1254,6 +1433,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMI-F11-CLIM:
   pattern: 2A-CLIM.F11.SSMI.*
   product_category: PMW
@@ -1271,6 +1452,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMI-F13-CLIM:
   pattern: 2A-CLIM.F13.SSMI.*
   product_category: PMW
@@ -1288,6 +1471,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMI-F14-CLIM:
   pattern: 2A-CLIM.F14.SSMI.*
   product_category: PMW
@@ -1305,6 +1490,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMI-F15-CLIM:
   pattern: 2A-CLIM.F15.SSMI.*
   product_category: PMW
@@ -1322,6 +1509,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMIS-F16-CLIM:
   pattern: 2A-CLIM.F16.SSMIS.*
   product_category: PMW
@@ -1339,6 +1528,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMIS-F17-CLIM:
   pattern: 2A-CLIM.F17.SSMIS.*
   product_category: PMW
@@ -1356,6 +1547,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMIS-F18-CLIM:
   pattern: 2A-CLIM.F18.SSMIS.*
   product_category: PMW
@@ -1373,6 +1566,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-SSMIS-F19-CLIM:
   pattern: 2A-CLIM.F19.SSMIS.*
   product_category: PMW
@@ -1390,6 +1585,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-TMI-CLIM:
   pattern: 2A-CLIM.TRMM.TMI.*
   product_category: PMW
@@ -1407,6 +1604,8 @@
   available_versions:
   - 5
   - 7
+  scan_modes_v5:
+  - S1
 2A-DPR:
   pattern: 2A.GPM.DPR.V\d-*
   product_category: RADAR
