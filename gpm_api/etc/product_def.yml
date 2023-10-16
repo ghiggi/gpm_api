@@ -3,11 +3,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
-  - S2
-  - S4
-  - S5
   scan_modes_v7:
   - S1
   - S2
@@ -31,10 +26,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
   scan_modes_v7:
   - S1
   - S2
@@ -57,9 +48,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
   scan_modes_v7:
   - S1
   - S2
@@ -79,9 +67,6 @@
   product_category: RADAR
   product_types:
   - RS
-  scan_modes_v6:
-  - HS
-  - MS
   scan_modes_v7:
   - HS
   - MS
@@ -101,8 +86,6 @@
   product_category: RADAR
   product_types:
   - RS
-  scan_modes_v6:
-  - NS
   scan_modes_v7:
   - FS
   pps_nrt_dir: null
@@ -120,8 +103,6 @@
   product_category: RADAR
   product_types:
   - RS
-  scan_modes_v6:
-  - NS
   scan_modes_v7:
   - FS
   pps_nrt_dir: null
@@ -139,10 +120,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
   scan_modes_v7:
   - S1
   - S2
@@ -165,13 +142,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
-  - S5
-  - S6
   scan_modes_v7:
   - S1
   - S2
@@ -199,13 +169,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
-  - S5
-  - S6
   scan_modes_v7:
   - S1
   - S2
@@ -233,8 +196,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -252,8 +213,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -271,8 +230,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -291,11 +248,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
   scan_modes_v7:
   - S1
   - S2
@@ -320,11 +272,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
   scan_modes_v7:
   - S1
   - S2
@@ -343,11 +290,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
   scan_modes_v7:
   - S1
   - S2
@@ -372,9 +314,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
   scan_modes_v7:
   - S1
   - S2
@@ -395,9 +334,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
   scan_modes_v7:
   - S1
   - S2
@@ -417,8 +353,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -437,8 +371,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: 1C/MHS
@@ -457,8 +389,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: 1C/MHS
@@ -476,8 +406,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -496,8 +424,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: 1C/MHS
@@ -516,8 +442,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: 1C/SAPHIR
@@ -608,6 +532,7 @@
   end_time: 2000-05-16 16:57:56
   available_versions:
   - 5
+  - 6
   - 7
   scan_modes_v5:
   - S1
@@ -636,6 +561,7 @@
   end_time: 2009-11-20 01:08:59
   available_versions:
   - 5
+  - 6
   - 7
   scan_modes_v5:
   - S1
@@ -664,6 +590,7 @@
   end_time: 2008-08-24 00:48:17
   available_versions:
   - 5
+  - 6
   - 7
   scan_modes_v5:
   - S1
@@ -692,6 +619,7 @@
   end_time: 2006-08-14 01:23:04
   available_versions:
   - 5
+  - 6
   - 7
   scan_modes_v5:
   - S1
@@ -704,11 +632,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
   scan_modes_v7:
   - S1
   - S2
@@ -733,11 +656,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
   scan_modes_v7:
   - S1
   - S2
@@ -762,11 +680,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
   scan_modes_v7:
   - S1
   - S2
@@ -790,11 +703,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
-  - S4
   scan_modes_v7:
   - S1
   - S2
@@ -818,10 +726,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
-  - S2
-  - S3
   scan_modes_v7:
   - S1
   - S2
@@ -844,8 +748,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/AMSR2
@@ -863,8 +765,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
@@ -882,8 +782,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
@@ -899,8 +797,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
@@ -918,8 +814,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/GMI
@@ -937,8 +831,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -956,8 +848,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
@@ -975,8 +865,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
@@ -993,8 +881,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1012,8 +898,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
@@ -1048,8 +932,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
@@ -1067,8 +949,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
@@ -1086,8 +966,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
@@ -1105,8 +983,6 @@
   product_types:
   - RS
   - NRT
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
@@ -1123,8 +999,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/AMSR2
@@ -1142,8 +1016,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1161,8 +1033,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1180,8 +1050,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1199,8 +1067,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1218,8 +1084,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
@@ -1237,8 +1101,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
@@ -1253,8 +1115,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/ATMS
@@ -1272,8 +1132,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/GMI
@@ -1291,8 +1149,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1310,8 +1166,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
@@ -1329,8 +1183,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
@@ -1348,8 +1200,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1383,8 +1233,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/MHS
@@ -1402,8 +1250,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1421,8 +1267,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1440,8 +1284,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1459,8 +1301,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1478,8 +1318,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1497,8 +1335,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1516,8 +1352,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
@@ -1535,8 +1369,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
@@ -1554,8 +1386,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
@@ -1573,8 +1403,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: GPROF/SSMIS
@@ -1592,8 +1420,6 @@
   product_category: PMW
   product_types:
   - RS
-  scan_modes_v6:
-  - S1
   scan_modes_v7:
   - S1
   pps_nrt_dir: null
@@ -1794,8 +1620,6 @@
   product_category: RADAR
   product_types:
   - RS
-  scan_modes_v6:
-  - null
   scan_modes_v7:
   - null
   pps_nrt_dir: null
@@ -1808,8 +1632,6 @@
   product_category: RADAR
   product_types:
   - RS
-  scan_modes_v6:
-  - null
   scan_modes_v7:
   - null
   pps_nrt_dir: null
