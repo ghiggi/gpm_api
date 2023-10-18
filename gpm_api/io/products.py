@@ -65,8 +65,17 @@ def get_info_dict():
     return read_yaml_file(fpath)
 
 
+def _check_valid_product(product):
+    if not isinstance(product, str):
+        raise TypeError("'product' must be a string.")
+    valid_products = list(get_info_dict())
+    if product not in valid_products:
+        raise ValueError("Please provide a valid GPM product --> gpm_api.available_products().")
+
+
 def available_versions(product):
     """Provide a list with the available product versions."""
+    _check_valid_product(product)
     versions = get_info_dict()[product]["available_versions"]
     return versions
 
@@ -139,14 +148,11 @@ def available_products(
 
 def available_scan_modes(product, version):
     """Return the available scan_modes for a given product (and specific version)."""
+    _check_valid_product(product)
     version = check_product_version(version, product)
     check_product_validity(product)
     info_dict = get_info_dict()
-    if version == 7:
-        key = "scan_modes_v7"
-    else:  # <= 6
-        key = "scan_modes_v6"
-    scan_modes = info_dict[product].get(key)
+    scan_modes = info_dict[product]["scan_modes"]["V" + str(version)]
     return scan_modes
 
 
