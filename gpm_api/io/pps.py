@@ -24,6 +24,7 @@ from gpm_api.io.checks import (
 from gpm_api.io.directories import get_pps_directory
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.info import get_version_from_filepaths
+from gpm_api.io.products import available_products
 from gpm_api.utils.warnings import GPMDownloadWarning
 
 VERSION_WARNING = True
@@ -36,6 +37,24 @@ def flatten_list(nested_list):
         if isinstance(nested_list, list)
         else [nested_list]
     )
+
+
+def ensure_valid_start_date(start_date, product):
+    if product == "2A-SAPHIR-MT1-CLIM":
+        min_start_date = "2011-10-13"
+    elif product in available_products(product_category="PMW"):
+        min_start_date = "1987-07-09"
+    elif product in available_products(product_category="RADAR") or product in available_products(
+        product_category="CMB"
+    ):
+        min_start_date = "1997-12-07"
+    elif "IMERG" in product:
+        min_start_date = "2000-06-01"
+    else:
+        min_start_date = "1987-07-09"
+    min_start_date = datetime.date.fromisoformat(min_start_date)
+    start_date = max(start_date, min_start_date)
+    return start_date
 
 
 def _check_correct_version(filepaths, product, version):
@@ -326,6 +345,7 @@ def find_pps_filepaths(
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
     start_date = datetime.datetime(start_time.year, start_time.month, start_time.day)
     start_date = start_date - datetime.timedelta(days=1)
+    start_date = ensure_valid_start_date(start_date, product)
     end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
     date_range = pd.date_range(start=start_date, end=end_date, freq="D")
     dates = list(date_range.to_pydatetime())
