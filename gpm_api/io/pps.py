@@ -41,18 +41,18 @@ def flatten_list(nested_list):
 
 def ensure_valid_start_date(start_date, product):
     if product == "2A-SAPHIR-MT1-CLIM":
-        min_start_date = "2011-10-13"
+        min_start_date = "2011-10-13 00:00:00"
     elif product in available_products(product_category="PMW"):
-        min_start_date = "1987-07-09"
+        min_start_date = "1987-07-09 00:00:00"
     elif product in available_products(product_category="RADAR") or product in available_products(
         product_category="CMB"
     ):
-        min_start_date = "1997-12-07"
+        min_start_date = "1997-12-07 00:00:00"
     elif "IMERG" in product:
-        min_start_date = "2000-06-01"
+        min_start_date = "2000-06-01 00:00:00"
     else:
-        min_start_date = "1987-07-09"
-    min_start_date = datetime.date.fromisoformat(min_start_date)
+        min_start_date = "1987-07-09 00:00:00"
+    min_start_date = datetime.datetime.fromisoformat(min_start_date)
     start_date = max(start_date, min_start_date)
     return start_date
 
