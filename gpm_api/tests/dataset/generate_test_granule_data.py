@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from gpm_api.configs import get_gpm_username, get_gpm_password
 from gpm_api.dataset.granule import open_granule
-from gpm_api.io import download, products
+from gpm_api.io import download, products as gpm_products
 from gpm_api.io.pps import find_pps_filepaths
 
 
@@ -15,7 +15,6 @@ RAW_DIRNAME = "raw"
 CUT_DIRNAME = "cut"
 PROCESSED_DIRNAME = "processed"
 KEPT_PRODUCT_TYPES = ["RS"]
-SCAN_MODES_KEY = "scan_modes_v7"
 
 
 # Create granule directories ###################################################
@@ -29,11 +28,28 @@ os.makedirs(granules_dir_path, exist_ok=True)
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
+# Check available versions and scan_modes ######################################
+
+
+def check_scan_mode_versions(products: dict):
+    for product, info in products.items():
+        version = info["available_versions"][-1]
+        if f"V{version}" not in info["scan_modes"]:
+            print(
+                f"WARNING: {product} does not have scan modes listed for latest version {version}"
+            )
+
+
+products = gpm_products.get_info_dict()
+check_scan_mode_versions(products)
+
+
 # Download raw granules ########################################################
 
 
 def download_raw_granules(products: dict) -> None:
     print("Listing files to download...")
+    print('Please ignore the "No data found" warnings')
 
     pps_filepaths = list_files_to_download(products)
     filenames = [pps_filepath.split("/")[-1] for pps_filepath in pps_filepaths]
@@ -86,9 +102,6 @@ def list_pps_filepaths(products: dict) -> list[str]:
             if pps_filepath is not None:
                 pps_filepaths.append(pps_filepath)
 
-        if len(pps_filepaths) > 2:
-            break
-
     return pps_filepaths
 
 
@@ -107,13 +120,12 @@ def find_first_pps_filepath(
     )
 
     if len(pps_filepaths) == 0:
-        print(f"No PPS files found for {product}")
+        print(f"WARNING: No PPS files found for {product}")
         return None
 
     return pps_filepaths[0]
 
 
-products = products.get_info_dict()
 download_raw_granules(products)
 
 
@@ -276,7 +288,9 @@ def open_and_save_processed_granules(products: dict):
             print(f"Could not find {product} file")
             continue
 
-        process_granule(product_basename, product_info[SCAN_MODES_KEY])
+        version = gpm_products.get_last_product_version(product)
+        scan_modes = product_info["scan_modes"][f"V{version}"]
+        process_granule(product_basename, scan_modes)
 
 
 def find_product_basename_from_pattern(product_basenames: list[str], pattern: str) -> str | None:
