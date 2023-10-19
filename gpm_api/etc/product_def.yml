@@ -954,7 +954,7 @@
     V7:
     - S1
 2A-SAPHIR-MT1:
-  pattern: 2A.SAPHIR.MT1.*
+  pattern: 2A.MT1.SAPHIR.*
   product_category: PMW
   product_types:
   - RS
@@ -968,8 +968,6 @@
   - 6
   scan_modes:
     V6:
-    - S1
-    V7:
     - S1
 2A-SSMIS-F16:
   pattern: 2A.F16.SSMIS.*
@@ -1275,7 +1273,7 @@
     V7:
     - S1
 2A-SAPHIR-MT1-CLIM:
-  pattern: 2A-CLIM.SAPHIR.MT1.*
+  pattern: 2A-CLIM.MT1.SAPHIR.*
   product_category: PMW
   product_types:
   - RS
@@ -1288,8 +1286,6 @@
   - 6
   scan_modes:
     V6:
-    - S1
-    V7:
     - S1
 2A-MHS-NOAA19-CLIM:
   pattern: 2A-CLIM.NOAA19.MHS.*
