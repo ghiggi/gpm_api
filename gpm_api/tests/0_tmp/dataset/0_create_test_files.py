@@ -86,7 +86,6 @@ def _copy_attrs(src_h5_obj, dst_h5_obj):
 def _copy_datasets(src_group, dst_group, subset_size=5):
     for name, h5_obj in src_group.items():
         if isinstance(h5_obj, h5py.Dataset):
-
             # Determine the subset shape (2 indices per dimension)
             subset_shape, subset_chunks = _get_subset_shape_chunks(h5_obj, subset_size=subset_size)
 

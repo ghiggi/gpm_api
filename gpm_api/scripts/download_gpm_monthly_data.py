@@ -12,6 +12,7 @@ import click
 warnings.filterwarnings("ignore")
 sys.tracebacklimit = 0  # avoid full traceback error if occur
 
+
 # -------------------------------------------------------------------------.
 # Click Command Line Interface decorator
 @click.command()
