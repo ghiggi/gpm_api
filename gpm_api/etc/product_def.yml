@@ -494,18 +494,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F10:
   pattern: 1C.F10.SSMI.*
   product_category: PMW
@@ -523,18 +517,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F11:
   pattern: 1C.F11.SSMI.*
   product_category: PMW
@@ -553,18 +541,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F13:
   pattern: 1C.F13.SSMI.*
   product_category: PMW
@@ -583,18 +565,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F14:
   pattern: 1C.F14.SSMI.*
   product_category: PMW
@@ -613,18 +589,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F15:
   pattern: 1C.F15.SSMI.*
   product_category: PMW
@@ -643,18 +613,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMIS-F16:
   pattern: 1C.F16.SSMIS.*
   product_category: PMW
@@ -770,12 +734,8 @@
   scan_modes:
     V5:
     - S1
-    - S2
-    - S3
     V7:
     - S1
-    - S2
-    - S3
 2A-AMSR2-GCOMW1:
   pattern: 2A.GCOMW1.AMSR2.*
   product_category: PMW
