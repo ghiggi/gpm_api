@@ -36,6 +36,7 @@ DIM_DICT = {
     # PMW 1C-GMI (V7)
     "npixel1": "cross_track",
     "npixel2": "cross_track",
+    "npixel3": "cross_track",
     # PMW 1A and 1C-GMI (V7)
     "nscan1": "along_track",
     "nscan2": "along_track",
