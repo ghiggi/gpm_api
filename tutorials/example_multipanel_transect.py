@@ -252,7 +252,7 @@ for i in range(0, 3):
     axs[i, 1].set_yticks([])
     axs[i, 1].set_ylabel(None)
 
-# Remove xlabel and xticks execpt in bottom plots
+# Remove xlabel and xticks except in bottom plots
 for i in range(0, 2):
     for j in range(0, 2):
         axs[i, j].set_xticks([])
@@ -323,7 +323,7 @@ for i in range(0, 3):
     axs[i, 1].set_yticks([])
     axs[i, 1].set_ylabel(None)
 
-# Remove xlabel and xticks execpt in bottom plots
+# Remove xlabel and xticks except in bottom plots
 for i in range(0, 2):
     for j in range(0, 2):
         axs[i, j].set_xticks([])

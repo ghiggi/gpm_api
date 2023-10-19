@@ -294,7 +294,7 @@ def open_dataset(
     decode_cf: bool, optional
         Whether to decode the dataset. The default is False.
     parallel : bool, default: False
-        If True, the dataset openining is performed in parallel using ``dask.delayed``.
+        If True, the dataset opening is performed in parallel using ``dask.delayed``.
         If parallel=True, 'chunks' can not be None. The underlying data must be dask.Array.
         The default is False.
     prefix_group: bool, optional

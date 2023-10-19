@@ -126,7 +126,7 @@ def _get_pps_file_list(username, password, url_file_list, product, date, version
         print(
             f"This occurred when searching for product {product} (V0{version_str}) at date {date}."
         )
-        raise ValueError("Sorry for the incovenience.")
+        raise ValueError("Sorry for the inconvenience.")
 
     # Check if data are available
     if stdout[0] == "<":

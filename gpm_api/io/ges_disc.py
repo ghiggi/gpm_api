@@ -67,7 +67,7 @@ def _get_ges_disc_url_content(url):
     # Check if server is available
     if stdout == "":
         raise ValueError(
-            "The GES DISC data archive is currently unavailable. Sorry for the incovenience."
+            "The GES DISC data archive is currently unavailable. Sorry for the inconvenience."
         )
     return stdout
 
