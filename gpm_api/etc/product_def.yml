@@ -494,18 +494,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F10:
   pattern: 1C.F10.SSMI.*
   product_category: PMW
@@ -523,18 +517,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F11:
   pattern: 1C.F11.SSMI.*
   product_category: PMW
@@ -553,18 +541,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F13:
   pattern: 1C.F13.SSMI.*
   product_category: PMW
@@ -583,18 +565,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F14:
   pattern: 1C.F14.SSMI.*
   product_category: PMW
@@ -613,18 +589,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMI-F15:
   pattern: 1C.F15.SSMI.*
   product_category: PMW
@@ -643,18 +613,12 @@
     V5:
     - S1
     - S2
-    - S3
-    - S4
     V6:
     - S1
     - S2
-    - S3
-    - S4
     V7:
     - S1
     - S2
-    - S3
-    - S4
 1C-SSMIS-F16:
   pattern: 1C.F16.SSMIS.*
   product_category: PMW
@@ -1208,7 +1172,7 @@
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPAMHS_CLIM
-  start_time: 2006-11-23 10:24:51
+  start_time: 2006-11-23 13:47:35
   end_time: 2019-12-23 22:37:47
   available_versions:
   - 5
@@ -1226,7 +1190,7 @@
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPBMHS_CLIM
-  start_time: 2012-09-25 07:30:57
+  start_time: 2012-09-25 09:12:03
   end_time: null
   available_versions:
   - 5
@@ -1244,7 +1208,7 @@
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPCMHS_CLIM
-  start_time: 2018-11-16 06:45:21
+  start_time: 2018-11-16 08:26:37
   end_time: null
   available_versions:
   - 5
@@ -1262,7 +1226,7 @@
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA18MHS_CLIM
-  start_time: 2005-05-25 16:54:59
+  start_time: 2005-05-26 15:02:35
   end_time: 2018-10-20 19:58:16
   available_versions:
   - 5
@@ -1295,7 +1259,7 @@
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA19MHS_CLIM
-  start_time: 2009-02-12 11:37:53
+  start_time: 2009-02-12 13:20:00
   end_time: null
   available_versions:
   - 5

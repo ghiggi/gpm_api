@@ -109,50 +109,58 @@ def test_open_granule(monkeypatch):
     assert list(returned_dataset.coords) == expected_coordinate_keys
 
 
-def test_open_granule_on_real_files():
+def test_open_granule_on_real_files(tmp_path):
     """Test open_granule on real files.
 
-    Run `python generate_test_dataset_assets.py` to generate the test assets.
-    The expected assets directory structure is:
-    assets
-    ├── cut
-    │   ├── 1A.GPM.GMI.COUNT2021.20140304-S223658-E000925.000082.V07A.HDF5
-    │   └── ...
-    └── processed
-        ├── 1A.GPM.GMI.COUNT2021.20140304-S223658-E000925.000082.V07A
-        │   ├── S1.nc
-        │   ├── S2.nc
-        │   ├── S4.nc
-        │   └── S5.nc
-        └── ...
+    Load cut granules, save them as netcdf, and check that the new file is identical to the saved reference.
+    We do not compare the hdf5 loaded with open_granule to the reference netcdf5 loaded with xr.open_dataset
+    directly, because xr.open_dataset decodes data differently.
+
+    Run `python generate_test_granule_data.py` to generate the test granules.
+    The expected granules directory structure is:
+
+    test_granule_data
+    ├── 1A.GPM.GMI.COUNT2021.20140304-S223658-E000925.000082.V07A
+    │   ├── cut
+    │   │   └── 1A.GPM.GMI.COUNT2021.20140304-S223658-E000925.000082.V07A.HDF5
+    │   └── processed
+    │       ├── S1.nc
+    │       ├── S2.nc
+    │       ├── S4.nc
+    │       └── S5.nc
+    └── ...
     """
 
-    assets_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
-    hdf5_dir_path = os.path.join(assets_dir_path, "cut")
-    processed_dir_path = os.path.join(assets_dir_path, "processed")
+    granules_dir_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "test_granule_data"
+    )
+    test_netcdf_file_path = str(tmp_path / "test.nc")
 
-    if not os.path.exists(hdf5_dir_path) or not os.path.exists(processed_dir_path):
-        pytest.skip(
-            "Datasets assets not found. Please run `python generate_test_dataset_assets.py`."
+    if not os.path.exists(granules_dir_path):
+        pytest.skip("Test granules not found. Please run `python generate_test_granule_data.py`.")
+
+    product_basenames = os.listdir(granules_dir_path)
+    product_basenames.sort()
+
+    for product_basename in product_basenames:
+        hdf5_filepath = os.path.join(
+            granules_dir_path, product_basename, "cut", product_basename + ".HDF5"
         )
-
-    hdf5_filenames = os.listdir(hdf5_dir_path)
-
-    for hdf5_filename in hdf5_filenames:
-        hdf5_filepath = os.path.join(hdf5_dir_path, hdf5_filename)
-        base_name = os.path.splitext(hdf5_filename)[0]
-        netcdf_dir_path = os.path.join(processed_dir_path, base_name)
-        netcdf_filenames = os.listdir(netcdf_dir_path)
-        scan_modes = [os.path.splitext(netcdf_filename)[0] for netcdf_filename in netcdf_filenames]
+        reference_netcdf_dir_path = os.path.join(granules_dir_path, product_basename, "processed")
+        reference_netcdf_filenames = os.listdir(reference_netcdf_dir_path)
+        scan_modes = [os.path.splitext(filename)[0] for filename in reference_netcdf_filenames]
+        scan_modes.sort()
 
         for scan_mode in scan_modes:
-            ds = granule.open_granule(hdf5_filepath, scan_mode=scan_mode).compute()
+            ds = granule.open_granule(hdf5_filepath, scan_mode=scan_mode)
+            ds.to_netcdf(test_netcdf_file_path)
+            ds = xr.open_dataset(test_netcdf_file_path).compute()
             expected_ds = xr.open_dataset(
-                os.path.join(netcdf_dir_path, f"{scan_mode}.nc")
+                os.path.join(reference_netcdf_dir_path, f"{scan_mode}.nc")
             ).compute()
             del ds.attrs["history"]
             del expected_ds.attrs["history"]
-            assert xr.testing.assert_identical(ds, expected_ds)
+            xr.testing.assert_identical(ds, expected_ds)
 
 
 # Tests for internal functions #################################################
