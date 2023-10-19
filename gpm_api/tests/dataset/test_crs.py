@@ -1,5 +1,4 @@
 from gpm_api.dataset import crs
-from gpm_api.old_dataset import reader
 from pyproj import CRS
 import pytest
 from pytest_mock import MockerFixture
