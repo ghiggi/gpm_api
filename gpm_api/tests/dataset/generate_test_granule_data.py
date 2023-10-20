@@ -113,8 +113,6 @@ def find_first_pps_filepath(
     pps_filepaths = find_pps_filepaths(
         product,
         start_time,
-        # start_time gets extended to (start_time - 1 day) in find_pps_filepaths.
-        # May produce "No data found" warning
         end_time,
         product_type=product_type,
     )
@@ -313,7 +311,8 @@ def process_granule(product_basename: str, scan_modes: list[str]):
         processed_granule_filepath = os.path.join(processed_dir_path, f"{scan_mode}.nc")
         try:
             ds = open_granule(granule_path, scan_mode)
-            ds.to_netcdf(processed_granule_filepath)
+            # Must use h5netcdf engine because netCDF does not support booleans in attributes
+            ds.to_netcdf(processed_granule_filepath, engine="h5netcdf", invalid_netcdf=True)
         except Exception as e:
             print(f"Failed to process {product_basename} with scan mode {scan_mode}: {e}")
 

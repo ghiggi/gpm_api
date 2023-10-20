@@ -153,12 +153,13 @@ def test_open_granule_on_real_files(tmp_path):
 
         for scan_mode in scan_modes:
             ds = granule.open_granule(hdf5_filepath, scan_mode=scan_mode)
-            ds.to_netcdf(test_netcdf_file_path)
+            # Must use h5netcdf engine because netCDF does not support booleans in attributes
+            ds.to_netcdf(test_netcdf_file_path, engine="h5netcdf", invalid_netcdf=True)
             ds = xr.open_dataset(test_netcdf_file_path).compute()
             expected_ds = xr.open_dataset(
                 os.path.join(reference_netcdf_dir_path, f"{scan_mode}.nc")
             ).compute()
-            del ds.attrs["history"]
+            del ds.attrs["history"]  # Current date and time added
             del expected_ds.attrs["history"]
             xr.testing.assert_identical(ds, expected_ds)
 
