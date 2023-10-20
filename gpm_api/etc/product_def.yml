@@ -873,7 +873,7 @@
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPCMHS
-  start_time: 2018-11-16 06:45:21
+  start_time: 2019-07-02 23:18:47
   end_time: null
   available_versions:
   - 5
