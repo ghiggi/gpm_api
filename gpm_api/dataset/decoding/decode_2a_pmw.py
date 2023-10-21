@@ -31,7 +31,7 @@ def decode_product(ds):
     ]
     # Decode such variables if present in the xarray object
     for variable in variables:
-        if variable in ds and not ds[variable].attrs.get("gpm_api_decoded", False):
+        if variable in ds and ds[variable].attrs.get("gpm_api_decoded", "no") != "yes":
             ds[variable] = _get_decoding_function(variable)(ds[variable])
-            ds[variable].attrs["gpm_api_decoded"] = True
+            ds[variable].attrs["gpm_api_decoded"] = "yes"
     return ds

@@ -23,21 +23,26 @@ DIM_DICT = {
     "nfreq": "radar_frequency",
     "nDSD": "DSD_params",
     # 2B-GPM-CORRA
+    "nemiss": "pmw_frequency",
+    "nKuKa": "radar_frequency",
     "nBnPSD": "range",  # V7 88 bins (250 m each bin)
     "nBnPSDhi": "range",  # V6 88 bins (250 m each bin)
     # "nBnEnv": "nBnEnv",
-    "nemiss": "pmw_frequency",
-    "nKuKa": "radar_frequency",
+    # 2B-GPM SLH/CSH
+    "nlayer": "range",
     # PMW 1B-GMI (V7)
     "npix1": "cross_track",  # PMW (i.e. GMI)
     "npix2": "cross_track",  # PMW (i.e. GMI)
     "nchan1": "pmw_frequency",
     "nchan2": "pmw_frequency",
-    # PMW 1C-GMI (V7)
+    # PMW 1C-<PMW> (V7)
     "npixel1": "cross_track",
     "npixel2": "cross_track",
     "npixel3": "cross_track",
-    # PMW 1A and 1C-GMI (V7)
+    "npixel4": "cross_track",
+    "npixel5": "cross_track",
+    "npixel6": "cross_track",
+    # PMW 1A and 1C-<PMW> (V7)
     "nscan1": "along_track",
     "nscan2": "along_track",
     "nscan3": "along_track",
@@ -61,8 +66,6 @@ DIM_DICT = {
     "npixelht": "cross_track",
     "npixelcs": "cross_track",
     "npixelfr": "cross_track",  # S4 mode
-    # nfreqHI
-    # nlayer --> in CSH, SLH --> converted to height in decoding
 }
 
 SPATIAL_DIMS = [

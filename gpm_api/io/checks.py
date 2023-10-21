@@ -200,6 +200,7 @@ def check_time(time):
 
 
 def check_date(date):
+    """Check is a datetime.date object."""
     if date is None:
         raise ValueError("date cannot be None")
 
@@ -209,6 +210,7 @@ def check_date(date):
 
 
 def check_start_end_time(start_time, end_time):
+    """Check start_time and end_time value validity."""
     start_time = check_time(start_time)
     end_time = check_time(end_time)
     # Check start_time and end_time are chronological
@@ -220,6 +222,18 @@ def check_start_end_time(start_time, end_time):
     if end_time > datetime.datetime.utcnow():
         raise ValueError("Provide a end_time occurring in the past.")
     return (start_time, end_time)
+
+
+def check_valid_time_request(start_time, end_time, product):
+    """Check validity of the time request."""
+    from gpm_api.io.products import get_product_end_time, get_product_start_time
+
+    product_start_time = get_product_start_time(product)
+    product_end_time = get_product_end_time(product)
+    if start_time < product_start_time:
+        raise ValueError(f"{product} production started the {product_start_time}.")
+    if end_time > product_end_time:
+        raise ValueError(f"{product} production ended the {get_product_end_time}.")
 
 
 def check_scan_mode(scan_mode, product, version):

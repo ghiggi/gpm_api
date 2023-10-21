@@ -4,12 +4,16 @@ Created on Tue Jul 18 17:03:49 2023
 
 @author: ghiggi
 """
+import ast
 import datetime
 
 import numpy as np
 
-from gpm_api.utils.utils_HDF5 import (
-    parse_attr_string,
+from gpm_api.utils.utils_string import (
+    str_detect,
+    str_isfloat,
+    str_isinteger,
+    str_islist,
 )
 
 STATIC_GLOBAL_ATTRS = (
@@ -57,7 +61,27 @@ DYNAMIC_GLOBAL_ATTRS = (
     "NumberOfRainPixelsHS",
 )
 
-# TODO read this dictionary from config YAML ...
+# TODO: read this dictionary from config YAML ...
+
+
+def parse_attr_string(s):
+    """Parse attribute string value."""
+    # If multiple stuffs between brackets [ ], convert to list
+    if isinstance(s, str) and str_islist(s):
+        s = ast.literal_eval(s)
+    # If still a comma in a string --> Convert into a list
+    if isinstance(s, str) and str_detect(s, ","):
+        s = s.split(",")
+    if isinstance(s, str) and str_detect(s, "\n"):
+        s = s.split("\n")
+    # If the character can be a number, convert it
+    if isinstance(s, str) and str_isinteger(s):
+        s = int(float(s))  # prior float because '0.0000' otherwise crash
+    elif isinstance(s, str) and str_isfloat(s):
+        s = float(s)
+    else:
+        s = s
+    return s
 
 
 def decode_string(string):

@@ -517,12 +517,13 @@ def _add_variables_crs_attrs(ds, crs, grid_mapping_name):
         ds[var].attrs["grid_mapping"] = grid_mapping
 
     # Add coordinates attribute if swath data
+    # --> If added to attrs, to_netcdf move it to encoding !
     if has_swath_coords(ds):
         lon_coord, lat_coord = _get_swath_dim_coords(ds)
         for var in variables:
             da_coords = ds[var].coords
             if lon_coord in da_coords and lat_coord in da_coords:
-                ds[var].attrs["coordinates"] = f"{lat_coord} {lon_coord}"
+                ds[var].encoding["coordinates"] = f"{lat_coord} {lon_coord}"
     return ds
 
 

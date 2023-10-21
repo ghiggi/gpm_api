@@ -4,6 +4,7 @@ Created on Thu Oct 13 11:13:15 2022
 
 @author: ghiggi
 """
+import datetime
 import functools
 import os
 
@@ -74,7 +75,7 @@ def _check_valid_product(product):
 
 
 def available_versions(product):
-    """Provide a list with the available product versions."""
+    """Provides a list with the available product versions."""
     _check_valid_product(product)
     versions = get_info_dict()[product]["available_versions"]
     return versions
@@ -84,6 +85,21 @@ def get_last_product_version(product):
     """Provide the most recent product version."""
     version = available_versions(product)[-1]
     return version
+
+
+def get_product_start_time(product):
+    """Provide the product start_time."""
+    _check_valid_product(product)
+    start_time = get_info_dict()[product]["start_time"]
+    return start_time
+
+
+def get_product_end_time(product):
+    """Provide the product end_time."""
+    _check_valid_product(product)
+    end_time = get_info_dict()[product]["end_time"]
+    end_time = datetime.datetime.utcnow()
+    return end_time
 
 
 def available_products(

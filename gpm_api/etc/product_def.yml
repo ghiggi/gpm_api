@@ -1563,7 +1563,6 @@
   scan_modes:
     V6:
     - NS
-    - MS
     - HS
     V7:
     - FS

@@ -1,64 +1,44 @@
 #!/usr/bin/env python3
 """
-Created on Fri Jul 28 14:03:18 2023
+Created on Fri Jul 28 13:46:01 2023
 
 @author: ghiggi
 """
-import warnings
+import importlib
 
-import xarray as xr
+from gpm_api.io.products import available_products
 
-from gpm_api.dataset.decoding.attrs import clean_dataarrays_attrs
-from gpm_api.dataset.decoding.coordinates import set_coordinates
-from gpm_api.dataset.decoding.variables import decode_variables
-
-# TODO REFACTORING:
-# In finalize_dataset (If variable attrs not changing across granules)
-#  - First clean attributes .. for _FillValue, FillValue, etc  !
-#  - Then do cf decoding
-#  - Then apply custom decoding
-# --> Currently done per granule !
-
-# -----------------------------------------------------------------------------.
+# TODO:
+# - implement accessor ds.gpm_api.decode_variable(variable)
+# - use gpm_api_product attribute to recognize where decode_<variable> function is
+# - run decoding only if gpm_api_decoded not present (or "no"). If "yes", raise error (already decoded)
 
 
-def decode_dataset(ds):
-    """CF decode the xarray dataset.
+def _get_decoding_function(module_name):
+    """Retrieve the decode_product function from a specific module."""
+    module = importlib.import_module(module_name)
+    decode_function = getattr(module, "decode_product", None)
 
-    For more information on CF-decoding, read:
-        https://docs.xarray.dev/en/stable/generated/xarray.decode_cf.html
-    """
-    # Decode with xr.decode_cf
-    with warnings.catch_warnings():
-        warnings.simplefilter(action="ignore", category=FutureWarning)
-        ds = xr.decode_cf(ds, decode_timedelta=False)
+    if decode_function is None or not callable(decode_function):
+        raise ValueError("decode_product function not found in the {module_name} module.")
 
-    # Clean the DataArray attributes and encodings
-    for var, da in ds.items():
-        # When decoding with xr.decode_cf, _FillValue and the source dtype are automatically
-        # added to the encoding attribute
-        ds[var].attrs.pop("source_dtype", None)
-        ds[var].attrs.pop("_FillValue", None)
-        # Remove hdf encodings
-        ds[var].encoding.pop("szip", None)
-        ds[var].encoding.pop("zstd", None)
-        ds[var].encoding.pop("bzip2", None)
-        ds[var].encoding.pop("blosc", None)
-    return ds
+    return decode_function
 
 
-def apply_custom_decoding(ds, product, scan_mode):
-    """Ensure correct decoding of dataset coordinates."""
-    # Clean attributes
-    ds = clean_dataarrays_attrs(ds, product)
+def decode_variables(ds, product):
+    """Decode the variables of a given GPM product."""
+    # Decode variables of 2A-<RADAR> products
+    if product in available_products(product_category="RADAR", product_level="2A"):
+        ds = _get_decoding_function("gpm_api.dataset.decoding.decode_2a_radar")(ds)
 
-    # Decode dataset
-    # ds = decode_dataset(ds) # in future ... see TODO above
+    # Decode variables of 2A-<PMW> products
+    if product in available_products(product_category="PMW", product_level="2A"):
+        ds = _get_decoding_function("gpm_api.dataset.decoding.decode_2a_pmw")(ds)
 
-    # Set relevant coordinates
-    ds = set_coordinates(ds, product, scan_mode)
-
-    # Decode variables
-    ds = decode_variables(ds, product)
+    # if ds.attrs.get("TotalQualityCode"):
+    #     TotalQualityCode = ds.attrs.get("TotalQualityCode")
+    #     ds["TotalQualityCode"] = xr.DataArray(
+    #         np.repeat(TotalQualityCode, ds.dims["along_track"]), dims=["along_track"]
+    #     )
 
     return ds

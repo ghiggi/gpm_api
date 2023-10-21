@@ -4,82 +4,26 @@ Created on Tue Jul 18 17:30:43 2023
 
 @author: ghiggi
 """
-import os
 import warnings
 from functools import partial
 
 import xarray as xr
 
 from gpm_api.configs import get_gpm_base_dir
-from gpm_api.dataset.attrs import decode_string
 from gpm_api.dataset.conventions import finalize_dataset
 from gpm_api.dataset.granule import _open_granule
 from gpm_api.io.checks import (
     check_base_dir,
+    check_groups,
     check_product,
     check_scan_mode,
     check_start_end_time,
+    check_valid_time_request,
     check_variables,
 )
 from gpm_api.io.disk import find_filepaths
 from gpm_api.utils.checks import has_missing_granules
 from gpm_api.utils.warnings import GPM_Warning
-
-
-def _is_valid_granule(filepath):
-    """Check the GPM HDF file is readable, not corrupted and not EMPTY."""
-    # TODO: move somewhere else if needed (deprecated).
-    # TODO: when opening dataset, code has been refactored to open only once the file.
-    # Try loading the HDF granule file
-    try:
-        with xr.open_dataset(filepath, engine="netcdf4", group="") as ds:
-            attrs = ds.attrs
-            attrs = decode_string(attrs["FileHeader"])
-            is_empty_granule = attrs["EmptyGranule"] == "NOT_EMPTY"
-
-    # FileNotFoundError: [Errno 2] No such file or directory:
-    except OSError as e:
-        error_str = str(e)
-        if not os.path.exists(filepath):
-            raise ValueError(
-                "This is a gpm_api bug. `find_filepaths` should not have returned this filepath."
-            )
-        elif "lock" in error_str:
-            msg = "Unfortunately, HDF locking is occurring."
-            msg += "Export the environment variable HDF5_USE_FILE_LOCKING = 'FALSE' into your environment (i.e. in the .bashrc).\n"  # noqa
-            msg += f"The error is: '{error_str}'."
-            raise ValueError(msg)
-        else:
-            msg = f"The following file is corrupted and is being removed: {filepath}. Redownload the file."
-            warnings.warn(msg, GPM_Warning)
-            # os.remove(filepath) # TODO !!!
-            return False
-
-    # If the GPM granule is empty, return False, otherwise True
-    return is_empty_granule
-
-
-def _identify_error(e, filepath):
-    """Identify error when opening HDF file."""
-    error_str = str(e)
-    # TODO: to create test case !
-    # Corrupted file error (i.e. interrupted download)
-    # netCDF4._netCDF4._ensure_nc_success
-    # OSError: [Errno -101] NetCDF: HDF error
-    # OSError: [Errno -51] NetCDF: Unknown file format
-    # --> If raise an OSError, warn and remove the file
-    if "[Errno -101] NetCDF: HDF error" in error_str:
-        msg = "The file {filepath} is corrupted. It must be redownload."
-        warnings.warn(msg, GPM_Warning)
-    elif "lock" in error_str:
-        msg = "Unfortunately, HDF locking is occurring."
-        msg += "Export the environment variable HDF5_USE_FILE_LOCKING = 'FALSE' into your environment (i.e. in the .bashrc).\n"  # noqa
-        msg += f"The error is: '{error_str}'."
-        raise ValueError(msg)
-    else:
-        msg = f"The following file is corrupted and is being removed: {filepath}. Redownload the file."
-        warnings.warn(msg, GPM_Warning)
-    return
 
 
 def _get_scheduler(get=None, collection=None):
@@ -118,13 +62,6 @@ def _get_scheduler(get=None, collection=None):
 
 def _try_open_granule(filepath, scan_mode, variables, groups, prefix_group, decode_cf, chunks):
     """Try open a granule."""
-    # TODO: Capture error when granule is empty !
-
-    # Check the file exists
-    if not os.path.exists(filepath):
-        msg = "The filepath {filepath} does not exist."
-        warnings.warn(msg, GPM_Warning)
-        return None
     try:
         ds = _open_granule(
             filepath,
@@ -135,11 +72,9 @@ def _try_open_granule(filepath, scan_mode, variables, groups, prefix_group, deco
             prefix_group=prefix_group,
             chunks=chunks,
         )
-    except OSError as e:
-        _ = _identify_error(e, filepath)
-        # msg = f"The following file is corrupted and is being removed: {filepath}. Redownload the file."
-        # warnings.warn(msg, GPM_Warning)
-        # os.remove(filepath) # TODO !!!
+    except Exception as e:
+        msg = f"The following error occurred while opening the {filepath} granule: {e}"
+        warnings.warn(msg, GPM_Warning)
         ds = None
     return ds
 
@@ -324,14 +259,10 @@ def open_dataset(
     ## Check valid product and variables
     check_product(product, product_type=product_type)
     variables = check_variables(variables)
+    groups = check_groups(groups)
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
-
-    ##------------------------------------------------------------------------.
-    ## TODO: Check for chunks
-    # - check works in open_dataset
-    # - smart_autochunk per variable (based on dim...)
-    # chunks = check_chunks(chunks)
+    check_valid_time_request(start_time, end_time, product)
 
     ##------------------------------------------------------------------------.
     # Find filepaths
@@ -386,7 +317,12 @@ def open_dataset(
     ##-------------------------------------------------------------------------.
     # Finalize dataset
     ds = finalize_dataset(
-        ds=ds, product=product, decode_cf=decode_cf, start_time=start_time, end_time=end_time
+        ds=ds,
+        product=product,
+        scan_mode=scan_mode,
+        decode_cf=decode_cf,
+        start_time=start_time,
+        end_time=end_time,
     )
 
     ##------------------------------------------------------------------------.

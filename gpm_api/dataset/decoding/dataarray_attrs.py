@@ -82,7 +82,7 @@ def _format_dataarray_attrs(da, product=None):
     return da
 
 
-def clean_dataarrays_attrs(ds, product):
+def standardize_dataarrays_attrs(ds, product):
     for var, da in ds.items():
         ds[var] = _format_dataarray_attrs(da, product)
     return ds

@@ -15,6 +15,8 @@ from gpm_api.utils.yaml import read_yaml_file
 
 
 def ensure_valid_coords(ds, raise_error=False):
+    from gpm_api import config
+
     # invalid_coords = np.logical_or(ds["lon"].data == -9999.9,
     #                                ds["lat"].data == -9999.9)
     invalid_coords = np.logical_or(
@@ -27,7 +29,8 @@ def ensure_valid_coords(ds, raise_error=False):
         if raise_error:
             raise ValueError(msg)
         else:
-            warnings.warn(msg, GPM_Warning)
+            if config.get("warn_invalid_spatial_coordinates"):
+                warnings.warn(msg, GPM_Warning)
 
         da_invalid_coords = ds["lon"].copy()
         da_invalid_coords.data = invalid_coords
@@ -121,6 +124,8 @@ def get_pmw_frequency_corra(product):
         pmw_frequency = pmw_frequency + get_pmw_frequency("GMI", scan_mode="S2")
     elif product == "2B-TRMM-CORRA":
         pmw_frequency = get_pmw_frequency("TMI", scan_mode="S1")
+        pmw_frequency = pmw_frequency + get_pmw_frequency("TMI", scan_mode="S2")
+        pmw_frequency = pmw_frequency + get_pmw_frequency("TMI", scan_mode="S3")
     return pmw_frequency
 
 
@@ -128,11 +133,14 @@ def _parse_sun_local_time(ds):
     """Ensure sunLocalTime to be in float type."""
     dtype = ds["sunLocalTime"].data.dtype
     if dtype == "timedelta64[ns]":
-        ds["sunLocalTime"] = ds["sunLocalTime"].astype(int) / 10**9 / 60 / 60
+        ds["sunLocalTime"] = ds["sunLocalTime"].astype(float) / 10**9 / 60 / 60
     elif np.issubdtype(dtype, np.floating):
         pass
     else:
         raise ValueError("Expecting sunLocalTime as float or timedelta64[ns]")
+    ds["sunLocalTime"].attrs[
+        "units"
+    ] = "decimal hours"  # to avoid open_dataset netCDF convert to timedelta64[ns]
     return ds
 
 

@@ -13,7 +13,6 @@ import numpy as np
 import xarray as xr
 from matplotlib.collections import PolyCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.ndimage import binary_dilation
 
 ### TODO: Add xarray + cartopy  (xr_carto) (xr_mpl)
 # _plot_cartopy_xr_imshow
@@ -57,6 +56,8 @@ def get_extent(da, x="lon", y="lat"):
 
 def get_antimeridian_mask(lons, buffer=True):
     """Get mask of longitude coordinates neighbors crossing the antimeridian."""
+    from scipy.ndimage import binary_dilation
+
     # Check vertical edges
     row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
     row_idx_rev, col_idx_rev = np.where(np.abs(np.diff(lons[::-1, :], axis=0)) > 180)
@@ -78,6 +79,8 @@ def get_antimeridian_mask(lons, buffer=True):
 
 
 def get_masked_cells_polycollection(x, y, arr, mask, plot_kwargs):
+    from scipy.ndimage import binary_dilation
+
     from gpm_api.utils.area import _from_corners_to_bounds, _get_lonlat_corners, is_vertex_clockwise
 
     # - Buffer mask by 1 to derive vertices of all masked QuadMesh

@@ -46,6 +46,7 @@ dependencies = [
     "wget",
     "tqdm",
     "click",
+    "donfig",
     "trollsift",
     "pyresample", # TO MAKE OPTIONAL
     "cartopy>=0.20.0",  # TO MAKE OPTIONAL
@@ -146,3 +147,10 @@ exclude = [
 
 [tool.codespell]
     ignore-words-list = "ges,nd"
+
+
+[tool.coverage.run]
+omit = [
+  "gpm_api/_version.py",
+  "gpm_api/etc/*",
+]

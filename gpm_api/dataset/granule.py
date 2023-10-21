@@ -12,7 +12,6 @@ import xarray as xr
 from gpm_api.dataset.attrs import get_granule_attrs
 from gpm_api.dataset.conventions import finalize_dataset
 from gpm_api.dataset.coords import get_coords
-from gpm_api.dataset.decoding import apply_custom_decoding
 from gpm_api.dataset.groups_variables import _get_relevant_groups_variables
 from gpm_api.io.checks import (
     check_groups,
@@ -20,9 +19,6 @@ from gpm_api.io.checks import (
     check_variables,
 )
 from gpm_api.io.info import get_product_from_filepath, get_version_from_filepath
-from gpm_api.utils.checks import is_regular
-from gpm_api.utils.time import ensure_time_validity
-from gpm_api.utils.warnings import GPM_Warning
 
 
 def _prefix_dataset_group_variables(ds, group):
@@ -163,26 +159,15 @@ def remove_unused_var_dims(ds):
 
 def _open_granule(
     filepath,
-    scan_mode=None,
-    groups=None,
-    variables=None,
-    decode_cf=False,
-    chunks={},
-    prefix_group=True,
+    scan_mode,
+    groups,
+    variables,
+    decode_cf,
+    chunks,
+    prefix_group,
 ):
     """Open granule file into xarray Dataset."""
     from gpm_api.dataset.datatree import open_datatree
-
-    # Get product and version
-    product = get_product_from_filepath(filepath)
-    version = get_version_from_filepath(filepath)
-
-    # Check variables and groups
-    variables = check_variables(variables)
-    groups = check_groups(groups)
-
-    # Check scan_mode
-    scan_mode = check_scan_mode(scan_mode, product, version)
 
     # Open datatree
     dt = open_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True)
@@ -198,6 +183,7 @@ def _open_granule(
         decode_cf=False,
     )
 
+    ###-----------------------------------------------------------------------.
     # Specify datatree closer
     # TODO: implement datatree.close() and datatree._close in datatree repository
     # --> datatree._close as iterator ?
@@ -206,37 +192,9 @@ def _open_granule(
     ds.set_close(getattr(dt, "_close"))
 
     ###-----------------------------------------------------------------------.
-    ### Clean attributes, decode variables
-    # Apply custom processing
-    ds = apply_custom_decoding(ds, product, scan_mode)
-
     # If there are dataset variables, remove coords and dimensions not exploited by data variables
     if len(ds.data_vars) >= 1:
         ds = remove_unused_var_dims(ds)
-
-    ###-----------------------------------------------------------------------.
-    ## Check swath time coordinate
-    # Ensure validity of the time dimension
-    # - Infill up to 10 consecutive NaT
-    # - Do not check for regular time dimension !
-    # --> TODO: this can be moved into get_orbit_coords !
-    ds = ensure_time_validity(ds, limit=10)
-
-    # Try to warn if non-contiguous scans are present in a GPM Orbit
-    # - If any of the  GPM Orbit specified variables has the cross-track dimension, the check raise an error
-    # - If ds is a GPM Grid Granule, is always a single timestep so always True
-    try:
-        if not is_regular(ds):
-            msg = f"The GPM granule {filepath} has non-contiguous scans !"
-            warnings.warn(msg, GPM_Warning)
-    except Exception:
-        pass
-
-    ###-----------------------------------------------------------------------.
-    ## Check geolocation latitude/longitude coordinates
-    # TODO: check_valid_geolocation
-    # TODO: ensure_valid_geolocation (1 spurious pixel)
-    # TODO: ds_gpm.gpm_api.valid_geolocation
 
     ###-----------------------------------------------------------------------.
     # Return xr.Dataset
@@ -311,6 +269,17 @@ def open_granule(
     ds:  xarray.Dataset
 
     """
+    # Get product and version
+    product = get_product_from_filepath(filepath)
+    version = get_version_from_filepath(filepath)
+
+    # Check variables and groups
+    variables = check_variables(variables)
+    groups = check_groups(groups)
+
+    # Check scan_mode
+    scan_mode = check_scan_mode(scan_mode, product, version)
+
     # Open granule
     ds = _open_granule(
         filepath=filepath,
@@ -323,8 +292,12 @@ def open_granule(
     )
 
     # Finalize granule
-    product = get_product_from_filepath(filepath)
     ds = finalize_dataset(
-        ds=ds, product=product, decode_cf=decode_cf, start_time=None, end_time=None
+        ds=ds,
+        product=product,
+        scan_mode=scan_mode,
+        decode_cf=decode_cf,
+        start_time=None,
+        end_time=None,
     )
     return ds

@@ -18,6 +18,7 @@ from gpm_api.io.checks import (
     check_product_type,
     check_product_version,
     check_start_end_time,
+    check_valid_time_request,
     is_empty,
 )
 from gpm_api.io.directories import get_disk_directory, get_disk_product_directory
@@ -240,7 +241,7 @@ def find_filepaths(
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     start_time, end_time = check_start_end_time(start_time, end_time)
-
+    check_valid_time_request(start_time, end_time, product)
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX

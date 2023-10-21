@@ -13,6 +13,7 @@ from gpm_api.io.checks import (
     check_base_dir,
     check_product,
     check_start_end_time,
+    check_valid_time_request,
 )
 from gpm_api.io.disk import find_filepaths
 
@@ -118,7 +119,7 @@ def check_archive_integrity(
     check_product(product, product_type=product_type)
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
-
+    check_valid_time_request(start_time, end_time, product)
     # Find filepaths
     filepaths = find_filepaths(
         base_dir=base_dir,

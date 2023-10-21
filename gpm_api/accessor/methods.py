@@ -554,13 +554,13 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 
     def available_retrievals(self):
         """Available GPM-API retrievals for that GPM product."""
-        from gpm_api.dataset.retrievals.routines import available_retrievals
+        from gpm_api.retrievals.routines import available_retrievals
 
         return available_retrievals(self._obj)
 
     def retrieve(self, name, **kwargs):
         """Retrieve a GPM-API variable."""
-        from gpm_api.dataset.retrievals.routines import get_retrieval_variable
+        from gpm_api.retrievals.routines import get_retrieval_variable
 
         return get_retrieval_variable(self._obj, retrieval=name, **kwargs)
 

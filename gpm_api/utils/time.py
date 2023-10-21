@@ -175,6 +175,22 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
     return timesteps
 
 
+def infill_timesteps(timesteps, limit):
+    """Infill missing timesteps if less than <limit> consecutive."""
+    # Check at least two time steps available to infill
+    if len(timesteps) <= 2:
+        return timesteps
+
+    # Interpolate if maximum <limit> timesteps are missing
+    timesteps = interpolate_nat(timesteps, method="linear", limit=limit, limit_area="inside")
+
+    # Check if there are still residual NaT
+    if np.any(is_nat(timesteps)):
+        raise ValueError(f"More than {limit} consecutive timesteps are NaT.")
+
+    return timesteps
+
+
 def ensure_time_validity(xr_obj, limit=10):
     """
     Attempt to correct the time coordinate if less than 'limit' consecutive NaT values are present.
@@ -193,20 +209,11 @@ def ensure_time_validity(xr_obj, limit=10):
 
     """
     timesteps = xr_obj["time"].values
-
-    # In case only 1 timestep, return the object (also Grid case)
-    if len(timesteps) == 1:
-        return xr_obj
-
-    # Interpolate if maximum 10 timesteps are missing
-    timesteps = interpolate_nat(timesteps, method="linear", limit=limit, limit_area="inside")
-
-    # Check if there are still residual NaT
-    if np.any(is_nat(timesteps)):
-        raise ValueError("More than 10 consecutive timesteps are NaT.")
-
-    # Update timesteps xarray object
-    xr_obj["time"].data = timesteps
+    timesteps = infill_timesteps(timesteps, limit=limit)
+    if "time" not in list(xr_obj.dims):
+        xr_obj["time"].data = timesteps
+    else:
+        xr_obj = xr_obj.assign_coords({"time": timesteps})
 
     return xr_obj
 

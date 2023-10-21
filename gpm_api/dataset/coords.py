@@ -35,6 +35,7 @@ def get_orbit_coords(dt, scan_mode):
     lat = np.asanyarray(dt[scan_mode]["Latitude"].data)
     # lst = dt[scan_mode]["sunLocalTime"].data.compute()
     time = _get_orbit_scan_time(dt, scan_mode)
+
     n_along_track, n_cross_track = lon.shape
     granule_id = np.repeat(granule_id, n_along_track)
     along_track_id = np.arange(n_along_track)

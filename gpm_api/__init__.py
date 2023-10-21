@@ -9,6 +9,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 # os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"  # noqa
 import gpm_api.accessor  # noqa
+from gpm_api._config import config
 from gpm_api.configs import define_gpm_api_configs as define_configs
 from gpm_api.configs import read_gpm_api_configs as read_configs
 from gpm_api.dataset.dataset import open_dataset
@@ -21,7 +22,12 @@ from gpm_api.io.download import (
     download_files,
     download_monthly_data,
 )
-from gpm_api.io.products import available_products, available_scan_modes
+from gpm_api.io.products import (
+    available_products,
+    available_scan_modes,
+    get_product_end_time,
+    get_product_start_time,
+)
 from gpm_api.utils.checks import (
     check_contiguous_scans,
     check_missing_granules,
@@ -35,10 +41,13 @@ _root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 __all__ = [
     "_root_path",
+    "config",
     "define_configs",
     "read_configs",
     "available_products",
     "available_scan_modes",
+    "get_product_start_time",
+    "get_product_end_time",
     "download",
     "download_daily_data",
     "download_monthly_data",

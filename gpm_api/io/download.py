@@ -23,6 +23,7 @@ from gpm_api.io.checks import (
     check_product_type,
     check_product_version,
     check_start_end_time,
+    check_valid_time_request,
     is_empty,
 )
 from gpm_api.io.data_integrity import (
@@ -1000,7 +1001,7 @@ def download_archive(
     version = check_product_version(version, product)
     base_dir = check_base_dir(base_dir)
     start_time, end_time = check_start_end_time(start_time, end_time)
-
+    check_valid_time_request(start_time, end_time, product)
     # -------------------------------------------------------------------------.
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory

@@ -11,6 +11,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 from gpm_api.configs import get_gpm_password, get_gpm_username
 from gpm_api.io.checks import (
@@ -19,12 +20,13 @@ from gpm_api.io.checks import (
     check_product_type,
     check_product_version,
     check_start_end_time,
+    check_valid_time_request,
     is_empty,
 )
 from gpm_api.io.directories import get_pps_directory
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.info import get_version_from_filepaths
-from gpm_api.io.products import available_products
+from gpm_api.io.products import available_products, get_info_dict
 from gpm_api.utils.warnings import GPMDownloadWarning
 
 VERSION_WARNING = True
@@ -42,6 +44,8 @@ def flatten_list(nested_list):
 def ensure_valid_start_date(start_date, product):
     if product == "2A-SAPHIR-MT1-CLIM":
         min_start_date = "2011-10-13 00:00:00"
+    elif "1A-" in product or "1B-" in product:
+        min_start_date = "1997-12-07 00:00:00"
     elif product in available_products(product_category="PMW"):
         min_start_date = "1987-07-09 00:00:00"
     elif product in available_products(product_category="RADAR") or product in available_products(
@@ -339,7 +343,7 @@ def find_pps_filepaths(
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     start_time, end_time = check_start_end_time(start_time, end_time)
-
+    check_valid_time_request(start_time, end_time, product)
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
@@ -401,3 +405,24 @@ def find_pps_filepaths(
     # Return filepaths
     filepaths = sorted(filepaths)
     return filepaths
+
+
+def find_first_pps_granule_filepath(product: str, product_type: str, version: int) -> str:
+    """Return the PPS filepath of the first available granule."""
+    # Retrieve product start_time from product.yaml file.
+    info_dict = get_info_dict()
+    start_time = info_dict[product].get("start_time", None)
+    if start_time is None:
+        raise ValueError(f"{product} product start_time is not provided in the product.yaml file.")
+    # Find filepath
+    end_time = start_time + relativedelta(days=1)
+    pps_filepaths = find_pps_filepaths(
+        product=product,
+        start_time=start_time,
+        end_time=end_time,
+        version=version,
+        product_type=product_type,
+    )
+    if len(pps_filepaths) == 0:
+        raise ValueError(f"No PPS files found for {product} product around {start_time}.")
+    return pps_filepaths[0]

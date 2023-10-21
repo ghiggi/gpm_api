@@ -4,6 +4,7 @@ channels:
 dependencies:
   - cartopy>=0.20.0
   - click
+  - donfig
   - dask
   - h5py
   - netcdf4

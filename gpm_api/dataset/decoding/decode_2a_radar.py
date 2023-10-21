@@ -248,15 +248,16 @@ def decode_product(ds):
     ]
     # Decode such variables if present in the xarray object
     for variable in variables:
-        if variable in ds and not ds[variable].attrs.get("gpm_api_decoded", False):
+        if variable in ds and ds[variable].attrs.get("gpm_api_decoded", "no") != "yes":
             with xr.set_options(keep_attrs=True):
                 ds[variable] = _get_decoding_function(variable)(ds[variable])
-            ds[variable].attrs["gpm_api_decoded"] = True
+            ds[variable].attrs["gpm_api_decoded"] = "yes"
 
     # Preprocess other variables
     # --> Split 3D field in 2D fields
-    if "precipWaterIntegrated" in ds and not ds["precipWaterIntegrated"].attrs.get(
-        "gpm_api_decoded", False
+    if (
+        "precipWaterIntegrated" in ds
+        and ds["precipWaterIntegrated"].attrs.get("gpm_api_decoded", "no") != "yes"
     ):
         ds["precipWaterIntegrated"] = ds["precipWaterIntegrated"] / 1000
         ds["precipWaterIntegrated_Liquid"] = ds["precipWaterIntegrated"].isel({"LS": 0})
@@ -271,6 +272,6 @@ def decode_product(ds):
             "precipWaterIntegrated",
         ]
         for var in variables:
-            ds[var].attrs["gpm_api_decoded"] = True
+            ds[var].attrs["gpm_api_decoded"] = "yes"
             ds[var].attrs["units"] = "kg/m^2"
     return ds
