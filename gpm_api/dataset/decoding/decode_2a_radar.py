@@ -13,7 +13,7 @@ def decode_landSurfaceType(da):
     """Decode the 2A-<RADAR> variable landSurfaceType."""
     da = da.where(da >= 0)  # < 0 set to np.nan
     da = da / 100
-    da = da.astype(int)
+    da = da.round(0)
     da.attrs["flag_values"] = [0, 1, 2, 3]
     da.attrs["flag_meanings"] = ["Ocean", "Land", "Coast", "Inland Water"]
     da.attrs["description"] = "Land Surface type"
@@ -23,7 +23,7 @@ def decode_landSurfaceType(da):
 def decode_phase(da):
     """Decode the 2A-<RADAR> variable phase."""
     da = da / 100
-    da = da.astype(int)
+    da = da.round(0)
     da = da.where(da >= 0)  # < 0 set to np.nan
     da.attrs["flag_values"] = [0, 1, 2]
     da.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
@@ -34,7 +34,7 @@ def decode_phase(da):
 def decode_phaseNearSurface(da):
     """Decode the 2A-<RADAR> variable phaseNearSurface."""
     da = da / 100
-    da = da.astype(int)
+    da = da.round(0)
     da = da.where(da >= 0)  # < 0 set to np.nan
     da.attrs["flag_values"] = [0, 1, 2]
     da.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
