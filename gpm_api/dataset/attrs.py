@@ -9,13 +9,6 @@ import datetime
 
 import numpy as np
 
-from gpm_api.utils.utils_string import (
-    str_detect,
-    str_isfloat,
-    str_isinteger,
-    str_islist,
-)
-
 STATIC_GLOBAL_ATTRS = (
     ## FileHeader
     "DOI",
@@ -61,23 +54,56 @@ DYNAMIC_GLOBAL_ATTRS = (
     "NumberOfRainPixelsHS",
 )
 
+
 # TODO: read this dictionary from config YAML ...
 
 
-def parse_attr_string(s):
+def _is_str_list(s):
+    """
+    Return a boolean indicating if the string start and end with brackets and can
+    be converted to a list.
+    """
+    if s.startswith("[") and s.endswith("]"):
+        try:
+            ast.literal_eval(s)
+            return True
+        except ValueError:
+            return False
+    else:
+        return False
+
+
+def _isfloat(s):
+    """Return a boolean indicating if the string can be converted to float."""
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+def _isinteger(s):
+    """Return a boolean indicating if the string can be converted to float."""
+    if _isfloat(s):
+        return float(s).is_integer()
+    else:
+        return False
+
+
+def _parse_attr_string(s):
     """Parse attribute string value."""
     # If multiple stuffs between brackets [ ], convert to list
-    if isinstance(s, str) and str_islist(s):
+    if isinstance(s, str) and _is_str_list(s):
         s = ast.literal_eval(s)
     # If still a comma in a string --> Convert into a list
-    if isinstance(s, str) and str_detect(s, ","):
+    if isinstance(s, str) and "," in s:
         s = s.split(",")
-    if isinstance(s, str) and str_detect(s, "\n"):
+    if isinstance(s, str) and "\n" in s:
         s = s.split("\n")
     # If the character can be a number, convert it
-    if isinstance(s, str) and str_isinteger(s):
+    if isinstance(s, str) and _isinteger(s):
         s = int(float(s))  # prior float because '0.0000' otherwise crash
-    elif isinstance(s, str) and str_isfloat(s):
+    elif isinstance(s, str) and _isfloat(s):
         s = float(s)
     else:
         s = s
@@ -85,7 +111,7 @@ def parse_attr_string(s):
 
 
 def decode_string(string):
-    """Decode dictionary string.
+    """Decode string dictionary.
 
     Format: "<key>=<value>\n."
     It removes ; and \t prior to parsing the string.
@@ -98,12 +124,9 @@ def decode_string(string):
         list_key_value = [
             key_value.split("=") for key_value in string.split(";") if len(key_value) > 0
         ]
-        value = {
-            key_value[0].replace("\n", ""): parse_attr_string(key_value[1])
-            for key_value in list_key_value
-        }
+        value = {key.replace("\n", ""): _parse_attr_string(value) for key, value in list_key_value}
     else:
-        value = parse_attr_string(string)
+        value = _parse_attr_string(string)
     return value
 
 

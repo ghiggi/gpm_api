@@ -180,6 +180,13 @@ def get_products_pattern_dict():
     return pattern_dict
 
 
+def get_product_pattern(product):
+    """Return the filename pattern associated to GPM product."""
+    info_dict = get_info_dict()
+    pattern = info_dict[product]["pattern"]
+    return pattern
+
+
 def get_product_category(product):
     """Get the product_category of a GPM product.
 

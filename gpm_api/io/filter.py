@@ -20,8 +20,7 @@ from gpm_api.io.info import (
     get_start_end_time_from_filepaths,
     get_version_from_filepaths,
 )
-from gpm_api.io.products import get_products_pattern_dict
-from gpm_api.utils.utils_string import str_subset
+from gpm_api.io.products import get_product_pattern
 
 
 def is_granule_within_time(start_time, end_time, file_start_time, file_end_time):
@@ -51,6 +50,11 @@ def is_granule_within_time(start_time, end_time, file_start_time, file_end_time)
 ##########################
 #### Filter filepaths ####
 ##########################
+
+
+def _string_match(pattern, string):
+    """Return True if a string match the pattern. Otherwise False."""
+    return bool(re.search(pattern, string))
 
 
 def _filter_filepath(filepath, product=None, version=None, start_time=None, end_time=None):
@@ -95,11 +99,9 @@ def _filter_filepath(filepath, product=None, version=None, start_time=None, end_
             return None
 
     # Filter by product
-    # - TODO with info_dict once we have dictionary mapping patterns to filepath product acronyms
     if product is not None:
-        gpm_pattern_dict = get_products_pattern_dict()
-        filepath = str_subset(filepath, gpm_pattern_dict[product])
-        if filepath is None:
+        product_pattern = get_product_pattern(product)
+        if not _string_match(pattern=product_pattern, string=filepath):
             return None
 
     # Filter by start_time and end_time
@@ -215,11 +217,15 @@ def filter_by_product(filepaths, product, product_type="RS"):
 
     # -------------------------------------------------------------------------.
     # Retrieve GPM filename dictionary
-    patterns_dict = get_products_pattern_dict()
+    product_pattern = get_product_pattern(product)
 
     # -------------------------------------------------------------------------.
     # Subset by specific product
-    filepaths = str_subset(filepaths, patterns_dict[product])
+    filepaths = [
+        filepath
+        for filepath in filepaths
+        if _string_match(pattern=product_pattern, string=filepath)
+    ]
 
     # -------------------------------------------------------------------------.
     # Return valid filepaths

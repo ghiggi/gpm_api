@@ -24,7 +24,7 @@ NASA_NRT_FNAME_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:
 # - Pattern for 1B-Ku and 1B-Ka
 JAXA_FNAME_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_time:%H%M}_{granule_id}_{product_level:2s}{product_type}_{algorithm:s}_{version}.{data_format}"  # noqa
 
-fname = "2A.GPM.DPR.V920211125.20230814-S131128-E134127.V07B.RT-H5"
+
 ####---------------------------------------------------------------------------.
 ##########################
 #### Filename parsers ####

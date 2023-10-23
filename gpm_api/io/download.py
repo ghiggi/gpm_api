@@ -43,7 +43,6 @@ from gpm_api.io.info import (
 )
 from gpm_api.io.pps import _find_pps_daily_filepaths
 from gpm_api.utils.timing import print_elapsed_time
-from gpm_api.utils.utils_string import subset_list_by_boolean
 from gpm_api.utils.warnings import GPMDownloadWarning
 
 ### Notes
@@ -352,11 +351,13 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
     # -------------------------------------------------------------------------.
     # Check if data already exists
     if force_download is False:
-        # Get index which do not exist
-        idx_not_existing = [not os.path.exists(disk_path) for disk_path in disk_paths]
-        # Select filepath not existing on disk
-        disk_paths = subset_list_by_boolean(disk_paths, idx_not_existing)
-        server_paths = subset_list_by_boolean(server_paths, idx_not_existing)
+        # Get index of files which does not exist on disk
+        idx_not_existing = [
+            i for i, disk_path in enumerate(disk_paths) if not os.path.exists(disk_path)
+        ]
+        # Select paths of files not present on disk
+        disk_paths = [disk_paths[i] for i in idx_not_existing]
+        server_paths = [server_paths[i] for i in idx_not_existing]
     return (server_paths, disk_paths)
 
 
