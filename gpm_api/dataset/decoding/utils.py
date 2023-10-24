@@ -4,6 +4,7 @@ Created on Fri Jul 28 11:34:55 2023
 
 @author: ghiggi
 """
+import dask.array
 import numpy as np
 
 
@@ -26,3 +27,14 @@ def remap_numeric_array(arr, remapping_dict):
     # remapped_arr1 = np.vectorize(remap_value)(arr)
 
     return remapped_arr
+
+
+def ceil_datarray(da):
+    """Ceil a xr.DataArray."""
+    data = da.data
+    if hasattr(data, "chunks"):
+        data = np.ceil(data)
+    else:
+        data = dask.array.ceil(data)
+    da.data = data
+    return da

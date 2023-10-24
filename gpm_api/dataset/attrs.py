@@ -90,12 +90,23 @@ def _isinteger(s):
         return False
 
 
+def _remove_multiple_spaces(string):
+    """Remove consecutive spaces in a string."""
+    return " ".join(string.split())
+
+
 def _parse_attr_string(s):
-    """Parse attribute string value."""
+    """Parse attribute string value.
+
+    This function can return a string, list, integer or float.
+    """
+    # If there are contiguous spaces, just keep one
+    if isinstance(s, str):
+        s = _remove_multiple_spaces(s)
     # If multiple stuffs between brackets [ ], convert to list
     if isinstance(s, str) and _is_str_list(s):
         s = ast.literal_eval(s)
-    # If still a comma in a string --> Convert into a list
+    # If still , or \n in a string --> Convert into a list
     if isinstance(s, str) and "," in s:
         s = s.split(",")
     if isinstance(s, str) and "\n" in s:
@@ -118,11 +129,10 @@ def decode_string(string):
     """
     # Clean the string
     string = string.replace("\t", "").rstrip("\n")
-
     # Create dictionary if = is present
     if "=" in string:
         list_key_value = [
-            key_value.split("=") for key_value in string.split(";") if len(key_value) > 0
+            key_value.split("=", 1) for key_value in string.split(";") if len(key_value) > 0
         ]
         value = {key.replace("\n", ""): _parse_attr_string(value) for key, value in list_key_value}
     else:
@@ -144,6 +154,7 @@ def decode_attrs(attrs):
 
 
 def _has_nested_dictionary(attrs):
+    """Check if the dictionary has nested dictionaries."""
     return np.any([isinstance(v, dict) for v in attrs.values()])
 
 
@@ -164,6 +175,7 @@ def get_granule_attrs(dt):
 
 
 def add_history(ds):
+    """Add the history attribute to the xr.Dataset"""
     current_time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     history = f"Created by ghiggi/gpm_api software on {current_time}"
     ds.attrs["history"] = history

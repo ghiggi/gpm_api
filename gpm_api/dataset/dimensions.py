@@ -99,6 +99,11 @@ def _get_dataarray_dim_dict(da):
     if dim_names_str is not None:
         dim_names = dim_names_str.split(",")
         for dim, new_dim in zip(list(da.dims), dim_names):
+            # Deal with missing DimensionNames in
+            # - sunVectorInBodyFrame variable in V5 products
+            # - 1B-Ku/Ka V5 *Temp products
+            if new_dim == "":
+                new_dim = dim
             dim_dict[dim] = new_dim
     return dim_dict
 

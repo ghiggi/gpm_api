@@ -29,8 +29,8 @@ VERSIONS = [7, 6, 5]
 PRODUCT_TYPES = ["RS"]
 
 FORCE_DOWNLOAD = False
-FORCE_CUT = True
-FORCE_PROCESSED = True
+FORCE_CUT = False
+FORCE_PROCESSED = False
 
 
 gpm_api.config.set(
@@ -42,7 +42,7 @@ gpm_api.config.set(
 )
 
 # Debug
-# VERSIONS = [7]
+VERSIONS = [7, 6]
 
 
 ## Test directory structure

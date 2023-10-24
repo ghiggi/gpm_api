@@ -22,13 +22,17 @@ def test_get_pmw_frequency_corra(
     # Try products hardcoded in function
     res = co.get_pmw_frequency_corra("2B-GPM-CORRA")
     assert len(res) > 0
-    assert res == co.get_pmw_frequency("GMI", scan_mode="S1") + co.get_pmw_frequency(
-        "GMI", scan_mode="S2"
+    assert res == (
+        co.get_pmw_frequency("GMI", scan_mode="S1") + co.get_pmw_frequency("GMI", scan_mode="S2")
     )
 
     res = co.get_pmw_frequency_corra("2B-TRMM-CORRA")
     assert len(res) > 0
-    assert res == co.get_pmw_frequency("TMI", scan_mode="S1")
+    assert res == (
+        co.get_pmw_frequency("TMI", scan_mode="S1")
+        + co.get_pmw_frequency("TMI", scan_mode="S2")
+        + co.get_pmw_frequency("TMI", scan_mode="S3")
+    )
 
     # Test other non-corra products fail
     for product in products:

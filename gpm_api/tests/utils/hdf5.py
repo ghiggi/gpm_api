@@ -7,6 +7,7 @@ Created on Fri Oct 20 12:44:10 2023
 """
 import os
 import h5py
+from h5py.h5ds import get_scale_name
 
 
 def _get_fixed_dimensions():
@@ -61,9 +62,9 @@ def _get_subset_shape_chunks(h5_obj, subset_size):
                 subset_shape.append(src_size)
                 subset_chunks.append(chunk)
             else:
-                subset_size = min(subset_size, src_size)
-                subset_chunk = min(chunk, subset_size)
-                subset_shape.append(subset_size)
+                allowed_subset_size = min(subset_size, src_size)
+                subset_chunk = min(chunk, allowed_subset_size)
+                subset_shape.append(allowed_subset_size)
                 subset_chunks.append(subset_chunk)
 
         # Determine subset shape
@@ -81,38 +82,84 @@ def _copy_attrs(src_h5_obj, dst_h5_obj):
         dst_h5_obj.attrs[key] = value
 
 
+def _subset_dataset(src_dataset, name, dst_group, subset_size):
+    """Subset a HDF5 dataset and add it to the destination group."""
+    # Determine the subset shape (2 indices per dimension)
+    subset_shape, subset_chunks = _get_subset_shape_chunks(src_dataset, subset_size=subset_size)
+
+    # Create a new dataset in the subset group with the subset shape
+    dst_dataset = dst_group.create_dataset(
+        name,
+        shape=subset_shape,
+        dtype=src_dataset.dtype,
+        chunks=subset_chunks,
+    )
+
+    # Copy data from the src_src_dataset dataset to the subset dataset
+    dst_dataset[:] = src_dataset[tuple(slice(0, size) for size in subset_shape)]
+
+    # Copy attributes from the src_src_dataset dataset to the subset dataset
+    _copy_attrs(src_dataset, dst_dataset)
+
+    # Set scale if src_dataset is_scale
+    if src_dataset.is_scale:
+        _ = dst_dataset.attrs.pop("NAME", None)
+        _ = dst_dataset.attrs.pop("CLASS", None)
+        _ = dst_dataset.attrs.pop("REFERENCE_LIST", None)
+        scale_name = get_scale_name(src_dataset.id)
+        dst_dataset.make_scale(scale_name)
+
+    # Copy encoding information
+    if src_dataset.compression is not None and "compression" in src_dataset.compression:
+        dst_dataset.compression = src_dataset.compression
+        dst_dataset.compression_opts = src_dataset.compression_opts
+
+
 def _copy_datasets(src_group, dst_group, subset_size):
     for name, h5_obj in src_group.items():
-        if isinstance(h5_obj, h5py.Dataset):
-            # Determine the subset shape (2 indices per dimension)
-            subset_shape, subset_chunks = _get_subset_shape_chunks(h5_obj, subset_size=subset_size)
-
-            # Create a new dataset in the subset group with the subset shape
-            subset_dataset = dst_group.create_dataset(
-                name, subset_shape, dtype=h5_obj.dtype, chunks=subset_chunks
-            )
-
-            # Copy data from the src_h5_obj dataset to the subset dataset
-            subset_dataset[:] = h5_obj[tuple(slice(0, size) for size in subset_shape)]
-
-            # Copy attributes from the src_h5_obj dataset to the subset dataset
-            _copy_attrs(h5_obj, subset_dataset)
-
-            # Copy encoding information
-            if h5_obj.compression is not None and "compression" in h5_obj.compression:
-                subset_dataset.compression = h5_obj.compression
-                subset_dataset.compression_opts = h5_obj.compression_opts
-
-        elif isinstance(h5_obj, h5py.Group):
-            # If the h5_obj is a group, create a corresponding group in the subset file and copy its datasets recursively
+        if isinstance(h5_obj, h5py.Group):
+            # If the H5 object is a HDF5 group
+            # - Create a corresponding group in the subset file
             subgroup = dst_group.create_group(name)
-            # Copy group attributes
+            # - Copy the group attributes
             _copy_attrs(h5_obj, subgroup)
+            # - Then copy the downstream tree recursively
             _copy_datasets(h5_obj, subgroup, subset_size=subset_size)
+        elif isinstance(h5_obj, h5py.Dataset):
+            # If the H5 object is a HDF5 dataset, copy a subset of the dataset
+            _subset_dataset(
+                src_dataset=h5_obj, name=name, dst_group=dst_group, subset_size=subset_size
+            )
+        else:
+            pass
+
+
+def _attach_dataset_scale(dst_file, src_dataset):
+    if "DIMENSION_LIST" in src_dataset.attrs:
+        var = src_dataset.name
+        _ = dst_file[var].attrs.pop("DIMENSION_LIST")
+        for i in range(len(src_dataset.dims)):
+            dim_path = src_dataset.dims[i].values()[0].name
+            dst_file[var].dims[i].attach_scale(dst_file[dim_path])
+
+
+def _attach_scales(dst_file, src_group):
+    """Update DIMENSION_LIST if present in source HDF5 file."""
+    for name, h5_obj in src_group.items():
+        if isinstance(h5_obj, h5py.Group):
+            # Update downstream in the tree recursively
+            _attach_scales(dst_file, src_group=h5_obj)
+        elif isinstance(h5_obj, h5py.Dataset):
+            # Update DIMENSION_LIST
+            if not h5_obj.is_scale:
+                _attach_dataset_scale(dst_file, src_dataset=h5_obj)
 
 
 def create_test_hdf5(src_fpath, dst_fpath):
-    """Create test HDF5 file."""
+    """Create test HDF5 file.
+
+    The routine does not currently ensure the same attributes keys order !
+    """
     if os.path.exists(dst_fpath):
         os.remove(dst_fpath)
 
@@ -127,6 +174,9 @@ def create_test_hdf5(src_fpath, dst_fpath):
 
     # Write attributes from the source HDF5 root group to the new HDF5 file root group
     _copy_attrs(src_file, dst_file)
+
+    # Update variable attribute DIMENSION_LIST
+    _attach_scales(dst_file, src_group=src_file)
 
     # Close connection
     src_file.close()
