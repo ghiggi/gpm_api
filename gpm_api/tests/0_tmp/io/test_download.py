@@ -10,7 +10,7 @@ import time
 
 import numpy as np
 
-from gpm_api.io.download import curl_cmd, download_archive, run, wget_cmd
+from gpm_api.io.download import curl_pps_cmd, download_archive, run, wget_pps_cmd
 
 ####-------------------------------------------------------------------------.
 #### Test gpm_api.download function
@@ -55,7 +55,7 @@ password = username
 
 ### WGET
 t_i = time.time()
-cmd = wget_cmd(server_path, disk_path1, username, password)
+cmd = wget_pps_cmd(server_path, disk_path1, username, password)
 print(cmd)
 run([cmd], n_threads=10, progress_bar=True, verbose=True)
 t_f = time.time()
@@ -64,54 +64,13 @@ print(t_elapsed, "seconds")  # 96.6 seconds
 
 ### CURL cmd
 t_i = time.time()
-cmd = curl_cmd(server_path, disk_path2, username, password)
+cmd = curl_pps_cmd(server_path, disk_path2, username, password)
 print(cmd)
 run([cmd], n_threads=10, progress_bar=True, verbose=True)
 t_f = time.time()
 t_elapsed = np.round(t_f - t_i, 2)
 print(t_elapsed, "seconds")  # 102.6 seconds
 
-
-#### ------------------------------------------------------------------------
-#### Test download with ftplib
-from gpm_api.io.download import (
-    get_fpaths_from_fnames,
-    filter_download_list,
-    ftplib_download,
-)
-from gpm_api.io.find import find_filepaths
-
-n_threads = 4
-
-pps_filepaths = find_filepaths(
-    protocol="pps",
-    product=product,
-    product_type=product_type,
-    version=version,
-    start_time=start_time,
-    end_time=end_time,
-    verbose=verbose,
-)
-
-disk_filepaths = get_fpaths_from_fnames(pps_filepaths, protocol="local", product_type=product_type)
-
-
-pps_filepaths, disk_filepaths = filter_download_list(
-    disk_paths=disk_filepaths,
-    server_paths=pps_filepaths,
-    force_download=force_download,
-)
-
-pps_filepaths = pps_filepaths[0:4]
-disk_filepaths = disk_filepaths[0:4]
-
-ftplib_download(
-    server_paths=pps_filepaths,
-    disk_paths=disk_filepaths,
-    username=username,
-    password=password,
-    n_threads=n_threads,
-)
 
 ####-------------------------------------------------------------------------.
 #### Test multiple download at once

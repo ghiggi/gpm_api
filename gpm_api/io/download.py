@@ -5,8 +5,8 @@ Created on Mon Aug 15 00:18:33 2022
 @author: ghiggi
 """
 import datetime
-import ftplib
 import os
+import platform
 import re
 import subprocess
 import warnings
@@ -51,11 +51,13 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 # --> "--header='Authorization: Basic Z2lvbmF0YS5naGlnZ2lAZXBmbC5jaDpnaW9uYXRhLmdoaWdnaUBlcGZsLmNo' "
 
 
-##----------------------------------------------------------------------------.
-#############################
-#### Single file command ####
-#############################
-def curl_cmd(server_path, disk_path, username, password):
+####--------------------------------------------------------------------------.
+############################################
+#### PPS and GES DISC Download Commands ####
+############################################
+
+
+def curl_pps_cmd(server_path, disk_path, username, password):
     """Download data using curl via ftps."""
     # -------------------------------------------------------------------------.
     # Check disk directory exists (if not, create)
@@ -110,7 +112,18 @@ def curl_cmd(server_path, disk_path, username, password):
     return cmd
 
 
-def wget_cmd(server_path, disk_path, username, password):
+def curl_ges_disc_cmd(src_fpath, dst_fpath):
+    """Return curl command to download a file from the GES DISC."""
+    # Define wget options
+    curl_options = "--connect-timeout 20 --retry 5 --retry-delay 10"
+    # Define authentication settings
+    auth = "-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
+    # Define command
+    cmd = f"curl {auth} {curl_options} --url {src_fpath} -o {dst_fpath}"
+    return cmd
+
+
+def wget_pps_cmd(server_path, disk_path, username, password):
     """Create wget command to download data via ftps."""
     # -------------------------------------------------------------------------.
     # Check disk directory exists (if not, create)
@@ -148,6 +161,38 @@ def wget_cmd(server_path, disk_path, username, password):
         ]
     )
     return cmd
+
+
+def wget_ges_disc_cmd(src_fpath, dst_fpath):
+    """Return wget command to download a file from the GES DISC."""
+    # Define path to EarthData urs_cookies
+    urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
+    # Define wget options
+    wget_options = "-c --read-timeout=10 --tries=5 -nH -np"
+    # Determine the operating system
+    os_name = platform.system()
+    # Define command
+    if os_name == "Windows":
+        # TODO: RETRIEVE !
+        # --> Or write to gpm_api config yaml !
+        ges_disc_username = ""
+        # .netrc
+        # machine urs.earthdata.nasa.gov login {username} password {password}
+        auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
+        window_options = f"--user={ges_disc_username} --ask-password"
+        cmd = f"wget {auth} {wget_options} {window_options} --content-disposition {src_fpath} -O {dst_fpath}"
+    elif os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
+        auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
+        cmd = f"wget {auth} {wget_options} --content-disposition {src_fpath} -O {dst_fpath}"
+    else:
+        raise ValueError(f"Unsupported OS: {os_name}")
+    return cmd
+
+
+####--------------------------------------------------------------------------.
+##########################
+#### Download Utility ####
+##########################
 
 
 def _get_commands_futures(executor, commands):
@@ -245,80 +290,52 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 def _download_files(
     src_fpaths,
     dst_fpaths,
-    protocol="pps",
-    transfer_tool="wget",
+    protocol,
+    transfer_tool,
     n_threads=4,
     progress_bar=True,
     verbose=False,
 ):
+    # Ensure destination directory exists
+    for fpath in dst_fpaths:
+        if not os.path.exists(os.path.dirname(fpath)):
+            os.makedirs(os.path.dirname(fpath))
+
+    # Download files
     if protocol == "pps":
         username = get_gpm_username(None)
         password = get_gpm_password(None)
+        if transfer_tool == "curl":
+            list_cmd = [
+                curl_pps_cmd(src_path, dst_path, username, password)
+                for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+            ]
+        elif transfer_tool == "wget":
+            list_cmd = [
+                wget_pps_cmd(src_path, dst_path, username, password)
+                for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+            ]
+        else:
+            raise NotImplementedError("Download is available with 'wget' or 'curl'.")
+    elif protocol == "ges_disc":
+        if transfer_tool == "curl":
+            list_cmd = [
+                curl_ges_disc_cmd(src_path, dst_path)
+                for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+            ]
+        elif transfer_tool == "wget":
+            list_cmd = [
+                wget_ges_disc_cmd(src_path, dst_path)
+                for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+            ]
+        else:
+            raise NotImplementedError("Download is available with 'wget' or 'curl'.")
     else:
-        raise NotImplementedError()
-
-    if transfer_tool == "curl":
-        list_cmd = [
-            curl_cmd(src_path, dst_path, username, password)
-            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
-        ]
-    elif transfer_tool == "wget":
-        list_cmd = [
-            wget_cmd(src_path, dst_path, username, password)
-            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
-        ]
-    else:
-        raise NotImplementedError("Download is available with 'wget' or 'curl'.")
+        raise NotImplementedError("Download implemented only for protocol 'pps' and 'ges_disc'")
     # -------------------------------------------------------------------------.
     ## Download the data (in parallel)
     status = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
     return status
-
-
-def _download_with_ftlib(server_path, disk_path, username, password):
-    # Infer hostname
-    hostname = server_path.split("/", 3)[2]  # remove ftps:// and select host
-
-    # Remove hostname from server_path
-    server_path = server_path.split("/", 3)[3]
-
-    # Connect to the FTP server using FTPS
-    ftps = ftplib.FTP_TLS(hostname)
-
-    # Login to the FTP server using the provided username and password
-    ftps.login(username, password)  # /gpmdata base directory
-
-    # Download the file from the FTP server
-    try:
-        with open(disk_path, "wb") as file:
-            ftps.retrbinary(f"RETR {server_path}", file.write)
-    except EOFError:
-        return f"Impossible to download {server_path}"
-
-    # Close the FTP connection
-    ftps.close()
-    return None
-
-
-def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
-    from tqdm import tqdm
-
-    # Download file concurrently
-    n_files = len(server_paths)
-    with tqdm(total=n_files) as pbar, ThreadPoolExecutor(max_workers=n_threads) as executor:
-        dict_futures = {
-            executor.submit(
-                _download_with_ftlib,
-                server_path=server_path,
-                disk_path=disk_path,
-                username=username,
-                password=password,
-            ): server_path
-            for server_path, disk_path in zip(server_paths, disk_paths)
-        }
-        # List cmds that didn't work
-        l_cmd_error = _get_list_failing_commands(dict_futures, pbar)
-    return l_cmd_error
 
 
 ####--------------------------------------------------------------------------.
@@ -546,9 +563,10 @@ def download_files(
     _ = _download_files(
         src_fpaths=new_remote_filepaths,
         dst_fpaths=new_local_filepaths,
+        protocol=protocol,
+        transfer_tool=transfer_tool,
         n_threads=n_threads,
         progress_bar=progress_bar,
-        transfer_tool=transfer_tool,
         verbose=verbose,
     )
 
@@ -766,6 +784,8 @@ def _download_daily_data(
     status = _download_files(
         src_fpaths=remote_filepaths,
         dst_fpaths=local_filepaths,
+        protocol=protocol,
+        transfer_tool=transfer_tool,
         n_threads=n_threads,
         progress_bar=progress_bar,
         verbose=verbose,

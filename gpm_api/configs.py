@@ -35,6 +35,8 @@ def set_ges_disc_authentification(username, password):
     None.
 
     """
+    # TODO
+    # - Write earthdata login and password to gpm_api config yaml
     urs = "urs.earthdata.nasa.gov"  # Earthdata URL to call for authentication
     home_dir_path = os.path.expanduser("~") + os.sep
 

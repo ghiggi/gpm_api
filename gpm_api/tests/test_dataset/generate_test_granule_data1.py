@@ -85,6 +85,7 @@ for product_type in PRODUCT_TYPES:
                 _ = _download_files(
                     src_fpaths=[pps_filepath],
                     dst_fpaths=[raw_filepath],
+                    protocol="pps",
                     transfer_tool="wget",
                     verbose=True,
                 )

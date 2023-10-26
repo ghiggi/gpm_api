@@ -54,7 +54,7 @@ def _get_all_daily_filepaths(protocol, date, product, product_type, version, ver
             version=version,
             verbose=verbose,
         )
-    elif protocol == "gesdisc":
+    elif protocol == "ges_disc":
         filepaths = get_gesdisc_daily_filepaths(
             product=product,
             product_type=product_type,
