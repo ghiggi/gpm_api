@@ -1,8 +1,53 @@
+import datetime
+import os
 from typing import Dict, Any, List
 from pytest_mock import MockerFixture
 from gpm_api.io import pps
 from gpm_api.io import find
 from gpm_api.io.products import available_products, available_versions
+
+
+def test_get_pps_nrt_product_dir(products: List[str]) -> None:
+    """Test NRT product type folder name
+
+    Depends on gpm_api.io.pps._get_pps_nrt_product_folder_name()
+    """
+
+    date = datetime.datetime(2021, 1, 1).date()
+
+    for product in products:
+        # Only work on NRT products
+        if product in available_products(product_type="NRT"):
+            # Dependent on dir forming private function
+            foldername = pps._get_pps_nrt_product_folder_name(product)
+
+            res = pps._get_pps_nrt_product_dir(product, date)
+            if product in available_products(
+                product_type="NRT",
+                product_category="IMERG",
+            ):
+                assert res == os.path.join(
+                    foldername,
+                    date.strftime("%Y%m"),
+                )
+            else:
+                assert res == foldername
+
+
+# def test_get_pps_directory(
+#     products: List[str],
+#     product_types: List[str],
+# ) -> None:
+#     for product in products:
+#         for product_type in product_types:
+#             # Only work on NRT products
+#             if product in available_products(product_type=product_type):
+#                 # Dependent on dir forming private function
+#                 foldername = pps._get_pps_nrt_product_folder_name(product)
+
+#                 res = pps.get_pps_directory(product, product_type)
+#                 assert res == foldername
+#     pass
 
 
 def test_find_pps_daily_filepaths_private(

@@ -364,50 +364,6 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
 ###########################
 #### Filepaths utility ####
 ###########################
-def get_fpaths_from_fnames(filepaths, protocol, product_type):
-    """
-    Convert GPM file names or file paths to <protocol> file paths.
-
-    Parameters
-    ----------
-    filepaths : list
-        GPM file names or file paths.
-
-    Returns
-    -------
-    fpaths : list
-        List of file paths on <protocol> storage.
-
-    """
-    fpaths = [
-        get_fpath_from_fname(fpath, protocol=protocol, product_type=product_type)
-        for fpath in filepaths
-    ]
-    return fpaths
-
-
-def get_fpath_from_fname(filename, protocol, product_type):
-    """Infer the filepath from the file name."""
-    # Retrieve the filename
-    filename = os.path.basename(filename)
-    # Retrieve relevant info from filename
-    try:
-        info = get_info_from_filepath(filename)
-    except ValueError:
-        raise ValueError(f"Impossible to infer file information from '{filename}'")
-    product = info["product"]
-    version = int(re.findall("\\d+", info["version"])[0])
-    date = info["start_time"].date()
-    # Retrieve filepath
-    fpath = _define_filepath(
-        product=product,
-        product_type=product_type,
-        date=date,
-        version=version,
-        filename=filename,
-        protocol=protocol,
-    )
-    return fpath
 
 
 def _define_filepath(
@@ -418,6 +374,7 @@ def _define_filepath(
     filename,
     protocol,
 ):
+    """Retrieve the filepath based on the filename."""
     if protocol == "local":
         fpath = define_disk_filepath(
             product=product,
@@ -441,95 +398,56 @@ def _define_filepath(
     return fpath
 
 
-####--------------------------------------------------------------------------.
-###########################
-#### Download routines ####
-###########################
-
-
-def _ensure_files_completness(
-    filepaths,
-    product_type,
-    remove_corrupted,
-    verbose,
-    transfer_tool,
-    retry,
-    n_threads,
-    progress_bar,
-):
-    """Check file validity and attempt download if corrupted."""
-    l_corrupted = check_filepaths_integrity(
-        filepaths=filepaths, remove_corrupted=remove_corrupted, verbose=verbose
-    )
-    if verbose:
-        print("Integrity checking of GPM files has completed.")
-    if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
-        if verbose:
-            print("Start attempts to redownload the corrupted files.")
-        l_corrupted = download_files(
-            filepaths=l_corrupted,
-            product_type=product_type,
-            force_download=True,
-            n_threads=n_threads,
-            transfer_tool=transfer_tool,
-            progress_bar=progress_bar,
-            verbose=verbose,
-            retry=retry - 1,
-        )
-        if verbose:
-            if len(l_corrupted) == 0:
-                print("All corrupted files have been redownloaded successively.")
-            else:
-                print("Some corrupted files couldn't been redownloaded.")
-                print("Returning the list of corrupted files.")
-    return l_corrupted
-
-
-def _ensure_archive_completness(
-    product,
-    start_time,
-    end_time,
-    version,
-    product_type,
-    remove_corrupted,
-    verbose,
-    transfer_tool,
-    retry,
-    n_threads,
-    progress_bar,
-):
-    """Check the archive completeness over the specified time period."""
-    l_corrupted = check_archive_integrity(
+def get_fpath_from_fname(filename, protocol, product_type):
+    """Convert GPM file names to the <protocol> file path."""
+    # Retrieve the filename
+    filename = os.path.basename(filename)
+    # Retrieve relevant info from filename
+    try:
+        info = get_info_from_filepath(filename)
+    except ValueError:
+        raise ValueError(f"Impossible to infer file information from '{filename}'")
+    product = info["product"]
+    version = int(re.findall("\\d+", info["version"])[0])
+    date = info["start_time"].date()
+    # Retrieve filepath
+    fpath = _define_filepath(
         product=product,
-        start_time=start_time,
-        end_time=end_time,
-        version=version,
         product_type=product_type,
-        remove_corrupted=remove_corrupted,
-        verbose=verbose,
+        date=date,
+        version=version,
+        filename=filename,
+        protocol=protocol,
     )
-    if verbose:
-        print("Integrity checking of GPM files has completed.")
-    if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
-        if verbose:
-            print("Start attempts to redownload the corrupted files.")
-        l_corrupted = download_files(
-            filepaths=l_corrupted,
-            product_type=product_type,
-            force_download=True,
-            n_threads=n_threads,
-            transfer_tool=transfer_tool,
-            progress_bar=progress_bar,
-            verbose=verbose,
-            retry=retry - 1,
-        )
-        if verbose:
-            if len(l_corrupted) == 0:
-                print("All corrupted files have been redownloaded successively.")
-            else:
-                print("Some corrupted files couldn't been redownloaded.")
-                print("Returning the list of corrupted files.")
-    return l_corrupted
+    return fpath
+
+
+def get_fpaths_from_fnames(filepaths, protocol, product_type):
+    """
+    Convert GPM file names or file paths to <protocol> file paths.
+
+    Parameters
+    ----------
+    filepaths : list
+        GPM file names or file paths.
+
+    Returns
+    -------
+    fpaths : list
+        List of file paths on <protocol> storage.
+
+    """
+    fpaths = [
+        get_fpath_from_fname(fpath, protocol=protocol, product_type=product_type)
+        for fpath in filepaths
+    ]
+    return fpaths
+
+
+####--------------------------------------------------------------------------.
+###############################
+#### Download by filenames ####
+###############################
 
 
 def download_files(
@@ -648,6 +566,97 @@ def download_files(
         if verbose:
             print(f"The requested files are now available on disk at {new_local_filepaths}.")
 
+    return l_corrupted
+
+
+####--------------------------------------------------------------------------.
+###########################
+#### Download routines ####
+###########################
+
+
+def _ensure_files_completness(
+    filepaths,
+    product_type,
+    remove_corrupted,
+    verbose,
+    transfer_tool,
+    retry,
+    n_threads,
+    progress_bar,
+):
+    """Check file validity and attempt download if corrupted."""
+    l_corrupted = check_filepaths_integrity(
+        filepaths=filepaths, remove_corrupted=remove_corrupted, verbose=verbose
+    )
+    if verbose:
+        print("Integrity checking of GPM files has completed.")
+    if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
+        if verbose:
+            print("Start attempts to redownload the corrupted files.")
+        l_corrupted = download_files(
+            filepaths=l_corrupted,
+            product_type=product_type,
+            force_download=True,
+            n_threads=n_threads,
+            transfer_tool=transfer_tool,
+            progress_bar=progress_bar,
+            verbose=verbose,
+            retry=retry - 1,
+        )
+        if verbose:
+            if len(l_corrupted) == 0:
+                print("All corrupted files have been redownloaded successively.")
+            else:
+                print("Some corrupted files couldn't been redownloaded.")
+                print("Returning the list of corrupted files.")
+    return l_corrupted
+
+
+def _ensure_archive_completness(
+    product,
+    start_time,
+    end_time,
+    version,
+    product_type,
+    remove_corrupted,
+    verbose,
+    transfer_tool,
+    retry,
+    n_threads,
+    progress_bar,
+):
+    """Check the archive completeness over the specified time period."""
+    l_corrupted = check_archive_integrity(
+        product=product,
+        start_time=start_time,
+        end_time=end_time,
+        version=version,
+        product_type=product_type,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
+    )
+    if verbose:
+        print("Integrity checking of GPM files has completed.")
+    if retry > 0 and remove_corrupted and len(l_corrupted) > 0:
+        if verbose:
+            print("Start attempts to redownload the corrupted files.")
+        l_corrupted = download_files(
+            filepaths=l_corrupted,
+            product_type=product_type,
+            force_download=True,
+            n_threads=n_threads,
+            transfer_tool=transfer_tool,
+            progress_bar=progress_bar,
+            verbose=verbose,
+            retry=retry - 1,
+        )
+        if verbose:
+            if len(l_corrupted) == 0:
+                print("All corrupted files have been redownloaded successively.")
+            else:
+                print("Some corrupted files couldn't been redownloaded.")
+                print("Returning the list of corrupted files.")
     return l_corrupted
 
 

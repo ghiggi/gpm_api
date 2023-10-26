@@ -17,7 +17,6 @@ from gpm_api.bucket.processing import (
     get_granule_dataframe,
 )
 
-# from gpm_api.io.directories import get_time_tree
 # from gpm_api.io.info import get_key_from_filepath
 from gpm_api.utils.dask import clean_memory, get_client
 from gpm_api.utils.timing import print_task_elapsed_time
