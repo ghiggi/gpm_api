@@ -98,7 +98,8 @@ def get_product_end_time(product):
     """Provide the product end_time."""
     _check_valid_product(product)
     end_time = get_info_dict()[product]["end_time"]
-    end_time = datetime.datetime.utcnow()
+    if end_time is None:
+        end_time = datetime.datetime.utcnow()
     return end_time
 
 

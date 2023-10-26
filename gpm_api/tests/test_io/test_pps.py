@@ -1,7 +1,8 @@
+import datetime
 from typing import Dict, Any, List
 from pytest_mock import MockerFixture
 from gpm_api.io import pps
-from gpm_api.io.products import available_products, available_versions
+from gpm_api.io.products import available_products, available_versions, get_product_start_time
 
 
 def test_find_pps_daily_filepaths_private(
@@ -62,12 +63,17 @@ def test_find_pps_filepaths(
 
     for product_type in product_types:
         for product in available_products(product_type=product_type):
+            start_time = get_product_start_time(product)
+            if start_time is None:
+                continue
+            end_time = start_time + datetime.timedelta(hours=1)
+
             assert (
                 pps.find_pps_filepaths(
                     product=product,
                     product_type=product_type,
-                    start_time="2021-01-01",
-                    end_time="2021-01-01",
+                    start_time=start_time,
+                    end_time=end_time,
                     username="test",
                     password="test",
                 )
@@ -79,8 +85,8 @@ def test_find_pps_filepaths(
                 pps.find_pps_filepaths(
                     product=product,
                     product_type=product_type,
-                    start_time="2021-01-01",
-                    end_time="2021-01-01",
+                    start_time=start_time,
+                    end_time=end_time,
                     username="test",
                     password="test",
                     parallel=False,

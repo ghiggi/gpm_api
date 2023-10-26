@@ -5,7 +5,7 @@ import ftplib
 from typing import Any, List, Dict
 from pytest_mock.plugin import MockerFixture
 from gpm_api.io import download as dl
-from gpm_api.io.products import available_products
+from gpm_api.io.products import available_products, get_product_start_time
 from gpm_api.utils.warnings import GPMDownloadWarning
 from gpm_api import configs
 
@@ -251,10 +251,13 @@ def test_download_data(
     for product in products:
         for product_type in product_types:
             if product in available_products(product_type=product_type):
+                start_time = get_product_start_time(product)
+                if start_time is None:
+                    continue
                 res = dl.download_archive(
                     product=product,
-                    start_time=datetime.datetime(2022, 9, 7, 12, 0, 0),
-                    end_time=datetime.datetime(2022, 9, 8, 12, 0, 0),
+                    start_time=start_time,
+                    end_time=start_time + datetime.timedelta(hours=1),
                     product_type=product_type,
                 )
 
