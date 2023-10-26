@@ -181,15 +181,11 @@ def test_download_file_private(
         dl._download_files(
             src_fpaths=[server_path],
             dst_fpaths=[disk_path],
-            username="test",
-            password="test",
             transfer_tool="curl",
         )
         dl._download_files(
             src_fpaths=[server_path],
             dst_fpaths=[disk_path],
-            username="test",
-            password="test",
             transfer_tool="wget",
         )
 
@@ -198,8 +194,6 @@ def test_download_file_private(
             dl._download_files(
                 src_fpaths=[server_path],
                 dst_fpaths=[disk_path],
-                username="test",
-                password="test",
                 transfer_tool="fake",
             )
 
@@ -287,6 +281,7 @@ def test_download_daily_data_private(
             for product_type in product_types:
                 for product in available_products(product_type=product_type):
                     dl._download_daily_data(
+                        protocol="pps",
                         date=datetime.datetime(2022, 9, 7, 12, 0, 0),
                         version=version,
                         product=product,
@@ -358,14 +353,12 @@ def test_get_fpaths_from_fnames(
     Parameters
     """
     # TODO: WRONG REDO !
-    assert dl.convert_pps_to_disk_filepaths(
+    assert dl.get_fpaths_from_fnames(
         pps_filepaths=[
             "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
         ],
-        base_dir=str(tmpdir),
-        product="2A-DPR",
+        protocol="local",
         product_type="RS",
-        version=7,
     ) == [
         os.path.join(
             tmpdir,
