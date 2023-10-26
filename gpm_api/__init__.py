@@ -15,13 +15,13 @@ from gpm_api.configs import read_gpm_api_configs as read_configs
 from gpm_api.dataset.dataset import open_dataset
 from gpm_api.dataset.datatree import open_datatree
 from gpm_api.dataset.granule import open_granule
-from gpm_api.io.disk import find_filepaths as find_files
 from gpm_api.io.download import download_archive as download
 from gpm_api.io.download import (
     download_daily_data,
     download_files,
     download_monthly_data,
 )
+from gpm_api.io.find import find_filepaths as find_files
 from gpm_api.io.products import (
     available_products,
     available_scan_modes,

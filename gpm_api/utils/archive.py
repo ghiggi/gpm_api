@@ -11,7 +11,7 @@ import numpy as np
 from gpm_api.io.checks import (
     check_start_end_time,
 )
-from gpm_api.io.disk import find_filepaths
+from gpm_api.io.find import find_filepaths
 from gpm_api.io.info import (
     get_granule_from_filepaths,
 )
@@ -36,6 +36,7 @@ def check_no_duplicated_files(
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
+        protocol="local",
         version=version,
         product=product,
         product_type=product_type,
@@ -197,7 +198,7 @@ def check_archive_completeness(
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "wget".
+        Whether to use "curl" or "wget" for data download. The default is "curl".
     verbose : bool, optional
         Whether to print processing details. The default is False.
     """
@@ -211,6 +212,7 @@ def check_archive_completeness(
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
+        protocol="local",
         version=version,
         product=product,
         product_type=product_type,

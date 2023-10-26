@@ -13,7 +13,7 @@ from gpm_api.io.checks import (
     check_start_end_time,
     check_valid_time_request,
 )
-from gpm_api.io.disk import find_filepaths
+from gpm_api.io.find import find_filepaths
 
 
 def get_corrupted_filepaths(filepaths):
@@ -111,6 +111,7 @@ def check_archive_integrity(
     check_valid_time_request(start_time, end_time, product)
     # Find filepaths
     filepaths = find_filepaths(
+        protocol="local",
         version=version,
         product=product,
         product_type=product_type,

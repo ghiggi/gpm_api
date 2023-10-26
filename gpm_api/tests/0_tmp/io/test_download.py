@@ -79,11 +79,12 @@ from gpm_api.io.download import (
     filter_download_list,
     ftplib_download,
 )
-from gpm_api.io.pps import find_pps_filepaths
+from gpm_api.io.find import find_filepaths
 
 n_threads = 4
 
-pps_filepaths = find_pps_filepaths(
+pps_filepaths = find_filepaths(
+    protocol="pps",
     product=product,
     product_type=product_type,
     version=version,
@@ -115,9 +116,10 @@ ftplib_download(
 ####-------------------------------------------------------------------------.
 #### Test multiple download at once
 from gpm_api.io.download import get_fpaths_from_fnames, filter_download_list
-from gpm_api.io.pps import find_pps_filepaths
+from gpm_api.io.find import find_filepaths
 
-pps_filepaths = find_pps_filepaths(
+pps_filepaths = find_filepaths(
+    protocol="pps",
     product=product,
     product_type=product_type,
     version=version,

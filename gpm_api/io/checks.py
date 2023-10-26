@@ -72,6 +72,28 @@ def check_groups(groups):
     return groups
 
 
+def check_protocol(protocol):
+    """Check protocol."""
+    if not isinstance(protocol, str):
+        raise TypeError("'protocol' must be a string.")
+    valid_protocols = ["ges_disc", "pps", "local"]
+    if protocol.lower() not in valid_protocols:
+        raise ValueError(f"{protocol} is an invalid protocol. Valid values are {valid_protocols}.")
+    return protocol.lower()
+
+
+def check_remote_protocol(protocol):
+    """Check protocol is remote."""
+    if not isinstance(protocol, str):
+        raise TypeError("'protocol' must be a string.")
+    valid_protocols = ["ges_disc", "pps"]
+    if protocol.lower() not in valid_protocols:
+        raise ValueError(
+            f"{protocol} is an invalid remote protocol. Valid values are {valid_protocols}."
+        )
+    return protocol.lower()
+
+
 def check_version(version):
     if not isinstance(version, int):
         raise ValueError("Please specify the GPM version with an integer between 5 and 7.")

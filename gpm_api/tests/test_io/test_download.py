@@ -4,6 +4,7 @@ import datetime
 import ftplib
 from typing import Any, List, Dict
 from pytest_mock.plugin import MockerFixture
+from gpm_api.io import find
 from gpm_api.io import download as dl
 from gpm_api.io.products import available_products
 from gpm_api.utils.warnings import GPMDownloadWarning
@@ -241,8 +242,8 @@ def test_download_data(
         },
     )
     mocker.patch.object(
-        pps,
-        "_find_pps_daily_filepaths",
+        find,
+        "find_daily_filepaths",
         autospec=True,
         return_value=(server_paths.keys(), versions),
     )
@@ -278,7 +279,7 @@ def test_download_daily_data_private(
     # Patch download functions as to not actually download anything
     mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
     mocker.patch.object(dl, "run", autospec=True, return_value=None)
-    mocker.patch.object(dl, "_find_pps_daily_filepaths", autospec=True, return_value=([], versions))
+    mocker.patch.object(dl, "find_daily_filepaths", autospec=True, return_value=([], versions))
 
     # Mocking empty responses will cause a DownloadWarning. Test that it is raised
     with pytest.warns(GPMDownloadWarning):
@@ -290,6 +291,14 @@ def test_download_daily_data_private(
                         version=version,
                         product=product,
                         product_type=product_type,
+                        start_time=None,
+                        end_time=None,
+                        n_threads=4,
+                        transfer_tool="curl",
+                        progress_bar=True,
+                        force_download=False,
+                        verbose=True,
+                        warn_missing_files=True,
                     )
 
 
@@ -335,15 +344,6 @@ def test_check_download_status(
         assert dl._check_download_status([1, 1, 1], product, True) is True  # All success download
         assert dl._check_download_status([], product, True) is None  # No data available
         assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
-
-
-def test_flatten_list() -> None:
-    """Test flattening nested lists into lists"""
-
-    assert dl.flatten_list([["single item"]]) == ["single item"]
-    assert dl.flatten_list([["double", "item"]]) == ["double", "item"]
-    assert dl.flatten_list([]) == [], "Empty list should return empty list"
-    assert dl.flatten_list(["single item"]) == ["single item"], "Flat list should return same list"
 
 
 def test_get_fpaths_from_fnames(
