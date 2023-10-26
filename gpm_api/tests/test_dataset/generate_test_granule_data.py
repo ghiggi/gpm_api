@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from gpm_api.dataset.granule import open_granule
 from gpm_api.io import download, products as gpm_products
-from gpm_api.io.pps import find_pps_filepaths
+from gpm_api.io.find import find_filepaths
 
 
 RAW_DIRNAME = "raw"
@@ -107,12 +107,13 @@ def find_first_pps_filepath(
 ) -> str | None:
     end_time = start_time + relativedelta(days=1)
 
-    pps_filepaths = find_pps_filepaths(
-        product,
-        start_time,
-        # start_time gets extended to (start_time - 1 day) in find_pps_filepaths.
+    pps_filepaths = find_filepaths(
+        protocol="pps",
+        product=product,
+        start_time=start_time,
+        # start_time gets extended to (start_time - 1 day) in find_filepaths.
         # May produce "No data found" warning
-        end_time,
+        end_time=end_time,
         product_type=product_type,
     )
 

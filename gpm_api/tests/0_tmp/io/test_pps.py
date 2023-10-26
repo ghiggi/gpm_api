@@ -7,7 +7,7 @@ Created on Fri Dec  9 16:59:07 2022
 """
 import datetime
 
-from gpm_api.io.pps import _find_pps_daily_filepaths, find_pps_filepaths
+from gpm_api.io.find import find_daily_filepaths, find_filepaths
 
 product = "2A-DPR"
 date = datetime.date(2020, 7, 5)  # OK
@@ -19,7 +19,8 @@ product_type = "RS"
 verbose = True
 parallel = True
 
-filepaths, available_version = _find_pps_daily_filepaths(
+filepaths, available_version = find_daily_filepaths(
+    protocol="pps",
     product=product,
     product_type=product_type,
     date=date,
@@ -40,7 +41,8 @@ end_time = datetime.datetime(
 )  # this time make raise the print error that should be removed ...
 
 t_i = time.time()
-filepaths = find_pps_filepaths(
+filepaths = find_filepaths(
+    protocol="pps",
     product=product,
     product_type=product_type,
     version=version,
@@ -57,7 +59,7 @@ print(t_elapsed, "seconds")  # 10 seconds per month
 #### Find imerg data
 import datetime
 
-from gpm_api.io.pps import find_pps_filepaths
+from gpm_api.io.find import find_filepaths
 
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
@@ -66,7 +68,8 @@ product_type = "RS"
 version = 6
 verbose = True
 parallel = True
-filepaths = find_pps_filepaths(
+filepaths = find_filepaths(
+    protocol="pps",
     product=product,
     product_type=product_type,
     start_time=start_time,

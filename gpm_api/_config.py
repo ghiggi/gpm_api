@@ -15,11 +15,11 @@ _CONFIG_DEFAULTS = {
     "warn_non_contiguous_scans": True,
     "warn_non_regular_timesteps": True,
     "warn_invalid_spatial_coordinates": True,
-    # 'readers': {
-    #     'clip_negative_radiances': False,
-    # },
+    "warn_multiple_product_versions": True,
 }
 
 _CONFIG_PATHS = []
 
 config = Config("gpm_api", defaults=[_CONFIG_DEFAULTS], paths=_CONFIG_PATHS)
+
+# gpm_api.config.pprint()

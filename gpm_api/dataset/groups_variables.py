@@ -6,17 +6,9 @@ Created on Tue Jul 18 17:11:09 2023
 """
 import numpy as np
 
+from gpm_api.utils.list import flatten_list
+
 WISHED_COORDS = ["height", "dataQuality", "SCorientation"]
-
-
-def flatten_list(nested_list):
-    flat_list = []
-    for item in nested_list:
-        if isinstance(item, list):
-            flat_list.extend(flatten_list(item))
-        else:
-            flat_list.append(item)
-    return flat_list
 
 
 def _get_groups_path(dt):

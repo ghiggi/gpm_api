@@ -19,7 +19,7 @@ from gpm_api.io.checks import (
     check_valid_time_request,
     check_variables,
 )
-from gpm_api.io.disk import find_filepaths
+from gpm_api.io.find import find_filepaths
 from gpm_api.utils.checks import has_missing_granules
 from gpm_api.utils.warnings import GPM_Warning
 
@@ -253,6 +253,7 @@ def open_dataset(
     ##------------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
+        protocol="local",
         version=version,
         product=product,
         product_type=product_type,

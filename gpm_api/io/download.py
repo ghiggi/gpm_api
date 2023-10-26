@@ -22,6 +22,7 @@ from gpm_api.io.checks import (
     check_product,
     check_product_type,
     check_product_version,
+    check_remote_protocol,
     check_start_end_time,
     check_valid_time_request,
     is_empty,
@@ -31,8 +32,10 @@ from gpm_api.io.data_integrity import (
     check_filepaths_integrity,
 )
 from gpm_api.io.disk import define_disk_filepath
+from gpm_api.io.find import find_daily_filepaths
 from gpm_api.io.info import get_info_from_filepath
-from gpm_api.io.pps import _find_pps_daily_filepaths, define_pps_filepath
+from gpm_api.io.pps import define_pps_filepath
+from gpm_api.utils.list import flatten_list
 from gpm_api.utils.timing import print_elapsed_time
 from gpm_api.utils.warnings import GPMDownloadWarning
 
@@ -532,6 +535,7 @@ def _ensure_archive_completness(
 def download_files(
     filepaths,
     product_type="RS",
+    protocol="pps",
     n_threads=4,
     transfer_tool="curl",
     force_download=False,
@@ -539,7 +543,6 @@ def download_files(
     progress_bar=False,
     verbose=True,
     retry=1,
-    protocol="pps",
 ):
     """
     Download specific GPM files from NASA servers.
@@ -551,12 +554,15 @@ def download_files(
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
         The default is "RS".
+    protocol : str, optional
+        The remote repository from where to download.
+        Either "pps" or "ges_disc". The default is "pps".
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
         Whether to display progress. The default is True.
     transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "curl".
+        Whether to use "curl" or "wget" for data download. The default is "curl".
     verbose : bool, optional
         Whether to print processing details. The default is False.
     force_download : boolean, optional
@@ -566,9 +572,6 @@ def download_files(
        By default is True.
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
-    protocol : str, optional
-        The remote repository from where to download.
-        Either "pps" or "ges_disc". The default is "pps".
 
     Returns
     -------
@@ -582,6 +585,7 @@ def download_files(
     # - we should provide better error messages
 
     # Check inputs
+    protocol = check_remote_protocol(protocol)
     if isinstance(filepaths, type(None)):
         return None
     if isinstance(filepaths, str):
@@ -652,14 +656,15 @@ def _download_daily_data(
     version,
     product,
     product_type,
-    start_time=None,
-    end_time=None,
-    n_threads=4,
-    transfer_tool="curl",
-    progress_bar=True,
-    force_download=False,
-    verbose=True,
-    warn_missing_files=True,
+    protocol,
+    transfer_tool,
+    n_threads,
+    start_time,
+    end_time,
+    progress_bar,
+    force_download,
+    verbose,
+    warn_missing_files,
 ):
     """
     Download GPM data from NASA servers using curl or wget.
@@ -674,21 +679,23 @@ def _download_daily_data(
         Filtering start time.
     end_time : datetime.datetime
         Filtering end time.
-    product_type : str, optional
+    product_type : str
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
-        GPM data readers are currently implemented only for GPM V06.
-    n_threads : int, optional
-        Number of parallel downloads. The default is set to 10.
-    progress_bar : bool, optional
-        Whether to display progress. The default is True.
-    transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "curl".
-    force_download : boolean, optional
-        Whether to redownload data if already existing on disk. The default is False.
-    verbose : bool, optional
-        Whether to print processing details. The default is True.
+    protocol : str
+        The remote repository from where to download.
+        Either "pps" or "ges_disc".
+    n_threads : int
+        Number of parallel downloads.
+    progress_bar : bool
+        Whether to display progress.
+    transfer_tool : str
+        Whether to use "curl" or "wget" for data download.
+    force_download : boolean
+        Whether to redownload data if already existing on disk.
+    verbose : bool
+        Whether to print processing details. T
 
     Returns
     -------
@@ -701,10 +708,11 @@ def _download_daily_data(
     date = check_date(date)
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
-
+    protocol = check_remote_protocol(protocol)
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
-    remote_filepaths, available_version = _find_pps_daily_filepaths(
+    remote_filepaths, available_version = find_daily_filepaths(
+        protocol=protocol,
         product=product,
         product_type=product_type,
         version=version,
@@ -794,29 +802,13 @@ def _check_download_status(status, product, verbose):
     return True
 
 
-def flatten_list(nested_list):
-    """Flatten a nested list into a single-level list."""
-
-    # If list is already flat, return as is to avoid flattening to chars
-    if (
-        isinstance(nested_list, list)
-        and len(nested_list) == 1
-        and not isinstance(nested_list[0], list)
-    ):
-        return nested_list
-    return (
-        [item for sublist in nested_list for item in sublist]
-        if isinstance(nested_list, list)
-        else [nested_list]
-    )
-
-
 def download_archive(
     product,
     start_time,
     end_time,
     product_type="RS",
     version=None,
+    protocol="pps",
     n_threads=4,
     transfer_tool="curl",
     progress_bar=False,
@@ -841,13 +833,15 @@ def download_archive(
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
-        GPM data readers are currently implemented only for GPM V06.
+    protocol : str, optional
+        The remote repository from where to download.
+        Either "pps" or "ges_disc". The default is "pps".
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
         Whether to display progress. The default is True.
     transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "curl".
+        Whether to use "curl" or "wget" for data download. The default is "curl".
     force_download : boolean, optional
         Whether to redownload data if already existing on disk. The default is False.
     verbose : bool, optional
@@ -864,6 +858,7 @@ def download_archive(
     """
     # -------------------------------------------------------------------------.
     ## Checks input arguments
+    protocol = check_remote_protocol(protocol)
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     version = check_product_version(version, product)
@@ -898,6 +893,7 @@ def download_archive(
             product_type=product_type,
             start_time=start_time,
             end_time=end_time,
+            protocol=protocol,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
             progress_bar=progress_bar,
@@ -953,6 +949,7 @@ def download_daily_data(
     day,
     product_type="RS",
     version=None,
+    protocol="pps",
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,
@@ -973,6 +970,7 @@ def download_daily_data(
         end_time=end_time,
         product_type=product_type,
         version=version,
+        protocol=protocol,
         n_threads=n_threads,
         transfer_tool=transfer_tool,
         progress_bar=progress_bar,
@@ -992,6 +990,7 @@ def download_monthly_data(
     month,
     product_type="RS",
     version=None,
+    protocol="pps",
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,
@@ -1012,6 +1011,7 @@ def download_monthly_data(
         end_time=end_time,
         product_type=product_type,
         version=version,
+        protocol=protocol,
         n_threads=n_threads,
         transfer_tool=transfer_tool,
         progress_bar=progress_bar,

@@ -1,6 +1,7 @@
 from typing import Dict, Any, List
 from pytest_mock import MockerFixture
 from gpm_api.io import pps
+from gpm_api.io import find
 from gpm_api.io.products import available_products, available_versions
 
 
@@ -17,7 +18,8 @@ def test_find_pps_daily_filepaths_private(
     for product_type in product_types:
         for product in available_products(product_type=product_type):
             for version in available_versions(product=product):
-                pps._find_pps_daily_filepaths(
+                find.find_daily_filepaths(
+                    protocol="pps",
                     date="2021-01-01",
                     product=product,
                     version=version,
@@ -33,7 +35,8 @@ def test_find_pps_daily_filepaths_private(
 
     for product_type in product_types:
         for product in available_products(product_type=product_type):
-            pps._find_pps_daily_filepaths(
+            find.find_daily_filepaths(
+                protocol="pps",
                 date="2021-01-01",
                 product=product,
                 version=None,
@@ -46,12 +49,12 @@ def test_find_pps_filepaths(
     mocker: MockerFixture,
     server_paths: Dict[str, Any],
 ) -> None:
-    """Test the find_pps_filepaths function."""
+    """Test the PPS find_filepaths function."""
 
     sftp_paths = [x for x in list(server_paths) if x.split("://")[0] == "sftp"]
     mocker.patch.object(
-        pps,
-        "_find_pps_daily_filepaths",
+        find,
+        "find_daily_filepaths",
         autospec=True,
         return_value=(sftp_paths, []),
     )
@@ -59,7 +62,8 @@ def test_find_pps_filepaths(
     for product_type in product_types:
         for product in available_products(product_type=product_type):
             assert (
-                pps.find_pps_filepaths(
+                find.find_filepaths(
+                    protocol="pps",
                     product=product,
                     product_type=product_type,
                     start_time="2021-01-01",
@@ -70,7 +74,8 @@ def test_find_pps_filepaths(
 
             # Non-parallel
             assert (
-                pps.find_pps_filepaths(
+                find.find_filepaths(
+                    protocol="pps",
                     product=product,
                     product_type=product_type,
                     start_time="2021-01-01",

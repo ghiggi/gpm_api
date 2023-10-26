@@ -7,42 +7,16 @@ Created on Thu Oct 13 17:45:37 2022
 import datetime
 import os
 import subprocess
-import warnings
 
-import numpy as np
-import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 from gpm_api.configs import get_gpm_password, get_gpm_username
-from gpm_api.io.checks import (
-    check_date,
-    check_product,
-    check_product_type,
-    check_product_version,
-    check_start_end_time,
-    check_valid_time_request,
-    is_empty,
-)
 from gpm_api.io.directories import (
     get_pps_directory,
     get_pps_directory_tree,
     get_pps_servers,
 )
-from gpm_api.io.filter import filter_filepaths
-from gpm_api.io.info import get_version_from_filepaths
 from gpm_api.io.products import available_products, get_info_dict
-from gpm_api.utils.warnings import GPMDownloadWarning
-
-VERSION_WARNING = True
-
-
-def flatten_list(nested_list):
-    """Flatten a nested list into a single-level list."""
-    return (
-        [item for sublist in nested_list for item in sublist]
-        if isinstance(nested_list, list)
-        else [nested_list]
-    )
 
 
 def ensure_valid_start_date(start_date, product):
@@ -63,34 +37,6 @@ def ensure_valid_start_date(start_date, product):
     min_start_date = datetime.datetime.fromisoformat(min_start_date)
     start_date = max(start_date, min_start_date)
     return start_date
-
-
-def _check_correct_version(filepaths, product, version):
-    """Check the file version is correct.
-
-    If 'version' is the last version, we retrieve data from 'gpmalldata' directory.
-    But many products are not available to the last version.
-    So to archive data correctly on the user side, we check that the file version
-    actually match the asked version, and otherwise we download the last available version.
-    """
-    global VERSION_WARNING  # To just warn once. Maybe to be defined at each download call
-
-    if len(filepaths) == 0:
-        return filepaths, version
-
-    files_versions = np.unique(get_version_from_filepaths(filepaths, integer=True)).tolist()
-    if len(files_versions) > 1:
-        raise ValueError(
-            f"Multiple file versions found: {files_versions}. Please report their occurrence !"
-        )
-    files_version = files_versions[0]
-    if files_version != version:
-        if VERSION_WARNING:
-            VERSION_WARNING = False
-            msg = f"The last available version for {product} product is version {files_version}! "
-            msg += f"Starting the download of version {files_version}."
-            warnings.warn(msg, GPMDownloadWarning)
-    return filepaths, files_version
 
 
 def _get_pps_file_list(url_file_list, product, date, version, verbose=True):
@@ -206,194 +152,20 @@ def define_pps_filepath(product, product_type, date, version, filename):
 ##-----------------------------------------------------------------------------.
 
 
-def _find_pps_daily_filepaths(
-    date,
-    product,
-    product_type,
-    version,
-    start_time=None,
-    end_time=None,
-    verbose=False,
-):
-    """
-    Retrieve GPM data filepaths for NASA PPS server for a specific day and product.
-
-    Parameters
-    ----------
-    date : datetime.date
-        Single date for which to retrieve the data.
-    product : str
-        GPM product acronym. See gpm_api.available_products()
-    start_time : datetime.datetime
-        Filtering start time.
-    end_time : datetime.datetime
-        Filtering end time.
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
-    verbose : bool, optional
-        Default is False.
-
-    Returns
-    -------
-    pps_fpaths: list
-        List of file paths on the NASA PPS server.
-    disk_fpaths: list
-        List of file paths on the local disk.
-
-    """
-    ##------------------------------------------------------------------------.
-    # Check date
-    date = check_date(date)
-
-    ##------------------------------------------------------------------------.
-    # Retrieve list of available files on pps
-    filepaths = _get_pps_daily_filepaths(
-        product=product,
-        product_type=product_type,
-        date=date,
-        version=version,
-        verbose=verbose,
-    )
-    if is_empty(filepaths):
-        return [], []
-    ##------------------------------------------------------------------------.
-    # Filter the GPM daily file list (for product, start_time & end time)
-    filepaths = filter_filepaths(
-        filepaths,
-        product=product,
-        product_type=product_type,
-        version=None,  # important to not filter !
-        start_time=start_time,
-        end_time=end_time,
-    )
-    if is_empty(filepaths):
-        return [], []
-
-    ## -----------------------------------------------------------------------.
-    ## Check correct version and return the available version
-    filepaths, available_version = _check_correct_version(
-        filepaths=filepaths, product=product, version=version
-    )
-    return filepaths, [available_version]
-
-
-##-----------------------------------------------------------------------------.
-
-
-def find_pps_filepaths(
-    product,
-    start_time,
-    end_time,
-    product_type="RS",
-    version=None,
-    verbose=True,
-    parallel=True,
-):
-    """
-    Retrieve GPM data filepaths on NASA PPS server a specific time period and product.
-
-    Parameters
-    ----------
-    product : str
-        GPM product acronym.
-    start_time : datetime.datetime
-        Start time.
-    end_time : datetime.datetime
-        End time.
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
-    parallel : bool, optional
-        Whether to loop over dates in parallel.
-        The default is True.
-
-    Returns
-    -------
-    filepaths : list
-        List of GPM filepaths.
-
-    """
-    import dask
-
-    # -------------------------------------------------------------------------.
-    ## Checks input arguments
-    version = check_product_version(version, product)
-    check_product_type(product_type=product_type)
-    check_product(product=product, product_type=product_type)
-    start_time, end_time = check_start_end_time(start_time, end_time)
-    check_valid_time_request(start_time, end_time, product)
-    # Retrieve sequence of dates
-    # - Specify start_date - 1 day to include data potentially on previous day directory
-    # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
-    start_date = datetime.datetime(start_time.year, start_time.month, start_time.day)
-    start_date = start_date - datetime.timedelta(days=1)
-    start_date = ensure_valid_start_date(start_date, product)
-    end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
-    date_range = pd.date_range(start=start_date, end=end_date, freq="D")
-    dates = list(date_range.to_pydatetime())
-
-    # If NRT, all data lies in a single directory
-    if product_type == "NRT":
-        dates = [dates[0]]
-        parallel = False
-    # -------------------------------------------------------------------------.
-    # Loop over dates and retrieve available filepaths
-    if parallel:
-        list_delayed = []
-        for date in dates:
-            del_op = dask.delayed(_find_pps_daily_filepaths)(
-                version=version,
-                product=product,
-                product_type=product_type,
-                date=date,
-                start_time=start_time,
-                end_time=end_time,
-                verbose=verbose,
-            )
-            list_delayed.append(del_op)
-        # Get filepaths list for each date
-        list_filepaths = dask.compute(*list_delayed)
-        list_filepaths = [tpl[0] for tpl in list_filepaths]
-        filepaths = flatten_list(list_filepaths)
-    else:
-        # TODO list
-        # - start_time and end_time filtering could be done only on first and last iteration
-        # - misleading error message can occur on last iteration if end_time is close to 00:00:00
-        #   and the searched granule is in previous day directory
-        list_filepaths = []
-        for date in dates:
-            filepaths, _ = _find_pps_daily_filepaths(
-                version=version,
-                product=product,
-                product_type=product_type,
-                date=date,
-                start_time=start_time,
-                end_time=end_time,
-                verbose=verbose,
-            )
-            # Concatenate filepaths
-            list_filepaths += filepaths
-        filepaths = list_filepaths
-
-    # -------------------------------------------------------------------------.
-    # Return filepaths
-    filepaths = sorted(filepaths)
-    return filepaths
-
-
 def find_first_pps_granule_filepath(product: str, product_type: str, version: int) -> str:
     """Return the PPS filepath of the first available granule."""
+    from gpm_api.io.find import find_filepaths
+
     # Retrieve product start_time from product.yaml file.
     info_dict = get_info_dict()
     start_time = info_dict[product].get("start_time", None)
     if start_time is None:
         raise ValueError(f"{product} product start_time is not provided in the product.yaml file.")
+
     # Find filepath
     end_time = start_time + relativedelta(days=1)
-    pps_filepaths = find_pps_filepaths(
+    pps_filepaths = find_filepaths(
+        protocol="pps",
         product=product,
         start_time=start_time,
         end_time=end_time,
