@@ -8,9 +8,113 @@ import glob
 import os
 
 from gpm_api.configs import get_gpm_base_dir
-from gpm_api.io.directories import get_disk_directory, get_disk_product_directory
+from gpm_api.io.checks import check_base_dir
+from gpm_api.io.products import get_product_category
 
 ####--------------------------------------------------------------------------.
+
+
+def get_disk_dir_pattern(product, product_type, version):
+    """
+    Defines the local (disk) repository base pattern where data are stored and searched.
+
+    Parameters
+    ----------
+    product : str
+        GPM product name. See: gpm_api.available_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+    version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'.
+
+    Returns
+    -------
+
+    pattern : str
+        Directory base pattern.
+        If product_type == "RS": GPM/RS/V<version>/<product_category>/<product>
+        If product_type == "NRT": GPM/NRT/<product_category>/<product>
+        Product category are: RADAR, PMW, CMB, IMERG
+
+    """
+    # Define pattern
+    product_category = get_product_category(product)
+    if product_type == "NRT":
+        dir_structure = os.path.join("GPM", product_type, product_category, product)
+    else:  # product_type == "RS"
+        version_str = "V0" + str(int(version))
+        dir_structure = os.path.join("GPM", product_type, version_str, product_category, product)
+    return dir_structure
+
+
+def get_time_tree(date):
+    """Get time tree path."""
+    year = date.strftime("%Y")
+    month = date.strftime("%m")
+    day = date.strftime("%d")
+    time_tree = os.path.join(year, month, day)
+    return time_tree
+
+
+def get_disk_product_directory(base_dir, product, product_type, version):
+    """
+    Provide the disk product directory path where the requested GPM data are stored/need to be saved.
+
+    Parameters
+    ----------
+    base_dir : str
+        The base directory where to store GPM data.
+    product : str
+        GPM product name. See: gpm_api.available_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+    version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'.
+
+    Returns
+    -------
+
+    product_dir : str
+        Product directory path where data are located.
+    """
+    base_dir = check_base_dir(base_dir)
+    product_dir_pattern = get_disk_dir_pattern(product, product_type, version)
+    product_dir = os.path.join(base_dir, product_dir_pattern)
+    return product_dir
+
+
+def get_disk_directory(product, product_type, version, date):
+    """
+    Provide the disk repository path where the requested daily GPM data are stored/need to be saved.
+
+    Parameters
+    ----------
+    product : str
+        GPM product name. See: gpm_api.available_products()
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+    version : int, optional
+        GPM version of the data to retrieve if product_type = 'RS'.
+    date : datetime.date
+        Single date for which to retrieve the data.
+
+    Returns
+    -------
+
+    dir_path : str
+        Directory path where daily GPM data are located.
+        If product_type == "RS": <base_dir>/GPM/RS/V0<version>/<product_category>/<product>/<YYYY>/<MM>/<DD>
+        If product_type == "NRT": <base_dir>/GPM/NRT/<product_category>/<product>/<YYYY>/<MM>/<DD>
+        <product_category> are: RADAR, PMW, CMB, IMERG.
+
+    """
+    base_dir = get_gpm_base_dir(None)
+    product_dir = get_disk_product_directory(
+        base_dir=base_dir, product=product, product_type=product_type, version=version
+    )
+    time_tree = get_time_tree(date)
+    dir_path = os.path.join(product_dir, time_tree)
+    return dir_path
 
 
 def _get_disk_daily_filepaths(product, product_type, date, version, verbose=True):
