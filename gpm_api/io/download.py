@@ -178,6 +178,7 @@ def wget_ges_disc_cmd(src_fpath, dst_fpath):
         ges_disc_username = ""
         # .netrc
         # machine urs.earthdata.nasa.gov login {username} password {password}
+
         auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
         window_options = f"--user={ges_disc_username} --ask-password"
         cmd = f"wget {auth} {wget_options} {window_options} --content-disposition {src_fpath} -O {dst_fpath}"
