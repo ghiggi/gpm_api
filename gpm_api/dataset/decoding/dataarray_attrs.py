@@ -24,9 +24,7 @@ def ensure_dtype_name(dtype):
     return dtype
 
 
-def _format_dataarray_attrs(da, product=None):
-    attrs = da.attrs
-
+def _check_fillvalue_format(attrs):
     # Ensure fill values are numbers
     if "CodeMissingValue" in attrs:
         if isinstance(attrs["CodeMissingValue"], str):
@@ -52,9 +50,16 @@ def _format_dataarray_attrs(da, product=None):
     # Remove 'CodeMissingValue'
     _ = attrs.pop("CodeMissingValue", None)
 
-    # Move _FillValue to encoding
-    # if "_FillValue" in attrs:
-    #    da.encoding["_FillValue"] = attrs.pop("_FillValue")
+    return attrs
+
+
+def _format_dataarray_attrs(da, product=None):
+    attrs = da.attrs
+
+    # Ensure fill values are numbers
+    # - If CodeMissingValue is present, it is used as _FillValue
+    # - _FillValue are moved to encoding by xr.decode_cf !
+    attrs = _check_fillvalue_format(attrs)
 
     # Convert 'Units' to 'units'
     if not attrs.get("units", False) and attrs.get("Units", False):
@@ -83,6 +88,7 @@ def _format_dataarray_attrs(da, product=None):
 
     # Attach attributes
     da.attrs = attrs
+
     return da
 
 

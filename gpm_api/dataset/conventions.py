@@ -91,6 +91,7 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
 
     ##------------------------------------------------------------------------.
     # Decode dataset
+    # - _FillValue is moved from attrs to encoding !
     if decode_cf:
         ds = apply_cf_decoding(ds)
 

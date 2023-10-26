@@ -199,6 +199,12 @@ def decode_binDFRmMLBottom(da):
     return da
 
 
+def decode_binDFRmMLTop(da):
+    """Decode the 2A-<RADAR> variable binDFRmMLTop."""
+    da = da.where(da >= 0)  # -1111 is set to np.nan
+    return da
+
+
 def decode_binHeavyIcePrecipTop(da):
     """Decode the 2A-<RADAR> variable binHeavyIcePrecipTop."""
     da = da.where(da >= 0)  # -1111 is set to np.nan
@@ -236,6 +242,7 @@ def decode_product(ds):
         "binBBTop",
         "binBBBottom",
         "binDFRmMLBottom",
+        "binDFRmMLTop",
         "binHeavyIcePrecipTop",
         "binHeavyIcePrecipBottom",
         "qualityTypePrecip",
