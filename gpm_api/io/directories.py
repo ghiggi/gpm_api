@@ -7,6 +7,7 @@ Created on Thu Oct 13 16:48:22 2022
 import datetime
 import os
 
+from gpm_api.configs import get_gpm_base_dir
 from gpm_api.io.checks import (
     check_base_dir,
     check_product_type,
@@ -90,14 +91,12 @@ def get_disk_product_directory(base_dir, product, product_type, version):
     return product_dir
 
 
-def get_disk_directory(base_dir, product, product_type, version, date):
+def get_disk_directory(product, product_type, version, date):
     """
     Provide the disk repository path where the requested daily GPM data are stored/need to be saved.
 
     Parameters
     ----------
-    base_dir : str
-        The base directory where to store GPM data.
     product : str
         GPM product name. See: gpm_api.available_products()
     product_type : str, optional
@@ -117,6 +116,7 @@ def get_disk_directory(base_dir, product, product_type, version, date):
         <product_category> are: RADAR, PMW, CMB, IMERG.
 
     """
+    base_dir = get_gpm_base_dir(None)
     product_dir = get_disk_product_directory(
         base_dir=base_dir, product=product, product_type=product_type, version=version
     )

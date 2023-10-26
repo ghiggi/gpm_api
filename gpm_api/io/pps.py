@@ -23,7 +23,11 @@ from gpm_api.io.checks import (
     check_valid_time_request,
     is_empty,
 )
-from gpm_api.io.directories import get_pps_directory
+from gpm_api.io.directories import (
+    get_pps_directory,
+    get_pps_directory_tree,
+    get_pps_servers,
+)
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.info import get_version_from_filepaths
 from gpm_api.io.products import available_products, get_info_dict
@@ -193,6 +197,18 @@ def _get_pps_daily_filepaths(
 
     # Return the pps data server filepaths
     return pps_fpaths
+
+
+def define_pps_filepath(product, product_type, date, version, filename):
+    # Retrieve PPS directory tree
+    dir_tree = get_pps_directory_tree(
+        product=product, product_type=product_type, date=date, version=version
+    )
+    # Retrieve PPS servers URLs
+    url_text_server, url_data_server = get_pps_servers(product_type)
+    # Define PPS filepath
+    fpath = os.path.join(url_data_server, dir_tree, filename)
+    return fpath
 
 
 ##-----------------------------------------------------------------------------.

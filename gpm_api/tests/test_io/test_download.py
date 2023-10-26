@@ -349,7 +349,7 @@ def test_flatten_list() -> None:
     assert dl.flatten_list(["single item"]) == ["single item"], "Flat list should return same list"
 
 
-def test_convert_pps_to_disk_filepaths(
+def test_get_fpaths_from_fnames(
     server_paths: Dict[str, Dict[str, Any]],
     versions: List[str],
     products: List[str],
@@ -360,7 +360,7 @@ def test_convert_pps_to_disk_filepaths(
 
     Parameters
     """
-
+    # TODO: WRONG REDO !
     assert dl.convert_pps_to_disk_filepaths(
         pps_filepaths=[
             "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"

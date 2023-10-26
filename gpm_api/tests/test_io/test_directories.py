@@ -48,13 +48,13 @@ def test_get_disk_directory(
 
     date = datetime.datetime.strptime("2021-01-01", "%Y-%m-%d").date()
 
+    # TODO: define in gpm_api.config !!!
     base_dir = os.path.join(tmpdir, "gpm_api_data")
 
     for product in products:
         for product_type in product_types:
             for version in versions:
                 dir_path = dir.get_disk_directory(
-                    base_dir,
                     product,
                     product_type,
                     version,

@@ -14,24 +14,24 @@ from gpm_api.utils.countries import get_country_extent
 from gpm_api.utils.utils_cmap import get_colorbar_settings
 from gpm_api.visualization.plot import plot_cartopy_background
 
-start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
-end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
+start_time = datetime.datetime.strptime("2020-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
+end_time = datetime.datetime.strptime("2020-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'
 product_type = "RS"
 version = 6
 
 # Download the data
-# gpm_api.download(
-#     product=product,
-#     product_type=product_type,
-#     version=version,
-#     start_time=start_time,
-#     end_time=end_time,
-#     force_download=False,
-#     verbose=True,
-#     progress_bar=True,
-#     check_integrity=False,
-# )
+gpm_api.download(
+    product=product,
+    product_type=product_type,
+    version=version,
+    start_time=start_time,
+    end_time=end_time,
+    force_download=False,
+    verbose=True,
+    progress_bar=True,
+    check_integrity=False,
+)
 
 # Load IMERG dataset
 ds = gpm_api.open_dataset(
