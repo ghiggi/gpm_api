@@ -14,8 +14,8 @@ from gpm_api.utils.countries import get_country_extent
 from gpm_api.utils.utils_cmap import get_colorbar_settings
 from gpm_api.visualization.plot import plot_cartopy_background
 
-start_time = datetime.datetime.strptime("2009-06-13 11:00:00", "%Y-%m-%d %H:%M:%S")
-end_time = datetime.datetime.strptime("2009-06-13 13:00:00", "%Y-%m-%d %H:%M:%S")
+start_time = datetime.datetime.strptime("2011-06-13 11:00:00", "%Y-%m-%d %H:%M:%S")
+end_time = datetime.datetime.strptime("2011-06-13 13:00:00", "%Y-%m-%d %H:%M:%S")
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'
 product_type = "RS"
 version = 6
