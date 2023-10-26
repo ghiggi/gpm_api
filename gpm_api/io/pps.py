@@ -18,6 +18,11 @@ from gpm_api.io.checks import (
 )
 from gpm_api.io.products import available_products, get_info_dict
 
+####--------------------------------------------------------------------------.
+#####################
+#### Directories ####
+#####################
+
 
 def _get_pps_nrt_product_folder_name(product):
     """ "Retrieve NASA PPS server folder name for NRT product_type."""
@@ -102,7 +107,7 @@ def _get_pps_rs_product_dir(product, date, version):
     return directory_tree
 
 
-def get_pps_directory_tree(product, product_type, date, version):
+def _get_pps_directory_tree(product, product_type, date, version):
     """
     Retrieve the NASA PPS server directory tree where the GPM data are stored.
 
@@ -129,7 +134,7 @@ def get_pps_directory_tree(product, product_type, date, version):
         return _get_pps_rs_product_dir(product, date, version)
 
 
-def get_pps_servers(product_type):
+def _get_pps_servers(product_type):
     """Return the url to the PPS servers."""
     if product_type == "NRT":
         url_text_server = "https://jsimpsonhttps.pps.eosdis.nasa.gov/text"
@@ -140,7 +145,7 @@ def get_pps_servers(product_type):
     return (url_text_server, url_data_server)
 
 
-def get_pps_directory(product, product_type, date, version):
+def _get_pps_directory(product, product_type, date, version):
     """
     Retrieve the NASA PPS server directory paths where the GPM data for
     a specific date are listed and stored.
@@ -167,13 +172,11 @@ def get_pps_directory(product, product_type, date, version):
         url of the NASA PPS server where the data are listed.
 
     """
-    check_product_type(product_type)
-
     # Retrieve servers URLs
-    url_text_server, url_data_server = get_pps_servers(product_type)
+    url_text_server, url_data_server = _get_pps_servers(product_type)
 
     # Retrieve directory tree structure
-    dir_structure = get_pps_directory_tree(
+    dir_structure = _get_pps_directory_tree(
         product=product, product_type=product_type, date=date, version=version
     )
 
@@ -184,7 +187,15 @@ def get_pps_directory(product, product_type, date, version):
     return (url_data_server, url_data_list)
 
 
+####--------------------------------------------------------------------------.
+############################
+#### Filepath retrieval ####
+############################
+
+
 def ensure_valid_start_date(start_date, product):
+    """Ensure that the product directory exists on the PPS server."""
+    # TODO: where it is used ?
     if product == "2A-SAPHIR-MT1-CLIM":
         min_start_date = "2011-10-13 00:00:00"
     elif "1A-" in product or "1B-" in product:
@@ -261,7 +272,7 @@ def _get_pps_file_list(url_file_list, product, date, version, verbose=True):
     return filepaths
 
 
-def _get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
+def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
     """
     Retrieve the complete url to the files available on the NASA PPS server for a specific day and product.
 
@@ -280,7 +291,7 @@ def _get_pps_daily_filepaths(product, product_type, date, version, verbose=True)
         The default is True.
     """
     # Retrieve server urls of NASA PPS
-    (url_data_server, url_file_list) = get_pps_directory(
+    (url_data_server, url_file_list) = _get_pps_directory(
         product=product, product_type=product_type, date=date, version=version
     )
     # Retrieve filepaths
@@ -304,17 +315,20 @@ def _get_pps_daily_filepaths(product, product_type, date, version, verbose=True)
 def define_pps_filepath(product, product_type, date, version, filename):
     """Define PPS filepath from filename."""
     # Retrieve PPS directory tree
-    dir_tree = get_pps_directory_tree(
+    dir_tree = _get_pps_directory_tree(
         product=product, product_type=product_type, date=date, version=version
     )
     # Retrieve PPS servers URLs
-    url_text_server, url_data_server = get_pps_servers(product_type)
+    url_text_server, url_data_server = _get_pps_servers(product_type)
     # Define PPS filepath
     fpath = os.path.join(url_data_server, dir_tree, filename)
     return fpath
 
 
-##-----------------------------------------------------------------------------.
+####--------------------------------------------------------------------------.
+#################
+#### Utility ####
+#################
 
 
 def find_first_pps_granule_filepath(product: str, product_type: str, version: int) -> str:

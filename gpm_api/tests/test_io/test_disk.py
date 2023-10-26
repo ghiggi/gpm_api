@@ -5,7 +5,7 @@ from gpm_api.io.products import available_products, get_product_category
 from gpm_api.io import disk
 
 
-def test_get_disk_dir_pattern(
+def test__get_disk_dir_pattern(
     products: List[str],
     product_types: List[str],
     versions: List[int],
@@ -16,7 +16,7 @@ def test_get_disk_dir_pattern(
     for product in products:
         for product_type in product_types:
             for version in versions:
-                dir_pattern = disk.get_disk_dir_pattern(
+                dir_pattern = disk._get_disk_dir_pattern(
                     product,
                     product_type,
                     version,
@@ -38,7 +38,7 @@ def test_get_disk_dir_pattern(
                         )
 
 
-def test_get_disk_directory(
+def test__get_disk_directory(
     products: List[str],
     product_types: List[str],
     versions: List[int],
@@ -54,11 +54,12 @@ def test_get_disk_directory(
     for product in products:
         for product_type in product_types:
             for version in versions:
-                dir_path = disk.get_disk_directory(
-                    product,
-                    product_type,
-                    version,
-                    date,
+                dir_path = disk._get_disk_directory(
+                    base_dir=base_dir,
+                    product=product,
+                    product_type=product_type,
+                    version=version,
+                    date=date,
                 )
 
                 # Work only on product if product_type are compatible

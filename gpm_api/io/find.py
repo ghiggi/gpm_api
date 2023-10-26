@@ -22,10 +22,11 @@ from gpm_api.io.checks import (
     check_valid_time_request,
     is_empty,
 )
-from gpm_api.io.disk import _get_disk_daily_filepaths
+from gpm_api.io.disk import get_disk_daily_filepaths
 from gpm_api.io.filter import filter_filepaths
+from gpm_api.io.ges_disc import get_gesdisc_daily_filepaths
 from gpm_api.io.info import get_version_from_filepaths
-from gpm_api.io.pps import _get_pps_daily_filepaths
+from gpm_api.io.pps import get_pps_daily_filepaths
 from gpm_api.utils.list import flatten_list
 from gpm_api.utils.warnings import GPMDownloadWarning
 
@@ -38,7 +39,7 @@ def _get_all_daily_filepaths(protocol, date, product, product_type, version, ver
     This functions returns a tuple ([filepaths][available_version])
     """
     if protocol == "local":
-        filepaths = _get_disk_daily_filepaths(
+        filepaths = get_disk_daily_filepaths(
             product=product,
             product_type=product_type,
             date=date,
@@ -46,7 +47,7 @@ def _get_all_daily_filepaths(protocol, date, product, product_type, version, ver
             verbose=verbose,
         )
     elif protocol == "pps":
-        filepaths = _get_pps_daily_filepaths(
+        filepaths = get_pps_daily_filepaths(
             product=product,
             product_type=product_type,
             date=date,
@@ -54,9 +55,15 @@ def _get_all_daily_filepaths(protocol, date, product, product_type, version, ver
             verbose=verbose,
         )
     elif protocol == "gesdisc":
-        raise NotImplementedError()
+        filepaths = get_gesdisc_daily_filepaths(
+            product=product,
+            product_type=product_type,
+            date=date,
+            version=version,
+            verbose=verbose,
+        )
     else:
-        raise ValueError("Invalid protocol {protocol}.")
+        raise ValueError(f"Invalid protocol {protocol}.")
     return filepaths
 
 

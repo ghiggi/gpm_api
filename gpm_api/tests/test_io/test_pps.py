@@ -34,7 +34,7 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
                 assert res == foldername
 
 
-# def test_get_pps_directory(
+# def test__get_pps_directory(
 #     products: List[str],
 #     product_types: List[str],
 # ) -> None:
@@ -45,7 +45,7 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
 #                 # Dependent on dir forming private function
 #                 foldername = pps._get_pps_nrt_product_folder_name(product)
 
-#                 res = pps.get_pps_directory(product, product_type)
+#                 res = pps._get_pps_directory(product, product_type)
 #                 assert res == foldername
 #     pass
 
@@ -58,7 +58,7 @@ def test_find_pps_daily_filepaths_private(
     """Test the find_pps_daily_filepaths function."""
 
     # Mock server call, with a return of empty data
-    mocker.patch.object(pps, "_get_pps_daily_filepaths", return_value=[])
+    mocker.patch.object(pps, "get_pps_daily_filepaths", return_value=[])
 
     for product_type in product_types:
         for product in available_products(product_type=product_type):
@@ -74,7 +74,7 @@ def test_find_pps_daily_filepaths_private(
     # Return the curated server_path list
     mocker.patch.object(
         pps,
-        "_get_pps_daily_filepaths",
+        "get_pps_daily_filepaths",
         return_value=list(server_paths),
     )
 

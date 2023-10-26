@@ -33,6 +33,7 @@ from gpm_api.io.data_integrity import (
 )
 from gpm_api.io.disk import define_disk_filepath
 from gpm_api.io.find import find_daily_filepaths
+from gpm_api.io.ges_disc import define_gesdisc_filepath
 from gpm_api.io.info import get_info_from_filepath
 from gpm_api.io.pps import define_pps_filepath
 from gpm_api.utils.list import flatten_list
@@ -392,7 +393,13 @@ def _define_filepath(
             filename=filename,
         )
     elif protocol == "gesc_disc":
-        raise NotImplementedError
+        fpath = define_gesdisc_filepath(
+            product=product,
+            product_type=product_type,
+            date=date,
+            version=version,
+            filename=filename,
+        )
     else:
         raise ValueError("Invalid protocol.")
     return fpath
