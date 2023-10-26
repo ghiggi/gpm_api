@@ -7,6 +7,7 @@ Created on Mon Aug 15 00:18:33 2022
 import datetime
 import ftplib
 import os
+import re
 import subprocess
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -30,18 +31,9 @@ from gpm_api.io.data_integrity import (
     check_archive_integrity,
     check_filepaths_integrity,
 )
-from gpm_api.io.directories import (
-    get_disk_directory,
-    get_pps_directory_tree,
-    get_pps_servers,
-)
-from gpm_api.io.info import (
-    get_info_from_filepath,
-    get_product_from_filepath,
-    get_start_time_from_filepaths,
-    get_version_from_filepath,
-)
-from gpm_api.io.pps import _find_pps_daily_filepaths
+from gpm_api.io.disk import define_disk_filepath
+from gpm_api.io.info import get_info_from_filepath
+from gpm_api.io.pps import _find_pps_daily_filepaths, define_pps_filepath
 from gpm_api.utils.timing import print_elapsed_time
 from gpm_api.utils.warnings import GPMDownloadWarning
 
@@ -335,7 +327,7 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
     ----------
     server_paths : str
         GPM directory on disk for a specific product and date.
-    PPS_filepaths : str
+    remote_filepaths : str
         Filepaths on which GPM data are stored on PPS servers.
     force_download : boolean, optional
         Whether to redownload data if already existing on disk. The default is False.
@@ -365,33 +357,9 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
 ###########################
 #### Filepaths utility ####
 ###########################
-
-
-def get_pps_fpath_from_fname(filepath, product_type="RS"):
-    """Infer the PPS filepath from the file name."""
-    # Retrieve the filename
-    filename = os.path.basename(filepath)
-    # Retrieve relevant info
-    info = get_info_from_filepath(filename)
-    product = get_product_from_filepath(filename)
-    version = get_version_from_filepath(filename)
-    date = info["start_time"].date()
-    # Retrieve PPS directory tree
-    dir_tree = get_pps_directory_tree(
-        product=product, product_type=product_type, date=date, version=version
-    )
-    # Retrieve PPS servers URLs
-    url_text_server, url_data_server = get_pps_servers(product_type)
-
-    # Define PPS filepath
-    fpath = os.path.join(url_data_server, dir_tree, filename)
-
-    return fpath
-
-
-def get_pps_fpaths_from_fnames(filepaths, product_type="RS"):
+def get_fpaths_from_fnames(filepaths, protocol, product_type):
     """
-    Convert GPM file names or file paths to PPS file paths.
+    Convert GPM file names or file paths to <protocol> file paths.
 
     Parameters
     ----------
@@ -400,101 +368,70 @@ def get_pps_fpaths_from_fnames(filepaths, product_type="RS"):
 
     Returns
     -------
-    pps_filepaths : list
-        List of file paths on PPS.
+    fpaths : list
+        List of file paths on <protocol> storage.
 
     """
-    pps_fpaths = [get_pps_fpath_from_fname(fpath, product_type) for fpath in filepaths]
-    return pps_fpaths
-
-
-def get_disk_fpath_from_fname(filepath, base_dir, product_type="RS"):
-    """Infer the disk filepath from the file name."""
-    # Retrieve the filename
-    filename = os.path.basename(filepath)
-    # Retrieve relevant info
-    try:
-        info = get_info_from_filepath(filename)
-    except ValueError:
-        raise ValueError(f"Impossible to infer file information from '{filename}'")
-
-    product = get_product_from_filepath(filename)
-    version = get_version_from_filepath(filename)
-    date = info["start_time"].date()
-    # Define disk directory path
-    dir_tree = get_disk_directory(
-        base_dir=base_dir,
-        product=product,
-        product_type=product_type,
-        date=date,
-        version=version,
-    )
-    # Define disk file path
-    fpath = os.path.join(dir_tree, filename)
-    return fpath
-
-
-def get_disk_fpaths_from_fnames(filepaths, base_dir, product_type="RS"):
-    """
-    Convert GPM file names or file paths to disk file paths.
-
-    Parameters
-    ----------
-    filepaths : list
-        GPM file names or file paths.
-
-    Returns
-    -------
-    disk_filepaths : list
-        List of file paths on disk.
-
-    """
-
-    """Infer the disk filepaths from the file names."""
     fpaths = [
-        get_disk_fpath_from_fname(fpath, base_dir=base_dir, product_type=product_type)
+        get_fpath_from_fname(fpath, protocol=protocol, product_type=product_type)
         for fpath in filepaths
     ]
     return fpaths
 
 
-def convert_pps_to_disk_filepaths(pps_filepaths, base_dir, product, product_type, version):
-    """
-    Convert PPS filepaths to local disk filepaths.
+def get_fpath_from_fname(filename, protocol, product_type):
+    """Infer the filepath from the file name."""
+    # Retrieve the filename
+    filename = os.path.basename(filename)
+    # Retrieve relevant info from filename
+    try:
+        info = get_info_from_filepath(filename)
+    except ValueError:
+        raise ValueError(f"Impossible to infer file information from '{filename}'")
+    product = info["product"]
+    version = int(re.findall("\\d+", info["version"])[0])
+    date = info["start_time"].date()
+    # Retrieve filepath
+    fpath = _define_filepath(
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
+        filename=filename,
+        protocol=protocol,
+    )
+    return fpath
 
-    Parameters
-    ----------
-    pps_filepaths : list
-        File paths on the PPS server.
-    base_dir : str
-        The base directory where to store GPM data.
-    product : str
-        GPM product acronym. See gpm_api.available_products()
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
 
-    Returns
-    -------
-    disk_filepaths : list
-        List of filepaths on local disk.
-
-    """
-    l_start_time = get_start_time_from_filepaths(pps_filepaths)
-    l_dates = [start_time.date() for start_time in l_start_time]
-    disk_filepaths = []
-    for date, pps_filepath in zip(l_dates, pps_filepaths):
-        disk_dir = get_disk_directory(
-            base_dir=base_dir,
+def _define_filepath(
+    product,
+    product_type,
+    date,
+    version,
+    filename,
+    protocol,
+):
+    if protocol == "local":
+        fpath = define_disk_filepath(
             product=product,
             product_type=product_type,
             date=date,
             version=version,
+            filename=filename,
         )
-        disk_filepath = os.path.join(disk_dir, os.path.basename(pps_filepath))
-        disk_filepaths.append(disk_filepath)
-    return disk_filepaths
+    elif protocol == "pps":
+        fpath = define_pps_filepath(
+            product=product,
+            product_type=product_type,
+            date=date,
+            version=version,
+            filename=filename,
+        )
+    elif protocol == "gesc_disc":
+        raise NotImplementedError
+    else:
+        raise ValueError("Invalid protocol.")
+    return fpath
 
 
 ####--------------------------------------------------------------------------.
@@ -611,6 +548,7 @@ def download_files(
     progress_bar=False,
     verbose=True,
     retry=1,
+    protocol="pps",
     base_dir=None,
     username=None,
     password=None,
@@ -640,6 +578,9 @@ def download_files(
        By default is True.
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
+    protocol : str, optional
+        The remote repository from where to download.
+        Either "pps" or "ges_disc". The default is "pps".
     base_dir : str, optional
         The path to the GPM base directory. If None, it use the one specified
         in the GPM-API config file.
@@ -684,27 +625,27 @@ def download_files(
         n_files = len(filepaths)
         print(f"Attempt to download {n_files} files.")
 
-    # Retrieve the PPS and disk file paths
-    disk_filepaths = get_disk_fpaths_from_fnames(
-        filepaths, base_dir=base_dir, product_type=product_type
+    # Retrieve the remote and local file paths
+    remote_filepaths = get_fpaths_from_fnames(
+        filepaths, protocol=protocol, product_type=product_type
     )
-    pps_filepaths = get_pps_fpaths_from_fnames(filepaths, product_type=product_type)
+    local_filepaths = get_fpaths_from_fnames(filepaths, protocol="local", product_type=product_type)
 
     # If force_download is False, select only data not present on disk
-    new_pps_filepaths, new_disk_filepaths = filter_download_list(
-        disk_paths=disk_filepaths,
-        server_paths=pps_filepaths,
+    new_remote_filepaths, new_local_filepaths = filter_download_list(
+        disk_paths=local_filepaths,
+        server_paths=remote_filepaths,
         force_download=force_download,
     )
-    if is_empty(new_pps_filepaths):
+    if is_empty(new_remote_filepaths):
         if verbose:
-            print(f"The requested files are already on disk at {disk_filepaths}.")
+            print(f"The requested files are already on disk at {local_filepaths}.")
         return None
 
     # Download files
     _ = _download_files(
-        src_fpaths=new_pps_filepaths,
-        dst_fpaths=new_disk_filepaths,
+        src_fpaths=new_remote_filepaths,
+        dst_fpaths=new_local_filepaths,
         username=username,
         password=password,
         n_threads=n_threads,
@@ -715,7 +656,7 @@ def download_files(
 
     # Get corrupted (and optionally removed) filepaths
     l_corrupted = check_filepaths_integrity(
-        filepaths=new_disk_filepaths, remove_corrupted=remove_corrupted, verbose=verbose
+        filepaths=new_local_filepaths, remove_corrupted=remove_corrupted, verbose=verbose
     )
 
     # Retry download if retry > 1 as input argument
@@ -735,7 +676,7 @@ def download_files(
         )
     else:
         if verbose:
-            print(f"The requested files are now available on disk at {new_disk_filepaths}.")
+            print(f"The requested files are now available on disk at {new_local_filepaths}.")
 
     return l_corrupted
 
@@ -808,7 +749,7 @@ def _download_daily_data(
 
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
-    pps_filepaths, available_version = _find_pps_daily_filepaths(
+    remote_filepaths, available_version = _find_pps_daily_filepaths(
         username=username,
         password=password,
         product=product,
@@ -821,7 +762,7 @@ def _download_daily_data(
     )
     # -------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
-    if is_empty(pps_filepaths):
+    if is_empty(remote_filepaths):
         if warn_missing_files:
             msg = f"No data found on PPS on date {date} for product {product}"
             warnings.warn(msg, GPMDownloadWarning)
@@ -829,29 +770,25 @@ def _download_daily_data(
 
     # -------------------------------------------------------------------------.
     # Define disk filepaths
-    disk_filepaths = convert_pps_to_disk_filepaths(
-        pps_filepaths=pps_filepaths,
-        base_dir=base_dir,
-        product=product,
-        product_type=product_type,
-        version=available_version[0],
+    local_filepaths = get_fpaths_from_fnames(
+        remote_filepaths, protocol="local", product_type=product_type
     )
 
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
-    pps_filepaths, disk_filepaths = filter_download_list(
-        disk_paths=disk_filepaths,
-        server_paths=pps_filepaths,
+    remote_filepaths, local_filepaths = filter_download_list(
+        disk_paths=local_filepaths,
+        server_paths=remote_filepaths,
         force_download=force_download,
     )
-    if is_empty(pps_filepaths):
+    if is_empty(remote_filepaths):
         return [-1], available_version  # flag for already on disk
 
     # -------------------------------------------------------------------------.
     # Retrieve commands
     status = _download_files(
-        src_fpaths=pps_filepaths,
-        dst_fpaths=disk_filepaths,
+        src_fpaths=remote_filepaths,
+        dst_fpaths=local_filepaths,
         username=username,
         password=password,
         n_threads=n_threads,

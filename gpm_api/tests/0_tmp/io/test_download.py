@@ -74,13 +74,12 @@ print(t_elapsed, "seconds")  # 102.6 seconds
 #### ------------------------------------------------------------------------
 #### Test download with ftplib
 from gpm_api.io.download import (
-    convert_pps_to_disk_filepaths,
+    get_fpaths_from_fnames,
     filter_download_list,
     ftplib_download,
 )
 from gpm_api.io.pps import find_pps_filepaths
 
-base_dir = ""  # TBD
 username = "gionata.ghiggi@epfl.ch"
 password = "gionata.ghiggi@epfl.ch"
 n_threads = 4
@@ -95,13 +94,8 @@ pps_filepaths = find_pps_filepaths(
     verbose=verbose,
 )
 
-disk_filepaths = convert_pps_to_disk_filepaths(
-    pps_filepaths=pps_filepaths,
-    base_dir=base_dir,
-    product=product,
-    product_type=product_type,
-    version=version,
-)
+disk_filepaths = get_fpaths_from_fnames(pps_filepaths, protocol="local", product_type=product_type)
+
 
 pps_filepaths, disk_filepaths = filter_download_list(
     disk_paths=disk_filepaths,
@@ -122,7 +116,7 @@ ftplib_download(
 
 ####-------------------------------------------------------------------------.
 #### Test multiple download at once
-from gpm_api.io.download import convert_pps_to_disk_filepaths, filter_download_list
+from gpm_api.io.download import get_fpaths_from_fnames, filter_download_list
 from gpm_api.io.pps import find_pps_filepaths
 
 pps_filepaths = find_pps_filepaths(
@@ -135,12 +129,10 @@ pps_filepaths = find_pps_filepaths(
     verbose=verbose,
 )
 
-disk_filepaths = convert_pps_to_disk_filepaths(
-    pps_filepaths=pps_filepaths,
-    base_dir=base_dir,
-    product=product,
+disk_filepaths = get_fpaths_from_fnames(
+    pps_filepaths,
+    protocol="local",
     product_type=product_type,
-    version=version,
 )
 
 pps_filepaths, disk_filepaths = filter_download_list(

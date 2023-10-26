@@ -12,7 +12,6 @@ import pandas as pd
 
 from gpm_api.configs import get_gpm_base_dir
 from gpm_api.io.checks import (
-    check_base_dir,
     check_date,
     check_product,
     check_product_type,
@@ -30,14 +29,12 @@ from gpm_api.io.filter import filter_filepaths
 ######################
 
 
-def _get_disk_daily_filepaths(base_dir, product, product_type, date, version, verbose=True):
+def _get_disk_daily_filepaths(product, product_type, date, version, verbose=True):
     """
     Retrieve GPM data filepaths on the local disk directory of a specific day and product.
 
     Parameters
     ----------
-    base_dir : str
-        The base directory where to store GPM data.
     product : str
         GPM product acronym. See gpm_api.available_products()
     product_type : str, optional
@@ -51,7 +48,6 @@ def _get_disk_daily_filepaths(base_dir, product, product_type, date, version, ve
     """
     # Retrieve the directory on disk where the data are stored
     dir_path = get_disk_directory(
-        base_dir=base_dir,
         product=product,
         product_type=product_type,
         date=date,
@@ -108,8 +104,21 @@ def get_disk_filepaths(product, product_type, version, base_dir=None):
     return filepaths
 
 
+def define_disk_filepath(product, product_type, date, version, filename):
+    """Define disk file path."""
+    # Define disk directory path
+    dir_tree = get_disk_directory(
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
+    )
+    # Define disk file path
+    fpath = os.path.join(dir_tree, filename)
+    return fpath
+
+
 def _find_daily_filepaths(
-    base_dir,
     date,
     product,
     product_type,
@@ -153,7 +162,6 @@ def _find_daily_filepaths(
     ##------------------------------------------------------------------------.
     # Retrieve filepaths
     filepaths = _get_disk_daily_filepaths(
-        base_dir=base_dir,
         product=product,
         product_type=product_type,
         date=date,
@@ -231,13 +239,9 @@ def find_filepaths(
 
     """
     # -------------------------------------------------------------------------.
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-
-    # -------------------------------------------------------------------------.
     ## Checks input arguments
     version = check_product_version(version, product)
-    base_dir = check_base_dir(base_dir)
+
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     start_time, end_time = check_start_end_time(start_time, end_time)
@@ -263,7 +267,6 @@ def find_filepaths(
     for i, date in enumerate(dates):
         verbose = False if i == 0 else verbose_arg
         filepaths = _find_daily_filepaths(
-            base_dir=base_dir,
             version=version,
             product=product,
             product_type=product_type,
