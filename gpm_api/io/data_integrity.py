@@ -8,9 +8,7 @@ import os
 
 import h5py
 
-from gpm_api.configs import get_gpm_base_dir
 from gpm_api.io.checks import (
-    check_base_dir,
     check_product,
     check_start_end_time,
     check_valid_time_request,
@@ -77,7 +75,6 @@ def check_archive_integrity(
     product_type="RS",
     remove_corrupted=True,
     verbose=True,
-    base_dir=None,
 ):
     """
     Check GPM granule file integrity over a given period.
@@ -100,10 +97,6 @@ def check_archive_integrity(
     remove_corrupted : bool, optional
         Whether to remove the corrupted files.
         The default is True.
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
 
     Returns
     -------
@@ -111,10 +104,6 @@ def check_archive_integrity(
         List of file paths which are corrupted.
 
     """
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-    # Check base_dir
-    base_dir = check_base_dir(base_dir)
     # Check valid product and variables
     check_product(product, product_type=product_type)
     # Check valid start/end time
@@ -122,7 +111,6 @@ def check_archive_integrity(
     check_valid_time_request(start_time, end_time, product)
     # Find filepaths
     filepaths = find_filepaths(
-        base_dir=base_dir,
         version=version,
         product=product,
         product_type=product_type,

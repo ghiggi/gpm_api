@@ -12,7 +12,6 @@ from gpm_api.io.pps import _find_pps_daily_filepaths, find_pps_filepaths
 product = "2A-DPR"
 date = datetime.date(2020, 7, 5)  # OK
 
-username = "gionata.ghiggi@epfl.ch"
 version = 7
 start_time = None
 end_time = None
@@ -21,7 +20,6 @@ verbose = True
 parallel = True
 
 filepaths, available_version = _find_pps_daily_filepaths(
-    username=username,
     product=product,
     product_type=product_type,
     date=date,
@@ -43,7 +41,6 @@ end_time = datetime.datetime(
 
 t_i = time.time()
 filepaths = find_pps_filepaths(
-    username=username,
     product=product,
     product_type=product_type,
     version=version,
@@ -67,11 +64,9 @@ end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S"
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'
 product_type = "RS"
 version = 6
-username = "gionata.ghiggi@epfl.ch"
 verbose = True
 parallel = True
 filepaths = find_pps_filepaths(
-    username=username,
     product=product,
     product_type=product_type,
     start_time=start_time,

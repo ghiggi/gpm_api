@@ -49,6 +49,7 @@ l_corrupted = download_archive(
 server_path = "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
 disk_path1 = "/tmp/dummy1.hdf"
 disk_path2 = "/tmp/dummy2.hdf"
+
 username = "gionata.ghiggi@epfl.ch"
 password = username
 
@@ -80,12 +81,9 @@ from gpm_api.io.download import (
 )
 from gpm_api.io.pps import find_pps_filepaths
 
-username = "gionata.ghiggi@epfl.ch"
-password = "gionata.ghiggi@epfl.ch"
 n_threads = 4
 
 pps_filepaths = find_pps_filepaths(
-    username=username,
     product=product,
     product_type=product_type,
     version=version,
@@ -120,7 +118,6 @@ from gpm_api.io.download import get_fpaths_from_fnames, filter_download_list
 from gpm_api.io.pps import find_pps_filepaths
 
 pps_filepaths = find_pps_filepaths(
-    username=username,
     product=product,
     product_type=product_type,
     version=version,
@@ -236,10 +233,8 @@ print(cmd)
 #### Test download monthly data
 from gpm_api.io.download import download_monthly_data
 
-base_dir = "/home/ghiggi/GPM"
 product = "2A-DPR"
 product_type = "RS"
-username = "gionata.ghiggi@epfl.ch"
 year = 2020
 month = 7
 version = 7
@@ -253,8 +248,6 @@ transfer_tool = "curl"  # works
 transfer_tool = "wget"  # buggy ... especially with lot of threads
 
 l_corrupted = download_monthly_data(
-    base_dir=base_dir,
-    username=username,
     product=product,
     year=year,
     month=month,
@@ -273,16 +266,14 @@ l_corrupted = download_monthly_data(
 #### ------------------------------------------------------------------------
 #### Test download GPM IMERG
 import datetime
-
 import gpm_api
 
-base_dir = "/home/ghiggi/GPM"
+
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
 product = "IMERG-FR"  # 'IMERG-ER' 'IMERG-LR'
 product_type = "RS"
 version = 6
-username = "gionata.ghiggi@epfl.ch"
 n_threads = 1
 force_download = False
 verbose = True
@@ -294,8 +285,6 @@ remove_corrupted = True
 
 # Download the data
 gpm_api.download(
-    base_dir=base_dir,
-    username=username,
     product=product,
     product_type=product_type,
     version=version,

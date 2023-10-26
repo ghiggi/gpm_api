@@ -18,8 +18,6 @@ def test_find_pps_daily_filepaths_private(
         for product in available_products(product_type=product_type):
             for version in available_versions(product=product):
                 pps._find_pps_daily_filepaths(
-                    username="test",
-                    password="test",
                     date="2021-01-01",
                     product=product,
                     version=version,
@@ -36,8 +34,6 @@ def test_find_pps_daily_filepaths_private(
     for product_type in product_types:
         for product in available_products(product_type=product_type):
             pps._find_pps_daily_filepaths(
-                username="test",
-                password="test",
                 date="2021-01-01",
                 product=product,
                 version=None,
@@ -68,8 +64,6 @@ def test_find_pps_filepaths(
                     product_type=product_type,
                     start_time="2021-01-01",
                     end_time="2021-01-01",
-                    username="test",
-                    password="test",
                 )
                 == sftp_paths
             )
@@ -81,8 +75,6 @@ def test_find_pps_filepaths(
                     product_type=product_type,
                     start_time="2021-01-01",
                     end_time="2021-01-01",
-                    username="test",
-                    password="test",
                     parallel=False,
                 )
                 == sftp_paths

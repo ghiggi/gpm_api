@@ -16,9 +16,8 @@ import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
+from gpm_api.configs import get_gpm_password, get_gpm_username
 from gpm_api.io.checks import (
-    check_base_dir,
     check_date,
     check_product,
     check_product_type,
@@ -242,21 +241,26 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 def _download_files(
     src_fpaths,
     dst_fpaths,
-    username,
-    password,
+    protocol="pps",
     transfer_tool="wget",
     n_threads=4,
     progress_bar=True,
     verbose=False,
 ):
+    if protocol == "pps":
+        username = get_gpm_username(None)
+        password = get_gpm_password(None)
+    else:
+        raise NotImplementedError()
+
     if transfer_tool == "curl":
         list_cmd = [
-            curl_cmd(src_path, dst_path, username, username)
+            curl_cmd(src_path, dst_path, username, password)
             for src_path, dst_path in zip(src_fpaths, dst_fpaths)
         ]
     elif transfer_tool == "wget":
         list_cmd = [
-            wget_cmd(src_path, dst_path, username, username)
+            wget_cmd(src_path, dst_path, username, password)
             for src_path, dst_path in zip(src_fpaths, dst_fpaths)
         ]
     else:
@@ -449,9 +453,6 @@ def _ensure_files_completness(
     retry,
     n_threads,
     progress_bar,
-    base_dir,
-    username,
-    password,
 ):
     """Check file validity and attempt download if corrupted."""
     l_corrupted = check_filepaths_integrity(
@@ -465,9 +466,6 @@ def _ensure_files_completness(
         l_corrupted = download_files(
             filepaths=l_corrupted,
             product_type=product_type,
-            base_dir=base_dir,
-            username=username,
-            password=password,
             force_download=True,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
@@ -485,7 +483,6 @@ def _ensure_files_completness(
 
 
 def _ensure_archive_completness(
-    base_dir,
     product,
     start_time,
     end_time,
@@ -493,8 +490,6 @@ def _ensure_archive_completness(
     product_type,
     remove_corrupted,
     verbose,
-    username,
-    password,
     transfer_tool,
     retry,
     n_threads,
@@ -502,7 +497,6 @@ def _ensure_archive_completness(
 ):
     """Check the archive completeness over the specified time period."""
     l_corrupted = check_archive_integrity(
-        base_dir=base_dir,
         product=product,
         start_time=start_time,
         end_time=end_time,
@@ -519,9 +513,6 @@ def _ensure_archive_completness(
         l_corrupted = download_files(
             filepaths=l_corrupted,
             product_type=product_type,
-            base_dir=base_dir,
-            username=username,
-            password=password,
             force_download=True,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
@@ -549,9 +540,6 @@ def download_files(
     verbose=True,
     retry=1,
     protocol="pps",
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     """
     Download specific GPM files from NASA servers.
@@ -581,18 +569,6 @@ def download_files(
     protocol : str, optional
         The remote repository from where to download.
         Either "pps" or "ges_disc". The default is "pps".
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
-    username: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
-    password: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
 
     Returns
     -------
@@ -614,11 +590,6 @@ def download_files(
         raise TypeError("Expecting a list of file paths.")
     if len(filepaths) == 0:
         return None
-
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-    username = get_gpm_username(username)
-    password = get_gpm_password(password)
 
     # Print the number of files to download
     if verbose:
@@ -646,8 +617,6 @@ def download_files(
     _ = _download_files(
         src_fpaths=new_remote_filepaths,
         dst_fpaths=new_local_filepaths,
-        username=username,
-        password=password,
         n_threads=n_threads,
         progress_bar=progress_bar,
         transfer_tool=transfer_tool,
@@ -664,9 +633,6 @@ def download_files(
         l_corrupted = download_files(
             filepaths=l_corrupted,
             product_type=product_type,
-            base_dir=base_dir,
-            username=username,
-            password=password,
             force_download=force_download,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
@@ -682,9 +648,6 @@ def download_files(
 
 
 def _download_daily_data(
-    base_dir,
-    username,
-    password,
     date,
     version,
     product,
@@ -703,12 +666,6 @@ def _download_daily_data(
 
     Parameters
     ----------
-    base_dir : str
-        The base directory where to store GPM data.
-    username: str
-        Email address with which you registered on the NASA PPS.
-    password: str
-        Password to access the NASA PPS server.
     product : str
         GPM product name. See: gpm_api.available_products()
     date : datetime
@@ -722,8 +679,6 @@ def _download_daily_data(
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
         GPM data readers are currently implemented only for GPM V06.
-    username : str, optional
-        Provide your email for login on GPM NASA servers.
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
@@ -750,8 +705,6 @@ def _download_daily_data(
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
     remote_filepaths, available_version = _find_pps_daily_filepaths(
-        username=username,
-        password=password,
         product=product,
         product_type=product_type,
         version=version,
@@ -789,8 +742,6 @@ def _download_daily_data(
     status = _download_files(
         src_fpaths=remote_filepaths,
         dst_fpaths=local_filepaths,
-        username=username,
-        password=password,
         n_threads=n_threads,
         progress_bar=progress_bar,
         verbose=verbose,
@@ -874,9 +825,6 @@ def download_archive(
     remove_corrupted=True,
     retry=1,
     verbose=True,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     """
     Download GPM data from NASA servers (day by day).
@@ -913,31 +861,12 @@ def download_archive(
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
         Only applies if check_integrity is True !
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
-    username: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
-    password: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
     """
-    # -------------------------------------------------------------------------.
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-    username = get_gpm_username(username)
-    password = get_gpm_password(password)
-
     # -------------------------------------------------------------------------.
     ## Checks input arguments
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     version = check_product_version(version, product)
-    base_dir = check_base_dir(base_dir)
     start_time, end_time = check_start_end_time(start_time, end_time)
     check_valid_time_request(start_time, end_time, product)
     # -------------------------------------------------------------------------.
@@ -963,9 +892,6 @@ def download_archive(
             warn_missing_files = True
 
         status, available_version = _download_daily_data(
-            base_dir=base_dir,
-            username=username,
-            password=password,
             date=date,
             version=version,
             product=product,
@@ -999,7 +925,6 @@ def download_archive(
     if check_integrity:
         l_corrupted = [
             _ensure_archive_completness(
-                base_dir=base_dir,
                 product=product,
                 start_time=start_time,
                 end_time=end_time,
@@ -1007,8 +932,6 @@ def download_archive(
                 product_type=product_type,
                 remove_corrupted=remove_corrupted,
                 verbose=verbose,
-                username=username,
-                password=password,
                 transfer_tool=transfer_tool,
                 retry=retry,
                 n_threads=n_threads,
@@ -1038,9 +961,6 @@ def download_daily_data(
     remove_corrupted=True,
     verbose=True,
     retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     from gpm_api.io.download import download_archive
 
@@ -1061,9 +981,6 @@ def download_daily_data(
         remove_corrupted=remove_corrupted,
         verbose=verbose,
         retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
     )
     return l_corrupted
 
@@ -1083,9 +1000,6 @@ def download_monthly_data(
     remove_corrupted=True,
     verbose=True,
     retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     from gpm_api.io.download import download_archive
 
@@ -1106,9 +1020,6 @@ def download_monthly_data(
         remove_corrupted=remove_corrupted,
         verbose=verbose,
         retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
     )
     return l_corrupted
 

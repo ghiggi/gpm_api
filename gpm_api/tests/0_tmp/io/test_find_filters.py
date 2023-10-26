@@ -17,11 +17,8 @@ from gpm_api.io.filter import (
     filter_by_time,
 )
 from gpm_api.io.pps import find_pps_daily_filepaths
-from gpm_api.configs import get_gpm_base_dir, get_gpm_username
 
 # -------------------------------------------------------------------------.
-base_dir = get_gpm_base_dir()
-username = get_gpm_username()
 version = 7
 product_type = "RS"
 products = gpm_api.available_products(product_type=product_type)
@@ -44,8 +41,6 @@ check_product(product=product, product_type=product_type)
 # -------------------------------------------------------------------------.
 ## Retrieve the list of files available on NASA PPS server
 (pps_fpaths, disk_fpaths) = find_pps_daily_filepaths(
-    username=username,
-    base_dir=base_dir,
     product=product,
     product_type=product_type,
     version=version,

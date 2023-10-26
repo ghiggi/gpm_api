@@ -9,11 +9,9 @@ from functools import partial
 
 import xarray as xr
 
-from gpm_api.configs import get_gpm_base_dir
 from gpm_api.dataset.conventions import finalize_dataset
 from gpm_api.dataset.granule import _open_granule
 from gpm_api.io.checks import (
-    check_base_dir,
     check_groups,
     check_product,
     check_scan_mode,
@@ -182,7 +180,6 @@ def open_dataset(
     parallel=False,
     prefix_group=False,
     verbose=False,
-    base_dir=None,
 ):
     """
     Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
@@ -237,23 +234,12 @@ def open_dataset(
         If you aim to save the Dataset to disk as netCDF or Zarr, you need to set prefix_group=False
         or later remove the prefix before writing the dataset.
         The default is False.
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
 
     Returns
     -------
     xarray.Dataset
 
     """
-    # -------------------------------------------------------------------------.
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-
-    ##------------------------------------------------------------------------.
-    # Check base_dir
-    base_dir = check_base_dir(base_dir)
     ## Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version=version)
     ## Check valid product and variables
@@ -267,7 +253,6 @@ def open_dataset(
     ##------------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
-        base_dir=base_dir,
         version=version,
         product=product,
         product_type=product_type,

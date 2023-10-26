@@ -8,10 +8,6 @@ Created on Sun Aug 14 13:52:46 2022
 import datetime
 import gpm_api
 
-
-base_dir = "/home/ghiggi"
-username = "gionata.ghiggi@epfl.ch"
-
 #### Define analysis time period
 start_time = datetime.datetime.strptime("2020-10-28 08:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2020-10-28 09:00:00", "%Y-%m-%d %H:%M:%S")
@@ -60,8 +56,6 @@ product_type = "RS"
 for product in products:
     print(product)
     gpm_api.download(
-        base_dir=base_dir,
-        username=username,
         product=product,
         product_type=product_type,
         start_time=start_time,
@@ -162,7 +156,6 @@ version = None
 for product in products:
     print(product)
     ds = gpm_api.open_dataset(
-        base_dir=base_dir,
         product=product,
         start_time=start_time,
         end_time=end_time,
