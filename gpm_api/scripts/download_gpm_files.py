@@ -25,9 +25,6 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.option("--remove_corrupted", type=bool, default=True)
 @click.option("--verbose", type=bool, default=True)
 @click.option("--retry", type=int, default=1)
-@click.option("--base_dir", type=str, default=None)
-@click.option("--username", type=str, default=None)
-@click.option("--password", type=str, default=None)
 def download_gpm_files(
     filenames,
     product_type="RS",
@@ -38,9 +35,6 @@ def download_gpm_files(
     remove_corrupted=True,
     verbose=True,
     retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     """Download the specified GPM files."""
     from gpm_api.io.download import download_files
@@ -56,9 +50,6 @@ def download_gpm_files(
         progress_bar=progress_bar,
         verbose=verbose,
         retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
     )
 
     return

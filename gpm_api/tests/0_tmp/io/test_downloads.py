@@ -9,11 +9,6 @@ import gpm_api
 import datetime
 import numpy as np
 
-##----------------------------------------------------------------------------.
-### Download data
-base_dir = "/home/ghiggi/tmp"
-username = "gionata.ghiggi@epfl.ch"
-
 ##-----------------------------------------------------------------------------.
 ## Retrieve RS data
 version = 7
@@ -31,8 +26,6 @@ end_time = datetime.datetime.strptime("2014-08-09 03:00:00", "%Y-%m-%d %H:%M:%S"
 for product in products:
     print("Product:", product)
     gpm_api.download(
-        base_dir=base_dir,
-        username=username,
         product=product,
         product_type=product_type,
         version=version,
@@ -55,8 +48,6 @@ end_time = datetime.datetime.strptime("2020-08-17 04:00:00", "%Y-%m-%d %H:%M:%S"
 for product in products:
     print("Product:", product)
     gpm_api.download(
-        base_dir=base_dir,
-        username=username,
         product=product,
         product_type=product_type,
         start_time=start_time,
@@ -69,13 +60,10 @@ date = np.datetime64("2017-01-01").astype(datetime.datetime)
 version = 6
 product_type = "RS"
 product = "2A-Ku"
-base_dir = "/home/ghiggi/tmp"
 start_hhmmss = datetime.datetime.strptime("01:00:00", "%H:%M:%S")
 end_hhmmss = datetime.datetime.strptime("03:00:00", "%H:%M:%S")
 
 gpm_api.download(
-    base_dir=base_dir,
-    username=username,
     version=version,
     product=product,
     product_type=product_type,

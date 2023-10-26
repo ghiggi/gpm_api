@@ -208,7 +208,6 @@ def find_filepaths(
     product_type="RS",
     version=None,
     verbose=True,
-    base_dir=None,
 ):
     """
     Retrieve GPM data filepaths on local disk for a specific time period and product.
@@ -227,10 +226,6 @@ def find_filepaths(
         GPM version of the data to retrieve if product_type = 'RS'.
     verbose : bool, optional
         Whether to print processing details. The default is True.
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
 
     Returns
     -------

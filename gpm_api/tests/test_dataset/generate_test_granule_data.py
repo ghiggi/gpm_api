@@ -5,7 +5,6 @@ import os
 from dateutil.relativedelta import relativedelta
 from tqdm import tqdm
 
-from gpm_api.configs import get_gpm_username, get_gpm_password
 from gpm_api.dataset.granule import open_granule
 from gpm_api.io import download, products as gpm_products
 from gpm_api.io.pps import find_pps_filepaths
@@ -64,8 +63,6 @@ def download_raw_granules(products: dict) -> None:
     download._download_files(
         pps_filepaths,
         local_filepaths,
-        get_gpm_username(),
-        get_gpm_password(),
         verbose=True,
     )
 

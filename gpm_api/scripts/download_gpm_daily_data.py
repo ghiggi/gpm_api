@@ -30,9 +30,6 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.option("--remove_corrupted", type=bool, default=True)
 @click.option("--verbose", type=bool, default=True)
 @click.option("--retry", type=int, default=1)
-@click.option("--base_dir", type=str, default=None)
-@click.option("--username", type=str, default=None)
-@click.option("--password", type=str, default=None)
 def download_gpm_daily_data(
     product,
     year,
@@ -48,9 +45,6 @@ def download_gpm_daily_data(
     remove_corrupted=True,
     verbose=True,
     retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     """Download the GPM product for a specific date."""
     from gpm_api.io.download import download_daily_data
@@ -70,9 +64,6 @@ def download_gpm_daily_data(
         remove_corrupted=remove_corrupted,
         verbose=verbose,
         retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
     )
 
     return

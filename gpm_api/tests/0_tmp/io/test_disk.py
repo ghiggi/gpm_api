@@ -7,9 +7,7 @@ Created on Fri Dec  9 15:46:47 2022
 """
 import datetime
 from gpm_api.io.disk import _find_daily_filepaths, find_filepaths
-from gpm_api.configs import get_gpm_base_dir
 
-base_dir = get_gpm_base_dir()
 product = "2A-DPR"
 date = datetime.date(2020, 7, 5)  # OK
 # date = datetime.date(2020, 7, 3) # NO
@@ -20,7 +18,6 @@ product_type = "RS"
 verbose = True
 
 filepaths = _find_daily_filepaths(
-    base_dir=base_dir,
     product=product,
     product_type=product_type,
     date=date,
@@ -35,7 +32,6 @@ start_time = datetime.datetime(2020, 7, 5, 0, 2, 0)
 end_time = datetime.datetime(2020, 7, 5, 0, 3, 0)
 
 filepaths = find_filepaths(
-    base_dir=base_dir,
     product=product,
     product_type=product_type,
     version=version,

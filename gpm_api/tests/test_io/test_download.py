@@ -286,9 +286,6 @@ def test_download_daily_data_private(
             for product_type in product_types:
                 for product in available_products(product_type=product_type):
                     dl._download_daily_data(
-                        base_dir=tmpdir,
-                        username="test",
-                        password="test",
                         date=datetime.datetime(2022, 9, 7, 12, 0, 0),
                         version=version,
                         product=product,

@@ -10,7 +10,6 @@ import gpm_api
 import shutil
 
 # from tqdm import tqdm
-from gpm_api.configs import get_gpm_username, get_gpm_password
 from gpm_api.io.products import (
     available_products,
     available_scan_modes,
@@ -87,8 +86,6 @@ for product_type in PRODUCT_TYPES:
                     src_fpaths=[pps_filepath],
                     dst_fpaths=[raw_filepath],
                     transfer_tool="wget",
-                    username=get_gpm_username(),
-                    password=get_gpm_password(),
                     verbose=True,
                 )
 
