@@ -4,35 +4,17 @@ Created on Mon Oct  9 12:44:42 2023
 
 @author: ghiggi
 """
+import datetime
 import os
 import re
 import subprocess
 
-from gpm_api.io.products import get_info_dict, is_trmm_product
+from gpm_api.io.products import get_product_info, is_trmm_product
 
 ###---------------------------------------------------------------------------.
-
-
-def get_ges_disc_dir_key(product):
-    info_dict = get_info_dict()[product]
-    dir_pattern = info_dict["ges_disc_dir"]
-    return dir_pattern
-
-
-def _get_gesc_disc_product_level_dirname(product):
-    dir_pattern = get_ges_disc_dir_key(product)
-    if isinstance(dir_pattern, str):
-        return dir_pattern.split("/")[0]
-    else:
-        return None
-
-
-def _get_gesc_disc_product_name(product):
-    dir_pattern = get_ges_disc_dir_key(product)
-    if isinstance(dir_pattern, str):
-        return dir_pattern.split("/")[1]
-    else:
-        return None
+###########################
+#### GES DISC scraping ####
+###########################
 
 
 def _get_ges_disc_url_content(url):
@@ -42,9 +24,7 @@ def _get_ges_disc_url_content(url):
     stdout = process.communicate()[0].decode()
     # Check if server is available
     if stdout == "":
-        raise ValueError(
-            "The GES DISC data archive is currently unavailable. Sorry for the inconvenience."
-        )
+        raise ValueError(f"The requested url {url} was not found on the GES DISC server.")
     return stdout
 
 
@@ -63,14 +43,24 @@ def _get_href_value(input_string):
 
 
 def _get_gesc_disc_list_path(url):
+    # Retrieve url content
+    # - If it returns something, means url is correct
     wget_output = _get_ges_disc_url_content(url)
+    # Retrieve content
     list_content = [_get_href_value(s) for s in wget_output.split("alt=")[4:]]
     list_content = [s for s in list_content if s != ""]
     if len(list_content) == 0:
-        dirname = os.path.basename(url)
-        raise ValueError(f"The GES DISC {dirname} directory is empty.")
+        raise ValueError(f"The GES DISC {url} directory is empty.")
     list_path = [os.path.join(url, s) for s in list_content]
     return list_path
+
+
+# # Empty directory
+# url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07/"
+# url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07"
+
+# # Unexisting directory
+# url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07/2020"
 
 
 ####--------------------------------------------------------------------------.
@@ -78,10 +68,8 @@ def _get_gesc_disc_list_path(url):
 #### Directories ####
 #####################
 
-# _get_pps_servers
 
-
-def get_ges_disc_base_url(product):
+def _get_ges_disc_servers(product):
     # TRMM
     if is_trmm_product(product):
         ges_disc_base_url = "https://disc2.gesdisc.eosdis.nasa.gov/data/"
@@ -93,13 +81,65 @@ def get_ges_disc_base_url(product):
     return ges_disc_base_url
 
 
-def get_ges_disc_product_path(product, version):
-    base_url = get_ges_disc_base_url(product)
-    dir_pattern = get_ges_disc_dir_key(product)
-    if isinstance(dir_pattern, str):
-        dir_pattern = f"{dir_pattern}.0{version}"
-    url = os.path.join(base_url, dir_pattern)
-    return url
+def _get_ges_disc_product_folder_name(product, version):
+    dir_pattern = get_product_info(product)["ges_disc_dir"]
+    folder_name = f"{dir_pattern}.0{version}"
+    return folder_name
+
+
+def _get_ges_disc_product_directory_tree(product, date, version):
+    """Return the GES DISC product directory tree.
+
+    The directory structure is
+     - <product directory>/YYYY/DOY for L1 and L2 products (and IMERG half hourly)
+     - <product directory>/YYYY/MM for L3 daily products
+     - <product directory>/YYYY or <product directory>/YYYY/MM for L3 monthly products
+    """
+    # Retrieve foldername
+    folder_name = _get_ges_disc_product_folder_name(product, version)
+
+    # Specify the directory tree
+    # --> TODO: currently specified only for L1 and L2
+    directory_tree = os.path.join(
+        folder_name,
+        datetime.datetime.strftime(date, "%Y/%j"),
+    )
+    return directory_tree
+
+
+def _get_gesdisc_directory(product, date, version):
+    """
+    Retrieve the NASA GES DISC server product directory path at a specific date.
+
+    The data list is retrieved using https.
+
+    Parameters
+    ----------
+    product : str
+        GPM product name. See: gpm_api.available_products() .
+    date : datetime.date
+        Single date for which to retrieve the data.
+    version : int, optional
+        GPM version of the data to retrieve.
+
+    Returns
+    -------
+    url_data_list : str
+        url of the NASA GES DISC server where the data are stored.
+    """
+    # Retrieve servers URLs
+    url_server = _get_ges_disc_servers(product)
+
+    # Retrieve directory tree structure
+    dir_structure = _get_ges_disc_product_directory_tree(
+        product=product, date=date, version=version
+    )
+
+    # Define url where data are listed
+    url_data_list = os.path.join(url_server, dir_structure)
+
+    # Return tuple
+    return url_data_list
 
 
 ####--------------------------------------------------------------------------.
@@ -108,64 +148,26 @@ def get_ges_disc_product_path(product, version):
 ############################
 
 
-def _get_gesdisc_servers(product):
-    pass
-
-
-def _get_gesdisc_directory_tree(product, product_type, date, version):
-    pass
-
-
 def _get_gesdisc_file_list(url_file_list, product, date, version, verbose=True):
-    # --> HTTP request !
-    pass
-
-
-def _get_gesdisc_directory(product, product_type, date, version):
-    """
-    Retrieve the NASA GES DISC server directory paths where the GPM data for
-    a specific date are listed and stored.
-
-    The data list is retrieved using https.
-    The data stored are retrieved using ftps.
-
-    Parameters
-    ----------
-    product : str
-        GPM product name. See: gpm_api.available_products() .
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    date : datetime.date
-        Single date for which to retrieve the data.
-    version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
-
-    Returns
-    -------
-    url_data_server : str
-        url of the NASA GES DISC server where the data are stored.
-    url_data_list: list
-        url of the NASA GES DISC server where the data are listed.
-
-    """
-    # Retrieve servers URLs
-    url_text_server, url_data_server = _get_gesdisc_servers(product_type)
-
-    # Retrieve directory tree structure
-    dir_structure = _get_gesdisc_directory_tree(
-        product=product, product_type=product_type, date=date, version=version
-    )
-
-    # Define url where data are listed
-    url_data_list = os.path.join(url_text_server, dir_structure)
-
-    # Return tuple
-    return (url_data_server, url_data_list)
+    try:
+        filepaths = _get_gesc_disc_list_path(url_file_list)
+    except Exception as e:
+        # If url not exist, raise an error
+        if "was not found on the GES DISC server" in str(e):
+            raise e
+        else:
+            # If no filepath (empty directory), print message if verbose=True
+            if verbose:
+                version_str = str(int(version))
+                msg = f"No data found on GES DISC on date {date} for product {product} (V0{version_str})"
+                print(msg)
+            filepaths = []
+    return filepaths
 
 
 def get_gesdisc_daily_filepaths(product, product_type, date, version, verbose=True):
     """
-    Retrieve the complete url to the files available on the NASA GES DISC server for a specific day and product.
+    Retrieve the NASA GES DISC file paths available at a given date.
 
     Parameters
     ----------
@@ -173,44 +175,54 @@ def get_gesdisc_daily_filepaths(product, product_type, date, version, verbose=Tr
         GPM product acronym. See gpm_api.available_products() .
     date : datetime
         Single date for which to retrieve the data.
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+    product_type : str
+        GPM product type. Not used for GES DISC.
+    version : int
+        GPM version of the data to retrieve.
     verbose : bool, optional
         Whether to specify when data are not available for a specific date.
         The default is True.
     """
+    if product_type == "NRT" and "IMERG" not in product:
+        raise ValueError("The only available NRT products on GES DISC are IMERG-ER and IMERG-FR")
+
     # Retrieve server urls of NASA GES DISC
-    (url_data_server, url_file_list) = _get_gesdisc_directory(
-        product=product, product_type=product_type, date=date, version=version
-    )
+    url_data_list = _get_gesdisc_directory(product=product, date=date, version=version)
+
     # Retrieve filepaths
     # - If empty: return []
     filepaths = _get_gesdisc_file_list(
-        url_file_list=url_file_list,
+        url_file_list=url_data_list,
         product=product,
         date=date,
         version=version,
         verbose=verbose,
     )
-
-    # Define the complete url of gesdisc filepaths
-    # - Need to remove the starting "/" to each filepath
-    gesdisc_fpaths = [os.path.join(url_data_server, filepath[1:]) for filepath in filepaths]
-
-    # Return the gesdisc data server filepaths
-    return gesdisc_fpaths
+    # Return the GES DISC filepaths
+    return filepaths
 
 
 def define_gesdisc_filepath(product, product_type, date, version, filename):
-    """Define GES DISC filepath from filename."""
-    # Retrieve GES DISC directory tree
-    dir_tree = _get_gesdisc_directory_tree(
-        product=product, product_type=product_type, date=date, version=version
-    )
-    # Retrieve GES DISC servers URLs
-    url_text_server, url_data_server = _get_gesdisc_servers(product_type)
+    """Define GES DISC filepath from filename.
+
+    Parameters
+    ----------
+    product : str
+        GPM product acronym. See gpm_api.available_products().
+    product_type : str
+            GPM product type. Not used for GES DISC.
+    date : datetime
+        Single date for which to retrieve the data.
+    version : int
+        GPM version of the data to retrieve if product_type = 'RS'.
+    filename : str
+        Name of the GPM file.
+    """
+    if product_type == "NRT" and "IMERG" not in product:
+        raise ValueError("The only available NRT products on GES DISC are IMERG-ER and IMERG-FR")
+
+    # Retrieve product directory path at specific date
+    url_data_list = _get_gesdisc_directory(product=product, date=date, version=version)
     # Define GES DISC filepath
-    fpath = os.path.join(url_data_server, dir_tree, filename)
+    fpath = os.path.join(url_data_list, filename)
     return fpath

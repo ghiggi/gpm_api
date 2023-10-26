@@ -16,7 +16,7 @@ from gpm_api.io.checks import (
     check_product_validity,
     check_product_version,
 )
-from gpm_api.io.products import available_products, get_info_dict
+from gpm_api.io.products import available_products, get_product_info
 
 ####--------------------------------------------------------------------------.
 #####################
@@ -24,9 +24,20 @@ from gpm_api.io.products import available_products, get_info_dict
 #####################
 
 
+def _get_pps_servers(product_type):
+    """Return the url to the PPS servers."""
+    if product_type == "NRT":
+        url_text_server = "https://jsimpsonhttps.pps.eosdis.nasa.gov/text"
+        url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov/data"
+    else:
+        url_text_server = "https://arthurhouhttps.pps.eosdis.nasa.gov/text"
+        url_data_server = "ftps://arthurhouftps.pps.eosdis.nasa.gov"
+    return (url_text_server, url_data_server)
+
+
 def _get_pps_nrt_product_folder_name(product):
     """ "Retrieve NASA PPS server folder name for NRT product_type."""
-    folder_name = get_info_dict()[product].get("pps_nrt_dir", None)
+    folder_name = get_product_info(product).get("pps_nrt_dir", None)
     if folder_name is None:
         raise ValueError(
             f"The pps_nrt_dir key of the {product} product is not specified in the config files."
@@ -36,7 +47,7 @@ def _get_pps_nrt_product_folder_name(product):
 
 def _get_pps_rs_product_folder_name(product):
     """ "Retrieve NASA PPS server folder name for RS product_type."""
-    folder_name = get_info_dict()[product].get("pps_rs_dir", None)
+    folder_name = get_product_info(product).get("pps_rs_dir", None)
     if folder_name is None:
         raise ValueError(
             f"The pps_rs_dir key of the {product} product is not specified in the config files."
@@ -134,17 +145,6 @@ def _get_pps_directory_tree(product, product_type, date, version):
         return _get_pps_rs_product_dir(product, date, version)
 
 
-def _get_pps_servers(product_type):
-    """Return the url to the PPS servers."""
-    if product_type == "NRT":
-        url_text_server = "https://jsimpsonhttps.pps.eosdis.nasa.gov/text"
-        url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov/data"
-    else:
-        url_text_server = "https://arthurhouhttps.pps.eosdis.nasa.gov/text"
-        url_data_server = "ftps://arthurhouftps.pps.eosdis.nasa.gov"
-    return (url_text_server, url_data_server)
-
-
 def _get_pps_directory(product, product_type, date, version):
     """
     Retrieve the NASA PPS server directory paths where the GPM data for
@@ -232,6 +232,9 @@ def _get_pps_file_list(url_file_list, product, date, version, verbose=True):
     verbose : bool, optional
         Default is False. Whether to specify when data are not available for a specific date.
     """
+    # TODO: maybe remove arguments product, date, version, verbose
+    # --> Define try catch outside !
+
     # Retrieve GPM-API configs
     username = get_gpm_username(None)
     password = get_gpm_password(None)
@@ -336,8 +339,7 @@ def find_first_pps_granule_filepath(product: str, product_type: str, version: in
     from gpm_api.io.find import find_filepaths
 
     # Retrieve product start_time from product.yaml file.
-    info_dict = get_info_dict()
-    start_time = info_dict[product].get("start_time", None)
+    start_time = get_product_info(product).get("start_time", None)
     if start_time is None:
         raise ValueError(f"{product} product start_time is not provided in the product.yaml file.")
 

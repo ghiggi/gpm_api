@@ -11,7 +11,7 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 from gpm_api import configs
 
 
-def test_construct_curl_cmd(
+def test_construct_curl_pps_cmd(
     server_paths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
@@ -41,7 +41,7 @@ def test_construct_curl_cmd(
     gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
 
     for server_path in server_paths:
-        path = dl.curl_cmd(
+        path = dl.curl_pps_cmd(
             server_path=server_path,
             disk_path=disk_path,
             username=gpm_username,
@@ -66,7 +66,7 @@ def test_construct_curl_cmd(
         ), f"Folder {os.path.dirname(disk_path)} was not created"
 
 
-def test_construct_wget_cmd(
+def test_construct_wget_pps_cmd(
     # username: str,
     # password: str,
     server_paths: Dict[str, Dict[str, Any]],
@@ -97,7 +97,7 @@ def test_construct_wget_cmd(
     gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
 
     for server_path in server_paths:
-        path = dl.wget_cmd(
+        path = dl.wget_pps_cmd(
             server_path=server_path,
             disk_path=disk_path,
             username=gpm_username,
@@ -117,47 +117,6 @@ def test_construct_wget_cmd(
         ), f"Folder {os.path.dirname(disk_path)} was not created"
 
 
-def test_download_with_ftplib(
-    mocker: MockerFixture,
-    server_paths: Dict[str, Dict[str, Any]],
-    tmpdir: str,
-) -> None:
-    ftp_mock = mocker.patch(
-        "ftplib.FTP_TLS",
-        autospec=True,
-    )
-    file_open_mock = mocker.patch("builtins.open", autospec=True)
-
-    # ftp_mock_instance = mocker.Mock(spec=FTP_TLS)
-    ftp_mock.login.return_value = "230 Login successful."
-    # Set the return value for the retrbinary method to indicate a successful download
-    ftp_mock.retrbinary.return_value = "226 Transfer complete."
-    ftp_mock.retrbinary.side_effect = [
-        "226 Transfer complete.",
-    ]
-
-    disk_paths = []
-    for server_path in server_paths:
-        disk_paths.append(
-            os.path.join(
-                tmpdir,
-                "test_download_with_ftplib",
-                os.path.basename(server_path),
-            )
-        )
-    gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
-    dl.ftplib_download(
-        server_paths=server_paths.keys(),
-        disk_paths=server_paths,
-        username=gpm_username,
-        password=gpm_password,
-    )
-
-    assert ftp_mock.called
-
-    # TODO: Assert username/password are passed to ftp_mock.login (assert_called_with not working?)
-
-
 def test_download_file_private(
     server_paths: Dict[str, Dict[str, Any]],
     tmpdir: str,
@@ -168,6 +127,8 @@ def test_download_file_private(
     Uses tmpdir to create a unique path for each test and mocker to mock the
     download function
     """
+    protocol = "pps"
+
     # Don't actually download anything, so mock the run function
     mocker.patch.object(dl, "run", autospec=True, return_value=None)
 
@@ -181,11 +142,13 @@ def test_download_file_private(
         dl._download_files(
             src_fpaths=[server_path],
             dst_fpaths=[disk_path],
+            protocol=protocol,
             transfer_tool="curl",
         )
         dl._download_files(
             src_fpaths=[server_path],
             dst_fpaths=[disk_path],
+            protocol=protocol,
             transfer_tool="wget",
         )
 
@@ -194,6 +157,7 @@ def test_download_file_private(
             dl._download_files(
                 src_fpaths=[server_path],
                 dst_fpaths=[disk_path],
+                protocol=protocol,
                 transfer_tool="fake",
             )
 

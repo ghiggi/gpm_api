@@ -63,6 +63,8 @@ def download_raw_granules(products: dict) -> None:
     download._download_files(
         pps_filepaths,
         local_filepaths,
+        protocol="pps",
+        transfer_tool="wget",
         verbose=True,
     )
 
