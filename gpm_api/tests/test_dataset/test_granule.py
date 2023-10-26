@@ -368,13 +368,7 @@ def test_finalize_dataset(monkeypatch):
     assert ds.attrs["history"]
     assert ds.attrs["gpm_api_product"] == "product"
 
-    # Check encoding information
-    def mock_set_encoding(ds, *args, **kwargs):
-        ds.attrs["encoding"] = True
-        return ds
-
-    monkeypatch.setattr(conventions, "set_encoding", mock_set_encoding)
-
+    # Check time encoding
     ds = xr.Dataset({"var": da, "time": time})
     ds = finalize_dataset(ds, "product", decode_cf=False)
     expected_time_encoding = {

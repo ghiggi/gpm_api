@@ -446,6 +446,11 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 
         return select_spatial_2d_variables(self._obj, strict=strict, squeeze=squeeze)
 
+    def set_encoding(self, encoding_dict=None):
+        from gpm_api.encoding.routines import set_encoding
+
+        return set_encoding(self._obj, encoding_dict=encoding_dict)
+
     def title(
         self,
         add_timestep=True,

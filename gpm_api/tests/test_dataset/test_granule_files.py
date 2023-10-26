@@ -80,41 +80,5 @@ def test_open_granule_on_real_files(tmp_path):
                 _ = ds.attrs.pop("history", None)
                 _ = ds_expected.attrs.pop("history", None)
 
-                # Write dataset to disk
-                # - This enable to apply array encodings
-                # - This enable to apply custom netcdf attrs serialization
-                # --> flag_values [0,1,2] --> [0 1 2]
-                tmp_filepath = "/tmp/dummy.nc"  # TODO generalize for CI
-                ds.to_netcdf(tmp_filepath)
-
-                # Open encoded dataset
-                ds = xr.open_dataset(tmp_filepath).compute()
-
                 # Check equality
                 xr.testing.assert_identical(ds, ds_expected)
-
-                ####-----------------------------------------------------------.
-                #### TO DEBUG
-                # import numpy as np
-
-                # # Remove attrs
-                # ds.attrs = {}
-                # ds_expected.attrs = {}
-
-                # # Check equality
-                # try:
-                #     xr.testing.assert_identical(ds, ds_expected)
-                # except Exception as e:
-                #     print("ERROR")
-
-                # var = "rainType2ADPR"
-                # np.testing.assert_allclose(ds[var].data, ds_expected[var].data)
-                # xr.testing.assert_identical( ds[var], ds_expected[var])
-
-                # ds[var] == ds_expected[var]
-
-                # ds["lat"] - ds_expected["lat"]
-                # ds["nearSurfacePrecipRate"].data - ds_expected["nearSurfacePrecipRate"].data
-
-                # # cut_filepath = "/home/ghiggi/GPM_TEST_DATA_DEMO/cut/RS/V7/2A-GPM-SLH/2A.GPM.DPR.GPM-SLH.20140308-S220950-E234217.000144.V06B.HDF5"
-                # # rainType2ADPR

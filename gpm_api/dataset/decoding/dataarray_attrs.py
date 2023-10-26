@@ -52,6 +52,10 @@ def _format_dataarray_attrs(da, product=None):
     # Remove 'CodeMissingValue'
     _ = attrs.pop("CodeMissingValue", None)
 
+    # Move _FillValue to encoding
+    # if "_FillValue" in attrs:
+    #    da.encoding["_FillValue"] = attrs.pop("_FillValue")
+
     # Convert 'Units' to 'units'
     if not attrs.get("units", False) and attrs.get("Units", False):
         attrs["units"] = attrs.pop("Units")

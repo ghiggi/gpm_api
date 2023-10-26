@@ -17,7 +17,6 @@ from gpm_api.dataset.decoding.cf import apply_cf_decoding
 from gpm_api.dataset.decoding.coordinates import set_coordinates
 from gpm_api.dataset.decoding.dataarray_attrs import standardize_dataarrays_attrs
 from gpm_api.dataset.decoding.routines import decode_variables
-from gpm_api.dataset.encoding import set_encoding
 from gpm_api.utils.checks import is_regular
 from gpm_api.utils.time import (
     ensure_time_validity,
@@ -136,10 +135,6 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     # Add GPM-API global attributes
     ds = add_history(ds)
     ds.attrs["gpm_api_product"] = product
-
-    ##------------------------------------------------------------------------.
-    # Add coordinates and variables encoding
-    ds = set_encoding(ds)
 
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time

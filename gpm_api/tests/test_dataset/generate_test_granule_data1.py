@@ -30,7 +30,7 @@ PRODUCT_TYPES = ["RS"]
 
 FORCE_DOWNLOAD = False
 FORCE_CUT = False
-FORCE_PROCESSED = False
+FORCE_PROCESSED = True
 
 
 gpm_api.config.set(
@@ -105,6 +105,7 @@ for product_type in PRODUCT_TYPES:
                     continue
 
             # Create the processed netCDF
+            print(f"Create {product_info} netCDF")
             scan_modes = available_scan_modes(product=product, version=version)
             processed_dir_path = os.path.join(
                 local_granules_dir_path, PROCESSED_DIRNAME, product_pattern
@@ -114,6 +115,8 @@ for product_type in PRODUCT_TYPES:
             for scan_mode in scan_modes:
                 processed_filepath = os.path.join(processed_dir_path, f"{scan_mode}.nc")
                 if FORCE_PROCESSED or not os.path.exists(processed_filepath):
+                    if os.path.exists(processed_filepath):
+                        os.remove(processed_filepath)
                     try:
                         ds = gpm_api.open_granule(cut_filepath, scan_mode=scan_mode)
                         ds.to_netcdf(processed_filepath)
@@ -132,7 +135,7 @@ local_cut_dir = os.path.join(local_granules_dir_path, CUT_DIRNAME)
 repo_cut_dir = os.path.join(repo_granules_dir_path, CUT_DIRNAME)
 shutil.copytree(local_cut_dir, repo_cut_dir)
 
-# Move REPO directory
+# Move PROCESSED directory
 local_cut_dir = os.path.join(local_granules_dir_path, PROCESSED_DIRNAME)
 repo_cut_dir = os.path.join(repo_granules_dir_path, PROCESSED_DIRNAME)
 shutil.copytree(local_cut_dir, repo_cut_dir)
