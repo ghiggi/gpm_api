@@ -12,94 +12,94 @@ from gpm_api import configs
 
 
 def test_construct_curl_pps_cmd(
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
     """Test that the curl command constructor works as expected
 
-    `disk_path` relates to a file on the disk
+    `local_filepath` relates to a file on the disk
     """
 
     # Use datetime as path as to be unique to every test
-    disk_path = os.path.join(
+    local_filepath = os.path.join(
         tmpdir,
         datetime.datetime.utcnow().isoformat().replace(":", "-"),
         "curl",
         "output_file.hdf5",
     )
     assert not os.path.exists(
-        os.path.dirname(disk_path)
-    ), f"Folder {os.path.dirname(disk_path)} already exists"
+        os.path.dirname(local_filepath)
+    ), f"Folder {os.path.dirname(local_filepath)} already exists"
 
     curl_truth = (
         "curl --verbose --ipv4 --insecure "
         "--user {username}:{password} --ftp-ssl "
         "--header 'Connection: close' --connect-timeout 20 "
-        "--retry 5 --retry-delay 10 -n {server_path} -o {local_path}"
+        "--retry 5 --retry-delay 10 -n {remote_filepath} -o {local_filepath}"
     )
 
     gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
 
-    for server_path in server_paths:
+    for remote_filepath in remote_filepaths:
         path = dl.curl_pps_cmd(
-            server_path=server_path,
-            disk_path=disk_path,
+            remote_filepath=remote_filepath,
+            local_filepath=local_filepath,
             username=gpm_username,
             password=gpm_password,
         )
 
         # Test against ftps -> ftp casting
-        ftp_designation = server_path.split(":")[0]  # Split out URI scheme
+        ftp_designation = remote_filepath.split(":")[0]  # Split out URI scheme
         if ftp_designation == "ftps":
-            server_path = server_path.replace("ftps://", "ftp://", 1)
+            remote_filepath = remote_filepath.replace("ftps://", "ftp://", 1)
 
         assert path == curl_truth.format(
             username=gpm_username,
             password=gpm_password,
-            server_path=server_path,
-            local_path=disk_path,
+            remote_filepath=remote_filepath,
+            local_filepath=local_filepath,
         )
 
         # Check that the folder is created
         assert os.path.exists(
-            os.path.dirname(disk_path)
-        ), f"Folder {os.path.dirname(disk_path)} was not created"
+            os.path.dirname(local_filepath)
+        ), f"Folder {os.path.dirname(local_filepath)} was not created"
 
 
 def test_construct_wget_pps_cmd(
     # username: str,
     # password: str,
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
     """Test that the wget command constructor works as expected
 
-    `disk_path` relates to a file on the disk
+    `local_filepath` relates to a file on the disk
     """
 
     # Use datetime as path as to be unique to every test
-    disk_path = os.path.join(
+    local_filepath = os.path.join(
         tmpdir,
         datetime.datetime.utcnow().isoformat().replace(":", "-"),
         "wget",
         "output_file.hdf5",
     )
     assert not os.path.exists(
-        os.path.dirname(disk_path)
-    ), f"Folder {os.path.dirname(disk_path)} already exists"
+        os.path.dirname(local_filepath)
+    ), f"Folder {os.path.dirname(local_filepath)} already exists"
 
     wget_truth = (
         "wget -4 --ftp-user={username} --ftp-password={password} "
         "-e robots=off -np -R .html,.tmp -nH -c --read-timeout=10 "
-        "--tries=5 -O {local_path} {server_path}"
+        "--tries=5 -O {local_filepath} {remote_filepath}"
     )
 
     gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
 
-    for server_path in server_paths:
+    for remote_filepath in remote_filepaths:
         path = dl.wget_pps_cmd(
-            server_path=server_path,
-            disk_path=disk_path,
+            remote_filepath=remote_filepath,
+            local_filepath=local_filepath,
             username=gpm_username,
             password=gpm_password,
         )
@@ -107,18 +107,18 @@ def test_construct_wget_pps_cmd(
         assert path == wget_truth.format(
             username=gpm_username,
             password=gpm_password,
-            server_path=server_path,
-            local_path=disk_path,
+            remote_filepath=remote_filepath,
+            local_filepath=local_filepath,
         )
 
         # Check that the folder is created
         assert os.path.exists(
-            os.path.dirname(disk_path)
-        ), f"Folder {os.path.dirname(disk_path)} was not created"
+            os.path.dirname(local_filepath)
+        ), f"Folder {os.path.dirname(local_filepath)} was not created"
 
 
 def test_download_file_private(
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
     mocker: MockerFixture,
 ) -> None:
@@ -133,21 +133,21 @@ def test_download_file_private(
     mocker.patch.object(dl, "run", autospec=True, return_value=None)
 
     # Use server paths in fixture and try curl and wget
-    for server_path in server_paths:
-        disk_path = os.path.join(
+    for remote_filepath in remote_filepaths:
+        local_filepath = os.path.join(
             tmpdir,
             "test_download_file_private",
-            os.path.basename(server_path),
+            os.path.basename(remote_filepath),
         )
         dl._download_files(
-            src_fpaths=[server_path],
-            dst_fpaths=[disk_path],
+            remote_filepaths=[remote_filepath],
+            local_filepaths=[local_filepath],
             storage=storage,
             transfer_tool="curl",
         )
         dl._download_files(
-            src_fpaths=[server_path],
-            dst_fpaths=[disk_path],
+            remote_filepaths=[remote_filepath],
+            local_filepaths=[local_filepath],
             storage=storage,
             transfer_tool="wget",
         )
@@ -155,8 +155,8 @@ def test_download_file_private(
         # Use non-existent transfer tool
         with pytest.raises(NotImplementedError):
             dl._download_files(
-                src_fpaths=[server_path],
-                dst_fpaths=[disk_path],
+                remote_filepaths=[remote_filepath],
+                local_filepaths=[local_filepath],
                 storage=storage,
                 transfer_tool="fake",
             )
@@ -165,7 +165,7 @@ def test_download_file_private(
 def test_download_data(
     products: List[str],
     product_types: List[str],
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     mocker: MockerFixture,
     versions: List[str],
 ):
@@ -203,7 +203,7 @@ def test_download_data(
         find,
         "find_daily_filepaths",
         autospec=True,
-        return_value=(server_paths.keys(), versions),
+        return_value=(remote_filepaths.keys(), versions),
     )
 
     # Assume files pass file integrity check by mocking return as empty
@@ -262,7 +262,7 @@ def test_download_daily_data_private(
 
 
 def test_download_files(
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     versions: List[str],
     mocker: MockerFixture,
 ) -> None:
@@ -275,7 +275,7 @@ def test_download_files(
     mocker.patch.object(dl, "check_filepaths_integrity", autospec=True, return_value=[])
 
     # Download a simple list of files
-    assert dl.download_files(filepaths=list(server_paths.keys())) == []
+    assert dl.download_files(filepaths=list(remote_filepaths.keys())) == []
 
     # Test that None filepaths returns None
     assert dl.download_files(filepaths=None) is None
@@ -284,7 +284,7 @@ def test_download_files(
     assert dl.download_files(filepaths=[]) is None
 
     # Test that a single filepath as a string also accepted as input
-    assert dl.download_files(filepaths=list(server_paths.keys())[0]) == []
+    assert dl.download_files(filepaths=list(remote_filepaths.keys())[0]) == []
 
     # Test that filetypes other than a list are not accepted
     with pytest.raises(TypeError):
@@ -306,13 +306,13 @@ def test_check_download_status(
 
 
 def test_get_fpaths_from_fnames(
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     versions: List[str],
     products: List[str],
     product_types: List[str],
     tmpdir: str,
 ) -> None:
-    """Test convert_pps_to_disk_filepaths function
+    """Test convert_pps_to_local_filepaths function
 
     Parameters
     """

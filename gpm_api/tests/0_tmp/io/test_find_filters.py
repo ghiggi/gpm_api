@@ -40,7 +40,7 @@ check_product(product=product, product_type=product_type)
 
 # -------------------------------------------------------------------------.
 ## Retrieve the list of files available on NASA PPS server
-(pps_fpaths, disk_fpaths) = find_pps_daily_filepaths(
+(pps_fpaths, local_filepaths) = find_pps_daily_filepaths(
     product=product,
     product_type=product_type,
     version=version,

@@ -9,7 +9,7 @@ import os
 import time
 import dask
 import gpm_api
-from gpm_api.io.disk import get_disk_filepaths
+from gpm_api.io.local import get_local_filepaths
 from gpm_api.dataset.dataset import _open_valid_granules, _concat_datasets, _multi_file_closer
 from dask.distributed import Client, LocalCluster
 
@@ -62,7 +62,7 @@ chunks = {}
 decode_cf = False
 
 
-fpaths = get_disk_filepaths(product=product, product_type=product_type, version=version)
+fpaths = get_local_filepaths(product=product, product_type=product_type, version=version)
 
 print(len(fpaths))
 filepaths = fpaths

@@ -2,10 +2,10 @@ import datetime
 import os
 from typing import List
 from gpm_api.io.products import available_products, get_product_category
-from gpm_api.io import disk
+from gpm_api.io import local
 
 
-def test__get_disk_dir_pattern(
+def test__get_local_dir_pattern(
     products: List[str],
     product_types: List[str],
     versions: List[int],
@@ -16,7 +16,7 @@ def test__get_disk_dir_pattern(
     for product in products:
         for product_type in product_types:
             for version in versions:
-                dir_pattern = disk._get_disk_dir_pattern(
+                dir_pattern = local._get_local_dir_pattern(
                     product,
                     product_type,
                     version,
@@ -38,7 +38,7 @@ def test__get_disk_dir_pattern(
                         )
 
 
-def test_get_disk_product_base_directory(
+def test_get_local_product_base_directory(
     products: List[str],
     product_types: List[str],
     versions: List[int],
@@ -54,7 +54,7 @@ def test_get_disk_product_base_directory(
     for product in products:
         for product_type in product_types:
             for version in versions:
-                dir_path = disk.get_disk_product_directory(
+                dir_path = local.get_local_product_directory(
                     base_dir=base_dir,
                     product=product,
                     product_type=product_type,

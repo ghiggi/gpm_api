@@ -26,7 +26,7 @@ def get_time_tree(date):
     return time_tree
 
 
-def _get_disk_dir_pattern(product, product_type, version):
+def _get_local_dir_pattern(product, product_type, version):
     """
     Defines the local (disk) repository base pattern where data are stored and searched.
 
@@ -59,7 +59,7 @@ def _get_disk_dir_pattern(product, product_type, version):
     return dir_structure
 
 
-def _get_disk_product_base_directory(base_dir, product, product_type, version):
+def _get_local_product_base_directory(base_dir, product, product_type, version):
     """
     Provide the local product base directory path where the requested GPM data are stored.
 
@@ -81,12 +81,12 @@ def _get_disk_product_base_directory(base_dir, product, product_type, version):
         Product base directory path where data are located.
     """
     base_dir = check_base_dir(base_dir)
-    product_dir_pattern = _get_disk_dir_pattern(product, product_type, version)
+    product_dir_pattern = _get_local_dir_pattern(product, product_type, version)
     product_dir = os.path.join(base_dir, product_dir_pattern)
     return product_dir
 
 
-def _get_disk_directory_tree(product, product_type, date, version):
+def _get_local_directory_tree(product, product_type, date, version):
     """Return the local product directory tree.
 
     The directory tree structure for product_type == "RS" is:
@@ -111,7 +111,7 @@ def _get_disk_directory_tree(product, product_type, date, version):
         DIrectory tree on the NASA GESC DISC server where the data are stored.
     """
     # Define product directory: GPM/RS/V<version>/<product_category>/<product>
-    product_dir_tree = _get_disk_dir_pattern(product, product_type, version)
+    product_dir_tree = _get_local_dir_pattern(product, product_type, version)
     # Define time tree
     time_tree = get_time_tree(date)
     # Define product directory tree for a specific date
@@ -119,7 +119,7 @@ def _get_disk_directory_tree(product, product_type, date, version):
     return directory_tree
 
 
-def get_disk_product_directory(base_dir, product, product_type, version, date):
+def get_local_product_directory(base_dir, product, product_type, version, date):
     """
     Provide the local repository path where the requested daily GPM data are stored/need to be saved.
 
@@ -146,7 +146,7 @@ def get_disk_product_directory(base_dir, product, product_type, version, date):
         <product_category> are: RADAR, PMW, CMB, IMERG.
 
     """
-    dir_structure = _get_disk_directory_tree(
+    dir_structure = _get_local_directory_tree(
         product=product, product_type=product_type, version=version, date=date
     )
     product_dir_path = os.path.join(base_dir, dir_structure)
@@ -159,7 +159,7 @@ def get_disk_product_directory(base_dir, product, product_type, version, date):
 ############################
 
 
-def get_disk_daily_filepaths(product, product_type, date, version, verbose=True):
+def get_local_daily_filepaths(product, product_type, date, version, verbose=True):
     """
     Retrieve GPM data filepaths on the local disk directory of a specific day and product.
 
@@ -181,7 +181,7 @@ def get_disk_daily_filepaths(product, product_type, date, version, verbose=True)
     base_dir = check_base_dir(base_dir)
 
     # Retrieve the directory on disk where the data are stored
-    dir_path = get_disk_product_directory(
+    dir_path = get_local_product_directory(
         base_dir=base_dir,
         product=product,
         product_type=product_type,
@@ -202,14 +202,14 @@ def get_disk_daily_filepaths(product, product_type, date, version, verbose=True)
     return filepaths
 
 
-def define_disk_filepath(product, product_type, date, version, filename):
+def define_local_filepath(product, product_type, date, version, filename):
     """Define local file path."""
-    # Retrieve the directory on disk where the data are stored
+    # Retrieve the local GPM base directory
     base_dir = get_gpm_base_dir(None)
     base_dir = check_base_dir(base_dir)
 
     # Define disk directory path
-    dir_tree = get_disk_product_directory(
+    dir_tree = get_local_product_directory(
         base_dir=base_dir,
         product=product,
         product_type=product_type,
@@ -227,7 +227,7 @@ def define_disk_filepath(product, product_type, date, version, filename):
 #################
 
 
-def get_disk_filepaths(product, version=7, product_type="RS"):
+def get_local_filepaths(product, version=7, product_type="RS"):
     """
     Retrieve all GPM filepaths on the local disk directory for a specific product.
 
@@ -241,11 +241,12 @@ def get_disk_filepaths(product, version=7, product_type="RS"):
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     """
-    # Retrieve the directory on disk where the data are stored
+    # Retrieve the local GPM base directory
     base_dir = get_gpm_base_dir(None)
     base_dir = check_base_dir(base_dir)
 
-    product_dir = _get_disk_product_base_directory(
+    # Retrieve the local directory where the data are stored
+    product_dir = _get_local_product_base_directory(
         base_dir=base_dir,
         product=product,
         product_type=product_type,
