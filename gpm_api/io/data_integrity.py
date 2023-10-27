@@ -111,7 +111,7 @@ def check_archive_integrity(
     check_valid_time_request(start_time, end_time, product)
     # Find filepaths
     filepaths = find_filepaths(
-        protocol="local",
+        storage="local",
         version=version,
         product=product,
         product_type=product_type,

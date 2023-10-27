@@ -78,7 +78,7 @@ from gpm_api.io.download import get_fpaths_from_fnames, filter_download_list
 from gpm_api.io.find import find_filepaths
 
 pps_filepaths = find_filepaths(
-    protocol="pps",
+    storage="pps",
     product=product,
     product_type=product_type,
     version=version,
@@ -89,7 +89,7 @@ pps_filepaths = find_filepaths(
 
 disk_filepaths = get_fpaths_from_fnames(
     pps_filepaths,
-    protocol="local",
+    storage="local",
     product_type=product_type,
 )
 

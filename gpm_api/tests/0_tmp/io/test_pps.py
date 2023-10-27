@@ -20,7 +20,7 @@ verbose = True
 parallel = True
 
 filepaths, available_version = find_daily_filepaths(
-    protocol="pps",
+    storage="pps",
     product=product,
     product_type=product_type,
     date=date,
@@ -42,7 +42,7 @@ end_time = datetime.datetime(
 
 t_i = time.time()
 filepaths = find_filepaths(
-    protocol="pps",
+    storage="pps",
     product=product,
     product_type=product_type,
     version=version,
@@ -69,7 +69,7 @@ version = 6
 verbose = True
 parallel = True
 filepaths = find_filepaths(
-    protocol="pps",
+    storage="pps",
     product=product,
     product_type=product_type,
     start_time=start_time,

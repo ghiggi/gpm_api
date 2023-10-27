@@ -64,7 +64,7 @@ def test_find_pps_daily_filepaths_private(
         for product in available_products(product_type=product_type):
             for version in available_versions(product=product):
                 find.find_daily_filepaths(
-                    protocol="pps",
+                    storage="pps",
                     date="2021-01-01",
                     product=product,
                     version=version,
@@ -81,7 +81,7 @@ def test_find_pps_daily_filepaths_private(
     for product_type in product_types:
         for product in available_products(product_type=product_type):
             find.find_daily_filepaths(
-                protocol="pps",
+                storage="pps",
                 date="2021-01-01",
                 product=product,
                 version=None,
@@ -108,7 +108,7 @@ def test_find_pps_filepaths(
         for product in available_products(product_type=product_type):
             assert (
                 find.find_filepaths(
-                    protocol="pps",
+                    storage="pps",
                     product=product,
                     product_type=product_type,
                     start_time="2021-01-01",
@@ -120,7 +120,7 @@ def test_find_pps_filepaths(
             # Non-parallel
             assert (
                 find.find_filepaths(
-                    protocol="pps",
+                    storage="pps",
                     product=product,
                     product_type=product_type,
                     start_time="2021-01-01",

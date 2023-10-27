@@ -36,7 +36,7 @@ def check_no_duplicated_files(
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
-        protocol="local",
+        storage="local",
         version=version,
         product=product,
         product_type=product_type,
@@ -212,7 +212,7 @@ def check_archive_completeness(
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
-        protocol="local",
+        storage="local",
         version=version,
         product=product,
         product_type=product_type,
