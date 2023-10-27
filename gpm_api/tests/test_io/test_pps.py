@@ -53,7 +53,7 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
 def test_find_pps_daily_filepaths_private(
     mocker: MockerFixture,
     product_types: List[str],
-    server_paths: Dict[str, Any],
+    remote_filepaths: Dict[str, Any],
 ) -> None:
     """Test the find_pps_daily_filepaths function."""
 
@@ -71,11 +71,11 @@ def test_find_pps_daily_filepaths_private(
                     product_type=product_type,
                 )
 
-    # Return the curated server_path list
+    # Return the curated remote_filepath list
     mocker.patch.object(
         pps,
         "get_pps_daily_filepaths",
-        return_value=list(server_paths),
+        return_value=list(remote_filepaths),
     )
 
     for product_type in product_types:
@@ -92,11 +92,11 @@ def test_find_pps_daily_filepaths_private(
 def test_find_pps_filepaths(
     product_types: List[str],
     mocker: MockerFixture,
-    server_paths: Dict[str, Any],
+    remote_filepaths: Dict[str, Any],
 ) -> None:
     """Test the PPS find_filepaths function."""
 
-    sftp_paths = [x for x in list(server_paths) if x.split("://")[0] == "sftp"]
+    sftp_paths = [x for x in list(remote_filepaths) if x.split("://")[0] == "sftp"]
     mocker.patch.object(
         find,
         "find_daily_filepaths",

@@ -79,7 +79,7 @@ def products() -> List[str]:
 
 
 @pytest.fixture
-def server_paths() -> Dict[str, Dict[str, Any]]:
+def remote_filepaths() -> Dict[str, Dict[str, Any]]:
     """Return a list of probable GPM server paths"""
 
     # Not validated to be real paths but follow the structure

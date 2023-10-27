@@ -31,10 +31,10 @@ from gpm_api.io.data_integrity import (
     check_archive_integrity,
     check_filepaths_integrity,
 )
-from gpm_api.io.disk import define_disk_filepath
 from gpm_api.io.find import find_daily_filepaths
 from gpm_api.io.ges_disc import define_gesdisc_filepath
 from gpm_api.io.info import get_info_from_filepath
+from gpm_api.io.local import define_local_filepath
 from gpm_api.io.pps import define_pps_filepath
 from gpm_api.utils.list import flatten_list
 from gpm_api.utils.timing import print_elapsed_time
@@ -57,17 +57,17 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 ############################################
 
 
-def curl_pps_cmd(server_path, disk_path, username, password):
+def curl_pps_cmd(remote_filepath, local_filepath, username, password):
     """Download data using curl via ftps."""
     # -------------------------------------------------------------------------.
     # Check disk directory exists (if not, create)
-    disk_dir = os.path.dirname(disk_path)
-    if not os.path.exists(disk_dir):
-        os.makedirs(disk_dir)
+    local_dir = os.path.dirname(local_filepath)
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
     # -------------------------------------------------------------------------.
     # Replace ftps with ftp to make curl work !!!
     # - curl expects ftp:// and not ftps://
-    server_path = server_path.replace("ftps://", "ftp://", 1)
+    remote_filepath = remote_filepath.replace("ftps://", "ftp://", 1)
     # -------------------------------------------------------------------------.
     ## Define command to run
     # Base command: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
@@ -103,33 +103,33 @@ def curl_pps_cmd(server_path, disk_path, username, password):
             "--retry 5 ",
             "--retry-delay 10 ",
             "-n ",
-            server_path,
+            remote_filepath,
             " ",
             "-o ",
-            disk_path,
+            local_filepath,
         ]
     )
     return cmd
 
 
-def curl_ges_disc_cmd(src_fpath, dst_fpath):
+def curl_ges_disc_cmd(remote_filepath, local_filepath):
     """Return curl command to download a file from the GES DISC."""
     # Define wget options
     curl_options = "--connect-timeout 20 --retry 5 --retry-delay 10"
     # Define authentication settings
     auth = "-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
     # Define command
-    cmd = f"curl {auth} {curl_options} --url {src_fpath} -o {dst_fpath}"
+    cmd = f"curl {auth} {curl_options} --url {remote_filepath} -o {local_filepath}"
     return cmd
 
 
-def wget_pps_cmd(server_path, disk_path, username, password):
+def wget_pps_cmd(remote_filepath, local_filepath, username, password):
     """Create wget command to download data via ftps."""
     # -------------------------------------------------------------------------.
     # Check disk directory exists (if not, create)
-    disk_dir = os.path.dirname(disk_path)
-    if not os.path.exists(disk_dir):
-        os.makedirs(disk_dir)
+    local_dir = os.path.dirname(local_filepath)
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
     # -------------------------------------------------------------------------.
     # Base command: wget -4 --ftp-user=[user name] –-ftp-password=[password] -O
     ## Define command to run
@@ -155,15 +155,15 @@ def wget_pps_cmd(server_path, disk_path, username, password):
             "5",
             " ",  # retry 5 times (0 forever)
             "-O ",
-            disk_path,
+            local_filepath,
             " ",
-            server_path,
+            remote_filepath,
         ]
     )
     return cmd
 
 
-def wget_ges_disc_cmd(src_fpath, dst_fpath):
+def wget_ges_disc_cmd(remote_filepath, local_filepath):
     """Return wget command to download a file from the GES DISC."""
     # Define path to EarthData urs_cookies
     urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
@@ -181,10 +181,10 @@ def wget_ges_disc_cmd(src_fpath, dst_fpath):
 
         auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
         window_options = f"--user={ges_disc_username} --ask-password"
-        cmd = f"wget {auth} {wget_options} {window_options} --content-disposition {src_fpath} -O {dst_fpath}"
+        cmd = f"wget {auth} {wget_options} {window_options} --content-disposition {remote_filepath} -O {local_filepath}"
     elif os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
         auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
-        cmd = f"wget {auth} {wget_options} --content-disposition {src_fpath} -O {dst_fpath}"
+        cmd = f"wget {auth} {wget_options} --content-disposition {remote_filepath} -O {local_filepath}"
     else:
         raise ValueError(f"Unsupported OS: {os_name}")
     return cmd
@@ -289,8 +289,8 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 
 
 def _download_files(
-    src_fpaths,
-    dst_fpaths,
+    remote_filepaths,
+    local_filepaths,
     storage,
     transfer_tool,
     n_threads=4,
@@ -298,7 +298,7 @@ def _download_files(
     verbose=False,
 ):
     # Ensure destination directory exists
-    for fpath in dst_fpaths:
+    for fpath in local_filepaths:
         if not os.path.exists(os.path.dirname(fpath)):
             os.makedirs(os.path.dirname(fpath))
 
@@ -308,26 +308,26 @@ def _download_files(
         password = get_gpm_password(None)
         if transfer_tool == "curl":
             list_cmd = [
-                curl_pps_cmd(src_path, dst_path, username, password)
-                for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+                curl_pps_cmd(remote_filepath, local_filepath, username, password)
+                for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
             ]
         elif transfer_tool == "wget":
             list_cmd = [
-                wget_pps_cmd(src_path, dst_path, username, password)
-                for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+                wget_pps_cmd(remote_filepath, local_filepath, username, password)
+                for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
             ]
         else:
             raise NotImplementedError("Download is available with 'wget' or 'curl'.")
     elif storage == "ges_disc":
         if transfer_tool == "curl":
             list_cmd = [
-                curl_ges_disc_cmd(src_path, dst_path)
-                for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+                curl_ges_disc_cmd(remote_filepath, local_filepath)
+                for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
             ]
         elif transfer_tool == "wget":
             list_cmd = [
-                wget_ges_disc_cmd(src_path, dst_path)
-                for src_path, dst_path in zip(src_fpaths, dst_fpaths)
+                wget_ges_disc_cmd(remote_filepath, local_filepath)
+                for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
             ]
         else:
             raise NotImplementedError("Download is available with 'wget' or 'curl'.")
@@ -345,13 +345,13 @@ def _download_files(
 ############################
 
 
-def filter_download_list(server_paths, disk_paths, force_download=False):
+def filter_download_list(remote_filepaths, local_filepaths, force_download=False):
     """
     Removes filepaths of GPM file already existing on disk.
 
     Parameters
     ----------
-    server_paths : str
+    remote_filepaths : str
         GPM directory on disk for a specific product and date.
     remote_filepaths : str
         Filepaths on which GPM data are stored on PPS servers.
@@ -360,9 +360,9 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
 
     Returns
     -------
-    server_paths: list
+    remote_filepaths: list
         List of filepaths on the NASA PPS server.
-    disk_paths: list
+    local_filepaths: list
         List of filepaths on the local disk.
 
     """
@@ -371,12 +371,14 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
     if force_download is False:
         # Get index of files which does not exist on disk
         idx_not_existing = [
-            i for i, disk_path in enumerate(disk_paths) if not os.path.exists(disk_path)
+            i
+            for i, local_filepath in enumerate(local_filepaths)
+            if not os.path.exists(local_filepath)
         ]
         # Select paths of files not present on disk
-        disk_paths = [disk_paths[i] for i in idx_not_existing]
-        server_paths = [server_paths[i] for i in idx_not_existing]
-    return (server_paths, disk_paths)
+        local_filepaths = [local_filepaths[i] for i in idx_not_existing]
+        remote_filepaths = [remote_filepaths[i] for i in idx_not_existing]
+    return (remote_filepaths, local_filepaths)
 
 
 ####--------------------------------------------------------------------------.
@@ -395,7 +397,7 @@ def _define_filepath(
 ):
     """Retrieve the filepath based on the filename."""
     if storage == "local":
-        fpath = define_disk_filepath(
+        fpath = define_local_filepath(
             product=product,
             product_type=product_type,
             date=date,
@@ -549,8 +551,8 @@ def download_files(
 
     # If force_download is False, select only data not present on disk
     new_remote_filepaths, new_local_filepaths = filter_download_list(
-        disk_paths=local_filepaths,
-        server_paths=remote_filepaths,
+        local_filepaths=local_filepaths,
+        remote_filepaths=remote_filepaths,
         force_download=force_download,
     )
     if is_empty(new_remote_filepaths):
@@ -560,8 +562,8 @@ def download_files(
 
     # Download files
     _ = _download_files(
-        src_fpaths=new_remote_filepaths,
-        dst_fpaths=new_local_filepaths,
+        remote_filepaths=new_remote_filepaths,
+        local_filepaths=new_local_filepaths,
         storage=storage,
         transfer_tool=transfer_tool,
         n_threads=n_threads,
@@ -771,8 +773,8 @@ def _download_daily_data(
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
     remote_filepaths, local_filepaths = filter_download_list(
-        disk_paths=local_filepaths,
-        server_paths=remote_filepaths,
+        local_filepaths=local_filepaths,
+        remote_filepaths=remote_filepaths,
         force_download=force_download,
     )
     if is_empty(remote_filepaths):
@@ -781,8 +783,8 @@ def _download_daily_data(
     # -------------------------------------------------------------------------.
     # Retrieve commands
     status = _download_files(
-        src_fpaths=remote_filepaths,
-        dst_fpaths=local_filepaths,
+        remote_filepaths=remote_filepaths,
+        local_filepaths=local_filepaths,
         storage=storage,
         transfer_tool=transfer_tool,
         n_threads=n_threads,
@@ -804,7 +806,7 @@ def _check_download_status(status, product, verbose):
     """
     status = np.array(status)
     no_remote_files = len(status) == 0
-    all_already_on_disk = np.all(status == -1).item()
+    all_already_local = np.all(status == -1).item()
     n_remote_files = np.logical_or(status == 0, status == 1).sum().item()
     n_failed = np.sum(status == 0).item()
     n_downloads = np.sum(status == 1).item()
@@ -814,7 +816,7 @@ def _check_download_status(status, product, verbose):
         print("No files are available for download !")
         return None
     # - Pass if all files are already on disk
-    if all_already_on_disk:
+    if all_already_local:
         if verbose:
             print(f"All the available GPM {product} product files are already on disk.")
         pass

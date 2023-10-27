@@ -22,10 +22,10 @@ from gpm_api.io.checks import (
     check_valid_time_request,
     is_empty,
 )
-from gpm_api.io.disk import get_disk_daily_filepaths
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.ges_disc import get_gesdisc_daily_filepaths
 from gpm_api.io.info import get_version_from_filepaths
+from gpm_api.io.local import get_local_daily_filepaths
 from gpm_api.io.pps import get_pps_daily_filepaths
 from gpm_api.io.products import available_products
 from gpm_api.utils.list import flatten_list
@@ -40,7 +40,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
     This functions returns a tuple ([filepaths][available_version])
     """
     if storage == "local":
-        filepaths = get_disk_daily_filepaths(
+        filepaths = get_local_daily_filepaths(
             product=product,
             product_type=product_type,
             date=date,
