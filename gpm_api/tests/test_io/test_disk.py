@@ -38,7 +38,7 @@ def test__get_disk_dir_pattern(
                         )
 
 
-def test__get_disk_directory(
+def test_get_disk_product_base_directory(
     products: List[str],
     product_types: List[str],
     versions: List[int],
@@ -54,7 +54,7 @@ def test__get_disk_directory(
     for product in products:
         for product_type in product_types:
             for version in versions:
-                dir_path = disk._get_disk_directory(
+                dir_path = disk.get_disk_product_directory(
                     base_dir=base_dir,
                     product=product,
                     product_type=product_type,
