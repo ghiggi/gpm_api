@@ -16,7 +16,12 @@ import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-from gpm_api.configs import get_gpm_password, get_gpm_username
+from gpm_api.configs import (
+    get_earthdata_password,
+    get_earthdata_username,
+    get_pps_password,
+    get_pps_username,
+)
 from gpm_api.io.checks import (
     check_date,
     check_product,
@@ -103,7 +108,7 @@ def curl_pps_cmd(remote_filepath, local_filepath, username, password):
     return cmd
 
 
-def curl_ges_disc_cmd(remote_filepath, local_filepath):
+def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=None):
     """CURL command to download data from GES DISC."""
     # - Define authentication settings
     auth = "-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
@@ -132,7 +137,7 @@ def wget_pps_cmd(remote_filepath, local_filepath, username, password):
     return cmd
 
 
-def wget_ges_disc_cmd(remote_filepath, local_filepath):
+def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
     """WGET command to download data from GES DISC."""
     # Define path to EarthData urs_cookies
     urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
@@ -148,12 +153,7 @@ def wget_ges_disc_cmd(remote_filepath, local_filepath):
 
     # Define command
     if os_name == "Windows":
-        # TODO: RETRIEVE !
-        # --> Or write to gpm_api config yaml !
-        ges_disc_username = ""
-        # .netrc
-        # machine urs.earthdata.nasa.gov login {username} password {password}
-        window_options = f"--user={ges_disc_username} --ask-password"
+        window_options = f"--user={username} --ask-password"
         cmd = f"wget {auth} {options} {window_options} --content-disposition {remote_filepath} -O {local_filepath}"
     elif os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
         cmd = f"wget {auth} {options} --content-disposition {remote_filepath} -O {local_filepath}"
@@ -260,6 +260,16 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
     return status
 
 
+def _get_single_file_cmd_function(transfer_tool, storage):
+    """Return command definition function."""
+    dict_fun = {
+        "pps": {"wget": wget_pps_cmd, "curl": curl_pps_cmd},
+        "ges_disc": {"wget": wget_ges_disc_cmd, "curl": curl_ges_disc_cmd},
+    }
+    func = dict_fun[storage][transfer_tool]
+    return func
+
+
 def _download_files(
     remote_filepaths,
     local_filepaths,
@@ -274,37 +284,21 @@ def _download_files(
         if not os.path.exists(os.path.dirname(fpath)):
             os.makedirs(os.path.dirname(fpath))
 
-    # Download files
+    # Retrieve username and password
     if storage == "pps":
-        username = get_gpm_username(None)
-        password = get_gpm_password(None)
-        if transfer_tool == "curl":
-            list_cmd = [
-                curl_pps_cmd(remote_filepath, local_filepath, username, password)
-                for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
-            ]
-        elif transfer_tool == "wget":
-            list_cmd = [
-                wget_pps_cmd(remote_filepath, local_filepath, username, password)
-                for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
-            ]
-        else:
-            raise NotImplementedError("Download is available with 'wget' or 'curl'.")
-    elif storage == "ges_disc":
-        if transfer_tool == "curl":
-            list_cmd = [
-                curl_ges_disc_cmd(remote_filepath, local_filepath)
-                for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
-            ]
-        elif transfer_tool == "wget":
-            list_cmd = [
-                wget_ges_disc_cmd(remote_filepath, local_filepath)
-                for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
-            ]
-        else:
-            raise NotImplementedError("Download is available with 'wget' or 'curl'.")
+        username = get_pps_username()
+        password = get_pps_password()
     else:
-        raise NotImplementedError("Download implemented only for storage 'pps' and 'ges_disc'")
+        username = get_earthdata_username()
+        password = get_earthdata_password()
+
+    # Define command list
+    get_single_file_cmd = _get_single_file_cmd_function(transfer_tool, storage)
+    list_cmd = [
+        get_single_file_cmd(remote_filepath, local_filepath, username, password)
+        for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
+    ]
+
     # -------------------------------------------------------------------------.
     ## Download the data (in parallel)
     status = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)

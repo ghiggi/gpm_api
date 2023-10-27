@@ -10,7 +10,7 @@ import subprocess
 
 from dateutil.relativedelta import relativedelta
 
-from gpm_api.configs import get_gpm_password, get_gpm_username
+from gpm_api.configs import get_pps_password, get_pps_username
 from gpm_api.io.checks import (
     check_product_type,
     check_product_validity,
@@ -206,8 +206,8 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
 
 def __get_pps_file_list(url_product_dir):
     # Retrieve GPM-API configs
-    username = get_gpm_username(None)
-    password = get_gpm_password(None)
+    username = get_pps_username()
+    password = get_pps_password()
     # Ensure url_file_list ends with "/"
     if url_product_dir[-1] != "/":
         url_product_dir = url_product_dir + "/"

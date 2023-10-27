@@ -76,18 +76,28 @@ def _write_yaml_file(dictionary, fpath, sort_keys=False):
     return
 
 
-def define_gpm_api_configs(gpm_username: str, gpm_password: str, gpm_base_dir: str):
+def define_gpm_api_configs(
+    gpm_base_dir: str,
+    username_pps: str,
+    password_pps: str,
+    username_earthdata=None,
+    password_earthdata=None,
+):
     """
     Defines the GPM-API configuration file with the given credentials and base directory.
 
     Parameters
     ----------
-    gpm_username : str
-        The username for the NASA GPM PPS account.
-    gpm_password : str
-        The password for the NASA GPM PPS account.
     gpm_base_dir : str
         The base directory where GPM data are stored.
+    username_pps : str, optional
+        The username for the NASA GPM PPS account.
+    password_pps : str, optional
+        The password for the NASA GPM PPS account.
+    username_earthdata : str, optional
+        The username for the NASA EarthData account.
+    password_earthdata : str, optional
+        The password for the NASA EarthData account.
 
     Notes
     -----
@@ -97,9 +107,18 @@ def define_gpm_api_configs(gpm_username: str, gpm_password: str, gpm_base_dir: s
 
     """
     config_dict = {}
-    config_dict["gpm_username"] = gpm_username
-    config_dict["gpm_password"] = gpm_password
     config_dict["gpm_base_dir"] = gpm_base_dir
+
+    # Define PPS authentication parameters
+    if isinstance(username_pps, str) and isinstance(password_pps, str):
+        config_dict["username_pps"] = username_pps
+        config_dict["password_pps"] = password_pps
+
+    # Define EarthData authentication files and parameters
+    if isinstance(username_earthdata, str) and isinstance(password_earthdata, str):
+        config_dict["username_earthdata"] = username_earthdata
+        config_dict["password_earthdata"] = password_earthdata
+        set_ges_disc_authentification(username_earthdata, password_earthdata)
 
     # Retrieve user home directory
     home_directory = os.path.expanduser("~")
@@ -149,23 +168,34 @@ def read_gpm_api_configs() -> Dict[str, str]:
 
 
 ####--------------------------------------------------------------------------.
-def _get_config_key(key, value=None):
+def _get_config_key(key):
     """Return the config key if `value` is None."""
+    value = read_gpm_api_configs().get(key, None)
     if value is None:
-        value = read_gpm_api_configs()[key]
+        raise ValueError(f"The GPM-API {key} parameter has not been defined ! ")
     return value
 
 
-def get_gpm_base_dir(gpm_base_dir=None):
+def get_gpm_base_dir():
     """Return the GPM base directory."""
-    return _get_config_key(key="gpm_base_dir", value=gpm_base_dir)
+    return _get_config_key(key="gpm_base_dir")
 
 
-def get_gpm_username(gpm_username=None):
+def get_pps_username():
     """Return the GPM-API PPS username."""
-    return _get_config_key(key="gpm_username", value=gpm_username)
+    return _get_config_key(key="username_pps")
 
 
-def get_gpm_password(gpm_password=None):
+def get_pps_password():
     """Return the GPM-API PPS password."""
-    return _get_config_key(key="gpm_password", value=gpm_password)
+    return _get_config_key(key="password_pps")
+
+
+def get_earthdata_username():
+    """Return the GPM-API EarthData username."""
+    return _get_config_key(key="username_earthdata")
+
+
+def get_earthdata_password():
+    """Return the GPM-API EarthData password."""
+    return _get_config_key(key="password_earthdata")
