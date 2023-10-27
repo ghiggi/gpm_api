@@ -34,9 +34,9 @@ def _get_disk_dir_pattern(product, product_type, version):
     ----------
     product : str
         GPM product name. See: gpm_api.available_products()
-    product_type : str, optional
+    product_type : str
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
 
     Returns
@@ -59,9 +59,9 @@ def _get_disk_dir_pattern(product, product_type, version):
     return dir_structure
 
 
-def _get_disk_product_directory(base_dir, product, product_type, version):
+def _get_disk_product_base_directory(base_dir, product, product_type, version):
     """
-    Provide the disk product directory path where the requested GPM data are stored/need to be saved.
+    Provide the local product base directory path where the requested GPM data are stored.
 
     Parameters
     ----------
@@ -69,16 +69,16 @@ def _get_disk_product_directory(base_dir, product, product_type, version):
         The base directory where to store GPM data.
     product : str
         GPM product name. See: gpm_api.available_products()
-    product_type : str, optional
+    product_type : str
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
 
     Returns
     -------
 
     product_dir : str
-        Product directory path where data are located.
+        Product base directory path where data are located.
     """
     base_dir = check_base_dir(base_dir)
     product_dir_pattern = _get_disk_dir_pattern(product, product_type, version)
@@ -86,9 +86,42 @@ def _get_disk_product_directory(base_dir, product, product_type, version):
     return product_dir
 
 
-def _get_disk_directory(base_dir, product, product_type, version, date):
+def _get_disk_directory_tree(product, product_type, date, version):
+    """Return the local product directory tree.
+
+    The directory tree structure for product_type == "RS" is:
+        GPM/RS/V<version>/<product_category>/<product>/YYYY/MM/YY
+    The directory tree structure for product_type == "NRT" is:
+        GPM/NRT/<product_category>/<product>/YYYY/MM/YY
+
+    Parameters
+    ----------
+    product : str
+        GPM product name. See: gpm_api.available_products().
+    product_type : str, optional
+        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+    date : datetime.date
+        Single date for which to retrieve the data.
+    version : int
+        GPM version of the data to retrieve.
+
+    Returns
+    -------
+    directory_tree : str
+        DIrectory tree on the NASA GESC DISC server where the data are stored.
     """
-    Provide the disk repository path where the requested daily GPM data are stored/need to be saved.
+    # Define product directory: GPM/RS/V<version>/<product_category>/<product>
+    product_dir_tree = _get_disk_dir_pattern(product, product_type, version)
+    # Define time tree
+    time_tree = get_time_tree(date)
+    # Define product directory tree for a specific date
+    directory_tree = os.path.join(product_dir_tree, time_tree)
+    return directory_tree
+
+
+def get_disk_product_directory(base_dir, product, product_type, version, date):
+    """
+    Provide the local repository path where the requested daily GPM data are stored/need to be saved.
 
     Parameters
     ----------
@@ -96,9 +129,9 @@ def _get_disk_directory(base_dir, product, product_type, version, date):
         The base directory where to store GPM data.
     product : str
         GPM product name. See: gpm_api.available_products()
-    product_type : str, optional
+    product_type : str
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
     date : datetime.date
         Single date for which to retrieve the data.
@@ -106,19 +139,18 @@ def _get_disk_directory(base_dir, product, product_type, version, date):
     Returns
     -------
 
-    dir_path : str
+    product_dir_path : str
         Directory path where daily GPM data are located.
         If product_type == "RS": <base_dir>/GPM/RS/V0<version>/<product_category>/<product>/<YYYY>/<MM>/<DD>
         If product_type == "NRT": <base_dir>/GPM/NRT/<product_category>/<product>/<YYYY>/<MM>/<DD>
         <product_category> are: RADAR, PMW, CMB, IMERG.
 
     """
-    product_dir = _get_disk_product_directory(
-        base_dir=base_dir, product=product, product_type=product_type, version=version
+    dir_structure = _get_disk_directory_tree(
+        product=product, product_type=product_type, version=version, date=date
     )
-    time_tree = get_time_tree(date)
-    dir_path = os.path.join(product_dir, time_tree)
-    return dir_path
+    product_dir_path = os.path.join(base_dir, dir_structure)
+    return product_dir_path
 
 
 ####--------------------------------------------------------------------------.
@@ -135,11 +167,11 @@ def get_disk_daily_filepaths(product, product_type, date, version, verbose=True)
     ----------
     product : str
         GPM product acronym. See gpm_api.available_products()
-    product_type : str, optional
+    product_type : str
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     date : datetime
         Single date for which to retrieve the data.
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
     verbose : bool, optional
         Whether to print processing details. The default is True.
@@ -149,7 +181,7 @@ def get_disk_daily_filepaths(product, product_type, date, version, verbose=True)
     base_dir = check_base_dir(base_dir)
 
     # Retrieve the directory on disk where the data are stored
-    dir_path = _get_disk_directory(
+    dir_path = get_disk_product_directory(
         base_dir=base_dir,
         product=product,
         product_type=product_type,
@@ -177,7 +209,7 @@ def define_disk_filepath(product, product_type, date, version, filename):
     base_dir = check_base_dir(base_dir)
 
     # Define disk directory path
-    dir_tree = _get_disk_directory(
+    dir_tree = get_disk_product_directory(
         base_dir=base_dir,
         product=product,
         product_type=product_type,
@@ -195,7 +227,7 @@ def define_disk_filepath(product, product_type, date, version, filename):
 #################
 
 
-def get_disk_filepaths(product, product_type, version):
+def get_disk_filepaths(product, version=7, product_type="RS"):
     """
     Retrieve all GPM filepaths on the local disk directory for a specific product.
 
@@ -203,17 +235,17 @@ def get_disk_filepaths(product, product_type, version):
     ----------
     product : str
         GPM product acronym. See gpm_api.available_products()
+    version : int
+        GPM version of the data to retrieve if product_type = 'RS'.
+        The default is 7.
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
-    verbose : bool, optional
-        Whether to print processing details. The default is True.
     """
     # Retrieve the directory on disk where the data are stored
     base_dir = get_gpm_base_dir(None)
+    base_dir = check_base_dir(base_dir)
 
-    product_dir = _get_disk_product_directory(
+    product_dir = _get_disk_product_base_directory(
         base_dir=base_dir,
         product=product,
         product_type=product_type,

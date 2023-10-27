@@ -24,15 +24,22 @@ from gpm_api.io.products import available_products, get_product_info
 #####################
 
 
-def _get_pps_servers(product_type):
-    """Return the url to the PPS servers."""
+def _get_pps_text_server(product_type):
+    """Return the url to the PPS text servers."""
     if product_type == "NRT":
         url_text_server = "https://jsimpsonhttps.pps.eosdis.nasa.gov/text"
-        url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov/data"
     else:
         url_text_server = "https://arthurhouhttps.pps.eosdis.nasa.gov/text"
+    return url_text_server
+
+
+def _get_pps_data_server(product_type):
+    """Return the url to the PPS data servers."""
+    if product_type == "NRT":
+        url_data_server = "ftps://jsimpsonftps.pps.eosdis.nasa.gov/data"
+    else:
         url_data_server = "ftps://arthurhouftps.pps.eosdis.nasa.gov"
-    return (url_text_server, url_data_server)
+    return url_data_server
 
 
 def _get_pps_nrt_product_folder_name(product):
@@ -84,10 +91,9 @@ def _get_pps_rs_product_dir(product, date, version):
     ----------
     product : str
         GPM product name. See: gpm_api.available_products() .
-
     date : datetime.date
         Single date for which to retrieve the data.
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
     """
     version = check_product_version(version, product)
@@ -122,15 +128,23 @@ def _get_pps_directory_tree(product, product_type, date, version):
     """
     Retrieve the NASA PPS server directory tree where the GPM data are stored.
 
+    The directory tree structure for product_type="RS" is:
+        - <gpmallversions>/V0<version>/<pps_rs_dir>/YYYY/MM/DD
+        -  The L3 monthly products are saved in the YYYY/MM/01 directory
+
+    The directory tree structure for product_type="NRT" is:
+        - IMERG-ER and IMERG-FR: imerg/<early/late>/YYYY/MM/
+        - Otherwise <pps_nrt_dir>/
+
     Parameters
     ----------
     product : str
         GPM product name. See: gpm_api.available_products() .
-    product_type : str, optional
+    product_type : str
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     date : datetime.date
         Single date for which to retrieve the data.
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
 
     Returns
@@ -145,10 +159,9 @@ def _get_pps_directory_tree(product, product_type, date, version):
         return _get_pps_rs_product_dir(product, date, version)
 
 
-def _get_pps_directory(product, product_type, date, version):
+def get_pps_product_directory(product, product_type, date, version, server_type):
     """
-    Retrieve the NASA PPS server directory paths where the GPM data for
-    a specific date are listed and stored.
+    Retrieve the NASA PPS server product directory path at specific date.
 
     The data list is retrieved using https.
     The data stored are retrieved using ftps.
@@ -157,34 +170,32 @@ def _get_pps_directory(product, product_type, date, version):
     ----------
     product : str
         GPM product name. See: gpm_api.available_products() .
-    product_type : str, optional
+    product_type : str
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     date : datetime.date
         Single date for which to retrieve the data.
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
+    server_type: str
+        Either "text" or "data"
 
     Returns
     -------
-    url_data_server : str
-        url of the NASA PPS server where the data are stored.
-    url_data_list: list
+    url_product_dir : str
         url of the NASA PPS server where the data are listed.
-
     """
-    # Retrieve servers URLs
-    url_text_server, url_data_server = _get_pps_servers(product_type)
-
+    # Retrieve server URL
+    if server_type == "text":
+        url_server = _get_pps_text_server(product_type)
+    else:
+        url_server = _get_pps_data_server(product_type)
     # Retrieve directory tree structure
     dir_structure = _get_pps_directory_tree(
         product=product, product_type=product_type, date=date, version=version
     )
-
-    # Define url where data are listed
-    url_data_list = os.path.join(url_text_server, dir_structure)
-
-    # Return tuple
-    return (url_data_server, url_data_list)
+    # Define product directory where data are listed
+    url_product_dir = os.path.join(url_server, dir_structure)
+    return url_product_dir
 
 
 ####--------------------------------------------------------------------------.
@@ -193,38 +204,46 @@ def _get_pps_directory(product, product_type, date, version):
 ############################
 
 
-def ensure_valid_start_date(start_date, product):
-    """Ensure that the product directory exists on the PPS server."""
-    # TODO: where it is used ?
-    if product == "2A-SAPHIR-MT1-CLIM":
-        min_start_date = "2011-10-13 00:00:00"
-    elif "1A-" in product or "1B-" in product:
-        min_start_date = "1997-12-07 00:00:00"
-    elif product in available_products(product_category="PMW"):
-        min_start_date = "1987-07-09 00:00:00"
-    elif product in available_products(product_category="RADAR") or product in available_products(
-        product_category="CMB"
-    ):
-        min_start_date = "1997-12-07 00:00:00"
-    elif "IMERG" in product:
-        min_start_date = "2000-06-01 00:00:00"
+def __get_pps_file_list(url_product_dir):
+    # Retrieve GPM-API configs
+    username = get_gpm_username(None)
+    password = get_gpm_password(None)
+    # Ensure url_file_list ends with "/"
+    if url_product_dir[-1] != "/":
+        url_product_dir = url_product_dir + "/"
+    # Define curl command
+    # -k is required with curl > 7.71 otherwise results in "unauthorized access".
+    cmd = f"curl -k --user {username}:{password} {url_product_dir}"
+    # Run command
+    args = cmd.split()
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout = process.communicate()[0].decode()
+    # Check if server is available
+    if stdout == "":
+        raise ValueError("The PPS server is currently unavailable. Sorry for the inconvenience.")
+    # Check if there are data are available
+    if stdout[0] == "<":
+        raise ValueError("No data found on PPS.")
     else:
-        min_start_date = "1987-07-09 00:00:00"
-    min_start_date = datetime.datetime.fromisoformat(min_start_date)
-    start_date = max(start_date, min_start_date)
-    return start_date
+        # Retrieve filepaths
+        filepaths = stdout.split()
+    # Return file paths
+    return filepaths
 
 
-def _get_pps_file_list(url_file_list, product, date, version, verbose=True):
+def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
     """
-    Retrieve the filepaths of the files available on the NASA PPS server for a specific day and product.
+    Retrieve the filepaths of the files available on the NASA PPS server for a specific day.
 
     The query is done using https !
     The function does not return the full PPS server url, but the filepath
     from the server root: i.e: '/gpmdata/2020/07/05/radar/<...>.HDF5'
+    The returned filepaths can includes more than one product !!!
 
     Parameters
     ----------
+    url_product_dir : str
+        The PPS product directory url.
     product : str
         GPM product acronym. See gpm_api.available_products() .
     date : datetime
@@ -232,46 +251,21 @@ def _get_pps_file_list(url_file_list, product, date, version, verbose=True):
     verbose : bool, optional
         Default is False. Whether to specify when data are not available for a specific date.
     """
-    # TODO: maybe remove arguments product, date, version, verbose
-    # --> Define try catch outside !
-
-    # Retrieve GPM-API configs
-    username = get_gpm_username(None)
-    password = get_gpm_password(None)
-
-    # Ensure url_file_list ends with "/"
-    if url_file_list[-1] != "/":
-        url_file_list = url_file_list + "/"
-
-    # Define curl command
-    # -k is required with curl > 7.71 otherwise results in "unauthorized access".
-    cmd = "curl -k --user " + username + ":" + password + " " + url_file_list
-
-    # Run command
-    args = cmd.split()
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout = process.communicate()[0].decode()
-
-    # Check if server is available
-    if stdout == "":
-        version_str = str(int(version))
-        print("The PPS server is currently unavailable.")
-        print(
-            f"This occurred when searching for product {product} (V0{version_str}) at date {date}."
-        )
-        raise ValueError("Sorry for the inconvenience.")
-
-    # Check if data are available
-    if stdout[0] == "<":
-        if verbose:
-            version_str = str(int(version))
-            print(f"No data found on PPS on date {date} for product {product} (V0{version_str})")
-        return []
-    else:
-        # Retrieve filepaths
-        filepaths = stdout.split()
-
-    # Return file paths
+    try:
+        filepaths = __get_pps_file_list(url_product_dir)
+    except Exception as e:
+        # If url not exist, raise an error
+        if "The PPS server is currently unavailable." in str(e):
+            raise e
+        elif "No data found on PPS." in str(e):
+            # If no filepath (empty directory), print message if verbose=True
+            if verbose:
+                version_str = str(int(version))
+                msg = f"No data found on GES DISC on date {date} for product {product} (V0{version_str})"
+                print(msg)
+            filepaths = []
+        else:
+            raise ValueError("Undefined error. The error is {e}.")
     return filepaths
 
 
@@ -293,38 +287,43 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
         Whether to specify when data are not available for a specific date.
         The default is True.
     """
-    # Retrieve server urls of NASA PPS
-    (url_data_server, url_file_list) = _get_pps_directory(
-        product=product, product_type=product_type, date=date, version=version
+    # Retrieve url to product directory
+    url_product_dir = get_pps_product_directory(
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
+        server_type="text",
     )
-    # Retrieve filepaths
+    # Retrieve filepaths from the PPS base directory of the server
     # - If empty: return []
+    # - Example /gpmdata/2020/07/05/radar/<...>.HDF5'
     filepaths = _get_pps_file_list(
-        url_file_list=url_file_list,
+        url_product_dir=url_product_dir,
         product=product,
         date=date,
         version=version,
         verbose=verbose,
     )
-
     # Define the complete url of pps filepaths
     # - Need to remove the starting "/" to each filepath
-    pps_fpaths = [os.path.join(url_data_server, filepath[1:]) for filepath in filepaths]
-
-    # Return the pps data server filepaths
-    return pps_fpaths
+    url_data_server = _get_pps_data_server(product_type)
+    filepaths = [os.path.join(url_data_server, filepath[1:]) for filepath in filepaths]
+    return filepaths
 
 
 def define_pps_filepath(product, product_type, date, version, filename):
     """Define PPS filepath from filename."""
-    # Retrieve PPS directory tree
-    dir_tree = _get_pps_directory_tree(
-        product=product, product_type=product_type, date=date, version=version
+    # Retrieve product directory url
+    url_product_dir = get_pps_product_directory(
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
+        server_type="data",
     )
-    # Retrieve PPS servers URLs
-    url_text_server, url_data_server = _get_pps_servers(product_type)
     # Define PPS filepath
-    fpath = os.path.join(url_data_server, dir_tree, filename)
+    fpath = os.path.join(url_product_dir, filename)
     return fpath
 
 

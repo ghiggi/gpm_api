@@ -34,7 +34,7 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
                 assert res == foldername
 
 
-# def test__get_pps_directory(
+# def test_get_pps_product_directory(
 #     products: List[str],
 #     product_types: List[str],
 # ) -> None:
@@ -45,7 +45,7 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
 #                 # Dependent on dir forming private function
 #                 foldername = pps._get_pps_nrt_product_folder_name(product)
 
-#                 res = pps._get_pps_directory(product, product_type)
+#                 res = pps.get_pps_product_directory(product, product_type, date, version)
 #                 assert res == foldername
 #     pass
 

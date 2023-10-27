@@ -27,6 +27,7 @@ from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.ges_disc import get_gesdisc_daily_filepaths
 from gpm_api.io.info import get_version_from_filepaths
 from gpm_api.io.pps import get_pps_daily_filepaths
+from gpm_api.io.products import available_products
 from gpm_api.utils.list import flatten_list
 from gpm_api.utils.warnings import GPMDownloadWarning
 
@@ -93,6 +94,27 @@ def _check_correct_version(filepaths, product, version):
             msg += f"Starting the download of version {files_version}."
             warnings.warn(msg, GPMDownloadWarning)
     return filepaths, files_version
+
+
+def ensure_valid_start_date(start_date, product):
+    """Ensure that the product directory exists for start_date."""
+    if product == "2A-SAPHIR-MT1-CLIM":
+        min_start_date = "2011-10-13 00:00:00"
+    elif "1A-" in product or "1B-" in product:
+        min_start_date = "1997-12-07 00:00:00"
+    elif product in available_products(product_category="PMW"):
+        min_start_date = "1987-07-09 00:00:00"
+    elif product in available_products(product_category="RADAR") or product in available_products(
+        product_category="CMB"
+    ):
+        min_start_date = "1997-12-07 00:00:00"
+    elif "IMERG" in product:
+        min_start_date = "2000-06-01 00:00:00"
+    else:
+        min_start_date = "1987-07-09 00:00:00"
+    min_start_date = datetime.datetime.fromisoformat(min_start_date)
+    start_date = max(start_date, min_start_date)
+    return start_date
 
 
 def find_daily_filepaths(
@@ -228,6 +250,7 @@ def find_filepaths(
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
     start_date = datetime.datetime(start_time.year, start_time.month, start_time.day)
     start_date = start_date - datetime.timedelta(days=1)
+    start_date = ensure_valid_start_date(start_date=start_date, product=product)
     end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
     date_range = pd.date_range(start=start_date, end=end_date, freq="D")
     dates = list(date_range.to_pydatetime())

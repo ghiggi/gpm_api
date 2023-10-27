@@ -153,4 +153,7 @@ exclude = [
 omit = [
   "gpm_api/_version.py",
   "gpm_api/etc/*",
+  "gpm_api/encoding/*",
+  "gpm_api/retrieval/*",
+  "gpm_api/bucket/*",
 ]
