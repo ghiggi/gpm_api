@@ -38,14 +38,14 @@ def test_construct_curl_pps_cmd(
         "--retry 5 --retry-delay 10 -n {remote_filepath} -o {local_filepath}"
     )
 
-    gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
+    username_pps, password_pps, gpm_base_dir = configs.read_gpm_api_configs().values()
 
     for remote_filepath in remote_filepaths:
         path = dl.curl_pps_cmd(
             remote_filepath=remote_filepath,
             local_filepath=local_filepath,
-            username=gpm_username,
-            password=gpm_password,
+            username=username_pps,
+            password=password_pps,
         )
 
         # Test against ftps -> ftp casting
@@ -54,8 +54,8 @@ def test_construct_curl_pps_cmd(
             remote_filepath = remote_filepath.replace("ftps://", "ftp://", 1)
 
         assert path == curl_truth.format(
-            username=gpm_username,
-            password=gpm_password,
+            username=username_pps,
+            password=password_pps,
             remote_filepath=remote_filepath,
             local_filepath=local_filepath,
         )
@@ -94,19 +94,19 @@ def test_construct_wget_pps_cmd(
         "--tries=5 -O {local_filepath} {remote_filepath}"
     )
 
-    gpm_username, gpm_password, gpm_base_dir = configs.read_gpm_api_configs().values()
+    username_pps, password_pps, gpm_base_dir = configs.read_gpm_api_configs().values()
 
     for remote_filepath in remote_filepaths:
         path = dl.wget_pps_cmd(
             remote_filepath=remote_filepath,
             local_filepath=local_filepath,
-            username=gpm_username,
-            password=gpm_password,
+            username=username_pps,
+            password=password_pps,
         )
 
         assert path == wget_truth.format(
-            username=gpm_username,
-            password=gpm_password,
+            username=username_pps,
+            password=password_pps,
             remote_filepath=remote_filepath,
             local_filepath=local_filepath,
         )

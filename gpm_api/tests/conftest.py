@@ -18,8 +18,8 @@ def mock_configuration():
     """
 
     mocked_configuration = {
-        "gpm_username": "testuser",
-        "gpm_password": "testuser",
+        "username_pps": "testuser",
+        "password_pps": "testuser",
         "gpm_base_dir": os.path.join(
             os.getcwd(),
             "gpm_api",

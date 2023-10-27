@@ -177,7 +177,7 @@ def get_local_daily_filepaths(product, product_type, date, version, verbose=True
         Whether to print processing details. The default is True.
     """
     # Retrieve the local GPM base directory
-    base_dir = get_gpm_base_dir(None)
+    base_dir = get_gpm_base_dir()
     base_dir = check_base_dir(base_dir)
 
     # Retrieve the directory on disk where the data are stored
@@ -205,7 +205,7 @@ def get_local_daily_filepaths(product, product_type, date, version, verbose=True
 def define_local_filepath(product, product_type, date, version, filename):
     """Define local file path."""
     # Retrieve the local GPM base directory
-    base_dir = get_gpm_base_dir(None)
+    base_dir = get_gpm_base_dir()
     base_dir = check_base_dir(base_dir)
 
     # Define disk directory path
@@ -242,7 +242,7 @@ def get_local_filepaths(product, version=7, product_type="RS"):
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     """
     # Retrieve the local GPM base directory
-    base_dir = get_gpm_base_dir(None)
+    base_dir = get_gpm_base_dir()
     base_dir = check_base_dir(base_dir)
 
     # Retrieve the local directory where the data are stored
