@@ -63,7 +63,7 @@ def download_raw_granules(products: dict) -> None:
     download._download_files(
         pps_filepaths,
         local_filepaths,
-        protocol="pps",
+        storage="pps",
         transfer_tool="wget",
         verbose=True,
     )
@@ -110,7 +110,7 @@ def find_first_pps_filepath(
     end_time = start_time + relativedelta(days=1)
 
     pps_filepaths = find_filepaths(
-        protocol="pps",
+        storage="pps",
         product=product,
         start_time=start_time,
         # start_time gets extended to (start_time - 1 day) in find_filepaths.

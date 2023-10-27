@@ -22,7 +22,7 @@ from gpm_api.io.checks import (
     check_product,
     check_product_type,
     check_product_version,
-    check_remote_protocol,
+    check_remote_storage,
     check_start_end_time,
     check_valid_time_request,
     is_empty,
@@ -291,7 +291,7 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 def _download_files(
     src_fpaths,
     dst_fpaths,
-    protocol,
+    storage,
     transfer_tool,
     n_threads=4,
     progress_bar=True,
@@ -303,7 +303,7 @@ def _download_files(
             os.makedirs(os.path.dirname(fpath))
 
     # Download files
-    if protocol == "pps":
+    if storage == "pps":
         username = get_gpm_username(None)
         password = get_gpm_password(None)
         if transfer_tool == "curl":
@@ -318,7 +318,7 @@ def _download_files(
             ]
         else:
             raise NotImplementedError("Download is available with 'wget' or 'curl'.")
-    elif protocol == "ges_disc":
+    elif storage == "ges_disc":
         if transfer_tool == "curl":
             list_cmd = [
                 curl_ges_disc_cmd(src_path, dst_path)
@@ -332,7 +332,7 @@ def _download_files(
         else:
             raise NotImplementedError("Download is available with 'wget' or 'curl'.")
     else:
-        raise NotImplementedError("Download implemented only for protocol 'pps' and 'ges_disc'")
+        raise NotImplementedError("Download implemented only for storage 'pps' and 'ges_disc'")
     # -------------------------------------------------------------------------.
     ## Download the data (in parallel)
     status = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
@@ -391,10 +391,10 @@ def _define_filepath(
     date,
     version,
     filename,
-    protocol,
+    storage,
 ):
     """Retrieve the filepath based on the filename."""
-    if protocol == "local":
+    if storage == "local":
         fpath = define_disk_filepath(
             product=product,
             product_type=product_type,
@@ -402,7 +402,7 @@ def _define_filepath(
             version=version,
             filename=filename,
         )
-    elif protocol == "pps":
+    elif storage == "pps":
         fpath = define_pps_filepath(
             product=product,
             product_type=product_type,
@@ -410,7 +410,7 @@ def _define_filepath(
             version=version,
             filename=filename,
         )
-    elif protocol == "gesc_disc":
+    elif storage == "gesc_disc":
         fpath = define_gesdisc_filepath(
             product=product,
             product_type=product_type,
@@ -419,12 +419,12 @@ def _define_filepath(
             filename=filename,
         )
     else:
-        raise ValueError("Invalid protocol.")
+        raise ValueError("Invalid storage.")
     return fpath
 
 
-def get_fpath_from_fname(filename, protocol, product_type):
-    """Convert GPM file names to the <protocol> file path."""
+def get_fpath_from_fname(filename, storage, product_type):
+    """Convert GPM file names to the <storage> file path."""
     # Retrieve the filename
     filename = os.path.basename(filename)
     # Retrieve relevant info from filename
@@ -442,14 +442,14 @@ def get_fpath_from_fname(filename, protocol, product_type):
         date=date,
         version=version,
         filename=filename,
-        protocol=protocol,
+        storage=storage,
     )
     return fpath
 
 
-def get_fpaths_from_fnames(filepaths, protocol, product_type):
+def get_fpaths_from_fnames(filepaths, storage, product_type):
     """
-    Convert GPM file names or file paths to <protocol> file paths.
+    Convert GPM file names or file paths to <storage> file paths.
 
     Parameters
     ----------
@@ -459,11 +459,11 @@ def get_fpaths_from_fnames(filepaths, protocol, product_type):
     Returns
     -------
     fpaths : list
-        List of file paths on <protocol> storage.
+        List of file paths on <storage> storage.
 
     """
     fpaths = [
-        get_fpath_from_fname(fpath, protocol=protocol, product_type=product_type)
+        get_fpath_from_fname(fpath, storage=storage, product_type=product_type)
         for fpath in filepaths
     ]
     return fpaths
@@ -478,7 +478,7 @@ def get_fpaths_from_fnames(filepaths, protocol, product_type):
 def download_files(
     filepaths,
     product_type="RS",
-    protocol="pps",
+    storage="pps",
     n_threads=4,
     transfer_tool="curl",
     force_download=False,
@@ -497,7 +497,7 @@ def download_files(
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
         The default is "RS".
-    protocol : str, optional
+    storage : str, optional
         The remote repository from where to download.
         Either "pps" or "ges_disc". The default is "pps".
     n_threads : int, optional
@@ -528,7 +528,7 @@ def download_files(
     # - we should provide better error messages
 
     # Check inputs
-    protocol = check_remote_protocol(protocol)
+    storage = check_remote_storage(storage)
     if isinstance(filepaths, type(None)):
         return None
     if isinstance(filepaths, str):
@@ -544,10 +544,8 @@ def download_files(
         print(f"Attempt to download {n_files} files.")
 
     # Retrieve the remote and local file paths
-    remote_filepaths = get_fpaths_from_fnames(
-        filepaths, protocol=protocol, product_type=product_type
-    )
-    local_filepaths = get_fpaths_from_fnames(filepaths, protocol="local", product_type=product_type)
+    remote_filepaths = get_fpaths_from_fnames(filepaths, storage=storage, product_type=product_type)
+    local_filepaths = get_fpaths_from_fnames(filepaths, storage="local", product_type=product_type)
 
     # If force_download is False, select only data not present on disk
     new_remote_filepaths, new_local_filepaths = filter_download_list(
@@ -564,7 +562,7 @@ def download_files(
     _ = _download_files(
         src_fpaths=new_remote_filepaths,
         dst_fpaths=new_local_filepaths,
-        protocol=protocol,
+        storage=storage,
         transfer_tool=transfer_tool,
         n_threads=n_threads,
         progress_bar=progress_bar,
@@ -691,7 +689,7 @@ def _download_daily_data(
     version,
     product,
     product_type,
-    protocol,
+    storage,
     transfer_tool,
     n_threads,
     start_time,
@@ -718,7 +716,7 @@ def _download_daily_data(
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     version : int
         GPM version of the data to retrieve if product_type = 'RS'.
-    protocol : str
+    storage : str
         The remote repository from where to download.
         Either "pps" or "ges_disc".
     n_threads : int
@@ -743,11 +741,11 @@ def _download_daily_data(
     date = check_date(date)
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
-    protocol = check_remote_protocol(protocol)
+    storage = check_remote_storage(storage)
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
     remote_filepaths, available_version = find_daily_filepaths(
-        protocol=protocol,
+        storage=storage,
         product=product,
         product_type=product_type,
         version=version,
@@ -767,7 +765,7 @@ def _download_daily_data(
     # -------------------------------------------------------------------------.
     # Define disk filepaths
     local_filepaths = get_fpaths_from_fnames(
-        remote_filepaths, protocol="local", product_type=product_type
+        remote_filepaths, storage="local", product_type=product_type
     )
 
     # -------------------------------------------------------------------------.
@@ -785,7 +783,7 @@ def _download_daily_data(
     status = _download_files(
         src_fpaths=remote_filepaths,
         dst_fpaths=local_filepaths,
-        protocol=protocol,
+        storage=storage,
         transfer_tool=transfer_tool,
         n_threads=n_threads,
         progress_bar=progress_bar,
@@ -845,7 +843,7 @@ def download_archive(
     end_time,
     product_type="RS",
     version=None,
-    protocol="pps",
+    storage="pps",
     n_threads=4,
     transfer_tool="curl",
     progress_bar=False,
@@ -870,7 +868,7 @@ def download_archive(
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
-    protocol : str, optional
+    storage : str, optional
         The remote repository from where to download.
         Either "pps" or "ges_disc". The default is "pps".
     n_threads : int, optional
@@ -895,7 +893,7 @@ def download_archive(
     """
     # -------------------------------------------------------------------------.
     ## Checks input arguments
-    protocol = check_remote_protocol(protocol)
+    storage = check_remote_storage(storage)
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     version = check_product_version(version, product)
@@ -930,7 +928,7 @@ def download_archive(
             product_type=product_type,
             start_time=start_time,
             end_time=end_time,
-            protocol=protocol,
+            storage=storage,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
             progress_bar=progress_bar,
@@ -986,7 +984,7 @@ def download_daily_data(
     day,
     product_type="RS",
     version=None,
-    protocol="pps",
+    storage="pps",
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,
@@ -1007,7 +1005,7 @@ def download_daily_data(
         end_time=end_time,
         product_type=product_type,
         version=version,
-        protocol=protocol,
+        storage=storage,
         n_threads=n_threads,
         transfer_tool=transfer_tool,
         progress_bar=progress_bar,
@@ -1027,7 +1025,7 @@ def download_monthly_data(
     month,
     product_type="RS",
     version=None,
-    protocol="pps",
+    storage="pps",
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,
@@ -1048,7 +1046,7 @@ def download_monthly_data(
         end_time=end_time,
         product_type=product_type,
         version=version,
-        protocol=protocol,
+        storage=storage,
         n_threads=n_threads,
         transfer_tool=transfer_tool,
         progress_bar=progress_bar,

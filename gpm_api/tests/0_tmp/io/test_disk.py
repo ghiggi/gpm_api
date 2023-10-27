@@ -18,7 +18,7 @@ product_type = "RS"
 verbose = True
 
 filepaths, _ = find_daily_filepaths(
-    protocol="local",
+    storage="local",
     product=product,
     product_type=product_type,
     date=date,
@@ -33,7 +33,7 @@ start_time = datetime.datetime(2020, 7, 5, 0, 2, 0)
 end_time = datetime.datetime(2020, 7, 5, 0, 3, 0)
 
 filepaths = find_filepaths(
-    protocol="local",
+    storage="local",
     product=product,
     product_type=product_type,
     version=version,

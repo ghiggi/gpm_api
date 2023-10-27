@@ -127,7 +127,7 @@ def test_download_file_private(
     Uses tmpdir to create a unique path for each test and mocker to mock the
     download function
     """
-    protocol = "pps"
+    storage = "pps"
 
     # Don't actually download anything, so mock the run function
     mocker.patch.object(dl, "run", autospec=True, return_value=None)
@@ -142,13 +142,13 @@ def test_download_file_private(
         dl._download_files(
             src_fpaths=[server_path],
             dst_fpaths=[disk_path],
-            protocol=protocol,
+            storage=storage,
             transfer_tool="curl",
         )
         dl._download_files(
             src_fpaths=[server_path],
             dst_fpaths=[disk_path],
-            protocol=protocol,
+            storage=storage,
             transfer_tool="wget",
         )
 
@@ -157,7 +157,7 @@ def test_download_file_private(
             dl._download_files(
                 src_fpaths=[server_path],
                 dst_fpaths=[disk_path],
-                protocol=protocol,
+                storage=storage,
                 transfer_tool="fake",
             )
 
@@ -245,7 +245,7 @@ def test_download_daily_data_private(
             for product_type in product_types:
                 for product in available_products(product_type=product_type):
                     dl._download_daily_data(
-                        protocol="pps",
+                        storage="pps",
                         date=datetime.datetime(2022, 9, 7, 12, 0, 0),
                         version=version,
                         product=product,
@@ -321,7 +321,7 @@ def test_get_fpaths_from_fnames(
         filepaths=[
             "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
         ],
-        protocol="local",
+        storage="local",
         product_type="RS",
     ) == [
         os.path.join(

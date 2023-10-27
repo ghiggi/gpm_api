@@ -17,8 +17,8 @@ from gpm_api.io.checks import (
     check_product,
     check_product_type,
     check_product_version,
-    check_protocol,
     check_start_end_time,
+    check_storage,
     check_valid_time_request,
     is_empty,
 )
@@ -33,12 +33,12 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 VERSION_WARNING = config.get("warn_multiple_product_versions")
 
 
-def _get_all_daily_filepaths(protocol, date, product, product_type, version, verbose):
+def _get_all_daily_filepaths(storage, date, product, product_type, version, verbose):
     """Return the find_daily_filepaths_func.
 
     This functions returns a tuple ([filepaths][available_version])
     """
-    if protocol == "local":
+    if storage == "local":
         filepaths = get_disk_daily_filepaths(
             product=product,
             product_type=product_type,
@@ -46,7 +46,7 @@ def _get_all_daily_filepaths(protocol, date, product, product_type, version, ver
             version=version,
             verbose=verbose,
         )
-    elif protocol == "pps":
+    elif storage == "pps":
         filepaths = get_pps_daily_filepaths(
             product=product,
             product_type=product_type,
@@ -54,7 +54,7 @@ def _get_all_daily_filepaths(protocol, date, product, product_type, version, ver
             version=version,
             verbose=verbose,
         )
-    elif protocol == "ges_disc":
+    elif storage == "ges_disc":
         filepaths = get_gesdisc_daily_filepaths(
             product=product,
             product_type=product_type,
@@ -63,7 +63,7 @@ def _get_all_daily_filepaths(protocol, date, product, product_type, version, ver
             verbose=verbose,
         )
     else:
-        raise ValueError(f"Invalid protocol {protocol}.")
+        raise ValueError(f"Invalid storage {storage}.")
     return filepaths
 
 
@@ -96,7 +96,7 @@ def _check_correct_version(filepaths, product, version):
 
 
 def find_daily_filepaths(
-    protocol,
+    storage,
     date,
     product,
     product_type,
@@ -140,7 +140,7 @@ def find_daily_filepaths(
     ##------------------------------------------------------------------------.
     # Retrieve list of available files on pps
     filepaths = _get_all_daily_filepaths(
-        protocol=protocol,
+        storage=storage,
         product=product,
         product_type=product_type,
         date=date,
@@ -148,7 +148,7 @@ def find_daily_filepaths(
         verbose=verbose,
     )
     if is_empty(filepaths):
-        if protocol == "local" and verbose:
+        if storage == "local" and verbose:
             version_str = str(int(version))
             print(
                 f"The GPM product {product} (V0{version_str}) on date {date} has not been downloaded !"
@@ -178,7 +178,7 @@ def find_daily_filepaths(
 
 
 def find_filepaths(
-    protocol,
+    storage,
     product,
     start_time,
     end_time,
@@ -216,7 +216,7 @@ def find_filepaths(
     """
     # -------------------------------------------------------------------------.
     ## Checks input arguments
-    protocol = check_protocol(protocol)
+    storage = check_storage(storage)
     version = check_product_version(version, product)
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
@@ -234,7 +234,7 @@ def find_filepaths(
 
     # -------------------------------------------------------------------------.
     # If NRT, all data lies in a single directory at PPS
-    if protocol == "pps" and product_type == "NRT":
+    if storage == "pps" and product_type == "NRT":
         dates = [dates[0]]
         parallel = False
 
@@ -246,7 +246,7 @@ def find_filepaths(
         for i, date in enumerate(dates):
             verbose = False if i == 0 else verbose_arg
             del_op = dask.delayed(find_daily_filepaths)(
-                protocol=protocol,
+                storage=storage,
                 version=version,
                 product=product,
                 product_type=product_type,
@@ -270,7 +270,7 @@ def find_filepaths(
         for i, date in enumerate(dates):
             verbose = False if i == 0 else verbose_arg
             filepaths, _ = find_daily_filepaths(
-                protocol=protocol,
+                storage=storage,
                 version=version,
                 product=product,
                 product_type=product_type,

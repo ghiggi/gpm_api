@@ -346,7 +346,7 @@ def find_first_pps_granule_filepath(product: str, product_type: str, version: in
     # Find filepath
     end_time = start_time + relativedelta(days=1)
     pps_filepaths = find_filepaths(
-        protocol="pps",
+        storage="pps",
         product=product,
         start_time=start_time,
         end_time=end_time,

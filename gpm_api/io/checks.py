@@ -72,26 +72,26 @@ def check_groups(groups):
     return groups
 
 
-def check_protocol(protocol):
-    """Check protocol."""
-    if not isinstance(protocol, str):
-        raise TypeError("'protocol' must be a string.")
-    valid_protocols = ["ges_disc", "pps", "local"]
-    if protocol.lower() not in valid_protocols:
-        raise ValueError(f"{protocol} is an invalid protocol. Valid values are {valid_protocols}.")
-    return protocol.lower()
+def check_storage(storage):
+    """Check storage."""
+    if not isinstance(storage, str):
+        raise TypeError("'storage' must be a string.")
+    valid_storages = ["ges_disc", "pps", "local"]
+    if storage.lower() not in valid_storages:
+        raise ValueError(f"{storage} is an invalid storage. Valid values are {valid_storages}.")
+    return storage.lower()
 
 
-def check_remote_protocol(protocol):
-    """Check protocol is remote."""
-    if not isinstance(protocol, str):
-        raise TypeError("'protocol' must be a string.")
-    valid_protocols = ["ges_disc", "pps"]
-    if protocol.lower() not in valid_protocols:
+def check_remote_storage(storage):
+    """Check storage is remote."""
+    if not isinstance(storage, str):
+        raise TypeError("'storage' must be a string.")
+    valid_storages = ["ges_disc", "pps"]
+    if storage.lower() not in valid_storages:
         raise ValueError(
-            f"{protocol} is an invalid remote protocol. Valid values are {valid_protocols}."
+            f"{storage} is an invalid remote storage. Valid values are {valid_storages}."
         )
-    return protocol.lower()
+    return storage.lower()
 
 
 def check_version(version):

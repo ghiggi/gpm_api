@@ -18,7 +18,7 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.command()
 @click.argument("filenames", type=str, nargs=-1, metavar="filename")
 @click.option("--product_type", type=str, show_default=True, default="RS")
-@click.option("--protocol", type=str, show_default=True, default="pps")
+@click.option("--storage", type=str, show_default=True, default="pps")
 @click.option("--n_threads", type=int, default=4)
 @click.option("--transfer_tool", type=str, default="curl")
 @click.option("--progress_bar", type=bool, default=False)
@@ -29,7 +29,7 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 def download_gpm_files(
     filenames,
     product_type="RS",
-    protocol="pps",
+    storage="pps",
     n_threads=4,
     transfer_tool="curl",
     progress_bar=False,
@@ -45,7 +45,7 @@ def download_gpm_files(
     download_files(
         filepaths=filenames,
         product_type=product_type,
-        protocol=protocol,
+        storage=storage,
         n_threads=n_threads,
         transfer_tool=transfer_tool,
         force_download=force_download,
