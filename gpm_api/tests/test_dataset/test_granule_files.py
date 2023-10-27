@@ -26,7 +26,7 @@ gpm_api.config.set(
 )
 
 
-def test_open_granule_on_real_files(tmp_path):
+def test_open_granule_on_real_files():
     """Test open_granule on real files.
 
     Load cut granules and check that the new file is identical to the saved reference.
@@ -38,17 +38,18 @@ def test_open_granule_on_real_files(tmp_path):
     ├── cut
     │   ├── V7/RS/1A-GMI
     │   │   └── 1A.GPM.GMI.COUNT2021.20140304-S223658-E000925.000082.V07A.HDF5
-    ├── processed
-    │   ├── V7/RS/1A-GMI
-    │       ├── S1.nc
-    │       ├── S2.nc
-    │       ├── S4.nc
-    │       └── S5.nc
-    └── ...
+    │   └── ...
+    └── processed
+        ├── V7/RS/1A-GMI
+        │    ├── S1.nc
+        │    ├── S2.nc
+        │    ├── S4.nc
+        │    └── S5.nc
+        └── ...
     """
 
-    granules_dir_path = os.path.join(_root_path, "gpm_api", "tests", "data", "granules")
-    granules_dir_path = os.path.join("/home/ghiggi/GPM_TEST_DATA_DEMO")
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    granules_dir_path = os.path.join(script_path, "..", "data", "granules")
 
     if not os.path.exists(granules_dir_path):
         pytest.skip("Test granules not found. Please run `python generate_test_granule_data.py`.")
