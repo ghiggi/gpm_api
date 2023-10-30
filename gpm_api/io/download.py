@@ -267,6 +267,8 @@ def _get_single_file_cmd_function(transfer_tool, storage):
         "pps": {"wget": wget_pps_cmd, "curl": curl_pps_cmd},
         "ges_disc": {"wget": wget_ges_disc_cmd, "curl": curl_ges_disc_cmd},
     }
+    if transfer_tool not in dict_fun[storage].keys():
+        raise NotImplementedError(f"Unsupported transfer tool: {transfer_tool}")
     func = dict_fun[storage][transfer_tool]
     return func
 

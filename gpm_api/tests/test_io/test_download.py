@@ -32,10 +32,10 @@ def test_construct_curl_pps_cmd(
     ), f"Folder {os.path.dirname(local_filepath)} already exists"
 
     curl_truth = (
-        "curl --verbose --ipv4 --insecure "
+        "curl --ipv4 --insecure -n "
         "--user {username}:{password} --ftp-ssl "
         "--header 'Connection: close' --connect-timeout 20 "
-        "--retry 5 --retry-delay 10 -n {remote_filepath} -o {local_filepath}"
+        "--retry 5 --retry-delay 10 --url {remote_filepath} -o {local_filepath}"
     )
 
     username_pps, password_pps, gpm_base_dir = configs.read_gpm_api_configs().values()
