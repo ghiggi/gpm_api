@@ -79,6 +79,13 @@ def products() -> List[str]:
 
 
 @pytest.fixture
+def product_info() -> Dict[str, Any]:
+    """Return a dictionary of product info"""
+
+    return get_info_dict()
+
+
+@pytest.fixture
 def remote_filepaths() -> Dict[str, Dict[str, Any]]:
     """Return a list of probable GPM server paths"""
 
