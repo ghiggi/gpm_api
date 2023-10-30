@@ -104,7 +104,7 @@ def curl_pps_cmd(remote_filepath, local_filepath, username, password):
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"  # --verbose
     # - Define command
-    cmd = f"curl {auth} {options} {remote_filepath} -o {local_filepath}"
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
     return cmd
 
 
@@ -146,7 +146,7 @@ def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
     auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
 
     # Define wget options
-    options = "-c --read-timeout=10 --tries=5 -nH -np"
+    options = "-c --read-timeout=10 --tries=5 -nH -np --content-disposition"
 
     # Determine the operating system
     os_name = platform.system()
@@ -154,9 +154,9 @@ def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
     # Define command
     if os_name == "Windows":
         window_options = f"--user={username} --ask-password"
-        cmd = f"wget {auth} {options} {window_options} --content-disposition {remote_filepath} -O {local_filepath}"
+        cmd = f"wget {auth} {options} {window_options} {remote_filepath} -O {local_filepath}"
     elif os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
-        cmd = f"wget {auth} {options} --content-disposition {remote_filepath} -O {local_filepath}"
+        cmd = f"wget {auth} {options} {remote_filepath} -O {local_filepath}"
     else:
         raise ValueError(f"Unsupported OS: {os_name}")
     return cmd
@@ -231,7 +231,8 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 
     Returns
     -------
-    List of commands which didn't complete.
+    status : list
+        Download status of each file. 0=Failed. 1=Success.
     """
     from tqdm import tqdm
 
@@ -353,6 +354,16 @@ def filter_download_list(remote_filepaths, local_filepaths, force_download=False
 ###########################
 
 
+def _get_func_filepath_definition(storage):
+    dict_fun = {
+        "local": define_local_filepath,
+        "pps": define_pps_filepath,
+        "ges_disc": define_gesdisc_filepath,
+    }
+    func = dict_fun[storage]
+    return func
+
+
 def _define_filepath(
     product,
     product_type,
@@ -362,32 +373,13 @@ def _define_filepath(
     storage,
 ):
     """Retrieve the filepath based on the filename."""
-    if storage == "local":
-        fpath = define_local_filepath(
-            product=product,
-            product_type=product_type,
-            date=date,
-            version=version,
-            filename=filename,
-        )
-    elif storage == "pps":
-        fpath = define_pps_filepath(
-            product=product,
-            product_type=product_type,
-            date=date,
-            version=version,
-            filename=filename,
-        )
-    elif storage == "gesc_disc":
-        fpath = define_gesdisc_filepath(
-            product=product,
-            product_type=product_type,
-            date=date,
-            version=version,
-            filename=filename,
-        )
-    else:
-        raise ValueError("Invalid storage.")
+    fpath = _get_func_filepath_definition(storage)(
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
+        filename=filename,
+    )
     return fpath
 
 
