@@ -18,8 +18,8 @@ def mock_configuration():
     """
 
     mocked_configuration = {
-        "gpm_username": "testuser",
-        "gpm_password": "testuser",
+        "username_pps": "testuser",
+        "password_pps": "testuser",
         "gpm_base_dir": os.path.join(
             os.getcwd(),
             "gpm_api",
@@ -79,7 +79,7 @@ def products() -> List[str]:
 
 
 @pytest.fixture
-def server_paths() -> Dict[str, Dict[str, Any]]:
+def remote_filepaths() -> Dict[str, Dict[str, Any]]:
     """Return a list of probable GPM server paths"""
 
     # Not validated to be real paths but follow the structure

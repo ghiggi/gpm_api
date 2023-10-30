@@ -5,8 +5,9 @@ Created on Mon Aug 15 00:18:33 2022
 @author: ghiggi
 """
 import datetime
-import ftplib
 import os
+import platform
+import re
 import subprocess
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -15,13 +16,18 @@ import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
+from gpm_api.configs import (
+    get_earthdata_password,
+    get_earthdata_username,
+    get_pps_password,
+    get_pps_username,
+)
 from gpm_api.io.checks import (
-    check_base_dir,
     check_date,
     check_product,
     check_product_type,
     check_product_version,
+    check_remote_storage,
     check_start_end_time,
     check_valid_time_request,
     is_empty,
@@ -30,18 +36,12 @@ from gpm_api.io.data_integrity import (
     check_archive_integrity,
     check_filepaths_integrity,
 )
-from gpm_api.io.directories import (
-    get_disk_directory,
-    get_pps_directory_tree,
-    get_pps_servers,
-)
-from gpm_api.io.info import (
-    get_info_from_filepath,
-    get_product_from_filepath,
-    get_start_time_from_filepaths,
-    get_version_from_filepath,
-)
-from gpm_api.io.pps import _find_pps_daily_filepaths
+from gpm_api.io.find import find_daily_filepaths
+from gpm_api.io.ges_disc import define_gesdisc_filepath
+from gpm_api.io.info import get_info_from_filepath
+from gpm_api.io.local import define_local_filepath
+from gpm_api.io.pps import define_pps_filepath
+from gpm_api.utils.list import flatten_list
 from gpm_api.utils.timing import print_elapsed_time
 from gpm_api.utils.warnings import GPMDownloadWarning
 
@@ -56,103 +56,116 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 # --> "--header='Authorization: Basic Z2lvbmF0YS5naGlnZ2lAZXBmbC5jaDpnaW9uYXRhLmdoaWdnaUBlcGZsLmNo' "
 
 
-##----------------------------------------------------------------------------.
-#############################
-#### Single file command ####
-#############################
-def curl_cmd(server_path, disk_path, username, password):
-    """Download data using curl via ftps."""
-    # -------------------------------------------------------------------------.
+# WGET options
+# -e robots=off : allow wget to work ignoring robots.txt file
+# -np           : prevents files from parent directories from being downloaded
+# -R .html,.tmp : comma-separated list of rejected extensions
+# -nH           : don't create host directories
+# -c            :continue from where it left
+# --read-timeout=10 --tries=5
+#               : if no data arriving for 10 seconds, retry 5 times (0 forever)
+
+# CURL options
+# -4: handle IPV6 connections
+# --fail : fail silently on server errors. Allow to deal better with failed attempts
+#           Return error > 0 when the request fails
+# -n or --netrc: flag in curl tells the program to use the user's .netrc
+# --silent: hides the progress and error
+# --retry 10: retry 10 times
+# --retry-delay 5: with 5 secs delays
+# --retry-max-time 60*10: total time before it's considered failed
+# --connect-timeout 20: limits time curl spend trying to connect to the host to 20 secs
+# -o : write to file instead of stdout
+
+####--------------------------------------------------------------------------.
+############################################
+#### PPS and GES DISC Download Commands ####
+############################################
+
+
+def curl_pps_cmd(remote_filepath, local_filepath, username, password):
+    """CURL command to download data from PPS through ftps."""
     # Check disk directory exists (if not, create)
-    disk_dir = os.path.dirname(disk_path)
-    if not os.path.exists(disk_dir):
-        os.makedirs(disk_dir)
-    # -------------------------------------------------------------------------.
+    local_dir = os.path.dirname(local_filepath)
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
+
     # Replace ftps with ftp to make curl work !!!
     # - curl expects ftp:// and not ftps://
-    server_path = server_path.replace("ftps://", "ftp://", 1)
-    # -------------------------------------------------------------------------.
-    ## Define command to run
-    # Base command: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
-    # - -4: handle IPV6 connections
-    # - v : verbose
-    # --fail : fail silently on server errors. Allow to deal better with failed attempts
-    #           Return error > 0 when the request fails
-    # --silent: hides the progress and error
-    # --retry 10: retry 10 times
-    # --retry-delay 5: with 5 secs delays
-    # --retry-max-time 60*10: total time before it's considered failed
-    # --connect-timeout 20: limits time curl spend trying to connect to the host to 20 secs
-    # --get url: specify the url
-    # -o : write to file instead of stdout
-    # Important note
-    # - -k (or --insecure) is required with curl > 7.71 otherwise unauthorized access
-    #
-    cmd = "".join(
-        [
-            "curl ",
-            "--verbose ",
-            "--ipv4 ",
-            "--insecure ",
-            "--user ",
-            username,
-            ":",
-            password,
-            " ",
-            "--ftp-ssl ",
-            # Custom settings
-            "--header 'Connection: close' ",
-            "--connect-timeout 20 ",
-            "--retry 5 ",
-            "--retry-delay 10 ",
-            "-n ",
-            server_path,
-            " ",
-            "-o ",
-            disk_path,
-        ]
+    remote_filepath = remote_filepath.replace("ftps://", "ftp://", 1)
+
+    # Define CURL command
+    # - Base cmd: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
+    # - With curl > 7.71 the flag -k (or --insecure) is required  to avoid unauthorized access
+    # - Define authentication settings
+    auth = (
+        f"--ipv4 --insecure -n --user {username}:{password} --ftp-ssl --header 'Connection: close'"
     )
+    # - Define options
+    options = "--connect-timeout 20 --retry 5 --retry-delay 10"  # --verbose
+    # - Define command
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
     return cmd
 
 
-def wget_cmd(server_path, disk_path, username, password):
-    """Create wget command to download data via ftps."""
-    # -------------------------------------------------------------------------.
+def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=None):
+    """CURL command to download data from GES DISC."""
+    # - Define authentication settings
+    auth = "-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
+    # - Define options
+    options = "--connect-timeout 20 --retry 5 --retry-delay 10"
+    # - Define command
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
+    return cmd
+
+
+def wget_pps_cmd(remote_filepath, local_filepath, username, password):
+    """WGET command to download data from PPS through ftps."""
     # Check disk directory exists (if not, create)
-    disk_dir = os.path.dirname(disk_path)
-    if not os.path.exists(disk_dir):
-        os.makedirs(disk_dir)
-    # -------------------------------------------------------------------------.
-    # Base command: wget -4 --ftp-user=[user name] –-ftp-password=[password] -O
-    ## Define command to run
-    cmd = "".join(
-        [
-            "wget ",
-            "-4 ",
-            "--ftp-user=",
-            username,
-            " ",
-            "--ftp-password=",
-            password,
-            " ",
-            "-e robots=off ",  # allow wget to work ignoring robots.txt file
-            "-np ",  # prevents files from parent directories from being downloaded
-            "-R .html,.tmp ",  # comma-separated list of rejected extensions
-            "-nH ",  # don't create host directories
-            "-c ",  # continue from where it left
-            "--read-timeout=",
-            "10",
-            " ",  # if no data arriving for 10 seconds, retry
-            "--tries=",
-            "5",
-            " ",  # retry 5 times (0 forever)
-            "-O ",
-            disk_path,
-            " ",
-            server_path,
-        ]
-    )
+    local_dir = os.path.dirname(local_filepath)
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
+
+    ## Define WGET command
+    # - Base cmd: wget -4 --ftp-user=[user name] –-ftp-password=[password] -O
+    # - Define authentication settings
+    auth = f"-4 --ftp-user={username} --ftp-password={password} -e robots=off"
+    # - Define options
+    options = "-np -R .html,.tmp -nH -c --read-timeout=10 --tries=5"
+    # - Define command
+    cmd = f"wget {auth} {options} -O {local_filepath} {remote_filepath}"
     return cmd
+
+
+def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
+    """WGET command to download data from GES DISC."""
+    # Define path to EarthData urs_cookies
+    urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
+
+    # Define authentication settings
+    auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
+
+    # Define wget options
+    options = "-c --read-timeout=10 --tries=5 -nH -np --content-disposition"
+
+    # Determine the operating system
+    os_name = platform.system()
+
+    # Define command
+    if os_name == "Windows":
+        window_options = f"--user={username} --ask-password"
+        cmd = f"wget {auth} {options} {window_options} {remote_filepath} -O {local_filepath}"
+    elif os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
+        cmd = f"wget {auth} {options} {remote_filepath} -O {local_filepath}"
+    else:
+        raise ValueError(f"Unsupported OS: {os_name}")
+    return cmd
+
+
+####--------------------------------------------------------------------------.
+##########################
+#### Download Utility ####
+##########################
 
 
 def _get_commands_futures(executor, commands):
@@ -218,7 +231,8 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 
     Returns
     -------
-    List of commands which didn't complete.
+    status : list
+        Download status of each file. 0=Failed. 1=Success.
     """
     from tqdm import tqdm
 
@@ -247,78 +261,49 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
     return status
 
 
+def _get_single_file_cmd_function(transfer_tool, storage):
+    """Return command definition function."""
+    dict_fun = {
+        "pps": {"wget": wget_pps_cmd, "curl": curl_pps_cmd},
+        "ges_disc": {"wget": wget_ges_disc_cmd, "curl": curl_ges_disc_cmd},
+    }
+    func = dict_fun[storage][transfer_tool]
+    return func
+
+
 def _download_files(
-    src_fpaths,
-    dst_fpaths,
-    username,
-    password,
-    transfer_tool="wget",
+    remote_filepaths,
+    local_filepaths,
+    storage,
+    transfer_tool,
     n_threads=4,
     progress_bar=True,
     verbose=False,
 ):
-    if transfer_tool == "curl":
-        list_cmd = [
-            curl_cmd(src_path, dst_path, username, username)
-            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
-        ]
-    elif transfer_tool == "wget":
-        list_cmd = [
-            wget_cmd(src_path, dst_path, username, username)
-            for src_path, dst_path in zip(src_fpaths, dst_fpaths)
-        ]
+    # Ensure destination directory exists
+    for fpath in local_filepaths:
+        if not os.path.exists(os.path.dirname(fpath)):
+            os.makedirs(os.path.dirname(fpath))
+
+    # Retrieve username and password
+    if storage == "pps":
+        username = get_pps_username()
+        password = get_pps_password()
     else:
-        raise NotImplementedError("Download is available with 'wget' or 'curl'.")
+        username = get_earthdata_username()
+        password = get_earthdata_password()
+
+    # Define command list
+    get_single_file_cmd = _get_single_file_cmd_function(transfer_tool, storage)
+    list_cmd = [
+        get_single_file_cmd(remote_filepath, local_filepath, username, password)
+        for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
+    ]
+
     # -------------------------------------------------------------------------.
     ## Download the data (in parallel)
     status = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
     return status
-
-
-def _download_with_ftlib(server_path, disk_path, username, password):
-    # Infer hostname
-    hostname = server_path.split("/", 3)[2]  # remove ftps:// and select host
-
-    # Remove hostname from server_path
-    server_path = server_path.split("/", 3)[3]
-
-    # Connect to the FTP server using FTPS
-    ftps = ftplib.FTP_TLS(hostname)
-
-    # Login to the FTP server using the provided username and password
-    ftps.login(username, password)  # /gpmdata base directory
-
-    # Download the file from the FTP server
-    try:
-        with open(disk_path, "wb") as file:
-            ftps.retrbinary(f"RETR {server_path}", file.write)
-    except EOFError:
-        return f"Impossible to download {server_path}"
-
-    # Close the FTP connection
-    ftps.close()
-    return None
-
-
-def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
-    from tqdm import tqdm
-
-    # Download file concurrently
-    n_files = len(server_paths)
-    with tqdm(total=n_files) as pbar, ThreadPoolExecutor(max_workers=n_threads) as executor:
-        dict_futures = {
-            executor.submit(
-                _download_with_ftlib,
-                server_path=server_path,
-                disk_path=disk_path,
-                username=username,
-                password=password,
-            ): server_path
-            for server_path, disk_path in zip(server_paths, disk_paths)
-        }
-        # List cmds that didn't work
-        l_cmd_error = _get_list_failing_commands(dict_futures, pbar)
-    return l_cmd_error
 
 
 ####--------------------------------------------------------------------------.
@@ -327,24 +312,24 @@ def ftplib_download(server_paths, disk_paths, username, password, n_threads=10):
 ############################
 
 
-def filter_download_list(server_paths, disk_paths, force_download=False):
+def filter_download_list(remote_filepaths, local_filepaths, force_download=False):
     """
     Removes filepaths of GPM file already existing on disk.
 
     Parameters
     ----------
-    server_paths : str
+    remote_filepaths : str
         GPM directory on disk for a specific product and date.
-    PPS_filepaths : str
+    remote_filepaths : str
         Filepaths on which GPM data are stored on PPS servers.
     force_download : boolean, optional
         Whether to redownload data if already existing on disk. The default is False.
 
     Returns
     -------
-    server_paths: list
+    remote_filepaths: list
         List of filepaths on the NASA PPS server.
-    disk_paths: list
+    local_filepaths: list
         List of filepaths on the local disk.
 
     """
@@ -353,12 +338,14 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
     if force_download is False:
         # Get index of files which does not exist on disk
         idx_not_existing = [
-            i for i, disk_path in enumerate(disk_paths) if not os.path.exists(disk_path)
+            i
+            for i, local_filepath in enumerate(local_filepaths)
+            if not os.path.exists(local_filepath)
         ]
         # Select paths of files not present on disk
-        disk_paths = [disk_paths[i] for i in idx_not_existing]
-        server_paths = [server_paths[i] for i in idx_not_existing]
-    return (server_paths, disk_paths)
+        local_filepaths = [local_filepaths[i] for i in idx_not_existing]
+        remote_filepaths = [remote_filepaths[i] for i in idx_not_existing]
+    return (remote_filepaths, local_filepaths)
 
 
 ####--------------------------------------------------------------------------.
@@ -367,76 +354,62 @@ def filter_download_list(server_paths, disk_paths, force_download=False):
 ###########################
 
 
-def get_pps_fpath_from_fname(filepath, product_type="RS"):
-    """Infer the PPS filepath from the file name."""
-    # Retrieve the filename
-    filename = os.path.basename(filepath)
-    # Retrieve relevant info
-    info = get_info_from_filepath(filename)
-    product = get_product_from_filepath(filename)
-    version = get_version_from_filepath(filename)
-    date = info["start_time"].date()
-    # Retrieve PPS directory tree
-    dir_tree = get_pps_directory_tree(
-        product=product, product_type=product_type, date=date, version=version
-    )
-    # Retrieve PPS servers URLs
-    url_text_server, url_data_server = get_pps_servers(product_type)
-
-    # Define PPS filepath
-    fpath = os.path.join(url_data_server, dir_tree, filename)
-
-    return fpath
+def _get_func_filepath_definition(storage):
+    dict_fun = {
+        "local": define_local_filepath,
+        "pps": define_pps_filepath,
+        "ges_disc": define_gesdisc_filepath,
+    }
+    func = dict_fun[storage]
+    return func
 
 
-def get_pps_fpaths_from_fnames(filepaths, product_type="RS"):
-    """
-    Convert GPM file names or file paths to PPS file paths.
-
-    Parameters
-    ----------
-    filepaths : list
-        GPM file names or file paths.
-
-    Returns
-    -------
-    pps_filepaths : list
-        List of file paths on PPS.
-
-    """
-    pps_fpaths = [get_pps_fpath_from_fname(fpath, product_type) for fpath in filepaths]
-    return pps_fpaths
-
-
-def get_disk_fpath_from_fname(filepath, base_dir, product_type="RS"):
-    """Infer the disk filepath from the file name."""
-    # Retrieve the filename
-    filename = os.path.basename(filepath)
-    # Retrieve relevant info
-    try:
-        info = get_info_from_filepath(filename)
-    except ValueError:
-        raise ValueError(f"Impossible to infer file information from '{filename}'")
-
-    product = get_product_from_filepath(filename)
-    version = get_version_from_filepath(filename)
-    date = info["start_time"].date()
-    # Define disk directory path
-    dir_tree = get_disk_directory(
-        base_dir=base_dir,
+def _define_filepath(
+    product,
+    product_type,
+    date,
+    version,
+    filename,
+    storage,
+):
+    """Retrieve the filepath based on the filename."""
+    fpath = _get_func_filepath_definition(storage)(
         product=product,
         product_type=product_type,
         date=date,
         version=version,
+        filename=filename,
     )
-    # Define disk file path
-    fpath = os.path.join(dir_tree, filename)
     return fpath
 
 
-def get_disk_fpaths_from_fnames(filepaths, base_dir, product_type="RS"):
+def get_fpath_from_fname(filename, storage, product_type):
+    """Convert GPM file names to the <storage> file path."""
+    # Retrieve the filename
+    filename = os.path.basename(filename)
+    # Retrieve relevant info from filename
+    try:
+        info = get_info_from_filepath(filename)
+    except ValueError:
+        raise ValueError(f"Impossible to infer file information from '{filename}'")
+    product = info["product"]
+    version = int(re.findall("\\d+", info["version"])[0])
+    date = info["start_time"].date()
+    # Retrieve filepath
+    fpath = _define_filepath(
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
+        filename=filename,
+        storage=storage,
+    )
+    return fpath
+
+
+def get_fpaths_from_fnames(filepaths, storage, product_type):
     """
-    Convert GPM file names or file paths to disk file paths.
+    Convert GPM file names or file paths to <storage> file paths.
 
     Parameters
     ----------
@@ -445,56 +418,139 @@ def get_disk_fpaths_from_fnames(filepaths, base_dir, product_type="RS"):
 
     Returns
     -------
-    disk_filepaths : list
-        List of file paths on disk.
+    fpaths : list
+        List of file paths on <storage> storage.
 
     """
-
-    """Infer the disk filepaths from the file names."""
     fpaths = [
-        get_disk_fpath_from_fname(fpath, base_dir=base_dir, product_type=product_type)
+        get_fpath_from_fname(fpath, storage=storage, product_type=product_type)
         for fpath in filepaths
     ]
     return fpaths
 
 
-def convert_pps_to_disk_filepaths(pps_filepaths, base_dir, product, product_type, version):
+####--------------------------------------------------------------------------.
+###############################
+#### Download by filenames ####
+###############################
+
+
+def download_files(
+    filepaths,
+    product_type="RS",
+    storage="pps",
+    n_threads=4,
+    transfer_tool="curl",
+    force_download=False,
+    remove_corrupted=True,
+    progress_bar=False,
+    verbose=True,
+    retry=1,
+):
     """
-    Convert PPS filepaths to local disk filepaths.
+    Download specific GPM files from NASA servers.
 
     Parameters
     ----------
-    pps_filepaths : list
-        File paths on the PPS server.
-    base_dir : str
-        The base directory where to store GPM data.
-    product : str
-        GPM product acronym. See gpm_api.available_products()
+    filepaths: (str or list)
+        List of GPM file names to download.
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+        The default is "RS".
+    storage : str, optional
+        The remote repository from where to download.
+        Either "pps" or "ges_disc". The default is "pps".
+    n_threads : int, optional
+        Number of parallel downloads. The default is set to 10.
+    progress_bar : bool, optional
+        Whether to display progress. The default is True.
+    transfer_tool : str, optional
+        Whether to use "curl" or "wget" for data download. The default is "curl".
+    verbose : bool, optional
+        Whether to print processing details. The default is False.
+    force_download : boolean, optional
+        Whether to redownload data if already existing on disk. The default is False.
+    remove_corrupted : boolean, optional
+       Whether to remove the corrupted files.
+       By default is True.
+    retry : int, optional,
+        The number of attempts to redownload the corrupted files. The default is 1.
 
     Returns
     -------
-    disk_filepaths : list
-        List of filepaths on local disk.
-
+    l_corrupted : list
+        List of corrupted file paths.
+        If no corrupted files, returns an empty list.
     """
-    l_start_time = get_start_time_from_filepaths(pps_filepaths)
-    l_dates = [start_time.date() for start_time in l_start_time]
-    disk_filepaths = []
-    for date, pps_filepath in zip(l_dates, pps_filepaths):
-        disk_dir = get_disk_directory(
-            base_dir=base_dir,
-            product=product,
+    # TODO:
+    # - providing inexisting file names currently behave as if the downloaded file
+    #   was corrupted
+    # - we should provide better error messages
+
+    # Check inputs
+    storage = check_remote_storage(storage)
+    if isinstance(filepaths, type(None)):
+        return None
+    if isinstance(filepaths, str):
+        filepaths = [filepaths]
+    if not isinstance(filepaths, list):
+        raise TypeError("Expecting a list of file paths.")
+    if len(filepaths) == 0:
+        return None
+
+    # Print the number of files to download
+    if verbose:
+        n_files = len(filepaths)
+        print(f"Attempt to download {n_files} files.")
+
+    # Retrieve the remote and local file paths
+    remote_filepaths = get_fpaths_from_fnames(filepaths, storage=storage, product_type=product_type)
+    local_filepaths = get_fpaths_from_fnames(filepaths, storage="local", product_type=product_type)
+
+    # If force_download is False, select only data not present on disk
+    new_remote_filepaths, new_local_filepaths = filter_download_list(
+        local_filepaths=local_filepaths,
+        remote_filepaths=remote_filepaths,
+        force_download=force_download,
+    )
+    if is_empty(new_remote_filepaths):
+        if verbose:
+            print(f"The requested files are already on disk at {local_filepaths}.")
+        return None
+
+    # Download files
+    _ = _download_files(
+        remote_filepaths=new_remote_filepaths,
+        local_filepaths=new_local_filepaths,
+        storage=storage,
+        transfer_tool=transfer_tool,
+        n_threads=n_threads,
+        progress_bar=progress_bar,
+        verbose=verbose,
+    )
+
+    # Get corrupted (and optionally removed) filepaths
+    l_corrupted = check_filepaths_integrity(
+        filepaths=new_local_filepaths, remove_corrupted=remove_corrupted, verbose=verbose
+    )
+
+    # Retry download if retry > 1 as input argument
+    if len(l_corrupted) > 0 and retry > 1:
+        l_corrupted = download_files(
+            filepaths=l_corrupted,
             product_type=product_type,
-            date=date,
-            version=version,
+            force_download=force_download,
+            n_threads=n_threads,
+            transfer_tool=transfer_tool,
+            progress_bar=progress_bar,
+            verbose=verbose,
+            retry=retry - 1,
         )
-        disk_filepath = os.path.join(disk_dir, os.path.basename(pps_filepath))
-        disk_filepaths.append(disk_filepath)
-    return disk_filepaths
+    else:
+        if verbose:
+            print(f"The requested files are now available on disk at {new_local_filepaths}.")
+
+    return l_corrupted
 
 
 ####--------------------------------------------------------------------------.
@@ -512,9 +568,6 @@ def _ensure_files_completness(
     retry,
     n_threads,
     progress_bar,
-    base_dir,
-    username,
-    password,
 ):
     """Check file validity and attempt download if corrupted."""
     l_corrupted = check_filepaths_integrity(
@@ -528,9 +581,6 @@ def _ensure_files_completness(
         l_corrupted = download_files(
             filepaths=l_corrupted,
             product_type=product_type,
-            base_dir=base_dir,
-            username=username,
-            password=password,
             force_download=True,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
@@ -548,7 +598,6 @@ def _ensure_files_completness(
 
 
 def _ensure_archive_completness(
-    base_dir,
     product,
     start_time,
     end_time,
@@ -556,8 +605,6 @@ def _ensure_archive_completness(
     product_type,
     remove_corrupted,
     verbose,
-    username,
-    password,
     transfer_tool,
     retry,
     n_threads,
@@ -565,7 +612,6 @@ def _ensure_archive_completness(
 ):
     """Check the archive completeness over the specified time period."""
     l_corrupted = check_archive_integrity(
-        base_dir=base_dir,
         product=product,
         start_time=start_time,
         end_time=end_time,
@@ -582,9 +628,6 @@ def _ensure_archive_completness(
         l_corrupted = download_files(
             filepaths=l_corrupted,
             product_type=product_type,
-            base_dir=base_dir,
-            username=username,
-            password=password,
             force_download=True,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
@@ -601,173 +644,26 @@ def _ensure_archive_completness(
     return l_corrupted
 
 
-def download_files(
-    filepaths,
-    product_type="RS",
-    n_threads=4,
-    transfer_tool="curl",
-    force_download=False,
-    remove_corrupted=True,
-    progress_bar=False,
-    verbose=True,
-    retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
-):
-    """
-    Download specific GPM files from NASA servers.
-
-    Parameters
-    ----------
-    filepaths: (str or list)
-        List of GPM file names to download.
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-        The default is "RS".
-    n_threads : int, optional
-        Number of parallel downloads. The default is set to 10.
-    progress_bar : bool, optional
-        Whether to display progress. The default is True.
-    transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "curl".
-    verbose : bool, optional
-        Whether to print processing details. The default is False.
-    force_download : boolean, optional
-        Whether to redownload data if already existing on disk. The default is False.
-    remove_corrupted : boolean, optional
-       Whether to remove the corrupted files.
-       By default is True.
-    retry : int, optional,
-        The number of attempts to redownload the corrupted files. The default is 1.
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
-    username: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
-    password: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
-
-    Returns
-    -------
-    l_corrupted : list
-        List of corrupted file paths.
-        If no corrupted files, returns an empty list.
-    """
-    # TODO:
-    # - providing inexisting file names currently behave as if the downloaded file
-    #   was corrupted
-    # - we should provide better error messages
-
-    # Check inputs
-    if isinstance(filepaths, type(None)):
-        return None
-    if isinstance(filepaths, str):
-        filepaths = [filepaths]
-    if not isinstance(filepaths, list):
-        raise TypeError("Expecting a list of file paths.")
-    if len(filepaths) == 0:
-        return None
-
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-    username = get_gpm_username(username)
-    password = get_gpm_password(password)
-
-    # Print the number of files to download
-    if verbose:
-        n_files = len(filepaths)
-        print(f"Attempt to download {n_files} files.")
-
-    # Retrieve the PPS and disk file paths
-    disk_filepaths = get_disk_fpaths_from_fnames(
-        filepaths, base_dir=base_dir, product_type=product_type
-    )
-    pps_filepaths = get_pps_fpaths_from_fnames(filepaths, product_type=product_type)
-
-    # If force_download is False, select only data not present on disk
-    new_pps_filepaths, new_disk_filepaths = filter_download_list(
-        disk_paths=disk_filepaths,
-        server_paths=pps_filepaths,
-        force_download=force_download,
-    )
-    if is_empty(new_pps_filepaths):
-        if verbose:
-            print(f"The requested files are already on disk at {disk_filepaths}.")
-        return None
-
-    # Download files
-    _ = _download_files(
-        src_fpaths=new_pps_filepaths,
-        dst_fpaths=new_disk_filepaths,
-        username=username,
-        password=password,
-        n_threads=n_threads,
-        progress_bar=progress_bar,
-        transfer_tool=transfer_tool,
-        verbose=verbose,
-    )
-
-    # Get corrupted (and optionally removed) filepaths
-    l_corrupted = check_filepaths_integrity(
-        filepaths=new_disk_filepaths, remove_corrupted=remove_corrupted, verbose=verbose
-    )
-
-    # Retry download if retry > 1 as input argument
-    if len(l_corrupted) > 0 and retry > 1:
-        l_corrupted = download_files(
-            filepaths=l_corrupted,
-            product_type=product_type,
-            base_dir=base_dir,
-            username=username,
-            password=password,
-            force_download=force_download,
-            n_threads=n_threads,
-            transfer_tool=transfer_tool,
-            progress_bar=progress_bar,
-            verbose=verbose,
-            retry=retry - 1,
-        )
-    else:
-        if verbose:
-            print(f"The requested files are now available on disk at {new_disk_filepaths}.")
-
-    return l_corrupted
-
-
 def _download_daily_data(
-    base_dir,
-    username,
-    password,
     date,
     version,
     product,
     product_type,
-    start_time=None,
-    end_time=None,
-    n_threads=4,
-    transfer_tool="curl",
-    progress_bar=True,
-    force_download=False,
-    verbose=True,
-    warn_missing_files=True,
+    storage,
+    transfer_tool,
+    n_threads,
+    start_time,
+    end_time,
+    progress_bar,
+    force_download,
+    verbose,
+    warn_missing_files,
 ):
     """
     Download GPM data from NASA servers using curl or wget.
 
     Parameters
     ----------
-    base_dir : str
-        The base directory where to store GPM data.
-    username: str
-        Email address with which you registered on the NASA PPS.
-    password: str
-        Password to access the NASA PPS server.
     product : str
         GPM product name. See: gpm_api.available_products()
     date : datetime
@@ -776,23 +672,23 @@ def _download_daily_data(
         Filtering start time.
     end_time : datetime.datetime
         Filtering end time.
-    product_type : str, optional
+    product_type : str
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
-    version : int, optional
+    version : int
         GPM version of the data to retrieve if product_type = 'RS'.
-        GPM data readers are currently implemented only for GPM V06.
-    username : str, optional
-        Provide your email for login on GPM NASA servers.
-    n_threads : int, optional
-        Number of parallel downloads. The default is set to 10.
-    progress_bar : bool, optional
-        Whether to display progress. The default is True.
-    transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "curl".
-    force_download : boolean, optional
-        Whether to redownload data if already existing on disk. The default is False.
-    verbose : bool, optional
-        Whether to print processing details. The default is True.
+    storage : str
+        The remote repository from where to download.
+        Either "pps" or "ges_disc".
+    n_threads : int
+        Number of parallel downloads.
+    progress_bar : bool
+        Whether to display progress.
+    transfer_tool : str
+        Whether to use "curl" or "wget" for data download.
+    force_download : boolean
+        Whether to redownload data if already existing on disk.
+    verbose : bool
+        Whether to print processing details. T
 
     Returns
     -------
@@ -805,12 +701,11 @@ def _download_daily_data(
     date = check_date(date)
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
-
+    storage = check_remote_storage(storage)
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
-    pps_filepaths, available_version = _find_pps_daily_filepaths(
-        username=username,
-        password=password,
+    remote_filepaths, available_version = find_daily_filepaths(
+        storage=storage,
         product=product,
         product_type=product_type,
         version=version,
@@ -821,7 +716,7 @@ def _download_daily_data(
     )
     # -------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
-    if is_empty(pps_filepaths):
+    if is_empty(remote_filepaths):
         if warn_missing_files:
             msg = f"No data found on PPS on date {date} for product {product}"
             warnings.warn(msg, GPMDownloadWarning)
@@ -829,31 +724,27 @@ def _download_daily_data(
 
     # -------------------------------------------------------------------------.
     # Define disk filepaths
-    disk_filepaths = convert_pps_to_disk_filepaths(
-        pps_filepaths=pps_filepaths,
-        base_dir=base_dir,
-        product=product,
-        product_type=product_type,
-        version=available_version[0],
+    local_filepaths = get_fpaths_from_fnames(
+        remote_filepaths, storage="local", product_type=product_type
     )
 
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
-    pps_filepaths, disk_filepaths = filter_download_list(
-        disk_paths=disk_filepaths,
-        server_paths=pps_filepaths,
+    remote_filepaths, local_filepaths = filter_download_list(
+        local_filepaths=local_filepaths,
+        remote_filepaths=remote_filepaths,
         force_download=force_download,
     )
-    if is_empty(pps_filepaths):
+    if is_empty(remote_filepaths):
         return [-1], available_version  # flag for already on disk
 
     # -------------------------------------------------------------------------.
     # Retrieve commands
     status = _download_files(
-        src_fpaths=pps_filepaths,
-        dst_fpaths=disk_filepaths,
-        username=username,
-        password=password,
+        remote_filepaths=remote_filepaths,
+        local_filepaths=local_filepaths,
+        storage=storage,
+        transfer_tool=transfer_tool,
         n_threads=n_threads,
         progress_bar=progress_bar,
         verbose=verbose,
@@ -873,7 +764,7 @@ def _check_download_status(status, product, verbose):
     """
     status = np.array(status)
     no_remote_files = len(status) == 0
-    all_already_on_disk = np.all(status == -1).item()
+    all_already_local = np.all(status == -1).item()
     n_remote_files = np.logical_or(status == 0, status == 1).sum().item()
     n_failed = np.sum(status == 0).item()
     n_downloads = np.sum(status == 1).item()
@@ -883,7 +774,7 @@ def _check_download_status(status, product, verbose):
         print("No files are available for download !")
         return None
     # - Pass if all files are already on disk
-    if all_already_on_disk:
+    if all_already_local:
         if verbose:
             print(f"All the available GPM {product} product files are already on disk.")
         pass
@@ -906,29 +797,13 @@ def _check_download_status(status, product, verbose):
     return True
 
 
-def flatten_list(nested_list):
-    """Flatten a nested list into a single-level list."""
-
-    # If list is already flat, return as is to avoid flattening to chars
-    if (
-        isinstance(nested_list, list)
-        and len(nested_list) == 1
-        and not isinstance(nested_list[0], list)
-    ):
-        return nested_list
-    return (
-        [item for sublist in nested_list for item in sublist]
-        if isinstance(nested_list, list)
-        else [nested_list]
-    )
-
-
 def download_archive(
     product,
     start_time,
     end_time,
     product_type="RS",
     version=None,
+    storage="pps",
     n_threads=4,
     transfer_tool="curl",
     progress_bar=False,
@@ -937,9 +812,6 @@ def download_archive(
     remove_corrupted=True,
     retry=1,
     verbose=True,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     """
     Download GPM data from NASA servers (day by day).
@@ -956,13 +828,15 @@ def download_archive(
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     version : int, optional
         GPM version of the data to retrieve if product_type = 'RS'.
-        GPM data readers are currently implemented only for GPM V06.
+    storage : str, optional
+        The remote repository from where to download.
+        Either "pps" or "ges_disc". The default is "pps".
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
         Whether to display progress. The default is True.
     transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "curl".
+        Whether to use "curl" or "wget" for data download. The default is "curl".
     force_download : boolean, optional
         Whether to redownload data if already existing on disk. The default is False.
     verbose : bool, optional
@@ -976,31 +850,13 @@ def download_archive(
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
         Only applies if check_integrity is True !
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
-    username: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
-    password: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
     """
     # -------------------------------------------------------------------------.
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-    username = get_gpm_username(username)
-    password = get_gpm_password(password)
-
-    # -------------------------------------------------------------------------.
     ## Checks input arguments
+    storage = check_remote_storage(storage)
     check_product_type(product_type=product_type)
     check_product(product=product, product_type=product_type)
     version = check_product_version(version, product)
-    base_dir = check_base_dir(base_dir)
     start_time, end_time = check_start_end_time(start_time, end_time)
     check_valid_time_request(start_time, end_time, product)
     # -------------------------------------------------------------------------.
@@ -1026,15 +882,13 @@ def download_archive(
             warn_missing_files = True
 
         status, available_version = _download_daily_data(
-            base_dir=base_dir,
-            username=username,
-            password=password,
             date=date,
             version=version,
             product=product,
             product_type=product_type,
             start_time=start_time,
             end_time=end_time,
+            storage=storage,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
             progress_bar=progress_bar,
@@ -1062,7 +916,6 @@ def download_archive(
     if check_integrity:
         l_corrupted = [
             _ensure_archive_completness(
-                base_dir=base_dir,
                 product=product,
                 start_time=start_time,
                 end_time=end_time,
@@ -1070,8 +923,6 @@ def download_archive(
                 product_type=product_type,
                 remove_corrupted=remove_corrupted,
                 verbose=verbose,
-                username=username,
-                password=password,
                 transfer_tool=transfer_tool,
                 retry=retry,
                 n_threads=n_threads,
@@ -1093,6 +944,7 @@ def download_daily_data(
     day,
     product_type="RS",
     version=None,
+    storage="pps",
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,
@@ -1101,9 +953,6 @@ def download_daily_data(
     remove_corrupted=True,
     verbose=True,
     retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     from gpm_api.io.download import download_archive
 
@@ -1116,6 +965,7 @@ def download_daily_data(
         end_time=end_time,
         product_type=product_type,
         version=version,
+        storage=storage,
         n_threads=n_threads,
         transfer_tool=transfer_tool,
         progress_bar=progress_bar,
@@ -1124,9 +974,6 @@ def download_daily_data(
         remove_corrupted=remove_corrupted,
         verbose=verbose,
         retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
     )
     return l_corrupted
 
@@ -1138,6 +985,7 @@ def download_monthly_data(
     month,
     product_type="RS",
     version=None,
+    storage="pps",
     n_threads=10,
     transfer_tool="curl",
     progress_bar=False,
@@ -1146,9 +994,6 @@ def download_monthly_data(
     remove_corrupted=True,
     verbose=True,
     retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     from gpm_api.io.download import download_archive
 
@@ -1161,6 +1006,7 @@ def download_monthly_data(
         end_time=end_time,
         product_type=product_type,
         version=version,
+        storage=storage,
         n_threads=n_threads,
         transfer_tool=transfer_tool,
         progress_bar=progress_bar,
@@ -1169,9 +1015,6 @@ def download_monthly_data(
         remove_corrupted=remove_corrupted,
         verbose=verbose,
         retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
     )
     return l_corrupted
 

@@ -8,11 +8,10 @@ import warnings
 
 import numpy as np
 
-from gpm_api.configs import get_gpm_base_dir, get_gpm_password, get_gpm_username
 from gpm_api.io.checks import (
     check_start_end_time,
 )
-from gpm_api.io.disk import find_filepaths
+from gpm_api.io.find import find_filepaths
 from gpm_api.io.info import (
     get_granule_from_filepaths,
 )
@@ -26,7 +25,6 @@ from gpm_api.utils.warnings import GPM_Warning
 
 
 def check_no_duplicated_files(
-    base_dir,
     product,
     start_time,
     end_time,
@@ -38,7 +36,7 @@ def check_no_duplicated_files(
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
-        base_dir=base_dir,
+        storage="local",
         version=version,
         product=product,
         product_type=product_type,
@@ -172,9 +170,6 @@ def check_archive_completeness(
     transfer_tool="wget",
     n_threads=4,
     verbose=True,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     """
     Check that the GPM product archive is not missing granules over a given period.
@@ -203,38 +198,21 @@ def check_archive_completeness(
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     transfer_tool : str, optional
-        Whether to use curl or wget for data download. The default is "wget".
+        Whether to use "curl" or "wget" for data download. The default is "curl".
     verbose : bool, optional
         Whether to print processing details. The default is False.
-    base_dir : str, optional
-        The path to the GPM base directory. If None, it use the one specified
-        in the GPM-API config file.
-        The default is None.
-    username: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
-    password: str, optional
-        Email address with which you registered on the NASA PPS.
-        If None, it uses the one specified in the GPM-API config file.
-        The default is None.
     """
     ##--------------------------------------------------------------------.
     from gpm_api.io.download import download_archive
 
     # -------------------------------------------------------------------------.
-    # Retrieve GPM-API configs
-    base_dir = get_gpm_base_dir(base_dir)
-    username = get_gpm_username(username)
-    password = get_gpm_password(password)
-
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
 
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
-        base_dir=base_dir,
+        storage="local",
         version=version,
         product=product,
         product_type=product_type,
@@ -261,8 +239,6 @@ def check_archive_completeness(
             # Attempt to download the missing data
             for s_time, e_time in list_missing_periods:
                 download_archive(
-                    base_dir=base_dir,
-                    username=username,
                     version=version,
                     product=product,
                     product_type=product_type,

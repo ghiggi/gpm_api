@@ -114,6 +114,13 @@ def _get_info_from_filename(fname):
         except:
             raise ValueError(f"{fname} can not be parsed. Report the issue.")
 
+    # Add product information
+    # - ATTENTION: can not be inferred for products not defined in etc/product.yml
+    try:
+        info_dict["product"] = get_product_from_filepath(fname)
+    except Exception:
+        pass
+
     # Return info dictionary
     return info_dict
 

@@ -66,18 +66,22 @@ def get_info_dict():
     return read_yaml_file(fpath)
 
 
-def _check_valid_product(product):
+@functools.lru_cache(maxsize=None)
+def get_product_info(product):
+    """Provide the product info dictionary."""
     if not isinstance(product, str):
         raise TypeError("'product' must be a string.")
+    info_dict = get_info_dict()
     valid_products = list(get_info_dict())
     if product not in valid_products:
         raise ValueError("Please provide a valid GPM product --> gpm_api.available_products().")
+    product_info = info_dict[product]
+    return product_info
 
 
 def available_versions(product):
     """Provides a list with the available product versions."""
-    _check_valid_product(product)
-    versions = get_info_dict()[product]["available_versions"]
+    versions = get_product_info(product)["available_versions"]
     return versions
 
 
@@ -89,14 +93,12 @@ def get_last_product_version(product):
 
 def get_product_start_time(product):
     """Provide the product start_time."""
-    _check_valid_product(product)
-    start_time = get_info_dict()[product]["start_time"]
+    start_time = get_product_info(product)["start_time"]
     return start_time
 
 
 def get_product_end_time(product):
     """Provide the product end_time."""
-    _check_valid_product(product)
     end_time = get_info_dict()[product]["end_time"]
     if end_time is None:
         end_time = datetime.datetime.utcnow()
@@ -165,11 +167,10 @@ def available_products(
 
 def available_scan_modes(product, version):
     """Return the available scan_modes for a given product (and specific version)."""
-    _check_valid_product(product)
+    product_info = get_product_info(product)
     version = check_product_version(version, product)
     check_product_validity(product)
-    info_dict = get_info_dict()
-    scan_modes = info_dict[product]["scan_modes"]["V" + str(version)]
+    scan_modes = product_info["scan_modes"]["V" + str(version)]
     return scan_modes
 
 
@@ -193,7 +194,7 @@ def get_product_category(product):
 
     The product_category is used to organize file on disk.
     """
-    product_category = get_info_dict()[product].get("product_category", None)
+    product_category = get_product_info(product).get("product_category", None)
     if product_category is None:
         raise ValueError(
             f"The product_category for {product} product is not specified in the config files"
@@ -205,7 +206,7 @@ def get_product_level(product, short=False):
     """Get the product_level of a GPM product."""
     # TODO: 2A-CLIM, 2H (CSH, LSH), 3B-HH3, 3B-DAY
     # TODO: Add product level into product.yaml ?
-    pattern = get_info_dict()[product].get("pattern", None).split(".")[0]
+    pattern = get_product_info(product).get("pattern", None).split(".")[0]
     if "GPMCOR" in pattern:
         product_level = "1B"
     else:

@@ -6,27 +6,24 @@ Created on Thu Jan 19 16:19:22 2023
 @author: ghiggi
 """
 import datetime
-from gpm_api.configs import get_gpm_base_dir
 from gpm_api.io.data_integrity import check_archive_integrity
 from gpm_api.utils.archive import (
     check_archive_completeness,
     check_no_duplicated_files,
 )
 
-base_dir = get_gpm_base_dir()
+
 product_type = "RS"
 product = "2A-DPR"
 version = 7
 start_time = datetime.datetime(2022, 2, 1)
 end_time = datetime.datetime(2022, 3, 1)
 download = True
-username = None
 transfer_tool = "wget"
 n_threads = 4
 verbose = True
 
 check_no_duplicated_files(
-    base_dir=base_dir,
     product=product,
     start_time=start_time,
     end_time=end_time,
@@ -36,7 +33,6 @@ check_no_duplicated_files(
 )
 
 check_archive_integrity(
-    base_dir=base_dir,
     product=product,
     start_time=start_time,
     end_time=end_time,
@@ -47,14 +43,12 @@ check_archive_integrity(
 )
 
 check_archive_completeness(
-    base_dir=base_dir,
     product=product,
     start_time=start_time,
     end_time=end_time,
     version=version,
     product_type=product_type,
     download=True,
-    username="gionata.ghiggi@epfl.ch",
     transfer_tool=transfer_tool,
     n_threads=n_threads,
     verbose=verbose,

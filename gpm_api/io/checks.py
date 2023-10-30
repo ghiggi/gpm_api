@@ -72,6 +72,28 @@ def check_groups(groups):
     return groups
 
 
+def check_storage(storage):
+    """Check storage."""
+    if not isinstance(storage, str):
+        raise TypeError("'storage' must be a string.")
+    valid_storages = ["ges_disc", "pps", "local"]
+    if storage.lower() not in valid_storages:
+        raise ValueError(f"{storage} is an invalid storage. Valid values are {valid_storages}.")
+    return storage.lower()
+
+
+def check_remote_storage(storage):
+    """Check storage is remote."""
+    if not isinstance(storage, str):
+        raise TypeError("'storage' must be a string.")
+    valid_storages = ["ges_disc", "pps"]
+    if storage.lower() not in valid_storages:
+        raise ValueError(
+            f"{storage} is an invalid remote storage. Valid values are {valid_storages}."
+        )
+    return storage.lower()
+
+
 def check_version(version):
     if not isinstance(version, int):
         raise ValueError("Please specify the GPM version with an integer between 5 and 7.")

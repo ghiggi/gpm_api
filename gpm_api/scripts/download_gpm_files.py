@@ -18,6 +18,7 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.command()
 @click.argument("filenames", type=str, nargs=-1, metavar="filename")
 @click.option("--product_type", type=str, show_default=True, default="RS")
+@click.option("--storage", type=str, show_default=True, default="pps")
 @click.option("--n_threads", type=int, default=4)
 @click.option("--transfer_tool", type=str, default="curl")
 @click.option("--progress_bar", type=bool, default=False)
@@ -25,12 +26,10 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.option("--remove_corrupted", type=bool, default=True)
 @click.option("--verbose", type=bool, default=True)
 @click.option("--retry", type=int, default=1)
-@click.option("--base_dir", type=str, default=None)
-@click.option("--username", type=str, default=None)
-@click.option("--password", type=str, default=None)
 def download_gpm_files(
     filenames,
     product_type="RS",
+    storage="pps",
     n_threads=4,
     transfer_tool="curl",
     progress_bar=False,
@@ -38,9 +37,6 @@ def download_gpm_files(
     remove_corrupted=True,
     verbose=True,
     retry=1,
-    base_dir=None,
-    username=None,
-    password=None,
 ):
     """Download the specified GPM files."""
     from gpm_api.io.download import download_files
@@ -49,6 +45,7 @@ def download_gpm_files(
     download_files(
         filepaths=filenames,
         product_type=product_type,
+        storage=storage,
         n_threads=n_threads,
         transfer_tool=transfer_tool,
         force_download=force_download,
@@ -56,9 +53,6 @@ def download_gpm_files(
         progress_bar=progress_bar,
         verbose=verbose,
         retry=retry,
-        base_dir=base_dir,
-        username=username,
-        password=password,
     )
 
     return

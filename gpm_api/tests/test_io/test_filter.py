@@ -51,7 +51,7 @@ def test_granule_within_time() -> None:
 
 
 def test_filter_filepaths(
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     products: Dict[str, Dict[str, Any]],
     mocker: MockerFixture,
 ) -> None:
@@ -60,7 +60,7 @@ def test_filter_filepaths(
     # Test year filtering
     # Count and assert 2019 paths
     count_2019 = 0
-    for server_path, info_dict in server_paths.items():
+    for remote_filepath, info_dict in remote_filepaths.items():
         if (
             info_dict["year"] == 2019
             and info_dict["product"] == "2A-DPR"
@@ -69,7 +69,7 @@ def test_filter_filepaths(
             count_2019 += 1
 
     res = filter.filter_filepaths(
-        filepaths=list(server_paths.keys()),
+        filepaths=list(remote_filepaths.keys()),
         product="2A-DPR",
         start_time=datetime.datetime(2019, 1, 1),
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
@@ -100,11 +100,11 @@ def test_filter_filepaths(
 
     # Test empty start time
     count_until_2019 = 0
-    for server_path, info_dict in server_paths.items():
+    for remote_filepath, info_dict in remote_filepaths.items():
         if info_dict["year"] == 2019:
             count_until_2019 += 1
     res = filter.filter_filepaths(
-        filepaths=list(server_paths.keys()),
+        filepaths=list(remote_filepaths.keys()),
         product="2A-DPR",
         start_time=None,
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
@@ -117,12 +117,12 @@ def test_filter_filepaths(
     # requires date to be less than now() in supportive
     # function checks.check_start_end_time)
     count_from_2019 = 0
-    for server_path, info_dict in server_paths.items():
+    for remote_filepath, info_dict in remote_filepaths.items():
         if info_dict["year"] >= 2019:
             count_from_2019 += 1
 
     res = filter.filter_filepaths(
-        filepaths=list(server_paths.keys()),
+        filepaths=list(remote_filepaths.keys()),
         product="2A-DPR",
         start_time=datetime.datetime(2019, 1, 1),
         end_time=None,
@@ -132,19 +132,19 @@ def test_filter_filepaths(
 
 
 def test_filter_by_time(
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
 ) -> None:
     """Test filter filepaths"""
 
     # Test year filtering
     # Count and assert 2019 paths
     count_2019 = 0
-    for server_path, info_dict in server_paths.items():
+    for remote_filepath, info_dict in remote_filepaths.items():
         if info_dict["year"] == 2019:
             count_2019 += 1
 
     res = filter.filter_by_time(
-        filepaths=list(server_paths.keys()),
+        filepaths=list(remote_filepaths.keys()),
         start_time=datetime.datetime(2019, 1, 1),
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
     )
@@ -171,11 +171,11 @@ def test_filter_by_time(
 
     # Test empty start time
     count_until_2019 = 0
-    for server_path, info_dict in server_paths.items():
+    for remote_filepath, info_dict in remote_filepaths.items():
         if info_dict["year"] == 2019:
             count_until_2019 += 1
     res = filter.filter_by_time(
-        filepaths=list(server_paths.keys()),
+        filepaths=list(remote_filepaths.keys()),
         start_time=None,
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
     )
@@ -185,40 +185,40 @@ def test_filter_by_time(
     # Test empty end time (should default to utcnow which will technically be
     # in the past by the time it gets to the function)
     count_from_2019 = 0
-    for server_path, info_dict in server_paths.items():
+    for remote_filepath, info_dict in remote_filepaths.items():
         if info_dict["year"] >= 2019:
             count_from_2019 += 1
 
     res = filter.filter_by_time(
-        filepaths=list(server_paths.keys()),
+        filepaths=list(remote_filepaths.keys()),
         start_time=datetime.datetime(2019, 1, 1),
         end_time=None,
     )
 
 
 def test_filter_by_product(
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     products: List[str],
 ) -> None:
     """Test filter by product
 
-    Use predefined server_paths list to validate filter"""
+    Use predefined remote_filepaths list to validate filter"""
 
     # Check 2A-DPR
     products_2A_DPR = 0
-    for server_path, info_dict in server_paths.items():
-        # Ensure exists in server_path list
+    for remote_filepath, info_dict in remote_filepaths.items():
+        # Ensure exists in remote_filepath list
         if info_dict["product"] == "2A-DPR":
             products_2A_DPR += 1
 
-    assert products_2A_DPR > 0, "The test server_paths fixture does not contain expected value"
+    assert products_2A_DPR > 0, "The test remote_filepaths fixture does not contain expected value"
 
     filter.filter_by_product(
-        filepaths=list(server_paths.keys()),
+        filepaths=list(remote_filepaths.keys()),
         product="2A-DPR",
     )
 
-    assert len(server_paths) == products_2A_DPR
+    assert len(remote_filepaths) == products_2A_DPR
 
     # Test None filepath
     assert (
@@ -240,7 +240,7 @@ def test_filter_by_product(
 
 
 def test_filter_by_version(
-    server_paths: Dict[str, Dict[str, Any]],
+    remote_filepaths: Dict[str, Dict[str, Any]],
     versions: List[int],
 ) -> None:
     """Test filtering by version"""
@@ -248,13 +248,13 @@ def test_filter_by_version(
     # Test each version
     for version in versions:
         paths_with_matching_version = 0
-        for server_path, info_dict in server_paths.items():
+        for remote_filepath, info_dict in remote_filepaths.items():
             if info_dict["version"] == version:
                 paths_with_matching_version += 1
 
-        # Only test if there are matching versions in server_paths
+        # Only test if there are matching versions in remote_filepaths
         if paths_with_matching_version > 0:
-            res = filter.filter_by_version(list(server_paths.keys()), version)
+            res = filter.filter_by_version(list(remote_filepaths.keys()), version)
 
             assert len(res) == paths_with_matching_version
 
