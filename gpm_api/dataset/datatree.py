@@ -72,7 +72,7 @@ def _identify_error(e, filepath):
         msg = f"The file {filepath} is corrupted and is being removed. It must be redownload."
         raise ValueError(msg)
     elif "[Errno -51] NetCDF: Unknown file format" in error_str:
-        msg = "The GPM-API is not currently able to read the file format of {filepath}. Report the issue please."
+        msg = f"The GPM-API is not currently able to read the file format of {filepath}. Report the issue please."
         raise ValueError(msg)
     elif "lock" in error_str:
         msg = "Unfortunately, HDF locking is occurring."
