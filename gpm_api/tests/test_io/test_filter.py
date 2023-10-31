@@ -57,20 +57,22 @@ def test_filter_filepaths(
 ) -> None:
     """Test filter filepaths"""
 
+    product = "2A-DPR"
+
     # Test year filtering
     # Count and assert 2019 paths
     count_2019 = 0
     for remote_filepath, info_dict in remote_filepaths.items():
         if (
             info_dict["year"] == 2019
-            and info_dict["product"] == "2A-DPR"
+            and info_dict["product"] == product
             and info_dict["version"] == 7
         ):
             count_2019 += 1
 
     res = filter.filter_filepaths(
         filepaths=list(remote_filepaths.keys()),
-        product="2A-DPR",
+        product=product,
         start_time=datetime.datetime(2019, 1, 1),
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
         version=7,
@@ -81,7 +83,7 @@ def test_filter_filepaths(
     # Test None filepaths
     res = filter.filter_filepaths(
         filepaths=None,
-        product="2A-DPR",
+        product=product,
         start_time=datetime.datetime(2019, 1, 1),
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
         version=7,
@@ -91,7 +93,7 @@ def test_filter_filepaths(
     # Test empty filepath list
     res = filter.filter_filepaths(
         filepaths=[],
-        product="2A-DPR",
+        product=product,
         start_time=datetime.datetime(2019, 1, 1),
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
         version=7,
@@ -101,11 +103,11 @@ def test_filter_filepaths(
     # Test empty start time
     count_until_2019 = 0
     for remote_filepath, info_dict in remote_filepaths.items():
-        if info_dict["year"] == 2019:
+        if info_dict["year"] == 2019 and info_dict["product"] == product:
             count_until_2019 += 1
     res = filter.filter_filepaths(
         filepaths=list(remote_filepaths.keys()),
-        product="2A-DPR",
+        product=product,
         start_time=None,
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
         version=7,
@@ -118,12 +120,12 @@ def test_filter_filepaths(
     # function checks.check_start_end_time)
     count_from_2019 = 0
     for remote_filepath, info_dict in remote_filepaths.items():
-        if info_dict["year"] >= 2019:
+        if info_dict["year"] >= 2019 and info_dict["product"] == product:
             count_from_2019 += 1
 
     res = filter.filter_filepaths(
         filepaths=list(remote_filepaths.keys()),
-        product="2A-DPR",
+        product=product,
         start_time=datetime.datetime(2019, 1, 1),
         end_time=None,
         version=7,
@@ -133,7 +135,7 @@ def test_filter_filepaths(
     # Test unmatched version
     res = filter.filter_filepaths(
         filepaths=list(remote_filepaths.keys()),
-        product="2A-DPR",
+        product=product,
         start_time=datetime.datetime(2019, 1, 1),
         end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
         version=0,
@@ -233,12 +235,12 @@ def test_filter_by_product(
 
     assert products_2A_DPR > 0, "The test remote_filepaths fixture does not contain expected value"
 
-    filter.filter_by_product(
+    filtered_filepaths = filter.filter_by_product(
         filepaths=list(remote_filepaths.keys()),
         product="2A-DPR",
     )
 
-    assert len(remote_filepaths) == products_2A_DPR
+    assert len(filtered_filepaths) == products_2A_DPR
 
     # Test None filepath
     assert (
