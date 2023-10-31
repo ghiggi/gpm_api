@@ -273,11 +273,6 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
     l_start_time, l_end_time = get_start_end_time_from_filepaths(filepaths)
 
     # -------------------------------------------------------------------------.
-    # Check file are available
-    if len(l_start_time) == 0:
-        return []
-
-    # -------------------------------------------------------------------------.
     # Select granules with data within the start and end time
     # - Case 1
     #     s               e

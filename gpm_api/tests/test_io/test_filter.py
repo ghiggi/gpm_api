@@ -130,6 +130,26 @@ def test_filter_filepaths(
     )
     assert len(res) == count_from_2019
 
+    # Test unmatched version
+    res = filter.filter_filepaths(
+        filepaths=list(remote_filepaths.keys()),
+        product="2A-DPR",
+        start_time=datetime.datetime(2019, 1, 1),
+        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+        version=0,
+    )
+    assert res == []
+
+    # Test unmatched product
+    res = filter.filter_filepaths(
+        filepaths=list(remote_filepaths.keys()),
+        product="1A-GMI",
+        start_time=datetime.datetime(2019, 1, 1),
+        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+        version=7,
+    )
+    assert res == []
+
 
 def test_filter_by_time(
     remote_filepaths: Dict[str, Dict[str, Any]],
