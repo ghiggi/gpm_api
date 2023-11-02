@@ -34,10 +34,6 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Retrieve LSF items in test data
-        run: |
-          git submodule foreach git lfs pull
-
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
