@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-from typing import Dict
+from typing import Dict, List
 
 from pytest_mock.plugin import MockerFixture
 
@@ -12,7 +12,7 @@ def test_get_local_daily_filepaths(
     mock_configuration: Dict[str, str],
     mocker: MockerFixture,
     product_info: Dict[str, dict],
-):
+) -> None:
     """Test _get_all_daily_filepaths for "local" storage"""
 
     storage = "local"
@@ -82,7 +82,7 @@ def test_get_local_daily_filepaths(
 def test_get_pps_daily_filepaths(
     mocker: MockerFixture,
     product_info: Dict[str, dict],
-):
+) -> None:
     """Test _get_all_daily_filepaths for "pps" storage"""
 
     stoarge = "pps"
@@ -94,7 +94,7 @@ def test_get_pps_daily_filepaths(
         "file2.HDF5",
     ]
 
-    def mock_get_pps_file_list(url_product_dir):
+    def mock_get_pps_file_list(url_product_dir: str) -> List[str]:
         # Remove the base URL, assuming they have the followgin format:
         # RS: https://arthurhouhttps.pps.eosdis.nasa.gov/text/...
         # NRT: https://jsimpsonhttps.pps.eosdis.nasa.gov/text/...
@@ -186,4 +186,52 @@ def test_get_pps_daily_filepaths(
             f"ftps://jsimpsonftps.pps.eosdis.nasa.gov/data/{pps_dir}/{date.strftime('%Y%m')}/"
         )
         expected_filepaths = [f"{base_url}{filename}" for filename in mock_filenames]
+        assert returned_filepaths == expected_filepaths
+
+
+def test_get_gesdisc_daily_filepaths(
+    mocker: MockerFixture,
+    product_info: Dict[str, dict],
+) -> None:
+    """Test _get_all_daily_filepaths for "ges_disc" storage"""
+
+    stoarge = "ges_disc"
+    date = datetime(2020, 12, 31)
+    version = 7
+
+    # Mock gpm_api.io.ges_disc._get_gesc_disc_list_path, which uses wget to get a list of files
+    mock_filenames = [
+        "file1.HDF5",
+        "file2.HDF5",
+    ]
+
+    def mock_get_gesc_disc_list_path(url: str) -> List[str]:
+        return [f"{url}/{filename}" for filename in mock_filenames]
+
+    mocker.patch(
+        "gpm_api.io.ges_disc._get_gesc_disc_list_path", side_effect=mock_get_gesc_disc_list_path
+    )
+
+    for product, info in product_info.items():
+        version = info["available_versions"][-1]
+        ges_disc_dir = info["ges_disc_dir"]
+        if ges_disc_dir is None:
+            continue
+
+        returned_filepaths = find._get_all_daily_filepaths(
+            storage=stoarge,
+            date=date,
+            product=product,
+            product_type=None,
+            version=version,
+            verbose=True,
+        )
+
+        if "TRMM" in ges_disc_dir:
+            subdomain = "disc2"
+        else:
+            subdomain = "gpm2"
+
+        base_url = f"https://{subdomain}.gesdisc.eosdis.nasa.gov/data/{ges_disc_dir}.0{version}/{date.strftime('%Y/%j')}"
+        expected_filepaths = [f"{base_url}/{filename}" for filename in mock_filenames]
         assert returned_filepaths == expected_filepaths
