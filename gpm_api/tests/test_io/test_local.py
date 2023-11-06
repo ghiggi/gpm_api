@@ -1,4 +1,5 @@
 import os
+from typing import Dict
 
 from pytest_mock import MockerFixture
 
@@ -6,7 +7,7 @@ from gpm_api.io import local
 
 
 def test_get_local_filepaths(
-    mock_configuration: dict[str, str],
+    mock_configuration: Dict[str, str],
     mocker: MockerFixture,
 ):
     product = "2A-DPR"

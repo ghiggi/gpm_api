@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+from typing import Dict
 
 from pytest_mock.plugin import MockerFixture
 
@@ -8,9 +9,9 @@ from gpm_api.io.products import available_products
 
 
 def test_get_local_daily_filepaths(
-    mock_configuration: dict[str, str],
+    mock_configuration: Dict[str, str],
     mocker: MockerFixture,
-    product_info: dict[str, dict],
+    product_info: Dict[str, dict],
 ):
     """Test _get_all_daily_filepaths for "local" storage"""
 
@@ -80,7 +81,7 @@ def test_get_local_daily_filepaths(
 
 def test_get_pps_daily_filepaths(
     mocker: MockerFixture,
-    product_info: dict[str, dict],
+    product_info: Dict[str, dict],
 ):
     """Test _get_all_daily_filepaths for "pps" storage"""
 
