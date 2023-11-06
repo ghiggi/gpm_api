@@ -309,11 +309,11 @@ def test_check_download_status(
 
 
 def test_get_fpaths_from_fnames(
+    mock_configuration: dict[str, str],
     remote_filepaths: Dict[str, Dict[str, Any]],
     versions: List[str],
     products: List[str],
     product_types: List[str],
-    tmpdir: str,
 ) -> None:
     """Test convert_pps_to_local_filepaths function
 
@@ -328,7 +328,7 @@ def test_get_fpaths_from_fnames(
         product_type="RS",
     ) == [
         os.path.join(
-            tmpdir,
+            mock_configuration["gpm_base_dir"],
             "GPM",
             "RS",
             "V07",
