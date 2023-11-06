@@ -24,9 +24,6 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
                 product_type="NRT",
                 product_category="IMERG",
             ):
-                assert res == os.path.join(
-                    foldername,
-                    date.strftime("%Y%m"),
-                )
+                assert res == f"{foldername}/{date.strftime('%Y%m')}"
             else:
                 assert res == foldername
