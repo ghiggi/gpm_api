@@ -79,7 +79,7 @@ def products() -> List[str]:
 
 
 @pytest.fixture
-def product_info() -> Dict[str, Any]:
+def product_info() -> Dict[str, dict]:
     """Return a dictionary of product info"""
 
     return get_info_dict()
