@@ -1,6 +1,6 @@
 import pytest
 import datetime
-from typing import Any, List, Dict, Tuple
+from typing import Any, List, Dict, Tuple, Iterable
 from gpm_api.io.products import get_info_dict, available_products
 import posixpath as pxp
 import ntpath as ntp
@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 
 @pytest.fixture(scope="session", autouse=True)
-def mock_configuration():
+def mock_configuration() -> Iterable[Dict[str, str]]:
     """Patch the user configuration for entire session
 
     Doing this will retrieve the configuration from pytest memory and not
@@ -33,7 +33,7 @@ def mock_configuration():
         "read_gpm_api_configs",
         return_value=mocked_configuration,
     ):
-        yield
+        yield mocked_configuration
 
 
 @pytest.fixture
