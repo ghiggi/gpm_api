@@ -77,9 +77,15 @@ def test_open_granule_on_real_files():
                 ds = open_granule(cut_filepath, scan_mode=scan_mode).compute()
                 ds_expected = xr.open_dataset(processed_filepath).compute()
 
-                # Remove history attribute
-                _ = ds.attrs.pop("history", None)
-                _ = ds_expected.attrs.pop("history", None)
+                for _ds in [ds, ds_expected]:
+                    # Remove history attribute
+                    _ds.attrs.pop("history")
+
+                    # Remove attributes conflicting between python versions
+                    if "crsWGS84" in _ds.coords:
+                        _ds.coords["crsWGS84"].attrs.pop("crs_wkt")
+                        _ds.coords["crsWGS84"].attrs.pop("horizontal_datum_name")
+                        _ds.coords["crsWGS84"].attrs.pop("spatial_ref")
 
                 # Check equality
                 xr.testing.assert_identical(ds, ds_expected)
