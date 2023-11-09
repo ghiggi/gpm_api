@@ -95,7 +95,7 @@ def test_get_pps_daily_filepaths(
     ]
 
     def mock_get_pps_file_list(url_product_dir: str) -> List[str]:
-        # Remove the base URL, assuming they have the followgin format:
+        # Remove the base URL, assuming they have the following format:
         # RS: https://arthurhouhttps.pps.eosdis.nasa.gov/text/...
         # NRT: https://jsimpsonhttps.pps.eosdis.nasa.gov/text/...
         url_without_base = url_product_dir.split("/text")[1]

@@ -314,19 +314,19 @@ def test_finalize_dataset(monkeypatch):
     da = xr.DataArray(np.random.rand(1, 1, 1), dims=("lat", "lon", "other"))
     expected_dims = ("other", "lat", "lon")
     ds = xr.Dataset({"var": da, "time": time})
-    ds = finalize_dataset(ds, product, False, scan_mode)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     assert ds["var"].dims == expected_dims
 
     da = xr.DataArray(np.random.rand(1, 1, 1), dims=("other", "cross_track", "along_track"))
     expected_dims = ("cross_track", "along_track", "other")
     ds = xr.Dataset({"var": da, "time": time})
-    ds = finalize_dataset(ds, product, False, scan_mode)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     assert ds["var"].dims == expected_dims
 
     da = xr.DataArray(np.random.rand(1, 1), dims=("other", "along_track"))
     expected_dims = ("along_track", "other")
     ds = xr.Dataset({"var": da, "time": time})
-    ds = finalize_dataset(ds, product, False, scan_mode)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     assert ds["var"].dims == expected_dims
 
     # Check time subsetting
@@ -340,7 +340,7 @@ def test_finalize_dataset(monkeypatch):
     ds = xr.Dataset({"var": da, "time": time})
     start_time = datetime.fromtimestamp(np.random.randint(0, MAX_TIMESTAMP))
     end_time = datetime.fromtimestamp(np.random.randint(0, MAX_TIMESTAMP))
-    ds = finalize_dataset(ds, product, False, scan_mode, start_time=start_time, end_time=end_time)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False, start_time=start_time, end_time=end_time)
     assert ds.attrs["start_time"] == start_time
     assert ds.attrs["end_time"] == end_time
 
@@ -354,7 +354,7 @@ def test_finalize_dataset(monkeypatch):
     monkeypatch.setattr(xr, "decode_cf", mock_decode_cf)
 
     ds = xr.Dataset({"var": da, "time": time})
-    ds = finalize_dataset(ds, product, True, scan_mode)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=True)
     assert ds.attrs["decoded"]
 
     # Check addition of attributes
@@ -371,14 +371,14 @@ def test_finalize_dataset(monkeypatch):
     monkeypatch.setattr(conventions, "add_history", mock_add_history)
 
     ds = xr.Dataset({"var": da, "time": time})
-    ds = finalize_dataset(ds, product, False, scan_mode)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     assert ds.attrs["coords_attrs"]
     assert ds.attrs["history"]
     assert ds.attrs["gpm_api_product"] == product
 
     # Check time encoding
     ds = xr.Dataset({"var": da, "time": time})
-    ds = finalize_dataset(ds, product, False, scan_mode)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     expected_time_encoding = {
         "units": "seconds since 1970-01-01 00:00:00",
         "calendar": "proleptic_gregorian",
@@ -393,5 +393,5 @@ def test_finalize_dataset(monkeypatch):
     monkeypatch.setattr(conventions, "set_dataset_crs", mock_set_dataset_crs)
 
     ds = xr.Dataset({"var": da, "time": time})
-    ds = finalize_dataset(ds, product, False, scan_mode)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     assert ds.attrs["crs"]
