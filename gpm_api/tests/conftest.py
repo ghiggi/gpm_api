@@ -127,6 +127,19 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "version": 7,
             "granule_id": 36094,
         },
+        # Over two days
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S231057-E004329.036096.V07A.HDF5": {
+            "year": 2020,
+            "month": 7,
+            "day": 5,
+            "product": "2A-DPR",
+            "product_category": "radar",
+            "product_type": "RS",
+            "start_time": datetime.datetime(2020, 7, 5, 23, 10, 57),
+            "end_time": datetime.datetime(2020, 7, 6, 0, 43, 29),
+            "version": 7,
+            "granule_id": 36096,
+        },
         # NRT
         "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.V07A.HDF5": {
             "year": 2020,

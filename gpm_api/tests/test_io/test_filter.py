@@ -217,6 +217,20 @@ def test_filter_by_time(
         end_time=None,
     )
 
+    # Test granule starting on previous day
+    count_previous_day = 0
+    for remote_filepath, info_dict in remote_filepaths.items():
+        if info_dict["start_time"].day != info_dict["end_time"].day:
+            count_previous_day += 1
+
+    res = filter.filter_by_time(
+        filepaths=list(remote_filepaths.keys()),
+        start_time=datetime.datetime(2020, 7, 6, 0, 0, 20),
+        end_time=datetime.datetime(2020, 7, 6, 0, 0, 30),
+    )
+
+    assert len(res) == count_previous_day
+
 
 def test_filter_by_product(
     remote_filepaths: Dict[str, Dict[str, Any]],
