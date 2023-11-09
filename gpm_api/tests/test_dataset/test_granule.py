@@ -340,7 +340,14 @@ def test_finalize_dataset(monkeypatch):
     ds = xr.Dataset({"var": da, "time": time})
     start_time = datetime.fromtimestamp(np.random.randint(0, MAX_TIMESTAMP))
     end_time = datetime.fromtimestamp(np.random.randint(0, MAX_TIMESTAMP))
-    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False, start_time=start_time, end_time=end_time)
+    ds = finalize_dataset(
+        ds,
+        product=product,
+        scan_mode=scan_mode,
+        decode_cf=False,
+        start_time=start_time,
+        end_time=end_time,
+    )
     assert ds.attrs["start_time"] == start_time
     assert ds.attrs["end_time"] == end_time
 
