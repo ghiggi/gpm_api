@@ -48,8 +48,7 @@ def test_open_granule_on_real_files():
         └── ...
     """
 
-    script_path = os.path.dirname(os.path.abspath(__file__))
-    granules_dir_path = os.path.join(script_path, "..", "data", "granules")
+    granules_dir_path = os.path.join(_root_path, "gpm_api", "tests", "data", "granules")
 
     if not os.path.exists(granules_dir_path):
         pytest.skip("Test granules not found. Please run `python generate_test_granule_data.py`.")
