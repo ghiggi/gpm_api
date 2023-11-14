@@ -96,7 +96,7 @@ def _check_correct_version(filepaths, product, version):
     return filepaths, files_version
 
 
-def ensure_valid_start_date(start_date, product):
+def _ensure_valid_start_date(start_date, product):
     """Ensure that the product directory exists for start_date."""
     if product == "2A-SAPHIR-MT1-CLIM":
         min_start_date = "2011-10-13 00:00:00"
@@ -250,7 +250,7 @@ def find_filepaths(
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
     start_date = datetime.datetime(start_time.year, start_time.month, start_time.day)
     start_date = start_date - datetime.timedelta(days=1)
-    start_date = ensure_valid_start_date(start_date=start_date, product=product)
+    start_date = _ensure_valid_start_date(start_date=start_date, product=product)
     end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
     date_range = pd.date_range(start=start_date, end=end_date, freq="D")
     dates = list(date_range.to_pydatetime())

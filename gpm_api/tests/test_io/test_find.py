@@ -1,11 +1,13 @@
 from datetime import datetime
 import os
-from typing import Dict, List
+from typing import Any, Dict, List, Tuple
 
+import pytest
 from pytest_mock.plugin import MockerFixture
 
 from gpm_api.io import find
 from gpm_api.io.products import available_products
+from gpm_api.utils.warnings import GPMDownloadWarning
 
 
 def test_get_local_daily_filepaths(
@@ -235,3 +237,155 @@ def test_get_gesdisc_daily_filepaths(
         base_url = f"https://{subdomain}.gesdisc.eosdis.nasa.gov/data/{ges_disc_dir}.0{version}/{date.strftime('%Y/%j')}"
         expected_filepaths = [f"{base_url}/{filename}" for filename in mock_filenames]
         assert returned_filepaths == expected_filepaths
+
+
+def test_get_invalid_daily_filepaths() -> None:
+    stoarge = "invalid"
+    date = datetime(2020, 12, 31)
+    product = "1C-GMI"
+    product_type = "RS"
+    version = 7
+
+    with pytest.raises(ValueError):
+        find._get_all_daily_filepaths(
+            storage=stoarge,
+            date=date,
+            product=product,
+            product_type=product_type,
+            version=version,
+            verbose=True,
+        )
+
+
+@pytest.mark.filterwarnings("error")
+def test_check_correct_version(
+    remote_filepaths: Dict[str, Dict[str, Any]],
+) -> None:
+    """Test _check_correct_version"""
+
+    product = "2A-DPR"
+    version = 7
+    filepath_template = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V0{}A.HDF5"
+
+    # Test correct version
+    files_version = [7] * 3
+    filepaths = [filepath_template.format(v) for v in files_version]
+    returned_filepaths, returned_version = find._check_correct_version(
+        filepaths=filepaths, product=product, version=version
+    )
+    assert returned_filepaths == filepaths
+    assert returned_version == version
+
+    # Test incorrect version
+    files_version = [6] * 3
+    filepaths = [filepath_template.format(v) for v in files_version]
+    with pytest.raises(GPMDownloadWarning):
+        find._check_correct_version(filepaths=filepaths, product=product, version=version)
+
+    # Test multiple versions
+    files_version = [6, 7, 7]
+    filepaths = [filepath_template.format(v) for v in files_version]
+    with pytest.raises(ValueError):
+        find._check_correct_version(filepaths=filepaths, product=product, version=version)
+
+    # Test empty list
+    filepaths = []
+    _, returned_version = find._check_correct_version(
+        filepaths=filepaths, product=product, version=version
+    )
+    assert returned_version == version
+
+
+def test_find_daily_filepaths(
+    mocker: MockerFixture,
+) -> None:
+    """Test find_daily_filepaths"""
+
+    storage = "storage"
+    date = datetime(2020, 12, 31)
+    product = "product"
+    product_type = "product-type"
+    version = 7
+    start_time = datetime(2020, 12, 31, 1, 2, 3)
+    end_time = datetime(2020, 12, 31, 4, 5, 6)
+
+    date_checked = datetime(1900, 1, 1)
+    mocker.patch.object(find, "check_date", autospec=True, return_value=date_checked)
+
+    # Mock _get_all_daily_filepaths, already tested above
+    def mock_get_all_daily_filepaths(**kwargs: Any) -> List[str]:
+        base_filepath = "_".join([f"{key}:{value}" for key, value in kwargs.items()])
+        return [f"{base_filepath}_{i}" for i in range(3)]
+
+    patch_get_all_daily_filepaths = mocker.patch.object(
+        find, "_get_all_daily_filepaths", autospec=True, side_effect=mock_get_all_daily_filepaths
+    )
+
+    # Mock filter_filepaths, already tested in test_filter.py
+    def mock_filter_filepaths(filepaths, **kwargs: Any) -> List[str]:
+        suffix = "_".join([f"{key}-filtered:{value}" for key, value in kwargs.items()])
+        return [f"{filepath}_{suffix}" for filepath in filepaths]
+
+    patch_filter_filepaths = mocker.patch.object(
+        find, "filter_filepaths", autospec=True, side_effect=mock_filter_filepaths
+    )
+
+    # Mock _check_correct_version, already tested above
+    def mock_check_correct_version(filepaths, **kwargs: Any) -> Tuple[List[str], int]:
+        suffix = "_".join([f"{key}-version-checked:{value}" for key, value in kwargs.items()])
+        return [f"{filepath}_{suffix}" for filepath in filepaths], version
+
+    mocker.patch.object(
+        find, "_check_correct_version", autospec=True, side_effect=mock_check_correct_version
+    )
+
+    kwargs = {
+        "storage": storage,
+        "date": date,
+        "product": product,
+        "product_type": product_type,
+        "version": version,
+        "start_time": start_time,
+        "end_time": end_time,
+        "verbose": True,
+    }
+
+    returned_filepaths, returned_versions = find.find_daily_filepaths(**kwargs)
+
+    assert returned_versions[0] == version
+    returned_filepath = returned_filepaths[0]
+
+    # Check date checked
+    assert str(date_checked) in returned_filepath
+
+    # Check all _get_all_daily_filepaths kwargs passed
+    assert f"storage:{storage}" in returned_filepath
+    assert f"product:{product}" in returned_filepath
+    assert f"product_type:{product_type}" in returned_filepath
+    assert f"date:{date_checked}" in returned_filepath
+    assert f"version:{version}" in returned_filepath
+    assert f"verbose:True" in returned_filepath
+
+    # Check all filter_filepaths kwargs passed
+    assert f"product-filtered:{product}" in returned_filepath
+    assert f"product_type-filtered:{product_type}" in returned_filepath
+    assert f"version-filtered:None" in returned_filepath
+    assert f"start_time-filtered:{start_time}" in returned_filepath
+    assert f"end_time-filtered:{end_time}" in returned_filepath
+
+    # Check all _check_correct_version kwargs passed
+    assert f"product-version-checked:{product}" in returned_filepath
+    assert f"version-version-checked:{version}" in returned_filepath
+
+    # Check empty filtered filepaths list
+    patch_filter_filepaths.side_effect = lambda filepaths, **kwargs: []
+    returned_filepaths, returned_versions = find.find_daily_filepaths(**kwargs)
+    assert returned_filepaths == []
+    assert returned_versions == []
+
+    # Check empty filepaths list
+    patch_get_all_daily_filepaths.side_effect = lambda **kwargs: []
+    kwargs["storage"] = "local"
+    returned_filepaths, returned_versions = find.find_daily_filepaths(**kwargs)
+    assert returned_filepaths == []
+    assert returned_versions == []
