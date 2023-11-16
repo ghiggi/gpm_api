@@ -20,6 +20,8 @@ def mock_configuration() -> Iterable[Dict[str, str]]:
     mocked_configuration = {
         "username_pps": "testuser",
         "password_pps": "testuser",
+        "username_earthdata": "testuser",
+        "password_earthdata": "testuser",
         "gpm_base_dir": os.path.join(
             os.getcwd(),
             "gpm_api",

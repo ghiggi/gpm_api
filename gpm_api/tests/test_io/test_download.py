@@ -12,6 +12,7 @@ from gpm_api import configs
 
 
 def test_construct_curl_pps_cmd(
+    mock_configuration: Dict[str, str],
     remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
@@ -38,7 +39,8 @@ def test_construct_curl_pps_cmd(
         "--retry 5 --retry-delay 10 --url {remote_filepath} -o {local_filepath}"
     )
 
-    username_pps, password_pps, gpm_base_dir = configs.read_gpm_api_configs().values()
+    username_pps = mock_configuration["username_pps"]
+    password_pps = mock_configuration["password_pps"]
 
     for remote_filepath in remote_filepaths:
         path = dl.curl_pps_cmd(
@@ -67,8 +69,7 @@ def test_construct_curl_pps_cmd(
 
 
 def test_construct_wget_pps_cmd(
-    # username: str,
-    # password: str,
+    mock_configuration: Dict[str, str],
     remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
@@ -94,7 +95,8 @@ def test_construct_wget_pps_cmd(
         "--tries=5 -O {local_filepath} {remote_filepath}"
     )
 
-    username_pps, password_pps, gpm_base_dir = configs.read_gpm_api_configs().values()
+    username_pps = mock_configuration["username_pps"]
+    password_pps = mock_configuration["password_pps"]
 
     for remote_filepath in remote_filepaths:
         path = dl.wget_pps_cmd(
@@ -117,17 +119,18 @@ def test_construct_wget_pps_cmd(
         ), f"Folder {os.path.dirname(local_filepath)} was not created"
 
 
+@pytest.mark.parametrize("storage", ["pps", "ges_disc"])
 def test_download_file_private(
     remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
     mocker: MockerFixture,
+    storage: str,
 ) -> None:
     """Build curl/wget calls for download, but don't actually download anything
 
     Uses tmpdir to create a unique path for each test and mocker to mock the
     download function
     """
-    storage = "pps"
 
     # Don't actually download anything, so mock the run function
     mocker.patch.object(dl, "run", autospec=True, return_value=None)
@@ -162,74 +165,102 @@ def test_download_file_private(
             )
 
 
-def test_download_data(
-    check,  # For non-failing asserts
-    products: List[str],
-    product_types: List[str],
-    remote_filepaths: Dict[str, Dict[str, Any]],
-    mocker: MockerFixture,
-    versions: List[str],
-):
-    """Test download_data function
+class TestDownloadArchive:
+    @pytest.fixture(autouse=True)
+    def mock_download(
+        self,
+        mocker: MockerFixture,
+        remote_filepaths: Dict[str, Dict[str, Any]],
+        versions: List[str],
+    ) -> None:
+        mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
+        mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
+        mocker.patch.object(dl, "run", autospec=True, return_value=None)
+        from gpm_api.io import info, pps
 
-    This test is somewhat redundant considering it is testing methods
-    bundled in another functions which need to be turned off in order to
-    test this function. However, it is useful to have a test that checks
-    the entire download process.
+        mocker.patch.object(
+            info,
+            "_get_info_from_filename",
+            autospec=True,
+            return_value={
+                "product": "2A-CLIM",
+                "product_type": "CLIM",
+                "start_time": datetime.datetime(2022, 9, 7, 12, 0, 0),
+                "end_time": datetime.datetime(2022, 9, 7, 13, 0, 0),
+                "version": "V07A",
+                "satellite": "GPM",
+                "granule_id": "2A-CLIM.GPM.GMI.GPROF2021v1.20150301-S121433-E134706.005708.V07A.HDF5",
+            },
+        )
+        mocker.patch.object(
+            find,
+            "find_daily_filepaths",
+            autospec=True,
+            return_value=(remote_filepaths.keys(), versions),
+        )
 
-    It may be useful as boilerplate to increase the number of tests here in the
-    future.
-    """
+    def test_download_data(
+        self,
+        check,  # For non-failing asserts
+        products: List[str],
+        product_types: List[str],
+    ):
+        """Test download_data function
 
-    mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
-    mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
-    mocker.patch.object(dl, "run", autospec=True, return_value=None)
-    from gpm_api.io import info, pps
+        This test is somewhat redundant considering it is testing methods
+        bundled in another functions which need to be turned off in order to
+        test this function. However, it is useful to have a test that checks
+        the entire download process.
 
-    mocker.patch.object(
-        info,
-        "_get_info_from_filename",
-        autospec=True,
-        return_value={
-            "product": "2A-CLIM",
-            "product_type": "CLIM",
-            "start_time": datetime.datetime(2022, 9, 7, 12, 0, 0),
-            "end_time": datetime.datetime(2022, 9, 7, 13, 0, 0),
-            "version": "V07A",
-            "satellite": "GPM",
-            "granule_id": "2A-CLIM.GPM.GMI.GPROF2021v1.20150301-S121433-E134706.005708.V07A.HDF5",
-        },
-    )
-    mocker.patch.object(
-        find,
-        "find_daily_filepaths",
-        autospec=True,
-        return_value=(remote_filepaths.keys(), versions),
-    )
+        It may be useful as boilerplate to increase the number of tests here in the
+        future.
+        """
 
-    # Assume files pass file integrity check by mocking return as empty
-    for product_type in product_types:
-        for product in available_products(product_type=product_type):
-            start_time = get_product_start_time(product)
-            if start_time is None:
-                continue
-            res = dl.download_archive(
-                product=product,
-                start_time=start_time,
-                end_time=start_time + datetime.timedelta(hours=1),
-                product_type=product_type,
-            )
+        # Assume files pass file integrity check by mocking return as empty
+        for product_type in product_types:
+            for product in available_products(product_type=product_type):
+                start_time = get_product_start_time(product)
+                if start_time is None:
+                    continue
+                res = dl.download_archive(
+                    product=product,
+                    start_time=start_time,
+                    end_time=start_time + datetime.timedelta(hours=1),
+                    product_type=product_type,
+                )
 
-        with check:
-            assert res is None  # Assume data is downloaded
+            with check:
+                assert res is None  # Assume data is downloaded
+
+    def test_corrupted_archive(
+        self,
+        mocker: MockerFixture,
+    ) -> None:
+        product = "1A-GMI"
+        start_time = get_product_start_time(product)
+        end_time = start_time + datetime.timedelta(hours=1)
+
+        # Mock download status as failed
+        mocker.patch.object(dl, "_check_download_status", autospec=True, return_value=False)
+
+        # Mock file integrity check as passed
+        mocker.patch.object(dl, "check_archive_integrity", autospec=True, return_value=[])
+
+        res = dl.download_archive(
+            product=product,
+            start_time=start_time,
+            end_time=end_time,
+        )
 
 
+@pytest.mark.parametrize("storage", ["pps", "ges_disc"])
 def test_download_daily_data_private(
     tmpdir: str,
     versions: List[str],
     products: List[str],
     product_types: List[str],
     mocker: MockerFixture,
+    storage: str,
 ) -> None:
     """Test download_daily_data function
 
@@ -249,7 +280,7 @@ def test_download_daily_data_private(
             for product_type in product_types:
                 for product in available_products(product_type=product_type):
                     dl._download_daily_data(
-                        storage="pps",
+                        storage=storage,
                         date=datetime.datetime(2022, 9, 7, 12, 0, 0),
                         version=version,
                         product=product,
@@ -295,6 +326,10 @@ def test_download_files(
         for obj in [(), {}, 1, 1.0, "str", True]:
             dl.download_files(filepaths=obj)
 
+    # Test data already on disk (force_download=False)
+    mocker.patch.object(dl, "filter_download_list", autospec=True, return_value=([], []))
+    assert dl.download_files(filepaths=list(remote_filepaths.keys())) == None
+
 
 def test_check_download_status(
     products: List[str],
@@ -309,35 +344,54 @@ def test_check_download_status(
         assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
 
 
-def test_get_fpaths_from_fnames(
-    mock_configuration: Dict[str, str],
-    remote_filepaths: Dict[str, Dict[str, Any]],
-    versions: List[str],
-    products: List[str],
-    product_types: List[str],
-) -> None:
-    """Test convert_pps_to_local_filepaths function
+class TestGetFpathsFromFnames:
+    """Test get_fpaths_from_fnames function"""
 
-    Parameters
-    """
-    # TODO: WRONG REDO !
-    assert dl.get_fpaths_from_fnames(
-        filepaths=[
-            "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
-        ],
-        storage="local",
-        product_type="RS",
-    ) == [
-        os.path.join(
-            mock_configuration["gpm_base_dir"],
-            "GPM",
-            "RS",
-            "V07",
-            "RADAR",
-            "2A-DPR",
-            "2020",
-            "07",
-            "05",
-            "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5",
-        )
-    ]
+    filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
+
+    def test_local(
+        self,
+        mock_configuration: Dict[str, str],
+    ) -> None:
+        assert dl.get_fpaths_from_fnames(
+            filepaths=[self.filename],
+            storage="local",
+            product_type="RS",
+        ) == [
+            os.path.join(
+                mock_configuration["gpm_base_dir"],
+                "GPM",
+                "RS",
+                "V07",
+                "RADAR",
+                "2A-DPR",
+                "2020",
+                "07",
+                "05",
+                self.filename,
+            )
+        ]
+
+    def test_pps(self) -> None:
+        assert dl.get_fpaths_from_fnames(
+            filepaths=[self.filename],
+            storage="pps",
+            product_type="RS",
+        ) == [f"ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/{self.filename}"]
+
+    def test_ges_disc(self) -> None:
+        assert dl.get_fpaths_from_fnames(
+            filepaths=[self.filename],
+            storage="ges_disc",
+            product_type="RS",
+        ) == [
+            f"https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L2/GPM_2ADPR.07/2020/187/{self.filename}"
+        ]
+
+    def test_invalid_filename(self) -> None:
+        with pytest.raises(ValueError):
+            dl.get_fpaths_from_fnames(
+                filepaths=["invalid_filename"],
+                storage="local",
+                product_type="RS",
+            )

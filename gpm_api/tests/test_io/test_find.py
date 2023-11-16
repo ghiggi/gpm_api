@@ -118,7 +118,7 @@ class TestGetDailyFilepaths:
     ) -> None:
         """Test _get_all_daily_filepaths for "pps" storage with RS version 7 products"""
 
-        stoarge = "pps"
+        storage = "pps"
         product_type = "RS"
         version = 7
 
@@ -127,7 +127,7 @@ class TestGetDailyFilepaths:
             pps_dir = info["pps_rs_dir"]
 
             returned_filepaths = find._get_all_daily_filepaths(
-                storage=stoarge,
+                storage=storage,
                 date=self.date,
                 product=product,
                 product_type=product_type,
@@ -147,7 +147,7 @@ class TestGetDailyFilepaths:
     ) -> None:
         """Test _get_all_daily_filepaths for "pps" storage with RS lower version products"""
 
-        stoarge = "pps"
+        storage = "pps"
         product_type = "RS"
 
         for product in available_products(product_type=product_type):
@@ -159,7 +159,7 @@ class TestGetDailyFilepaths:
                     continue
 
                 returned_filepaths = find._get_all_daily_filepaths(
-                    storage=stoarge,
+                    storage=storage,
                     date=self.date,
                     product=product,
                     product_type=product_type,
@@ -179,7 +179,7 @@ class TestGetDailyFilepaths:
     ) -> None:
         """Test _get_all_daily_filepaths for "pps" storage with NRT products (except IMERG)"""
 
-        stoarge = "pps"
+        storage = "pps"
         product_type = "NRT"
 
         for product in available_products(product_type=product_type):
@@ -191,7 +191,7 @@ class TestGetDailyFilepaths:
             pps_dir = info["pps_nrt_dir"]
 
             returned_filepaths = find._get_all_daily_filepaths(
-                storage=stoarge,
+                storage=storage,
                 date=self.date,
                 product=product,
                 product_type=product_type,
@@ -211,7 +211,7 @@ class TestGetDailyFilepaths:
     ) -> None:
         """Test _get_all_daily_filepaths for "pps" storage with NRT IMERG products"""
 
-        stoarge = "pps"
+        storage = "pps"
         product_type = "NRT"
         product_category = "IMERG"
 
@@ -223,7 +223,7 @@ class TestGetDailyFilepaths:
             pps_dir = info["pps_nrt_dir"]
 
             returned_filepaths = find._get_all_daily_filepaths(
-                storage=stoarge,
+                storage=storage,
                 date=self.date,
                 product=product,
                 product_type=product_type,
@@ -234,6 +234,32 @@ class TestGetDailyFilepaths:
             expected_filepaths = [f"{base_url}{filename}" for filename in self.mock_filenames]
             with check:
                 assert returned_filepaths == expected_filepaths
+
+    def test_pps_missing_pps_product_dir(
+        self,
+        product_info: Dict[str, dict],
+        mocker: MockerFixture,
+    ) -> None:
+        storage = "pps"
+        product = "1A-GMI"
+        version = 7
+        info = product_info[product]
+
+        # Mock missing dirs
+        del info["pps_rs_dir"]
+        del info["pps_nrt_dir"]
+        mocker.patch("gpm_api.io.products.get_product_info", return_value=info)
+
+        for product_type in ["RS", "NRT"]:
+            with pytest.raises(ValueError):
+                find._get_all_daily_filepaths(
+                    storage=storage,
+                    date=self.date,
+                    product=product,
+                    product_type=product_type,
+                    version=version,
+                    verbose=True,
+                )
 
     @pytest.fixture
     def mock_get_ges_disc_list_path(
@@ -257,7 +283,7 @@ class TestGetDailyFilepaths:
     ) -> None:
         """Test _get_all_daily_filepaths for "ges_disc" storage"""
 
-        stoarge = "ges_disc"
+        storage = "ges_disc"
         version = 7
 
         for product, info in product_info.items():
@@ -267,7 +293,7 @@ class TestGetDailyFilepaths:
                 continue
 
             returned_filepaths = find._get_all_daily_filepaths(
-                storage=stoarge,
+                storage=storage,
                 date=self.date,
                 product=product,
                 product_type=None,
@@ -288,14 +314,14 @@ class TestGetDailyFilepaths:
     def test_invalid_storage(self) -> None:
         """Test _get_all_daily_filepaths for invalid "storage" argument"""
 
-        stoarge = "invalid"
+        storage = "invalid"
         product = "1C-GMI"
         product_type = "RS"
         version = 7
 
         with pytest.raises(ValueError):
             find._get_all_daily_filepaths(
-                storage=stoarge,
+                storage=storage,
                 date=self.date,
                 product=product,
                 product_type=product_type,
