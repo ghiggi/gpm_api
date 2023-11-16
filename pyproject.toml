@@ -59,7 +59,7 @@ dynamic = ["version"]
 image = ["ximage"]
 dev = ["pre-commit",
        "black[jupyter]", "blackdoc", "codespell", "ruff",
-       "pytest", "pytest-cov", "pytest-mock", "pydantic",
+       "pytest", "pytest-cov", "pytest-mock", "pydantic", "pytest-check",
        "pytest-watcher", "pip-tools", "bumpver", "twine",
        "setuptools>=61.0.0", "wheel",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]
@@ -90,7 +90,7 @@ download_gpm_files="gpm_api.scripts.download_gpm_files:download_gpm_files"
 
 
 [tool.pytest.ini_options]
-addopts = "--ignore=gpm_api/tests/0_tmp/ --cov --cov-report term-missing"
+addopts = "--ignore=gpm_api/tests/0_tmp/ --cov --cov-report term-missing --check-max-report=10"
 
 [tool.black]
 line-length = 100
@@ -147,13 +147,3 @@ exclude = [
 
 [tool.codespell]
     ignore-words-list = "ges,nd"
-
-
-[tool.coverage.run]
-omit = [
-  "gpm_api/_version.py",
-  "gpm_api/etc/*",
-  "gpm_api/encoding/*",
-  "gpm_api/retrieval/*",
-  "gpm_api/bucket/*",
-]

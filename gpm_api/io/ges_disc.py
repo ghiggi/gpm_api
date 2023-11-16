@@ -41,7 +41,7 @@ def _get_href_value(input_string):
     return href_value
 
 
-def _get_gesc_disc_list_path(url):
+def _get_ges_disc_list_path(url):
     # Retrieve url content
     # - If it returns something, means url is correct
     wget_output = _get_ges_disc_url_content(url)
@@ -179,7 +179,7 @@ def _get_gesdisc_file_list(url_product_dir, product, date, version, verbose=True
         Default is False. Whether to specify when data are not available for a specific date.
     """
     try:
-        filepaths = _get_gesc_disc_list_path(url_product_dir)
+        filepaths = _get_ges_disc_list_path(url_product_dir)
     except Exception as e:
         # If url not exist, raise an error
         if "was not found on the GES DISC server" in str(e):

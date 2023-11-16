@@ -72,8 +72,8 @@ def test_get_start_end_time_from_filepaths(
 
 
 def test_invalid_filepaths():
-    # with pytest.raises(ValueError):
-    #     info.get_info_from_filepath("invalid_filepath")
+    with pytest.raises(ValueError):
+        info.get_info_from_filepath("invalid_filepath")
 
     # Invalid JAXA product type
     with pytest.raises(ValueError):

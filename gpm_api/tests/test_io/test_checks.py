@@ -240,29 +240,30 @@ def test_check_version(
 
 
 def test_check_product_version(
+    check,  # For non-failing asserts
     product_info: Dict[str, Any],
     versions: List[int],
 ) -> None:
     """Test check_product_version()"""
 
-    # Check valid versions
     for product, info in product_info.items():
+        # Check valid versions
         valid_versions = info.get("available_versions", [])
 
         for version in valid_versions:
-            assert checks.check_product_version(version, product) == version
+            with check:
+                assert checks.check_product_version(version, product) == version
 
-    # Check last version return if None
-    for product, info in product_info.items():
+        # Check last version return if None
         last_version = info.get("available_versions", [])[-1]
-        assert checks.check_product_version(None, product) == last_version
+        with check:
+            assert checks.check_product_version(None, product) == last_version
 
-    # Check invalid versions
-    for product, info in product_info.items():
+        # Check invalid versions
         invalid_versions = list(set(versions) - set(info.get("available_versions", [])))
 
         for version in invalid_versions:
-            with pytest.raises(ValueError):
+            with check.raises(ValueError):
                 checks.check_product_version(version, product)
 
 
@@ -579,6 +580,7 @@ def test_check_start_end_time() -> None:
 
 
 def test_check_valid_time_request(
+    check,  # For non-failing asserts
     product_info: Dict[str, Any],
 ) -> None:
     """Test check_valid_time_request()"""
@@ -596,14 +598,14 @@ def test_check_valid_time_request(
             # Check invalid start time
             start_time = valid_start_time - datetime.timedelta(days=1)
             end_time = valid_start_time + datetime.timedelta(days=1)
-            with pytest.raises(ValueError):
+            with check.raises(ValueError):
                 checks.check_valid_time_request(start_time, end_time, product)
 
         # Check invalid end time
         if valid_end_time is not None:
             start_time = valid_end_time - datetime.timedelta(days=1)
             end_time = valid_end_time + datetime.timedelta(days=1)
-            with pytest.raises(ValueError):
+            with check.raises(ValueError):
                 checks.check_valid_time_request(start_time, end_time, product)
 
 

@@ -163,6 +163,7 @@ def test_download_file_private(
 
 
 def test_download_data(
+    check,  # For non-failing asserts
     products: List[str],
     product_types: List[str],
     remote_filepaths: Dict[str, Dict[str, Any]],
@@ -207,20 +208,20 @@ def test_download_data(
     )
 
     # Assume files pass file integrity check by mocking return as empty
-    for product in products:
-        for product_type in product_types:
-            if product in available_products(product_type=product_type):
-                start_time = get_product_start_time(product)
-                if start_time is None:
-                    continue
-                res = dl.download_archive(
-                    product=product,
-                    start_time=start_time,
-                    end_time=start_time + datetime.timedelta(hours=1),
-                    product_type=product_type,
-                )
+    for product_type in product_types:
+        for product in available_products(product_type=product_type):
+            start_time = get_product_start_time(product)
+            if start_time is None:
+                continue
+            res = dl.download_archive(
+                product=product,
+                start_time=start_time,
+                end_time=start_time + datetime.timedelta(hours=1),
+                product_type=product_type,
+            )
 
-        assert res is None  # Assume data is downloaded
+        with check:
+            assert res is None  # Assume data is downloaded
 
 
 def test_download_daily_data_private(
