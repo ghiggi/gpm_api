@@ -177,16 +177,20 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
 
 def infill_timesteps(timesteps, limit):
     """Infill missing timesteps if less than <limit> consecutive."""
-    # Check at least two time steps available to infill
-    if len(timesteps) <= 2:
-        return timesteps
-
     # Interpolate if maximum <limit> timesteps are missing
     timesteps = interpolate_nat(timesteps, method="linear", limit=limit, limit_area="inside")
 
     # Check if there are still residual NaT
     if np.any(is_nat(timesteps)):
-        raise ValueError(f"More than {limit} consecutive timesteps are NaT.")
+        if len(timesteps) <= 2:
+            error_message = "Not enough timesteps available to infill NaTs."
+        elif is_nat(timesteps[0]) or is_nat(timesteps[-1]):
+            error_message = (
+                "NaTs present at the beginning or at the end of the timesteps cannot be inferred."
+            )
+        else:
+            error_message = "More than {limit} consecutive timesteps are NaT."
+        raise ValueError(error_message)
 
     return timesteps
 
@@ -205,7 +209,7 @@ def ensure_time_validity(xr_obj, limit=10):
     Returns
     -------
     xr_obj : (xr.Dataset, xr.DataArray)
-        GPM xarray object..
+        GPM xarray object.
 
     """
     timesteps = xr_obj["time"].values
