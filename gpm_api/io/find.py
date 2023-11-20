@@ -20,7 +20,6 @@ from gpm_api.io.checks import (
     check_start_end_time,
     check_storage,
     check_valid_time_request,
-    is_empty,
 )
 from gpm_api.io.filter import filter_filepaths
 from gpm_api.io.ges_disc import get_gesdisc_daily_filepaths
@@ -169,7 +168,7 @@ def find_daily_filepaths(
         version=version,
         verbose=verbose,
     )
-    if is_empty(filepaths):
+    if len(filepaths) == 0:
         if storage == "local" and verbose:
             version_str = str(int(version))
             print(
@@ -188,7 +187,7 @@ def find_daily_filepaths(
         start_time=start_time,
         end_time=end_time,
     )
-    if is_empty(filepaths):
+    if len(filepaths) == 0:
         return [], []
 
     ## -----------------------------------------------------------------------.

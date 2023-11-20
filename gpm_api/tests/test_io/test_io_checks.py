@@ -20,34 +20,6 @@ from gpm_api.io import checks
 from gpm_api.io.products import available_products, available_scan_modes, available_versions
 
 
-def test_is_not_empty() -> None:
-    """Test is_not_empty() which always returns a boolean"""
-
-    # Test False responses:
-    for obj in [None, (), {}, []]:
-        res = checks.is_not_empty(obj)
-        assert res is False, "Function returned True, expected False"
-
-    # Test True responses:
-    for obj in [[1, 2, 3], (1, 2, 3), (1), [1]]:
-        res = checks.is_not_empty(obj)
-        assert res is True, "Function returned False, expected True"
-
-
-def test_is_empty() -> None:
-    """Test is_empty()"""
-
-    # Test False responses:
-    for obj in [[1, 2, 3], (1, 2, 3), (1), [1]]:
-        res = checks.is_empty(obj)
-        assert res is False, "Function returned True, expected False"
-
-    # Test True responses:
-    for obj in [None, (), {}, []]:
-        res = checks.is_empty(obj)
-        assert res is True, "Function returned False, expected True"
-
-
 def test_check_base_dir() -> None:
     """Check path constructor for base_dir"""
 

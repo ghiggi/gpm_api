@@ -9,14 +9,6 @@ import os
 import numpy as np
 
 
-def is_not_empty(x):
-    return bool(x)
-
-
-def is_empty(x):
-    return not x
-
-
 def check_base_dir(base_dir):
     """Check base directory path.
 
