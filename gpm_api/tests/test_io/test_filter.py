@@ -1,8 +1,6 @@
 from gpm_api.io import filter
 from typing import Dict, Any, List
 import datetime
-import pytest
-from pytest_mock.plugin import MockerFixture
 
 
 def test_granule_within_time() -> None:

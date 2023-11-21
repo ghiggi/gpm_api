@@ -83,7 +83,7 @@ def test_invalid_filepaths():
 
     # Unknown product (not in product_def.yml)
     with pytest.raises(ValueError):
-        info_dict = info.get_info_from_filepath(
+        info.get_info_from_filepath(
             "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/😥.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
         )
 

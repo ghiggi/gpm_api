@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import pytest
 from pytest_mock.plugin import MockerFixture

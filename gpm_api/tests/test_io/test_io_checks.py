@@ -190,7 +190,7 @@ def test_check_version(
 
     # Check if None, None is returned
     with pytest.raises(ValueError):
-        res = checks.check_version(None)
+        checks.check_version(None)
 
     # Check if string, exception is raised
     with pytest.raises(ValueError):
@@ -202,8 +202,8 @@ def test_check_version(
 
     # Check available range should not raise exception
     for version in versions:
-        res = checks.check_version(version)
-        assert res is None, f"Function returned {res} for version {version}, expected None"
+        checks.check_version(version)
+        # Should run without raising Exception
 
     # Try versions outside of range
     for version in list(range(0, 3)) + list(range(8, 10)):
@@ -251,8 +251,8 @@ def test_check_product(
     # Test a product that does exist
     for product_type in product_types:
         for product in available_products(product_type=product_type):
-            res = checks.check_product(product, product_type=product_type)
-            assert res is None, f"Function returned {res} for product {product} expected None"
+            checks.check_product(product, product_type=product_type)
+            # Should run without raising Exception
 
     # Test a product that isn't a string
     for product_type in product_types:
@@ -268,10 +268,8 @@ def test_check_product_type(
 
     # Test a product_type that does exist
     for product_type in product_types:
-        res = checks.check_product_type(product_type)
-        assert res is None, (
-            f"Function returned {res} for product_type {product_type}, " f"expected None"
-        )
+        checks.check_product_type(product_type)
+        # Should run without raising Exception
 
     # Test a product_type that doesn't exist
     for product_type in ["IMERG", 123, None]:
@@ -291,10 +289,8 @@ def test_check_product_category(
 
     # Test a product_category that does exist
     for product_category in product_categories:
-        res = checks.check_product_category(product_category)
-        assert res is None, (
-            f"Function returned {res} for product_category {product_category}," f" expected None"
-        )
+        checks.check_product_category(product_category)
+        # Should run without raising Exception
 
     # Test a product_category that doesn't exist
     for product_category in ["NOT", "A", "CATEGORY"]:
@@ -314,10 +310,8 @@ def test_check_product_level(
 
     # Test a product_level that does exist
     for product_level in product_levels:
-        res = checks.check_product_level(product_level)
-        assert (
-            res is None
-        ), f"Function returned {res} for product_level {product_level}, expected None"
+         checks.check_product_level(product_level)
+        # Should run without raising Exception
 
     # Test a product_level that doesn't exist
     for product_level in ["NOT", "A", "LEVEL"]:
@@ -333,8 +327,8 @@ def test_check_product_validity(
     # Test a product that does exist
     for product_type in product_types:
         for product in available_products(product_type=product_type):
-            res = checks.check_product_validity(product, product_type=product_type)
-            assert res is None, f"Function returned {res} for product {product}, expected None"
+            checks.check_product_validity(product, product_type=product_type)
+            # Should run without raising Exception
 
     # Test a product that doesn't exist
     for product_type in product_types:

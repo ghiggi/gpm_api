@@ -8,7 +8,6 @@ from gpm_api.io import find
 from gpm_api.io import download as dl
 from gpm_api.io.products import available_products, get_product_start_time
 from gpm_api.utils.warnings import GPMDownloadWarning
-from gpm_api import configs
 
 
 def test_construct_curl_pps_cmd(
@@ -246,7 +245,7 @@ class TestDownloadArchive:
         # Mock file integrity check as passed
         mocker.patch.object(dl, "check_archive_integrity", autospec=True, return_value=[])
 
-        res = dl.download_archive(
+        dl.download_archive(
             product=product,
             start_time=start_time,
             end_time=end_time,

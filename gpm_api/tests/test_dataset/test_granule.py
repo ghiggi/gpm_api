@@ -377,7 +377,6 @@ def test_finalize_dataset_time_subsetting(monkeypatch):
 
     product = "product"
     scan_mode = "scan_mode"
-    time = [0]
     ds = _prepare_test_finalize_dataset(monkeypatch)
 
     def mock_subset_by_time(ds, start_time, end_time):
