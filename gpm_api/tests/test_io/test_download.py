@@ -1,7 +1,6 @@
 import pytest
 import os
 import datetime
-import ftplib
 from typing import Any, List, Dict
 from pytest_mock.plugin import MockerFixture
 from gpm_api.io import find

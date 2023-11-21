@@ -310,8 +310,8 @@ def test_check_product_level(
 
     # Test a product_level that does exist
     for product_level in product_levels:
-         checks.check_product_level(product_level)
-        # Should run without raising Exception
+        checks.check_product_level(product_level)
+    # Should run without raising Exception
 
     # Test a product_level that doesn't exist
     for product_level in ["NOT", "A", "LEVEL"]:
