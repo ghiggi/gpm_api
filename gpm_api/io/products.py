@@ -99,8 +99,9 @@ def get_product_start_time(product):
 
 def get_product_end_time(product):
     """Provide the product end_time."""
-    end_time = get_product_info(product)["end_time"]
-    end_time = datetime.datetime.utcnow()
+    end_time = get_info_dict()[product]["end_time"]
+    if end_time is None:
+        end_time = datetime.datetime.utcnow()
     return end_time
 
 

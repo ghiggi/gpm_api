@@ -3,6 +3,7 @@ from typing import List, Tuple
 import os
 import posixpath as pxp
 import ntpath as ntp
+import xarray as xr
 
 
 def test_get_corrupted_filepaths(
@@ -20,7 +21,28 @@ def test_get_corrupted_filepaths(
         ), "Corrupted paths array should be the same length as input paths"
         assert abs_paths == res, "Corrupted paths array should be the same as input paths"
 
-    # TODO: Test an actual HDF5 for OSError and empty list (success)
+
+def test_get_corrupted_filepaths_real_files(
+    tmpdir: str,
+) -> None:
+    filepath = os.path.join(tmpdir, "test.h5")
+
+    # Create hdf5 file
+    array = xr.DataArray([])
+    array.to_netcdf(filepath)
+
+    # Test that no paths are "corrupted"
+    res = di.get_corrupted_filepaths([filepath])
+    assert len(res) == 0, "Corrupted paths array should be empty"
+
+    # Corrupt file by truncating it
+    with open(filepath, "r+") as f:
+        file_size = os.path.getsize(filepath)
+        f.truncate(round(file_size / 2))
+
+    # Test that all paths are "corrupted"
+    res = di.get_corrupted_filepaths([filepath])
+    assert len(res) == 1, "Corrupted paths array should have one path"
 
 
 def test_remove_corrupted_filepaths(

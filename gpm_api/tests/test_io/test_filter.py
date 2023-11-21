@@ -1,8 +1,6 @@
 from gpm_api.io import filter
 from typing import Dict, Any, List
 import datetime
-import pytest
-from pytest_mock.plugin import MockerFixture
 
 
 def test_granule_within_time() -> None:
@@ -50,85 +48,126 @@ def test_granule_within_time() -> None:
         )
 
 
-def test_filter_filepaths(
-    remote_filepaths: Dict[str, Dict[str, Any]],
-    products: Dict[str, Dict[str, Any]],
-    mocker: MockerFixture,
-) -> None:
+class TestFilterFilepaths:
     """Test filter filepaths"""
 
-    # Test year filtering
-    # Count and assert 2019 paths
-    count_2019 = 0
-    for remote_filepath, info_dict in remote_filepaths.items():
-        if (
-            info_dict["year"] == 2019
-            and info_dict["product"] == "2A-DPR"
-            and info_dict["version"] == 7
-        ):
-            count_2019 += 1
+    product = "2A-DPR"
 
-    res = filter.filter_filepaths(
-        filepaths=list(remote_filepaths.keys()),
-        product="2A-DPR",
-        start_time=datetime.datetime(2019, 1, 1),
-        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
-        version=7,
-    )
+    def test_year_filtering(
+        self,
+        remote_filepaths: Dict[str, Dict[str, Any]],
+    ) -> None:
+        # Count and assert 2019 paths
+        count_2019 = 0
+        for remote_filepath, info_dict in remote_filepaths.items():
+            if (
+                info_dict["year"] == 2019
+                and info_dict["product"] == self.product
+                and info_dict["version"] == 7
+            ):
+                count_2019 += 1
 
-    assert len(res) == count_2019
+        res = filter.filter_filepaths(
+            filepaths=list(remote_filepaths.keys()),
+            product=self.product,
+            start_time=datetime.datetime(2019, 1, 1),
+            end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+            version=7,
+        )
 
-    # Test None filepaths
-    res = filter.filter_filepaths(
-        filepaths=None,
-        product="2A-DPR",
-        start_time=datetime.datetime(2019, 1, 1),
-        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
-        version=7,
-    )
-    assert res == []
+        assert len(res) == count_2019
 
-    # Test empty filepath list
-    res = filter.filter_filepaths(
-        filepaths=[],
-        product="2A-DPR",
-        start_time=datetime.datetime(2019, 1, 1),
-        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
-        version=7,
-    )
-    assert res == []
+    def test_none_filepath(
+        self,
+        remote_filepaths: Dict[str, Dict[str, Any]],
+    ) -> None:
+        res = filter.filter_filepaths(
+            filepaths=None,
+            product=self.product,
+            start_time=datetime.datetime(2019, 1, 1),
+            end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+            version=7,
+        )
+        assert res == []
 
-    # Test empty start time
-    count_until_2019 = 0
-    for remote_filepath, info_dict in remote_filepaths.items():
-        if info_dict["year"] == 2019:
-            count_until_2019 += 1
-    res = filter.filter_filepaths(
-        filepaths=list(remote_filepaths.keys()),
-        product="2A-DPR",
-        start_time=None,
-        end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
-        version=7,
-    )
+    def test_empty_filepath_list(
+        self,
+        remote_filepaths: Dict[str, Dict[str, Any]],
+    ) -> None:
+        res = filter.filter_filepaths(
+            filepaths=[],
+            product=self.product,
+            start_time=datetime.datetime(2019, 1, 1),
+            end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+            version=7,
+        )
+        assert res == []
 
-    assert len(res) == count_until_2019
+    def test_empty_start_time(
+        self,
+        remote_filepaths: Dict[str, Dict[str, Any]],
+    ) -> None:
+        count_until_2019 = 0
+        for remote_filepath, info_dict in remote_filepaths.items():
+            if info_dict["year"] == 2019 and info_dict["product"] == self.product:
+                count_until_2019 += 1
+        res = filter.filter_filepaths(
+            filepaths=list(remote_filepaths.keys()),
+            product=self.product,
+            start_time=None,
+            end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+            version=7,
+        )
 
-    # Test empty end time (Error as time given (datetime.datetime.now())
-    # requires date to be less than now() in supportive
-    # function checks.check_start_end_time)
-    count_from_2019 = 0
-    for remote_filepath, info_dict in remote_filepaths.items():
-        if info_dict["year"] >= 2019:
-            count_from_2019 += 1
+        assert len(res) == count_until_2019
 
-    res = filter.filter_filepaths(
-        filepaths=list(remote_filepaths.keys()),
-        product="2A-DPR",
-        start_time=datetime.datetime(2019, 1, 1),
-        end_time=None,
-        version=7,
-    )
-    assert len(res) == count_from_2019
+    def test_empty_end_time(
+        self,
+        remote_filepaths: Dict[str, Dict[str, Any]],
+    ) -> None:
+        """Test empty end time (Error as time given (datetime.datetime.now())
+        requires date to be less than now() in supportive
+        function checks.check_start_end_time)"""
+
+        count_from_2019 = 0
+        for remote_filepath, info_dict in remote_filepaths.items():
+            if info_dict["year"] >= 2019 and info_dict["product"] == self.product:
+                count_from_2019 += 1
+
+        res = filter.filter_filepaths(
+            filepaths=list(remote_filepaths.keys()),
+            product=self.product,
+            start_time=datetime.datetime(2019, 1, 1),
+            end_time=None,
+            version=7,
+        )
+        assert len(res) == count_from_2019
+
+    def test_unmatched_version(
+        self,
+        remote_filepaths: Dict[str, Dict[str, Any]],
+    ) -> None:
+        res = filter.filter_filepaths(
+            filepaths=list(remote_filepaths.keys()),
+            product=self.product,
+            start_time=datetime.datetime(2019, 1, 1),
+            end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+            version=0,
+        )
+        assert res == []
+
+    def test_unmatched_product(
+        self,
+        remote_filepaths: Dict[str, Dict[str, Any]],
+    ) -> None:
+        res = filter.filter_filepaths(
+            filepaths=list(remote_filepaths.keys()),
+            product="1A-GMI",
+            start_time=datetime.datetime(2019, 1, 1),
+            end_time=datetime.datetime(2019, 12, 31, 23, 59, 59),
+            version=7,
+        )
+        assert res == []
 
 
 def test_filter_by_time(
@@ -195,6 +234,20 @@ def test_filter_by_time(
         end_time=None,
     )
 
+    # Test granule starting on previous day
+    count_previous_day = 0
+    for remote_filepath, info_dict in remote_filepaths.items():
+        if info_dict["start_time"].day != info_dict["end_time"].day:
+            count_previous_day += 1
+
+    res = filter.filter_by_time(
+        filepaths=list(remote_filepaths.keys()),
+        start_time=datetime.datetime(2020, 7, 6, 0, 0, 20),
+        end_time=datetime.datetime(2020, 7, 6, 0, 0, 30),
+    )
+
+    assert len(res) == count_previous_day
+
 
 def test_filter_by_product(
     remote_filepaths: Dict[str, Dict[str, Any]],
@@ -213,12 +266,12 @@ def test_filter_by_product(
 
     assert products_2A_DPR > 0, "The test remote_filepaths fixture does not contain expected value"
 
-    filter.filter_by_product(
+    filtered_filepaths = filter.filter_by_product(
         filepaths=list(remote_filepaths.keys()),
         product="2A-DPR",
     )
 
-    assert len(remote_filepaths) == products_2A_DPR
+    assert len(filtered_filepaths) == products_2A_DPR
 
     # Test None filepath
     assert (

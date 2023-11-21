@@ -30,7 +30,6 @@ from gpm_api.io.checks import (
     check_remote_storage,
     check_start_end_time,
     check_valid_time_request,
-    is_empty,
 )
 from gpm_api.io.data_integrity import (
     check_archive_integrity,
@@ -267,6 +266,8 @@ def _get_single_file_cmd_function(transfer_tool, storage):
         "pps": {"wget": wget_pps_cmd, "curl": curl_pps_cmd},
         "ges_disc": {"wget": wget_ges_disc_cmd, "curl": curl_ges_disc_cmd},
     }
+    if transfer_tool not in dict_fun[storage].keys():
+        raise NotImplementedError(f"Unsupported transfer tool: {transfer_tool}")
     func = dict_fun[storage][transfer_tool]
     return func
 
@@ -513,7 +514,7 @@ def download_files(
         remote_filepaths=remote_filepaths,
         force_download=force_download,
     )
-    if is_empty(new_remote_filepaths):
+    if len(new_remote_filepaths) == 0:
         if verbose:
             print(f"The requested files are already on disk at {local_filepaths}.")
         return None
@@ -716,7 +717,7 @@ def _download_daily_data(
     )
     # -------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
-    if is_empty(remote_filepaths):
+    if len(remote_filepaths) == 0:
         if warn_missing_files:
             msg = f"No data found on PPS on date {date} for product {product}"
             warnings.warn(msg, GPMDownloadWarning)
@@ -735,7 +736,7 @@ def _download_daily_data(
         remote_filepaths=remote_filepaths,
         force_download=force_download,
     )
-    if is_empty(remote_filepaths):
+    if len(remote_filepaths) == 0:
         return [-1], available_version  # flag for already on disk
 
     # -------------------------------------------------------------------------.

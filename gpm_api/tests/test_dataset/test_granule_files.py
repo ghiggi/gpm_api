@@ -26,7 +26,7 @@ gpm_api.config.set(
 )
 
 
-def test_open_granule_on_real_files(tmp_path):
+def test_open_granule_on_real_files():
     """Test open_granule on real files.
 
     Load cut granules and check that the new file is identical to the saved reference.
@@ -38,17 +38,17 @@ def test_open_granule_on_real_files(tmp_path):
     ├── cut
     │   ├── V7/RS/1A-GMI
     │   │   └── 1A.GPM.GMI.COUNT2021.20140304-S223658-E000925.000082.V07A.HDF5
-    ├── processed
-    │   ├── V7/RS/1A-GMI
-    │       ├── S1.nc
-    │       ├── S2.nc
-    │       ├── S4.nc
-    │       └── S5.nc
-    └── ...
+    │   └── ...
+    └── processed
+        ├── V7/RS/1A-GMI
+        │    ├── S1.nc
+        │    ├── S2.nc
+        │    ├── S4.nc
+        │    └── S5.nc
+        └── ...
     """
 
     granules_dir_path = os.path.join(_root_path, "gpm_api", "tests", "data", "granules")
-    granules_dir_path = os.path.join("/home/ghiggi/GPM_TEST_DATA_DEMO")
 
     if not os.path.exists(granules_dir_path):
         pytest.skip("Test granules not found. Please run `python generate_test_granule_data.py`.")
@@ -76,9 +76,15 @@ def test_open_granule_on_real_files(tmp_path):
                 ds = open_granule(cut_filepath, scan_mode=scan_mode).compute()
                 ds_expected = xr.open_dataset(processed_filepath).compute()
 
-                # Remove history attribute
-                _ = ds.attrs.pop("history", None)
-                _ = ds_expected.attrs.pop("history", None)
+                for _ds in [ds, ds_expected]:
+                    # Remove history attribute
+                    _ds.attrs.pop("history")
+
+                    # Remove attributes conflicting between python versions
+                    if "crsWGS84" in _ds.coords:
+                        _ds.coords["crsWGS84"].attrs.pop("crs_wkt")
+                        _ds.coords["crsWGS84"].attrs.pop("horizontal_datum_name")
+                        _ds.coords["crsWGS84"].attrs.pop("spatial_ref")
 
                 # Check equality
                 xr.testing.assert_identical(ds, ds_expected)

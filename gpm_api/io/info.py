@@ -116,10 +116,7 @@ def _get_info_from_filename(fname):
 
     # Add product information
     # - ATTENTION: can not be inferred for products not defined in etc/product.yml
-    try:
-        info_dict["product"] = get_product_from_filepath(fname)
-    except Exception:
-        pass
+    info_dict["product"] = get_product_from_filepath(fname)
 
     # Return info dictionary
     return info_dict

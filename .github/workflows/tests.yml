@@ -31,6 +31,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
 
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
@@ -48,6 +50,8 @@ jobs:
       - name: Test with pytest
         run: |
           pytest
+        env:
+          HDF5_USE_FILE_LOCKING: FALSE
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3

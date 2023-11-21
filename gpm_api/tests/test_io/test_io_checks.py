@@ -15,37 +15,9 @@ import ntpath as ntp
 import posixpath as ptp
 import pytz
 import pandas as pd
-from typing import List
+from typing import List, Dict, Any
 from gpm_api.io import checks
 from gpm_api.io.products import available_products, available_scan_modes, available_versions
-
-
-def test_is_not_empty() -> None:
-    """Test is_not_empty() which always returns a boolean"""
-
-    # Test False responses:
-    for obj in [None, (), {}, []]:
-        res = checks.is_not_empty(obj)
-        assert res is False, "Function returned True, expected False"
-
-    # Test True responses:
-    for obj in [[1, 2, 3], (1, 2, 3), (1), [1]]:
-        res = checks.is_not_empty(obj)
-        assert res is True, "Function returned False, expected True"
-
-
-def test_is_empty() -> None:
-    """Test is_empty()"""
-
-    # Test False responses:
-    for obj in [[1, 2, 3], (1, 2, 3), (1), [1]]:
-        res = checks.is_empty(obj)
-        assert res is False, "Function returned True, expected False"
-
-    # Test True responses:
-    for obj in [None, (), {}, []]:
-        res = checks.is_empty(obj)
-        assert res is True, "Function returned False, expected True"
 
 
 def test_check_base_dir() -> None:
@@ -166,6 +138,48 @@ def test_check_groups() -> None:
         checks.check_groups(123)
 
 
+def test_check_storage() -> None:
+    """Test check_storage()"""
+
+    # Check valid storage
+    valid_storage = ["ges_disc", "pps", "local", "GES_DISC", "PPS", "LOCAL"]
+    expected_return = ["ges_disc", "pps", "local", "ges_disc", "pps", "local"]
+
+    for storage, expected in zip(valid_storage, expected_return):
+        returned_storage = checks.check_storage(storage)
+        assert (
+            returned_storage == expected
+        ), f"Function returned '{returned_storage}' for storage '{storage}', expected '{expected}'"
+
+    # Check invalid storage
+    with pytest.raises(ValueError):
+        checks.check_storage("invalid_storage")
+
+    with pytest.raises(TypeError):
+        checks.check_storage(123)
+
+
+def test_check_remote_storage() -> None:
+    """Test check_remote_storage()"""
+
+    # Check valid storage
+    valid_storage = ["ges_disc", "pps", "GES_DISC", "PPS"]
+    expected_return = ["ges_disc", "pps", "ges_disc", "pps"]
+
+    for storage, expected in zip(valid_storage, expected_return):
+        returned_storage = checks.check_remote_storage(storage)
+        assert (
+            returned_storage == expected
+        ), f"Function returned '{returned_storage}' for storage '{storage}', expected '{expected}'"
+
+    # Check invalid storage
+    with pytest.raises(ValueError):
+        checks.check_remote_storage("invalid_storage")
+
+    with pytest.raises(TypeError):
+        checks.check_remote_storage(123)
+
+
 def test_check_version(
     versions: List[int],
 ) -> None:
@@ -176,7 +190,7 @@ def test_check_version(
 
     # Check if None, None is returned
     with pytest.raises(ValueError):
-        res = checks.check_version(None)
+        checks.check_version(None)
 
     # Check if string, exception is raised
     with pytest.raises(ValueError):
@@ -188,13 +202,41 @@ def test_check_version(
 
     # Check available range should not raise exception
     for version in versions:
-        res = checks.check_version(version)
-        assert res is None, f"Function returned {res} for version {version}, expected None"
+        checks.check_version(version)
+        # Should run without raising Exception
 
     # Try versions outside of range
     for version in list(range(0, 3)) + list(range(8, 10)):
         with pytest.raises(ValueError):
             checks.check_version(version)
+
+
+def test_check_product_version(
+    check,  # For non-failing asserts
+    product_info: Dict[str, Any],
+    versions: List[int],
+) -> None:
+    """Test check_product_version()"""
+
+    for product, info in product_info.items():
+        # Check valid versions
+        valid_versions = info.get("available_versions", [])
+
+        for version in valid_versions:
+            with check:
+                assert checks.check_product_version(version, product) == version
+
+        # Check last version return if None
+        last_version = info.get("available_versions", [])[-1]
+        with check:
+            assert checks.check_product_version(None, product) == last_version
+
+        # Check invalid versions
+        invalid_versions = list(set(versions) - set(info.get("available_versions", [])))
+
+        for version in invalid_versions:
+            with check.raises(ValueError):
+                checks.check_product_version(version, product)
 
 
 def test_check_product(
@@ -209,8 +251,8 @@ def test_check_product(
     # Test a product that does exist
     for product_type in product_types:
         for product in available_products(product_type=product_type):
-            res = checks.check_product(product, product_type=product_type)
-            assert res is None, f"Function returned {res} for product {product} expected None"
+            checks.check_product(product, product_type=product_type)
+            # Should run without raising Exception
 
     # Test a product that isn't a string
     for product_type in product_types:
@@ -226,10 +268,8 @@ def test_check_product_type(
 
     # Test a product_type that does exist
     for product_type in product_types:
-        res = checks.check_product_type(product_type)
-        assert res is None, (
-            f"Function returned {res} for product_type {product_type}, " f"expected None"
-        )
+        checks.check_product_type(product_type)
+        # Should run without raising Exception
 
     # Test a product_type that doesn't exist
     for product_type in ["IMERG", 123, None]:
@@ -249,10 +289,8 @@ def test_check_product_category(
 
     # Test a product_category that does exist
     for product_category in product_categories:
-        res = checks.check_product_category(product_category)
-        assert res is None, (
-            f"Function returned {res} for product_category {product_category}," f" expected None"
-        )
+        checks.check_product_category(product_category)
+        # Should run without raising Exception
 
     # Test a product_category that doesn't exist
     for product_category in ["NOT", "A", "CATEGORY"]:
@@ -272,10 +310,8 @@ def test_check_product_level(
 
     # Test a product_level that does exist
     for product_level in product_levels:
-        res = checks.check_product_level(product_level)
-        assert (
-            res is None
-        ), f"Function returned {res} for product_level {product_level}, expected None"
+        checks.check_product_level(product_level)
+    # Should run without raising Exception
 
     # Test a product_level that doesn't exist
     for product_level in ["NOT", "A", "LEVEL"]:
@@ -291,8 +327,8 @@ def test_check_product_validity(
     # Test a product that does exist
     for product_type in product_types:
         for product in available_products(product_type=product_type):
-            res = checks.check_product_validity(product, product_type=product_type)
-            assert res is None, f"Function returned {res} for product {product}, expected None"
+            checks.check_product_validity(product, product_type=product_type)
+            # Should run without raising Exception
 
     # Test a product that doesn't exist
     for product_type in product_types:
@@ -376,6 +412,11 @@ def test_check_time() -> None:
     with pytest.raises(TypeError):
         checks.check_time(123)
 
+    # Check numpy single timestamp
+    res = checks.check_time(np.array(["2014-12-31"], dtype="datetime64[s]"))
+    assert isinstance(res, datetime.datetime)
+    assert res == datetime.datetime(2014, 12, 31)
+
     # Check numpy multiple timestamp
     with pytest.raises(ValueError):
         checks.check_time(np.array(["2014-12-31", "2015-01-01"], dtype="datetime64[s]"))
@@ -383,6 +424,12 @@ def test_check_time() -> None:
     # Test with numpy non datetime64 object
     with pytest.raises(ValueError):
         checks.check_time(np.array(["2014-12-31"]))
+
+    # Check non-UTC timezone
+    with pytest.raises(ValueError):
+        checks.check_time(
+            datetime.datetime(2014, 12, 31, 12, 30, 30, 300, tzinfo=pytz.timezone("Europe/Zurich"))
+        )
 
 
 def test_check_date() -> None:
@@ -496,6 +543,36 @@ def test_check_start_end_time() -> None:
         datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
         datetime.datetime.utcnow(),
     )
+
+
+def test_check_valid_time_request(
+    check,  # For non-failing asserts
+    product_info: Dict[str, Any],
+) -> None:
+    """Test check_valid_time_request()"""
+
+    for product, info in product_info.items():
+        valid_start_time = info["start_time"]
+        valid_end_time = info["end_time"]
+
+        if valid_start_time is not None:
+            # Check valid times
+            start_time = valid_start_time
+            end_time = valid_start_time + datetime.timedelta(days=1)
+            checks.check_valid_time_request(start_time, end_time, product)
+
+            # Check invalid start time
+            start_time = valid_start_time - datetime.timedelta(days=1)
+            end_time = valid_start_time + datetime.timedelta(days=1)
+            with check.raises(ValueError):
+                checks.check_valid_time_request(start_time, end_time, product)
+
+        # Check invalid end time
+        if valid_end_time is not None:
+            start_time = valid_end_time - datetime.timedelta(days=1)
+            end_time = valid_end_time + datetime.timedelta(days=1)
+            with check.raises(ValueError):
+                checks.check_valid_time_request(start_time, end_time, product)
 
 
 def test_check_scan_mode(
