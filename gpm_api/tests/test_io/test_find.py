@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import os
 from typing import Any, Dict, List, Tuple
 
@@ -13,7 +13,7 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 class TestGetDailyFilepaths:
     """Test _get_all_daily_filepaths"""
 
-    date = datetime(2020, 12, 31)
+    date = datetime.datetime(2020, 12, 31)
     mock_filenames = [
         "file1.HDF5",
         "file2.HDF5",
@@ -375,14 +375,14 @@ def test_find_daily_filepaths(
     """Test find_daily_filepaths"""
 
     storage = "storage"
-    date = datetime(2020, 12, 31)
+    date = datetime.datetime(2020, 12, 31)
     product = "product"
     product_type = "product-type"
     version = 7
-    start_time = datetime(2020, 12, 31, 1, 2, 3)
-    end_time = datetime(2020, 12, 31, 4, 5, 6)
+    start_time = datetime.datetime(2020, 12, 31, 1, 2, 3)
+    end_time = datetime.datetime(2020, 12, 31, 4, 5, 6)
 
-    date_checked = datetime(1900, 1, 1)
+    date_checked = datetime.datetime(1900, 1, 1)
     mocker.patch.object(find, "check_date", autospec=True, return_value=date_checked)
 
     # Mock _get_all_daily_filepaths, already tested above
@@ -462,3 +462,77 @@ def test_find_daily_filepaths(
     returned_filepaths, returned_versions = find.find_daily_filepaths(**kwargs)
     assert returned_filepaths == []
     assert returned_versions == []
+
+
+def test_find_filepaths(
+    mocker: MockerFixture,
+) -> None:
+    """Test find_filepaths.
+
+    Since find_filepaths relies on find_daily_filepaths, we can mock
+    find_daily_filepaths and only test some cases here.
+    """
+
+    storage = "pps"
+    version = 7
+    product = "2A-DPR"
+    product_type = "RS"
+    start_time = datetime.datetime(2020, 12, 29, 8, 0, 0)
+    end_time = datetime.datetime(2020, 12, 31, 8, 0, 0)
+    verbose = True
+
+    n_filepath_per_day = 3
+
+    # Mock find_daily_filepaths
+    def mock_find_daily_filepaths(**kwargs: Any) -> Tuple[List[str], List[int]]:
+        base_filepath = "_".join([f"{key}:{value}" for key, value in kwargs.items()])
+        return [f"{base_filepath}_{i}" for i in range(n_filepath_per_day)], [
+            version
+        ] * n_filepath_per_day
+
+    mocker.patch.object(
+        find, "find_daily_filepaths", autospec=True, side_effect=mock_find_daily_filepaths
+    )
+
+    kwargs = {
+        "storage": storage,
+        "product": product,
+        "product_type": product_type,
+        "start_time": start_time,
+        "end_time": end_time,
+        "verbose": verbose,
+    }
+
+    returned_filepaths = find.find_filepaths(**kwargs, parallel=False)
+    returned_filepaths_parallel = find.find_filepaths(**kwargs, parallel=True)
+    assert returned_filepaths == returned_filepaths_parallel
+
+    # Check all find_daily_filepaths kwargs passed
+    returned_filepath = returned_filepaths[
+        -1
+    ]  # Take last filepath, because "verbose" is not passed to first date
+    assert f"storage:{storage}" in returned_filepath
+    assert f"version:{version}" in returned_filepath
+    assert f"product:{product}" in returned_filepath
+    assert f"product_type:{product_type}" in returned_filepath
+    assert f"start_time:{start_time}" in returned_filepath
+    assert f"end_time:{end_time}" in returned_filepath
+    assert f"verbose:{verbose}" in returned_filepath
+
+    # Check that date goes from (start_time - 1) day to end_time
+    start_date = datetime.datetime(
+        start_time.year, start_time.month, start_time.day
+    ) - datetime.timedelta(days=1)
+    end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
+    n_days = (end_date - start_date).days + 1  # Include last day
+    assert len(returned_filepaths) == n_days * n_filepath_per_day, "More days than expected"
+
+    for date in [start_date + datetime.timedelta(days=i) for i in range(n_days)]:
+        filtered = list(filter(lambda fp: f"date:{date}" in fp, returned_filepaths))
+        assert len(filtered) == n_filepath_per_day, "Date is missing"
+
+    # Test NRT products: single date
+    product_type = "NRT"
+    kwargs["product_type"] = product_type
+    returned_filepaths = find.find_filepaths(**kwargs, parallel=False)
+    assert len(returned_filepaths) == n_filepath_per_day, "More days than expected"
