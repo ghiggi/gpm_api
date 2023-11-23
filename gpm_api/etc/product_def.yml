@@ -1667,6 +1667,8 @@
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: null
+  start_time: null
+  end_time: null
   available_versions:
   - 4
   scan_modes:
@@ -1680,6 +1682,8 @@
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: null
+  start_time: null
+  end_time: null
   available_versions:
   - 4
   scan_modes:

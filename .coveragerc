@@ -5,8 +5,13 @@ omit =
 	*dev*
 	*docs*
 	*tutorials*
-	gpm_api/tests/*
+	gpm_api/bucket/*
 	gpm_api/cli/*
+	gpm_api/encoding/*
+	gpm_api/etc/*
+	gpm_api/retrieval/*
+	gpm_api/tests/*
+	gpm_api/_version.py
 
 [report]
 exclude_lines =

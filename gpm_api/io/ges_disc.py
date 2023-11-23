@@ -5,7 +5,6 @@ Created on Mon Oct  9 12:44:42 2023
 @author: ghiggi
 """
 import datetime
-import os
 import re
 import subprocess
 
@@ -42,7 +41,7 @@ def _get_href_value(input_string):
     return href_value
 
 
-def _get_gesc_disc_list_path(url):
+def _get_ges_disc_list_path(url):
     # Retrieve url content
     # - If it returns something, means url is correct
     wget_output = _get_ges_disc_url_content(url)
@@ -51,7 +50,7 @@ def _get_gesc_disc_list_path(url):
     list_content = [s for s in list_content if s != ""]
     if len(list_content) == 0:
         raise ValueError(f"The GES DISC {url} directory is empty.")
-    list_path = [os.path.join(url, s) for s in list_content]
+    list_path = [f"{url}/{s}" for s in list_content]
     return list_path
 
 
@@ -72,11 +71,11 @@ def _get_gesc_disc_list_path(url):
 def _get_ges_disc_server(product):
     # TRMM
     if is_trmm_product(product):
-        ges_disc_base_url = "https://disc2.gesdisc.eosdis.nasa.gov/data/"
+        ges_disc_base_url = "https://disc2.gesdisc.eosdis.nasa.gov/data"
 
     # GPM
     else:
-        ges_disc_base_url = "https://gpm1.gesdisc.eosdis.nasa.gov/data"
+        # ges_disc_base_url = "https://gpm1.gesdisc.eosdis.nasa.gov/data"
         ges_disc_base_url = "https://gpm2.gesdisc.eosdis.nasa.gov/data"
     return ges_disc_base_url
 
@@ -114,9 +113,11 @@ def _get_ges_disc_product_directory_tree(product, date, version):
 
     # Specify the directory tree
     # --> TODO: currently specified only for L1 and L2
-    directory_tree = os.path.join(
-        folder_name,
-        datetime.datetime.strftime(date, "%Y/%j"),
+    directory_tree = "/".join(
+        [
+            folder_name,
+            datetime.datetime.strftime(date, "%Y/%j"),
+        ]
     )
     return directory_tree
 
@@ -148,7 +149,7 @@ def get_ges_disc_product_directory(product, date, version):
         product=product, date=date, version=version
     )
     # Define product directory where data are listed
-    url_product_dir = os.path.join(url_server, dir_structure)
+    url_product_dir = f"{url_server}/{dir_structure}"
     return url_product_dir
 
 
@@ -178,7 +179,7 @@ def _get_gesdisc_file_list(url_product_dir, product, date, version, verbose=True
         Default is False. Whether to specify when data are not available for a specific date.
     """
     try:
-        filepaths = _get_gesc_disc_list_path(url_product_dir)
+        filepaths = _get_ges_disc_list_path(url_product_dir)
     except Exception as e:
         # If url not exist, raise an error
         if "was not found on the GES DISC server" in str(e):
@@ -248,5 +249,5 @@ def define_gesdisc_filepath(product, product_type, date, version, filename):
     # Retrieve product directory url
     url_product_dir = get_ges_disc_product_directory(product=product, date=date, version=version)
     # Define GES DISC filepath
-    fpath = os.path.join(url_product_dir, filename)
+    fpath = f"{url_product_dir}/{filename}"
     return fpath

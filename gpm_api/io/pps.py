@@ -5,7 +5,6 @@ Created on Thu Oct 13 17:45:37 2022
 @author: ghiggi
 """
 import datetime
-import os
 import subprocess
 
 from dateutil.relativedelta import relativedelta
@@ -77,7 +76,7 @@ def _get_pps_nrt_product_dir(product, date):
     folder_name = _get_pps_nrt_product_folder_name(product)
     # Specify the directory tree
     if product in available_products(product_type="NRT", product_category="IMERG"):
-        directory_tree = os.path.join(folder_name, datetime.datetime.strftime(date, "%Y%m"))
+        directory_tree = f"{folder_name}/{datetime.datetime.strftime(date, '%Y%m')}"
     else:
         directory_tree = folder_name
     return directory_tree
@@ -104,20 +103,24 @@ def _get_pps_rs_product_dir(product, date, version):
 
     # Specify the directory tree for current RS version
     if version == 7:
-        directory_tree = os.path.join(
-            "gpmdata",
-            datetime.datetime.strftime(date, "%Y/%m/%d"),
-            folder_name,
+        directory_tree = "/".join(
+            [
+                "gpmdata",
+                datetime.datetime.strftime(date, "%Y/%m/%d"),
+                folder_name,
+            ]
         )
 
     # Specify the directory tree for old RS version
     else:  #  version in [4, 5, 6]:
         version_str = "V0" + str(int(version))
-        directory_tree = os.path.join(
-            "gpmallversions",
-            version_str,
-            datetime.datetime.strftime(date, "%Y/%m/%d"),
-            folder_name,
+        directory_tree = "/".join(
+            [
+                "gpmallversions",
+                version_str,
+                datetime.datetime.strftime(date, "%Y/%m/%d"),
+                folder_name,
+            ]
         )
 
     # Return the directory tree
@@ -194,7 +197,7 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
         product=product, product_type=product_type, date=date, version=version
     )
     # Define product directory where data are listed
-    url_product_dir = os.path.join(url_server, dir_structure)
+    url_product_dir = f"{url_server}/{dir_structure}"
     return url_product_dir
 
 
@@ -306,9 +309,9 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
         verbose=verbose,
     )
     # Define the complete url of pps filepaths
-    # - Need to remove the starting "/" to each filepath
+    # Filepaths start with a "/"
     url_data_server = _get_pps_data_server(product_type)
-    filepaths = [os.path.join(url_data_server, filepath[1:]) for filepath in filepaths]
+    filepaths = [f"{url_data_server}{filepath}" for filepath in filepaths]
     return filepaths
 
 
@@ -323,7 +326,7 @@ def define_pps_filepath(product, product_type, date, version, filename):
         server_type="data",
     )
     # Define PPS filepath
-    fpath = os.path.join(url_product_dir, filename)
+    fpath = f"{url_product_dir}/{filename}"
     return fpath
 
 

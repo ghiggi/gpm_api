@@ -9,14 +9,6 @@ import os
 import numpy as np
 
 
-def is_not_empty(x):
-    return bool(x)
-
-
-def is_empty(x):
-    return not x
-
-
 def check_base_dir(base_dir):
     """Check base directory path.
 
@@ -192,7 +184,7 @@ def check_time(time):
     if isinstance(time, np.ndarray):
         if np.issubdtype(time.dtype, np.datetime64):
             if time.size == 1:
-                time = time.astype("datetime64[s]").tolist()
+                time = time[0].astype("datetime64[s]").tolist()
             else:
                 raise ValueError("Expecting a single timestep!")
         else:
