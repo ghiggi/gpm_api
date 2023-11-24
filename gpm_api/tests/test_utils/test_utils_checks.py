@@ -1,3 +1,4 @@
+from typing import Union
 import numpy as np
 import xarray as xr
 
@@ -19,7 +20,7 @@ def create_dataset_with_coordinate(coord_name: str, coord_values: np.ndarray) ->
     return ds
 
 
-def create_orbit_time_array(time_template: list | np.ndarray) -> np.ndarray:
+def create_orbit_time_array(time_template: Union[list, np.ndarray]) -> np.ndarray:
     """Create a time array with ORBIT_TIME_TOLERANCE as unit"""
 
     start_time = np.datetime64("2020-12-31T00:00:00")
