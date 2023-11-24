@@ -3,7 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   tests:
-    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', latest dependencies' || '' }}
+    name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ', latest dependencies' || '' }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -25,10 +25,6 @@ jobs:
             experimental: false
             coverage: true
 
-          - os: "windows-latest"
-            python-version: "3.11"
-            experimental: false
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -49,26 +45,30 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest
+          pytest # See pyproject.toml for cov options
         env:
           HDF5_USE_FILE_LOCKING: FALSE
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         if: matrix.coverage
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Generate coverage report in lcov format
-        if: matrix.coverage
-        run: |
-          coverage lcov -o coverage/lcov.info
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
 
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@v2
         if: matrix.coverage
         with:
           parallel: true
+          files: lcov.info
+
+      - name: Upload coverage reports to Codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        if: matrix.coverage && github.ref == 'refs/heads/main'
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }} # Not accessible from PR
+          coverage-reports: coverage.xml
 
   end-coveralls:
     needs: [tests]
