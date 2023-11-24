@@ -1,5 +1,5 @@
-from typing import Union
 import numpy as np
+from typing import Union
 import xarray as xr
 
 import pytest

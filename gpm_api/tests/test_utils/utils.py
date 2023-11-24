@@ -1,8 +1,9 @@
 import datetime
 import numpy as np
+from typing import Union
 
 
-def convert_hours_array_to_datetime_array(hours: list | np.ndarray) -> np.ndarray:
+def convert_hours_array_to_datetime_array(hours: Union[list, np.ndarray]) -> np.ndarray:
     """Convert list of integers and NaNs into a np.datetime64 array"""
 
     datetimes = []
