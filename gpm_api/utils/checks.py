@@ -150,7 +150,7 @@ def has_missing_granules(xr_obj):
     if is_orbit(xr_obj):
         return bool(np.any(~_is_contiguous_granule(xr_obj["gpm_granule_id"].data)))
     if is_grid(xr_obj):
-        return ~has_regular_time(xr_obj)
+        return not has_regular_time(xr_obj)
     else:
         raise ValueError("Unrecognized GPM xarray object.")
 
@@ -212,8 +212,9 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
         GPM xarray object.
     tolerance : np.timedelta, optional
         The timedelta tolerance to define regular vs. non-regular timesteps.
-        If None, it uses the first 2 timesteps to derive the tolerance timedelta.
         The default is None.
+        If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
+        If GPM ORBIT object, it uses the ORBIT_TIME_TOLERANCE.
     min_size : int
         Minimum size for a slice to be returned.
 
@@ -267,7 +268,7 @@ def get_slices_non_regular_time(xr_obj, tolerance=None):
         The timedelta tolerance to define regular vs. non-regular timesteps.
         The default is None.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
-        If GPM ORBIT object, it uses the gpm_api.utils.time.ORBIT_TIME_TOLERANCE.
+        If GPM ORBIT object, it uses the ORBIT_TIME_TOLERANCE.
         It is discouraged to use this function for GPM ORBIT objects !
 
     Returns
@@ -313,7 +314,7 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
         The timedelta tolerance to define regular vs. non-regular timesteps.
         The default is None.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
-        If GPM ORBIT object, it uses the gpm_api.utils.time.ORBIT_TIME_TOLERANCE
+        If GPM ORBIT object, it uses the ORBIT_TIME_TOLERANCE
     verbose : bool
         If True, it prints the time interval when the non contiguous scans occurs.
         The default is True.
