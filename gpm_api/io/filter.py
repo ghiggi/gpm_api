@@ -89,7 +89,10 @@ def _filter_filepath(filepath, product=None, version=None, start_time=None, end_
 
     """
 
-    info_dict = get_info_from_filepath(filepath)
+    try:
+        info_dict = get_info_from_filepath(filepath)
+    except ValueError:
+        return None
 
     # Filter by version
     if version is not None:
