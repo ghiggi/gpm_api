@@ -61,6 +61,15 @@ def test_list_slices_intersection() -> None:
     returned_list = gpm_slices.list_slices_intersection(*slices)
     assert returned_list == expected_list
 
+    # Hole in one list: patched by the other
+    slices = [
+        [slice(0, 10)],
+        [slice(0, 5), slice(5, 10)],
+    ]
+    expected_list = [slice(0, 10)]
+    returned_list = gpm_slices.list_slices_intersection(*slices)
+    assert returned_list == expected_list
+
     # Test with empty list
     assert gpm_slices.list_slices_intersection() == []
 
