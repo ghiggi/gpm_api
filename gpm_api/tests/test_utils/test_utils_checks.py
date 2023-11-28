@@ -344,9 +344,138 @@ class TestCheckRegularTime:
             checks.check_regular_time(ds)
 
 
-def test_get_slices_contiguous_scans(
-    set_is_orbit_to_true: None,
-) -> None:
-    """Test get_slices_contiguous_scans"""
+def test_check_cross_track() -> None:
+    """Test _check_cross_track decorator"""
 
-    # TODO
+    @checks._check_cross_track
+    def identity(xr_obj: Union[xr.Dataset, xr.DataArray]) -> Union[xr.Dataset, xr.DataArray]:
+        return xr_obj
+
+    # Test with cross_track
+    da = xr.DataArray(np.arange(10), dims=["cross_track"])
+    identity(da)
+    # No error raised
+
+    # Test without cross_track
+    da = xr.DataArray(np.arange(10))
+    with pytest.raises(ValueError):
+        identity(da)
+
+
+def test_get_along_track_scan_distance() -> None:
+    """Test _get_along_track_scan_distance"""
+
+    # Values along track
+    lat = np.array([60, 60, 60])
+    lon = np.array([0, 45, 90])
+
+    # Stack values for cross track dimension
+    lat = np.stack((np.random.rand(3), lat, np.random.rand(3)))
+    lon = np.stack((np.random.rand(3), lon, np.random.rand(3)))
+
+    # Create dataset
+    ds = xr.Dataset()
+    ds["lat"] = (("cross_track", "along_track"), lat)
+    ds["lon"] = (("cross_track", "along_track"), lon)
+
+    returned_distances = checks._get_along_track_scan_distance(ds)
+
+    RADIUS_EARTH = 6357e3
+    expected_distance = RADIUS_EARTH * np.pi / 8
+    np.testing.assert_allclose(
+        returned_distances, [expected_distance, expected_distance], rtol=0.02
+    )
+
+
+class TestContinuousScans:
+    n_along_track = 10
+
+    @pytest.fixture
+    def ds_contiguous(self) -> xr.Dataset:
+        # Values along track
+        lat = np.array([60] * self.n_along_track)
+        lon = np.arange(self.n_along_track)
+
+        # Add cross track dimension
+        lat = lat[np.newaxis, :]
+        lon = lon[np.newaxis, :]
+
+        # Create dataset
+        ds = xr.Dataset()
+        ds["lat"] = (("cross_track", "along_track"), lat)
+        ds["lon"] = (("cross_track", "along_track"), lon)
+        ds["gpm_granule_id"] = np.arange(self.n_along_track)
+
+        return ds
+
+    @pytest.fixture
+    def ds_non_contiguous(
+        self,
+        ds_contiguous: xr.Dataset,
+    ) -> xr.Dataset:
+        ds = ds_contiguous.copy(deep=True)
+
+        # Insert one gap
+        ds["lon"][0, self.n_along_track // 2 :] = ds["lon"][0, self.n_along_track // 2 :] + 1
+        ds["gpm_granule_id"] = ds["lon"][0, :]
+
+        return ds
+
+    def test_is_contiguous_scans(
+        self,
+        ds_contiguous: xr.Dataset,
+        ds_non_contiguous: xr.Dataset,
+    ) -> None:
+        """Test _is_contiguous_scans"""
+
+        # Test contiguous
+        contiguous = checks._is_contiguous_scans(ds_contiguous)
+        assert np.all(contiguous)
+
+        # Test non contiguous (insert one gap)
+
+        contiguous = checks._is_contiguous_scans(ds_non_contiguous)
+        assert np.sum(contiguous) == self.n_along_track - 1
+        assert contiguous[self.n_along_track // 2 - 1] == False
+
+    def test_check_contiguous_scans(
+        self,
+        set_is_orbit_to_true: None,
+        ds_contiguous: xr.Dataset,
+        ds_non_contiguous: xr.Dataset,
+    ) -> None:
+        """Test check_contiguous_scans"""
+
+        # Test contiguous
+        checks.check_contiguous_scans(ds_contiguous)
+        # No error raised
+
+        # Test non contiguous (insert one gap)
+        with pytest.raises(ValueError):
+            checks.check_contiguous_scans(ds_non_contiguous)
+
+    def test_has_contiguous_scans(
+        self,
+        set_is_orbit_to_true: None,
+        ds_contiguous: xr.Dataset,
+        ds_non_contiguous: xr.Dataset,
+    ) -> None:
+        """Test has_contiguous_scans"""
+
+        assert checks.has_contiguous_scans(ds_contiguous)
+        assert not checks.has_contiguous_scans(ds_non_contiguous)
+
+
+def test_is_valid_geolocation() -> None:
+    """Test _is_valid_geolocation"""
+
+    # Valid
+    ds = xr.Dataset()
+    ds["lon"] = np.arange(10, dtype=float)
+    valid = checks._is_valid_geolocation(ds)
+    assert np.all(valid)
+
+    # Invalid
+    ds["lon"].data[0] = np.nan
+    valid = checks._is_valid_geolocation(ds)
+    assert np.sum(valid) == 9
