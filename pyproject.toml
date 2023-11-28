@@ -90,7 +90,7 @@ download_gpm_files="gpm_api.scripts.download_gpm_files:download_gpm_files"
 
 
 [tool.pytest.ini_options]
-addopts = "--ignore=gpm_api/tests/0_tmp/ --cov --cov-report term-missing --check-max-report=10"
+addopts = "--ignore=gpm_api/tests/0_tmp/ --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
 
 [tool.black]
 line-length = 100

@@ -1,0 +1,37 @@
+name: Tests Windows
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  tests:
+    name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ' with latest dependencies' || '' }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["windows-latest"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        experimental: [false]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up micromamba and install package dependencies
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: ${{ matrix.experimental && 'ci/environment_latest.yml' || 'ci/environment.yml' }}
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: >-
+            bash
+
+      - name: Install the package
+        run: |
+          pip install -e .[image,dev]
+
+      - name: Test with pytest
+        run: |
+          pytest
