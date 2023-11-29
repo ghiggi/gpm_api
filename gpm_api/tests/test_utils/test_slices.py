@@ -53,20 +53,38 @@ def test_list_slices_intersection() -> None:
     """Test list_slices_intersection"""
 
     slices = [
-        [slice(0, 3), slice(4, 7)],
-        [slice(2, 5), slice(5, 8)],
-    ]
+        [slice(0, 3), slice(4, 7)],  # 0 1 2|  4 5 6|
+        [slice(2, 5), slice(5, 8)],  #     2 3 4|5 6 7
+    ]  #                 intersection:     2|3 4|5 6|
     # Common indices: 2, 4, 5, 6
-    expected_list = [slice(2, 3), slice(4, 7)]
+    expected_list = [slice(2, 3), slice(4, 5), slice(5, 7)]
     returned_list = gpm_slices.list_slices_intersection(*slices)
     assert returned_list == expected_list
 
-    # Hole in one list: patched by the other
+    # Hole in one list: should not be patched
     slices = [
         [slice(0, 10)],
         [slice(0, 5), slice(5, 10)],
     ]
-    expected_list = [slice(0, 10)]
+    expected_list = [slice(0, 5), slice(5, 10)]
+    returned_list = gpm_slices.list_slices_intersection(*slices)
+    assert returned_list == expected_list
+
+    # Repeated slices
+    slices = [
+        [slice(0, 3), slice(3, 6)],
+        [slice(0, 3), slice(3, 6)],
+    ]
+    expected_list = [slice(0, 3), slice(3, 6)]
+    returned_list = gpm_slices.list_slices_intersection(*slices)
+    assert returned_list == expected_list
+
+    # Non-intersecting lists
+    slices = [
+        [slice(0, 3)],
+        [slice(4, 7)],
+    ]
+    expected_list = []
     returned_list = gpm_slices.list_slices_intersection(*slices)
     assert returned_list == expected_list
 

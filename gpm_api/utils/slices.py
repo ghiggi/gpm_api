@@ -4,7 +4,6 @@ Created on Sat Dec 10 18:46:00 2022
 
 @author: ghiggi
 """
-from functools import reduce
 
 import numpy as np
 
@@ -62,13 +61,39 @@ def get_indices_from_list_slices(list_slices, check_non_intersecting=True):
     return indices
 
 
+def _get_slices_intersection(slc1, slc2):
+    """Return the intersecting slices from two slices."""
+    if not isinstance(slc1, slice) or not isinstance(slc2, slice):
+        raise TypeError("Expecting slice objects")
+
+    if slc1.start > slc2.stop or slc1.stop < slc2.start:
+        return None
+
+    start = max(slc1.start, slc2.start)
+    stop = min(slc1.stop, slc2.stop)
+
+    if start == stop:
+        return None
+
+    return slice(start, stop)
+
+
 def list_slices_intersection(*args):
     """Return the intersecting slices from multiple list of slices."""
     if len(args) == 0:
         return []
-    list_indices = [get_indices_from_list_slices(l_slc) for l_slc in list(args)]
-    intersect_indices = reduce(np.intersect1d, list_indices)
-    return get_list_slices_from_indices(intersect_indices)
+
+    list_slices = [slice(-np.inf, np.inf)]
+
+    for i in range(len(args)):
+        list_slices = [
+            _get_slices_intersection(slc1, slc2) for slc1 in list_slices for slc2 in args[i]
+        ]
+        list_slices = [slc for slc in list_slices if slc is not None]
+        if len(list_slices) == 0:
+            return []
+
+    return list_slices
 
 
 def list_slices_union(*args):
