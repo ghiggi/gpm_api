@@ -61,24 +61,21 @@ def get_indices_from_list_slices(list_slices, check_non_intersecting=True):
     return indices
 
 
-def _get_slices_intersection(slc1, slc2):
+def _get_slices_intersection(slc1, slc2, min_size=1):
     """Return the intersecting slices from two slices."""
     if not isinstance(slc1, slice) or not isinstance(slc2, slice):
         raise TypeError("Expecting slice objects")
 
-    if slc1.start > slc2.stop or slc1.stop < slc2.start:
-        return None
-
     start = max(slc1.start, slc2.start)
     stop = min(slc1.stop, slc2.stop)
 
-    if start == stop:
+    if stop - start < min_size:
         return None
 
     return slice(start, stop)
 
 
-def list_slices_intersection(*args):
+def list_slices_intersection(*args, min_size=1):
     """Return the intersecting slices from multiple list of slices."""
     if len(args) == 0:
         return []
@@ -87,7 +84,9 @@ def list_slices_intersection(*args):
 
     for i in range(len(args)):
         list_slices = [
-            _get_slices_intersection(slc1, slc2) for slc1 in list_slices for slc2 in args[i]
+            _get_slices_intersection(slc1, slc2, min_size)
+            for slc1 in list_slices
+            for slc2 in args[i]
         ]
         list_slices = [slc for slc in list_slices if slc is not None]
         if len(list_slices) == 0:
@@ -103,13 +102,34 @@ def list_slices_union(*args):
     return get_list_slices_from_indices(union_indices)
 
 
+def _get_slices_difference(slc1, slc2):
+    """Return the list of slices covered by slc1 not intersecting slc2."""
+    slice_left = slice(slc1.start, min(slc1.stop, slc2.start))
+    slice_right = slice(max(slc1.start, slc2.stop), slc1.stop)
+
+    slices = []
+
+    if get_slice_size(slice_left) > 0:
+        slices.append(slice_left)
+
+    if get_slice_size(slice_right) > 0:
+        slices.append(slice_right)
+
+    return slices
+
+
 def list_slices_difference(list_slices1, list_slices2):
     """Return the list of slices covered by list_slices1 not intersecting list_slices2."""
-    list_indices1 = get_indices_from_list_slices(list_slices1)
-    list_indices2 = get_indices_from_list_slices(list_slices2)
-    diff_indices = np.setdiff1d(list_indices1, list_indices2)
-    list_slices = get_list_slices_from_indices(diff_indices)
-    return list_slices
+    if len(list_slices2) == 0:
+        return list_slices1
+
+    list_slices = [
+        [slc for slc1 in list_slices1 for slc in _get_slices_difference(slc1, slc2)]
+        for slc2 in list_slices2
+    ]
+    return list_slices_intersection(
+        *list_slices, min_size=0
+    )  # min_size=0 to keep holes from list_slices2
 
 
 def list_slices_combine(*args):

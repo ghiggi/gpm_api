@@ -113,6 +113,18 @@ def test_list_slices_union() -> None:
 def test_list_slices_difference() -> None:
     """Test list_slices_difference"""
 
+    # Base cases
+    assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 2)]) == [slice(3, 6)]
+    assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 4)]) == [slice(4, 6)]
+    assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 8)]) == []
+    assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(5, 8)]) == [slice(3, 5)]
+    assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(7, 8)]) == [slice(3, 6)]
+    assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(4, 5)]) == [
+        slice(3, 4),
+        slice(5, 6),
+    ]
+
+    # List of slices
     slices = [
         [slice(0, 3), slice(4, 7)],
         [slice(4, 7), slice(7, 10)],
@@ -122,10 +134,29 @@ def test_list_slices_difference() -> None:
     assert returned_list == expected_list
 
     # Test with one empty list
-    slices[1] = []
+    slices = [
+        [slice(0, 3), slice(4, 7)],
+        [],
+    ]
     expected_list = [slice(0, 3), slice(4, 7)]
     returned_list = gpm_slices.list_slices_difference(*slices)
     assert returned_list == expected_list
+
+    slices = [
+        [],
+        [slice(0, 3)],
+    ]
+    expected_list = []
+    returned_list = gpm_slices.list_slices_difference(*slices)
+    assert returned_list == expected_list
+
+    # Hole in one list: should not be patched
+    slices = [
+        [slice(0, 10)],
+        [slice(0, 5), slice(5, 10)],
+    ]
+    expected_list = [slice(5, 5)]
+    returned_list = gpm_slices.list_slices_difference(*slices)
 
 
 def test_list_slices_combine() -> None:
