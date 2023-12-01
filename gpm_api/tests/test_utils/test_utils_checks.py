@@ -444,6 +444,8 @@ class TestContinuousScans:
         self,
         ds_non_contiguous_granule_id: xr.Dataset,
     ) -> xr.Dataset:
+        """Create a dasaset with non contiguous lon and granule_id"""
+
         ds = ds_non_contiguous_granule_id.copy(deep=True)
 
         # Insert gap at same location as granule_id
@@ -487,9 +489,6 @@ class TestContinuousScans:
         """Test check_contiguous_scans"""
 
         # Test contiguous
-        print(ds_contiguous["lon"])
-        print(ds_contiguous["gpm_granule_id"])
-        print(ds_contiguous["time"])
         checks.check_contiguous_scans(ds_contiguous)
         # No error raised
 
@@ -519,16 +518,77 @@ class TestContinuousScans:
         assert not checks.has_contiguous_scans(ds_non_contiguous_both)
 
 
-def test_is_valid_geolocation() -> None:
-    """Test _is_valid_geolocation"""
+class TestValidGeolocation:
+    n_along_track = 10
+    invalid_idx = 5
 
-    # Valid
-    ds = xr.Dataset()
-    ds["lon"] = np.arange(10, dtype=float)
-    valid = checks._is_valid_geolocation(ds)
-    assert np.all(valid)
+    @pytest.fixture
+    def ds_valid(self) -> xr.Dataset:
+        # Values along track
+        lon = np.arange(self.n_along_track, dtype=float)
 
-    # Invalid
-    ds["lon"].data[0] = np.nan
-    valid = checks._is_valid_geolocation(ds)
-    assert np.sum(valid) == 9
+        # Add cross-track dimension
+        lon = lon[np.newaxis, :]
+        time = np.zeros(self.n_along_track)
+
+        ds = xr.Dataset()
+        ds["lon"] = (("cross_track", "along_track"), lon)
+        ds["time"] = time
+
+        return ds
+
+    @pytest.fixture
+    def ds_invalid(
+        self,
+        ds_valid: xr.Dataset,
+    ) -> xr.Dataset:
+        ds = ds_valid.copy(deep=True)
+
+        lon = ds["lon"].values.copy()
+        lon[0, self.invalid_idx] = np.nan
+        ds["lon"] = (("cross_track", "along_track"), lon)
+
+        return ds
+
+    def test_is_valid_geolocation(
+        self,
+        set_is_orbit_to_true: None,
+        ds_valid: xr.Dataset,
+        ds_invalid: xr.Dataset,
+    ) -> None:
+        """Test _is_valid_geolocation"""
+
+        # Valid
+        valid = checks._is_valid_geolocation(ds_valid)
+        assert np.all(valid)
+
+        # Invalid
+        valid = checks._is_valid_geolocation(ds_invalid)
+        assert np.sum(valid) == self.n_along_track - 1
+
+    def test_check_valid_geolocation(
+        self,
+        set_is_orbit_to_true: None,
+        ds_valid: xr.Dataset,
+        ds_invalid: xr.Dataset,
+    ) -> None:
+        """Test check_valid_geolocation"""
+
+        # Valid
+        checks.check_valid_geolocation(ds_valid)
+        # No error raised
+
+        # Invalid
+        with pytest.raises(ValueError):
+            checks.check_valid_geolocation(ds_invalid)
+
+    def test_has_valid_geolocation(
+        self,
+        set_is_orbit_to_true: None,
+        ds_valid: xr.Dataset,
+        ds_invalid: xr.Dataset,
+    ) -> None:
+        """Test has_valid_geolocation"""
+
+        assert checks.has_valid_geolocation(ds_valid)
+        assert not checks.has_valid_geolocation(ds_invalid)
