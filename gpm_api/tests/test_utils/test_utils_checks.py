@@ -389,6 +389,7 @@ def test_get_along_track_scan_distance() -> None:
 
 class TestContinuousScans:
     n_along_track = 10
+    cut_idx = 5
 
     @pytest.fixture
     def ds_contiguous(self) -> xr.Dataset:
@@ -400,31 +401,62 @@ class TestContinuousScans:
         lat = lat[np.newaxis, :]
         lon = lon[np.newaxis, :]
 
+        # Add time dimension
+        time = np.zeros(self.n_along_track)
+
         # Create dataset
         ds = xr.Dataset()
         ds["lat"] = (("cross_track", "along_track"), lat)
         ds["lon"] = (("cross_track", "along_track"), lon)
-        ds["gpm_granule_id"] = np.arange(self.n_along_track)
+        ds["gpm_granule_id"] = np.ones(self.n_along_track)
+        ds["time"] = time
 
         return ds
 
     @pytest.fixture
-    def ds_non_contiguous(
+    def ds_non_contiguous_lon(
         self,
         ds_contiguous: xr.Dataset,
     ) -> xr.Dataset:
         ds = ds_contiguous.copy(deep=True)
 
         # Insert one gap
-        ds["lon"][0, self.n_along_track // 2 :] = ds["lon"][0, self.n_along_track // 2 :] + 1
-        ds["gpm_granule_id"] = ds["lon"][0, :]
+        ds["lon"][0, self.cut_idx :] = ds["lon"][0, self.cut_idx :] + 1
+
+        return ds
+
+    @pytest.fixture
+    def ds_non_contiguous_granule_id(
+        self,
+        ds_contiguous: xr.Dataset,
+    ) -> xr.Dataset:
+        ds = ds_contiguous.copy(deep=True)
+
+        # Insert one gap
+        granule_id = np.ones(self.n_along_track)
+        granule_id[self.cut_idx :] = granule_id[self.cut_idx :] + 2
+        ds["gpm_granule_id"] = granule_id
+
+        return ds
+
+    @pytest.fixture
+    def ds_non_contiguous_both(
+        self,
+        ds_non_contiguous_granule_id: xr.Dataset,
+    ) -> xr.Dataset:
+        ds = ds_non_contiguous_granule_id.copy(deep=True)
+
+        # Insert gap at same location as granule_id
+        ds["lon"][0, self.cut_idx :] = ds["lon"][0, self.cut_idx :] + 1
 
         return ds
 
     def test_is_contiguous_scans(
         self,
         ds_contiguous: xr.Dataset,
-        ds_non_contiguous: xr.Dataset,
+        ds_non_contiguous_lon: xr.Dataset,
+        ds_non_contiguous_granule_id: xr.Dataset,
+        ds_non_contiguous_both: xr.Dataset,
     ) -> None:
         """Test _is_contiguous_scans"""
 
@@ -432,38 +464,59 @@ class TestContinuousScans:
         contiguous = checks._is_contiguous_scans(ds_contiguous)
         assert np.all(contiguous)
 
-        # Test non contiguous (insert one gap)
+        contiguous = checks._is_contiguous_scans(ds_non_contiguous_granule_id)
+        assert np.all(contiguous)  # lon is contiguous
 
-        contiguous = checks._is_contiguous_scans(ds_non_contiguous)
+        # Test non contiguous
+        contiguous = checks._is_contiguous_scans(ds_non_contiguous_lon)
         assert np.sum(contiguous) == self.n_along_track - 1
-        assert contiguous[self.n_along_track // 2 - 1] == False
+        assert contiguous[self.cut_idx - 1] == False
+
+        contiguous = checks._is_contiguous_scans(ds_non_contiguous_both)
+        assert np.sum(contiguous) == self.n_along_track - 1
+        assert contiguous[self.cut_idx - 1] == False
 
     def test_check_contiguous_scans(
         self,
         set_is_orbit_to_true: None,
         ds_contiguous: xr.Dataset,
-        ds_non_contiguous: xr.Dataset,
+        ds_non_contiguous_lon: xr.Dataset,
+        ds_non_contiguous_granule_id: xr.Dataset,
+        ds_non_contiguous_both: xr.Dataset,
     ) -> None:
         """Test check_contiguous_scans"""
 
         # Test contiguous
+        print(ds_contiguous["lon"])
+        print(ds_contiguous["gpm_granule_id"])
+        print(ds_contiguous["time"])
         checks.check_contiguous_scans(ds_contiguous)
         # No error raised
 
-        # Test non contiguous (insert one gap)
+        # Test non contiguous
         with pytest.raises(ValueError):
-            checks.check_contiguous_scans(ds_non_contiguous)
+            checks.check_contiguous_scans(ds_non_contiguous_lon)
+
+        with pytest.raises(ValueError):
+            checks.check_contiguous_scans(ds_non_contiguous_granule_id)
+
+        with pytest.raises(ValueError):
+            checks.check_contiguous_scans(ds_non_contiguous_both)
 
     def test_has_contiguous_scans(
         self,
         set_is_orbit_to_true: None,
         ds_contiguous: xr.Dataset,
-        ds_non_contiguous: xr.Dataset,
+        ds_non_contiguous_lon: xr.Dataset,
+        ds_non_contiguous_granule_id: xr.Dataset,
+        ds_non_contiguous_both: xr.Dataset,
     ) -> None:
         """Test has_contiguous_scans"""
 
         assert checks.has_contiguous_scans(ds_contiguous)
-        assert not checks.has_contiguous_scans(ds_non_contiguous)
+        assert not checks.has_contiguous_scans(ds_non_contiguous_lon)
+        assert not checks.has_contiguous_scans(ds_non_contiguous_granule_id)
+        assert not checks.has_contiguous_scans(ds_non_contiguous_both)
 
 
 def test_is_valid_geolocation() -> None:
