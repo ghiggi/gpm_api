@@ -650,8 +650,7 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
         idx_cross_track_not_all_invalid = np.where(~invalid_coords.all("along_track"))[0]
         # - If all invalid, return empty list
         if len(idx_cross_track_not_all_invalid) == 0:
-            list_slices = []
-            return list_slices
+            return []
         # - Select only cross-track index that are not all invalid along-track
         invalid_coords = invalid_coords.isel(cross_track=idx_cross_track_not_all_invalid)
         # - Now identify scans across which there are still invalid coordinates
@@ -664,7 +663,7 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
         # Select only slices with at least 2 scans
         list_slices = list_slices_filter(list_slices, min_size=min_size)
         return list_slices
-    return None
+    return []
 
 
 def get_slices_non_valid_geolocation(xr_obj):
