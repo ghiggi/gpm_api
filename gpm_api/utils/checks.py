@@ -565,8 +565,11 @@ def check_contiguous_scans(xr_obj, verbose=True):
     if n_discontinuous > 0:
         # Retrieve discontinuous timesteps interval
         timesteps = _get_timesteps(xr_obj)
+        discontinuous_timestep_idx = [
+            slice(slc.start - 1, slc.stop) for slc in list_discontinuous_slices
+        ]
         list_discontinuous = [
-            (timesteps[slc][0], timesteps[slc][-1]) for slc in list_discontinuous_slices
+            (timesteps[slc][0], timesteps[slc][-1]) for slc in discontinuous_timestep_idx
         ]
         first_problematic_timestep = list_discontinuous[0][0]
         # Print non-contiguous scans
