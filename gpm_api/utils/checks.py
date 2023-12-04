@@ -945,7 +945,7 @@ def _get_slices_variable_equal_value(da, value, dim=None, criteria="all"):
     bool_arr = (
         da_bool.all(dim=dims_apply_over).data
         if criteria == "all"
-        else da_bool.all(dim=dims_apply_over).data
+        else da_bool.any(dim=dims_apply_over).data
     )
     # Get list of slices with contiguous value
     list_slices = get_list_slices_from_bool_arr(
