@@ -65,10 +65,11 @@ dev = ["pre-commit",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]
 
 [project.urls]
-Homepage = "https://github.com/ghiggi/gpm_api"
-Source = "https://github.com/ghiggi/gpm_api"
-Tracker = "https://github.com/ghiggi/gpm_api/issues"
-Documentation = "https://gpm_api.readthedocs.io"
+homepage = "https://github.com/ghiggi/gpm_api"
+repository = "https://github.com/ghiggi/gpm_api"
+source = "https://github.com/ghiggi/gpm_api"
+tracker = "https://github.com/ghiggi/gpm_api/issues"
+documentation = "https://gpm_api.readthedocs.io"
 changelog = "https://github.com/ghigg/gpm_api/CHANGELOG.md"
 
 [tool.setuptools_scm]
