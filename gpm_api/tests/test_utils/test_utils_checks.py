@@ -592,3 +592,42 @@ class TestValidGeolocation:
 
         assert checks.has_valid_geolocation(ds_valid)
         assert not checks.has_valid_geolocation(ds_invalid)
+
+
+class TestWobblingSwath:
+    # Detect changes of direction. Repeated indices are not considered as changes
+    #               0  1  2  3  4  5  6xx7xx8xx9  10 11 12
+    lat = np.array([0, 1, 2, 2, 2, 3, 4, 3, 4, 3, 4, 5, 6])
+    n_along_track = len(lat)
+    lon = np.arange(n_along_track)
+
+    # Add cross track dimension
+    lat = lat[np.newaxis, :]
+    lon = lon[np.newaxis, :]
+
+    # Add time dimension
+    time = np.zeros(n_along_track)
+
+    # Create dataset
+    ds = xr.Dataset()
+    ds["lat"] = (("cross_track", "along_track"), lat)
+    ds["lon"] = (("cross_track", "along_track"), lon)
+    ds["gpm_granule_id"] = np.ones(n_along_track)
+    ds["time"] = time
+
+    # Threshold must be at least 3 to remove wobbling slices
+    threshold = 3
+
+    def test_get_slices_non_wobbling_swath(self) -> None:
+        """Test get_slices_non_wobbling_swath"""
+
+        returned_slices = checks.get_slices_non_wobbling_swath(self.ds, threshold=self.threshold)
+        expected_slices = [slice(0, 6 + 1), slice(9, 12 + 1)]
+        assert returned_slices == expected_slices
+
+    def test_get_slices_wobbling_swath(self) -> None:
+        """Test get_slices_wobbling_swath"""
+
+        returned_slices = checks.get_slices_wobbling_swath(self.ds, threshold=self.threshold)
+        expected_slices = [slice(7, 9)]  # TODO: check that this is the expected behavior
+        assert returned_slices == expected_slices
