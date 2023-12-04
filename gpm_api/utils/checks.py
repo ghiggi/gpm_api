@@ -833,8 +833,8 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
     lats_side0 = swath_def.lats[0, :]
     lats_side2 = swath_def.lats[-1, :]
     # Get valid slices
-    list_slices1 = _get_non_wobbling_lats(lats_side0, threshold=100)
-    list_slices2 = _get_non_wobbling_lats(lats_side2, threshold=100)
+    list_slices1 = _get_non_wobbling_lats(lats_side0, threshold=threshold)
+    list_slices2 = _get_non_wobbling_lats(lats_side2, threshold=threshold)
     list_slices = list_slices_intersection(list_slices1, list_slices2)
     return list_slices
 
