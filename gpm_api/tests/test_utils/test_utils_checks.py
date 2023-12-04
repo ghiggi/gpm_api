@@ -631,3 +631,111 @@ class TestWobblingSwath:
         returned_slices = checks.get_slices_wobbling_swath(self.ds, threshold=self.threshold)
         expected_slices = [slice(7, 9)]  # TODO: check that this is the expected behavior
         assert returned_slices == expected_slices
+
+
+class TestIsRegular:
+    """Test is_regular"""
+
+    def test_orbit(
+        self,
+        mocker: MockerFixture,
+        set_is_orbit_to_true: None,
+    ) -> None:
+        # Mock has_contiguous_scans to return True
+        mock_has_contiguous_scans = mocker.patch(
+            "gpm_api.utils.checks.has_contiguous_scans", return_value=True
+        )
+        ds = xr.Dataset()
+        assert checks.is_regular(ds)
+
+        # Mock has_contiguous_scans to return False
+        mock_has_contiguous_scans.return_value = False
+        assert not checks.is_regular(ds)
+
+    def test_grid(
+        self,
+        mocker: MockerFixture,
+        set_is_grid_to_true: None,
+    ) -> None:
+        # Mock has_regular_time to return True
+        mock_has_regular_time = mocker.patch(
+            "gpm_api.utils.checks.has_regular_time", return_value=True
+        )
+        ds = xr.Dataset()
+        assert checks.is_regular(ds)
+
+        # Mock has_regular_time to return False
+        mock_has_regular_time.return_value = False
+        assert not checks.is_regular(ds)
+
+
+def test_get_slices_var_equals() -> None:
+    """Test get_slices_var_equals"""
+
+    dim = "dimension"
+    array = [0, 0, 1, 1, 2, 3]
+    da = xr.DataArray(array, dims=[dim])
+
+    # Test with single value
+    values = 0
+    returned_slices = checks.get_slices_var_equals(da, dim=dim, values=values)
+    expected_slices = [slice(0, 2)]
+    assert returned_slices == expected_slices
+
+    # Test with union of slices
+    values = [0, 1]
+    returned_slices = checks.get_slices_var_equals(da, dim=dim, values=values, union=True)
+    expected_slices = [slice(0, 4)]
+    assert returned_slices == expected_slices
+
+    # Test without union of slices
+    returned_slices = checks.get_slices_var_equals(da, dim=dim, values=values, union=False)
+    expected_slices = [slice(0, 2), slice(2, 4)]
+    assert returned_slices == expected_slices
+
+    # Test with multiple dimensions
+    dim = ["x"]
+    array = np.array([[0, 0, 1, 1], [0, 0, 0, 0], [3, 0, 1, 2]])
+    da = xr.DataArray(array, dims=["x", "y"])
+    returned_slices = checks.get_slices_var_equals(
+        da, dim=dim, values=values, union=True, criteria="any"
+    )
+    expected_slices = [slice(0, 3)]  # All of sub arrays work
+    assert returned_slices == expected_slices
+
+    returned_slices = checks.get_slices_var_equals(
+        da, dim=dim, values=values, union=True, criteria="all"
+    )
+    expected_slices = [slice(1, 2)]  # Only [0, 0, 0, 0] sub array works (all values are valid)
+    assert returned_slices == expected_slices
+
+
+def test_get_slices_var_between() -> None:
+    """Test get_slices_var_between"""
+
+    vmin = 5
+    vmax = 10
+
+    # Test with single dimension
+    dim = "dimension"
+    array = np.arange(20)
+    da = xr.DataArray(array, dims=[dim])
+    returned_slices = checks.get_slices_var_between(da, dim=dim, vmin=vmin, vmax=vmax)
+    expected_slices = [slice(5, 11)]
+    assert returned_slices == expected_slices
+
+    # Test with multiple dimensions
+    dim = ["x"]
+    array = np.stack((np.arange(20), np.ones(20) * 7))
+    da = xr.DataArray(array, dims=["x", "y"])
+    returned_slices = checks.get_slices_var_between(
+        da, dim=dim, vmin=vmin, vmax=vmax, criteria="any"
+    )
+    expected_slices = [slice(0, 2)]  # All of sub arrays work
+    assert returned_slices == expected_slices
+
+    returned_slices = checks.get_slices_var_between(
+        da, dim=dim, vmin=vmin, vmax=vmax, criteria="all"
+    )
+    expected_slices = [slice(1, 2)]  # Only [7, 7] sub array works (all values are valid)
+    assert returned_slices == expected_slices
