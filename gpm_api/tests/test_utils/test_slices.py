@@ -115,9 +115,11 @@ def test_list_slices_difference() -> None:
 
     # Base cases
     assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 2)]) == [slice(3, 6)]
+    assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 3)]) == [slice(3, 6)]
     assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 4)]) == [slice(4, 6)]
     assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 8)]) == []
     assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(5, 8)]) == [slice(3, 5)]
+    assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(6, 8)]) == [slice(3, 6)]
     assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(7, 8)]) == [slice(3, 6)]
     assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(4, 5)]) == [
         slice(3, 4),
