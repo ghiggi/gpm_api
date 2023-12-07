@@ -119,7 +119,7 @@ def get_continent_extent(name):
     else:
         possible_match = difflib.get_close_matches(name, valid_continent, n=1, cutoff=0.6)
         if len(possible_match) == 0:
-            raise ValueError("Provide a valid continent name.")
+            raise ValueError(f"Provide a valid continent name from {valid_continent}.")
         else:
             possible_match = possible_match[0]
             raise ValueError(
