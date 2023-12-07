@@ -28,7 +28,18 @@ from gpm_api.utils.slices import (
 
 ORBIT_TIME_TOLERANCE = np.timedelta64(3, "s")
 
-# TODO: raise ValueError("Unrecognized GPM xarray object.") has decorator check?
+
+def _check_is_orbit_or_grid(function):
+    """Decorator function to check if input is orbit or grid. Raise ValueError if not."""
+
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        xr_obj = args[0]
+        if not is_orbit(xr_obj) and not is_grid(xr_obj):
+            raise ValueError("Unrecognized GPM xarray object.")
+        return function(*args, **kwargs)
+
+    return wrapper
 
 
 ####--------------------------------------------------------------------------.
@@ -57,6 +68,7 @@ def _is_contiguous_granule(granule_ids):
     return bool_arr
 
 
+@_check_is_orbit_or_grid
 def get_slices_contiguous_granules(xr_obj, min_size=2):
     """
     Return a list of slices ensuring contiguous granules.
@@ -106,8 +118,6 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
 
         # Return list of contiguous scan slices
         return list_slices
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
 
 
 def check_missing_granules(xr_obj):
@@ -131,6 +141,7 @@ def check_contiguous_granules(xr_obj):
     return check_missing_granules(xr_obj)
 
 
+@_check_is_orbit_or_grid
 def has_contiguous_granules(xr_obj):
     """Checks GPM object is composed of consecutive granules."""
     from gpm_api.checks import is_grid, is_orbit
@@ -139,10 +150,9 @@ def has_contiguous_granules(xr_obj):
         return bool(np.all(_is_contiguous_granule(xr_obj["gpm_granule_id"].data)))
     if is_grid(xr_obj):
         return has_regular_time(xr_obj)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
 
 
+@_check_is_orbit_or_grid
 def has_missing_granules(xr_obj):
     """Checks GPM object has missing granules."""
     from gpm_api.checks import is_grid, is_orbit
@@ -151,8 +161,6 @@ def has_missing_granules(xr_obj):
         return bool(np.any(~_is_contiguous_granule(xr_obj["gpm_granule_id"].data)))
     if is_grid(xr_obj):
         return not has_regular_time(xr_obj)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
 
 
 ####--------------------------------------------------------------------------.
@@ -168,6 +176,7 @@ def _get_timesteps(xr_obj):
     return timesteps
 
 
+@_check_is_orbit_or_grid
 def _infer_time_tolerance(xr_obj):
     """Infer time interval tolerance between timesteps."""
     from gpm_api.checks import is_grid, is_orbit
@@ -179,8 +188,6 @@ def _infer_time_tolerance(xr_obj):
     elif is_grid(xr_obj):
         timesteps = _get_timesteps(xr_obj)
         tolerance = np.diff(timesteps[0:2])[0]
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
     return tolerance
 
 
@@ -617,6 +624,7 @@ def _is_valid_geolocation(xr_obj, x="lon"):
     return bool_arr
 
 
+@_check_is_orbit_or_grid
 def get_slices_valid_geolocation(xr_obj, min_size=2):
     """Return a list of along-track slices ensuring valid geolocation.
 
@@ -663,7 +671,6 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
         # Select only slices with at least 2 scans
         list_slices = list_slices_filter(list_slices, min_size=min_size)
         return list_slices
-    return []
 
 
 def get_slices_non_valid_geolocation(xr_obj):
@@ -723,6 +730,7 @@ def check_valid_geolocation(xr_obj, verbose=True):
     return
 
 
+@_check_is_orbit_or_grid
 def has_valid_geolocation(xr_obj):
     """Checks GPM object has valid geolocation."""
     if is_orbit(xr_obj):
@@ -731,8 +739,6 @@ def has_valid_geolocation(xr_obj):
         return n_invalid_scan_slices == 0
     if is_grid(xr_obj):
         return True
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
 
 
 def apply_on_valid_geolocation(function):
@@ -861,6 +867,7 @@ def get_slices_wobbling_swath(xr_obj, threshold=100):
 #####################################
 
 
+@_check_is_orbit_or_grid
 def is_regular(xr_obj):
     """Checks the GPM object is regular.
 
@@ -873,10 +880,9 @@ def is_regular(xr_obj):
         return has_contiguous_scans(xr_obj)
     elif is_grid(xr_obj):
         return has_regular_time(xr_obj)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
 
 
+@_check_is_orbit_or_grid
 def get_slices_regular(xr_obj, min_size=None):
     """
     Return a list of slices to select regular GPM objects.
@@ -917,8 +923,6 @@ def get_slices_regular(xr_obj, min_size=None):
     elif is_grid(xr_obj):
         min_size = 1 if min_size is None else min_size
         return get_slices_regular_time(xr_obj, min_size=min_size)
-    else:
-        raise ValueError("Unrecognized GPM xarray object.")
 
 
 ####--------------------------------------------------------------------------.

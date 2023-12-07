@@ -3,7 +3,7 @@ import numpy as np
 from typing import Union
 
 
-def convert_hours_array_to_datetime_array(hours: Union[list, np.ndarray]) -> np.ndarray:
+def create_fake_datetime_array_from_hours_list(hours: Union[list, np.ndarray]) -> np.ndarray:
     """Convert list of integers and NaNs into a np.datetime64 array"""
 
     datetimes = []
@@ -21,4 +21,4 @@ def convert_hours_array_to_datetime_array(hours: Union[list, np.ndarray]) -> np.
 
 
 def get_time_range(start_hour: int, end_hour: int) -> np.ndarray:
-    return convert_hours_array_to_datetime_array(np.arange(start_hour, end_hour))
+    return create_fake_datetime_array_from_hours_list(np.arange(start_hour, end_hour))

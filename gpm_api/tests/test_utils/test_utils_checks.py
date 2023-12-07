@@ -6,7 +6,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from gpm_api.utils import checks
-from utils import convert_hours_array_to_datetime_array
+from utils import create_fake_datetime_array_from_hours_list
 
 
 # Utility functions ###########################################################
@@ -85,7 +85,7 @@ class TestGetSlicesContiguousGranules:
         self,
         set_is_grid_to_true: None,
     ) -> None:
-        time = convert_hours_array_to_datetime_array([0, 1, 2, 7, 8, 9])
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2, 7, 8, 9])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = [slice(0, 3), slice(3, 6)]
         returned_slices = checks.get_slices_contiguous_granules(ds)
@@ -123,7 +123,7 @@ class TestGetSlicesContiguousGranules:
         mocker.patch("gpm_api.utils.checks.is_grid", return_value=False)
         mocker.patch("gpm_api.utils.checks.is_orbit", return_value=False)
 
-        time = convert_hours_array_to_datetime_array([0, 1, 2, 7, 8, 9])
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2, 7, 8, 9])
         ds = create_dataset_with_coordinate("time", time)
         with pytest.raises(ValueError):
             checks.get_slices_contiguous_granules(ds)
@@ -196,7 +196,7 @@ class TestGetSlicesRegularTime:
 
     def test_tolerance_provided(self) -> None:
         # Test regular time
-        time = convert_hours_array_to_datetime_array(np.arange(0, 10))
+        time = create_fake_datetime_array_from_hours_list(np.arange(0, 10))
         tolerance = time[1] - time[0]
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = [slice(0, 10)]
@@ -204,27 +204,27 @@ class TestGetSlicesRegularTime:
         assert returned_slices == expected_slices
 
         # Test irregular time
-        time = convert_hours_array_to_datetime_array([0, 1, 2, 7, 8, 9])
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2, 7, 8, 9])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = [slice(0, 3), slice(3, 6)]
         returned_slices = checks.get_slices_regular_time(ds, tolerance=tolerance)
         assert returned_slices == expected_slices
 
         # Test 0 or 1 timesteps
-        time = convert_hours_array_to_datetime_array([])
+        time = create_fake_datetime_array_from_hours_list([])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = []
         returned_slices = checks.get_slices_regular_time(ds, tolerance=tolerance)
         assert returned_slices == expected_slices
 
-        time = convert_hours_array_to_datetime_array([0])
+        time = create_fake_datetime_array_from_hours_list([0])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = [slice(0, 1)]
         returned_slices = checks.get_slices_regular_time(ds, tolerance=tolerance)
         assert returned_slices == expected_slices
 
         # Only keep large enough slices
-        time = convert_hours_array_to_datetime_array([0, 1, 2, 7, 8])
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2, 7, 8])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = [slice(0, 3)]
         returned_slices = checks.get_slices_regular_time(ds, tolerance=tolerance, min_size=3)
@@ -235,7 +235,7 @@ class TestGetSlicesRegularTime:
         set_is_grid_to_true: None,
     ) -> None:
         # Tolerance not provided: inferred from first two values
-        time = convert_hours_array_to_datetime_array([1, 2, 3, 7, 8, 9])
+        time = create_fake_datetime_array_from_hours_list([1, 2, 3, 7, 8, 9])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = [slice(0, 3), slice(3, 6)]
         returned_slices = checks.get_slices_regular_time(ds, tolerance=None)
@@ -258,7 +258,7 @@ class TestGetSlicesNonRegularTime:
 
     def test_tolerance_provided(self) -> None:
         # Test regular time
-        time = convert_hours_array_to_datetime_array(np.arange(0, 10))
+        time = create_fake_datetime_array_from_hours_list(np.arange(0, 10))
         tolerance = time[1] - time[0]
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = []
@@ -266,20 +266,20 @@ class TestGetSlicesNonRegularTime:
 
         # Test irregular time
         #                                             0  1  2  3  4  5  6   7   8
-        time = convert_hours_array_to_datetime_array([0, 1, 2, 4, 5, 6, 10, 11, 12])
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2, 4, 5, 6, 10, 11, 12])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = [slice(2, 4), slice(5, 7)]  # All slices have length 2
         returned_slices = checks.get_slices_non_regular_time(ds, tolerance=tolerance)
         assert returned_slices == expected_slices
 
         # Test 0 or 1 timesteps
-        time = convert_hours_array_to_datetime_array([])
+        time = create_fake_datetime_array_from_hours_list([])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = []
         returned_slices = checks.get_slices_non_regular_time(ds, tolerance=tolerance)
         assert returned_slices == expected_slices
 
-        time = convert_hours_array_to_datetime_array([0])
+        time = create_fake_datetime_array_from_hours_list([0])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = []
         returned_slices = checks.get_slices_non_regular_time(ds, tolerance=tolerance)
@@ -291,7 +291,7 @@ class TestGetSlicesNonRegularTime:
     ) -> None:
         # Tolernace not provided: inferred from first two values
         #                                             0  1  2  3  4  5  6   7   8
-        time = convert_hours_array_to_datetime_array([0, 1, 2, 4, 5, 6, 10, 11, 12])
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2, 4, 5, 6, 10, 11, 12])
         ds = create_dataset_with_coordinate("time", time)
         expected_slices = [slice(2, 4), slice(5, 7)]  # All slices have length 2
         returned_slices = checks.get_slices_non_regular_time(ds, tolerance=None)
@@ -318,12 +318,12 @@ class TestCheckRegularTime:
         set_is_grid_to_true: None,
     ) -> None:
         # Test regular time
-        time = convert_hours_array_to_datetime_array(np.arange(0, 10))
+        time = create_fake_datetime_array_from_hours_list(np.arange(0, 10))
         ds = create_dataset_with_coordinate("time", time)
         checks.check_regular_time(ds)
 
         # Test irregular time
-        time = convert_hours_array_to_datetime_array([0, 1, 2, 7, 8, 9])
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2, 7, 8, 9])
         ds = create_dataset_with_coordinate("time", time)
         with pytest.raises(ValueError):
             checks.check_regular_time(ds)
@@ -629,7 +629,7 @@ class TestWobblingSwath:
         """Test get_slices_wobbling_swath"""
 
         returned_slices = checks.get_slices_wobbling_swath(self.ds, threshold=self.threshold)
-        expected_slices = [slice(7, 9)]  # TODO: check that this is the expected behavior
+        expected_slices = [slice(7, 9)]
         assert returned_slices == expected_slices
 
 

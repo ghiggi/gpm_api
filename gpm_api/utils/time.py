@@ -53,7 +53,7 @@ def subset_by_time(xr_obj, start_time=None, end_time=None):
     # If no dimension, it means that nothing to be subsetted
     # - Likely the time dimension has been dropped ...
     if len(dim_coords) == 0:
-        return {}
+        raise ValueError("Impossible to subset a non-dimensional time coordinate.")
 
     # If dimension > 1, not clear how to collapse to 1D the boolean array
     if len(dim_coords) != 1:
@@ -155,6 +155,8 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
         Timesteps array of type datetime64[ns]
 
     """
+    if len(timesteps) == 0:
+        return timesteps
     # Retrieve input dtype
     timesteps_dtype = timesteps.dtype
     # Convert timesteps to float
@@ -189,7 +191,7 @@ def infill_timesteps(timesteps, limit):
                 "NaTs present at the beginning or at the end of the timesteps cannot be inferred."
             )
         else:
-            error_message = "More than {limit} consecutive timesteps are NaT."
+            error_message = f"More than {limit} consecutive timesteps are NaT."
         raise ValueError(error_message)
 
     return timesteps
