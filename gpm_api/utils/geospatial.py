@@ -4,6 +4,8 @@ Created on Wed Aug 17 09:30:29 2022
 
 @author: ghiggi
 """
+import difflib
+import os
 import warnings
 
 import numpy as np
@@ -11,6 +13,7 @@ import xarray as xr
 
 from gpm_api.checks import is_grid, is_orbit
 from gpm_api.utils.slices import get_list_slices_from_indices
+from gpm_api.utils.yaml import read_yaml_file
 
 # Shapely bounds: (xmin, ymin, xmax, ymax)
 # Matlotlib extent: (xmin, xmax, ymin, ymax)
@@ -21,6 +24,118 @@ from gpm_api.utils.slices import get_list_slices_from_indices
 # - croup_around(point, distance)
 # - get_extent_around(point, distance)
 # - rename file crop.py?
+
+
+CONTINENT_EXTENT_DICT = {
+    "Africa": [-18.042, 51.292, -40.833, 37.092],
+    "Antarctica": [-180, 180, -90, -60],
+    "Arctic": [-180, 180, 60, 90],
+    "Asia": [35, 180, 5, 80],
+    "Australia": [105, 180, -55, 12],
+    "Oceania": [105, 180, -55, 12],
+    "Europe": [-30, 40, 34, 72],
+    "North America": [-180, -52, 5, 83],
+    "South America": [-85, -30, -60, 15],
+}
+
+
+def _extend_lonlat_extent(extent, x):
+    """
+    Extend the lat/lon extent by x degrees in every direction.
+
+    Parameters
+    ----------
+    extent : (tuple)
+        A tuple of four values representing the lat/lon extent.
+        The extent format must be [xmin, xmax, ymin, ymax]
+    x : float
+        The number of degrees to extend the extent in every direction.
+
+    Returns
+    -------
+    new_extent, tuple
+        The extended extent
+        DESCRIPTION.
+    """
+    xmin, xmax, ymin, ymax = extent
+    xmin = max(xmin - x, -180)
+    xmax = min(xmax + x, 180)
+    ymin = max(ymin - x, -90)
+    ymax = min(ymax + x, 90)
+    new_extent = (xmin, xmax, ymin, ymax)
+    return new_extent
+
+
+def _get_country_extent_dictionary():
+    # TODO: improve relative path
+    file_dir = os.path.realpath(__file__)
+    base_dir = "/" + os.path.join(*file_dir.split("/")[0:-2])
+    # Define file with extents dictionary
+    countries_extent_fpath = os.path.join(base_dir, "etc/country_extent.yaml")
+    # Read the data from the YAML file
+    countries_extent_dict = read_yaml_file(countries_extent_fpath)
+    return countries_extent_dict
+
+
+def get_country_extent(name):
+    # TODO: we could create a dictionary class which
+    # - optionally is key unsensitive for get method !!!
+    # - provide suggestions ...
+    # --> Could be reused also when searching for GPM products, ...
+    # -------------------------------------------------------------------------.
+    # Check country format
+    if not isinstance(name, str):
+        raise TypeError("Please provide the country name as a string.")
+    # Get country extent dictionary
+    countries_extent_dict = _get_country_extent_dictionary()
+    # Create same dictionary with lower case keys
+    countries_lower_extent_dict = {s.lower(): v for s, v in countries_extent_dict.items()}
+    # Get list of valid countries
+    valid_countries = list(countries_extent_dict.keys())
+    valid_countries_lower = list(countries_lower_extent_dict)
+    if name.lower() in valid_countries_lower:
+        extent = countries_lower_extent_dict[name.lower()]
+        extent = _extend_lonlat_extent(extent, 0.2)
+        return extent
+    else:
+        possible_match = difflib.get_close_matches(name, valid_countries, n=1, cutoff=0.6)
+        if len(possible_match) == 0:
+            raise ValueError("Provide a valid country name.")
+        else:
+            possible_match = possible_match[0]
+            raise ValueError(f"No matching country. Maybe are you looking for '{possible_match}'?")
+
+
+def get_continent_extent(name):
+    # TODO: we could create a dictionary class which
+    # - optionally is key unsensitive for get method !!!
+    # - provide suggestions ...
+    # --> Could be reused also when searching for GPM products, ...
+    # -------------------------------------------------------------------------.
+    # Check country format
+    if not isinstance(name, str):
+        raise TypeError("Please provide the continent name as a string.")
+
+    # Create same dictionary with lower case keys
+    continent_lower_extent_dict = {s.lower(): v for s, v in CONTINENT_EXTENT_DICT.items()}
+    # Get list of valid continents
+    valid_continent = list(CONTINENT_EXTENT_DICT.keys())
+    valid_continent_lower = list(continent_lower_extent_dict)
+    if name.lower() in valid_continent_lower:
+        extent = continent_lower_extent_dict[name.lower()]
+        # TODO:
+        # - add 0.5° degree buffer
+        # - ensure extent is correct
+        return extent
+    else:
+        possible_match = difflib.get_close_matches(name, valid_continent, n=1, cutoff=0.6)
+        if len(possible_match) == 0:
+            raise ValueError("Provide a valid continent name.")
+        else:
+            possible_match = possible_match[0]
+            raise ValueError(
+                f"No matching continent. Maybe are you looking for '{possible_match}'?"
+            )
 
 
 def unwrap_longitude_degree(x, period=360):
@@ -76,8 +191,6 @@ def crop_by_country(xr_obj, name):
 
     """
 
-    from gpm_api.utils.countries import get_country_extent
-
     extent = get_country_extent(name)
     return crop(xr_obj=xr_obj, extent=extent)
 
@@ -99,8 +212,6 @@ def crop_by_continent(xr_obj, name):
         Cropped xarray object.
 
     """
-
-    from gpm_api.utils.continents import get_continent_extent
 
     extent = get_continent_extent(name)
     return crop(xr_obj=xr_obj, extent=extent)
@@ -167,8 +278,6 @@ def get_crop_slices_by_continent(xr_obj, name):
     name : str
         Continent name.
     """
-    from gpm_api.utils.continents import get_continent_extent
-
     extent = get_continent_extent(name)
     return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
 
@@ -186,8 +295,6 @@ def get_crop_slices_by_country(xr_obj, name):
     name : str
         Country name.
     """
-    from gpm_api.utils.countries import get_country_extent
-
     extent = get_country_extent(name)
     return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
 

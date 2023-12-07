@@ -1,5 +1,3 @@
-import pytest
-
 # Test created to apply to gpm_api.io.checks.check_bbox() but function is now
 # deprecated, potential to use for gpm_api.utils.geospatial.extent calls
 
