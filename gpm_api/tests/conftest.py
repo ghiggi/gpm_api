@@ -409,7 +409,7 @@ def set_is_grid_to_true(
     mocker.patch("gpm_api.utils.checks.is_orbit", return_value=False)
 
 
-ExtentDictionary = dict[str, tuple[float, float, float, float]]
+ExtentDictionary = Dict[str, Tuple[float, float, float, float]]
 
 
 @pytest.fixture

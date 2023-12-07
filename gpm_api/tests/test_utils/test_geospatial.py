@@ -43,9 +43,11 @@
 
 
 import pytest
+from typing import Dict, Tuple
+
 from gpm_api.utils import geospatial
 
-ExtentDictionary = dict[str, tuple[float, float, float, float]]
+ExtentDictionary = Dict[str, Tuple[float, float, float, float]]
 
 
 # @pytest.fixture
