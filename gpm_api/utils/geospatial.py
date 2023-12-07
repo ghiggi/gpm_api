@@ -11,6 +11,7 @@ import warnings
 import numpy as np
 import xarray as xr
 
+from gpm_api import _root_path
 from gpm_api.checks import is_grid, is_orbit
 from gpm_api.utils.slices import get_list_slices_from_indices
 from gpm_api.utils.yaml import read_yaml_file
@@ -24,19 +25,6 @@ from gpm_api.utils.yaml import read_yaml_file
 # - croup_around(point, distance)
 # - get_extent_around(point, distance)
 # - rename file crop.py?
-
-
-CONTINENT_EXTENT_DICT = {
-    "Africa": [-18.042, 51.292, -40.833, 37.092],
-    "Antarctica": [-180, 180, -90, -60],
-    "Arctic": [-180, 180, 60, 90],
-    "Asia": [35, 180, 5, 80],
-    "Australia": [105, 180, -55, 12],
-    "Oceania": [105, 180, -55, 12],
-    "Europe": [-30, 40, 34, 72],
-    "North America": [-180, -52, 5, 83],
-    "South America": [-85, -30, -60, 15],
-}
 
 
 def _extend_lonlat_extent(extent, x):
@@ -54,8 +42,7 @@ def _extend_lonlat_extent(extent, x):
     Returns
     -------
     new_extent, tuple
-        The extended extent
-        DESCRIPTION.
+        The extended extent.
     """
     xmin, xmax, ymin, ymax = extent
     xmin = max(xmin - x, -180)
@@ -67,12 +54,7 @@ def _extend_lonlat_extent(extent, x):
 
 
 def _get_country_extent_dictionary():
-    # TODO: improve relative path
-    file_dir = os.path.realpath(__file__)
-    base_dir = "/" + os.path.join(*file_dir.split("/")[0:-2])
-    # Define file with extents dictionary
-    countries_extent_fpath = os.path.join(base_dir, "etc/country_extent.yaml")
-    # Read the data from the YAML file
+    countries_extent_fpath = os.path.join(_root_path, "gpm_api", "etc", "country_extent.yaml")
     countries_extent_dict = read_yaml_file(countries_extent_fpath)
     return countries_extent_dict
 
@@ -106,6 +88,12 @@ def get_country_extent(name):
             raise ValueError(f"No matching country. Maybe are you looking for '{possible_match}'?")
 
 
+def _get_continent_extent_dictionary():
+    continents_extent_fpath = os.path.join(_root_path, "gpm_api", "etc", "continent_extent.yaml")
+    continents_extent_dict = read_yaml_file(continents_extent_fpath)
+    return continents_extent_dict
+
+
 def get_continent_extent(name):
     # TODO: we could create a dictionary class which
     # - optionally is key unsensitive for get method !!!
@@ -117,9 +105,10 @@ def get_continent_extent(name):
         raise TypeError("Please provide the continent name as a string.")
 
     # Create same dictionary with lower case keys
-    continent_lower_extent_dict = {s.lower(): v for s, v in CONTINENT_EXTENT_DICT.items()}
+    continent_extent_dict = _get_continent_extent_dictionary()
+    continent_lower_extent_dict = {s.lower(): v for s, v in continent_extent_dict.items()}
     # Get list of valid continents
-    valid_continent = list(CONTINENT_EXTENT_DICT.keys())
+    valid_continent = list(continent_extent_dict.keys())
     valid_continent_lower = list(continent_lower_extent_dict)
     if name.lower() in valid_continent_lower:
         extent = continent_lower_extent_dict[name.lower()]
