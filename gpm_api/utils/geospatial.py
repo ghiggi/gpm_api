@@ -7,6 +7,7 @@ Created on Wed Aug 17 09:30:29 2022
 import difflib
 import os
 import warnings
+from typing import Union
 
 import numpy as np
 import xarray as xr
@@ -134,7 +135,7 @@ def unwrap_longitude_degree(x, period=360):
     return (x + mod) % (2 * mod) - mod
 
 
-def get_extent(xr_obj, padding=0):
+def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
     """Get geographic extent.
 
     The extent follows the matplotlib/cartopy format (xmin, xmax, ymin, ymax)
@@ -154,7 +155,7 @@ def get_extent(xr_obj, padding=0):
     lat_min = max(-90, np.nanmin(lat).item() - padding[1])
     lat_max = min(90, np.nanmax(lat).item() + padding[1])
 
-    if lon_min > lon_max:
+    if lon_min > lon_max:  # TODO: this condition is never met
         raise NotImplementedError(
             "The object cross the dateline. The extent can't be currently be defined."
         )
