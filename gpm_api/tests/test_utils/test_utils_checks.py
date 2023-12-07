@@ -6,49 +6,11 @@ import pytest
 from pytest_mock import MockerFixture
 
 from gpm_api.utils import checks
-from utils import create_fake_datetime_array_from_hours_list
-
-
-# Utility functions ###########################################################
-
-
-def create_dataset_with_coordinate(coord_name: str, coord_values: np.ndarray) -> xr.Dataset:
-    """Create a dataset with a single coordinate"""
-
-    ds = xr.Dataset()
-    ds[coord_name] = coord_values
-    return ds
-
-
-def create_orbit_time_array(time_template: Union[list, np.ndarray]) -> np.ndarray:
-    """Create a time array with ORBIT_TIME_TOLERANCE as unit"""
-
-    start_time = np.datetime64("2020-12-31T00:00:00")
-    time = np.array([start_time + checks.ORBIT_TIME_TOLERANCE * t for t in time_template])
-    return time
-
-
-@pytest.fixture
-def set_is_orbit_to_true(
-    mocker: MockerFixture,
-) -> None:
-    mocker.patch("gpm_api.checks.is_orbit", return_value=True)
-    mocker.patch("gpm_api.checks.is_grid", return_value=False)
-    mocker.patch("gpm_api.utils.checks.is_orbit", return_value=True)
-    mocker.patch("gpm_api.utils.checks.is_grid", return_value=False)
-
-
-@pytest.fixture
-def set_is_grid_to_true(
-    mocker: MockerFixture,
-) -> None:
-    mocker.patch("gpm_api.checks.is_grid", return_value=True)
-    mocker.patch("gpm_api.checks.is_orbit", return_value=False)
-    mocker.patch("gpm_api.utils.checks.is_grid", return_value=True)
-    mocker.patch("gpm_api.utils.checks.is_orbit", return_value=False)
-
-
-# Tests #######################################################################
+from utils import (
+    create_dataset_with_coordinate,
+    create_fake_datetime_array_from_hours_list,
+    create_orbit_time_array,
+)
 
 
 def test_get_missing_granule_numbers() -> None:

@@ -6,6 +6,7 @@ import posixpath as pxp
 import ntpath as ntp
 import gpm_api.configs
 import os
+from pytest_mock import MockerFixture
 from unittest.mock import patch
 
 
@@ -385,3 +386,23 @@ def local_filepaths_windows(local_filepaths) -> List[str]:
     """Return the local filepath list as windows paths"""
 
     return [ntp.join(*path) for path in local_filepaths]
+
+
+@pytest.fixture
+def set_is_orbit_to_true(
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch("gpm_api.checks.is_orbit", return_value=True)
+    mocker.patch("gpm_api.checks.is_grid", return_value=False)
+    mocker.patch("gpm_api.utils.checks.is_orbit", return_value=True)
+    mocker.patch("gpm_api.utils.checks.is_grid", return_value=False)
+
+
+@pytest.fixture
+def set_is_grid_to_true(
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch("gpm_api.checks.is_grid", return_value=True)
+    mocker.patch("gpm_api.checks.is_orbit", return_value=False)
+    mocker.patch("gpm_api.utils.checks.is_grid", return_value=True)
+    mocker.patch("gpm_api.utils.checks.is_orbit", return_value=False)
