@@ -110,7 +110,6 @@ def _get_pps_rs_product_dir(product, date, version):
                 folder_name,
             ]
         )
-
     # Specify the directory tree for old RS version
     else:  #  version in [4, 5, 6]:
         version_str = "V0" + str(int(version))

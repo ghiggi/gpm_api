@@ -70,8 +70,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
 def _check_correct_version(filepaths, product, version):
     """Check the file version is correct.
 
-    If 'version' is the last version, we retrieve data from 'gpmalldata' directory.
-    But many products are not available to the last version.
+    Several products are not available to the last version.
     So to archive data correctly on the user side, we check that the file version
     actually match the asked version, and otherwise we download the last available version.
     """
