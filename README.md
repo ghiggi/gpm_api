@@ -1,16 +1,26 @@
-# Welcome to GPM-API
-[![DOI](https://zenodo.org/badge/286664485.svg)](https://zenodo.org/badge/latestdoi/286664485)
-[![PyPI version](https://badge.fury.io/py/gpm_api.svg)](https://badge.fury.io/py/gpm_api)
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/gpm_api.svg)](https://anaconda.org/conda-forge/gpm_api)
-[![Tests](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml/badge.svg)](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml)
-[![Coverage Status](https://coveralls.io/repos/github/ghiggi/gpm_api/badge.svg?branch=main)](https://coveralls.io/github/ghiggi/gpm_api?branch=main)
-[![Documentation Status](https://readthedocs.org/projects/gpm-api/badge/?version=latest)](https://gpm-api.readthedocs.io/en/latest/?badge=latest)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-[![License](https://img.shields.io/github/license/ghiggi/gpm_api)](https://github.com/ghiggi/gpm_api/blob/master/LICENSE)
+# 📦 Welcome to GPM-API
+
+|                      |                                                |
+| -------------------- | ---------------------------------------------- |
+| Deployment           | [![PyPI](https://badge.fury.io/py/gpm_api.svg?style=flat)](https://pypi.org/project/gpm_api/) [![Conda](https://img.shields.io/conda/vn/conda-forge/gpm_api.svg?logo=conda-forge&logoColor=white&style=flat)](https://anaconda.org/conda-forge/gpm_api) |
+| Activity             | [![PyPI Downloads](https://img.shields.io/pypi/dm/gpm_api.svg?label=PyPI%20downloads&style=flat)](https://pypi.org/project/gpm_api/) [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/gpm_api.svg?label=Conda%20downloads&style=flat)](https://anaconda.org/conda-forge/gpm_api) |
+| Python Versions      | [![Python Versions](https://img.shields.io/badge/Python-3.8%20%203.9%20%203.10%20%203.11%20%203.12-blue?style=flat)](https://www.python.org/downloads/) |
+| Supported Systems    | [![Linux](https://img.shields.io/github/actions/workflow/status/ghiggi/gpm_api/.github/workflows/tests.yml?label=Linux&style=flat)](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml) [![macOS](https://img.shields.io/github/actions/workflow/status/ghiggi/gpm_api/.github/workflows/tests.yml?label=macOS&style=flat)](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml) [![Windows](https://img.shields.io/github/actions/workflow/status/ghiggi/gpm_api/.github/workflows/tests_windows.yml?label=Windows&style=flat)](https://github.com/ghiggi/gpm_api/actions/workflows/tests_windows.yml) |
+| Project Status       | [![Project Status](https://www.repostatus.org/badges/latest/active.svg?style=flat)](https://www.repostatus.org/#active) |
+| Build Status         | [![Tests](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml/badge.svg?style=flat)](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml) [![Lint](https://github.com/ghiggi/gpm_api/actions/workflows/lint.yml/badge.svg?style=flat)](https://github.com/ghiggi/gpm_api/actions/workflows/lint.yml) [![Docs](https://readthedocs.org/projects/gpm_api/badge/?version=latest&style=flat)](https://gpm_api.readthedocs.io/en/latest/) |
+| Linting              | [![Black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat)](https://github.com/psf/black) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json&style=flat)](https://github.com/astral-sh/ruff) [![Codespell](https://img.shields.io/badge/Codespell-enabled-brightgreen?style=flat)](https://github.com/codespell-project/codespell) |
+| Code Coverage        | [![Coveralls](https://coveralls.io/repos/github/ghiggi/gpm_api/badge.svg?branch=main&style=flat)](https://coveralls.io/github/ghiggi/gpm_api?branch=main) [![Codecov](https://codecov.io/gh/ghiggi/gpm_api/branch/main/graph/badge.svg?style=flat)](https://codecov.io/gh/ghiggi/gpm_api) |
+| Code Quality         | [![Codefactor](https://www.codefactor.io/repository/github/ghiggi/gpm_api/badge?style=flat)](https://www.codefactor.io/repository/github/ghiggi/gpm_api) [![Codebeat](https://codebeat.co/badges/236abcf2-cbae-4ca9-8a2d-3b70495bb16b?style=flat)](https://codebeat.co/projects/github-com-ghiggi-gpm_api-main) [![Codacy](https://app.codacy.com/project/badge/Grade/bee842cb10004ad8bb9288256f2fc8af?style=flat)](https://app.codacy.com/gh/ghiggi/gpm_api/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) [![Codescene](https://codescene.io/projects/36767/status-badges/code-health?style=flat)](https://codescene.io/projects/36767) |
+| Code Review          | [![pyOpenSci](https://tinyurl.com/XXXX)](#) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/XXXX/badge?style=flat)](#) |
+| License              | [![License](https://img.shields.io/github/license/ghiggi/gpm_api?style=flat)](https://github.com/ghiggi/gpm_api/blob/main/LICENSE) |
+| Community            | [![Slack](https://img.shields.io/badge/Slack-gpm_api-green.svg?logo=slack&style=flat)](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) [![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-green?logo=github&style=flat)](https://github.com/ghiggi/gpm_api/discussions) |   
+| Citation             | [![DOI](https://zenodo.org/badge/286664485.svg?style=flat)](https://doi.org/10.5281/zenodo.10255084) |
+
+ [**Slack**](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) | [**Docs**](https://gpm-api.readthedocs.io/en/latest/)
 
 The GPM-API is still in development. Feel free to try it out and to report issues or to suggest changes.
 
-## Quick start
+## 🚀 Quick start
 GPM-API provides an easy-to-use python interface to download, read, process and visualize most
 of the products of the Global Precipitation Measurement Mission (GPM) data archive.
 
@@ -46,6 +56,9 @@ print(configs)
 
 ```
 
+-----------------------------------------------------------------------------------------
+#### 📥 Download GPM data
+
 Now you can either start to download GPM data within python:
 
 ```python
@@ -73,6 +86,8 @@ or from the terminal using i.e. `download_daily_gpm_data <product> <year> <month
 ```bash
     download_daily_gpm_data 2A-DPR 2022 7 22
 ```
+-----------------------------------------------------------------------------------------
+#### 💫 Open GPM files into xarray
 
 A GPM granule can be opened in python using:
 
@@ -102,9 +117,16 @@ ds = gpm_api.open_dataset(product=product,
                           end_time=end_time)
 ```
 
-Look at the [Tutorials][tutorial_link] to learn how to analyse and visualize the GPM products !
+-----------------------------------------------------------------------------------------
+#### 📖 Explore the GPM-API documentation
 
-## Installation
+To discover all GPM-API download, manipulation, analysis and plotting utilities, or how to contribute your custom retrieval to GPM-API:
+- please read the software documentation available at [[https://disdrodb.readthedocs.io/en/latest/](https://gpm-api.readthedocs.io/en/latest/)].
+- dive into the Jupyter Notebooks [Tutorials][tutorial_link] tutorials.
+
+-----------------------------------------------------------------------------------------
+
+## 🛠️ Installation
 
 
 ### pip
@@ -133,11 +155,27 @@ In case conda forge is not set up for your system yet, see the easy to follow
 instructions on [conda forge][conda_forge_link].
 
 
-## Documentation for GPM-API
+## 💭 Feedback and Contributing Guidelines
 
-You can find the documentation under [gpm_api.readthedocs.io][doc_link]
+If you aim to contribute your data or discuss the future development of GPM-API,
+we highly suggest to join the [**GPM-API Slack Workspace**](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg)
 
-### Tutorials and Examples
+Feel free to also open a [GitHub Issue](https://github.com/ghiggi/gpm_api/issues) or a [GitHub Discussion](https://github.com/ghiggi/gpm_api/discussions) specific to your questions or ideas.
+
+## Citation
+
+You can cite the GPM-API software by:
+
+> Ghiggi Gionata & XXXX . ghiggi/gpm_api. Zenodo. https://doi.org/10.5281/zenodo.7753488
+
+If you want to cite a specific software version, have a look at the [Zenodo site](https://doi.org/10.5281/zenodo.7753488).
+
+## License
+
+The content of this repository is released under the terms of the [MIT license](LICENSE).
+
+
+### Tutorials
 
 The documentation also includes some [tutorials][tut_link], showing the most important use cases of GPM-API.
 These tutorial are also available as Jupyter Notebooks and in Google Colab:
@@ -155,18 +193,6 @@ These tutorial are also available as Jupyter Notebooks and in Google Colab:
 
 The associated python scripts are also provided in the `tutorial` folder.
 
-## Citation
-
-If you are using GPM-API in your publication please cite our paper:
-
-TODO: GMD
-
-You can cite the Zenodo code publication of GPM-API by:
-
-> Ghiggi Gionata & XXXX . ghiggi/gpm_api. Zenodo. https://doi.org/10.5281/zenodo.7753488
-
-If you want to cite a specific version, have a look at the [Zenodo site](https://doi.org/10.5281/zenodo.7753488).
-
 ## Requirements:
 
 - [xarray](https://docs.xarray.dev/en/stable/)
@@ -182,10 +208,6 @@ If you want to cite a specific version, have a look at the [Zenodo site](https:/
 - [zarr](https://zarr.readthedocs.io/en/stable/)
 - [dask_image](https://image.dask.org/en/latest/)
 - [skimage](https://scikit-image.org/)
-
-## License
-
-The content of this repository is released under the terms of the [MIT](LICENSE) license.
 
 [PPS_link]: https://gpm.nasa.gov/data/sources/pps-research
 [tutorial_link]: https://github.com/ghiggi/gpm_api/tree/master#tutorials-and-examples
