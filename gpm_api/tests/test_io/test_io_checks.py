@@ -299,24 +299,24 @@ def test_check_product_category(
 
 
 def test_check_product_level(
-    product_levels_short: List[str],
+    product_levels: List[str],
 ) -> None:
-    """Test check_product_level_short()"""
+    """Test check_product_level()"""
 
     # Test types that aren't strings
     for product_level in [123, None]:
         with pytest.raises(ValueError):
-            checks.check_product_level_short(product_level)
+            checks.check_product_level(product_level)
 
     # Test a product_level that does exist
-    for product_level in product_levels_short:
-        assert product_level == checks.check_product_level_short(product_level)
+    for product_level in product_levels:
+        assert product_level == checks.check_product_level(product_level)
     # Should run without raising Exception
 
     # Test a product_level that doesn't exist
     for product_level in ["NOT", "A", "LEVEL"]:
         with pytest.raises(ValueError):
-            checks.check_product_level_short(product_level)
+            checks.check_product_level(product_level)
 
 
 def test_check_product_validity(

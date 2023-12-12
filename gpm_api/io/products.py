@@ -11,9 +11,9 @@ import os
 import numpy as np
 
 from gpm_api.io.checks import (
+    check_full_product_levels,
     check_product_categories,
     check_product_levels,
-    check_product_levels_short,
     check_product_types,
     check_product_validity,
     check_product_version,
@@ -90,8 +90,8 @@ def get_info_dict_subset(
     product_categories=None,  # RADAR, PMW, CMB, ...
     product_types=None,  # RS, NRT
     versions=None,
+    full_product_levels=None,
     product_levels=None,
-    product_levels_short=None,
 ):
     """Retrieve info dictionary filtered by keys."""
     info_dict = get_info_dict()
@@ -113,15 +113,15 @@ def get_info_dict_subset(
         info_dict = _subset_info_dict_by_key(
             key="product_types", values=product_types, info_dict=info_dict
         )
+    if full_product_levels is not None:
+        full_product_levels = check_full_product_levels(full_product_levels)
+        info_dict = _subset_info_dict_by_key(
+            key="full_product_level", values=full_product_levels, info_dict=info_dict
+        )
     if product_levels is not None:
         product_levels = check_product_levels(product_levels)
         info_dict = _subset_info_dict_by_key(
             key="product_level", values=product_levels, info_dict=info_dict
-        )
-    if product_levels_short is not None:
-        product_levels_short = check_product_levels_short(product_levels_short)
-        info_dict = _subset_info_dict_by_key(
-            key="product_level_short", values=product_levels_short, info_dict=info_dict
         )
     if versions is not None:
         versions = check_versions(versions)
@@ -187,12 +187,12 @@ def get_available_products():
     return list(info_dict)
 
 
-def get_available_product_levels(short=True):
+def get_available_product_levels(full=False):
     """Get the list of all available product levels."""
-    if short:
-        key = "product_level_short"
-    else:
+    if not full:
         key = "product_level"
+    else:
+        key = "full_product_level"
     info_dict = get_info_dict()
     return _get_unique_key_values(info_dict, key=key)
 
@@ -225,14 +225,14 @@ def available_product_levels(
     product_categories=None,
     product_types=None,
     versions=None,
-    short=True,
+    full=False,
 ):
     """Return the available product levels."""
     # Define product level key
-    if short:
-        key = "product_level_short"
-    else:
+    if not full:
         key = "product_level"
+    else:
+        key = "full_product_level"
     # Retrieve info dictionary
     info_dict = get_info_dict_subset(
         sensors=sensors,
@@ -241,7 +241,7 @@ def available_product_levels(
         product_types=product_types,  # RS, NRT
         versions=versions,
         product_levels=None,
-        product_levels_short=None,
+        full_product_levels=None,
     )
     # Retrieve key values
     return _get_unique_key_values(info_dict, key=key)
@@ -253,7 +253,7 @@ def available_satellites(
     product_types=None,
     versions=None,
     product_levels=None,
-    product_levels_short=None,
+    full_product_levels=None,
     prefix_with_sensor=False,
 ):
     """Return the available satellites.
@@ -267,7 +267,7 @@ def available_satellites(
         product_types=product_types,  # RS, NRT
         versions=versions,
         product_levels=product_levels,
-        product_levels_short=product_levels_short,
+        full_product_levels=full_product_levels,
     )
 
     return _get_sensor_satellite_names(
@@ -281,7 +281,7 @@ def available_sensors(
     product_types=None,
     versions=None,
     product_levels=None,
-    product_levels_short=None,
+    full_product_levels=None,
     suffix_with_satellite=False,
 ):
     """Return the available sensors.
@@ -295,7 +295,7 @@ def available_sensors(
         product_types=product_types,  # RS, NRT
         versions=versions,
         product_levels=product_levels,
-        product_levels_short=product_levels_short,
+        full_product_levels=full_product_levels,
     )
     return _get_sensor_satellite_names(
         info_dict, key="sensor", combine_with="satellite" if suffix_with_satellite else None
@@ -308,7 +308,7 @@ def available_product_categories(
     product_types=None,
     versions=None,
     product_levels=None,
-    product_levels_short=None,
+    full_product_levels=None,
     suffix_with_satellite=False,
 ):
     """Return the available product categories."""
@@ -319,7 +319,7 @@ def available_product_categories(
         product_types=product_types,  # RS, NRT
         versions=versions,
         product_levels=product_levels,
-        product_levels_short=product_levels_short,
+        full_product_levels=full_product_levels,
     )
     return _get_unique_key_values(info_dict, key="product_category")
 
@@ -331,7 +331,7 @@ def available_products(
     product_types=None,
     versions=None,
     product_levels=None,
-    product_levels_short=None,
+    full_product_levels=None,
 ):
     """
     Provide a list of all/NRT/RS GPM data for download.
@@ -346,7 +346,7 @@ def available_products(
         If None (default), provide products from all product categories.
         If string, must be a valid product category.
         Valid product categories are: 'PMW', 'RADAR', 'IMERG', 'CMB'.
-    product_levels_short: (str or list), optional
+    product_levels: (str or list), optional
         If None (default), provide products from all product levels.
         If string, must be a valid product level.
         Valid product levels are: '1A','1B','1C','2A','2B','3B'.
@@ -365,7 +365,7 @@ def available_products(
         product_types=product_types,  # RS, NRT
         versions=versions,
         product_levels=product_levels,
-        product_levels_short=product_levels_short,
+        full_product_levels=full_product_levels,
     )
     products = list(info_dict)
     return sorted(products)
@@ -435,17 +435,17 @@ def get_product_category(product):
     return product_category
 
 
-def get_product_level(product, short=False):
+def get_product_level(product, full=False):
     """Get the product_level of a GPM product."""
     # TODO: Add L3 products: i.e  3B-HH3, 3B-DAY
     # Notes:
     # - "GPMCOR" --> 1B
-    # - product_level = info_dict[product]["pattern"].split(".")[0]
-    # - product_level_short --> product_level[0:2]
-    if not short:
-        return get_product_info(product).get("product_level", None)
+    # - full_product_level = info_dict[product]["pattern"].split(".")[0]
+    # - product_level --> product_level[0:2]
+    if full:
+        return get_product_info(product).get("full_product_level", None)
     else:
-        return get_product_info(product).get("product_level_short", None)
+        return get_product_info(product).get("product_level", None)
 
 
 def is_trmm_product(product):

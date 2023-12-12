@@ -25,7 +25,7 @@
     - S4
     - S5
   product_level: 1A
-  product_level_short: 1A
+  full_product_level: 1A
 1A-TMI:
   pattern: 1A.TRMM.TMI.*
   sensor: TMI
@@ -51,7 +51,7 @@
     - S2
     - S3
   product_level: 1A
-  product_level_short: 1A
+  full_product_level: 1A
 1B-GMI:
   pattern: 1B.GPM.GMI.*
   sensor: GMI
@@ -76,7 +76,7 @@
     - S1
     - S2
   product_level: 1B
-  product_level_short: 1B
+  full_product_level: 1B
 1B-Ka:
   pattern: GPMCOR_KAR*
   sensor: DPR
@@ -100,7 +100,7 @@
     - HS
     - MS
   product_level: 1B
-  product_level_short: 1B
+  full_product_level: 1B
 1B-Ku:
   pattern: GPMCOR_KUR*
   sensor: DPR
@@ -122,7 +122,7 @@
     V7:
     - FS
   product_level: 1B
-  product_level_short: 1B
+  full_product_level: 1B
 1B-PR:
   pattern: 1B.TRMM.PR*
   sensor: PR
@@ -144,7 +144,7 @@
     V7:
     - FS
   product_level: 1B
-  product_level_short: 1B
+  full_product_level: 1B
 1B-TMI:
   pattern: 1B.TRMM.TMI.*
   sensor: TMI
@@ -170,7 +170,7 @@
     - S2
     - S3
   product_level: 1B
-  product_level_short: 1B
+  full_product_level: 1B
 1C-AMSR2-GCOMW1:
   pattern: 1C.GCOMW1.AMSR2.*
   sensor: AMSR2
@@ -203,7 +203,7 @@
     - S5
     - S6
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-AMSRE-AQUA:
   pattern: 1C.AQUA.AMSRE.*
   sensor: AMSRE
@@ -235,7 +235,7 @@
     - S5
     - S6
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-AMSUB-NOAA15:
   pattern: 1C.NOAA15.AMSUB.*
   sensor: AMSUB
@@ -257,7 +257,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-AMSUB-NOAA16:
   pattern: 1C.NOAA16.AMSUB.*
   sensor: AMSUB
@@ -279,7 +279,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-AMSUB-NOAA17:
   pattern: 1C.NOAA17.AMSUB.*
   sensor: AMSUB
@@ -301,7 +301,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-ATMS-NOAA20:
   pattern: 1C.NOAA20.ATMS.*
   sensor: ATMS
@@ -330,7 +330,7 @@
     - S3
     - S4
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-ATMS-NOAA21:
   pattern: 1C.NOAA21.ATMS.*
   sensor: ATMS
@@ -353,7 +353,7 @@
     - S3
     - S4
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-ATMS-NPP:
   pattern: 1C.NPP.ATMS.*
   sensor: ATMS
@@ -382,7 +382,7 @@
     - S3
     - S4
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-GMI:
   pattern: 1C.GPM.GMI.*
   sensor: GMI
@@ -407,7 +407,7 @@
     - S1
     - S2
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-GMI-R:
   pattern: 1C-R.GPM.GMI.*
   sensor: GMI
@@ -431,8 +431,8 @@
     V7:
     - S1
     - S2
-  product_level: 1C-R
-  product_level_short: 1C
+  product_level: 1C
+  full_product_level: 1C-R
 1C-MHS-METOPA:
   pattern: 1C.METOPA.MHS.*
   sensor: MHS
@@ -454,7 +454,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-MHS-METOPB:
   pattern: 1C.METOPB.MHS.*
   sensor: MHS
@@ -477,7 +477,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-MHS-METOPC:
   pattern: 1C.METOPC.MHS.*
   sensor: MHS
@@ -500,7 +500,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-MHS-NOAA18:
   pattern: 1C.NOAA18.MHS.*
   sensor: MHS
@@ -522,7 +522,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-MHS-NOAA19:
   pattern: 1C.NOAA19.MHS.*
   sensor: MHS
@@ -545,7 +545,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SAPHIR-MT1:
   pattern: 1C.MT1.SAPHIR.*
   sensor: SAPHIR
@@ -568,7 +568,7 @@
     V7:
     - S1
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMI-F08:
   pattern: 1C.F08.SSMI.*
   sensor: SSMI
@@ -595,7 +595,7 @@
     - S1
     - S2
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMI-F10:
   pattern: 1C.F10.SSMI.*
   sensor: SSMI
@@ -622,7 +622,7 @@
     - S1
     - S2
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMI-F11:
   pattern: 1C.F11.SSMI.*
   sensor: SSMI
@@ -650,7 +650,7 @@
     - S1
     - S2
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMI-F13:
   pattern: 1C.F13.SSMI.*
   sensor: SSMI
@@ -678,7 +678,7 @@
     - S1
     - S2
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMI-F14:
   pattern: 1C.F14.SSMI.*
   sensor: SSMI
@@ -706,7 +706,7 @@
     - S1
     - S2
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMI-F15:
   pattern: 1C.F15.SSMI.*
   sensor: SSMI
@@ -734,7 +734,7 @@
     - S1
     - S2
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMIS-F16:
   pattern: 1C.F16.SSMIS.*
   sensor: SSMIS
@@ -763,7 +763,7 @@
     - S3
     - S4
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMIS-F17:
   pattern: 1C.F17.SSMIS.*
   sensor: SSMIS
@@ -792,7 +792,7 @@
     - S3
     - S4
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMIS-F18:
   pattern: 1C.F18.SSMIS.*
   sensor: SSMIS
@@ -821,7 +821,7 @@
     - S3
     - S4
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-SSMIS-F19:
   pattern: 1C.F19.SSMIS.*
   sensor: SSMIS
@@ -849,7 +849,7 @@
     - S3
     - S4
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 1C-TMI:
   pattern: 1C.TRMM.TMI.*
   sensor: TMI
@@ -875,7 +875,7 @@
     - S2
     - S3
   product_level: 1C
-  product_level_short: 1C
+  full_product_level: 1C
 2A-AMSR2-GCOMW1:
   pattern: 2A.GCOMW1.AMSR2.*
   sensor: AMSR2
@@ -897,7 +897,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-ATMS-NOAA20:
   pattern: 2A.NOAA20.ATMS.*
   sensor: ATMS
@@ -919,7 +919,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-ATMS-NOAA21:
   pattern: 2A.NOAA21.ATMS.*
   sensor: ATMS
@@ -939,7 +939,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-ATMS-NPP:
   pattern: 2A.NPP.ATMS.*
   sensor: ATMS
@@ -961,7 +961,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-GMI:
   pattern: 2A.GPM.GMI.*
   sensor: GMI
@@ -984,7 +984,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-MHS-METOPA:
   pattern: 2A.METOPA.MHS.*
   sensor: MHS
@@ -1005,7 +1005,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-MHS-METOPB:
   pattern: 2A.METOPB.MHS.*
   sensor: MHS
@@ -1027,7 +1027,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-MHS-METOPC:
   pattern: 2A.METOPC.MHS.*
   sensor: MHS
@@ -1049,7 +1049,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-MHS-NOAA18:
   pattern: 2A.NOAA18.MHS.*
   sensor: MHS
@@ -1070,7 +1070,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-MHS-NOAA19:
   pattern: 2A.NOAA19.MHS.*
   sensor: MHS
@@ -1092,7 +1092,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-SAPHIR-MT1:
   pattern: 2A.MT1.SAPHIR.*
   sensor: SAPHIR
@@ -1112,7 +1112,7 @@
     V6:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-SSMIS-F16:
   pattern: 2A.F16.SSMIS.*
   sensor: SSMIS
@@ -1134,7 +1134,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-SSMIS-F17:
   pattern: 2A.F17.SSMIS.*
   sensor: SSMIS
@@ -1156,7 +1156,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-SSMIS-F18:
   pattern: 2A.F18.SSMIS.*
   sensor: SSMIS
@@ -1178,7 +1178,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-SSMIS-F19:
   pattern: 2A.F19.SSMIS.*
   sensor: SSMIS
@@ -1200,7 +1200,7 @@
     V7:
     - S1
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-AMSR2-GCOMW1-CLIM:
   pattern: 2A-CLIM.GCOMW1.AMSR2.*
   sensor: AMSR2
@@ -1221,8 +1221,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-AMSRE-AQUA-CLIM:
   pattern: 2A-CLIM.AQUA.AMSRE.*
   sensor: AMSRE
@@ -1243,8 +1243,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-AMSUB-NOAA15-CLIM:
   pattern: 2A-CLIM.NOAA15.AMSUB.*
   sensor: AMSUB
@@ -1265,8 +1265,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-AMSUB-NOAA16-CLIM:
   pattern: 2A-CLIM.NOAA16.AMSUB.*
   sensor: AMSUB
@@ -1287,8 +1287,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-AMSUB-NOAA17-CLIM:
   pattern: 2A-CLIM.NOAA17.AMSUB.*
   sensor: AMSUB
@@ -1309,8 +1309,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-ATMS-NOAA20-CLIM:
   pattern: 2A-CLIM.NOAA20.ATMS.*
   sensor: ATMS
@@ -1331,8 +1331,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-ATMS-NOAA21-CLIM:
   pattern: 2A-CLIM.NOAA21.ATMS.*
   sensor: ATMS
@@ -1350,8 +1350,8 @@
   scan_modes:
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-ATMS-NPP-CLIM:
   pattern: 2A-CLIM.NPP.ATMS.*
   sensor: ATMS
@@ -1372,8 +1372,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-GMI-CLIM:
   pattern: 2A-CLIM.GPM.GMI.*
   sensor: GMI
@@ -1394,8 +1394,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-MHS-METOPA-CLIM:
   pattern: 2A-CLIM.METOPA.MHS.*
   sensor: MHS
@@ -1416,8 +1416,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-MHS-METOPB-CLIM:
   pattern: 2A-CLIM.METOPB.MHS.*
   sensor: MHS
@@ -1438,8 +1438,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-MHS-METOPC-CLIM:
   pattern: 2A-CLIM.METOPC.MHS.*
   sensor: MHS
@@ -1460,8 +1460,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-MHS-NOAA18-CLIM:
   pattern: 2A-CLIM.NOAA18.MHS.*
   sensor: MHS
@@ -1482,8 +1482,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-MHS-NOAA19-CLIM:
   pattern: 2A-CLIM.NOAA19.MHS.*
   sensor: MHS
@@ -1504,8 +1504,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SAPHIR-MT1-CLIM:
   pattern: 2A-CLIM.MT1.SAPHIR.*
   sensor: SAPHIR
@@ -1523,8 +1523,8 @@
   scan_modes:
     V6:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMI-F08-CLIM:
   pattern: 2A-CLIM.F08.SSMI.*
   sensor: SSMI
@@ -1545,8 +1545,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMI-F10-CLIM:
   pattern: 2A-CLIM.F10.SSMI.*
   sensor: SSMI
@@ -1567,8 +1567,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMI-F11-CLIM:
   pattern: 2A-CLIM.F11.SSMI.*
   sensor: SSMI
@@ -1589,8 +1589,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMI-F13-CLIM:
   pattern: 2A-CLIM.F13.SSMI.*
   sensor: SSMI
@@ -1611,8 +1611,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMI-F14-CLIM:
   pattern: 2A-CLIM.F14.SSMI.*
   sensor: SSMI
@@ -1633,8 +1633,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMI-F15-CLIM:
   pattern: 2A-CLIM.F15.SSMI.*
   sensor: SSMI
@@ -1655,8 +1655,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMIS-F16-CLIM:
   pattern: 2A-CLIM.F16.SSMIS.*
   sensor: SSMIS
@@ -1677,8 +1677,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMIS-F17-CLIM:
   pattern: 2A-CLIM.F17.SSMIS.*
   sensor: SSMIS
@@ -1699,8 +1699,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMIS-F18-CLIM:
   pattern: 2A-CLIM.F18.SSMIS.*
   sensor: SSMIS
@@ -1721,8 +1721,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-SSMIS-F19-CLIM:
   pattern: 2A-CLIM.F19.SSMIS.*
   sensor: SSMIS
@@ -1743,8 +1743,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-TMI-CLIM:
   pattern: 2A-CLIM.TRMM.TMI.*
   sensor: TMI
@@ -1765,8 +1765,8 @@
     - S1
     V7:
     - S1
-  product_level: 2A-CLIM
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-CLIM
 2A-DPR:
   pattern: 2A.GPM.DPR.V\d-*
   sensor: DPR
@@ -1792,7 +1792,7 @@
     - FS
     - HS
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-Ka:
   pattern: 2A.GPM.Ka.V*
   sensor: DPR
@@ -1817,7 +1817,7 @@
     - HS
     - FS
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-Ku:
   pattern: 2A.GPM.Ku.V*
   sensor: DPR
@@ -1840,7 +1840,7 @@
     V7:
     - FS
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-PR:
   pattern: 2A.TRMM.PR.V\d-*
   sensor: PR
@@ -1862,7 +1862,7 @@
     V7:
     - FS
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-ENV-DPR:
   pattern: 2A-ENV.GPM.DPR.V*
   sensor: DPR
@@ -1885,8 +1885,8 @@
     V7:
     - FS
     - HS
-  product_level: 2A-ENV
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-ENV
 2A-ENV-Ka:
   pattern: 2A-ENV.GPM.Ka.V*
   sensor: DPR
@@ -1909,8 +1909,8 @@
     V7:
     - HS
     - FS
-  product_level: 2A-ENV
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-ENV
 2A-ENV-Ku:
   pattern: 2A-ENV.GPM.Ku.V*
   sensor: DPR
@@ -1931,8 +1931,8 @@
     - NS
     V7:
     - FS
-  product_level: 2A-ENV
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-ENV
 2A-ENV-PR:
   pattern: 2A-ENV.TRMM.PR.V*
   sensor: PR
@@ -1953,8 +1953,8 @@
     - NS
     V7:
     - FS
-  product_level: 2A-ENV
-  product_level_short: 2A
+  product_level: 2A
+  full_product_level: 2A-ENV
 2A-GPM-SLH:
   pattern: 2A.GPM.DPR.GPM-SLH*
   sensor: DPR
@@ -1976,7 +1976,7 @@
     V7:
     - Swath
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2A-TRMM-SLH:
   pattern: 2A.TRMM.PR.TRMM-SLH*
   sensor: PR
@@ -1998,7 +1998,7 @@
     V7:
     - Swath
   product_level: 2A
-  product_level_short: 2A
+  full_product_level: 2A
 2B-GPM-CSAT:
   pattern: 2B.CSATGPM.COIN*
   sensor: null
@@ -2017,7 +2017,7 @@
     V4:
     - null
   product_level: 2B
-  product_level_short: 2B
+  full_product_level: 2B
 2B-TRMM-CSAT:
   pattern: 2B.CSATTRMM.COIN*
   sensor: null
@@ -2036,7 +2036,7 @@
     V4:
     - null
   product_level: 2B
-  product_level_short: 2B
+  full_product_level: 2B
 2B-GPM-CORRA:
   pattern: 2B.GPM.DPRGMI.CORRA*
   sensor:
@@ -2063,7 +2063,7 @@
     - KuKaGMI
     - KuGMI
   product_level: 2B
-  product_level_short: 2B
+  full_product_level: 2B
 2B-TRMM-CORRA:
   pattern: 2B.TRMM.PRTMI.CORRA*
   sensor:
@@ -2087,7 +2087,7 @@
     V7:
     - KuTMI
   product_level: 2B
-  product_level_short: 2B
+  full_product_level: 2B
 2B-GPM-CSH:
   pattern: 2B.GPM.DPRGMI.2HCSHv*
   sensor:
@@ -2111,7 +2111,7 @@
     V7:
     - Swath
   product_level: 2B
-  product_level_short: 2B
+  full_product_level: 2B
 2B-TRMM-CSH:
   pattern: 2B.TRMM.PRTMI.2HCSHv*
   sensor:
@@ -2135,7 +2135,7 @@
     V7:
     - Swath
   product_level: 2B
-  product_level_short: 2B
+  full_product_level: 2B
 IMERG-ER:
   pattern: 3B-HHR-E.MS.MRG*
   product_category: IMERG
@@ -2153,8 +2153,8 @@ IMERG-ER:
     - Grid
     V7:
     - Grid
-  product_level: 3B-HHR-E
-  product_level_short: 3B
+  product_level: 3B
+  full_product_level: 3B-HHR-E
 IMERG-LR:
   pattern: 3B-HHR-L.MS.MRG*
   product_category: IMERG
@@ -2172,8 +2172,8 @@ IMERG-LR:
     - Grid
     V7:
     - Grid
-  product_level: 3B-HHR-L
-  product_level_short: 3B
+  product_level: 3B
+  full_product_level: 3B-HHR-L
 IMERG-FR:
   pattern: 3B-HHR.MS.MRG.*
   product_category: IMERG
@@ -2192,5 +2192,5 @@ IMERG-FR:
     - Grid
     V7:
     - Grid
-  product_level: 3B-HHR
-  product_level_short: 3B
+  product_level: 3B
+  full_product_level: 3B-HHR

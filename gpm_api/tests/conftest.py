@@ -59,11 +59,11 @@ def product_categories() -> List[str]:
 
 
 @pytest.fixture
-def product_levels_short() -> List[str]:
+def product_levels() -> List[str]:
     """Return a list of product levels from the info dict"""
     from gpm_api.io.products import get_available_product_levels
 
-    return get_available_product_levels(short=True)  #  ["1A", "1B", "1C", "2A", "2B", "3B"]
+    return get_available_product_levels(full=False)  #  ["1A", "1B", "1C", "2A", "2B", "3B"]
 
 
 @pytest.fixture

@@ -273,16 +273,16 @@ def check_product_category(product_category):
     return product_category
 
 
-def check_product_level_short(product_level):
+def check_product_level(product_level):
     """Check product_level validity."""
     from gpm_api.io.products import get_available_product_levels  # circular otherwise
 
     if not isinstance(product_level, str):
-        raise ValueError("Please specify the product_level_short as a string.")
-    valid_values = get_available_product_levels(short=True)
+        raise ValueError("Please specify the product_level as a string.")
+    valid_values = get_available_product_levels(full=False)
     if product_level not in valid_values:
         raise ValueError(
-            f"{product_level} is an invalid product_level_short. Currently accepted values are {valid_values}."
+            f"{product_level} is an invalid product_level. Currently accepted values are {valid_values}."
         )
     return product_level
 
@@ -299,18 +299,18 @@ def check_version(version):
     return version
 
 
-def check_product_level(product_level):
-    """Check product_level validity."""
+def check_full_product_level(full_product_level):
+    """Check full_product_level validity."""
     from gpm_api.io.products import get_available_product_levels  # circular otherwise
 
-    if not isinstance(product_level, str):
-        raise ValueError("Please specify the product_level as a string.")
-    valid_values = get_available_product_levels(short=False)
-    if product_level not in valid_values:
+    if not isinstance(full_product_level, str):
+        raise ValueError("Please specify the full_product_level as a string.")
+    valid_values = get_available_product_levels(full=True)
+    if full_product_level not in valid_values:
         raise ValueError(
-            f"{product_level} is an invalid product_level. Currently accepted values are {valid_values}."
+            f"{full_product_level} is an invalid full_product_level. Currently accepted values are {valid_values}."
         )
-    return product_level
+    return full_product_level
 
 
 def check_sensor(sensor):
@@ -356,6 +356,18 @@ def check_satellites(satellites):
     return satellites
 
 
+def check_full_product_levels(full_product_levels):
+    """Check full product levels list validity."""
+    if isinstance(full_product_levels, str):
+        full_product_levels = [full_product_levels]
+    if full_product_levels is not None:
+        full_product_levels = [
+            check_full_product_level(full_product_level)
+            for full_product_level in full_product_levels
+        ]
+    return full_product_levels
+
+
 def check_product_levels(product_levels):
     """Check product levels list validity."""
     if isinstance(product_levels, str):
@@ -363,18 +375,6 @@ def check_product_levels(product_levels):
     if product_levels is not None:
         product_levels = [check_product_level(product_level) for product_level in product_levels]
     return product_levels
-
-
-def check_product_levels_short(product_levels_short):
-    """Check product levels list validity."""
-    if isinstance(product_levels_short, str):
-        product_levels_short = [product_levels_short]
-    if product_levels_short is not None:
-        product_levels_short = [
-            check_product_level_short(product_level_short)
-            for product_level_short in product_levels_short
-        ]
-    return product_levels_short
 
 
 def check_product_categories(product_categories):
