@@ -2,6 +2,7 @@ import inspect
 import importlib
 import numpy as np
 import pytest
+from pytest_mock import MockFixture
 import re
 from typing import Callable, Dict, Tuple
 import xarray as xr
@@ -30,11 +31,16 @@ dataarray_accessor_methods = [
 accessor_methods = base_accessor_methods + dataset_accessor_methods + dataarray_accessor_methods
 
 
-def get_arguments_list(function: Callable) -> list:
+def get_arguments_list(function: Callable, remove_self: bool = True) -> list:
     """Get list of arguments of a function"""
 
     signature = inspect.signature(function)
-    return list(signature.parameters.keys())
+    arguments = list(signature.parameters.keys())
+
+    if remove_self and arguments[0] == "self":
+        arguments = arguments[1:]
+
+    return arguments
 
 
 def get_function_location(function: Callable) -> str:
@@ -57,6 +63,13 @@ def get_imported_gpm_method_path(function: Callable) -> Tuple[str, str]:
 
     else:
         raise ValueError(f"No import statement found in {get_function_location(function)}")
+
+
+def get_imported_gpm_method(accessor_method: Callable) -> Callable:
+    imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
+    module = importlib.import_module(imported_module)
+    gpm_method = getattr(module, imported_method_name)
+    return gpm_method
 
 
 def get_default_arguments_dict(function: Callable) -> Dict[str, object]:
@@ -130,7 +143,37 @@ def test_default_arguments(
 ) -> None:
     """Test that default arguments are the same between accessor methods and gpm_api methods"""
 
-    imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
-    module = importlib.import_module(imported_module)
-    gpm_method = getattr(module, imported_method_name)
+    gpm_method = get_imported_gpm_method(accessor_method)
     compare_default_arguments(accessor_method, gpm_method)
+
+
+@pytest.mark.parametrize("accessor_method", base_accessor_methods + dataset_accessor_methods)
+def test_passed_arguments_dataset(
+    mocker: MockFixture,
+    accessor_method: Callable,
+) -> None:
+    """Test that arguments are passed correctly to gpm_api methods"""
+
+    imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
+
+    def mock_gpm_method(ds, **kwargs):
+        return {"ds": ds, **kwargs}
+
+    mocker.patch(f"{imported_module}.{imported_method_name}", side_effect=mock_gpm_method)
+
+    accessor_arguments = get_arguments_list(accessor_method)
+    kwargs = {arg: arg for arg in accessor_arguments}
+
+    ds = xr.Dataset()
+    expected = {"ds": ds, **kwargs}
+
+    if "variable" in accessor_arguments:
+        ds["variable"] = xr.DataArray()
+        kwargs["variable"] = "variable"
+
+    ds_accessor_method = getattr(ds.gpm_api, accessor_method.__name__)
+    returned = ds_accessor_method(**kwargs)
+
+    assert (
+        returned == expected
+    ), f"Arguments not passed correctly in {get_function_location(accessor_method)}"
