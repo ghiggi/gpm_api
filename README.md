@@ -29,8 +29,8 @@ The list of available products can be retrieved using:
 ```python
 import gpm_api
 
-gpm_api.available_products(product_type="RS")  # research products
-gpm_api.available_products(product_type="NRT") # near-real-time products
+gpm_api.available_products(product_types="RS")  # research products
+gpm_api.available_products(product_types="NRT") # near-real-time products
 
 ```
 

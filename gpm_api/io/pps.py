@@ -75,7 +75,7 @@ def _get_pps_nrt_product_dir(product, date):
     """
     folder_name = _get_pps_nrt_product_folder_name(product)
     # Specify the directory tree
-    if product in available_products(product_type="NRT", product_category="IMERG"):
+    if product in available_products(product_types="NRT", product_categories="IMERG"):
         directory_tree = f"{folder_name}/{datetime.datetime.strftime(date, '%Y%m')}"
     else:
         directory_tree = folder_name
@@ -96,7 +96,7 @@ def _get_pps_rs_product_dir(product, date, version):
         GPM version of the data to retrieve if product_type = 'RS'.
     """
     version = check_product_version(version, product)
-    check_product_validity(product, product_type="RS")
+    product = check_product_validity(product, product_type="RS")
 
     # Retrieve NASA server folder name for RS
     folder_name = _get_pps_rs_product_folder_name(product)
@@ -154,7 +154,7 @@ def _get_pps_directory_tree(product, product_type, date, version):
     directory_tree : str
         DIrectory tree on the NASA PPS server where the data are stored.
     """
-    check_product_type(product_type)
+    product_type = check_product_type(product_type)
     if product_type == "NRT":
         return _get_pps_nrt_product_dir(product, date)
     else:  # product_type == "RS"

@@ -28,11 +28,11 @@ def _get_decoding_function(module_name):
 def decode_variables(ds, product):
     """Decode the variables of a given GPM product."""
     # Decode variables of 2A-<RADAR> products
-    if product in available_products(product_category="RADAR", product_level="2A"):
+    if product in available_products(product_categories="RADAR", product_levels_short="2A"):
         ds = _get_decoding_function("gpm_api.dataset.decoding.decode_2a_radar")(ds)
 
     # Decode variables of 2A-<PMW> products
-    if product in available_products(product_category="PMW", product_level="2A"):
+    if product in available_products(product_categories="PMW", product_levels_short="2A"):
         ds = _get_decoding_function("gpm_api.dataset.decoding.decode_2a_pmw")(ds)
 
     # if ds.attrs.get("TotalQualityCode"):

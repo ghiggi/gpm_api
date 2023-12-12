@@ -202,7 +202,7 @@ def test_check_version(
 
     # Check available range should not raise exception
     for version in versions:
-        checks.check_version(version)
+        assert version == checks.check_version(version)
         # Should run without raising Exception
 
     # Try versions outside of range
@@ -250,8 +250,8 @@ def test_check_product(
 
     # Test a product that does exist
     for product_type in product_types:
-        for product in available_products(product_type=product_type):
-            checks.check_product(product, product_type=product_type)
+        for product in available_products(product_types=product_type):
+            assert product == checks.check_product(product, product_type=product_type)
             # Should run without raising Exception
 
     # Test a product that isn't a string
@@ -268,7 +268,7 @@ def test_check_product_type(
 
     # Test a product_type that does exist
     for product_type in product_types:
-        checks.check_product_type(product_type)
+        assert product_type == checks.check_product_type(product_type)
         # Should run without raising Exception
 
     # Test a product_type that doesn't exist
@@ -289,7 +289,7 @@ def test_check_product_category(
 
     # Test a product_category that does exist
     for product_category in product_categories:
-        checks.check_product_category(product_category)
+        assert product_category == checks.check_product_category(product_category)
         # Should run without raising Exception
 
     # Test a product_category that doesn't exist
@@ -299,24 +299,24 @@ def test_check_product_category(
 
 
 def test_check_product_level(
-    product_levels: List[str],
+    product_levels_short: List[str],
 ) -> None:
-    """Test check_product_level()"""
+    """Test check_product_level_short()"""
 
     # Test types that aren't strings
     for product_level in [123, None]:
         with pytest.raises(ValueError):
-            checks.check_product_level(product_level)
+            checks.check_product_level_short(product_level)
 
     # Test a product_level that does exist
-    for product_level in product_levels:
-        checks.check_product_level(product_level)
+    for product_level in product_levels_short:
+        assert product_level == checks.check_product_level_short(product_level)
     # Should run without raising Exception
 
     # Test a product_level that doesn't exist
     for product_level in ["NOT", "A", "LEVEL"]:
         with pytest.raises(ValueError):
-            checks.check_product_level(product_level)
+            checks.check_product_level_short(product_level)
 
 
 def test_check_product_validity(
@@ -326,8 +326,8 @@ def test_check_product_validity(
 
     # Test a product that does exist
     for product_type in product_types:
-        for product in available_products(product_type=product_type):
-            checks.check_product_validity(product, product_type=product_type)
+        for product in available_products(product_types=product_type):
+            assert product == checks.check_product_validity(product, product_type=product_type)
             # Should run without raising Exception
 
     # Test a product that doesn't exist
@@ -559,7 +559,9 @@ def test_check_valid_time_request(
             # Check valid times
             start_time = valid_start_time
             end_time = valid_start_time + datetime.timedelta(days=1)
-            checks.check_valid_time_request(start_time, end_time, product)
+            assert (start_time, end_time) == checks.check_valid_time_request(
+                start_time, end_time, product
+            )
 
             # Check invalid start time
             start_time = valid_start_time - datetime.timedelta(days=1)

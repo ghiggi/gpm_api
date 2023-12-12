@@ -105,10 +105,10 @@ def check_archive_integrity(
 
     """
     # Check valid product and variables
-    check_product(product, product_type=product_type)
+    product = check_product(product, product_type=product_type)
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
-    check_valid_time_request(start_time, end_time, product)
+    start_time, end_time = check_valid_time_request(start_time, end_time, product=product)
     # Find filepaths
     filepaths = find_filepaths(
         storage="local",

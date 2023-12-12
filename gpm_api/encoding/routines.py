@@ -46,7 +46,7 @@ def _get_encoding_function(module_name):
 def get_product_encoding_dict(product):
     """Read encoding dictionary from GPM product YAML file."""
     # Define retrievals for 2A-<RADAR> products
-    if product in available_products(product_category="RADAR", product_level="2A"):
+    if product in available_products(product_categories="RADAR", product_levels_short="2A"):
         module_name = "gpm_api.dataset.encoding.encode_2a_radar"
         return _get_encoding_function(module_name)()
     else:

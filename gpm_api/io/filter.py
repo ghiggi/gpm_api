@@ -88,7 +88,6 @@ def _filter_filepath(filepath, product=None, version=None, start_time=None, end_
         If no valid filepaths, return an empty list.
 
     """
-
     try:
         info_dict = get_info_from_filepath(filepath)
     except ValueError:
@@ -162,7 +161,7 @@ def filter_filepaths(
     if len(filepaths) == 0:
         return []
     # Check product validity
-    check_product(product=product, product_type=product_type)
+    product = check_product(product=product, product_type=product_type)
     # Check start_time and end_time
     if start_time is not None or end_time is not None:
         if start_time is None:
@@ -205,7 +204,6 @@ def filter_by_product(filepaths, product, product_type="RS"):
         If no valid filepaths, returns an empty list !
 
     """
-    # return filter_filepaths(filepaths, product=product, product_type=product_type)
     # -------------------------------------------------------------------------.
     # Check filepaths
     if isinstance(filepaths, type(None)):
@@ -216,7 +214,7 @@ def filter_by_product(filepaths, product, product_type="RS"):
 
     # -------------------------------------------------------------------------.
     # Check product validity
-    check_product(product=product, product_type=product_type)
+    product = check_product(product=product, product_type=product_type)
 
     # -------------------------------------------------------------------------.
     # Retrieve GPM filename dictionary
@@ -254,7 +252,6 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
         List of valid filepaths.
         If no valid filepaths, returns an empty list !
     """
-    # return filter_filepaths(filepaths, start_time=start_time, end_time=end_time)
     # -------------------------------------------------------------------------.
     # Check filepaths
     if isinstance(filepaths, type(None)):
@@ -317,7 +314,6 @@ def filter_by_version(filepaths, version):
         List of valid filepaths.
         If no valid filepaths, returns an empty list !
     """
-    # return filter_filepaths(filepaths, version=version)
     # -------------------------------------------------------------------------.
     # Check filepaths
     if isinstance(filepaths, type(None)):
@@ -328,7 +324,7 @@ def filter_by_version(filepaths, version):
 
     # -------------------------------------------------------------------------.
     # Check version validity
-    check_version(version)
+    version = check_version(version)
 
     # -------------------------------------------------------------------------.
     # Retrieve GPM granules version

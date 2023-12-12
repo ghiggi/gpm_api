@@ -14,14 +14,14 @@ def test_get_pps_nrt_product_dir(products: List[str]) -> None:
 
     for product in products:
         # Only work on NRT products
-        if product in available_products(product_type="NRT"):
+        if product in available_products(product_types="NRT"):
             # Dependent on dir forming private function
             foldername = pps._get_pps_nrt_product_folder_name(product)
 
             res = pps._get_pps_nrt_product_dir(product, date)
             if product in available_products(
-                product_type="NRT",
-                product_category="IMERG",
+                product_types="NRT",
+                product_categories="IMERG",
             ):
                 assert res == f"{foldername}/{date.strftime('%Y%m')}"
             else:

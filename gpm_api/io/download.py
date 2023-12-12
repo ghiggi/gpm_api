@@ -700,8 +700,8 @@ def _download_daily_data(
     # -------------------------------------------------------------------------.
     ## Check input arguments
     date = check_date(date)
-    check_product_type(product_type=product_type)
-    check_product(product=product, product_type=product_type)
+    product_type = check_product_type(product_type=product_type)
+    product = check_product(product=product, product_type=product_type)
     storage = check_remote_storage(storage)
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
@@ -855,11 +855,11 @@ def download_archive(
     # -------------------------------------------------------------------------.
     ## Checks input arguments
     storage = check_remote_storage(storage)
-    check_product_type(product_type=product_type)
-    check_product(product=product, product_type=product_type)
+    product_type = check_product_type(product_type=product_type)
+    product = check_product(product=product, product_type=product_type)
     version = check_product_version(version, product)
     start_time, end_time = check_start_end_time(start_time, end_time)
-    check_valid_time_request(start_time, end_time, product)
+    start_time, end_time = check_valid_time_request(start_time, end_time, product)
     # -------------------------------------------------------------------------.
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory

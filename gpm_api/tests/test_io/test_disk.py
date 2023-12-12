@@ -23,7 +23,7 @@ def test__get_local_dir_pattern(
                 )
 
                 # Work only on product if product_type are compatible
-                if product in available_products(product_type=product_type):
+                if product in available_products(product_types=product_type):
                     product_category = get_product_category(product)
                     if product_type == "NRT":
                         assert "V0" not in dir_pattern
@@ -63,7 +63,7 @@ def test_get_local_product_base_directory(
                 )
 
                 # Work only on product if product_type are compatible
-                if product in available_products(product_type=product_type):
+                if product in available_products(product_types=product_type):
                     product_category = get_product_category(product)
                     if product_type == "NRT":
                         assert "V0" not in dir_path
