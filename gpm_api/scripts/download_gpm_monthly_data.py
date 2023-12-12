@@ -66,8 +66,4 @@ def download_gpm_monthly_data(
         retry=retry,
     )
 
-    return
-
-
-if __name__ == "__main__":
-    download_gpm_monthly_data()
+    return None

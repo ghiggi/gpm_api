@@ -55,8 +55,4 @@ def download_gpm_files(
         retry=retry,
     )
 
-    return
-
-
-if __name__ == "__main__":
-    download_gpm_files()
+    return None
