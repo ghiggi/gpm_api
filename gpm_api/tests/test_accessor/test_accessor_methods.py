@@ -3,7 +3,7 @@ import importlib
 import numpy as np
 import pytest
 import re
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, Tuple
 import xarray as xr
 
 import gpm_api  # Needed to register accessors
@@ -20,12 +20,14 @@ def get_class_methods(accessor_class) -> Dict[str, Callable]:
 base_accessor_methods_dict = get_class_methods(GPM_Base_Accessor)
 dataset_accessor_methods_dict = get_class_methods(GPM_Dataset_Accessor)
 dataarray_accessor_methods_dict = get_class_methods(GPM_DataArray_Accessor)
-accessor_methods_dict = {
-    **dataset_accessor_methods_dict,
-    **dataarray_accessor_methods_dict,
-    **base_accessor_methods_dict,
-}
-accessor_methods = list(accessor_methods_dict.values())
+base_accessor_methods = list(base_accessor_methods_dict.values())
+dataset_accessor_methods = [
+    v for v in dataset_accessor_methods_dict.values() if v not in base_accessor_methods
+]
+dataarray_accessor_methods = [
+    v for v in dataarray_accessor_methods_dict.values() if v not in base_accessor_methods
+]
+accessor_methods = base_accessor_methods + dataset_accessor_methods + dataarray_accessor_methods
 
 
 def get_arguments_list(function: Callable) -> list:
