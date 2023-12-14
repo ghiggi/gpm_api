@@ -142,7 +142,7 @@ class GPM_Base_Accessor:
         """Retrieve variable values at specific range bins."""
         from gpm_api.utils.manipulations import get_variable_at_bin
 
-        return get_variable_at_bin(self._obj, bin=bin, variable=None)
+        return get_variable_at_bin(self._obj, bin=bin, variable=variable)
 
     def get_height_at_bin(self, bin):
         """Retrieve height values at specific range bins."""
@@ -489,8 +489,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 
         da = self._obj[variable]
         p = plot_map(
+            da,
             ax=ax,
-            da=da,
             x=x,
             y=y,
             add_colorbar=add_colorbar,
@@ -567,7 +567,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         """Retrieve a GPM-API variable."""
         from gpm_api.retrievals.routines import get_retrieval_variable
 
-        return get_retrieval_variable(self._obj, retrieval=name, **kwargs)
+        return get_retrieval_variable(self._obj, name=name, **kwargs)
 
     def slice_range_at_temperature(self, temperature, variable_temperature="airTemperature"):
         """Slice the 3D arrays along a specific isotherm."""

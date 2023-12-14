@@ -88,13 +88,11 @@ def get_default_arguments_dict(function: Callable) -> Dict[str, object]:
 def compare_default_arguments(
     accessor_method: Callable,
     reference_method: Callable,
-    changed_default_arguments: Dict[str, object] = {},
 ):
     """Check that default arguments of accessor_method and reference_method are the same"""
 
     accessor_default_arguments = get_default_arguments_dict(accessor_method)
     reference_default_arguments = get_default_arguments_dict(reference_method)
-    # modified_default_arguments = {**accessor_default_arguments, **changed_default_arguments}
 
     missing_arguments = set(reference_default_arguments.keys()) - set(
         accessor_default_arguments.keys()
@@ -155,24 +153,32 @@ def test_passed_arguments_dataset(
     """Test that arguments are passed correctly to gpm_api methods"""
 
     imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
+    gpm_method_arguments = get_arguments_list(get_imported_gpm_method(accessor_method))
 
-    def mock_gpm_method(ds, **kwargs):
-        return {"ds": ds, **kwargs}
+    # Mock gpm_api method
+    def mock_gpm_method(xr_obj, *args, **kwargs):
+        args_dict = {arg: arg for arg in args}
+        return {"xr_obj": xr_obj, **args_dict, **kwargs}
 
     mocker.patch(f"{imported_module}.{imported_method_name}", side_effect=mock_gpm_method)
 
+    # Create dictionary of accessor arguments
     accessor_arguments = get_arguments_list(accessor_method)
-    kwargs = {arg: arg for arg in accessor_arguments}
-
+    args_kwargs_dict = {arg: arg for arg in accessor_arguments}
     ds = xr.Dataset()
-    expected = {"ds": ds, **kwargs}
 
-    if "variable" in accessor_arguments:
-        ds["variable"] = xr.DataArray()
-        kwargs["variable"] = "variable"
+    # Different behavior if dataarray variable is extracted from dataset
+    if "variable" in accessor_arguments and "variable" not in gpm_method_arguments:
+        da = xr.DataArray([0])  # Must not be empty, otherwise comparison with itself fails
+        ds["variable"] = da
+        expected = {"xr_obj": da, **args_kwargs_dict}
+        del expected["variable"]
+
+    else:
+        expected = {"xr_obj": ds, **args_kwargs_dict}
 
     ds_accessor_method = getattr(ds.gpm_api, accessor_method.__name__)
-    returned = ds_accessor_method(**kwargs)
+    returned = ds_accessor_method(**args_kwargs_dict)
 
     assert (
         returned == expected
