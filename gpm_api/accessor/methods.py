@@ -634,7 +634,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
 
         da = self._obj
         p = plot_map(
-            da=da,
+            da,
             ax=ax,
             x=x,
             y=y,

@@ -121,6 +121,19 @@ def compare_default_arguments(
     ), f"Different values in {get_function_location(accessor_method)}: {different_values}"
 
 
+def mock_associated_gpm_method(
+    accessor_method: Callable,
+    mocker: MockFixture,
+) -> None:
+    imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
+
+    def mock_gpm_method(xr_obj, *args, **kwargs):
+        args_dict = {arg: arg for arg in args}
+        return {"xr_obj": xr_obj, **args_dict, **kwargs}
+
+    mocker.patch(f"{imported_module}.{imported_method_name}", side_effect=mock_gpm_method)
+
+
 class TestRegisterAccessor:
     """Test that accessor are registered by xarray"""
 
@@ -150,17 +163,10 @@ def test_passed_arguments_dataset(
     mocker: MockFixture,
     accessor_method: Callable,
 ) -> None:
-    """Test that arguments are passed correctly to gpm_api methods"""
+    """Test that arguments are passed correctly to gpm_api methods for datasets"""
 
-    imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
     gpm_method_arguments = get_arguments_list(get_imported_gpm_method(accessor_method))
-
-    # Mock gpm_api method
-    def mock_gpm_method(xr_obj, *args, **kwargs):
-        args_dict = {arg: arg for arg in args}
-        return {"xr_obj": xr_obj, **args_dict, **kwargs}
-
-    mocker.patch(f"{imported_module}.{imported_method_name}", side_effect=mock_gpm_method)
+    mock_associated_gpm_method(accessor_method, mocker)
 
     # Create dictionary of accessor arguments
     accessor_arguments = get_arguments_list(accessor_method)
@@ -179,6 +185,29 @@ def test_passed_arguments_dataset(
 
     ds_accessor_method = getattr(ds.gpm_api, accessor_method.__name__)
     returned = ds_accessor_method(**args_kwargs_dict)
+
+    assert (
+        returned == expected
+    ), f"Arguments not passed correctly in {get_function_location(accessor_method)}"
+
+
+@pytest.mark.parametrize("accessor_method", base_accessor_methods + dataarray_accessor_methods)
+def test_passed_arguments_dataarray(
+    mocker: MockFixture,
+    accessor_method: Callable,
+) -> None:
+    """Test that arguments are passed correctly to gpm_api methods for dataarrays"""
+
+    mock_associated_gpm_method(accessor_method, mocker)
+
+    # Create dictionary of accessor arguments
+    accessor_arguments = get_arguments_list(accessor_method)
+    args_kwargs_dict = {arg: arg for arg in accessor_arguments}
+    da = xr.DataArray()
+    da_accessor_method = getattr(da.gpm_api, accessor_method.__name__)
+
+    expected = {"xr_obj": da, **args_kwargs_dict}
+    returned = da_accessor_method(**args_kwargs_dict)
 
     assert (
         returned == expected
