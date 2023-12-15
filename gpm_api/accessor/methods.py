@@ -309,14 +309,14 @@ class GPM_Base_Accessor:
 
         return get_slices_valid_geolocation(self._obj, min_size=min_size)
 
-    def get_slices_regular(self, min_size=2):
+    def get_slices_regular(self, min_size=None):
         from gpm_api.utils.checks import get_slices_regular
 
         return get_slices_regular(self._obj, min_size=min_size)
 
     #### Plotting utility
     def plot_transect_line(
-        self, ax=None, add_direction=True, text_kwargs={}, line_kwargs={}, **common_kwargs
+        self, ax, add_direction=True, text_kwargs={}, line_kwargs={}, **common_kwargs
     ):
         from gpm_api.visualization.profile import plot_transect_line
 
@@ -352,14 +352,16 @@ class GPM_Base_Accessor:
         )
         return p
 
-    def plot_swath_lines(self, ax=None, linestyle="--", color="k", **kwargs):
+    def plot_swath_lines(self, ax=None, x="lon", y="lat", linestyle="--", color="k", **kwargs):
         from gpm_api.visualization.orbit import plot_swath_lines
 
-        p = plot_swath_lines(self._obj, ax=ax, linestyle=linestyle, color=color, **kwargs)
+        p = plot_swath_lines(self._obj, ax=ax, x=x, y=y, linestyle=linestyle, color=color, **kwargs)
         return p
 
     def plot_map_mesh(
         self,
+        x="lon",
+        y="lat",
         ax=None,
         edgecolors="k",
         linewidth=0.1,
@@ -372,6 +374,8 @@ class GPM_Base_Accessor:
 
         p = plot_map_mesh(
             xr_obj=self._obj,
+            x=x,
+            y=y,
             ax=ax,
             edgecolors=edgecolors,
             linewidth=linewidth,
@@ -384,6 +388,8 @@ class GPM_Base_Accessor:
 
     def plot_map_mesh_centroids(
         self,
+        x="lon",
+        y="lat",
         ax=None,
         c="r",
         s=1,
@@ -396,6 +402,8 @@ class GPM_Base_Accessor:
 
         p = plot_map_mesh_centroids(
             self._obj,
+            x=x,
+            y=y,
             ax=ax,
             c=c,
             s=s,
