@@ -42,10 +42,10 @@ products = [
 ]
 products = ["2B-TRMM-CORRA", "2B-TRMM-CSH", "2A-TRMM-SLH", "1B-TMI", "1C-TMI", "2A-ENV-PR", "2A-PR"]
 
-products = gpm_api.available_products(product_category="CMB")
-products = gpm_api.available_products(product_category="IMERG")
-products = gpm_api.available_products(product_category="RADAR")
-products = gpm_api.available_products(product_category="PMW")
+products = gpm_api.available_products(product_categories="CMB")
+products = gpm_api.available_products(product_categories="IMERG")
+products = gpm_api.available_products(product_categories="RADAR")
+products = gpm_api.available_products(product_categories="PMW")
 
 
 start_time = datetime.datetime.strptime("2018-07-01 08:00:00", "%Y-%m-%d %H:%M:%S")

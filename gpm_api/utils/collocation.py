@@ -17,12 +17,12 @@ def _get_collocation_defaults_args(product, variables, groups, version, scan_mod
         scan_modes = gpm_api.available_scan_modes(product=product, version=version)
     if isinstance(scan_modes, str):
         scan_modes = [scan_modes]
-    if product not in gpm_api.available_products(product_category="PMW"):
+    if product not in gpm_api.available_products(product_categories="PMW"):
         if len(scan_modes) > 1:
             raise ValueError("Multiple scan modes can be specified only for PMW products!")
     # PMW defaults
     if variables is None and groups is None:
-        if product in gpm_api.available_products(product_level="2A", product_category="PMW"):
+        if product in gpm_api.available_products(product_levels="2A", product_categories="PMW"):
             variables = [
                 "surfacePrecipitation",
                 "mostLikelyPrecipitation",

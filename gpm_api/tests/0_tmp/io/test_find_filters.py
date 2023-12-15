@@ -21,7 +21,7 @@ from gpm_api.io.pps import find_pps_daily_filepaths
 # -------------------------------------------------------------------------.
 version = 7
 product_type = "RS"
-products = gpm_api.available_products(product_type=product_type)
+products = gpm_api.available_products(product_types=product_type)
 
 date = datetime.date.fromisoformat("2020-08-17")
 start_time = datetime.datetime.strptime("2020-08-17 00:00:00", "%Y-%m-%d %H:%M:%S")
@@ -34,8 +34,8 @@ force_download = False
 
 # -------------------------------------------------------------------------.
 date = check_date(date)
-check_product_type(product_type=product_type)
-check_product(product=product, product_type=product_type)
+product_type = check_product_type(product_type=product_type)
+product = check_product(product=product, product_type=product_type)
 
 
 # -------------------------------------------------------------------------.

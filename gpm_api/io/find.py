@@ -70,8 +70,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
 def _check_correct_version(filepaths, product, version):
     """Check the file version is correct.
 
-    If 'version' is the last version, we retrieve data from 'gpmalldata' directory.
-    But many products are not available to the last version.
+    Several products are not available to the last version.
     So to archive data correctly on the user side, we check that the file version
     actually match the asked version, and otherwise we download the last available version.
     """
@@ -101,10 +100,10 @@ def _ensure_valid_start_date(start_date, product):
         min_start_date = "2011-10-13 00:00:00"
     elif "1A-" in product or "1B-" in product:
         min_start_date = "1997-12-07 00:00:00"
-    elif product in available_products(product_category="PMW"):
+    elif product in available_products(product_categories="PMW"):
         min_start_date = "1987-07-09 00:00:00"
-    elif product in available_products(product_category="RADAR") or product in available_products(
-        product_category="CMB"
+    elif product in available_products(product_categories="RADAR") or product in available_products(
+        product_categories="CMB"
     ):
         min_start_date = "1997-12-07 00:00:00"
     elif "IMERG" in product:
@@ -239,10 +238,10 @@ def find_filepaths(
     ## Checks input arguments
     storage = check_storage(storage)
     version = check_product_version(version, product)
-    check_product_type(product_type=product_type)
-    check_product(product=product, product_type=product_type)
+    product_type = check_product_type(product_type=product_type)
+    product = check_product(product=product, product_type=product_type)
     start_time, end_time = check_start_end_time(start_time, end_time)
-    check_valid_time_request(start_time, end_time, product)
+    start_time, end_time = check_valid_time_request(start_time, end_time, product)
 
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory

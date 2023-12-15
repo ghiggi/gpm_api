@@ -8,6 +8,12 @@ from pytest_mock.plugin import MockerFixture
 from gpm_api.io import find
 from gpm_api.io.products import available_products
 from gpm_api.utils.warnings import GPMDownloadWarning
+from gpm_api.io.find import (
+    _get_all_daily_filepaths,
+    _check_correct_version,
+    find_daily_filepaths,
+    find_filepaths,
+)
 
 
 class TestGetDailyFilepaths:
@@ -26,7 +32,7 @@ class TestGetDailyFilepaths:
 
         storage = "local"
 
-        returned_filepaths = find._get_all_daily_filepaths(
+        returned_filepaths = _get_all_daily_filepaths(
             storage=storage,
             date=self.date,
             product="1C-GMI",
@@ -53,12 +59,12 @@ class TestGetDailyFilepaths:
 
         # Test with existing files (mocked)
         for product_type in ["RS", "NRT"]:
-            for product in available_products(product_type=product_type):
+            for product in available_products(product_types=product_type):
                 info = product_info[product]
                 version = info["available_versions"][-1]
                 product_category = info["product_category"]
 
-                returned_filepaths = find._get_all_daily_filepaths(
+                returned_filepaths = _get_all_daily_filepaths(
                     storage=storage,
                     date=self.date,
                     product=product,
@@ -122,11 +128,11 @@ class TestGetDailyFilepaths:
         product_type = "RS"
         version = 7
 
-        for product in available_products(product_type=product_type, version=version):
+        for product in available_products(product_types=product_type, versions=version):
             info = product_info[product]
             pps_dir = info["pps_rs_dir"]
 
-            returned_filepaths = find._get_all_daily_filepaths(
+            returned_filepaths = _get_all_daily_filepaths(
                 storage=storage,
                 date=self.date,
                 product=product,
@@ -150,7 +156,7 @@ class TestGetDailyFilepaths:
         storage = "pps"
         product_type = "RS"
 
-        for product in available_products(product_type=product_type):
+        for product in available_products(product_types=product_type):
             info = product_info[product]
             pps_dir = info["pps_rs_dir"]
 
@@ -158,7 +164,7 @@ class TestGetDailyFilepaths:
                 if version == 7:
                     continue
 
-                returned_filepaths = find._get_all_daily_filepaths(
+                returned_filepaths = _get_all_daily_filepaths(
                     storage=storage,
                     date=self.date,
                     product=product,
@@ -182,7 +188,7 @@ class TestGetDailyFilepaths:
         storage = "pps"
         product_type = "NRT"
 
-        for product in available_products(product_type=product_type):
+        for product in available_products(product_types=product_type):
             info = product_info[product]
             if info["product_category"] == "IMERG":
                 continue
@@ -190,7 +196,7 @@ class TestGetDailyFilepaths:
             version = info["available_versions"][-1]
             pps_dir = info["pps_nrt_dir"]
 
-            returned_filepaths = find._get_all_daily_filepaths(
+            returned_filepaths = _get_all_daily_filepaths(
                 storage=storage,
                 date=self.date,
                 product=product,
@@ -216,13 +222,13 @@ class TestGetDailyFilepaths:
         product_category = "IMERG"
 
         for product in available_products(
-            product_type=product_type, product_category=product_category
+            product_types=product_type, product_categories=product_category
         ):
             info = product_info[product]
             version = info["available_versions"][-1]
             pps_dir = info["pps_nrt_dir"]
 
-            returned_filepaths = find._get_all_daily_filepaths(
+            returned_filepaths = _get_all_daily_filepaths(
                 storage=storage,
                 date=self.date,
                 product=product,
@@ -252,7 +258,7 @@ class TestGetDailyFilepaths:
 
         for product_type in ["RS", "NRT"]:
             with pytest.raises(ValueError):
-                find._get_all_daily_filepaths(
+                _get_all_daily_filepaths(
                     storage=storage,
                     date=self.date,
                     product=product,
@@ -292,7 +298,7 @@ class TestGetDailyFilepaths:
             if ges_disc_dir is None:
                 continue
 
-            returned_filepaths = find._get_all_daily_filepaths(
+            returned_filepaths = _get_all_daily_filepaths(
                 storage=storage,
                 date=self.date,
                 product=product,
@@ -320,7 +326,7 @@ class TestGetDailyFilepaths:
         version = 7
 
         with pytest.raises(ValueError):
-            find._get_all_daily_filepaths(
+            _get_all_daily_filepaths(
                 storage=storage,
                 date=self.date,
                 product=product,
@@ -343,7 +349,7 @@ def test_check_correct_version(
     # Test correct version
     files_version = [7] * 3
     filepaths = [filepath_template.format(v) for v in files_version]
-    returned_filepaths, returned_version = find._check_correct_version(
+    returned_filepaths, returned_version = _check_correct_version(
         filepaths=filepaths, product=product, version=version
     )
     assert returned_filepaths == filepaths
@@ -353,17 +359,17 @@ def test_check_correct_version(
     files_version = [6] * 3
     filepaths = [filepath_template.format(v) for v in files_version]
     with pytest.raises(GPMDownloadWarning):
-        find._check_correct_version(filepaths=filepaths, product=product, version=version)
+        _check_correct_version(filepaths=filepaths, product=product, version=version)
 
     # Test multiple versions
     files_version = [6, 7, 7]
     filepaths = [filepath_template.format(v) for v in files_version]
     with pytest.raises(ValueError):
-        find._check_correct_version(filepaths=filepaths, product=product, version=version)
+        _check_correct_version(filepaths=filepaths, product=product, version=version)
 
     # Test empty list
     filepaths = []
-    _, returned_version = find._check_correct_version(
+    _, returned_version = _check_correct_version(
         filepaths=filepaths, product=product, version=version
     )
     assert returned_version == version
@@ -423,7 +429,7 @@ def test_find_daily_filepaths(
         "verbose": True,
     }
 
-    returned_filepaths, returned_versions = find.find_daily_filepaths(**kwargs)
+    returned_filepaths, returned_versions = find_daily_filepaths(**kwargs)
 
     assert returned_versions[0] == version
     returned_filepath = returned_filepaths[0]
@@ -437,12 +443,12 @@ def test_find_daily_filepaths(
     assert f"product_type:{product_type}" in returned_filepath
     assert f"date:{date_checked}" in returned_filepath
     assert f"version:{version}" in returned_filepath
-    assert f"verbose:True" in returned_filepath
+    assert "verbose:True" in returned_filepath
 
     # Check all filter_filepaths kwargs passed
     assert f"product-filtered:{product}" in returned_filepath
     assert f"product_type-filtered:{product_type}" in returned_filepath
-    assert f"version-filtered:None" in returned_filepath
+    assert "version-filtered:None" in returned_filepath
     assert f"start_time-filtered:{start_time}" in returned_filepath
     assert f"end_time-filtered:{end_time}" in returned_filepath
 
@@ -452,14 +458,14 @@ def test_find_daily_filepaths(
 
     # Check empty filtered filepaths list
     patch_filter_filepaths.side_effect = lambda filepaths, **kwargs: []
-    returned_filepaths, returned_versions = find.find_daily_filepaths(**kwargs)
+    returned_filepaths, returned_versions = find_daily_filepaths(**kwargs)
     assert returned_filepaths == []
     assert returned_versions == []
 
     # Check empty filepaths list
     patch_get_all_daily_filepaths.side_effect = lambda **kwargs: []
     kwargs["storage"] = "local"
-    returned_filepaths, returned_versions = find.find_daily_filepaths(**kwargs)
+    returned_filepaths, returned_versions = find_daily_filepaths(**kwargs)
     assert returned_filepaths == []
     assert returned_versions == []
 
@@ -503,8 +509,8 @@ def test_find_filepaths(
         "verbose": verbose,
     }
 
-    returned_filepaths = find.find_filepaths(**kwargs, parallel=False)
-    returned_filepaths_parallel = find.find_filepaths(**kwargs, parallel=True)
+    returned_filepaths = find_filepaths(**kwargs, parallel=False)
+    returned_filepaths_parallel = find_filepaths(**kwargs, parallel=True)
     assert returned_filepaths == returned_filepaths_parallel
 
     # Check all find_daily_filepaths kwargs passed
@@ -534,5 +540,5 @@ def test_find_filepaths(
     # Test NRT products: single date
     product_type = "NRT"
     kwargs["product_type"] = product_type
-    returned_filepaths = find.find_filepaths(**kwargs, parallel=False)
+    returned_filepaths = find_filepaths(**kwargs, parallel=False)
     assert len(returned_filepaths) == n_filepath_per_day, "More days than expected"

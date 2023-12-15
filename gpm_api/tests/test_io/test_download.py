@@ -216,7 +216,7 @@ class TestDownloadArchive:
 
         # Assume files pass file integrity check by mocking return as empty
         for product_type in product_types:
-            for product in available_products(product_type=product_type):
+            for product in available_products(product_types=product_type):
                 start_time = get_product_start_time(product)
                 if start_time is None:
                     continue
@@ -276,7 +276,7 @@ def test_download_daily_data_private(
     with pytest.warns(GPMDownloadWarning):
         for version in versions:
             for product_type in product_types:
-                for product in available_products(product_type=product_type):
+                for product in available_products(product_types=product_type):
                     dl._download_daily_data(
                         storage=storage,
                         date=datetime.datetime(2022, 9, 7, 12, 0, 0),

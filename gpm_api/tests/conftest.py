@@ -61,24 +61,25 @@ def product_categories() -> List[str]:
 @pytest.fixture
 def product_levels() -> List[str]:
     """Return a list of product levels from the info dict"""
+    from gpm_api.io.products import get_available_product_levels
 
-    # Available in gpm_api.io.checks.check_product_level()
-    return ["1A", "1B", "1C", "2A", "2B"]
+    return get_available_product_levels(full=False)  #  ["1A", "1B", "1C", "2A", "2B", "3B"]
 
 
 @pytest.fixture
 def versions() -> List[int]:
     """Return a list of versions"""
+    from gpm_api.io.products import get_available_versions
 
-    # Available in gpm_api.io.checks.check_version()
-    return [4, 5, 6, 7]
+    return get_available_versions()
 
 
 @pytest.fixture
 def products() -> List[str]:
     """Return a list of all products regardless of type"""
+    from gpm_api.io.products import get_available_products
 
-    return available_products()
+    return get_available_products()
 
 
 @pytest.fixture

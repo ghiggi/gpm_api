@@ -13,7 +13,7 @@ import numpy as np
 ## Retrieve RS data
 version = 7
 product_type = "RS"
-products = gpm_api.available_products(product_type="RS")()
+products = gpm_api.available_products(product_types="RS")()
 
 # Only GPM
 start_time = datetime.datetime.strptime("2020-08-09 15:00:00", "%Y-%m-%d %H:%M:%S")
@@ -38,7 +38,7 @@ for product in products:
 ## Retrieve NRT data
 version = 6
 product_type = "NRT"
-products = gpm_api.available_products(product_type="NRT")
+products = gpm_api.available_products(product_types="NRT")
 
 date = datetime.date.fromisoformat("2020-08-17")
 
