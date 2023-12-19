@@ -25,7 +25,6 @@ from gpm_api.utils.yaml import read_yaml_file
 #### TODO:
 # - croup_around(point, distance)
 # - get_extent_around(point, distance)
-# - rename file crop.py?
 
 
 def _extend_lonlat_extent(extent, x):
@@ -60,12 +59,7 @@ def _get_country_extent_dictionary():
     return countries_extent_dict
 
 
-def get_country_extent(name):
-    # TODO: we could create a dictionary class which
-    # - optionally is key unsensitive for get method !!!
-    # - provide suggestions ...
-    # --> Could be reused also when searching for GPM products, ...
-    # -------------------------------------------------------------------------.
+def get_country_extent(name, padding=0.2):
     # Check country format
     if not isinstance(name, str):
         raise TypeError("Please provide the country name as a string.")
@@ -78,7 +72,7 @@ def get_country_extent(name):
     valid_countries_lower = list(countries_lower_extent_dict)
     if name.lower() in valid_countries_lower:
         extent = countries_lower_extent_dict[name.lower()]
-        extent = _extend_lonlat_extent(extent, 0.2)
+        extent = _extend_lonlat_extent(extent, padding)
         return extent
     else:
         possible_match = difflib.get_close_matches(name, valid_countries, n=1, cutoff=0.6)
@@ -95,12 +89,7 @@ def _get_continent_extent_dictionary():
     return continents_extent_dict
 
 
-def get_continent_extent(name):
-    # TODO: we could create a dictionary class which
-    # - optionally is key unsensitive for get method !!!
-    # - provide suggestions ...
-    # --> Could be reused also when searching for GPM products, ...
-    # -------------------------------------------------------------------------.
+def get_continent_extent(name, padding=0):
     # Check country format
     if not isinstance(name, str):
         raise TypeError("Please provide the continent name as a string.")
@@ -113,9 +102,7 @@ def get_continent_extent(name):
     valid_continent_lower = list(continent_lower_extent_dict)
     if name.lower() in valid_continent_lower:
         extent = continent_lower_extent_dict[name.lower()]
-        # TODO:
-        # - add 0.5° degree buffer
-        # - ensure extent is correct
+        extent = _extend_lonlat_extent(extent, padding)
         return extent
     else:
         possible_match = difflib.get_close_matches(name, valid_continent, n=1, cutoff=0.6)
@@ -135,6 +122,14 @@ def unwrap_longitude_degree(x, period=360):
     return (x + mod) % (2 * mod) - mod
 
 
+def _is_crossing_dateline(lon: Union[list, np.ndarray]):
+    """Check if the longitude array is crossing the dateline."""
+
+    lon = np.asarray(lon)
+    diff = np.diff(lon)
+    return np.any(diff > 180) or np.any(diff < -180)
+
+
 def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
     """Get geographic extent.
 
@@ -150,15 +145,17 @@ def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
         raise TypeError("Accepted padding type are int, float, list or tuple.")
     lon = xr_obj["lon"].data
     lat = xr_obj["lat"].data
+
+    if _is_crossing_dateline(lon):
+        raise NotImplementedError(
+            "The object cross the dateline. The extent can't be currently be defined."
+        )
+
     lon_min = max(-180, np.nanmin(lon).item() - padding[0])
     lon_max = min(180, np.nanmax(lon).item() + padding[0])
     lat_min = max(-90, np.nanmin(lat).item() - padding[1])
     lat_max = min(90, np.nanmax(lat).item() + padding[1])
 
-    if lon_min > lon_max:  # TODO: this condition is never met
-        raise NotImplementedError(
-            "The object cross the dateline. The extent can't be currently be defined."
-        )
     extent = tuple([lon_min, lon_max, lat_min, lat_max])
     return extent
 
