@@ -270,7 +270,7 @@ def plot_transect(
     da,
     ax=None,
     add_colorbar=True,
-    zoom=False,
+    zoom=True,
     fig_kwargs={},
     cbar_kwargs={},
     **plot_kwargs,
