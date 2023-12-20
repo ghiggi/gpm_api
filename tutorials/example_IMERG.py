@@ -10,7 +10,7 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
 import gpm_api
-from gpm_api.utils.countries import get_country_extent
+from gpm_api.utils.geospatial import get_country_extent
 from gpm_api.utils.utils_cmap import get_colorbar_settings
 from gpm_api.visualization.plot import plot_cartopy_background
 

@@ -4,13 +4,18 @@ Created on Wed Aug 17 09:30:29 2022
 
 @author: ghiggi
 """
+import difflib
+import os
 import warnings
+from typing import Union
 
 import numpy as np
 import xarray as xr
 
+from gpm_api import _root_path
 from gpm_api.checks import is_grid, is_orbit
 from gpm_api.utils.slices import get_list_slices_from_indices
+from gpm_api.utils.yaml import read_yaml_file
 
 # Shapely bounds: (xmin, ymin, xmax, ymax)
 # Matlotlib extent: (xmin, xmax, ymin, ymax)
@@ -20,7 +25,94 @@ from gpm_api.utils.slices import get_list_slices_from_indices
 #### TODO:
 # - croup_around(point, distance)
 # - get_extent_around(point, distance)
-# - rename file crop.py?
+
+
+def _extend_lonlat_extent(extent, x):
+    """
+    Extend the lat/lon extent by x degrees in every direction.
+
+    Parameters
+    ----------
+    extent : (tuple)
+        A tuple of four values representing the lat/lon extent.
+        The extent format must be [xmin, xmax, ymin, ymax]
+    x : float
+        The number of degrees to extend the extent in every direction.
+
+    Returns
+    -------
+    new_extent, tuple
+        The extended extent.
+    """
+    xmin, xmax, ymin, ymax = extent
+    xmin = max(xmin - x, -180)
+    xmax = min(xmax + x, 180)
+    ymin = max(ymin - x, -90)
+    ymax = min(ymax + x, 90)
+    new_extent = (xmin, xmax, ymin, ymax)
+    return new_extent
+
+
+def _get_country_extent_dictionary():
+    countries_extent_fpath = os.path.join(_root_path, "gpm_api", "etc", "country_extent.yaml")
+    countries_extent_dict = read_yaml_file(countries_extent_fpath)
+    return countries_extent_dict
+
+
+def get_country_extent(name, padding=0.2):
+    # Check country format
+    if not isinstance(name, str):
+        raise TypeError("Please provide the country name as a string.")
+    # Get country extent dictionary
+    countries_extent_dict = _get_country_extent_dictionary()
+    # Create same dictionary with lower case keys
+    countries_lower_extent_dict = {s.lower(): v for s, v in countries_extent_dict.items()}
+    # Get list of valid countries
+    valid_countries = list(countries_extent_dict.keys())
+    valid_countries_lower = list(countries_lower_extent_dict)
+    if name.lower() in valid_countries_lower:
+        extent = countries_lower_extent_dict[name.lower()]
+        extent = _extend_lonlat_extent(extent, padding)
+        return extent
+    else:
+        possible_match = difflib.get_close_matches(name, valid_countries, n=1, cutoff=0.6)
+        if len(possible_match) == 0:
+            raise ValueError("Provide a valid country name.")
+        else:
+            possible_match = possible_match[0]
+            raise ValueError(f"No matching country. Maybe are you looking for '{possible_match}'?")
+
+
+def _get_continent_extent_dictionary():
+    continents_extent_fpath = os.path.join(_root_path, "gpm_api", "etc", "continent_extent.yaml")
+    continents_extent_dict = read_yaml_file(continents_extent_fpath)
+    return continents_extent_dict
+
+
+def get_continent_extent(name, padding=0):
+    # Check country format
+    if not isinstance(name, str):
+        raise TypeError("Please provide the continent name as a string.")
+
+    # Create same dictionary with lower case keys
+    continent_extent_dict = _get_continent_extent_dictionary()
+    continent_lower_extent_dict = {s.lower(): v for s, v in continent_extent_dict.items()}
+    # Get list of valid continents
+    valid_continent = list(continent_extent_dict.keys())
+    valid_continent_lower = list(continent_lower_extent_dict)
+    if name.lower() in valid_continent_lower:
+        extent = continent_lower_extent_dict[name.lower()]
+        extent = _extend_lonlat_extent(extent, padding)
+        return extent
+    else:
+        possible_match = difflib.get_close_matches(name, valid_continent, n=1, cutoff=0.6)
+        if len(possible_match) == 0:
+            raise ValueError(f"Provide a valid continent name from {valid_continent}.")
+        else:
+            possible_match = possible_match[0]
+            raise ValueError(
+                f"No matching continent. Maybe are you looking for '{possible_match}'?"
+            )
 
 
 def unwrap_longitude_degree(x, period=360):
@@ -30,7 +122,15 @@ def unwrap_longitude_degree(x, period=360):
     return (x + mod) % (2 * mod) - mod
 
 
-def get_extent(xr_obj, padding=0):
+def _is_crossing_dateline(lon: Union[list, np.ndarray]):
+    """Check if the longitude array is crossing the dateline."""
+
+    lon = np.asarray(lon)
+    diff = np.diff(lon)
+    return np.any(np.abs(diff) > 180)
+
+
+def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
     """Get geographic extent.
 
     The extent follows the matplotlib/cartopy format (xmin, xmax, ymin, ymax)
@@ -45,15 +145,17 @@ def get_extent(xr_obj, padding=0):
         raise TypeError("Accepted padding type are int, float, list or tuple.")
     lon = xr_obj["lon"].data
     lat = xr_obj["lat"].data
+
+    if _is_crossing_dateline(lon):
+        raise NotImplementedError(
+            "The object cross the dateline. The extent can't be currently defined."
+        )
+
     lon_min = max(-180, np.nanmin(lon).item() - padding[0])
     lon_max = min(180, np.nanmax(lon).item() + padding[0])
     lat_min = max(-90, np.nanmin(lat).item() - padding[1])
     lat_max = min(90, np.nanmax(lat).item() + padding[1])
 
-    if lon_min > lon_max:
-        raise NotImplementedError(
-            "The object cross the dateline. The extent can't be currently be defined."
-        )
     extent = tuple([lon_min, lon_max, lat_min, lat_max])
     return extent
 
@@ -76,8 +178,6 @@ def crop_by_country(xr_obj, name):
 
     """
 
-    from gpm_api.utils.countries import get_country_extent
-
     extent = get_country_extent(name)
     return crop(xr_obj=xr_obj, extent=extent)
 
@@ -99,8 +199,6 @@ def crop_by_continent(xr_obj, name):
         Cropped xarray object.
 
     """
-
-    from gpm_api.utils.continents import get_continent_extent
 
     extent = get_continent_extent(name)
     return crop(xr_obj=xr_obj, extent=extent)
@@ -167,8 +265,6 @@ def get_crop_slices_by_continent(xr_obj, name):
     name : str
         Continent name.
     """
-    from gpm_api.utils.continents import get_continent_extent
-
     extent = get_continent_extent(name)
     return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
 
@@ -186,8 +282,6 @@ def get_crop_slices_by_country(xr_obj, name):
     name : str
         Country name.
     """
-    from gpm_api.utils.countries import get_country_extent
-
     extent = get_country_extent(name)
     return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
 

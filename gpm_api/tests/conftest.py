@@ -2,6 +2,7 @@ import pytest
 import datetime
 from typing import Any, List, Dict, Tuple, Iterable
 from gpm_api.io.products import get_info_dict, available_products
+from gpm_api.utils import geospatial
 import posixpath as pxp
 import ntpath as ntp
 import gpm_api.configs
@@ -407,3 +408,16 @@ def set_is_grid_to_true(
     mocker.patch("gpm_api.checks.is_orbit", return_value=False)
     mocker.patch("gpm_api.utils.checks.is_grid", return_value=True)
     mocker.patch("gpm_api.utils.checks.is_orbit", return_value=False)
+
+
+ExtentDictionary = Dict[str, Tuple[float, float, float, float]]
+
+
+@pytest.fixture
+def country_extent_dictionary() -> ExtentDictionary:
+    return geospatial._get_country_extent_dictionary()
+
+
+@pytest.fixture
+def continent_extent_dictionary() -> ExtentDictionary:
+    return geospatial._get_continent_extent_dictionary()

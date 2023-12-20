@@ -7,7 +7,7 @@ Created on Sat Dec 10 14:16:00 2022
 import datetime
 
 import gpm_api
-from gpm_api.utils.countries import get_country_extent
+from gpm_api.utils.geospatial import get_country_extent
 
 start_time = datetime.datetime.strptime("2020-07-05 02:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2020-07-05 06:00:00", "%Y-%m-%d %H:%M:%S")
