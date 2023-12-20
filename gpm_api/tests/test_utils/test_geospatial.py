@@ -187,12 +187,12 @@ class TestCrop:
 
     def test_orbit_multiple_crossings(
         self,
-        orbit_dataset_multiple_crossings: xr.Dataset,
+        orbit_dataset_multiple_prime_meridian_crossings: xr.Dataset,
     ) -> None:
         """Test with multiple crosses of extent"""
 
         with pytest.raises(ValueError):
-            geospatial.crop(orbit_dataset_multiple_crossings, self.extent)
+            geospatial.crop(orbit_dataset_multiple_prime_meridian_crossings, self.extent)
 
     def test_grid(
         self,
@@ -277,9 +277,11 @@ class TestCropSlicesByExtent:
 
     def test_orbit_multiple_crossings(
         self,
-        orbit_dataset_multiple_crossings: xr.Dataset,
+        orbit_dataset_multiple_prime_meridian_crossings: xr.Dataset,
     ) -> None:
-        slices = geospatial.get_crop_slices_by_extent(orbit_dataset_multiple_crossings, self.extent)
+        slices = geospatial.get_crop_slices_by_extent(
+            orbit_dataset_multiple_prime_meridian_crossings, self.extent
+        )
         expected_slices = [{"along_track": slice(4, 8)}, {"along_track": slice(15, 19)}]
         assert slices == expected_slices
 
