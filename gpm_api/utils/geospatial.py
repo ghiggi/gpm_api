@@ -127,7 +127,7 @@ def _is_crossing_dateline(lon: Union[list, np.ndarray]):
 
     lon = np.asarray(lon)
     diff = np.diff(lon)
-    return np.any(diff > 180) or np.any(diff < -180)
+    return np.any(np.abs(diff) > 180)
 
 
 def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
@@ -148,7 +148,7 @@ def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
 
     if _is_crossing_dateline(lon):
         raise NotImplementedError(
-            "The object cross the dateline. The extent can't be currently be defined."
+            "The object cross the dateline. The extent can't be currently defined."
         )
 
     lon_min = max(-180, np.nanmin(lon).item() - padding[0])

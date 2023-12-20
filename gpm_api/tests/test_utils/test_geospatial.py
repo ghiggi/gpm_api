@@ -140,7 +140,9 @@ def orbit_dataset() -> xr.Dataset:
 
 
 @pytest.fixture
-def orbit_dataset_multiple_crossings() -> xr.Dataset:
+def orbit_dataset_multiple_prime_meridian_crossings() -> xr.Dataset:
+    """Orbit dataset that crosses the prime meridian multiple times"""
+
     # Values along track
     lon = np.arange(-50, 51, 10)
     lon = np.tile(lon, 2)
