@@ -13,17 +13,15 @@ from gpm_api.dataset.attrs import decode_string
 def _get_orbit_scan_time(dt, scan_mode):
     """Return timesteps array."""
     ds = dt[scan_mode]["ScanTime"].compute()
-    df = pd.DataFrame(
-        {
-            "year": ds["Year"].data,
-            "month": ds["Month"].data,
-            "day": ds["DayOfMonth"].data,
-            "hour": ds["Hour"].data,
-            "minute": ds["Minute"].data,
-            "second": ds["Second"].data,
-        }
-    )
-    return pd.to_datetime(df).to_numpy()
+    dict_time = {
+        "year": ds["Year"].data,
+        "month": ds["Month"].data,
+        "day": ds["DayOfMonth"].data,
+        "hour": ds["Hour"].data,
+        "minute": ds["Minute"].data,
+        "second": ds["Second"].data,
+    }
+    return pd.to_datetime(dict_time).to_numpy()
 
 
 def get_orbit_coords(dt, scan_mode):
