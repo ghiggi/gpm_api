@@ -12,11 +12,12 @@ def create_fake_datetime_array_from_hours_list(hours: Union[list, np.ndarray]) -
     datetimes = []
     for hour in hours:
         if np.isnan(hour):
-            datetimes.append(np.datetime64("NaT"))
+            datetimes.append(np.datetime64("NaT", "ns"))
         else:
             datetimes.append(
                 np.datetime64(
-                    datetime.datetime(2020, 12, 31, 0, 0, 0) + datetime.timedelta(hours=int(hour))
+                    datetime.datetime(2020, 12, 31, 0, 0, 0) + datetime.timedelta(hours=int(hour)),
+                    "ns",
                 )
             )
 
@@ -38,6 +39,6 @@ def create_dataset_with_coordinate(coord_name: str, coord_values: np.ndarray) ->
 def create_orbit_time_array(time_template: Union[list, np.ndarray]) -> np.ndarray:
     """Create a time array with ORBIT_TIME_TOLERANCE as unit"""
 
-    start_time = np.datetime64("2020-12-31T00:00:00")
+    start_time = np.datetime64("2020-12-31T00:00:00", "ns")
     time = np.array([start_time + gpm_checks.ORBIT_TIME_TOLERANCE * t for t in time_template])
     return time

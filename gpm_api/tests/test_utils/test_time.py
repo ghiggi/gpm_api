@@ -90,7 +90,7 @@ class TestSubsetByTime:
         lat = np.arange(5)
         lon = np.arange(5)
         time = np.random.rand(len(lat), len(lon)) * 1e9
-        time = np.array(time, dtype="datetime64[s]")
+        time = np.array(time, dtype="datetime64[ns]")
         da = xr.DataArray(time, coords=[("lat", lat), ("lon", lon)])
         ds = xr.Dataset({"time": da})
 
