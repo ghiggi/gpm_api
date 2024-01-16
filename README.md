@@ -128,32 +128,27 @@ To discover all GPM-API download, manipulation, analysis and plotting utilities,
 
 ## 🛠️ Installation
 
-
-### pip
-
-GPM-API can be installed via [pip][pip_link] on Linux, Mac, and Windows.
-On Windows you can install [WinPython][winpy_link] to get Python and pip
-running.
-Prior installation of GPM-API, to avoid [GEOS](https://libgeos.org/) library version incompatibilities when
-installing the Cartopy package, we highly suggest to install first Cartopy using `conda install cartopy>=0.21.0`.
-
-Then, install the GPM-API package by typing the following command in the command terminal:
-
-    pip install gpm_api
-
-To install the latest development version via pip, see the
-[documentation][doc_install_link].
-
 ### conda
 
 GPM-API can be installed via [conda][conda_link] on Linux, Mac, and Windows.
-Install the package by typing the following command in a command terminal:
+Install the package by typing the following command in the terminal:
 
     conda install gpm-api
 
-In case conda-forge is not set up for your system yet, see the easy to follow
-instructions on [conda forge][conda_forge_link].
+In case conda-forge is not set up for your system yet, see the easy to follow instructions on [conda-forge][conda_forge_link].
 
+### pip
+
+GPM-API can be installed also via [pip][pip_link] on Linux, Mac, and Windows.
+On Windows you can install [WinPython][winpy_link] to get Python and pip running.
+Prior installation of GPM-API, try to install to `cartopy>=0.21.0` package to ensure there are not [GEOS](https://libgeos.org/) library version incompatibilities.
+If you can't solve the problems and install cartopy with pip, you should install at least cartopy with conda using `conda install cartopy>=0.21.0`.
+
+Then, install the GPM-API package by typing the following command in the terminal:
+
+    pip install gpm-api
+
+To install the latest development version via pip, see the [documentation][doc_install_link].
 
 ## 💭 Feedback and Contributing Guidelines
 
