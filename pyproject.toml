@@ -25,7 +25,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -43,20 +42,17 @@ dependencies = [
     "h5py", # TO DISCARD IN FUTURE
     "netcdf4",
     "dask",
-    "wget",
     "tqdm",
     "click",
     "donfig",
     "trollsift",
-    "pyresample", # TO MAKE OPTIONAL
-    "cartopy>=0.20.0",  # TO MAKE OPTIONAL
-     # "curl", can be installed with conda.  Make it optional in the code.
+    "pyresample",
+    "cartopy>=0.20.0",
 ]
 requires-python = ">=3.8"
 dynamic = ["version"]
 
 [project.optional-dependencies]
-image = ["ximage"]
 dev = ["pre-commit",
        "black[jupyter]", "blackdoc", "codespell", "ruff",
        "pytest", "pytest-cov", "pytest-mock", "pydantic", "pytest-check",
@@ -69,26 +65,19 @@ homepage = "https://github.com/ghiggi/gpm_api"
 repository = "https://github.com/ghiggi/gpm_api"
 source = "https://github.com/ghiggi/gpm_api"
 tracker = "https://github.com/ghiggi/gpm_api/issues"
-documentation = "https://gpm_api.readthedocs.io"
-changelog = "https://github.com/ghigg/gpm_api/CHANGELOG.md"
+documentation = "https://gpm-api.readthedocs.io"
+changelog = "https://github.com/ghiggi/gpm_api/blob/main/CHANGELOG.md"
 
 [tool.setuptools_scm]
 write_to = "gpm_api/_version.py"
 
 [tool.setuptools]
-license-files = ["LICENSE"]
 packages = ["gpm_api"] # explicitly list the packages in modules
-# To customize, remove packages and use instead [tool.setuptools.packages.find]
-
-# [tool.setuptools.packages.find]
-# where = ["gpm_api"]
-# include = ["io", "..."]
 
 [project.scripts]
 download_gpm_daily_data="gpm_api.scripts.download_gpm_daily_data:download_gpm_daily_data"
 download_gpm_monthly_data="gpm_api.scripts.download_gpm_monthly_data:download_gpm_monthly_data"
 download_gpm_files="gpm_api.scripts.download_gpm_files:download_gpm_files"
-
 
 [tool.pytest.ini_options]
 addopts = "--ignore=gpm_api/tests/0_tmp/ --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
