@@ -263,11 +263,11 @@ def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
             # If no filepath (empty directory), print message if verbose=True
             if verbose:
                 version_str = str(int(version))
-                msg = f"No data found on GES DISC on date {date} for product {product} (V0{version_str})"
+                msg = f"No data found on PPS on date {date} for product {product} (V0{version_str})"
                 print(msg)
             filepaths = []
         else:
-            raise ValueError("Undefined error. The error is {e}.")
+            raise ValueError(f"Undefined error. The error is {e}.")
     return filepaths
 
 
