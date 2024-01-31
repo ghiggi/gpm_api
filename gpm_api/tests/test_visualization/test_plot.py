@@ -69,10 +69,13 @@ def get_test_name(
 
 
 @pytest.fixture(scope="function")
-def orbit_dataset() -> xr.Dataset:
+def orbit_dataarray() -> xr.DataArray:
     n_cross_track = 5
     n_along_track = 10
+    cross_track = np.arange(n_cross_track)
+    along_track = np.arange(n_along_track)
     data = np.random.rand(n_cross_track, n_along_track)
+    granule_id = np.zeros(n_along_track)
 
     # Coordinates
     lon = np.linspace(-50, 50, n_along_track)
@@ -82,14 +85,13 @@ def orbit_dataset() -> xr.Dataset:
     lon = np.tile(lon, (n_cross_track, 1))
     lat = np.tile(lat, (n_cross_track, 1))
 
-    # Create dataset
-    ds = xr.Dataset()
-    ds["lat"] = (("cross_track", "along_track"), lat)
-    ds["lon"] = (("cross_track", "along_track"), lon)
-    ds["data"] = (("cross_track", "along_track"), data)
-    ds["granule_id"] = 0
+    # Create data array
+    da = xr.DataArray(data, coords={"cross_track": cross_track, "along_track": along_track})
+    da.coords["lat"] = (("cross_track", "along_track"), lat)
+    da.coords["lon"] = (("cross_track", "along_track"), lon)
+    da.coords["gpm_granule_id"] = ("along_track", granule_id)
 
-    return ds
+    return da
 
 
 @pytest.fixture(scope="function")
@@ -116,11 +118,11 @@ class TestPlotImage:
 
     def test_orbit(
         self,
-        orbit_dataset: xr.Dataset,
+        orbit_dataarray: xr.Dataset,
     ) -> None:
         """Test plotting orbit data"""
 
-        plot.plot_image(orbit_dataset)
+        plot.plot_image(orbit_dataarray)
         save_and_check_figure(get_test_name(self))
 
     def test_grid(
@@ -131,6 +133,15 @@ class TestPlotImage:
 
         plot.plot_image(grid_dataarray)
         save_and_check_figure(get_test_name(self))
+
+    def test_invalid(
+        self,
+    ) -> None:
+        """Test invalid data"""
+
+        da = xr.DataArray()
+        with pytest.raises(ValueError):
+            plot.plot_image(da)
 
 
 def test_plot_map_mesh() -> None:
