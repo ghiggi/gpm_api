@@ -1,3 +1,4 @@
+import cartopy.crs as ccrs
 import inspect
 import os
 import pyproj
@@ -17,7 +18,7 @@ plots_dir_path = os.path.join(_root_path, "gpm_api", "tests", "data", "plots")
 image_extension = ".png"
 
 
-# Utils function and fixtures ##################################################
+# Utils functions ##############################################################
 
 
 def save_and_check_figure(
@@ -136,22 +137,33 @@ def get_geodesic_band(
     return lon, lat
 
 
-@pytest.fixture(scope="function")
-def orbit_dataarray() -> xr.DataArray:
+def get_orbit_dataarray(
+    start_lon: float,
+    start_lat: float,
+    end_lon: float,
+    end_lat: float,
+    width: float,
+    n_along_track: int,
+    n_cross_track: int,
+) -> xr.DataArray:
+    """Create orbit data array on geodesic band"""
+
     np.random.seed(0)
-    n_cross_track = 5
-    n_along_track = 20
     cross_track = np.arange(n_cross_track)
     along_track = np.arange(n_along_track)
     data = np.random.rand(n_cross_track, n_along_track)
     granule_id = np.zeros(n_along_track)
 
     # Coordinates
-    lon = np.linspace(-50, 50, n_along_track)
-    lat = np.linspace(-30, 30, n_along_track)
-
-    # Add cross track dimension
-    lon, lat = get_geodesic_band(0, 0, 20, 15, 1e6, n_along_track, n_cross_track)
+    lon, lat = get_geodesic_band(
+        start_lon=start_lon,
+        start_lat=start_lat,
+        end_lon=end_lon,
+        end_lat=end_lat,
+        width=width,
+        n_along_track=n_along_track,
+        n_cross_track=n_cross_track,
+    )
 
     # Create data array
     da = xr.DataArray(data, coords={"cross_track": cross_track, "along_track": along_track})
@@ -162,16 +174,101 @@ def orbit_dataarray() -> xr.DataArray:
     return da
 
 
-@pytest.fixture(scope="function")
-def grid_dataarray() -> xr.DataArray:
-    lon = np.linspace(-5, 20, 20)
-    lat = np.linspace(-5, 15, 10)
-    data = np.random.rand(len(lat), len(lon))
+def get_grid_dataarray(
+    start_lon: float,
+    start_lat: float,
+    end_lon: float,
+    end_lat: float,
+    n_lon: int,
+    n_lat: int,
+) -> xr.DataArray:
+    """Create grid data array"""
+
+    np.random.seed(0)
+    lon = np.linspace(start_lon, end_lon, n_lon)
+    lat = np.linspace(start_lat, end_lat, n_lat)
+    data = np.random.rand(n_lat, n_lon)
 
     # Create data array
     da = xr.DataArray(data, coords={"lat": lat, "lon": lon})
 
     return da
+
+
+# Fixtures #####################################################################
+
+
+@pytest.fixture(scope="function")
+def orbit_dataarray() -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude"""
+
+    return get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def orbit_antimeridian_dataarray() -> xr.DataArray:
+    """Create orbit data array going over the antimeridian"""
+
+    return get_orbit_dataarray(
+        start_lon=160,
+        start_lat=0,
+        end_lon=-170,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def orbit_pole_dataarray() -> xr.DataArray:
+    """Create orbit data array going over the pole"""
+
+    return get_orbit_dataarray(
+        start_lon=-30,
+        start_lat=70,
+        end_lon=150,
+        end_lat=75,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def grid_dataarray() -> xr.DataArray:
+    """Create grid data array near 0 longitude and latitude"""
+
+    return get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+
+
+@pytest.fixture(scope="function")
+def grid_antimeridian_dataarray() -> xr.DataArray:
+    """Create grid data array going over the antimeridian"""
+
+    return get_grid_dataarray(
+        start_lon=160,
+        start_lat=-5,
+        end_lon=-170,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
 
 
 # Tests ########################################################################
@@ -189,6 +286,44 @@ class TestPlotMap:
         plot.plot_map(orbit_dataarray)
         save_and_check_figure(get_test_name(self))
 
+    def test_orbit_antimeridian(
+        self,
+        orbit_antimeridian_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data going over the antimeridian"""
+
+        plot.plot_map(orbit_antimeridian_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_antimeridian_projection(
+        self,
+        orbit_antimeridian_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data going over the antimeridian on orthographic projection"""
+
+        crs_proj = ccrs.Orthographic(180, 0)
+        plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_pole(
+        self,
+        orbit_pole_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data going over the pole"""
+
+        plot.plot_map(orbit_pole_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_pole_projection(
+        self,
+        orbit_pole_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data going over the pole on orthographic projection"""
+
+        crs_proj = ccrs.Orthographic(0, 30)
+        plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
+        save_and_check_figure(get_test_name(self))
+
     def test_grid(
         self,
         grid_dataarray: xr.DataArray,
@@ -196,6 +331,15 @@ class TestPlotMap:
         """Test plotting grid data"""
 
         plot.plot_map(grid_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_grid_antimeridian(
+        self,
+        grid_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data going over the antimeridian"""
+
+        plot.plot_map(grid_antimeridian_dataarray)
         save_and_check_figure(get_test_name(self))
 
     def test_invalid(
