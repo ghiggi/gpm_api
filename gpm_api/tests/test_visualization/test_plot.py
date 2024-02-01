@@ -1,10 +1,11 @@
 import inspect
 import os
+import pyproj
 import pytest
 from matplotlib import image as mpl_image, pyplot as plt
 import numpy as np
 import tempfile
-import traceback
+from typing import Tuple
 import xarray as xr
 
 
@@ -14,7 +15,6 @@ from gpm_api.visualization import plot
 
 plots_dir_path = os.path.join(_root_path, "gpm_api", "tests", "data", "plots")
 image_extension = ".png"
-np.random.seed(0)
 
 
 # Utils function and fixtures ##################################################
@@ -68,10 +68,79 @@ def get_test_name(
     return "-".join(name_parts)
 
 
+def get_geodesic_path(
+    start_lon: float,
+    start_lat: float,
+    end_lon: float,
+    end_lat: float,
+    n_points: int,
+    offset_distance: float = 0,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Compute geodesic path between starting and ending coordinates"""
+
+    geod = pyproj.Geod(ellps="sphere")
+    r = geod.inv_intermediate(
+        start_lon,
+        start_lat,
+        end_lon,
+        end_lat,
+        n_points,
+        initial_idx=0,
+        terminus_idx=0,
+        return_back_azimuth=False,
+        flags=pyproj.enums.GeodIntermediateFlag.AZIS_KEEP,
+    )
+
+    orthogonal_directions = np.array(r.azis) + 90
+
+    if offset_distance != 0:
+        geod.fwd(r.lons, r.lats, orthogonal_directions, [offset_distance] * n_points, inplace=True)
+
+    # Convert into numpy arrays
+    lon = np.array(r.lons)
+    lat = np.array(r.lats)
+
+    return lon, lat
+
+
+def get_geodesic_band(
+    start_lon: float,
+    start_lat: float,
+    end_lon: float,
+    end_lat: float,
+    width: float,
+    n_along_track: int,
+    n_cross_track: int,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Compute coordinates of geodesic band"""
+
+    lon_lines = []
+    lat_lines = []
+    offsets = np.linspace(-width / 2, width / 2, n_cross_track)
+
+    for offset in offsets:
+        lon_line, lat_line = get_geodesic_path(
+            start_lon=start_lon,
+            start_lat=start_lat,
+            end_lon=end_lon,
+            end_lat=end_lat,
+            n_points=n_along_track,
+            offset_distance=offset,
+        )
+        lon_lines.append(lon_line)
+        lat_lines.append(lat_line)
+
+    lon = np.stack(lon_lines)
+    lat = np.stack(lat_lines)
+
+    return lon, lat
+
+
 @pytest.fixture(scope="function")
 def orbit_dataarray() -> xr.DataArray:
+    np.random.seed(0)
     n_cross_track = 5
-    n_along_track = 10
+    n_along_track = 20
     cross_track = np.arange(n_cross_track)
     along_track = np.arange(n_along_track)
     data = np.random.rand(n_cross_track, n_along_track)
@@ -82,8 +151,7 @@ def orbit_dataarray() -> xr.DataArray:
     lat = np.linspace(-30, 30, n_along_track)
 
     # Add cross track dimension
-    lon = np.tile(lon, (n_cross_track, 1))
-    lat = np.tile(lat, (n_cross_track, 1))
+    lon, lat = get_geodesic_band(0, 0, 20, 15, 1e6, n_along_track, n_cross_track)
 
     # Create data array
     da = xr.DataArray(data, coords={"cross_track": cross_track, "along_track": along_track})
@@ -96,8 +164,8 @@ def orbit_dataarray() -> xr.DataArray:
 
 @pytest.fixture(scope="function")
 def grid_dataarray() -> xr.DataArray:
-    lon = np.arange(-50, 51, 10)
-    lat = np.arange(-50, 51, 10)
+    lon = np.linspace(-5, 20, 20)
+    lat = np.linspace(-5, 15, 10)
     data = np.random.rand(len(lat), len(lon))
 
     # Create data array
@@ -109,8 +177,35 @@ def grid_dataarray() -> xr.DataArray:
 # Tests ########################################################################
 
 
-def test_plot_map() -> None:
-    pass  # TODO
+class TestPlotMap:
+    """Test the plot_map function"""
+
+    def test_orbit(
+        self,
+        orbit_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data"""
+
+        plot.plot_map(orbit_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_grid(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data"""
+
+        plot.plot_map(grid_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_invalid(
+        self,
+    ) -> None:
+        """Test invalid data"""
+
+        da = xr.DataArray()
+        with pytest.raises(ValueError):
+            plot.plot_map(da)
 
 
 class TestPlotImage:
