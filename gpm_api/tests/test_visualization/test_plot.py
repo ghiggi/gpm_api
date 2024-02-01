@@ -452,5 +452,8 @@ class TestPlotMapMesh:
         save_and_check_figure(get_test_name(self))
 
 
-def test_plot_map_mesh_centroids() -> None:
-    pass  # TODO
+def test_plot_map_mesh_centroids(
+    orbit_dataarray: xr.Dataset,
+) -> None:
+    plot.plot_map_mesh_centroids(orbit_dataarray)
+    save_and_check_figure(get_test_name())
