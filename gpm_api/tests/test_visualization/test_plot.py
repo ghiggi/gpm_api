@@ -70,6 +70,154 @@ def get_test_name(
 # Tests ########################################################################
 
 
+class TestGetExtent:
+    """Test the get_extent function"""
+
+    def test_orbit(
+        self,
+        orbit_dataarray: xr.Dataset,
+    ) -> None:
+        """Test getting the extent of orbit data"""
+
+        returned_extent = plot.get_extent(orbit_dataarray)
+        expected_extent = (-2.77663454, 22.65579744, -3.53830585, 18.64709521)
+        np.testing.assert_allclose(returned_extent, expected_extent, rtol=1e-9)
+
+    def test_grid(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test getting the extent of grid data"""
+
+        returned_extent = plot.get_extent(grid_dataarray)
+        expected_extent = (-5, 20, -5, 15)
+        assert returned_extent == expected_extent
+
+
+def test_get_antimeridian_mask(
+    orbit_antimeridian_dataarray: xr.DataArray,
+) -> None:
+    """Test the get_antimeridian_mask function"""
+
+    lon = orbit_antimeridian_dataarray["lon"].data
+    returned_mask = plot.get_antimeridian_mask(lon)
+    expected_mask = np.array(
+        [
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ],
+        ]
+    )
+    assert np.array_equal(returned_mask, expected_mask)
+
+
 class TestPlotMap:
     """Test the plot_map function"""
 
