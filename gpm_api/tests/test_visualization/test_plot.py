@@ -230,13 +230,13 @@ def orbit_antimeridian_dataarray() -> xr.DataArray:
 
 @pytest.fixture(scope="function")
 def orbit_pole_dataarray() -> xr.DataArray:
-    """Create orbit data array going over the pole"""
+    """Create orbit data array going over the south pole"""
 
     return get_orbit_dataarray(
         start_lon=-30,
-        start_lat=70,
+        start_lat=-70,
         end_lon=150,
-        end_lat=75,
+        end_lat=-75,
         width=1e6,
         n_along_track=20,
         n_cross_track=5,
@@ -309,7 +309,7 @@ class TestPlotMap:
         self,
         orbit_pole_dataarray: xr.Dataset,
     ) -> None:
-        """Test plotting orbit data going over the pole"""
+        """Test plotting orbit data going over the south pole"""
 
         plot.plot_map(orbit_pole_dataarray)
         save_and_check_figure(get_test_name(self))
@@ -318,9 +318,9 @@ class TestPlotMap:
         self,
         orbit_pole_dataarray: xr.Dataset,
     ) -> None:
-        """Test plotting orbit data going over the pole on orthographic projection"""
+        """Test plotting orbit data going over the south pole on orthographic projection"""
 
-        crs_proj = ccrs.Orthographic(0, 30)
+        crs_proj = ccrs.Orthographic(0, -30)
         plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(get_test_name(self))
 
@@ -383,8 +383,73 @@ class TestPlotImage:
             plot.plot_image(da)
 
 
-def test_plot_map_mesh() -> None:
-    pass  # TODO
+class TestPlotMapMesh:
+    """Test the plot_map_mesh function"""
+
+    def test_orbit(
+        self,
+        orbit_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data"""
+
+        plot.plot_map_mesh(orbit_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_antimeridian(
+        self,
+        orbit_antimeridian_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data going over the antimeridian"""
+
+        plot.plot_map_mesh(orbit_antimeridian_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_antimeridian_projection(
+        self,
+        orbit_antimeridian_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data going over the antimeridian on orthographic projection"""
+
+        crs_proj = ccrs.Orthographic(180, 0)
+        plot.plot_map_mesh(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_pole(
+        self,
+        orbit_pole_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data going over the south pole"""
+
+        plot.plot_map_mesh(orbit_pole_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_pole_projection(
+        self,
+        orbit_pole_dataarray: xr.Dataset,
+    ) -> None:
+        """Test plotting orbit data going over the south pole on orthographic projection"""
+
+        crs_proj = ccrs.Orthographic(0, -30)
+        plot.plot_map_mesh(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
+        save_and_check_figure(get_test_name(self))
+
+    def test_grid(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data"""
+
+        plot.plot_map_mesh(grid_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_grid_antimeridian(
+        self,
+        grid_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data going over the antimeridian"""
+
+        plot.plot_map_mesh(grid_antimeridian_dataarray)
+        save_and_check_figure(get_test_name(self))
 
 
 def test_plot_map_mesh_centroids() -> None:
