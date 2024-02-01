@@ -9,6 +9,8 @@ import gpm_api.configs
 import os
 from pytest_mock import MockerFixture
 from unittest.mock import patch
+import xarray as xr
+from gpm_api.tests.utils.fake_datasets import get_orbit_dataarray, get_grid_dataarray
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -421,3 +423,76 @@ def country_extent_dictionary() -> ExtentDictionary:
 @pytest.fixture
 def continent_extent_dictionary() -> ExtentDictionary:
     return geospatial._get_continent_extent_dictionary()
+
+
+@pytest.fixture(scope="function")
+def orbit_dataarray() -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude"""
+
+    return get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def orbit_antimeridian_dataarray() -> xr.DataArray:
+    """Create orbit data array going over the antimeridian"""
+
+    return get_orbit_dataarray(
+        start_lon=160,
+        start_lat=0,
+        end_lon=-170,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def orbit_pole_dataarray() -> xr.DataArray:
+    """Create orbit data array going over the south pole"""
+
+    return get_orbit_dataarray(
+        start_lon=-30,
+        start_lat=-70,
+        end_lon=150,
+        end_lat=-75,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def grid_dataarray() -> xr.DataArray:
+    """Create grid data array near 0 longitude and latitude"""
+
+    return get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+
+
+@pytest.fixture(scope="function")
+def grid_antimeridian_dataarray() -> xr.DataArray:
+    """Create grid data array going over the antimeridian"""
+
+    return get_grid_dataarray(
+        start_lon=160,
+        start_lat=-5,
+        end_lon=-170,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
