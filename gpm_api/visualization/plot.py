@@ -210,6 +210,24 @@ def plot_colorbar(p, ax, cbar_kwargs={}, size="5%", pad=0.1):
 
 
 ####--------------------------------------------------------------------------.
+
+
+def _compute_extent(x_coords, y_coords):
+    """
+    Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+    This function assumes that the spacing between each pixel is uniform.
+    """
+    # Calculate the pixel size assuming uniform spacing between pixels
+    pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
+    pixel_size_y = (y_coords[-1] - y_coords[0]) / (len(y_coords) - 1)
+
+    # Adjust min and max to get the corners of the outer pixels
+    x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
+    y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
+
+    return [x_min, x_max, y_min, y_max]
+
+
 def _plot_cartopy_imshow(
     ax,
     da,
@@ -221,25 +239,28 @@ def _plot_cartopy_imshow(
     cbar_kwargs={},
 ):
     """Plot imshow with cartopy."""
-    # TODO: allow to plot whatever projection (based on CRS) !
-    # TODO: allow to plot subset of PlateeCarree !
-
     # - Ensure image with correct dimensions orders
     da = da.transpose(y, x)
     arr = np.asanyarray(da.data)
 
-    # - Derive extent
-    extent = [-180, 180, -90, 90]  # TODO: Derive from data !!!!
+    # - Compute coordinates
+    x_coords = da[x].values
+    y_coords = da[y].values
 
-    # TODO: ensure y data is increasing --> origin = "lower"
-    # TODO: ensure y data is decreasing --> origin = "upper"
+    # - Derive extent
+    extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
+
+    # - Determine origin based on the orientation of da[y] values
+    # -->  If increasing, set origin="lower"
+    # -->  If decreasing, set origin="upper"
+    origin = "lower" if y_coords[1] > y_coords[0] else "upper"
 
     # - Add variable field with cartopy
     p = ax.imshow(
         arr,
         transform=ccrs.PlateCarree(),
         extent=extent,
-        origin="lower",
+        origin=origin,
         interpolation=interpolation,
         **plot_kwargs,
     )
@@ -300,6 +321,7 @@ def _plot_cartopy_pcolormesh(
 
     # - Infill invalid value and add mask if necessary
     x, y, arr = get_valid_pcolormesh_inputs(x, y, arr, rgb=rgb)
+
     # - Ensure arguments
     if rgb:
         add_colorbar = False
@@ -561,6 +583,10 @@ def _plot_xr_pcolormesh(
 
 
 ####--------------------------------------------------------------------------.
+#### TODO: doc
+# figsize, dpi, subplot_kw only used if ax is None
+
+
 def plot_map(
     da,
     x="lon",
@@ -668,6 +694,50 @@ def plot_image(
 ####--------------------------------------------------------------------------.
 
 
+def create_grid_mesh_data_array(xr_obj, x, y):
+    """
+    Create a 2D xarray DataArray with mesh coordinates based on the 1D coordinate arrays
+    from an existing xarray object (Dataset or DataArray).
+
+    The function creates a 2D grid (mesh) of x and y coordinates and initializes
+    the data values to NaN.
+
+    Parameters
+    ----------
+    xr_obj : xarray.DataArray or xarray.Dataset
+        The input xarray object containing the 1D coordinate arrays.
+    x : str
+        The name of the x-coordinate in xr_obj.
+    y : str
+        The name of the y-coordinate in xr_obj.
+
+    Returns
+    -------
+    da_mesh : xarray.DataArray
+        A 2D xarray DataArray with mesh coordinates for x and y, and NaN values for data points.
+
+    Notes
+    -----
+    The resulting DataArray has dimensions named 'y' and 'x', corresponding to the y and x coordinates respectively.
+    The coordinate values are taken directly from the input 1D coordinate arrays, and the data values are set to NaN.
+    """
+    # Extract 1D coordinate arrays
+    x_coords = xr_obj[x].values
+    y_coords = xr_obj[y].values
+
+    # Create 2D meshgrid for x and y coordinates
+    X, Y = np.meshgrid(x_coords, y_coords, indexing="xy")
+
+    # Create a 2D array of NaN values with the same shape as the meshgrid
+    dummy_values = np.full(X.shape, np.nan)
+
+    # Create a new DataArray with 2D coordinates and NaN values
+    da_mesh = xr.DataArray(
+        dummy_values, coords={x: (("y", "x"), X), y: (("y", "x"), Y)}, dims=("y", "x")
+    )
+    return da_mesh
+
+
 def plot_map_mesh(
     xr_obj,
     x="lon",
@@ -680,8 +750,6 @@ def plot_map_mesh(
     subplot_kwargs={},
     **plot_kwargs,
 ):
-    # Interpolation only for grid objects
-    # figsize, dpi, subplot_kw only used if ax is None
     from gpm_api.checks import is_orbit  # is_grid
 
     from .grid import plot_grid_mesh
@@ -731,6 +799,8 @@ def plot_map_mesh_centroids(
     **plot_kwargs,
 ):
     """Plot GPM orbit granule mesh centroids in a cartographic map."""
+    from gpm_api.checks import is_grid
+
     # - Check inputs
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
 
@@ -743,9 +813,13 @@ def plot_map_mesh_centroids(
     if add_background:
         ax = plot_cartopy_background(ax)
 
-    # Plot centroids
-    lon = xr_obj[x].data
-    lat = xr_obj[y].data
+    # - Retrieve centroids
+    if is_grid(xr_obj):
+        xr_obj = create_grid_mesh_data_array(xr_obj, x=x, y=y)
+    lon = xr_obj[x].values
+    lat = xr_obj[y].values
+
+    # - Plot centroids
     p = ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
 
     # - Return mappable

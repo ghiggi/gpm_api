@@ -13,6 +13,7 @@ dependencies:
   - trollsift
   - xarray
   - xarray-datatree
+  - ximage
   # testing
   - pytest
   - pytest-cov
@@ -20,6 +21,4 @@ dependencies:
   - pydantic
   - pip
   - pip:
-    # image
-    - ximage
     - pycolorbar

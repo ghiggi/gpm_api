@@ -2,8 +2,8 @@
 
 |                      |                                                |
 | -------------------- | ---------------------------------------------- |
-| Deployment           | [![PyPI](https://badge.fury.io/py/gpm_api.svg?style=flat)](https://pypi.org/project/gpm_api/) [![Conda](https://img.shields.io/conda/vn/conda-forge/gpm_api.svg?logo=conda-forge&logoColor=white&style=flat)](https://anaconda.org/conda-forge/gpm_api) |
-| Activity             | [![PyPI Downloads](https://img.shields.io/pypi/dm/gpm_api.svg?label=PyPI%20downloads&style=flat)](https://pypi.org/project/gpm_api/) [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/gpm_api.svg?label=Conda%20downloads&style=flat)](https://anaconda.org/conda-forge/gpm_api) |
+| Deployment           | [![PyPI](https://badge.fury.io/py/gpm_api.svg?style=flat)](https://pypi.org/project/gpm_api/) [![Conda](https://img.shields.io/conda/vn/conda-forge/gpm-api.svg?logo=conda-forge&logoColor=white&style=flat)](https://anaconda.org/conda-forge/gpm-api) |
+| Activity             | [![PyPI Downloads](https://img.shields.io/pypi/dm/gpm_api.svg?label=PyPI%20downloads&style=flat)](https://pypi.org/project/gpm_api/) [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/gpm-api.svg?label=Conda%20downloads&style=flat)](https://anaconda.org/conda-forge/gpm-api) |
 | Python Versions      | [![Python Versions](https://img.shields.io/badge/Python-3.8%20%203.9%20%203.10%20%203.11%20%203.12-blue?style=flat)](https://www.python.org/downloads/) |
 | Supported Systems    | [![Linux](https://img.shields.io/github/actions/workflow/status/ghiggi/gpm_api/.github/workflows/tests.yml?label=Linux&style=flat)](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml) [![macOS](https://img.shields.io/github/actions/workflow/status/ghiggi/gpm_api/.github/workflows/tests.yml?label=macOS&style=flat)](https://github.com/ghiggi/gpm_api/actions/workflows/tests.yml) [![Windows](https://img.shields.io/github/actions/workflow/status/ghiggi/gpm_api/.github/workflows/tests_windows.yml?label=Windows&style=flat)](https://github.com/ghiggi/gpm_api/actions/workflows/tests_windows.yml) |
 | Project Status       | [![Project Status](https://www.repostatus.org/badges/latest/active.svg?style=flat)](https://www.repostatus.org/#active) |
@@ -128,32 +128,27 @@ To discover all GPM-API download, manipulation, analysis and plotting utilities,
 
 ## 🛠️ Installation
 
+### conda
+
+GPM-API can be installed via [conda][conda_link] on Linux, Mac, and Windows.
+Install the package by typing the following command in the terminal:
+
+    conda install gpm-api
+
+In case conda-forge is not set up for your system yet, see the easy to follow instructions on [conda-forge][conda_forge_link].
 
 ### pip
 
-GPM-API can be installed via [pip][pip_link] on Linux, Mac, and Windows.
-On Windows you can install [WinPython][winpy_link] to get Python and pip
-running.
-Prior installation of GPM-API, to avoid [GEOS](https://libgeos.org/) library version incompatibilities when
-installing the Cartopy package, we highly suggest to install first Cartopy using `conda install cartopy>=0.21.0`.
+GPM-API can be installed also via [pip][pip_link] on Linux, Mac, and Windows.
+On Windows you can install [WinPython][winpy_link] to get Python and pip running.
+Prior installation of GPM-API, try to install to `cartopy>=0.21.0` package to ensure there are not [GEOS](https://libgeos.org/) library version incompatibilities.
+If you can't solve the problems and install cartopy with pip, you should install at least cartopy with conda using `conda install cartopy>=0.21.0`.
 
-Then, install the GPM-API package by typing the following command in the command terminal:
+Then, install the GPM-API package by typing the following command in the terminal:
 
-    pip install gpm_api
+    pip install gpm-api
 
-To install the latest development version via pip, see the
-[documentation][doc_install_link].
-
-### conda [NOT YET AVAILABLE]
-
-GPM-API can be installed via [conda][conda_link] on Linux, Mac, and Windows.
-Install the package by typing the following command in a command terminal:
-
-    conda install gpm_api
-
-In case conda forge is not set up for your system yet, see the easy to follow
-instructions on [conda forge][conda_forge_link].
-
+To install the latest development version via pip, see the [documentation][doc_install_link].
 
 ## 💭 Feedback and Contributing Guidelines
 
@@ -214,7 +209,7 @@ The associated python scripts are also provided in the `tutorial` folder.
 
 [pip_link]: https://pypi.org/project/gstools
 [conda_link]: https://docs.conda.io/en/latest/miniconda.html
-[conda_forge_link]: https://github.com/conda-forge/gpm_api-feedstock#installing-gpm_api
+[conda_forge_link]: https://github.com/conda-forge/gpm-api-feedstock#installing-gpm-api
 [conda_pip]: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-pkgs.html#installing-non-conda-packages
 [pipiflag]: https://pip-python3.readthedocs.io/en/latest/reference/pip_install.html?highlight=i#cmdoption-i
 [winpy_link]: https://winpython.github.io/
