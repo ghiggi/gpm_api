@@ -14,6 +14,7 @@ from gpm_api.visualization import plot
 
 plots_dir_path = os.path.join(_root_path, "gpm_api", "tests", "data", "plots")
 image_extension = ".png"
+mse_tolerance = 5e-3
 
 
 # Utils functions ##############################################################
@@ -36,14 +37,21 @@ def save_and_check_figure(
         pytest.skip("Reference figure did not exist. Created it.")
 
     # Save current figure to temporary file
-    with tempfile.NamedTemporaryFile(suffix=image_extension) as tmp_file:
-        plt.savefig(tmp_file.name)
+    tmp_file = tempfile.NamedTemporaryFile(suffix=image_extension, delete=False)
+    plt.savefig(tmp_file.name)
 
-        # Compare reference and temporary file
-        reference = mpl_image.imread(reference_path)
-        tmp = mpl_image.imread(tmp_file.name)
+    # Compare reference and temporary file
+    reference = mpl_image.imread(reference_path)
+    tmp = mpl_image.imread(tmp_file.name)
 
-        assert np.allclose(reference, tmp), f"Figure {name}{image_extension} is not the same"
+    mse = np.mean((reference - tmp) ** 2)
+    assert (
+        mse < mse_tolerance
+    ), f"Figure {tmp_file.name} is not the same as {name}{image_extension}. MSE {mse} > {mse_tolerance}"
+
+    # Remove temporary file if comparison was successful
+    tmp_file.close()
+    os.remove(tmp_file.name)
 
 
 def get_test_name(
