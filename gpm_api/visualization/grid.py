@@ -15,6 +15,7 @@ from gpm_api.visualization.plot import (
     _plot_xr_imshow,
     _preprocess_figure_args,
     _preprocess_subplot_kwargs,
+    create_grid_mesh_data_array,
     plot_cartopy_background,
 )
 
@@ -33,8 +34,6 @@ def _plot_grid_map_cartopy(
     **plot_kwargs,
 ):
     """Plot DataArray 2D field with cartopy."""
-    # TODO: allow PlateeCarree subset (--> update _plot_cartopy_imshow)
-
     # - Check inputs
     check_is_spatial_2d(da)  # TODO: allow RGB !
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
@@ -93,6 +92,7 @@ def _plot_grid_map_facetgrid(
         raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
     subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+
     # - Add info required to plot on cartopy axes within FacetGrid
     plot_kwargs.update({"subplot_kws": subplot_kwargs})
     plot_kwargs.update({"transform": ccrs.PlateCarree()})
@@ -184,12 +184,6 @@ def plot_grid_image(
     # check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
-    # - Define default x and y
-    # if x is None:
-    #     x = "lon"
-    # if y is None:
-    #     y = "lat"
-
     # Initialize figure
     if ax is None:
         # - If col and row are not provided (not FacetedGrid), initialize
@@ -248,6 +242,8 @@ def plot_grid_mesh(
     subplot_kwargs={},
     **plot_kwargs,
 ):
+    from gpm_api.visualization.orbit import _plot_cartopy_pcolormesh
+
     """Plot GPM grid mesh in a cartographic map."""
     # - Check inputs
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
@@ -261,8 +257,8 @@ def plot_grid_mesh(
     if add_background:
         ax = plot_cartopy_background(ax)
 
-    # - Select lat coordinate for plotting
-    da = xr_obj[y]
+    # - Create 2D mesh DataArray
+    da = create_grid_mesh_data_array(xr_obj, x=x, y=y)
 
     # - Define plot_kwargs to display only the mesh
     plot_kwargs["facecolor"] = "none"
@@ -272,7 +268,7 @@ def plot_grid_mesh(
     plot_kwargs["antialiased"] = True
 
     # - Add variable field with cartopy
-    p = _plot_grid_map_cartopy(
+    p = _plot_cartopy_pcolormesh(
         da=da,
         ax=ax,
         x=x,

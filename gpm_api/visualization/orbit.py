@@ -344,6 +344,7 @@ def plot_orbit_mesh(
     plot_kwargs["edgecolors"] = (edgecolors,)
     plot_kwargs["linewidth"] = (linewidth,)
     plot_kwargs["antialiased"] = True
+
     # - Add variable field with cartopy
     p = _plot_cartopy_pcolormesh(
         da=da,

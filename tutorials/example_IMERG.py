@@ -151,8 +151,8 @@ p.axes.set_title(label=da_solid.gpm_api.title())
 #### Crop the dataset
 # Crop by extent
 extent = get_country_extent("United States")
-ds_ch = ds.gpm_api.crop(extent=extent)
-ds_ch[variable].isel(time=0).gpm_api.plot_map()
+ds_us = ds.gpm_api.crop(extent=extent)
+ds_us[variable].isel(time=0).gpm_api.plot_map()
 
 # Crop by country name
 ds_ch = ds.gpm_api.crop_by_country("Switzerland")
