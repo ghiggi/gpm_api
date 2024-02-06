@@ -415,9 +415,9 @@ ExtentDictionary = Dict[str, Tuple[float, float, float, float]]
 
 @pytest.fixture
 def country_extent_dictionary() -> ExtentDictionary:
-    return geospatial._get_country_extent_dictionary()
+    return geospatial.read_countries_extent_dictionary()
 
 
 @pytest.fixture
 def continent_extent_dictionary() -> ExtentDictionary:
-    return geospatial._get_continent_extent_dictionary()
+    return geospatial.read_continents_extent_dictionary()

@@ -102,6 +102,11 @@ def test_get_extent() -> None:
     returned_extent = geospatial.get_extent(ds, padding=padding)
     assert returned_extent == expected_extent
 
+    padding = (0.1, 0.1, 0.2, 0.2)
+    expected_extent = (-10.1, 20.1, -30.2, 40.2)
+    returned_extent = geospatial.get_extent(ds, padding=padding)
+    assert returned_extent == expected_extent
+
     # Test with invalid padding
     with pytest.raises(TypeError):
         geospatial.get_extent(ds, padding="invalid")
@@ -219,9 +224,9 @@ def test_crop_by_country(
     country = "Wakanda"
     extent = (-10, 20, -30, 40)
 
-    # Mock _get_country_extent_dictionary
+    # Mock read_countries_extent_dictionary
     mocker.patch(
-        "gpm_api.utils.geospatial._get_country_extent_dictionary",
+        "gpm_api.utils.geospatial.read_countries_extent_dictionary",
         return_value={country: extent},
     )
 
@@ -242,9 +247,9 @@ def test_crop_by_continent(
     continent = "Middle Earth"
     extent = (-10, 20, -30, 40)
 
-    # Mock _get_continent_extent_dictionary
+    # Mock read_continents_extent_dictionary
     mocker.patch(
-        "gpm_api.utils.geospatial._get_continent_extent_dictionary",
+        "gpm_api.utils.geospatial.read_continents_extent_dictionary",
         return_value={continent: extent},
     )
 
@@ -326,9 +331,9 @@ def test_get_crop_slices_by_country(
     country = "Froopyland"
     extent = (-10, 20, -30, 40)
 
-    # Mock _get_country_extent_dictionary
+    # Mock read_countries_extent_dictionary
     mocker.patch(
-        "gpm_api.utils.geospatial._get_country_extent_dictionary",
+        "gpm_api.utils.geospatial.read_countries_extent_dictionary",
         return_value={country: extent},
     )
 
@@ -347,9 +352,9 @@ def test_get_crop_slices_by_continent(
     continent = "Atlantis"
     extent = (-10, 20, -30, 40)
 
-    # Mock _get_continent_extent_dictionary
+    # Mock read_continents_extent_dictionary
     mocker.patch(
-        "gpm_api.utils.geospatial._get_continent_extent_dictionary",
+        "gpm_api.utils.geospatial.read_continents_extent_dictionary",
         return_value={continent: extent},
     )
 
