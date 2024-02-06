@@ -17,7 +17,7 @@ jobs:
         experimental: [false]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up micromamba and install package dependencies
         uses: mamba-org/setup-micromamba@v1
