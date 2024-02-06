@@ -1,94 +1,69 @@
-Contributing guide
+Contributors Guidelines
 ===========================
 
 Hi! Thanks for taking the time to contribute to GPM-API.
 
 You can contribute in many ways :
 
--  Join the
-   `discussion <https://github.com/ghiggi/gpm_api/discussions>`__
+- Join the `discussion <https://github.com/ghiggi/gpm_api/discussions>`__
 - Report `issues <#issue-reporting-guidelines>`__
+- Add new features
+- Add new retrievals
+- Add new visualization tools
 - Any others code improvements are welcome !
 
+**We Develop with GitHub !**
 
-Before adding your contribution, please make sure to take a moment
-and read through the following documnents :
-
-- `Code of Conduct <https://github.com/ghiggi/gpm_api/blob/main/CODE_OF_CONDUCT.md>`__
-- `Contributing environment setup <#contributing-environment-setup>`__
-- `Contributing process <#contributing-process>`__
-- `Code review checklist <#code-review-checklist>`__
-
-
-
-Issue Reporting Guidelines
---------------------------
-
--  Always use one available `issue
-   templates <https://github.com/ghiggi/gpm_api/issues/new/choose>`__
--  If you don’t find the required GitHub issue template, please ask for a new template.
-
-
-GitHub
------------------------
-
-**We Develop with Github !**
-
-We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
-
+We use GitHub to host code, to track issues and feature requests, as well as accept Pull Requests.
 We use `GitHub flow <https://docs.github.com/en/get-started/quickstart/github-flow>`__.
 So all code changes happen through Pull Requests (PRs).
 
 
-
-
-Contributing environment setup
------------------------------------
-
 **First Time Contributors ?**
 
-Please follow the following steps to install your developing environment :
+Before adding your contribution, please take a moment to read through the following sections:
 
--  Setting up the development environment
--  Install pre-commit hooks
+- The :ref:`Installation for contributors <installation_contributor>` help you to set up the developing environment and the pre-commit hooks.
+- The section `Contributing process <#contributing-process>`__ provides you with a brief overview of the steps that each GPM-API developer must follow to contribute to the repository.
+- The `Code review checklist <#code-review-checklist>`__ enable to speed up the code review process.
+- The `Code of conduct <https://github.com/ghiggi/gpm_api/blob/main/CODE_OF_CONDUCT.md>`__ details the expected behavior of all contributors.
 
-Setting up the development environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Initiating a discussion about your ideas or proposed implementations is a vital step before starting your contribution !
+Engaging with the community early on can provide valuable insights, ensure alignment with the project's goals, and prevent potential overlap with existing work.
+Here are some guidelines to facilitate this process:
 
-You will need python to set up the development environment. See `the installation guide <https://gpm-api.readthedocs.io/en/latest/installation.html>`__
-for further explanations.
+1. Start with a conversation
 
-Install pre-commit hooks
-~~~~~~~~~~~~~~~~~~~~~~~~
+   Before start coding, open a `GitHub Discussion <https://github.com/ghiggi/gpm_api/discussions>`__, a `GitHub Feature Request Issue <https://github.com/ghiggi/gpm_api/issues/new/choose>`__ or
+   just start a discussion in the `GPM-API Slack Workspace <https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg>`__.
+   These channels of communication provides an opportunity to gather feedback, understand the project's current state, and improve your contributions.
 
-After setting up your development environment, install the git pre-commit hook by executing the following command in the repository’s
-root:
+2. Seek guidance and suggestions
 
-::
+   Utilize the community's expertise. Experienced contributors and maintainers can offer guidance, suggest best practices, and help you navigate any complexities you might encounter.
 
-   pre-commit install
+3. Collaborate on the approach
 
+   Discussing your implementation strategy allows for a collaborative approach to problem-solving.
+   It ensures that your contribution is in line with the project's design principles and technical direction.
 
-The pre-commit hooks are scripts executed automatically in every commit
-to identify simple code quality issues. When an issue is identified
-(the pre-commit script exits with non-zero status), the hook aborts the
-commit and prints the error. Currently, GPM-API only tests that the
-code to be committed complies with black's format style and the ruff linter.
+By following these steps, you not only enhance the quality and relevance of your contribution but also become an integral part of the project's collaborative ecosystem.
 
-In case that the commit is aborted, you only need to run black agains you code.
-This can be done by running   ``black .``  or   ``ruff check .``
-
-.. note::
-	To maintain consistency, please use version and configuration defined into `.pre-commit-config.yaml`.
+If you have any questions, please do not hesitate to ask in the `GitHub Discussions <https://github.com/ghiggi/gpm_api/discussions>`__ or in the
+`GPM-API Slack Workspace <https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg>`__.
 
 
+Issue Reporting
+-----------------
 
-The can also be done with  ``pre-commit run --all-files``. This is recommended since it
-indicates if the commit contained any formatting errors (that are automatically corrected).
+To facilitate and enhance the issue reporting process, it is important to utilize the predefined GitHub Issue Templates.
+These templates are designed to ensure you provide all the essential information in your report, allowing for a faster and more effective response from the maintainers.
+You can access and use these templates by visiting the `GitHub Issue Templates page here <https://github.com/ghiggi/gpm_api/issues/new/choose>`__.
 
-
-More info on pre-commit and CI tools are provided in the Code quality and testing section  `Code quality and testing section <https://gpm-api.readthedocs.io/en/latest/contributors_guidelines.html#code-quality-control>`__
-
+However, if you find that the existing templates don't quite match the specifics of the issue you're encountering, please feel free to suggest a new template.
+Your feedback is invaluable in refining our processes and ensuring we address a broader spectrum of concerns.
+To do this, simply create a general issue in the repository, clearly stating that you're requesting a new template and include detailed suggestions about what this new template should entail.
+This proactive approach helps us continuously evolve and better serve the needs of the project and its contributors.
 
 
 Contributing process
@@ -110,42 +85,28 @@ Here is a brief overview of the steps that each GPM-API developer must follow to
 .. image:: /static/collaborative_process.png
 
 
+1. Fork the repository
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you do not have a GitHub account yet, please create one `here <https://github.com/join>`__.
+If you do not have yet Git installed on your computer, please install it following `these instructions <https://github.com/git-guides/install-git>`__.
+Then, please follow the guidelines in the :ref:`Installation for contributors <installation_contributor>` section
+to create the local copy of the GPM-API repository, set up the developing environment and the pre-commit hooks.
+
+Once you have have a local copy of the GPM-API repository on your machine, you are ready to
+contribute to the project!
 
 
-Fork the repository
-~~~~~~~~~~~~~~~~~~~
-
-Once you have set the development environment (see `Setting up the development environment`_), the next step is creating
-your local copy of the repository, where you will commit your
-modifications. The steps to follow are:
-
-1. Set up Git on your computer
-
-2. Create a GitHub account (if you don’t have one)
-
-3. Fork the repository in your GitHub.
-
-4. Clone a local copy of your fork. For example:
-
-::
-
-   git clone https://github.com/<your-account>/gpm_api.git
-
-Done! Now you have a local copy of the GPM-API repository.
-
-Create a new branch
-~~~~~~~~~~~~~~~~~~~
+2. Create a new branch
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Each contribution should be made in a separate new branch of your forked repository.
-Working on the main branch
-is reserved for Core Contributors only. Core Contributors are developers
-that actively work and maintain the repository. They are the only ones
-who accept pull requests and push commits directly to the GPM-API
-repository.
+Working on the main branch is reserved for `Core Contributors` only.
+Core Contributors are developers that actively work and maintain the repository.
+They are the only ones who accept Pull Requests and push commits directly to the GPM-API repository.
 
 For more information on how to create and work with branches, see
-`“Branches in a
-Nutshell” <https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell>`__
+`“Branches in a Nutshell” <https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell>`__
 in the Git documentation.
 
 Please define the name of your branch based on the scope of the contribution. Try to strictly stick to the following guidelines:
@@ -156,39 +117,34 @@ Please define the name of your branch based on the scope of the contribution. Tr
 -  If you refactor some code: ``refactor-<some_key>-<word>``
 -  If you optimize some code: ``optimize-<some_key>-<word>``
 
+For example, if you are adding new colormaps, you can create a new branch with the following command:
 
-\* Guidelines for the `data_source` :
+::
 
-- 	We use the institution name when campaign data spans more than 1 country (i.e. ARM, GPM)
-- 	We use the country name when all campaigns (or sensor networks) are inside a given country.
-
-
-
-Work on your changes
-~~~~~~~~~~~~~~~~~~~~
+   git checkout -b add-feature-<name>
 
 
-We follow the pep8 and the python-guide writing style
-
--  `Code Style — The Hitchhiker's Guide to
-   Python <https://docs.python-guide.org/writing/style/>`__
-
-To ensure a minimal style consistency, we use
-`black <https://black.readthedocs.io/en/stable/>`__ to auto-format
-the source code. The black configuration used in the GPM-API project is
-defined in the pyproject.toml, and it is automatically detected by
-black (see above).
+3. Work on your changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+When you are working on your changes, please stick with the repository's coding style and documentation rules.
 
-**Docstrings**
+**Code Style**
 
-Every module, function, or class must have a docstring that describe its
-purpose and how to use it. The docstrings follows the conventions
-described in the `PEP
-257 <https://www.python.org/dev/peps/pep-0257/#multi-line-docstrings>`__
-and the `Numpy’s docstrings
-format <https://numpydoc.readthedocs.io/en/latest/format.html>`__.
+We follow the `PEP 8 <https://pep8.org/>`__ style guide for python code.
+Another relevant style guide can be found in the `The Hitchhiker's Guide to Python <https://docs.python-guide.org/writing/style/>`__.
+
+To ensure a minimal style consistency, we use `black <https://black.readthedocs.io/en/stable/>`__ to auto-format the source code.
+The `black` configuration used in the GPM-API project is
+defined in the `pyproject.toml <https://github.com/ghiggi/gpm_api/blob/main/pyproject.toml>`__.
+
+
+**Code Documentation**
+
+Every module, function, or class must have a docstring that describes its purpose and how to use it.
+The docstrings follows the conventions described in the `PEP 257 <https://www.python.org/dev/peps/pep-0257/#multi-line-docstrings>`__
+and the `Numpy's docstrings format <https://numpydoc.readthedocs.io/en/latest/format.html>`__.
 
 Here is a summary of the most important rules:
 
@@ -197,8 +153,8 @@ Here is a summary of the most important rules:
 
 -  For one-line docstring, end the phrase with a period.
 
--  Use imperative mood for all docstrings (“””Return some value.”””)
-   rather than descriptive mood (“””Returns some value.”””).
+-  Use imperative mood for all docstrings (``“””Return some value.”””``)
+   rather than descriptive mood (``“””Returns some value.”””``).
 
 Here is an example of a docstring:
 
@@ -213,9 +169,9 @@ Here is an example of a docstring:
        Parameters
        ----------
        gamma_1 : float
-         Lag-1 temporal autocorrelation coeffient.
+         Lag-1 temporal autocorrelation coefficient.
        gamma_2 : float
-         Lag-2 temporal autocorrelation coeffient.
+         Lag-2 temporal autocorrelation coefficient.
 
        Returns
        -------
@@ -224,7 +180,8 @@ Here is an example of a docstring:
        """
 
 
-If you are using VS code, you can install the  `autoDocstring <https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring>`_ extension to automatically create such preformatted docstring.
+If you are using VS code, you can install the  `autoDocstring <https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring>`_
+extension to automatically create such preformatted docstring.
 
 You should configure VS code as follow :
 
@@ -234,217 +191,158 @@ You should configure VS code as follow :
 
 The convention we adopt for our docstrings is the numpydoc string convention.
 
+.. _code_quality_control:
 
-Code quality control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-To maintain a high code quality, Black and Ruff are defined in the ``.pre-commit-config.yaml`` file. These tools are run for every Pull Request on Github and can also be run locally.
+4. Code quality control
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+------------+-------+-------------------------------------------+
-|  Tool                                                                                         | Aim                                                              | pre-commit | CI/CD | Version                                   |
-+===============================================================================================+==================================================================+============+=======+===========================================+
-| `Black <https://black.readthedocs.io/en/stable/>`__                                           | Python code formatter                                            | 👍         | 👍    | 22.8.0                                    |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+------------+-------+-------------------------------------------+
-| `Ruff  <https://github.com/charliermarsh/ruff>`__                                             | Python linter                                                    | 👍         | 👍    | 0.0.2570                                  |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+------------+-------+-------------------------------------------+
+Pre-commit hooks are automated scripts that run during each commit to detect basic code quality issues.
+If a hook identifies an issue (signified by the pre-commit script exiting with a non-zero status), it halts the commit process and displays the error messages.
+
+Currently, GPM-API tests that the code to be committed complies with `black's  <https://github.com/psf/black>`__ format style,
+the `ruff <https://github.com/charliermarsh/ruff>`__ linter and the `codespell <https://github.com/codespell-project/codespell>`__ spelling checker.
+
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+------------+-------+
+|  Tool                                                                                         | Aim                                                              | pre-commit | CI/CD |
++===============================================================================================+==================================================================+============+=======+
+| `Black <https://black.readthedocs.io/en/stable/>`__                                           | Python code formatter                                            | 👍         | 👍    |
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+------------+-------+
+| `Ruff  <https://github.com/charliermarsh/ruff>`__                                             | Python linter                                                    | 👍         | 👍    |
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+------------+-------+
+| `Codespell  <https://github.com/codespell-project/codespell>`__                               | Spelling checker                                                 | 👍         | 👍    |
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+------------+-------+
+
+The versions of the software used in the pre-commit hooks is specified in the `.pre-commit-config.yaml <https://github.com/ghiggi/gpm_api/blob/main/.pre-commit-config.yaml>`__ file.
+This file serves as a configuration guide, ensuring that the hooks are executed with the correct versions of each tool, thereby maintaining consistency and reliability in the code quality checks.
+
+If a commit is blocked due to these checks, you can manually correct the issues by running locally the appropriate tool: ``black .`` for Black, ``ruff check .`` for Ruff, or ``codespell`` for Codespell.
+Alternatively, you can use the ``pre-commit run --all-files`` command to attempt automatic corrections of all formatting errors across all files.
+
+The Continuous Integration (CI) tools integrated within GitHub employ the same pre-commit hooks to consistently uphold code quality for every Pull Request.
+
+In addition to the pre-commit hooks, the Continuous Integration (CI) setup on GitHub incorporates an extended suite of tools.
+These tools, which are not installable on a local setup, perform advanced code quality analyses and reviews after each update to a Pull Request.
+
+Refer to the table below for a comprehensive summary of all CI tools employed to assess the code quality of a Pull Request.
+
++----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| Tool                                               | Aim                                                                                                                                 |
++====================================================+=====================================================================================================================================+
+| `pre-commit.ci <https://pre-commit.ci/>`__         | Run pre-commit (as defined in `.pre-commit-config.yaml <https://github.com/ghiggi/gpm_api/blob/main/.pre-commit-config.yaml>`__)    |
++----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| `CodeBeat <https://codebeat.co/>`__                | Automated code review and analysis tools                                                                                            |
++----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| `CodeScene <https://codescene.com/>`__             | Automated code review and analysis tools                                                                                            |
++----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| `CodeFactor <https://www.codefactor.io/>`__        | Automated code review and analysis tools                                                                                            |
++----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
 
 
 
-**pre-commit**
+5. Code testing with pytest
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To run pre-commit (black + Ruff) locally :
+GPM-API tests are written using the third-party `pytest <https://docs.pytest.org>`_ package. Every code change must be tested !
+
+The tests are organized within the ``/gpm_api/tests`` directory and are structured to comprehensively assess various aspects of the code.
+
+These tests are integral to the development process and are automatically triggered on GitHub upon any new commits or updates to a Pull Request.
+The Continuous Integration (CI) on GitHub runs tests and analyzes code coverage using multiple versions of Python,
+multiple operating systems, and multiple versions of dependency libraries. This is done to ensure that the code works in a variety of environments.
+
+The following tools are used:
+
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+
+|  Tool                                                                                         | Aim                                                              |
++===============================================================================================+==================================================================+
+| `Pytest  <https://docs.pytest.org>`__                                                         | Execute unit tests and functional tests                          |
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+
+| `Coverage <https://coverage.readthedocs.io/>`__                                               | Measure the code coverage of the project's unit tests            |
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+
+| `CodeCov    <https://about.codecov.io/>`__                                                    | Uses Coverage to track and analyze code coverage over time.      |
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+
+| `Coveralls    <https://coveralls.io/>`__                                                      | Uses Coverage to track and analyze code coverage over time.      |
++-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+
+
+
+For contributors interested in running the tests locally:
+
+1. Ensure you have the :ref:`development environment <installation_standard>` correctly set up.
+2. Navigate to the GPM-API root directory.
+3. Execute the following command to run the entire test suite:
 
 .. code-block:: bash
 
-   pre-commit run --all-files
+	pytest
 
+For more focused testing or during specific feature development, you may run subsets of tests.
+This can be done by specifying either a sub-directory or a particular test module.
 
-This is recommended since it
-indicates if the commit contained any formatting errors (that are automatically corrected).
-
-
-
-
-**Black**
-
-To run Black locally :
+Run tests in a specific sub-directory:
 
 .. code-block:: bash
 
-	black .
+    pytest gpm_api/tests/<test_subdirectory>/
 
+Run a particular test module:
 
+.. code-block:: bash
+
+    pytest gpm_api/tests/<test_subdirectory>/test_<module_name>.py
+
+These options provide flexibility, allowing you to efficiently target and validate specific components of the GPM-API software.
 
 .. note::
-	To maintain consistency, make sure to stick to the version defined in the `.pre-commit-config.yaml` file. This version will be used in the CI.
+   Each test module must be prefixed with ``test_`` to be recognized and selected by pytest.
+   This naming pattern is a standard convention in pytest and helps in the automatic discovery of test files.
 
 
-
-
-
-**Ruff**
-
-To run Ruff locally :
-
-.. code-block:: bash
-
-	ruff check .
-
-
-.. note::
-	To maintain consistency, make sure to stick to the version and the rule configuration defined in the `.pre-commit-config.yaml` file. This information is used in the CI.
-
-
-
-
-
-
-
-
-In the table below, some CI tool are mentioned for your information, but does not need to be installed on your computer. They are automatically run when you push your changes to the main repository via a GitHub Pull Request.
-
-
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-|  Tool                                                                                         | Aim                                                              | Python version                            |
-+===============================================================================================+==================================================================+===========================================+
-| `pre-commit.ci   <https://pre-commit.ci/>`__                                                  | Run pre-commit (as defined in `.pre-commit-config.yaml` )        |                                           |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| `CodeBeat      <https://codebeat.co/>`__                                                      | Automated code review and analysis tools                         | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| `CodeScene <https://codescene.com/>`__                                                        | Automated code review and analysis tools                         | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| `CodeFactor <https://www.codefactor.io/>`__                                                   | Automated code review and analysis tools                         | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-
-
-
-
-
-
-
-Code testing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-Every code change must be tested !
-
-
-
-
-**Pytest**
-
-GPM-API tests are written using the third-party `pytest <https://docs.pytest.org>`_ package.
-
-
-
-The tests located in the ``/gpm_api/tests`` folder are used to test various functions of the code and are automatically run when changes are pushed to the main repository through a GitHub Pull Request.
-
-.. code-block:: bash
-
-	pytest gpm_api/tests
-
-
-The Continuous Integration (CI) on GitHub runs tests and analyzes code coverage. The following tools are used:
-
-
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-|  Tool                                                                                         | Aim                                                              | Version                                   |
-+===============================================================================================+==================================================================+===========================================+
-| `Pytest  <https://docs.pytest.org>`__                                                         | Execute unit tests and functional tests                          |                                           |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| Coverage                                                                                      | Measure the code coverage of the project's unit tests            | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| `CodeCov    <https://about.codecov.io/>`__                                                    | Uses the "coverage" package to generate a code coverage report.  | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| `Coveralls    <https://coveralls.io/>`__                                                      | Uses the "coverage" to track the quality of your code over time. | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| `CodeBeat      <https://codebeat.co/>`__                                                      | Automated code review and analysis tools                         | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| `CodeScene <https://codescene.com/>`__                                                        | Automated code review and analysis tools                         | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-| `CodeFactor <https://www.codefactor.io/>`__                                                   | Automated code review and analysis tools                         | all versions according to GitHub workflow |
-+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------+
-
-
-
-Push your changes to your fork repository
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+6. Push your changes to your fork repository
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 During this process, pre-commit hooks will be run. Your commit will be
 allowed only if quality requirements are fulfilled.
 
-If you encounter errors, Black and Ruff can be run using the following command:
+If you encounter errors, you can attempt to fix the formatting errors with the following command:
 
 ::
 
    pre-commit run --all-files
 
-We follow a `commit message convention <https://www.conventionalcommits.org/en/v1.0.0/>`__, to have consistent git messages.
-The goal is to increase readability and ease of contribution.
+
+7. Create a new Pull Request in GitHub.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+Once your code has been uploaded into your GPM-API fork, you can create a Pull Request (PR) to the GPM-API main branch.
 
-Create a new Pull Request in GitHub.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Recommendation for the Pull Requests:
 
-Once your code has been uploaded into your GPM-API fork, you can create
-a Pull Request (PR) to the GPM-API main branch.
-
-**Recommendation for the pull request**
-
--  Add screenshots or GIFs for any UI changes. This will help the person reviewing your code to understand what you’ve changed and how it
-   works.
-
--  Please use the pertinent template for the pull request, and fill it out accurately.
-
--  It’s OK to have multiple small commits as you work on the PR - GitHub
-   will automatically squash it before merging.
-
+-  Please fill it out accurately the Pull Request template.
+-  It is perfectly fine to make many small commits as you work on a Pull Request. GitHub will automatically squash all the commits before merging the Pull Request.
 -  If adding a new feature:
 
-   -  Add accompanying test case.
-   -  Provide a convincing reason to add this feature. Ideally, you
-      should open a suggestion issue first and have it approved before
-      working on it.
-   -  Present your issue in the ‘discussion’ part of this repo
+   -  Provide a convincing reason to add the new feature. Ideally, propose your idea through a `Feature Request Issue <https://github.com/ghiggi/gpm_api/issues/new/choose>`__ and obtain approval before starting work on it. Alternatively, you can present your ideas in the `GitHub Discussions <https://github.com/ghiggi/gpm_api/discussions>`__ or in the `GPM-API Slack Workspace <https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg>`__.
+   -  Implement unit tests to verify the functionality of the new feature. This ensures that your addition works as intended and maintains the quality of the codebase.
 
 -  If fixing bug:
 
-   -  If you are resolving a special issue, add ``(fix #xxxx[,#xxxx])``
-      (#xxxx is the issue id) in your PR title for a better release log,
-      e.g. ``update entities encoding/decoding (fix #3899)``.
-   -  Provide a detailed description of the bug in the PR. Live demo
-      preferred.
-   -  Add appropriate test coverage if applicable.
+   -  Provide a comprehensive description of the bug within your Pull Request. This aids reviewers in understanding the issue and the impact of your fix.
+   -  If your Pull Request addresses a specific issue, add ``(fix #xxxx)`` in your PR title to link the PR to the issue and enhance the clarity of release logs. For example, the title of a PR fixing issue ``#3899`` would be ``<your PR title> (fix #3899)``.
+   -  If applicable, ensure that your fix includes appropriate tests. Adding tests for your bug fix helps prevent future regressions and maintains the stability of the software.
 
-.. _section-1:
 
 Code review checklist
 ---------------------
 
--  Ask to people to review your code:
-
-   -  a person who knows the domain well and can spot bugs in the
-      business logic;
-   -  an expert in the technologies you’re using who can help you
-      improve the code quality.
-
--  When you’re done with the changes after a code review, do another
-   self review of the code and write a comment to notify the reviewer,
-   that the pull request is ready for another iteration.
+-  Once your Pull Request is ready, ask the maintainers to review your code.
+-  When you are done with the changes suggested by the reviewers, do another  self review of the code and write a comment to notify the reviewer,
+   that the Pull Request is ready for another iteration.
 -  Resolve all the review comments, making sure they are all addressed before another review iteration.
--  Make sure you don’t have similar issues anywhere else in your pull
-   request.
--  If you’re not going to follow a code review recommendations, please add a comment explaining why you think the reviewer suggestion is not relevant.
--  Avoid writing comment like “done” of “fixed” on each code review
-   comment. Reviewers assume you’ll do all suggested changes, unless you
-   have a reason not to do some of them.
--  Sometimes it’s okay to postpone changes — in this case you’ll need to
-   add a ticket number to the pull request and to the code itself.
-
-.. _section-2:
+-  If you are not going to follow a code review recommendations, please add a comment explaining why you think the reviewer suggestion is not relevant.
+-  Avoid writing comment like “done” of “fixed” on each code review comment.
+   Reviewers assume you will do all suggested changes, unless you have a reason not to do some of them.
 
 
 Credits
@@ -452,4 +350,4 @@ Credits
 
 Thank you to all the people who have already contributed to GPM-API repository!
 
-If you have contributed data and/or code to GPM-API, add your name to the `AUTHORS.md <https://github.com/ghiggi/gpm_api/blob/main/AUTHORS.md>`__ file.
+If you have contributed colormaps and/or code to GPM-API, add your name to the `AUTHORS.md <https://github.com/ghiggi/gpm_api/blob/main/AUTHORS.md>`__ file.

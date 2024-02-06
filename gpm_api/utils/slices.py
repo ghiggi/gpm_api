@@ -181,7 +181,8 @@ def list_slices_filter(list_slices, min_size=None, max_size=None):
 def list_slices_flatten(list_slices):
     """Flatten out list of slices with 2 nested level.
 
-    Examples:
+    Examples
+    --------
     [[slice(1, 7934, None)], [slice(1, 2, None)]] --> [slice(1, 7934, None), slice(1, 2, None)]
     [slice(1, 7934, None), slice(1, 2, None)] --> [slice(1, 7934, None), slice(1, 2, None)]
     """
@@ -198,22 +199,22 @@ def list_slices_flatten(list_slices):
 def get_list_slices_from_bool_arr(bool_arr, include_false=True, skip_consecutive_false=True):
     """Return the slices corresponding to sequences of True in the input arrays.
 
-    If include_false=True, the last element of each slice sequence (except the last) will be False
-    If include_false=False, no element in each slice sequence will be False
+    If include_false=True, the last element of each slice sequence (except the last) will be False.
+    If include_false=False, no element in each slice sequence will be False.
     If skip_consecutive_false=True (default), the first element of each slice must be a True.
     If skip_consecutive_false=False, it returns also slices of size 1 which selects just the False value.
-    Note: if include_false = False, skip_consecutive_false is automatically True.
+    If include_false = False, skip_consecutive_false is automatically True.
 
-    Examples:
+    Examples
+    --------
     If include_false=True and skip_consecutive_false=False:
-       --> [False, False] --> [slice(0,1), slice(1,2)]
+    --> [False, False] --> [slice(0,1), slice(1,2)]
     If include_false=True and skip_consecutive_false=True:
-       --> [False, False] --> []
-       --> [False, False, True] --> [slice(2,3)]
-       --> [False, False, True, False] --> [slice(2,4)]
+    --> [False, False] --> []
+    --> [False, False, True] --> [slice(2,3)]
+    --> [False, False, True, False] --> [slice(2,4)]
     If include_false=False:
-        --> [False, False, True, False] --> [slice(2,3)]
-
+    --> [False, False, True, False] --> [slice(2,3)]
     """
     # Check the arguments
     if not include_false:

@@ -29,6 +29,9 @@ Tutorials and Examples
    tutorials/download
 
 
+API Reference
+===============
+
 .. toctree::
    :maxdepth: 1
 

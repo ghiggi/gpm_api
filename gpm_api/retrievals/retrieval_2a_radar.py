@@ -372,8 +372,8 @@ def retrieve_SHI(
 
     SHI is used to compute the Probability of Severe Hail (POSH) and Maximum Estimated Size of Hail (MESH).
     SHI applies a thermally weighted vertical integration of reflectivity from the melting level
-      to the top of the storm, neglecting any reflectivity less than 40 dBZ,
-      thereby attempting to capture only the ice content of a storm.
+    to the top of the storm, neglecting any reflectivity less than 40 dBZ,
+    thereby attempting to capture only the ice content of a storm.
 
     Reference: Witt et al., 1998
 
@@ -451,8 +451,8 @@ def retrieve_MESH(ds):
     Also known as the Maximum Expected Hail Size (MEHS).
 
     The “size” in MESH refers to the maximum diameter (in mm) of a hailstone.
-    It's an indicator that transforms SHI into hail size by fitting SHI to a chosen
-      percentile of maximum observed hail size (using a power-law)
+    It's an indicator that transforms SHI into hail size by fitting SHI to a
+    chosen percentile of maximum observed hail size (using a power-law)
     """
     da_shi = retrieve_SHI(ds)
     da_mesh = 2.54 * da_shi**0.5
@@ -469,8 +469,7 @@ def retrieve_POSH(ds):
     The probability of 0.75-inch diameter hail occurring.
 
     When SHI = WT, POSH = 50%.
-    Output probabilities are rounded off to the nearest 10%, to avoid
-      conveying an unrealistic degree of precision.
+    Output probabilities are rounded off to the nearest 10%, to avoid conveying an unrealistic degree of precision.
     """
     # Retrieve zero-degree height
     da_height_0 = ds["heightZeroDeg"]
