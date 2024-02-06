@@ -7,6 +7,7 @@ dependencies:
   - ximage
   - pyvista
   - polars
+  - jupyter
   - pandoc
   - nbsphinx==0.9.3
   - sphinx==5.1.1
