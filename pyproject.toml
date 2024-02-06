@@ -56,8 +56,9 @@ dynamic = ["version"]
 dev = ["pre-commit",
        "black[jupyter]", "blackdoc", "codespell", "ruff",
        "pytest", "pytest-cov", "pytest-mock", "pydantic", "pytest-check",
-       "pytest-watcher", "pip-tools", "bumpver", "twine",
-       "setuptools>=61.0.0", "wheel",
+       "pytest-watcher",
+       "pip-tools", "bumpver", "twine", "wheel", "build", "setuptools>=61.0.0",
+       "ximage", "pyvista", "polars", "pyarrow",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]
 
 [project.urls]

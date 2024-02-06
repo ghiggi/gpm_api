@@ -5,8 +5,8 @@ Hi! Thanks for taking the time to contribute to GPM-API.
 
 You can contribute in many ways :
 
-- Join the `discussion <https://github.com/ghiggi/gpm_api/discussions>`__
-- Report `issues <#issue-reporting-guidelines>`__
+- Join the `GitHub Discussions <https://github.com/ghiggi/gpm_api/discussions>`__
+- Report `issues <#issue-reporting>`__
 - Add new features
 - Add new retrievals
 - Add new visualization tools
@@ -117,7 +117,7 @@ Please define the name of your branch based on the scope of the contribution. Tr
 -  If you refactor some code: ``refactor-<some_key>-<word>``
 -  If you optimize some code: ``optimize-<some_key>-<word>``
 
-For example, if you are adding new colormaps, you can create a new branch with the following command:
+For example, if you are adding a new feature, you can create a new branch with the following command:
 
 ::
 
@@ -350,4 +350,4 @@ Credits
 
 Thank you to all the people who have already contributed to GPM-API repository!
 
-If you have contributed colormaps and/or code to GPM-API, add your name to the `AUTHORS.md <https://github.com/ghiggi/gpm_api/blob/main/AUTHORS.md>`__ file.
+If you have contributed code or documentation to GPM-API, add your name to the `AUTHORS.md <https://github.com/ghiggi/gpm_api/blob/main/AUTHORS.md>`__ file.

@@ -7,9 +7,9 @@ We define here two types of installation:
 
 - `Installation for standard users`_ : for users who want to process data.
 
-- `Installation for contributors`_: for contributors who want to enrich the project (eg. add a new reader).
+- `Installation for contributors`_: for contributors who want to enrich the project (eg. add a new features).
 
-We recommend users and contributors to first set up a `Virtual Environment <#virtual_environment>`_ where to install GPM-API.
+We recommend users and contributors to first set up a virtual environment where to install GPM-API.
 
 
 .. _virtual_environment:
@@ -91,8 +91,7 @@ Please install the package in the virtual environment you created before !
 **With pip:**
 
 On Linux, prior to the installation of GPM-API, you can install GEOS using your package manager (e.g. ``apt install libgeos-dev``).
-
-Then, install API with:
+Then, install GPM-API with:
 
 .. code-block:: bash
 
@@ -111,7 +110,7 @@ Here below we provide the steps to install the package in editable mode.
 Clone the repository from GitHub
 ......................................
 
-According to the ::ref:`contributors guidelines <contributor_guidelines>`,
+According to the :ref:`contributors guidelines <contributor_guidelines>`,
 you should first
 `create a fork into your personal GitHub account <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`__.
 

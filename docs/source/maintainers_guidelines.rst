@@ -1,5 +1,5 @@
 ========================
-Maintainers GPMuidelines
+Maintainers Guidelines
 ========================
 
 
@@ -91,7 +91,8 @@ To build the documentation locally, follow the next three steps.
 
 	.. code-block:: bash
 
-    	conda activate build-doc-gpm-api
+	   	conda activate build-doc-gpm-api
+
 
 3. Generate the documentation
 
