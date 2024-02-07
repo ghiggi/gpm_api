@@ -119,52 +119,6 @@ def test_construct_wget_pps_cmd(
         ), f"Folder {os.path.dirname(local_filepath)} was not created"
 
 
-@pytest.mark.parametrize("storage", ["pps", "ges_disc"])
-def test_download_file_private(
-    remote_filepaths: Dict[str, Dict[str, Any]],
-    tmpdir: str,
-    mocker: MockerFixture,
-    storage: str,
-) -> None:
-    """Build curl/wget calls for download, but don't actually download anything
-
-    Uses tmpdir to create a unique path for each test and mocker to mock the
-    download function
-    """
-
-    # Don't actually download anything, so mock the run function
-    mocker.patch.object(dl, "run", autospec=True, return_value=None)
-
-    # Use server paths in fixture and try curl and wget
-    for remote_filepath in remote_filepaths:
-        local_filepath = os.path.join(
-            tmpdir,
-            "test_download_file_private",
-            os.path.basename(remote_filepath),
-        )
-        dl._download_files(
-            remote_filepaths=[remote_filepath],
-            local_filepaths=[local_filepath],
-            storage=storage,
-            transfer_tool="curl",
-        )
-        dl._download_files(
-            remote_filepaths=[remote_filepath],
-            local_filepaths=[local_filepath],
-            storage=storage,
-            transfer_tool="wget",
-        )
-
-        # Use non-existent transfer tool
-        with pytest.raises(NotImplementedError):
-            dl._download_files(
-                remote_filepaths=[remote_filepath],
-                local_filepaths=[local_filepath],
-                storage=storage,
-                transfer_tool="fake",
-            )
-
-
 class TestDownloadUtility:
     def test_get_commands_futures(self):
         """Test _get_commands_futures."""
@@ -302,6 +256,65 @@ class TestGetFpathsFromFnames:
             )
 
 
+def test_check_download_status(
+    products: List[str],
+) -> None:
+    """Test check_download_status function"""
+
+    for product in products:
+        assert dl._check_download_status([-1, -1, -1], product, True) is True  # All already on disk
+        assert dl._check_download_status([0, 0, 0], product, True) is None  # All failed download
+        assert dl._check_download_status([1, 1, 1], product, True) is True  # All success download
+        assert dl._check_download_status([], product, True) is None  # No data available
+        assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
+
+
+@pytest.mark.parametrize("storage", ["pps", "ges_disc"])
+def test__download_files(
+    remote_filepaths: Dict[str, Dict[str, Any]],
+    tmpdir: str,
+    mocker: MockerFixture,
+    storage: str,
+) -> None:
+    """Build curl/wget calls for download, but don't actually download anything
+
+    Uses tmpdir to create a unique path for each test and mocker to mock the
+    download function
+    """
+
+    # Don't actually download anything, so mock the run function
+    mocker.patch.object(dl, "run", autospec=True, return_value=None)
+
+    # Use server paths in fixture and try curl and wget
+    for remote_filepath in remote_filepaths:
+        local_filepath = os.path.join(
+            tmpdir,
+            "test_download_file_private",
+            os.path.basename(remote_filepath),
+        )
+        dl._download_files(
+            remote_filepaths=[remote_filepath],
+            local_filepaths=[local_filepath],
+            storage=storage,
+            transfer_tool="curl",
+        )
+        dl._download_files(
+            remote_filepaths=[remote_filepath],
+            local_filepaths=[local_filepath],
+            storage=storage,
+            transfer_tool="wget",
+        )
+
+        # Use non-existent transfer tool
+        with pytest.raises(ValueError):
+            dl._download_files(
+                remote_filepaths=[remote_filepath],
+                local_filepaths=[local_filepath],
+                storage=storage,
+                transfer_tool="fake",
+            )
+
+
 def test_download_files(
     remote_filepaths: Dict[str, Dict[str, Any]],
     versions: List[str],
@@ -337,21 +350,8 @@ def test_download_files(
     assert dl.download_files(filepaths=list(remote_filepaths.keys())) == None
 
 
-def test_check_download_status(
-    products: List[str],
-) -> None:
-    """Test check_download_status function"""
-
-    for product in products:
-        assert dl._check_download_status([-1, -1, -1], product, True) is True  # All already on disk
-        assert dl._check_download_status([0, 0, 0], product, True) is None  # All failed download
-        assert dl._check_download_status([1, 1, 1], product, True) is True  # All success download
-        assert dl._check_download_status([], product, True) is None  # No data available
-        assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
-
-
 @pytest.mark.parametrize("storage", ["pps", "ges_disc"])
-def test_download_daily_data_private(
+def test__download_daily_data(
     tmpdir: str,
     versions: List[str],
     products: List[str],

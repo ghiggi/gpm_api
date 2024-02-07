@@ -4,7 +4,9 @@ Created on Sun Aug 14 20:02:18 2022
 @author: ghiggi
 """
 import datetime
+import functools
 import os
+import subprocess
 
 import numpy as np
 
@@ -73,7 +75,7 @@ def check_storage(storage):
         raise TypeError("'storage' must be a string.")
     valid_storages = ["ges_disc", "pps", "local"]
     if storage.lower() not in valid_storages:
-        raise ValueError(f"{storage} is an invalid storage. Valid values are {valid_storages}.")
+        raise ValueError(f"{storage} is an invalid 'storage'. Valid values are {valid_storages}.")
     return storage.lower()
 
 
@@ -84,9 +86,32 @@ def check_remote_storage(storage):
     valid_storages = ["ges_disc", "pps"]
     if storage.lower() not in valid_storages:
         raise ValueError(
-            f"{storage} is an invalid remote storage. Valid values are {valid_storages}."
+            f"'{storage}' is an invalid remote 'storage'. Valid values are {valid_storages}."
         )
     return storage.lower()
+
+
+@functools.cache
+def check_transfer_tool(transfer_tool):
+    """Check the transfer tool."""
+    valid_transfer_tools = ["curl", "wget"]
+    if transfer_tool not in valid_transfer_tools:
+        raise ValueError(
+            f"{transfer_tool} is an invalid 'transfer_tool'. Valid values are {valid_transfer_tools}."
+        )
+
+    # Check WGET or CURL is installed
+    try:
+        # Attempt to run `wget --version` to check if wget is available
+        subprocess.run(
+            [transfer_tool, "--version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+    except Exception:
+        raise ValueError(f"{transfer_tool.upper()} is not installed on your machine !")
+    return transfer_tool
 
 
 def check_product(product, product_type):

@@ -29,6 +29,7 @@ from gpm_api.io.checks import (
     check_product_version,
     check_remote_storage,
     check_start_end_time,
+    check_transfer_tool,
     check_valid_time_request,
 )
 from gpm_api.io.data_integrity import (
@@ -121,7 +122,7 @@ def _get_list_status_commands(dict_futures, pbar=None):
 
     pbar is a tqdm progress bar.
     """
-    # TODO: maybe here capture (with -1) if the file does not exists !¨
+    # TODO maybe here capture (with -1) if the file does not exists !¨
     n_futures = len(dict_futures)
     status = [1] * n_futures
     for future in as_completed(dict_futures.keys()):
@@ -208,8 +209,10 @@ def curl_pps_cmd(remote_filepath, local_filepath, username, password):
 
 def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=None):
     """CURL command to download data from GES DISC."""
+    urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
+
     # - Define authentication settings
-    auth = "-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
+    auth = f"-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"
     # - Define command
@@ -253,10 +256,8 @@ def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
     if os_name == "Windows":
         window_options = f"--user={username} --ask-password"
         cmd = f"wget {auth} {options} {window_options} {remote_filepath} -O {local_filepath}"
-    elif os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
+    else:  # os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
         cmd = f"wget {auth} {options} {remote_filepath} -O {local_filepath}"
-    else:
-        raise ValueError(f"Unsupported OS: {os_name}")
     return cmd
 
 
@@ -276,6 +277,22 @@ def _get_single_file_cmd_function(transfer_tool, storage):
     return func
 
 
+def _get_storage_username_password(storage):
+    """Retrieve username and password depending on the 'storage'."""
+    # Retrieve username and password
+    if storage == "pps":
+        username = get_pps_username()
+        password = get_pps_password()
+    else:
+        username = get_earthdata_username()
+        password = get_earthdata_password()
+    return username, password
+
+
+def _ensure_local_directories_exists(local_filepaths):
+    _ = [os.makedirs(os.path.dirname(path), exist_ok=True) for path in local_filepaths]
+
+
 def _download_files(
     remote_filepaths,
     local_filepaths,
@@ -285,18 +302,15 @@ def _download_files(
     progress_bar=True,
     verbose=False,
 ):
-    # Ensure destination directory exists
-    for fpath in local_filepaths:
-        if not os.path.exists(os.path.dirname(fpath)):
-            os.makedirs(os.path.dirname(fpath))
+    """Download a list of remote files to their GPM-API local file paths.
+
+    This function open a connection to the server for each file to download !.
+    """
+    transfer_tool = check_transfer_tool(transfer_tool)
+    _ensure_local_directories_exists(local_filepaths)
 
     # Retrieve username and password
-    if storage == "pps":
-        username = get_pps_username()
-        password = get_pps_password()
-    else:
-        username = get_earthdata_username()
-        password = get_earthdata_password()
+    username, password = _get_storage_username_password(storage)
 
     # Define command list
     get_single_file_cmd = _get_single_file_cmd_function(transfer_tool, storage)
@@ -342,9 +356,7 @@ def filter_download_list(remote_filepaths, local_filepaths, force_download=False
     if force_download is False:
         # Get index of files which does not exist on disk
         idx_not_existing = [
-            i
-            for i, local_filepath in enumerate(local_filepaths)
-            if not os.path.exists(local_filepath)
+            i for i, filepath in enumerate(local_filepaths) if not os.path.exists(filepath)
         ]
         # Select paths of files not present on disk
         local_filepaths = [local_filepaths[i] for i in idx_not_existing]
@@ -486,7 +498,7 @@ def download_files(
         List of corrupted file paths.
         If no corrupted files, returns an empty list.
     """
-    # TODO:
+    # TODO list
     # - providing inexisting file names currently behave as if the downloaded file
     #   was corrupted
     # - we should provide better error messages
@@ -706,6 +718,7 @@ def _download_daily_data(
     product_type = check_product_type(product_type=product_type)
     product = check_product(product=product, product_type=product_type)
     storage = check_remote_storage(storage)
+    transfer_tool = check_transfer_tool(transfer_tool)
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
     remote_filepaths, available_version = find_daily_filepaths(
@@ -861,6 +874,7 @@ def download_archive(
     product_type = check_product_type(product_type=product_type)
     product = check_product(product=product, product_type=product_type)
     version = check_product_version(version, product)
+    transfer_tool = check_transfer_tool(transfer_tool)
     start_time, end_time = check_start_end_time(start_time, end_time)
     start_time, end_time = check_valid_time_request(start_time, end_time, product)
     # -------------------------------------------------------------------------.

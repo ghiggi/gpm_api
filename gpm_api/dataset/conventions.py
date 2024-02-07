@@ -149,6 +149,8 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     # Warn if:
     # - non-contiguous scans in orbit data
     # - non-regular timesteps in grid data
+    # - invalid geolocation coordinates is checked already in ensure_valid_coords
+    #   --> SHOULD BE MOVED HERE !
     try:
         if is_grid(ds):
             if config.get("warn_non_contiguous_scans"):
@@ -164,11 +166,4 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
         pass
 
     ###-----------------------------------------------------------------------.
-    ## Check geolocation latitude/longitude coordinates
-    # TODO: check_valid_geolocation
-    # TODO: ensure_valid_geolocation (1 spurious pixel)
-    # TODO: ds_gpm.gpm_api.valid_geolocation
-
-    ###-----------------------------------------------------------------------.
-
     return ds
