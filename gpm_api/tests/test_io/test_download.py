@@ -2,6 +2,8 @@ import pytest
 import os
 import datetime
 from typing import Any, List, Dict
+from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import patch
 from pytest_mock.plugin import MockerFixture
 from gpm_api.io import find
 from gpm_api.io import download as dl
@@ -163,6 +165,56 @@ def test_download_file_private(
             )
 
 
+class TestDownloadUtility:
+    def test_get_commands_futures(self):
+        """Test _get_commands_futures."""
+        commands = ["echo 'Hello, World!'", "exit 1"]
+
+        with ThreadPoolExecutor() as executor:
+            with patch("subprocess.check_call", return_value=0) as mock_check_call:
+                futures = dl._get_commands_futures(executor, commands)
+                assert len(futures) == len(
+                    commands
+                ), "Number of futures should match number of commands"
+                # Ensure each future is for a subprocess.check_call call
+                for future in futures:
+                    assert (
+                        futures[future][1] in commands
+                    ), "Future command should be in commands list"
+                mock_check_call.assert_called()
+
+    def test_get_list_failing_commands(self):
+        """Test _get_list_failing_commands."""
+        commands = ["echo 'Hello, World!'", "exit 1"]  # Second command simulates a failure
+
+        with ThreadPoolExecutor() as executor:
+            futures = dl._get_commands_futures(executor, commands)
+            failing_commands = dl._get_list_failing_commands(futures)
+            # Check the failing command is in the failing_commands list
+            assert (
+                commands[1] in failing_commands
+            ), "Failing command should be in the list of failed commands"
+            # Check the valid command is not in the failing_commands list
+            assert (
+                commands[0] not in failing_commands
+            ), "Successful command should not be in the list of failed commands"
+
+    def test_get_list_status_commands(self):
+        """Test _get_list_status_commands."""
+        commands = ["echo 'Hello, World!'", "exit 1"]  # Second command simulates a failure
+
+        with ThreadPoolExecutor() as executor:
+            futures = dl._get_commands_futures(executor, commands)
+            status_list = dl._get_list_status_commands(futures)
+            assert len(status_list) == len(
+                commands
+            ), "Status list length should match number of commands"
+            # Assuming the first command does not fails, its status should be 1
+            assert status_list[0] == 1, "Status for valid command should be 1"
+            # Assuming the second command fails, its status should be 0
+            assert status_list[1] == 0, "Status for failing command should be 0"
+
+
 class TestDownloadArchive:
     @pytest.fixture(autouse=True)
     def mock_download(
@@ -197,11 +249,15 @@ class TestDownloadArchive:
             return_value=(remote_filepaths.keys(), versions),
         )
 
+    @pytest.mark.parametrize("check_integrity", [True, False])
+    @pytest.mark.parametrize("remove_corrupted", [True, False])
     def test_download_data(
         self,
         check,  # For non-failing asserts
         products: List[str],
         product_types: List[str],
+        check_integrity,
+        remove_corrupted,
     ):
         """Test download_data function
 
@@ -213,7 +269,6 @@ class TestDownloadArchive:
         It may be useful as boilerplate to increase the number of tests here in the
         future.
         """
-
         # Assume files pass file integrity check by mocking return as empty
         for product_type in product_types:
             for product in available_products(product_types=product_type):
@@ -225,8 +280,9 @@ class TestDownloadArchive:
                     start_time=start_time,
                     end_time=start_time + datetime.timedelta(hours=1),
                     product_type=product_type,
+                    check_integrity=check_integrity,
+                    remove_corrupted=remove_corrupted,
                 )
-
             with check:
                 assert res is None  # Assume data is downloaded
 
@@ -251,6 +307,63 @@ class TestDownloadArchive:
         )
 
 
+@pytest.mark.parametrize("verbose", [True, False])
+@pytest.mark.parametrize("remove_corrupted", [True, False])
+@pytest.mark.parametrize("retry", [0, 1])
+@pytest.mark.parametrize("filepaths", [["some_corrupted_filepaths"], []])
+def test_ensure_files_completness(
+    mocker: MockerFixture, verbose, remove_corrupted, retry, filepaths
+):
+    """Test _ensure_files_completness."""
+    # Patch download functions as to not actually download anything
+    mocker.patch.object(dl, "download_files", autospec=True, return_value=filepaths)
+    mocker.patch.object(dl, "check_filepaths_integrity", autospec=True, return_value=filepaths)
+
+    # Ensure completeness
+    l_corrupted = dl._ensure_files_completness(
+        filepaths=filepaths,
+        retry=retry,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
+        # Dummy
+        product_type="RS",
+        transfer_tool="wget",
+        n_threads=1,
+        progress_bar=True,
+    )
+    assert l_corrupted == filepaths
+
+
+@pytest.mark.parametrize("verbose", [True, False])
+@pytest.mark.parametrize("remove_corrupted", [True, False])
+@pytest.mark.parametrize("retry", [0, 1])
+@pytest.mark.parametrize("filepaths", [["some_corrupted_filepaths"], []])
+def test_ensure_archive_completness(
+    mocker: MockerFixture, verbose, remove_corrupted, retry, filepaths
+):
+    """Test _ensure_archive_completness."""
+    # Patch download functions as to not actually download anything
+    mocker.patch.object(dl, "download_files", autospec=True, return_value=filepaths)
+    mocker.patch.object(dl, "check_archive_integrity", autospec=True, return_value=filepaths)
+
+    # Ensure completeness
+    l_corrupted = dl._ensure_archive_completness(
+        retry=retry,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
+        # Dummy
+        product="dummy",
+        start_time="dummy",
+        end_time="dummy",
+        version=7,
+        product_type="RS",
+        transfer_tool="wget",
+        n_threads=1,
+        progress_bar=True,
+    )
+    assert l_corrupted == filepaths
+
+
 @pytest.mark.parametrize("storage", ["pps", "ges_disc"])
 def test_download_daily_data_private(
     tmpdir: str,
@@ -266,6 +379,9 @@ def test_download_daily_data_private(
     test the actual download process as communication with the server is
     mocked.
     """
+    # TODO: this currently test only behaviour when no files available !!!
+    # --> mock find_daily_filepaths and get_fpaths_from_fnames to return valid paths !
+    # --> mock filter_download_list (force True or False) to return something or nothing !
 
     # Patch download functions as to not actually download anything
     mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
@@ -340,6 +456,26 @@ def test_check_download_status(
         assert dl._check_download_status([1, 1, 1], product, True) is True  # All success download
         assert dl._check_download_status([], product, True) is None  # No data available
         assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
+
+
+def test_download_daily_data(mocker: MockerFixture):
+    """Test download_daily_data."""
+    # Patch download functions as to not actually download anything
+    mocker.patch.object(dl, "download_archive", autospec=True, return_value=[])
+    l_corrupted = dl.download_daily_data(product="dummy", year=2012, month=2, day=1)
+    assert l_corrupted == []
+
+
+def test_download_monthly_data(mocker: MockerFixture):
+    """Test download_monhtly_data."""
+    # Patch download functions as to not actually download anything
+    mocker.patch.object(dl, "download_archive", autospec=True, return_value=[])
+    l_corrupted = dl.download_monthly_data(
+        product="dummy",
+        year=2012,
+        month=2,
+    )
+    assert l_corrupted == []
 
 
 class TestGetFpathsFromFnames:
