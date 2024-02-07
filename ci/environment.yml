@@ -6,6 +6,7 @@ dependencies:
   - click
   - donfig
   - dask
+  - distributed
   - h5py
   - netcdf4
   - pyresample

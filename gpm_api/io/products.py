@@ -21,7 +21,7 @@ from gpm_api.io.checks import (
     check_sensors,
     check_versions,
 )
-from gpm_api.utils.yaml import read_yaml_file
+from gpm_api.utils.yaml import read_yaml
 
 ### Notes
 
@@ -68,7 +68,7 @@ def get_info_dict():
     from gpm_api import _root_path
 
     fpath = os.path.join(_root_path, "gpm_api", "etc", "product_def.yml")
-    return read_yaml_file(fpath)
+    return read_yaml(fpath)
 
 
 @functools.lru_cache(maxsize=None)

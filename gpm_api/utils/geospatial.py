@@ -16,7 +16,7 @@ import xarray as xr
 from gpm_api import _root_path
 from gpm_api.checks import is_grid, is_orbit
 from gpm_api.utils.slices import get_list_slices_from_indices
-from gpm_api.utils.yaml import read_yaml_file
+from gpm_api.utils.yaml import read_yaml
 
 # Shapely bounds: (xmin, ymin, xmax, ymax)
 # Matlotlib extent: (xmin, xmax, ymin, ymax)
@@ -115,7 +115,7 @@ def read_countries_extent_dictionary():
         dict: A dictionary containing countries extent information.
     """
     countries_extent_fpath = os.path.join(_root_path, "gpm_api", "etc", "country_extent.yaml")
-    countries_extent_dict = read_yaml_file(countries_extent_fpath)
+    countries_extent_dict = read_yaml(countries_extent_fpath)
     return countries_extent_dict
 
 
@@ -186,7 +186,7 @@ def read_continents_extent_dictionary():
         dict: A dictionary containing the extents of continents.
     """
     continents_extent_fpath = os.path.join(_root_path, "gpm_api", "etc", "continent_extent.yaml")
-    continents_extent_dict = read_yaml_file(continents_extent_fpath)
+    continents_extent_dict = read_yaml(continents_extent_fpath)
     return continents_extent_dict
 
 

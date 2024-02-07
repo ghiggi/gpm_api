@@ -10,7 +10,7 @@ import shutil
 from subprocess import Popen
 from typing import Dict
 
-import yaml
+from gpm_api.utils.yaml import read_yaml, write_yaml
 
 
 ####--------------------------------------------------------------------------.
@@ -60,20 +60,6 @@ def set_ges_disc_authentification(username, password):
         # Copy dodsrc to working directory in Windows
         shutil.copy2(home_dir_path + ".dodsrc", os.getcwd())
         print("Copied .dodsrc to:", os.getcwd())
-
-
-def _read_yaml_file(fpath):
-    """Read a YAML file into dictionary."""
-    with open(fpath) as f:
-        dictionary = yaml.safe_load(f)
-    return dictionary
-
-
-def _write_yaml_file(dictionary, fpath, sort_keys=False):
-    """Write dictionary to YAML file."""
-    with open(fpath, "w") as f:
-        yaml.dump(dictionary, f, sort_keys=sort_keys)
-    return
 
 
 def define_gpm_api_configs(
@@ -127,7 +113,7 @@ def define_gpm_api_configs(
     fpath = os.path.join(home_directory, ".config_gpm_api.yml")
 
     # Write the GPM-API config file
-    _write_yaml_file(config_dict, fpath, sort_keys=False)
+    write_yaml(config_dict, fpath, sort_keys=False)
 
     print("The GPM-API config file has been written successfully!")
     return
@@ -163,7 +149,7 @@ def read_gpm_api_configs() -> Dict[str, str]:
             "The GPM-API config file has not been specified. Use gpm_api.define_configs to specify it !"
         )
     # Read the GPM-API config file
-    config_dict = _read_yaml_file(fpath)
+    config_dict = read_yaml(fpath)
     return config_dict
 
 

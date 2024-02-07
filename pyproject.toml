@@ -42,6 +42,7 @@ dependencies = [
     "h5py", # TO DISCARD IN FUTURE
     "netcdf4",
     "dask",
+    "distributed",
     "tqdm",
     "click",
     "donfig",

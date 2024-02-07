@@ -145,15 +145,31 @@ def is_grid(xr_obj):
 
 
 def check_is_orbit(xr_obj):
-    "Check is a GPM orbit object."
+    "Check is a GPM ORBIT object."
     if not is_orbit(xr_obj):
         raise ValueError("Expecting a GPM ORBIT object.")
 
 
 def check_is_grid(xr_obj):
-    "Check is a GPM grid object."
+    "Check is a GPM GRID object."
     if not is_grid(xr_obj):
         raise ValueError("Expecting a GPM GRID object.")
+
+
+def check_is_gpm_object(xr_obj):
+    "Check is a GPM object (GRID or ORBIT)."
+    if not is_orbit(xr_obj) and not is_grid(xr_obj):
+        raise ValueError("Unrecognized GPM xarray object.")
+
+
+def check_has_cross_track_dimension(xr_obj):
+    if "cross_track" not in xr_obj.dims:
+        raise ValueError("The 'cross-track' dimension is not available.")
+
+
+def check_has_along_track_dimension(xr_obj):
+    if "along_track" not in xr_obj.dims:
+        raise ValueError("The 'along_track' dimension is not available.")
 
 
 def _is_spatial_2d_datarray(da, strict):
