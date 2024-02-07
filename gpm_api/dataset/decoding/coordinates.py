@@ -17,6 +17,8 @@ from gpm_api.utils.yaml import read_yaml
 def ensure_valid_coords(ds, raise_error=False):
     from gpm_api import config
 
+    # TODO: MOVE WARNING TO FINALIZE_DATASET
+
     # invalid_coords = np.logical_or(ds["lon"].data == -9999.9,
     #                                ds["lat"].data == -9999.9)
     invalid_coords = np.logical_or(
@@ -25,7 +27,7 @@ def ensure_valid_coords(ds, raise_error=False):
     )
     if np.any(invalid_coords):
         # Raise error or add warning
-        msg = "Invalid coordinate in the granule."
+        msg = "Invalid geographic coordinate in the granule."
         if raise_error:
             raise ValueError(msg)
         else:
