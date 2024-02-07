@@ -8,19 +8,10 @@ from gpm_api.utils import checks as gpm_checks
 
 def create_fake_datetime_array_from_hours_list(hours: Union[list, np.ndarray]) -> np.ndarray:
     """Convert list of integers and NaNs into a np.datetime64 array"""
-
-    datetimes = []
-    for hour in hours:
-        if np.isnan(hour):
-            datetimes.append(np.datetime64("NaT"))
-        else:
-            datetimes.append(
-                np.datetime64(
-                    datetime.datetime(2020, 12, 31, 0, 0, 0) + datetime.timedelta(hours=int(hour))
-                )
-            )
-
-    return np.array(datetimes)
+    start_time = np.array(["2020-12-31 00:00:00"]).astype("M8[ns]")
+    hours = np.array(hours).astype("m8[h]")
+    time = start_time + hours
+    return time
 
 
 def get_time_range(start_hour: int, end_hour: int) -> np.ndarray:

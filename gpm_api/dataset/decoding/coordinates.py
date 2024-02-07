@@ -11,7 +11,7 @@ import warnings
 import numpy as np
 
 from gpm_api.utils.warnings import GPM_Warning
-from gpm_api.utils.yaml import read_yaml_file
+from gpm_api.utils.yaml import read_yaml
 
 
 def ensure_valid_coords(ds, raise_error=False):
@@ -107,7 +107,7 @@ def get_pmw_frequency_dict():
     from gpm_api import _root_path
 
     fpath = os.path.join(_root_path, "gpm_api", "etc", "pmw_frequency.yml")
-    return read_yaml_file(fpath)
+    return read_yaml(fpath)
 
 
 @functools.lru_cache(maxsize=None)

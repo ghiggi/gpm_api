@@ -19,11 +19,11 @@ def compute_list_delayed(list_delayed, max_concurrent_tasks=None):
     list: List of computed results.
     """
     if max_concurrent_tasks is None:
-        computed_results = dask.compute(*list_delayed)
-    else:
-        computed_results = []
-        for i in range(0, len(list_delayed), max_concurrent_tasks):
-            subset_delayed = list_delayed[i : (i + max_concurrent_tasks)]
-            computed_results.extend(dask.compute(*subset_delayed))
+        return dask.compute(*list_delayed)
 
+    max_concurrent_tasks = min(len(list_delayed), max_concurrent_tasks)
+    computed_results = []
+    for i in range(0, len(list_delayed), max_concurrent_tasks):
+        subset_delayed = list_delayed[i : (i + max_concurrent_tasks)]
+        computed_results.extend(dask.compute(*subset_delayed))
     return computed_results
