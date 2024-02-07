@@ -670,7 +670,7 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
 
 
 def get_slices_non_valid_geolocation(xr_obj):
-    """Return a list of along-track slices with non-valid geolocation.
+    """Return a list of GPM ORBIT along-track slices with non-valid geolocation.
 
     The minimum size of the output slices is 2.
 
@@ -737,7 +737,7 @@ def has_valid_geolocation(xr_obj):
 
 
 def apply_on_valid_geolocation(function):
-    """A decorator that apply the get_slices_<function> only on portions
+    """A decorator that apply the get_slices_<function> only on portions of GPM ORBIT objects
     with valid geolocation."""
 
     @functools.wraps(function)
@@ -819,7 +819,7 @@ def _get_non_wobbling_lats(lats, threshold=100):
 
 @apply_on_valid_geolocation
 def get_slices_non_wobbling_swath(xr_obj, threshold=100):
-    """Return the along-track slices along which the swath is not wobbling.
+    """Return the GPM ORBIT along-track slices along which the swath is not wobbling.
 
     For wobbling, we define the occurrence of changes in latitude directions
     in less than `threshold` scans.
@@ -842,7 +842,7 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
 
 @apply_on_valid_geolocation
 def get_slices_wobbling_swath(xr_obj, threshold=100):
-    """Return the along-track slices along which the swath is wobbling.
+    """Return the GPM ORBIT along-track slices along which the swath is wobbling.
 
     For wobbling, we define the occurrence of changes in latitude directions
     in less than `threshold` scans.
