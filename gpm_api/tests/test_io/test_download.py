@@ -214,6 +214,187 @@ class TestDownloadUtility:
             # Assuming the second command fails, its status should be 0
             assert status_list[1] == 0, "Status for failing command should be 0"
 
+    @pytest.mark.parametrize("verbose", [True, False])
+    @pytest.mark.parametrize("progress_bar", [True, False])
+    @pytest.mark.parametrize("n_threads", [0, 1, 20])  # Test for n_threads > n_commands
+    def test_run(self, mocker: MockerFixture, verbose, progress_bar, n_threads) -> None:
+        """Test run function."""
+
+        commands = [
+            "echo 'Hello, World!'",
+            "exit 1",
+        ]  # subprocess.run("exit 1", shell=True).returncode --> 1
+        expected_status = [0, 1]
+
+        mock_get_cmds = mocker.patch.object(
+            dl, "_get_commands_futures", autospec=True, return_value=[]
+        )
+        mock_status_cmds = mocker.patch.object(
+            dl, "_get_list_status_commands", autospec=True, return_value=expected_status
+        )
+
+        if progress_bar:
+            mock_tqdm = mocker.patch("tqdm.tqdm")
+
+        status = dl.run(commands, progress_bar=True)
+        assert status == expected_status
+
+        # Assert called
+        if n_threads >= 1 and progress_bar:
+            mock_get_cmds.assert_called()
+            mock_status_cmds.assert_called()
+
+        # Assert tqdm is called
+        if progress_bar:
+            mock_tqdm.assert_called_once_with(total=len(commands))
+
+
+class TestGetFpathsFromFnames:
+    """Test get_fpaths_from_fnames function"""
+
+    filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
+
+    def test_local(
+        self,
+        mock_configuration: Dict[str, str],
+    ) -> None:
+        assert dl.get_fpaths_from_fnames(
+            filepaths=[self.filename],
+            storage="local",
+            product_type="RS",
+        ) == [
+            os.path.join(
+                mock_configuration["gpm_base_dir"],
+                "GPM",
+                "RS",
+                "V07",
+                "RADAR",
+                "2A-DPR",
+                "2020",
+                "07",
+                "05",
+                self.filename,
+            )
+        ]
+
+    def test_pps(self) -> None:
+        assert dl.get_fpaths_from_fnames(
+            filepaths=[self.filename],
+            storage="pps",
+            product_type="RS",
+        ) == [f"ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/{self.filename}"]
+
+    def test_ges_disc(self) -> None:
+        assert dl.get_fpaths_from_fnames(
+            filepaths=[self.filename],
+            storage="ges_disc",
+            product_type="RS",
+        ) == [
+            f"https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L2/GPM_2ADPR.07/2020/187/{self.filename}"
+        ]
+
+    def test_invalid_filename(self) -> None:
+        with pytest.raises(ValueError):
+            dl.get_fpaths_from_fnames(
+                filepaths=["invalid_filename"],
+                storage="local",
+                product_type="RS",
+            )
+
+
+def test_download_files(
+    remote_filepaths: Dict[str, Dict[str, Any]],
+    versions: List[str],
+    mocker: MockerFixture,
+) -> None:
+    """Test download_files function"""
+
+    # Mock called functions as to not download any data
+    mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
+    mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
+    mocker.patch.object(dl, "run", autospec=True, return_value=None)
+    mocker.patch.object(dl, "check_filepaths_integrity", autospec=True, return_value=[])
+
+    # Download a simple list of files
+    assert dl.download_files(filepaths=list(remote_filepaths.keys())) == []
+
+    # Test that None filepaths returns None
+    assert dl.download_files(filepaths=None) is None
+
+    # Test that an empty list of filepaths returns None
+    assert dl.download_files(filepaths=[]) is None
+
+    # Test that a single filepath as a string also accepted as input
+    assert dl.download_files(filepaths=list(remote_filepaths.keys())[0]) == []
+
+    # Test that filetypes other than a list are not accepted
+    with pytest.raises(TypeError):
+        for obj in [(), {}, 1, 1.0, "str", True]:
+            dl.download_files(filepaths=obj)
+
+    # Test data already on disk (force_download=False)
+    mocker.patch.object(dl, "filter_download_list", autospec=True, return_value=([], []))
+    assert dl.download_files(filepaths=list(remote_filepaths.keys())) == None
+
+
+def test_check_download_status(
+    products: List[str],
+) -> None:
+    """Test check_download_status function"""
+
+    for product in products:
+        assert dl._check_download_status([-1, -1, -1], product, True) is True  # All already on disk
+        assert dl._check_download_status([0, 0, 0], product, True) is None  # All failed download
+        assert dl._check_download_status([1, 1, 1], product, True) is True  # All success download
+        assert dl._check_download_status([], product, True) is None  # No data available
+        assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
+
+
+@pytest.mark.parametrize("storage", ["pps", "ges_disc"])
+def test_download_daily_data_private(
+    tmpdir: str,
+    versions: List[str],
+    products: List[str],
+    product_types: List[str],
+    mocker: MockerFixture,
+    storage: str,
+) -> None:
+    """Test download_daily_data function
+
+    Tests only the ability for the function to run without errors. Does not
+    test the actual download process as communication with the server is
+    mocked.
+    """
+    # TODO: this currently test only behaviour when no files available !!!
+    # --> mock find_daily_filepaths and get_fpaths_from_fnames to return valid paths !
+    # --> mock filter_download_list (force True or False) to return something or nothing !
+
+    # Patch download functions as to not actually download anything
+    mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
+    mocker.patch.object(dl, "run", autospec=True, return_value=None)
+    mocker.patch.object(dl, "find_daily_filepaths", autospec=True, return_value=([], versions))
+
+    # Mocking empty responses will cause a DownloadWarning. Test that it is raised
+    with pytest.warns(GPMDownloadWarning):
+        for version in versions:
+            for product_type in product_types:
+                for product in available_products(product_types=product_type):
+                    dl._download_daily_data(
+                        storage=storage,
+                        date=datetime.datetime(2022, 9, 7, 12, 0, 0),
+                        version=version,
+                        product=product,
+                        product_type=product_type,
+                        start_time=None,
+                        end_time=None,
+                        n_threads=4,
+                        transfer_tool="curl",
+                        progress_bar=True,
+                        force_download=False,
+                        verbose=True,
+                        warn_missing_files=True,
+                    )
+
 
 class TestDownloadArchive:
     @pytest.fixture(autouse=True)
@@ -223,11 +404,11 @@ class TestDownloadArchive:
         remote_filepaths: Dict[str, Dict[str, Any]],
         versions: List[str],
     ) -> None:
+        from gpm_api.io import info
+
         mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
         mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
         mocker.patch.object(dl, "run", autospec=True, return_value=None)
-        from gpm_api.io import info, pps
-
         mocker.patch.object(
             info,
             "_get_info_from_filename",
@@ -251,7 +432,7 @@ class TestDownloadArchive:
 
     @pytest.mark.parametrize("check_integrity", [True, False])
     @pytest.mark.parametrize("remove_corrupted", [True, False])
-    def test_download_data(
+    def test_download_data_with_no_data_available(
         self,
         check,  # For non-failing asserts
         products: List[str],
@@ -269,7 +450,6 @@ class TestDownloadArchive:
         It may be useful as boilerplate to increase the number of tests here in the
         future.
         """
-        # Assume files pass file integrity check by mocking return as empty
         for product_type in product_types:
             for product in available_products(product_types=product_type):
                 start_time = get_product_start_time(product)
@@ -305,6 +485,26 @@ class TestDownloadArchive:
             start_time=start_time,
             end_time=end_time,
         )
+
+
+def test_download_daily_data(mocker: MockerFixture):
+    """Test download_daily_data."""
+    # Patch download functions as to not actually download anything
+    mocker.patch.object(dl, "download_archive", autospec=True, return_value=[])
+    l_corrupted = dl.download_daily_data(product="dummy", year=2012, month=2, day=1)
+    assert l_corrupted == []
+
+
+def test_download_monthly_data(mocker: MockerFixture):
+    """Test download_monhtly_data."""
+    # Patch download functions as to not actually download anything
+    mocker.patch.object(dl, "download_archive", autospec=True, return_value=[])
+    l_corrupted = dl.download_monthly_data(
+        product="dummy",
+        year=2012,
+        month=2,
+    )
+    assert l_corrupted == []
 
 
 @pytest.mark.parametrize("verbose", [True, False])
@@ -362,170 +562,3 @@ def test_ensure_archive_completness(
         progress_bar=True,
     )
     assert l_corrupted == filepaths
-
-
-@pytest.mark.parametrize("storage", ["pps", "ges_disc"])
-def test_download_daily_data_private(
-    tmpdir: str,
-    versions: List[str],
-    products: List[str],
-    product_types: List[str],
-    mocker: MockerFixture,
-    storage: str,
-) -> None:
-    """Test download_daily_data function
-
-    Tests only the ability for the function to run without errors. Does not
-    test the actual download process as communication with the server is
-    mocked.
-    """
-    # TODO: this currently test only behaviour when no files available !!!
-    # --> mock find_daily_filepaths and get_fpaths_from_fnames to return valid paths !
-    # --> mock filter_download_list (force True or False) to return something or nothing !
-
-    # Patch download functions as to not actually download anything
-    mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
-    mocker.patch.object(dl, "run", autospec=True, return_value=None)
-    mocker.patch.object(dl, "find_daily_filepaths", autospec=True, return_value=([], versions))
-
-    # Mocking empty responses will cause a DownloadWarning. Test that it is raised
-    with pytest.warns(GPMDownloadWarning):
-        for version in versions:
-            for product_type in product_types:
-                for product in available_products(product_types=product_type):
-                    dl._download_daily_data(
-                        storage=storage,
-                        date=datetime.datetime(2022, 9, 7, 12, 0, 0),
-                        version=version,
-                        product=product,
-                        product_type=product_type,
-                        start_time=None,
-                        end_time=None,
-                        n_threads=4,
-                        transfer_tool="curl",
-                        progress_bar=True,
-                        force_download=False,
-                        verbose=True,
-                        warn_missing_files=True,
-                    )
-
-
-def test_download_files(
-    remote_filepaths: Dict[str, Dict[str, Any]],
-    versions: List[str],
-    mocker: MockerFixture,
-) -> None:
-    """Test download_files function"""
-
-    # Mock called functions as to not download any data
-    mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
-    mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
-    mocker.patch.object(dl, "run", autospec=True, return_value=None)
-    mocker.patch.object(dl, "check_filepaths_integrity", autospec=True, return_value=[])
-
-    # Download a simple list of files
-    assert dl.download_files(filepaths=list(remote_filepaths.keys())) == []
-
-    # Test that None filepaths returns None
-    assert dl.download_files(filepaths=None) is None
-
-    # Test that an empty list of filepaths returns None
-    assert dl.download_files(filepaths=[]) is None
-
-    # Test that a single filepath as a string also accepted as input
-    assert dl.download_files(filepaths=list(remote_filepaths.keys())[0]) == []
-
-    # Test that filetypes other than a list are not accepted
-    with pytest.raises(TypeError):
-        for obj in [(), {}, 1, 1.0, "str", True]:
-            dl.download_files(filepaths=obj)
-
-    # Test data already on disk (force_download=False)
-    mocker.patch.object(dl, "filter_download_list", autospec=True, return_value=([], []))
-    assert dl.download_files(filepaths=list(remote_filepaths.keys())) == None
-
-
-def test_check_download_status(
-    products: List[str],
-) -> None:
-    """Test check_download_status function"""
-
-    for product in products:
-        assert dl._check_download_status([-1, -1, -1], product, True) is True  # All already on disk
-        assert dl._check_download_status([0, 0, 0], product, True) is None  # All failed download
-        assert dl._check_download_status([1, 1, 1], product, True) is True  # All success download
-        assert dl._check_download_status([], product, True) is None  # No data available
-        assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
-
-
-def test_download_daily_data(mocker: MockerFixture):
-    """Test download_daily_data."""
-    # Patch download functions as to not actually download anything
-    mocker.patch.object(dl, "download_archive", autospec=True, return_value=[])
-    l_corrupted = dl.download_daily_data(product="dummy", year=2012, month=2, day=1)
-    assert l_corrupted == []
-
-
-def test_download_monthly_data(mocker: MockerFixture):
-    """Test download_monhtly_data."""
-    # Patch download functions as to not actually download anything
-    mocker.patch.object(dl, "download_archive", autospec=True, return_value=[])
-    l_corrupted = dl.download_monthly_data(
-        product="dummy",
-        year=2012,
-        month=2,
-    )
-    assert l_corrupted == []
-
-
-class TestGetFpathsFromFnames:
-    """Test get_fpaths_from_fnames function"""
-
-    filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
-
-    def test_local(
-        self,
-        mock_configuration: Dict[str, str],
-    ) -> None:
-        assert dl.get_fpaths_from_fnames(
-            filepaths=[self.filename],
-            storage="local",
-            product_type="RS",
-        ) == [
-            os.path.join(
-                mock_configuration["gpm_base_dir"],
-                "GPM",
-                "RS",
-                "V07",
-                "RADAR",
-                "2A-DPR",
-                "2020",
-                "07",
-                "05",
-                self.filename,
-            )
-        ]
-
-    def test_pps(self) -> None:
-        assert dl.get_fpaths_from_fnames(
-            filepaths=[self.filename],
-            storage="pps",
-            product_type="RS",
-        ) == [f"ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/{self.filename}"]
-
-    def test_ges_disc(self) -> None:
-        assert dl.get_fpaths_from_fnames(
-            filepaths=[self.filename],
-            storage="ges_disc",
-            product_type="RS",
-        ) == [
-            f"https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L2/GPM_2ADPR.07/2020/187/{self.filename}"
-        ]
-
-    def test_invalid_filename(self) -> None:
-        with pytest.raises(ValueError):
-            dl.get_fpaths_from_fnames(
-                filepaths=["invalid_filename"],
-                storage="local",
-                product_type="RS",
-            )
