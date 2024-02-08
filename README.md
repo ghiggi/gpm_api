@@ -133,7 +133,9 @@ To discover all GPM-API download, manipulation, analysis and plotting utilities,
 GPM-API can be installed via [conda][conda_link] on Linux, Mac, and Windows.
 Install the package by typing the following command in the terminal:
 
-    conda install gpm-api
+```bash
+conda install gpm-api
+```
 
 In case conda-forge is not set up for your system yet, see the easy to follow instructions on [conda-forge][conda_forge_link].
 
@@ -146,7 +148,9 @@ If you can't solve the problems and install cartopy with pip, you should install
 
 Then, install the GPM-API package by typing the following command in the terminal:
 
-    pip install gpm-api
+```bash
+pip install gpm-api
+```
 
 To install the latest development version via pip, see the [documentation][doc_install_link].
 

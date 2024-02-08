@@ -17,7 +17,7 @@ import pytz
 import pandas as pd
 from typing import List, Dict, Any
 from gpm_api.io import checks
-from gpm_api.io.products import available_products, available_scan_modes, available_versions
+from gpm_api.io.products import available_products, available_scan_modes, available_product_versions
 
 
 def test_check_base_dir() -> None:
@@ -311,12 +311,87 @@ def test_check_product_level(
     # Test a product_level that does exist
     for product_level in product_levels:
         assert product_level == checks.check_product_level(product_level)
-    # Should run without raising Exception
 
     # Test a product_level that doesn't exist
     for product_level in ["NOT", "A", "LEVEL"]:
         with pytest.raises(ValueError):
             checks.check_product_level(product_level)
+
+
+def test_check_full_product_level(
+    full_product_levels: List[str],
+) -> None:
+    """Test check_full_product_level()"""
+
+    # Test types that aren't strings
+    for product_level in [123, None]:
+        with pytest.raises(ValueError):
+            checks.check_product_level(product_level)
+
+    # Test a product_level that does exist
+    for product_level in full_product_levels:
+        assert product_level == checks.check_full_product_level(product_level)
+
+    # Test a product_level that doesn't exist
+    for product_level in ["NOT", "A", "LEVEL"]:
+        with pytest.raises(ValueError):
+            checks.check_full_product_level(product_level)
+
+
+def test_check_sensor(
+    sensors: List[str],
+) -> None:
+    """Test check_sensor()"""
+
+    # Test types that aren't strings
+    for sensor in [123, None]:
+        with pytest.raises(ValueError):
+            checks.check_product_level(sensor)
+
+    # Test a sensor that does exist
+    for sensor in sensors:
+        assert sensor == checks.check_sensor(sensor)
+
+    # Test a sensor that doesn't exist
+    for sensor in ["NOT", "A", "SENSOR"]:
+        with pytest.raises(ValueError):
+            checks.check_sensor(sensor)
+
+
+def test_check_sensors(
+    sensors: List[str],
+) -> None:
+    """Test check_sensors()"""
+    assert sensors == checks.check_sensors(sensors)
+    assert [sensors[0]] == checks.check_sensors(sensors[0])
+
+
+def test_check_satellite(
+    satellites: List[str],
+) -> None:
+    """Test check_satellite()"""
+
+    # Test types that aren't strings
+    for satellite in [123, None]:
+        with pytest.raises(ValueError):
+            checks.check_satellite(satellite)
+
+    # Test a satellite that does exist
+    for satellite in satellites:
+        assert satellite == checks.check_satellite(satellite)
+
+    # Test a satellite that doesn't exist
+    for satellite in ["NOT", "A", "SATELLITE"]:
+        with pytest.raises(ValueError):
+            checks.check_satellite(satellite)
+
+
+def test_check_satellites(
+    satellites: List[str],
+) -> None:
+    """Test check_satellites()"""
+    assert satellites == checks.check_satellites(satellites)
+    assert [satellites[0]] == checks.check_satellites(satellites[0])
 
 
 def test_check_product_validity(
@@ -583,7 +658,7 @@ def test_check_scan_mode(
     """Check scan mode is valid"""
 
     for product in products:
-        for version in available_versions(product):
+        for version in available_product_versions(product):
             # Get available scan modes
             scan_modes = available_scan_modes(product, version)
 

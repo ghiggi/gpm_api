@@ -478,6 +478,7 @@ def test_find_filepaths(
     Since find_filepaths relies on find_daily_filepaths, we can mock
     find_daily_filepaths and only test some cases here.
     """
+    # TODO: test for all products?
 
     storage = "pps"
     version = 7
@@ -514,9 +515,9 @@ def test_find_filepaths(
     assert returned_filepaths == returned_filepaths_parallel
 
     # Check all find_daily_filepaths kwargs passed
-    returned_filepath = returned_filepaths[
-        -1
-    ]  # Take last filepath, because "verbose" is not passed to first date
+    returned_filepath = returned_filepaths[-1]
+
+    # Take last filepath, because "verbose" is not passed to first date
     assert f"storage:{storage}" in returned_filepath
     assert f"version:{version}" in returned_filepath
     assert f"product:{product}" in returned_filepath

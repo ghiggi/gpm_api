@@ -177,9 +177,9 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 
 
 ####--------------------------------------------------------------------------.
-############################################
-#### PPS and GES DISC Download Commands ####
-############################################
+#######################################
+#### Download Single File Commands ####
+#######################################
 
 
 def curl_pps_cmd(remote_filepath, local_filepath, username, password):
@@ -499,8 +499,7 @@ def download_files(
         If no corrupted files, returns an empty list.
     """
     # TODO list
-    # - providing inexisting file names currently behave as if the downloaded file
-    #   was corrupted
+    # - providing inexisting file names currently behave as if the downloaded file was corrupted
     # - we should provide better error messages
 
     # Check inputs
