@@ -173,6 +173,13 @@ class TestFilterFilepaths:
         )
         assert res == []
 
+    def test_bad_filepath(
+        self,
+    ) -> None:
+        # Test return []
+        res = filter_filepaths(filepaths=["bad_filepath"], product="1A-GMI")
+        assert res == []
+
 
 def test_filter_by_time(remote_filepaths: Dict[str, Dict[str, Any]]) -> None:
     """Test filter filepaths"""

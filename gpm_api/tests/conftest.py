@@ -43,20 +43,17 @@ def mock_configuration() -> Iterable[Dict[str, str]]:
 @pytest.fixture
 def product_types() -> List[str]:
     """Return a list of all product types from the info dict"""
-    product_types = []
-    for product, info_dict in get_info_dict().items():
-        product_types += info_dict["product_types"]
+    from gpm_api.io.products import get_available_product_types
 
-    product_types = list(set(product_types))  # Dedup list
-
-    return product_types
+    return get_available_product_types()
 
 
 @pytest.fixture
 def product_categories() -> List[str]:
     """Return a list of product categories from the info dict"""
+    from gpm_api.io.products import get_available_product_categories
 
-    return list(set([info_dict["product_category"] for info_dict in get_info_dict().values()]))
+    return get_available_product_categories()
 
 
 @pytest.fixture
@@ -65,6 +62,32 @@ def product_levels() -> List[str]:
     from gpm_api.io.products import get_available_product_levels
 
     return get_available_product_levels(full=False)  #  ["1A", "1B", "1C", "2A", "2B", "3B"]
+
+
+@pytest.fixture
+def full_product_levels() -> List[str]:
+    """Return a list of full product levels from the info dict"""
+    from gpm_api.io.products import get_available_product_levels
+
+    return get_available_product_levels(
+        full=True
+    )  # ["1A", "1B", "1C", "2A", "2A-CLIM", "2A-ENV", "2B", "3B-HHR""]
+
+
+@pytest.fixture
+def sensors() -> List[str]:
+    """Return a list of sensors from the info dict"""
+    from gpm_api.io.products import get_available_sensors
+
+    return get_available_sensors()  # ['AMSR2', 'AMSRE', 'AMSUB', 'ATMS', 'DPR', ...]
+
+
+@pytest.fixture
+def satellites() -> List[str]:
+    """Return a list of satellites from the info dict"""
+    from gpm_api.io.products import get_available_satellites
+
+    return get_available_satellites()  # ['GCOMW1', 'GPM', 'METOPA', 'METOPB',  'METOPC', ...]
 
 
 @pytest.fixture
@@ -175,7 +198,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "year": 2020,
             "month": 7,
             "day": 5,
-            "product": "1B-Ka",
+            "product": "1B-Ku",
             "product_category": "radar",
             "product_type": "RS",
             "start_time": datetime.datetime(2020, 7, 5, 23, 10, 0),
