@@ -22,7 +22,7 @@ from gpm_api.io.checks import (
     check_valid_time_request,
 )
 from gpm_api.io.filter import filter_filepaths
-from gpm_api.io.ges_disc import get_gesdisc_daily_filepaths
+from gpm_api.io.ges_disc import get_ges_disc_daily_filepaths
 from gpm_api.io.info import get_version_from_filepaths
 from gpm_api.io.local import get_local_daily_filepaths
 from gpm_api.io.pps import get_pps_daily_filepaths
@@ -55,7 +55,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
             verbose=verbose,
         )
     elif storage == "ges_disc":
-        filepaths = get_gesdisc_daily_filepaths(
+        filepaths = get_ges_disc_daily_filepaths(
             product=product,
             product_type=product_type,
             date=date,
