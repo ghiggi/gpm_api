@@ -18,6 +18,8 @@ import pandas as pd
 from typing import List, Dict, Any
 from gpm_api.io import checks
 from gpm_api.io.products import available_products, available_scan_modes, available_product_versions
+from pytest_mock.plugin import MockerFixture
+from subprocess import CalledProcessError
 
 
 def test_check_base_dir() -> None:
@@ -178,6 +180,26 @@ def test_check_remote_storage() -> None:
 
     with pytest.raises(TypeError):
         checks.check_remote_storage(123)
+
+
+def test_check_transfer_tool(mocker: MockerFixture):
+    """Test check_transfer_tool()"""
+    # Assert "curl" is available and return "curl"
+    transfer_tool = "curl"  # "wget" is not mandatory
+    assert checks.check_transfer_tool(transfer_tool=transfer_tool) == transfer_tool
+
+    # Test the function with an invalid transfer tool
+    invalid_tool = "invalid_tool"
+    with pytest.raises(ValueError) as exc_info:
+        checks.check_transfer_tool(transfer_tool=invalid_tool)
+    assert f"'{invalid_tool}' is an invalid 'transfer_tool'." in str(exc_info.value)
+
+    # Test the function with a valid transfer tool that is not installed
+    transfer_tool = "wget"
+    mocker.patch("subprocess.run", side_effect=CalledProcessError(1, [transfer_tool, "--version"]))
+    with pytest.raises(ValueError) as exc_info:
+        checks.check_transfer_tool(transfer_tool)
+    assert f"{transfer_tool.upper()} is not installed on your machine !" in str(exc_info.value)
 
 
 def test_check_version(
