@@ -91,13 +91,13 @@ def check_remote_storage(storage):
     return storage.lower()
 
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def check_transfer_tool(transfer_tool):
     """Check the transfer tool."""
     valid_transfer_tools = ["curl", "wget"]
     if transfer_tool not in valid_transfer_tools:
         raise ValueError(
-            f"{transfer_tool} is an invalid 'transfer_tool'. Valid values are {valid_transfer_tools}."
+            f"'{transfer_tool}' is an invalid 'transfer_tool'. Valid values are {valid_transfer_tools}."
         )
 
     # Check WGET or CURL is installed
