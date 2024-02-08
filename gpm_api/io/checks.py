@@ -4,7 +4,6 @@ Created on Sun Aug 14 20:02:18 2022
 @author: ghiggi
 """
 import datetime
-import functools
 import os
 import subprocess
 
@@ -91,7 +90,6 @@ def check_remote_storage(storage):
     return storage.lower()
 
 
-@functools.lru_cache(maxsize=None)
 def check_transfer_tool(transfer_tool):
     """Check the transfer tool."""
     valid_transfer_tools = ["curl", "wget"]

@@ -37,7 +37,7 @@ from gpm_api.io.data_integrity import (
     check_filepaths_integrity,
 )
 from gpm_api.io.find import find_daily_filepaths
-from gpm_api.io.ges_disc import define_gesdisc_filepath
+from gpm_api.io.ges_disc import define_ges_disc_filepath
 from gpm_api.io.info import get_info_from_filepath
 from gpm_api.io.local import define_local_filepath
 from gpm_api.io.pps import define_pps_filepath
@@ -374,7 +374,7 @@ def _get_func_filepath_definition(storage):
     dict_fun = {
         "local": define_local_filepath,
         "pps": define_pps_filepath,
-        "ges_disc": define_gesdisc_filepath,
+        "ges_disc": define_ges_disc_filepath,
     }
     func = dict_fun[storage]
     return func
