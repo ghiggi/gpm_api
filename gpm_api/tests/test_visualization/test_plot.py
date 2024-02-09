@@ -78,6 +78,39 @@ def get_test_name(
 # Tests ########################################################################
 
 
+def test_is_generator() -> None:
+    """Test the _is_generator function"""
+
+    def generator():
+        yield 1
+
+    assert plot.is_generator(generator())
+    assert plot.is_generator((i for i in range(10)))
+    assert not plot.is_generator([1, 2, 3])
+
+
+def test_preprocess_figure_args() -> None:
+    """Test the _preprocess_figure_args function"""
+
+    nothing = {}
+    something = {"": 0}
+
+    # Test with ax None
+    plot._preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=nothing)
+    plot._preprocess_figure_args(None, fig_kwargs=something, subplot_kwargs=nothing)
+    plot._preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=something)
+
+    # Test with ax not None
+    ax = plt.subplot()
+    plot._preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=nothing)
+
+    with pytest.raises(ValueError):
+        plot._preprocess_figure_args(ax, fig_kwargs=something, subplot_kwargs=nothing)
+
+    with pytest.raises(ValueError):
+        plot._preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=something)
+
+
 class TestGetExtent:
     """Test the get_extent function"""
 
@@ -197,6 +230,15 @@ class TestPlotMap:
 
         crs_proj = ccrs.Orthographic(0, -30)
         plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_nan(
+        self,
+        orbit_nan_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with NaN values at cross-track edges"""
+
+        plot.plot_map(orbit_nan_dataarray)
         save_and_check_figure(get_test_name(self))
 
     def test_grid(

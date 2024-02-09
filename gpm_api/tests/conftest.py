@@ -471,6 +471,19 @@ def orbit_pole_dataarray() -> xr.DataArray:
 
 
 @pytest.fixture(scope="function")
+def orbit_nan_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with NaNs cross-track edges"""
+
+    padding_size = 2
+
+    data = orbit_dataarray.data
+    data[0:padding_size, :] = float("nan")
+    data[-padding_size:, :] = float("nan")
+
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
 def grid_dataarray() -> xr.DataArray:
     """Create grid data array near 0 longitude and latitude"""
 
