@@ -58,8 +58,8 @@ def test_find_first_pps_granule_filepath(mocker: MockerFixture, filepaths, produ
         assert pps_filepath == "pps_filepath1"
 
 
-def TestGetPPSFileList():
-    def test_private_get_pps_file_list_success(self, mocker: MockerFixture):
+class TestGetPPSFileList:
+    def test_try_get_pps_file_list(self, mocker: MockerFixture):
         url = "http://example.com/products/"
 
         # Mock subprocess.Popen to simulate curl command success
@@ -71,10 +71,10 @@ def TestGetPPSFileList():
         mocker.patch.object(cfg, "get_pps_username", return_value="user", autospec=True)
         mocker.patch.object(cfg, "get_pps_password", return_value="pass", autospec=True)
 
-        filepaths = pps.__get_pps_file_list(url)
+        filepaths = pps._try_get_pps_file_list(url)
         assert filepaths == ["file1.txt", "file2.txt"], "File paths do not match expected output"
 
-    def test_private_get_pps_file_list_unavailable_server(self, mocker: MockerFixture):
+    def test_try_get_pps_file_list_unavailable_server(self, mocker: MockerFixture):
         url = "http://example.com/products/"
 
         # Mock subprocess.Popen to simulate server unavailability
@@ -86,12 +86,12 @@ def TestGetPPSFileList():
         mocker.patch.object(cfg, "get_pps_password", return_value="pass", autospec=True)
 
         with pytest.raises(ValueError) as excinfo:
-            pps.__get_pps_file_list(url)
+            pps._try_get_pps_file_list(url)
         assert "The PPS server is currently unavailable." in str(
             excinfo.value
         ), "Expected ValueError not raised for unavailable server"
 
-    def test_private_get_pps_file_list_no_data_found(self, mocker: MockerFixture):
+    def test_try_get_pps_file_list_no_data_found(self, mocker: MockerFixture):
         url = "http://example.com/products/"
 
         # Mock subprocess.Popen to simulate no data found on PPS
@@ -103,13 +103,13 @@ def TestGetPPSFileList():
         mocker.patch.object(cfg, "get_pps_password", return_value="pass", autospec=True)
 
         with pytest.raises(ValueError) as excinfo:
-            pps.__get_pps_file_list(url)
+            pps._try_get_pps_file_list(url)
         assert "No data found on PPS." in str(
             excinfo.value
         ), "Expected ValueError not raised for no data found"
 
     @pytest.mark.parametrize("verbose", [True, False])
-    def test_get_pps_file_list_success(self, mocker: MockerFixture, verbose):
+    def test_get_pps_file_list(self, mocker: MockerFixture, verbose):
         url = "http://example.com/products/"
         product = "2A-DPR"
         version = 6
@@ -118,7 +118,7 @@ def TestGetPPSFileList():
             "/gpmdata/2020/07/05/radar/file1.HDF5",
             "/gpmdata/2020/07/05/radar/file2.HDF5",
         ]
-        mocker.patch("pps.__get_pps_file_list", return_value=expected_filepaths)
+        mocker.patch.object(pps, "_try_get_pps_file_list", return_value=expected_filepaths)
 
         filepaths = pps._get_pps_file_list(url, product, date, version, verbose=verbose)
         assert filepaths == expected_filepaths, "File paths do not match expected output"
@@ -132,7 +132,7 @@ def TestGetPPSFileList():
         date = datetime.date(2020, 7, 5)
 
         mocker.patch.object(
-            pps, "__get_pps_file_list", side_effect=ValueError("No data found on PPS.")
+            pps, "_try_get_pps_file_list", side_effect=ValueError("No data found on PPS.")
         )
 
         filepaths = pps._get_pps_file_list(url, product, date, version, verbose=True)
@@ -140,7 +140,7 @@ def TestGetPPSFileList():
 
         captured = capsys.readouterr()
         assert (
-            f"No data found on PPS on date {date} for product {product} (V006)" in captured.out
+            f"No data found on PPS on date {date} for product {product}" in captured.out
         ), "Expected verbose message not printed"
 
     def test_unavailable_server(self, mocker: MockerFixture):
@@ -153,7 +153,7 @@ def TestGetPPSFileList():
 
         mocker.patch.object(
             pps,
-            "get_pps_file_list",
+            "_try_get_pps_file_list",
             side_effect=ValueError(
                 "The PPS server is currently unavailable. Sorry for the inconvenience."
             ),
@@ -172,7 +172,7 @@ def TestGetPPSFileList():
         version = 6
         date = datetime.date(2020, 7, 5)
 
-        mocker.patch.object(pps, "__get_pps_file_list", side_effect=Exception("Some new error."))
+        mocker.patch.object(pps, "_try_get_pps_file_list", side_effect=Exception("Some new error."))
         with pytest.raises(ValueError) as excinfo:
             pps._get_pps_file_list(url, product, date, version)
         assert "Undefined error." in str(

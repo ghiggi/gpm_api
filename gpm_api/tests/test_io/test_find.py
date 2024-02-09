@@ -105,7 +105,7 @@ class TestGetDailyFilepaths:
         self,
         mocker: MockerFixture,
     ) -> None:
-        """Mock gpm_api.io.pps.__get_pps_file_list, which uses curl to get a list of files"""
+        """Mock gpm_api.io.pps._try_get_pps_file_list, which uses curl to get a list of files"""
 
         def mocked_get_pps_file_list(url_product_dir: str) -> List[str]:
             # Remove the base URL, assuming they have the following format:
@@ -114,7 +114,7 @@ class TestGetDailyFilepaths:
             url_without_base = url_product_dir.split("/text")[1]
             return [f"{url_without_base}/{filename}" for filename in self.mock_filenames]
 
-        mocker.patch("gpm_api.io.pps.__get_pps_file_list", side_effect=mocked_get_pps_file_list)
+        mocker.patch("gpm_api.io.pps._try_get_pps_file_list", side_effect=mocked_get_pps_file_list)
 
     def test_pps_rs_version_7(
         self,

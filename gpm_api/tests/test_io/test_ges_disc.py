@@ -11,7 +11,7 @@ from pytest_mock.plugin import MockerFixture
 from gpm_api.io import ges_disc
 
 
-def _test_get_ges_disc_list_path():
+def test_get_ges_disc_list_path():
     """Test _get_ges_disc_list_path"""
     # Empty directory
     url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07/"
@@ -42,7 +42,7 @@ def _test_get_ges_disc_list_path():
     assert f"The requested url {url} was not found on the GES DISC server." == str(excinfo.value)
 
 
-def _test_define_ges_disc_filepath():
+def test_define_ges_disc_filepath():
     # Test request of NRT but not IMERG
     with pytest.raises(ValueError):
         ges_disc.define_ges_disc_filepath(

@@ -206,7 +206,7 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
 ############################
 
 
-def __get_pps_file_list(url_product_dir):
+def _try_get_pps_file_list(url_product_dir):
     # Retrieve GPM-API configs
     username = get_pps_username()
     password = get_pps_password()
@@ -254,7 +254,7 @@ def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
         Default is False. Whether to specify when data are not available for a specific date.
     """
     try:
-        filepaths = __get_pps_file_list(url_product_dir)
+        filepaths = _try_get_pps_file_list(url_product_dir)
     except Exception as e:
         # If url not exist, raise an error
         if "The PPS server is currently unavailable." in str(e):
