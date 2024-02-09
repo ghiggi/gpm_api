@@ -1,6 +1,7 @@
 import pytest
 import os
 import datetime
+import platform
 from typing import Any, List, Dict
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
@@ -269,11 +270,13 @@ def test_check_download_status(
         assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
 
 
+@pytest.mark.parametrize("transfer_tool", ["wget", "curl"])
 @pytest.mark.parametrize("storage", ["pps", "ges_disc"])
 def test__download_files(
     remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
     mocker: MockerFixture,
+    transfer_tool: str,
     storage: str,
 ) -> None:
     """Build curl/wget calls for download, but don't actually download anything
@@ -281,6 +284,8 @@ def test__download_files(
     Uses tmpdir to create a unique path for each test and mocker to mock the
     download function
     """
+    if platform.system() == "Windows" and transfer_tool == "wget":
+        return None
 
     # Don't actually download anything, so mock the run function
     mocker.patch.object(dl, "run", autospec=True, return_value=None)
@@ -296,23 +301,17 @@ def test__download_files(
             remote_filepaths=[remote_filepath],
             local_filepaths=[local_filepath],
             storage=storage,
-            transfer_tool="curl",
+            transfer_tool=transfer_tool,
         )
+
+    # Test non-existent transfer tool
+    with pytest.raises(ValueError):
         dl._download_files(
             remote_filepaths=[remote_filepath],
             local_filepaths=[local_filepath],
             storage=storage,
-            transfer_tool="wget",
+            transfer_tool="fake",
         )
-
-        # Use non-existent transfer tool
-        with pytest.raises(ValueError):
-            dl._download_files(
-                remote_filepaths=[remote_filepath],
-                local_filepaths=[local_filepath],
-                storage=storage,
-                transfer_tool="fake",
-            )
 
 
 def test_download_files(

@@ -16,7 +16,6 @@ from gpm_api.io.products import (
     _get_sensor_satellite_names,
     available_satellites,
     available_product_levels,
-    available_satellites,
     available_sensors,
     available_versions,
     available_product_categories,
