@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import shutil
 import sys
 
 # sys.path.insert(0, os.path.abspath(".."))
@@ -23,6 +24,21 @@ sys.path.insert(0, os.path.join(os.path.abspath("../.."), "gpm_api"))
 project = "gpm_api"
 copyright = "Gionata Ghiggi"
 author = "Gionata Ghiggi"
+
+
+# -- Copy Jupyter Notebook Tutorials------------------------------------------
+root_path = os.path.dirname(os.path.dirname(os.getcwd()))
+filenames = [
+    "tutorial_02_IMERG.ipynb",
+    "tutorial_02_PMW_1C.ipynb",
+    "tutorial_02_PMW_2A.ipynb",
+    "tutorial_02_RADAR_2A.ipynb",
+]
+for filename in filenames:
+    in_path = os.path.join(root_path, "tutorials", filename)
+    out_path = os.path.join(os.getcwd(), "tutorials", filename)
+    shutil.copyfile(in_path, out_path)
+
 
 # -- General configuration ---------------------------------------------------
 

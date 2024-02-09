@@ -14,19 +14,15 @@ Documentation
 .. toctree::
    :maxdepth: 2
 
-   installation
-   quickstart
-   contributors_guidelines
-   maintainers_guidelines
-   authors
-
-Tutorials and Examples
-======================
-
-.. toctree::
-   :maxdepth: 2
-
-   tutorials/download
+   00_introduction
+   01_theory
+   02_installation
+   03_quickstart
+   04_tutorials
+   05_advanced_tools
+   06_contributors_guidelines
+   07_maintainers_guidelines
+   08_authors
 
 
 API Reference
