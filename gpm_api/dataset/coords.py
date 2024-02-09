@@ -57,8 +57,8 @@ def get_grid_coords(dt, scan_mode):
     IMERG and GRID products does not have GranuleNumber!
     """
     attrs = decode_string(dt.attrs["FileHeader"])
-    lon = np.asanyarray(dt[scan_mode]["lon"])
-    lat = np.asanyarray(dt[scan_mode]["lat"])
+    lon = np.asanyarray(dt[scan_mode]["lon"].data)
+    lat = np.asanyarray(dt[scan_mode]["lat"].data)
     time = attrs["StartGranuleDateTime"][:-1]
     time = np.array(
         np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1

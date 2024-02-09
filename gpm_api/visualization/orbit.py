@@ -155,10 +155,11 @@ def _remove_invalid_outer_cross_track(xr_obj, x="lon"):
     lon = np.asanyarray(xr_obj[x].transpose("cross_track", "along_track"))
     isna = np.all(np.isnan(lon), axis=1)
     if isna[0] or isna[-1]:
-        # Find the index where the first False value occurs
-        start_index = np.argmax(isna is False)
+        is_valid = ~isna
+        # Find the index where coordinates start to be valid
+        start_index = np.argmax(is_valid)
         # Find the index where the first False value occurs (from the end)
-        end_index = len(isna) - np.argmax(isna[::-1] is False)
+        end_index = len(is_valid) - np.argmax(is_valid[::-1])
         # Define slice
         slc = slice(start_index, end_index)
         # Subset object

@@ -26,8 +26,9 @@ from gpm_api.utils.slices import (
     list_slices_union,
 )
 
-ORBIT_TIME_TOLERANCE = np.timedelta64(3, "s")
+ORBIT_TIME_TOLERANCE = np.timedelta64(5, "s")
 
+# TODO: maybe infer from time? <3 s for DPR, up to 5s per old PMW
 
 ####--------------------------------------------------------------------------.
 ##########################
@@ -205,7 +206,7 @@ def _is_regular_time(xr_obj, tolerance=None):
     timesteps = _get_timesteps(xr_obj)
     # Infer tolerance if not specified
     tolerance = _infer_time_tolerance(xr_obj) if tolerance is None else tolerance
-    #  # Identify if the next regular timestep is present
+    # Identify if the next regular timestep is present
     bool_arr = np.diff(timesteps) <= tolerance
     # Add True to last position
     bool_arr = np.append(bool_arr, True)
@@ -341,7 +342,9 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
     if n_discontinuous > 0:
         # Retrieve discontinuous timesteps interval
         timesteps = _get_timesteps(xr_obj)
-        list_discontinuous = [timesteps[slc] for slc in list_discontinuous_slices]
+        list_discontinuous = [
+            (timesteps[slc.start], timesteps[slc.stop - 1]) for slc in list_discontinuous_slices
+        ]
         first_problematic_timestep = list_discontinuous[0][0]
         # Print non-regular timesteps
         if verbose:
@@ -420,7 +423,7 @@ def _is_contiguous_scans(xr_obj):
     # - Use the smallest distance as reference
     # - Assumed to be non contiguous if separated by more than min_dist + half min_dist
     # - This fails if duplicated geolocation --> min_dist = 0
-    min_dist = min(dist_km)
+    min_dist = np.nanmin(dist_km)
     bool_arr = dist_km < (min_dist + min_dist / 2)
 
     ### Option 2
@@ -570,11 +573,8 @@ def check_contiguous_scans(xr_obj, verbose=True):
     if n_discontinuous > 0:
         # Retrieve discontinuous timesteps interval
         timesteps = _get_timesteps(xr_obj)
-        discontinuous_timestep_idx = [
-            slice(slc.start - 1, slc.stop) for slc in list_discontinuous_slices
-        ]
         list_discontinuous = [
-            (timesteps[slc][0], timesteps[slc][-1]) for slc in discontinuous_timestep_idx
+            (timesteps[slc.start], timesteps[slc.stop - 1]) for slc in list_discontinuous_slices
         ]
         first_problematic_timestep = list_discontinuous[0][0]
         # Print non-contiguous scans
@@ -582,8 +582,9 @@ def check_contiguous_scans(xr_obj, verbose=True):
             for start, stop in list_discontinuous:
                 print(f"- Missing scans between {start} and {stop}")
         # Raise error and highlight first non-contiguous scan
-        msg = f"There are {n_discontinuous} non-contiguous scans."
-        msg += f"The first occur at {first_problematic_timestep}."
+        msg = f"There are {n_discontinuous} non-contiguous scans. "
+        msg += f"The first occur at {first_problematic_timestep}. "
+        msg += "Use get_slices_contiguous_scans() to retrieve a list of contiguous slices."
         raise ValueError(msg)
 
 

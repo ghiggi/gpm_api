@@ -4,6 +4,7 @@ Created on Tue Jul 18 17:33:38 2023
 
 @author: ghiggi
 """
+import datetime
 import warnings
 
 from gpm_api.checks import (
@@ -28,23 +29,27 @@ EPOCH = "seconds since 1970-01-01 00:00:00"
 
 
 def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=False):
-    """Check time period start_time, end_time is covered.
+    """Check time period start_time, end_time is covered with a tolerance of 5 seconds.
 
     If raise_error=True, raise error if time period is not covered.
     If raise_error=False, it raise a GPM warning.
 
     """
+    # Define tolerance in seconds
+    tolerance = datetime.timedelta(seconds=5)
+
     # Get first and last timestep from xr.Dataset
     first_start = ds["time"].data[0].astype("M8[s]").tolist()
     last_end = ds["time"].data[-1].astype("M8[s]").tolist()
     # Check time period is covered
     msg = ""
-    if start_time and first_start > start_time:
-        msg = f"The dataset start at {first_start}, although the specified start_time is {start_time}."
-    if end_time and last_end < end_time:
-        msg1 = f"The dataset end_time {last_end} occurs before the specified end_time {end_time}."
+    if start_time and first_start - tolerance > start_time:
+        msg = f"The dataset start at {first_start}, although the specified start_time is {start_time}. "
+    if end_time and last_end + tolerance < end_time:
+        msg1 = f"The dataset end_time {last_end} occurs before the specified end_time {end_time}. "
         msg = msg[:-1] + "; and t" + msg1[1:] if msg != "" else msg1
     if msg != "":
+        msg += "Some granules may be missing!"
         if raise_error:
             raise ValueError(msg)
         else:

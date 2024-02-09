@@ -16,6 +16,7 @@ _CONFIG_DEFAULTS = {
     "warn_non_regular_timesteps": True,
     "warn_invalid_spatial_coordinates": True,
     "warn_multiple_product_versions": True,
+    "viz_hide_antimeridian_data": True,
 }
 
 _CONFIG_PATHS = []

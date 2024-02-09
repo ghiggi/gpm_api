@@ -168,7 +168,7 @@ def set_coordinates(ds, product, scan_mode):
 
     # Add range_id coordinate
     if "range" in list(ds.dims):
-        range_id = np.arange(ds.dims["range"])
+        range_id = np.arange(ds.sizes["range"])
         ds = ds.assign_coords({"gpm_range_id": ("range", range_id)})
 
     # Add wished coordinates

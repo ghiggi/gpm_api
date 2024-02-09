@@ -11,8 +11,9 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from matplotlib.collections import PolyCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+import gpm_api
 
 ### TODO: Add xarray + cartopy  (xr_carto) (xr_mpl)
 # _plot_cartopy_xr_imshow
@@ -76,56 +77,6 @@ def get_antimeridian_mask(lons, buffer=True):
     # Buffer by 1 in all directions to ensure edges not crossing the antimeridian
     mask = binary_dilation(mask)
     return mask
-
-
-def get_masked_cells_polycollection(x, y, arr, mask, plot_kwargs):
-    from scipy.ndimage import binary_dilation
-
-    from gpm_api.utils.area import _from_corners_to_bounds, _get_lonlat_corners, is_vertex_clockwise
-
-    # - Buffer mask by 1 to derive vertices of all masked QuadMesh
-    mask = binary_dilation(mask)
-
-    # - Get index of masked quadmesh
-    row_mask, col_mask = np.where(mask)
-
-    # - Retrieve values of masked cells
-    array = arr[row_mask, col_mask]
-
-    # - Retrieve QuadMesh corners (m+1 x n+1)
-    x_corners, y_corners = _get_lonlat_corners(x, y)
-
-    # - Retrieve QuadMesh bounds (m*n x 4)
-    x_bounds = _from_corners_to_bounds(x_corners)
-    y_bounds = _from_corners_to_bounds(y_corners)
-
-    # - Retrieve vertices of masked QuadMesh (n_masked, 4, 2)
-    x_vertices = x_bounds[row_mask, col_mask]
-    y_vertices = y_bounds[row_mask, col_mask]
-
-    vertices = np.stack((x_vertices, y_vertices), axis=2)
-
-    # Check that are counterclockwise oriented (check first vertex)
-    # TODO: this check should be updated to use pyresample.future.spherical
-    if is_vertex_clockwise(vertices[0, :, :]):
-        vertices = vertices[:, ::-1, :]
-
-    # - Define additional kwargs for PolyCollection
-    plot_kwargs = plot_kwargs.copy()
-    if "edgecolors" not in plot_kwargs:
-        plot_kwargs["edgecolors"] = "face"  # 'none'
-    if "linewidth" not in plot_kwargs:
-        plot_kwargs["linewidth"] = 0
-    plot_kwargs["antialiaseds"] = False  # to better plotting quality
-
-    # - Define PolyCollection
-    coll = PolyCollection(
-        verts=vertices,
-        array=array,
-        transform=ccrs.Geodetic(),
-        **plot_kwargs,
-    )
-    return coll
 
 
 def get_valid_pcolormesh_inputs(x, y, data, rgb=False):
@@ -327,26 +278,33 @@ def _plot_cartopy_pcolormesh(
         add_colorbar = False
 
     # - Mask cells crossing the antimeridian
-    # --> Here assume not invalid coordinates anymore
-    antimeridian_mask = get_antimeridian_mask(x, buffer=True)
-    is_crossing_antimeridian = np.any(antimeridian_mask)
-    if is_crossing_antimeridian:
-        if np.ma.is_masked(arr):
-            if rgb:
-                data_mask = np.broadcast_to(np.expand_dims(antimeridian_mask, axis=-1), arr.shape)
-                combined_mask = np.logical_or(data_mask, antimeridian_mask)
+    # --> Here we assume not invalid coordinates anymore
+    # --> Cartopy still bugs with several projections when data cross the antimeridian
+    # --> This flag can be unset with gpm_api.config.set({"viz_hide_antimeridian_data": False})
+    if gpm_api.config.get("viz_hide_antimeridian_data"):
+        antimeridian_mask = get_antimeridian_mask(x, buffer=True)
+        is_crossing_antimeridian = np.any(antimeridian_mask)
+        if is_crossing_antimeridian:
+            if np.ma.is_masked(arr):
+                if rgb:
+                    data_mask = np.broadcast_to(
+                        np.expand_dims(antimeridian_mask, axis=-1), arr.shape
+                    )
+                    combined_mask = np.logical_or(data_mask, antimeridian_mask)
+                else:
+                    combined_mask = np.logical_or(arr.mask, antimeridian_mask)
+                arr = np.ma.masked_where(combined_mask, arr)
             else:
-                combined_mask = np.logical_or(arr.mask, antimeridian_mask)
-            arr = np.ma.masked_where(combined_mask, arr)
-        else:
-            arr = np.ma.masked_where(antimeridian_mask, arr)
-        # Sanitize cmap bad color to avoid cartopy bug
-        if "cmap" in plot_kwargs:
-            cmap = plot_kwargs["cmap"]
-            bad = cmap.get_bad()
-            bad[3] = 0  # enforce to 0 (transparent)
-            cmap.set_bad(bad)
-            plot_kwargs["cmap"] = cmap
+                arr = np.ma.masked_where(antimeridian_mask, arr)
+
+            # Sanitize cmap bad color to avoid cartopy bug
+            # - TODO cartopy requires bad_color to be transparent ...
+            if "cmap" in plot_kwargs:
+                cmap = plot_kwargs["cmap"]
+                bad = cmap.get_bad()
+                bad[3] = 0  # enforce to 0 (transparent)
+                cmap.set_bad(bad)
+                plot_kwargs["cmap"] = cmap
 
     # - Add variable field with cartopy
     if not rgb:
@@ -357,32 +315,14 @@ def _plot_cartopy_pcolormesh(
             transform=ccrs.PlateCarree(),
             **plot_kwargs,
         )
-        # - Add PolyCollection of QuadMesh cells crossing the antimeridian
-        if is_crossing_antimeridian:
-            coll = get_masked_cells_polycollection(
-                x, y, arr.data, mask=antimeridian_mask, plot_kwargs=plot_kwargs
-            )
-            p.axes.add_collection(coll)
 
     # - Add RGB
     else:
         p = _plot_rgb_pcolormesh(x, y, arr, ax=ax, **plot_kwargs)
-        if is_crossing_antimeridian:
-            plot_kwargs["facecolors"] = arr.reshape((arr.shape[0] * arr.shape[1], arr.shape[2]))
-            coll = get_masked_cells_polycollection(
-                x, y, arr.data, mask=antimeridian_mask, plot_kwargs=plot_kwargs
-            )
-            p.axes.add_collection(coll)
-
-    # - Set the extent
-    # --> To be set in projection coordinates of crs !!!
-    #     lon/lat conversion to proj required !
-    # extent = get_extent(da, x="lon", y="lat")
-    # ax.set_extent(extent)
 
     # - Add colorbar
+    # --> TODO: set axis proportion in a meaningful way ...
     if add_colorbar:
-        # --> TODO: set axis proportion in a meaningful way ...
         _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     return p
 
@@ -417,66 +357,12 @@ def _plot_mpl_imshow(
     return p
 
 
-# def _get_colorbar_inset_axes_kwargs(p):
-#     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-
-#     colorbar_axes = p.colorbar.ax
-
-#     # Get the position and size of the colorbar axes in figure coordinates
-#     bbox = colorbar_axes.get_position()
-
-#     # Extract the width and height of the colorbar axes in figure coordinates
-#     width = bbox.x1 - bbox.x0
-#     height = bbox.y1 - bbox.y0
-
-#     # Get the location of the colorbar axes ('upper', 'lower', 'center', etc.)
-#     # This information will be used to set the 'loc' parameter of inset_axes
-#     loc = 'upper right'  # Modify this according to your preference
-
-#     # Get the transformation of the colorbar axes with respect to the image axes
-#     # This information will be used to set the 'bbox_transform' parameter of inset_axes
-#     bbox_transform = colorbar_axes.get_transform()
-
-#     # Calculate the coordinates of the colorbar axes relative to the image axes
-#     x0, y0 = bbox_transform.transform((bbox.x0, bbox.y0))
-#     x1, y1 = bbox_transform.transform((bbox.x1, bbox.y1))
-#     bbox_to_anchor = (x0, y0, x1 - x0, y1 - y0)
-
-
 def set_colorbar_fully_transparent(p):
-    # from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+    """Add a fully transparent colorbar.
 
-    # colorbar_axes = p.colorbar.ax
-
-    # # Get the position and size of the colorbar axes in figure coordinates
-    # bbox = colorbar_axes.get_position()
-
-    # # Extract the width and height of the colorbar axes in figure coordinates
-    # width = bbox.x1 - bbox.x0
-    # height = bbox.y1 - bbox.y0
-
-    # # Get the location of the colorbar axes ('upper', 'lower', 'center', etc.)
-    # # This information will be used to set the 'loc' parameter of inset_axes
-    # loc = 'upper right'  # Modify this according to your preference
-
-    # # Get the transformation of the colorbar axes with respect to the image axes
-    # # This information will be used to set the 'bbox_transform' parameter of inset_axes
-    # bbox_transform = colorbar_axes.get_transform()
-
-    # # Calculate the coordinates of the colorbar axes relative to the image axes
-    # x0, y0 = bbox_transform.transform((bbox.x0, bbox.y0))
-    # x1, y1 = bbox_transform.transform((bbox.x1, bbox.y1))
-    # bbox_to_anchor = (x0, y0, x1 - x0, y1 - y0)
-
-    # # Create the inset axes using the retrieved parameters
-    # inset_ax = inset_axes(p.axes,
-    #                       width=width,
-    #                       height=height,
-    #                       loc=loc,
-    #                       bbox_to_anchor=bbox_to_anchor,
-    #                       bbox_transform=p.axes.transAxes,
-    #                       borderpad=0)
-
+    This is useful for animation where the colorbar should
+    not always in all frames but the plot area must be fixed.
+    """
     # Get the position of the colorbar
     cbar_pos = p.colorbar.ax.get_position()
 

@@ -201,6 +201,8 @@ def is_vertex_clockwise(vertex):
     # TODO: use pyresample.future in future
     # --> Check elementwise?
     # https://stackoverflow.com/questions/9473570/polygon-vertices-clockwise-or-counterclockwise
+    # We should check on the sphere
+    # - pyresample boundary PR and spherical PR ... move in separate package?
     from pyresample import SwathDefinition
 
     is_clockwise = SwathDefinition._corner_is_clockwise(

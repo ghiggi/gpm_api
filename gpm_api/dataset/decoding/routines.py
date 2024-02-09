@@ -38,7 +38,7 @@ def decode_variables(ds, product):
     # if ds.attrs.get("TotalQualityCode"):
     #     TotalQualityCode = ds.attrs.get("TotalQualityCode")
     #     ds["TotalQualityCode"] = xr.DataArray(
-    #         np.repeat(TotalQualityCode, ds.dims["along_track"]), dims=["along_track"]
+    #         np.repeat(TotalQualityCode, ds.sizes["along_track"]), dims=["along_track"]
     #     )
 
     return ds
