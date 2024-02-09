@@ -52,6 +52,7 @@ def save_and_check_figure(
     # Remove temporary file if comparison was successful
     tmp_file.close()
     os.remove(tmp_file.name)
+    plt.close()
 
 
 def get_test_name(
@@ -232,13 +233,40 @@ class TestPlotMap:
         plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(get_test_name(self))
 
-    def test_orbit_nan(
+    def test_orbit_nan_cross_track(
         self,
-        orbit_nan_dataarray: xr.DataArray,
+        orbit_nan_cross_track_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with NaN values at cross-track edges"""
 
-        plot.plot_map(orbit_nan_dataarray)
+        plot.plot_map(orbit_nan_cross_track_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_nan_along_track(
+        self,
+        orbit_nan_along_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with NaN values at along-track edges"""
+
+        plot.plot_map(orbit_nan_along_track_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_nan_lon(
+        self,
+        orbit_nan_lon_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with some NaN longitudes"""
+
+        plot.plot_map(orbit_nan_lon_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_nan_lat(
+        self,
+        orbit_nan_lat_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with some NaN latitudes"""
+
+        plot.plot_map(orbit_nan_lat_dataarray)
         save_and_check_figure(get_test_name(self))
 
     def test_grid(

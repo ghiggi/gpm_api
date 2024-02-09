@@ -471,14 +471,53 @@ def orbit_pole_dataarray() -> xr.DataArray:
 
 
 @pytest.fixture(scope="function")
-def orbit_nan_dataarray(orbit_dataarray) -> xr.DataArray:
-    """Create orbit data array near 0 longitude and latitude with NaNs cross-track edges"""
+def orbit_nan_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with NaN cross-track edges"""
 
     padding_size = 2
 
     data = orbit_dataarray.data
     data[0:padding_size, :] = float("nan")
     data[-padding_size:, :] = float("nan")
+
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
+def orbit_nan_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with NaN along-track edges"""
+
+    padding_size = 2
+
+    data = orbit_dataarray.data
+    data[:, 0:padding_size] = float("nan")
+    data[:, -padding_size:] = float("nan")
+
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
+def orbit_nan_lon_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with some NaN longitudes (along-track)"""
+
+    along_track_index = 5
+    padding_size = 2
+
+    lon = orbit_dataarray["lon"]
+    lon[:, along_track_index : along_track_index + padding_size] = float("nan")
+
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
+def orbit_nan_lat_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with some NaN latitudes (along-track)"""
+
+    along_track_index = 10
+    padding_size = 2
+
+    lat = orbit_dataarray["lat"]
+    lat[:, along_track_index : along_track_index + padding_size] = float("nan")
 
     return orbit_dataarray
 
