@@ -116,7 +116,7 @@ class TestGetExtent:
 
     def test_orbit(
         self,
-        orbit_dataarray: xr.Dataset,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test getting the extent of orbit data"""
 
@@ -187,7 +187,7 @@ class TestPlotMap:
 
     def test_orbit(
         self,
-        orbit_dataarray: xr.Dataset,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
 
@@ -196,7 +196,7 @@ class TestPlotMap:
 
     def test_orbit_antimeridian(
         self,
-        orbit_antimeridian_dataarray: xr.Dataset,
+        orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian"""
 
@@ -205,7 +205,7 @@ class TestPlotMap:
 
     def test_orbit_antimeridian_projection(
         self,
-        orbit_antimeridian_dataarray: xr.Dataset,
+        orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian on orthographic projection"""
 
@@ -215,7 +215,7 @@ class TestPlotMap:
 
     def test_orbit_pole(
         self,
-        orbit_pole_dataarray: xr.Dataset,
+        orbit_pole_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the south pole"""
 
@@ -224,7 +224,7 @@ class TestPlotMap:
 
     def test_orbit_pole_projection(
         self,
-        orbit_pole_dataarray: xr.Dataset,
+        orbit_pole_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the south pole on orthographic projection"""
 
@@ -274,7 +274,7 @@ class TestPlotImage:
 
     def test_orbit(
         self,
-        orbit_dataarray: xr.Dataset,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
 
@@ -305,7 +305,7 @@ class TestPlotMapMesh:
 
     def test_orbit(
         self,
-        orbit_dataarray: xr.Dataset,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
 
@@ -314,7 +314,7 @@ class TestPlotMapMesh:
 
     def test_orbit_antimeridian(
         self,
-        orbit_antimeridian_dataarray: xr.Dataset,
+        orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian"""
 
@@ -323,7 +323,7 @@ class TestPlotMapMesh:
 
     def test_orbit_antimeridian_projection(
         self,
-        orbit_antimeridian_dataarray: xr.Dataset,
+        orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian on orthographic projection"""
 
@@ -333,7 +333,7 @@ class TestPlotMapMesh:
 
     def test_orbit_pole(
         self,
-        orbit_pole_dataarray: xr.Dataset,
+        orbit_pole_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the south pole"""
 
@@ -342,7 +342,7 @@ class TestPlotMapMesh:
 
     def test_orbit_pole_projection(
         self,
-        orbit_pole_dataarray: xr.Dataset,
+        orbit_pole_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the south pole on orthographic projection"""
 
@@ -370,7 +370,7 @@ class TestPlotMapMesh:
 
 
 def test_plot_map_mesh_centroids(
-    orbit_dataarray: xr.Dataset,
+    orbit_dataarray: xr.DataArray,
 ) -> None:
     plot.plot_map_mesh_centroids(orbit_dataarray)
     save_and_check_figure(get_test_name())
