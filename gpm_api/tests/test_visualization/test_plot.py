@@ -251,23 +251,52 @@ class TestPlotMap:
         plot.plot_map(orbit_nan_along_track_dataarray)
         save_and_check_figure(get_test_name(self))
 
-    def test_orbit_nan_lon(
+    def test_orbit_nan_lon_cross_track(
         self,
-        orbit_nan_lon_dataarray: xr.DataArray,
+        orbit_nan_lon_cross_track_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting orbit data with some NaN longitudes"""
+        """Test plotting orbit data with some NaN longitudes cross-track"""
 
-        plot.plot_map(orbit_nan_lon_dataarray)
+        p = plot.plot_map(orbit_nan_lon_cross_track_dataarray)
+        assert type(p) == ValueError  # No regular scans available
+
+    def test_orbit_nan_lon_along_track(
+        self,
+        orbit_nan_lon_along_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with some NaN latitudes along-track"""
+
+        plot.plot_map(orbit_nan_lon_along_track_dataarray)
         save_and_check_figure(get_test_name(self))
 
-    def test_orbit_nan_lat(
+    def test_orbit_cbar_kwargs(
         self,
-        orbit_nan_lat_dataarray: xr.DataArray,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting orbit data with some NaN latitudes"""
+        """Test plotting orbit data with colorbar keyword arguments"""
 
-        plot.plot_map(orbit_nan_lat_dataarray)
+        cbar_kwargs = {"ticklabels": [42, 43, 44, 45, 46]}
+
+        plot.plot_map(orbit_dataarray, cbar_kwargs=cbar_kwargs)
         save_and_check_figure(get_test_name(self))
+
+    def test_orbit_rgb(
+        self,
+        orbit_rgb_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with RGB flag"""
+
+        plot.plot_map(orbit_rgb_dataarray, rgb=True)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_rgb_invalid(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with RGB flag on non RGB data"""
+
+        with pytest.raises(ValueError):
+            plot.plot_map(orbit_dataarray, rgb=True)
 
     def test_grid(
         self,
@@ -285,6 +314,15 @@ class TestPlotMap:
         """Test plotting grid data going over the antimeridian"""
 
         plot.plot_map(grid_antimeridian_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_grid_nan_lon(
+        self,
+        grid_nan_lon_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data with NaN longitudes"""
+
+        plot.plot_map(grid_nan_lon_dataarray)
         save_and_check_figure(get_test_name(self))
 
     def test_invalid(
@@ -394,6 +432,15 @@ class TestPlotMapMesh:
         """Test plotting grid data going over the antimeridian"""
 
         plot.plot_map_mesh(grid_antimeridian_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_grid_nan_lon(
+        self,
+        grid_nan_lon_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data with NaN longitudes"""
+
+        plot.plot_map_mesh(grid_nan_lon_dataarray)
         save_and_check_figure(get_test_name(self))
 
 

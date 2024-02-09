@@ -6,6 +6,7 @@ from gpm_api.utils import geospatial
 import posixpath as pxp
 import ntpath as ntp
 import gpm_api.configs
+import numpy as np
 import os
 from pytest_mock import MockerFixture
 from unittest.mock import patch
@@ -497,28 +498,39 @@ def orbit_nan_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
 
 
 @pytest.fixture(scope="function")
-def orbit_nan_lon_dataarray(orbit_dataarray) -> xr.DataArray:
-    """Create orbit data array near 0 longitude and latitude with some NaN longitudes (along-track)"""
+def orbit_nan_lon_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with some NaN longitudes (cross-track)"""
 
-    along_track_index = 5
-    padding_size = 2
+    cross_track_index = 1
+    missing_size = 2
 
     lon = orbit_dataarray["lon"]
-    lon[:, along_track_index : along_track_index + padding_size] = float("nan")
+    lon[cross_track_index : cross_track_index + missing_size, :] = float("nan")
 
     return orbit_dataarray
 
 
 @pytest.fixture(scope="function")
-def orbit_nan_lat_dataarray(orbit_dataarray) -> xr.DataArray:
-    """Create orbit data array near 0 longitude and latitude with some NaN latitudes (along-track)"""
+def orbit_nan_lon_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with some NaN longitudes (along-track)"""
 
-    along_track_index = 10
-    padding_size = 2
+    along_track_index = 5
+    missing_size = 2
 
-    lat = orbit_dataarray["lat"]
-    lat[:, along_track_index : along_track_index + padding_size] = float("nan")
+    lon = orbit_dataarray["lon"]
+    lon[:, along_track_index : along_track_index + missing_size] = float("nan")
 
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
+def orbit_rgb_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with RGB data"""
+
+    np.random.seed(0)
+
+    orbit_dataarray = orbit_dataarray.expand_dims(dim={"rgb": 3}, axis=2)
+    orbit_dataarray.data = np.random.rand(*orbit_dataarray.shape)
     return orbit_dataarray
 
 
@@ -548,3 +560,17 @@ def grid_antimeridian_dataarray() -> xr.DataArray:
         n_lon=20,
         n_lat=15,
     )
+
+
+@pytest.fixture(scope="function")
+def grid_nan_lon_dataarray(grid_dataarray) -> xr.DataArray:
+    """Create grid data array near 0 longitude and latitude with some NaN longitudes"""
+
+    lon_index = 5
+    missing_size = 2
+
+    lon = grid_dataarray["lon"].data.copy()
+    lon[lon_index : lon_index + missing_size] = float("nan")
+    grid_dataarray["lon"] = lon
+
+    return grid_dataarray

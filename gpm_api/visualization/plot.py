@@ -281,7 +281,7 @@ def _plot_rgb_pcolormesh(x, y, image, ax, **kwargs):
     Matplotlib, cartopy and xarray pcolormesh currently does not support RGB(A) arrays.
     This is a temporary workaround !
     """
-    if image.shape[2] not in [3, 4]:
+    if len(image.shape) < 3 or image.shape[2] not in [3, 4]:
         raise ValueError("Expecting RGB or RGB(A) arrays.")
 
     colorTuple = image.reshape((image.shape[0] * image.shape[1], image.shape[2]))
