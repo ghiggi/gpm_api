@@ -71,6 +71,16 @@ def test_get_start_end_time_from_filepaths(
         assert [info_dict["end_time"]] == generated_end_time
 
 
+def test_get_product_from_filepaths(
+    remote_filepaths: Dict[str, Dict[str, Any]],
+) -> None:
+    """Test get_product_from_filepaths"""
+
+    for remote_filepath, info_dict in remote_filepaths.items():
+        product = info.get_product_from_filepaths(remote_filepath)
+        assert [info_dict["product"]] == product
+
+
 def test_invalid_filepaths():
     with pytest.raises(ValueError):
         info.get_info_from_filepath("invalid_filepath")

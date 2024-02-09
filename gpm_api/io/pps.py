@@ -356,4 +356,5 @@ def find_first_pps_granule_filepath(product: str, product_type: str, version: in
     )
     if len(pps_filepaths) == 0:
         raise ValueError(f"No PPS files found for {product} product around {start_time}.")
+    pps_filepaths = sorted(pps_filepaths)
     return pps_filepaths[0]

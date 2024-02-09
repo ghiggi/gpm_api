@@ -5,6 +5,7 @@ Created on Sun Aug 14 20:02:18 2022
 """
 import datetime
 import os
+import subprocess
 
 import numpy as np
 
@@ -73,7 +74,7 @@ def check_storage(storage):
         raise TypeError("'storage' must be a string.")
     valid_storages = ["ges_disc", "pps", "local"]
     if storage.lower() not in valid_storages:
-        raise ValueError(f"{storage} is an invalid storage. Valid values are {valid_storages}.")
+        raise ValueError(f"{storage} is an invalid 'storage'. Valid values are {valid_storages}.")
     return storage.lower()
 
 
@@ -84,9 +85,31 @@ def check_remote_storage(storage):
     valid_storages = ["ges_disc", "pps"]
     if storage.lower() not in valid_storages:
         raise ValueError(
-            f"{storage} is an invalid remote storage. Valid values are {valid_storages}."
+            f"'{storage}' is an invalid remote 'storage'. Valid values are {valid_storages}."
         )
     return storage.lower()
+
+
+def check_transfer_tool(transfer_tool):
+    """Check the transfer tool."""
+    valid_transfer_tools = ["curl", "wget"]
+    if transfer_tool not in valid_transfer_tools:
+        raise ValueError(
+            f"'{transfer_tool}' is an invalid 'transfer_tool'. Valid values are {valid_transfer_tools}."
+        )
+
+    # Check WGET or CURL is installed
+    try:
+        # Attempt to run `wget --version` to check if wget is available
+        subprocess.run(
+            [transfer_tool, "--version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+    except Exception:
+        raise ValueError(f"{transfer_tool.upper()} is not installed on your machine !")
+    return transfer_tool
 
 
 def check_product(product, product_type):
@@ -102,15 +125,15 @@ def check_product(product, product_type):
 
 def check_product_version(version, product):
     """Check valid version for the specified product."""
-    from gpm_api.io.products import available_versions, get_last_product_version
+    from gpm_api.io.products import available_product_versions, get_last_product_version
 
     if version is None:
         version = get_last_product_version(product)
     version = check_version(version)
     # Check valid version for such product
-    valid_versions = available_versions(product)
+    valid_versions = available_product_versions(product)
     if version not in valid_versions:
-        raise ValueError(f"Valid versions for product {product} are {valid_versions}.")
+        raise ValueError(f"Valid versions for product '{product}' are {valid_versions}.")
     return version
 
 
@@ -121,11 +144,11 @@ def check_product_validity(product, product_type=None):
     if product not in available_products(product_types=product_type):
         if product_type is None:
             raise ValueError(
-                f"The {product} product is not available. See gpm_api.available_products()."
+                f"The '{product}' product is not available. See gpm_api.available_products()."
             )
         else:
             raise ValueError(
-                f"The {product} product is not available as {product_type} product_type."
+                f"The '{product}' product is not available as '{product_type}' product_type."
             )
     return product
 
@@ -203,12 +226,12 @@ def check_start_end_time(start_time, end_time):
 
     # Check start_time and end_time are chronological
     if start_time > end_time:
-        raise ValueError("Provide start_time occurring before of end_time.")
+        raise ValueError("Provide 'start_time' occurring before of 'end_time'.")
     # Check start_time and end_time are in the past
     if start_time > datetime.datetime.utcnow():
-        raise ValueError("Provide a start_time occurring in the past.")
+        raise ValueError("Provide a 'start_time' occurring in the past.")
     if end_time > datetime.datetime.utcnow():
-        raise ValueError("Provide a end_time occurring in the past.")
+        raise ValueError("Provide a 'end_time' occurring in the past.")
     return (start_time, end_time)
 
 
@@ -240,7 +263,7 @@ def check_scan_mode(scan_mode, product, version):
         raise ValueError("Specify a single 'scan_mode'.")
     # Check that a valid scan mode is specified
     if scan_mode is not None and scan_mode not in scan_modes:
-        raise ValueError(f"For {product} product, valid scan_modes are {scan_modes}.")
+        raise ValueError(f"For {product} product, valid 'scan_modes' are {scan_modes}.")
     return scan_mode
 
 
@@ -252,10 +275,10 @@ def check_product_type(product_type):
     from gpm_api.io.products import get_available_product_types  # circular otherwise
 
     if not isinstance(product_type, str):
-        raise ValueError("Please specify the product_type as a string.")
+        raise ValueError("Please specify the 'product_type' as a string.")
     valid_values = get_available_product_types()
     if product_type not in valid_values:
-        raise ValueError("Please specify the product_type as 'RS' or 'NRT'.")
+        raise ValueError("Please specify the 'product_type' as 'RS' or 'NRT'.")
     return product_type
 
 
@@ -264,11 +287,11 @@ def check_product_category(product_category):
     from gpm_api.io.products import get_available_product_categories  # circular otherwise
 
     if not isinstance(product_category, str):
-        raise ValueError("Please specify the product_category as a string.")
+        raise ValueError("Please specify the 'product_category' as a string.")
     valid_values = get_available_product_categories()  #  ['CMB', 'IMERG', 'PMW', 'RADAR']
     if product_category not in valid_values:
         raise ValueError(
-            f"{product_category} is an invalid product_category. Valid values are {valid_values}."
+            f"'{product_category}' is an invalid 'product_category'. Valid values are {valid_values}."
         )
     return product_category
 
@@ -278,11 +301,11 @@ def check_product_level(product_level):
     from gpm_api.io.products import get_available_product_levels  # circular otherwise
 
     if not isinstance(product_level, str):
-        raise ValueError("Please specify the product_level as a string.")
+        raise ValueError("Please specify the 'product_level' as a string.")
     valid_values = get_available_product_levels(full=False)
     if product_level not in valid_values:
         raise ValueError(
-            f"{product_level} is an invalid product_level. Currently accepted values are {valid_values}."
+            f"'{product_level}' is an invalid 'product_level'. Currently accepted values are {valid_values}."
         )
     return product_level
 
@@ -292,7 +315,7 @@ def check_version(version):
     from gpm_api.io.products import get_available_versions  # circular otherwise
 
     if not isinstance(version, int):
-        raise ValueError("Please specify the GPM version with an integer between 5 and 7.")
+        raise ValueError("Please specify the GPM 'version' with an integer between 5 and 7.")
     valid_values = get_available_versions()
     if version not in valid_values:
         raise ValueError("GPM-API currently supports only GPM versions 5, 6 and 7.")
@@ -308,7 +331,7 @@ def check_full_product_level(full_product_level):
     valid_values = get_available_product_levels(full=True)
     if full_product_level not in valid_values:
         raise ValueError(
-            f"{full_product_level} is an invalid full_product_level. Currently accepted values are {valid_values}."
+            f"'{full_product_level}' is an invalid 'full_product_level'. Currently accepted values are {valid_values}."
         )
     return full_product_level
 
@@ -317,10 +340,13 @@ def check_sensor(sensor):
     """Check sensor validity."""
     from gpm_api.io.products import get_available_sensors
 
+    if not isinstance(sensor, str):
+        raise ValueError("Please specify the 'sensor' as a string.")
+
     valid_sensors = get_available_sensors()
     if sensor not in valid_sensors:
         raise ValueError(
-            f"{sensor} is not an available sensor. Available sensors are {valid_sensors}."
+            f"'{sensor}' is not an available 'sensor'. Available sensors are {valid_sensors}."
         )
     return sensor
 
@@ -329,10 +355,13 @@ def check_satellite(satellite):
     """Check satellite validity."""
     from gpm_api.io.products import get_available_satellites
 
+    if not isinstance(satellite, str):
+        raise ValueError("Please specify the 'satellite' as a string.")
+
     valid_satellites = get_available_satellites()
     if satellite not in valid_satellites:
         raise ValueError(
-            f"{satellite} is not an available satellite. Available satellite are {valid_satellites}."
+            f"'{satellite}' is not an available 'satellite'. Available satellite are {valid_satellites}."
         )
     return satellite
 

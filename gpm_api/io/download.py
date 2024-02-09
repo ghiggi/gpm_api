@@ -29,6 +29,7 @@ from gpm_api.io.checks import (
     check_product_version,
     check_remote_storage,
     check_start_end_time,
+    check_transfer_tool,
     check_valid_time_request,
 )
 from gpm_api.io.data_integrity import (
@@ -36,7 +37,7 @@ from gpm_api.io.data_integrity import (
     check_filepaths_integrity,
 )
 from gpm_api.io.find import find_daily_filepaths
-from gpm_api.io.ges_disc import define_gesdisc_filepath
+from gpm_api.io.ges_disc import define_ges_disc_filepath
 from gpm_api.io.info import get_info_from_filepath
 from gpm_api.io.local import define_local_filepath
 from gpm_api.io.pps import define_pps_filepath
@@ -75,91 +76,6 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 # --retry-max-time 60*10: total time before it's considered failed
 # --connect-timeout 20: limits time curl spend trying to connect to the host to 20 secs
 # -o : write to file instead of stdout
-
-####--------------------------------------------------------------------------.
-############################################
-#### PPS and GES DISC Download Commands ####
-############################################
-
-
-def curl_pps_cmd(remote_filepath, local_filepath, username, password):
-    """CURL command to download data from PPS through ftps."""
-    # Check disk directory exists (if not, create)
-    local_dir = os.path.dirname(local_filepath)
-    if not os.path.exists(local_dir):
-        os.makedirs(local_dir)
-
-    # Replace ftps with ftp to make curl work !!!
-    # - curl expects ftp:// and not ftps://
-    remote_filepath = remote_filepath.replace("ftps://", "ftp://", 1)
-
-    # Define CURL command
-    # - Base cmd: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
-    # - With curl > 7.71 the flag -k (or --insecure) is required  to avoid unauthorized access
-    # - Define authentication settings
-    auth = (
-        f"--ipv4 --insecure -n --user {username}:{password} --ftp-ssl --header 'Connection: close'"
-    )
-    # - Define options
-    options = "--connect-timeout 20 --retry 5 --retry-delay 10"  # --verbose
-    # - Define command
-    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
-    return cmd
-
-
-def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=None):
-    """CURL command to download data from GES DISC."""
-    # - Define authentication settings
-    auth = "-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
-    # - Define options
-    options = "--connect-timeout 20 --retry 5 --retry-delay 10"
-    # - Define command
-    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
-    return cmd
-
-
-def wget_pps_cmd(remote_filepath, local_filepath, username, password):
-    """WGET command to download data from PPS through ftps."""
-    # Check disk directory exists (if not, create)
-    local_dir = os.path.dirname(local_filepath)
-    if not os.path.exists(local_dir):
-        os.makedirs(local_dir)
-
-    ## Define WGET command
-    # - Base cmd: wget -4 --ftp-user=[user name] –-ftp-password=[password] -O
-    # - Define authentication settings
-    auth = f"-4 --ftp-user={username} --ftp-password={password} -e robots=off"
-    # - Define options
-    options = "-np -R .html,.tmp -nH -c --read-timeout=10 --tries=5"
-    # - Define command
-    cmd = f"wget {auth} {options} -O {local_filepath} {remote_filepath}"
-    return cmd
-
-
-def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
-    """WGET command to download data from GES DISC."""
-    # Define path to EarthData urs_cookies
-    urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
-
-    # Define authentication settings
-    auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
-
-    # Define wget options
-    options = "-c --read-timeout=10 --tries=5 -nH -np --content-disposition"
-
-    # Determine the operating system
-    os_name = platform.system()
-
-    # Define command
-    if os_name == "Windows":
-        window_options = f"--user={username} --ask-password"
-        cmd = f"wget {auth} {options} {window_options} {remote_filepath} -O {local_filepath}"
-    elif os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
-        cmd = f"wget {auth} {options} {remote_filepath} -O {local_filepath}"
-    else:
-        raise ValueError(f"Unsupported OS: {os_name}")
-    return cmd
-
 
 ####--------------------------------------------------------------------------.
 ##########################
@@ -206,7 +122,7 @@ def _get_list_status_commands(dict_futures, pbar=None):
 
     pbar is a tqdm progress bar.
     """
-    # TODO: maybe here capture (with -1) if the file does not exists !¨
+    # TODO maybe here capture (with -1) if the file does not exists !¨
     n_futures = len(dict_futures)
     status = [1] * n_futures
     for future in as_completed(dict_futures.keys()):
@@ -260,6 +176,95 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
     return status
 
 
+####--------------------------------------------------------------------------.
+#######################################
+#### Download Single File Commands ####
+#######################################
+
+
+def curl_pps_cmd(remote_filepath, local_filepath, username, password):
+    """CURL command to download data from PPS through ftps."""
+    # Check disk directory exists (if not, create)
+    local_dir = os.path.dirname(local_filepath)
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
+
+    # Replace ftps with ftp to make curl work !!!
+    # - curl expects ftp:// and not ftps://
+    remote_filepath = remote_filepath.replace("ftps://", "ftp://", 1)
+
+    # Define CURL command
+    # - Base cmd: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
+    # - With curl > 7.71 the flag -k (or --insecure) is required  to avoid unauthorized access
+    # - Define authentication settings
+    auth = (
+        f"--ipv4 --insecure -n --user {username}:{password} --ftp-ssl --header 'Connection: close'"
+    )
+    # - Define options
+    options = "--connect-timeout 20 --retry 5 --retry-delay 10"  # --verbose
+    # - Define command
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
+    return cmd
+
+
+def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=None):
+    """CURL command to download data from GES DISC."""
+    urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
+
+    # - Define authentication settings
+    auth = f"-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
+    # - Define options
+    options = "--connect-timeout 20 --retry 5 --retry-delay 10"
+    # - Define command
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
+    return cmd
+
+
+def wget_pps_cmd(remote_filepath, local_filepath, username, password):
+    """WGET command to download data from PPS through ftps."""
+    # Check disk directory exists (if not, create)
+    local_dir = os.path.dirname(local_filepath)
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
+
+    ## Define WGET command
+    # - Base cmd: wget -4 --ftp-user=[user name] –-ftp-password=[password] -O
+    # - Define authentication settings
+    auth = f"-4 --ftp-user={username} --ftp-password={password} -e robots=off"
+    # - Define options
+    options = "-np -R .html,.tmp -nH -c --read-timeout=10 --tries=5"
+    # - Define command
+    cmd = f"wget {auth} {options} -O {local_filepath} {remote_filepath}"
+    return cmd
+
+
+def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
+    """WGET command to download data from GES DISC."""
+    # Define path to EarthData urs_cookies
+    urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
+
+    # Define authentication settings
+    auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
+
+    # Define wget options
+    options = "-c --read-timeout=10 --tries=5 -nH -np --content-disposition"
+
+    # Determine the operating system
+    os_name = platform.system()
+
+    # Define command
+    if os_name == "Windows":
+        window_options = f"--user={username} --ask-password"
+        cmd = f"wget {auth} {options} {window_options} {remote_filepath} -O {local_filepath}"
+    else:  # os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
+        cmd = f"wget {auth} {options} {remote_filepath} -O {local_filepath}"
+    return cmd
+
+
+####--------------------------------------------------------------------------.
+#### GPM Download Utility
+
+
 def _get_single_file_cmd_function(transfer_tool, storage):
     """Return command definition function."""
     dict_fun = {
@@ -272,6 +277,22 @@ def _get_single_file_cmd_function(transfer_tool, storage):
     return func
 
 
+def _get_storage_username_password(storage):
+    """Retrieve username and password depending on the 'storage'."""
+    # Retrieve username and password
+    if storage == "pps":
+        username = get_pps_username()
+        password = get_pps_password()
+    else:
+        username = get_earthdata_username()
+        password = get_earthdata_password()
+    return username, password
+
+
+def _ensure_local_directories_exists(local_filepaths):
+    _ = [os.makedirs(os.path.dirname(path), exist_ok=True) for path in local_filepaths]
+
+
 def _download_files(
     remote_filepaths,
     local_filepaths,
@@ -281,18 +302,15 @@ def _download_files(
     progress_bar=True,
     verbose=False,
 ):
-    # Ensure destination directory exists
-    for fpath in local_filepaths:
-        if not os.path.exists(os.path.dirname(fpath)):
-            os.makedirs(os.path.dirname(fpath))
+    """Download a list of remote files to their GPM-API local file paths.
+
+    This function open a connection to the server for each file to download !.
+    """
+    transfer_tool = check_transfer_tool(transfer_tool)
+    _ensure_local_directories_exists(local_filepaths)
 
     # Retrieve username and password
-    if storage == "pps":
-        username = get_pps_username()
-        password = get_pps_password()
-    else:
-        username = get_earthdata_username()
-        password = get_earthdata_password()
+    username, password = _get_storage_username_password(storage)
 
     # Define command list
     get_single_file_cmd = _get_single_file_cmd_function(transfer_tool, storage)
@@ -301,7 +319,6 @@ def _download_files(
         for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
     ]
 
-    # -------------------------------------------------------------------------.
     ## Download the data (in parallel)
     status = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
     return status
@@ -339,9 +356,7 @@ def filter_download_list(remote_filepaths, local_filepaths, force_download=False
     if force_download is False:
         # Get index of files which does not exist on disk
         idx_not_existing = [
-            i
-            for i, local_filepath in enumerate(local_filepaths)
-            if not os.path.exists(local_filepath)
+            i for i, filepath in enumerate(local_filepaths) if not os.path.exists(filepath)
         ]
         # Select paths of files not present on disk
         local_filepaths = [local_filepaths[i] for i in idx_not_existing]
@@ -359,7 +374,7 @@ def _get_func_filepath_definition(storage):
     dict_fun = {
         "local": define_local_filepath,
         "pps": define_pps_filepath,
-        "ges_disc": define_gesdisc_filepath,
+        "ges_disc": define_ges_disc_filepath,
     }
     func = dict_fun[storage]
     return func
@@ -483,9 +498,8 @@ def download_files(
         List of corrupted file paths.
         If no corrupted files, returns an empty list.
     """
-    # TODO:
-    # - providing inexisting file names currently behave as if the downloaded file
-    #   was corrupted
+    # TODO list
+    # - providing inexisting file names currently behave as if the downloaded file was corrupted
     # - we should provide better error messages
 
     # Check inputs
@@ -703,6 +717,7 @@ def _download_daily_data(
     product_type = check_product_type(product_type=product_type)
     product = check_product(product=product, product_type=product_type)
     storage = check_remote_storage(storage)
+    transfer_tool = check_transfer_tool(transfer_tool)
     # -------------------------------------------------------------------------.
     ## Retrieve the list of files available on NASA PPS server
     remote_filepaths, available_version = find_daily_filepaths(
@@ -858,6 +873,7 @@ def download_archive(
     product_type = check_product_type(product_type=product_type)
     product = check_product(product=product, product_type=product_type)
     version = check_product_version(version, product)
+    transfer_tool = check_transfer_tool(transfer_tool)
     start_time, end_time = check_start_end_time(start_time, end_time)
     start_time, end_time = check_valid_time_request(start_time, end_time, product)
     # -------------------------------------------------------------------------.
