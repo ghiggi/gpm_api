@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-"""
-Created on Thu Aug  3 13:59:19 2023
-
-@author: ghiggi
-"""
-
-
 def get_encoding_dict():
     """Get encoding dictionary for 2A-<RADAR> products."""
     # --------------------------------------------------------------------------.
