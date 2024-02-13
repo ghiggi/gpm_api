@@ -827,13 +827,12 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
     The function extract the along-track boundary on both swath sides and
     identify where the change in orbit direction occurs.
     """
-
     from gpm_api.utils.slices import list_slices_intersection
 
-    # Assume lats, lons having shape (y, x) with x=along_track direction
-    swath_def = xr_obj.gpm_api.pyresample_area
-    lats_side0 = swath_def.lats[0, :]
-    lats_side2 = swath_def.lats[-1, :]
+    xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
+    lats = xr_obj["lat"].values
+    lats_side0 = lats[0, :]
+    lats_side2 = lats[-1, :]
     # Get valid slices
     list_slices1 = _get_non_wobbling_lats(lats_side0, threshold=threshold)
     list_slices2 = _get_non_wobbling_lats(lats_side2, threshold=threshold)

@@ -191,7 +191,7 @@ class TestDownloadUtility:
         if progress_bar:
             mock_tqdm = mocker.patch("tqdm.tqdm")
 
-        status = dl.run(commands, progress_bar=True)
+        status = dl.run(commands, progress_bar=progress_bar)
         assert status == expected_status
 
         # Assert called

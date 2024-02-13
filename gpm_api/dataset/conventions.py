@@ -18,7 +18,7 @@ from gpm_api.dataset.decoding.cf import apply_cf_decoding
 from gpm_api.dataset.decoding.coordinates import set_coordinates
 from gpm_api.dataset.decoding.dataarray_attrs import standardize_dataarrays_attrs
 from gpm_api.dataset.decoding.routines import decode_variables
-from gpm_api.utils.checks import is_regular
+from gpm_api.utils.checks import has_valid_geolocation, is_regular
 from gpm_api.utils.time import (
     ensure_time_validity,
     subset_by_time,
@@ -154,8 +154,7 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     # Warn if:
     # - non-contiguous scans in orbit data
     # - non-regular timesteps in grid data
-    # - invalid geolocation coordinates is checked already in ensure_valid_coords
-    #   --> SHOULD BE MOVED HERE !
+    # - invalid geolocation coordinates
     try:
         if is_grid(ds):
             if config.get("warn_non_contiguous_scans"):
@@ -163,6 +162,10 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
                     msg = "Missing timesteps across the dataset !"
                     warnings.warn(msg, GPM_Warning)
         elif is_orbit(ds):
+            if config.get("warn_invalid_geolocation"):
+                if not has_valid_geolocation(ds):
+                    msg = "Presence of invalid geolocation coordinates !"
+                    warnings.warn(msg, GPM_Warning)
             if config.get("warn_non_contiguous_scans"):
                 if not is_regular(ds):
                     msg = "Presence of non-contiguous scans !"

@@ -6,34 +6,21 @@ Created on Fri Jul 28 13:50:05 2023
 """
 import functools
 import os
-import warnings
 
 import numpy as np
 
-from gpm_api.utils.warnings import GPM_Warning
 from gpm_api.utils.yaml import read_yaml
 
 
 def ensure_valid_coords(ds, raise_error=False):
-    from gpm_api import config
-
-    # TODO: MOVE WARNING TO FINALIZE_DATASET
-
-    # invalid_coords = np.logical_or(ds["lon"].data == -9999.9,
-    #                                ds["lat"].data == -9999.9)
+    """Ensure geographic coordinates are within expected range."""
     invalid_coords = np.logical_or(
         np.logical_or(ds["lon"].data < -180, ds["lon"].data > 180),
         np.logical_or(ds["lat"].data < -90, ds["lat"].data > 90),
     )
     if np.any(invalid_coords):
-        # Raise error or add warning
-        msg = "Invalid geographic coordinate in the granule."
         if raise_error:
-            raise ValueError(msg)
-        else:
-            if config.get("warn_invalid_spatial_coordinates"):
-                warnings.warn(msg, GPM_Warning)
-
+            raise ValueError("Invalid geographic coordinate in the granule.")
         da_invalid_coords = ds["lon"].copy()
         da_invalid_coords.data = invalid_coords
         # For each variable, set NaN value where invalid coordinates

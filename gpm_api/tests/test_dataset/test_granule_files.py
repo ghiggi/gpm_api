@@ -21,7 +21,7 @@ gpm_api.config.set(
     {
         "warn_non_contiguous_scans": False,
         "warn_non_regular_timesteps": False,
-        "warn_invalid_spatial_coordinates": False,
+        "warn_invalid_geolocation": False,
     }
 )
 
