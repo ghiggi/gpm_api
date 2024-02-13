@@ -191,7 +191,7 @@ def _call_over_contiguous_scans(function):
             # - Get slices with contiguous scans and valid geolocation
             list_slices = get_slices_regular(da)
             if len(list_slices) == 0:
-                return ValueError("No regular scans available. Impossible to plot.")
+                raise ValueError("No regular scans available. Impossible to plot.")
         else:
             list_slices = [slice(0, None)]
 
@@ -342,7 +342,7 @@ def plot_orbit_mesh(
     # - Define plot_kwargs to display only the mesh
     plot_kwargs["facecolor"] = "none"
     plot_kwargs["alpha"] = 1
-    plot_kwargs["edgecolors"] = (edgecolors,)
+    plot_kwargs["edgecolors"] = (edgecolors,)  # Introduce bugs in Cartopy !
     plot_kwargs["linewidth"] = (linewidth,)
     plot_kwargs["antialiased"] = True
 
@@ -375,12 +375,6 @@ def plot_orbit_image(
     check_is_spatial_2d(da)
     check_contiguous_scans(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
-
-    # - Define default x and y
-    # if x is None:
-    #     x = "along_track"
-    # if y is None:
-    #     y = "cross_track"
 
     # - Initialize figure
     if ax is None:

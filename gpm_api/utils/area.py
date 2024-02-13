@@ -9,6 +9,10 @@ from dask.array import map_blocks
 ### SwathDefinition --> geographic coordinates --> computation in ECEF (xyz)
 ### AreaDefinition --> proj coordinates --> computation in projection space !
 
+# quadrilateral_corners / quadmesh
+# get_lonlat_corners
+# get_projection_corners
+
 
 def _infer_interval_breaks(coord, axis=0):
     """Infer the outer and inner midpoints of 2D coordinate arrays.

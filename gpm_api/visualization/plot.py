@@ -59,6 +59,27 @@ def get_antimeridian_mask(lons, buffer=True):
     """Get mask of longitude coordinates neighbors crossing the antimeridian."""
     from scipy.ndimage import binary_dilation
 
+    # Initialize mask
+    n_y, n_x = lons.shape
+    mask = np.zeros((n_y - 1, n_x - 1))
+    # Check vertical edges
+    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
+    col_idx = np.clip(col_idx - 1, 0, n_x - 1)
+    mask[row_idx, col_idx] = 1
+    # Check horizontal edges
+    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=1)) > 180)
+    row_idx = np.clip(row_idx - 1, 0, n_y - 1)
+    mask[row_idx, col_idx] = 1
+    # Buffer by 1 in all directions to avoid plotting cells neighbour to those crossing the antimeridian
+    # --> This should not be needed, but it's needed to avoid cartopy bugs !
+    mask = binary_dilation(mask)
+    return mask
+
+
+def get_antimeridian_mask_old(lons, buffer=True):
+    """Get mask of longitude coordinates neighbors crossing the antimeridian."""
+    from scipy.ndimage import binary_dilation
+
     # Check vertical edges
     row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
     row_idx_rev, col_idx_rev = np.where(np.abs(np.diff(lons[::-1, :], axis=0)) > 180)
@@ -264,20 +285,26 @@ def _plot_cartopy_pcolormesh(
     If rgb=True, expect rgb dimension to be at last position.
     x and y must represents longitude and latitudes.
     """
-    # - Get x, y, and array to plot
+    # Get x, y, and array to plot
     da = da.compute()
     x = da[x].data
     y = da[y].data
     arr = da.data
 
-    # - Infill invalid value and add mask if necessary
+    # Infill invalid value and add mask if necessary
     x, y, arr = get_valid_pcolormesh_inputs(x, y, arr, rgb=rgb)
 
-    # - Ensure arguments
+    # Ensure arguments
     if rgb:
         add_colorbar = False
 
-    # - Mask cells crossing the antimeridian
+    # Compute coordinates of cell corners for pcolormesh quadrilateral mesh
+    # - This enable correct masking of cells crossing the antimeridian
+    from gpm_api.utils.area import _get_lonlat_corners
+
+    x, y = _get_lonlat_corners(x, y)
+
+    # Mask cells crossing the antimeridian
     # --> Here we assume not invalid coordinates anymore
     # --> Cartopy still bugs with several projections when data cross the antimeridian
     # --> This flag can be unset with gpm_api.config.set({"viz_hide_antimeridian_data": False})
@@ -306,7 +333,7 @@ def _plot_cartopy_pcolormesh(
                 cmap.set_bad(bad)
                 plot_kwargs["cmap"] = cmap
 
-    # - Add variable field with cartopy
+    # Add variable field with cartopy
     if not rgb:
         p = ax.pcolormesh(
             x,
@@ -316,11 +343,11 @@ def _plot_cartopy_pcolormesh(
             **plot_kwargs,
         )
 
-    # - Add RGB
+    # Add RGB
     else:
         p = _plot_rgb_pcolormesh(x, y, arr, ax=ax, **plot_kwargs)
 
-    # - Add colorbar
+    # Add colorbar
     # --> TODO: set axis proportion in a meaningful way ...
     if add_colorbar:
         _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
