@@ -40,7 +40,7 @@ product = check_product(product=product, product_type=product_type)
 
 # -------------------------------------------------------------------------.
 ## Retrieve the list of files available on NASA PPS server
-(pps_fpaths, local_filepaths) = find_pps_daily_filepaths(
+(pps_filepaths, local_filepaths) = find_pps_daily_filepaths(
     product=product,
     product_type=product_type,
     version=version,
@@ -52,5 +52,5 @@ product = check_product(product=product, product_type=product_type)
 )
 
 # -------------------------------------------------------------------------.
-filter_by_time(pps_fpaths, date, start_time, end_time)
-filter_by_product(pps_fpaths, product=product)
+filter_by_time(pps_filepaths, date, start_time, end_time)
+filter_by_product(pps_filepaths, product=product)

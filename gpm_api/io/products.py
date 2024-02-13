@@ -69,8 +69,8 @@ def get_info_dict():
     """Get product info dictionary."""
     from gpm_api import _root_path
 
-    fpath = os.path.join(_root_path, "gpm_api", "etc", "product_def.yml")
-    return read_yaml(fpath)
+    filepath = os.path.join(_root_path, "gpm_api", "etc", "product_def.yml")
+    return read_yaml(filepath)
 
 
 def get_info_dict_subset(

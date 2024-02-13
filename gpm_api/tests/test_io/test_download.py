@@ -204,8 +204,8 @@ class TestDownloadUtility:
             mock_tqdm.assert_called_once_with(total=len(commands))
 
 
-class TestGetFpathsFromFnames:
-    """Test get_fpaths_from_fnames function"""
+class TestGetFpathsFromfilenames:
+    """Test get_filepaths_from_filenames function"""
 
     filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
 
@@ -213,7 +213,7 @@ class TestGetFpathsFromFnames:
         self,
         mock_configuration: Dict[str, str],
     ) -> None:
-        assert dl.get_fpaths_from_fnames(
+        assert dl.get_filepaths_from_filenames(
             filepaths=[self.filename],
             storage="local",
             product_type="RS",
@@ -233,14 +233,14 @@ class TestGetFpathsFromFnames:
         ]
 
     def test_pps(self) -> None:
-        assert dl.get_fpaths_from_fnames(
+        assert dl.get_filepaths_from_filenames(
             filepaths=[self.filename],
             storage="pps",
             product_type="RS",
         ) == [f"ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/{self.filename}"]
 
     def test_ges_disc(self) -> None:
-        assert dl.get_fpaths_from_fnames(
+        assert dl.get_filepaths_from_filenames(
             filepaths=[self.filename],
             storage="ges_disc",
             product_type="RS",
@@ -250,7 +250,7 @@ class TestGetFpathsFromFnames:
 
     def test_invalid_filename(self) -> None:
         with pytest.raises(ValueError):
-            dl.get_fpaths_from_fnames(
+            dl.get_filepaths_from_filenames(
                 filepaths=["invalid_filename"],
                 storage="local",
                 product_type="RS",
@@ -365,7 +365,7 @@ def test__download_daily_data(
     mocked.
     """
     # TODO: this currently test only behaviour when no files available !!!
-    # --> mock find_daily_filepaths and get_fpaths_from_fnames to return valid paths !
+    # --> mock find_daily_filepaths and get_filepaths_from_filenames to return valid paths !
     # --> mock filter_download_list (force True or False) to return something or nothing !
 
     # Patch download functions as to not actually download anything

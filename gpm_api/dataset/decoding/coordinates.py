@@ -95,8 +95,8 @@ def get_pmw_frequency_dict():
     """Get PMW info dictionary."""
     from gpm_api import _root_path
 
-    fpath = os.path.join(_root_path, "gpm_api", "etc", "pmw_frequency.yml")
-    return read_yaml(fpath)
+    filepath = os.path.join(_root_path, "gpm_api", "etc", "pmw_frequency.yml")
+    return read_yaml(filepath)
 
 
 @functools.lru_cache(maxsize=None)

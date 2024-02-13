@@ -40,7 +40,7 @@ def _get_parquet_file_list(bin_dir_path):
     return key, file_list
 
 
-def _get_fpaths_by_bin_parallel(list_bin_dir_path):
+def _get_filepaths_by_bin_parallel(list_bin_dir_path):
     """Retrieve a dictionary with the list of filepaths for each bucket bin."""
     import concurrent
 
@@ -60,12 +60,12 @@ def _get_fpaths_by_bin_parallel(list_bin_dir_path):
     return results
 
 
-def get_fpaths_by_bin(base_dir, parallel=True):
+def get_filepaths_by_bin(base_dir, parallel=True):
     """Retrieve a dictionary with the list of filepaths for each bucket bin."""
     list_bin_dir_path = _retrieve_list_bin_dir_path(base_dir)
     list_bin_dir_path = list_bin_dir_path
     if parallel:
-        results = _get_fpaths_by_bin_parallel(list_bin_dir_path)
+        results = _get_filepaths_by_bin_parallel(list_bin_dir_path)
     else:
         results = {}
         for bin_dir_path in list_bin_dir_path:

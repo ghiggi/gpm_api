@@ -52,10 +52,10 @@ variables = [
     "zFactorMeasured",  # just to get a 3D variable and do not discard "height"
     "zFactorFinal",
 ]
-fpath = "/home/ghiggi/data/GPM/RS/V07/RADAR/2A-DPR/2022/07/08/2A.GPM.DPR.V9-20211125.20220708-S164934-E182207.047495.V07A.HDF5"
+filepath = "/home/ghiggi/data/GPM/RS/V07/RADAR/2A-DPR/2022/07/08/2A.GPM.DPR.V9-20211125.20220708-S164934-E182207.047495.V07A.HDF5"
 variables = None
 
-ds = gpm_api.open_granule(fpath, variables=variables)
+ds = gpm_api.open_granule(filepath, variables=variables)
 
 ds.nbytes / (1024**3)  # 5GB in memory, on disk 790 MB
 
@@ -321,8 +321,8 @@ pprint.pprint(sort_dictionary_by_values(reading_time_dict), sort_dicts=False)
 import time
 
 t_i = time.time()
-fpath = "/tmp/uint_comp1_fillvalue0_shuffle_to_zarr.zarr"
-ds = xr.open_zarr(fpath).compute()
+filepath = "/tmp/uint_comp1_fillvalue0_shuffle_to_zarr.zarr"
+ds = xr.open_zarr(filepath).compute()
 t_f = time.time()
 print(t_f - t_i)
 
@@ -330,8 +330,8 @@ print(t_f - t_i)
 import time
 
 t_i = time.time()
-fpath = "/tmp/uint_comp1_fillvalue0_shuffle_to_zarr.zarr.zip"
-ds = xr.open_zarr(fpath).compute()
+filepath = "/tmp/uint_comp1_fillvalue0_shuffle_to_zarr.zarr.zip"
+ds = xr.open_zarr(filepath).compute()
 t_f = time.time()
 print(t_f - t_i)
 

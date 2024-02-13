@@ -387,17 +387,17 @@ def _define_filepath(
     storage,
 ):
     """Retrieve the filepath based on the filename."""
-    fpath = _get_func_filepath_definition(storage)(
+    filepath = _get_func_filepath_definition(storage)(
         product=product,
         product_type=product_type,
         date=date,
         version=version,
         filename=filename,
     )
-    return fpath
+    return filepath
 
 
-def get_fpath_from_fname(filename, storage, product_type):
+def get_filepath_from_filename(filename, storage, product_type):
     """Convert GPM file names to the <storage> file path."""
     # Retrieve the filename
     filename = os.path.basename(filename)
@@ -410,7 +410,7 @@ def get_fpath_from_fname(filename, storage, product_type):
     version = int(re.findall("\\d+", info["version"])[0])
     date = info["start_time"].date()
     # Retrieve filepath
-    fpath = _define_filepath(
+    filepath = _define_filepath(
         product=product,
         product_type=product_type,
         date=date,
@@ -418,10 +418,10 @@ def get_fpath_from_fname(filename, storage, product_type):
         filename=filename,
         storage=storage,
     )
-    return fpath
+    return filepath
 
 
-def get_fpaths_from_fnames(filepaths, storage, product_type):
+def get_filepaths_from_filenames(filepaths, storage, product_type):
     """
     Convert GPM file names or file paths to <storage> file paths.
 
@@ -432,15 +432,15 @@ def get_fpaths_from_fnames(filepaths, storage, product_type):
 
     Returns
     -------
-    fpaths : list
+    filepaths : list
         List of file paths on <storage> storage.
 
     """
-    fpaths = [
-        get_fpath_from_fname(fpath, storage=storage, product_type=product_type)
-        for fpath in filepaths
+    filepaths = [
+        get_filepath_from_filename(filepath, storage=storage, product_type=product_type)
+        for filepath in filepaths
     ]
-    return fpaths
+    return filepaths
 
 
 ####--------------------------------------------------------------------------.
@@ -517,8 +517,12 @@ def download_files(
         print(f"Attempt to download {n_files} files.")
 
     # Retrieve the remote and local file paths
-    remote_filepaths = get_fpaths_from_fnames(filepaths, storage=storage, product_type=product_type)
-    local_filepaths = get_fpaths_from_fnames(filepaths, storage="local", product_type=product_type)
+    remote_filepaths = get_filepaths_from_filenames(
+        filepaths, storage=storage, product_type=product_type
+    )
+    local_filepaths = get_filepaths_from_filenames(
+        filepaths, storage="local", product_type=product_type
+    )
 
     # If force_download is False, select only data not present on disk
     new_remote_filepaths, new_local_filepaths = filter_download_list(
@@ -738,7 +742,7 @@ def _download_daily_data(
 
     # -------------------------------------------------------------------------.
     # Define disk filepaths
-    local_filepaths = get_fpaths_from_fnames(
+    local_filepaths = get_filepaths_from_filenames(
         remote_filepaths, storage="local", product_type=product_type
     )
 

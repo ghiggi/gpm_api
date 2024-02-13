@@ -45,10 +45,10 @@ def _get_arrow_to_pandas_defaults():
     return arrow_to_pandas
 
 
-def read_partitioned_dataset(fpath, columns=None):
+def read_partitioned_dataset(filepath, columns=None):
     arrow_to_pandas = _get_arrow_to_pandas_defaults()
     df = dd.read_parquet(
-        fpath,
+        filepath,
         engine="pyarrow",
         dtype_backend="pyarrow",
         index=False,
@@ -67,10 +67,10 @@ def read_partitioned_dataset(fpath, columns=None):
 
 
 #### Deprecated
-# def read_bin_buckets_files(bin_fpaths, columns=None, partition_size=None, split_row_group=False):
+# def read_bin_buckets_files(bin_filepaths, columns=None, partition_size=None, split_row_group=False):
 #     arrow_to_pandas = _get_arrow_to_pandas_defaults()
 #     df = dd.read_parquet(
-#         bin_fpaths,
+#         bin_filepaths,
 #         engine="pyarrow",
 #         dtype_backend="pyarrow",
 #         index=False,

@@ -110,10 +110,10 @@ def define_gpm_api_configs(
     home_directory = os.path.expanduser("~")
 
     # Define path to .config_gpm_api.yaml file
-    fpath = os.path.join(home_directory, ".config_gpm_api.yml")
+    filepath = os.path.join(home_directory, ".config_gpm_api.yml")
 
     # Write the GPM-API config file
-    write_yaml(config_dict, fpath, sort_keys=False)
+    write_yaml(config_dict, filepath, sort_keys=False)
 
     print("The GPM-API config file has been written successfully!")
     return
@@ -143,13 +143,13 @@ def read_gpm_api_configs() -> Dict[str, str]:
     # Retrieve user home directory
     home_directory = os.path.expanduser("~")
     # Define path where .config_gpm_api.yaml file should be located
-    fpath = os.path.join(home_directory, ".config_gpm_api.yml")
-    if not os.path.exists(fpath):
+    filepath = os.path.join(home_directory, ".config_gpm_api.yml")
+    if not os.path.exists(filepath):
         raise ValueError(
             "The GPM-API config file has not been specified. Use gpm_api.define_configs to specify it !"
         )
     # Read the GPM-API config file
-    config_dict = read_yaml(fpath)
+    config_dict = read_yaml(filepath)
     return config_dict
 
 

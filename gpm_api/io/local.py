@@ -203,7 +203,10 @@ def get_local_daily_filepaths(product, product_type, date, version, verbose=True
 
 
 def define_local_filepath(product, product_type, date, version, filename):
-    """Define local file path."""
+    """Define local file path.
+
+    This function is called by get_filepath_from_filename(filename, storage, product_type).
+    """
     # Retrieve the local GPM base directory
     base_dir = get_gpm_base_dir()
     base_dir = check_base_dir(base_dir)
@@ -217,8 +220,8 @@ def define_local_filepath(product, product_type, date, version, filename):
         version=version,
     )
     # Define disk file path
-    fpath = os.path.join(dir_tree, filename)
-    return fpath
+    filepath = os.path.join(dir_tree, filename)
+    return filepath
 
 
 ####--------------------------------------------------------------------------.

@@ -315,7 +315,10 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
 
 
 def define_pps_filepath(product, product_type, date, version, filename):
-    """Define PPS filepath from filename."""
+    """Define PPS filepath from filename.
+
+    This function is called by get_filepath_from_filename(filename, storage, product_type).
+    """
     # Retrieve product directory url
     url_product_dir = get_pps_product_directory(
         product=product,
@@ -325,8 +328,8 @@ def define_pps_filepath(product, product_type, date, version, filename):
         server_type="data",
     )
     # Define PPS filepath
-    fpath = f"{url_product_dir}/{filename}"
-    return fpath
+    filepath = f"{url_product_dir}/{filename}"
+    return filepath
 
 
 ####--------------------------------------------------------------------------.

@@ -230,12 +230,14 @@ def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=T
 def define_ges_disc_filepath(product, product_type, date, version, filename):
     """Define GES DISC filepath from filename.
 
+    This function is called by get_filepath_from_filename(filename, storage, product_type).
+
     Parameters
     ----------
     product : str
         GPM product acronym. See gpm_api.available_products().
     product_type : str
-            GPM product type. Not used for GES DISC.
+        GPM product type. Not used for GES DISC.
     date : datetime
         Single date for which to retrieve the data.
     version : int
@@ -247,5 +249,5 @@ def define_ges_disc_filepath(product, product_type, date, version, filename):
     # Retrieve product directory url
     url_product_dir = get_ges_disc_product_directory(product=product, date=date, version=version)
     # Define GES DISC filepath
-    fpath = f"{url_product_dir}/{filename}"
-    return fpath
+    filepath = f"{url_product_dir}/{filename}"
+    return filepath

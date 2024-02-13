@@ -147,7 +147,7 @@ def find_daily_filepaths(
 
     Returns
     -------
-    pps_fpaths: list
+    pps_filepaths: list
         List of file paths on the NASA PPS server.
     available_version: list
         List of available versions.

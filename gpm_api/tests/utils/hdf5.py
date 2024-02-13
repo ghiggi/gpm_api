@@ -155,19 +155,19 @@ def _attach_scales(dst_file, src_group):
                 _attach_dataset_scale(dst_file, src_dataset=h5_obj)
 
 
-def create_test_hdf5(src_fpath, dst_fpath):
+def create_test_hdf5(src_filepath, dst_filepath):
     """Create test HDF5 file.
 
     The routine does not currently ensure the same attributes keys order !
     """
-    if os.path.exists(dst_fpath):
-        os.remove(dst_fpath)
+    if os.path.exists(dst_filepath):
+        os.remove(dst_filepath)
 
     # Open source HDF5 file
-    src_file = h5py.File(src_fpath, "r")
+    src_file = h5py.File(src_filepath, "r")
 
     # Create empty HDF5 file
-    dst_file = h5py.File(dst_fpath, "w")
+    dst_file = h5py.File(dst_filepath, "w")
 
     # Write a subset of the source HDF5 groups and leafs into the new HDF5 file
     _copy_datasets(src_file, dst_file, subset_size=10)

@@ -11,14 +11,14 @@ import pyarrow.dataset
 
 
 #### Dataset Writers
-def _write_pd_partitioned_dataset(df, base_dir, fname_prefix, partitioning, **writer_kwargs):
+def _write_pd_partitioned_dataset(df, base_dir, filename_prefix, partitioning, **writer_kwargs):
     # Sanitize writer_kwargs
     _ = writer_kwargs.pop("create_dir", None)
     _ = writer_kwargs.pop("existing_data_behavior", None)
     _ = writer_kwargs.pop("partitioning_flavor", None)
 
     # Define basename template
-    basename_template = f"{fname_prefix}_" + "{i}.parquet"
+    basename_template = f"{filename_prefix}_" + "{i}.parquet"
 
     # Conversion to pyarrow table
     table = pa.Table.from_pandas(df, nthreads=None, preserve_index=False)
@@ -37,22 +37,24 @@ def _write_pd_partitioned_dataset(df, base_dir, fname_prefix, partitioning, **wr
     )
 
 
-def _write_dask_partition(part, part_index, base_dir, fname_prefix, partitioning, **writer_kwargs):
+def _write_dask_partition(
+    part, part_index, base_dir, filename_prefix, partitioning, **writer_kwargs
+):
     # Convert to pandas
     part = part.compute()
-    # Define actual fname_prefix
-    part_fname_prefix = f"{fname_prefix}_dask.partition_{part_index}"
+    # Define actual filename_prefix
+    part_filename_prefix = f"{filename_prefix}_dask.partition_{part_index}"
     # Write dask partition into various directories
     _write_pd_partitioned_dataset(
         part,
         base_dir=base_dir,
-        fname_prefix=part_fname_prefix,
+        filename_prefix=part_filename_prefix,
         partitioning=partitioning,
         **writer_kwargs,
     )
 
 
-def _write_dask_partitioned_dataset(df, base_dir, fname_prefix, partitioning, **writer_kwargs):
+def _write_dask_partitioned_dataset(df, base_dir, filename_prefix, partitioning, **writer_kwargs):
     # TODO: map_partitions could be used to write each partition in parallel
     # TODO: or pass list partitions to pyarrow directly
     for part_index, part in enumerate(df.partitions):
@@ -60,7 +62,7 @@ def _write_dask_partitioned_dataset(df, base_dir, fname_prefix, partitioning, **
             part=part,
             part_index=part_index,
             base_dir=base_dir,
-            fname_prefix=fname_prefix,
+            filename_prefix=filename_prefix,
             partitioning=partitioning,
             **writer_kwargs,
         )
@@ -70,7 +72,7 @@ def write_partitioned_dataset(
     df,
     base_dir,
     partitioning,
-    fname_prefix="part",
+    filename_prefix="part",
     format="parquet",
     use_threads=True,
     **writer_kwargs,
@@ -81,7 +83,7 @@ def write_partitioned_dataset(
         _write_dask_partitioned_dataset(
             df=df,
             base_dir=base_dir,
-            fname_prefix=fname_prefix,
+            filename_prefix=filename_prefix,
             partitioning=partitioning,
             **writer_kwargs,
         )
@@ -89,7 +91,7 @@ def write_partitioned_dataset(
         _write_pd_partitioned_dataset(
             df=df,
             base_dir=base_dir,
-            fname_prefix=fname_prefix,
+            filename_prefix=filename_prefix,
             partitioning=partitioning,
             **writer_kwargs,
         )

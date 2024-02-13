@@ -171,16 +171,16 @@ def filter_filepaths(
     # Filter filepaths
     filepaths = [
         _filter_filepath(
-            fpath,
+            filepath,
             product=product,
             version=version,
             start_time=start_time,
             end_time=end_time,
         )
-        for fpath in filepaths
+        for filepath in filepaths
     ]
     # Remove None from the list
-    filepaths = [fpath for fpath in filepaths if fpath is not None]
+    filepaths = [filepath for filepath in filepaths if filepath is not None]
     return filepaths
 
 

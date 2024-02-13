@@ -62,11 +62,11 @@ chunks = {}
 decode_cf = False
 
 
-fpaths = get_local_filepaths(product=product, product_type=product_type, version=version)
+filepaths = get_local_filepaths(product=product, product_type=product_type, version=version)
 
-print(len(fpaths))
-filepaths = fpaths
-filepaths = fpaths[0:10]
+print(len(filepaths))
+filepaths = filepaths
+filepaths = filepaths[0:10]
 
 
 t_i = time.time()

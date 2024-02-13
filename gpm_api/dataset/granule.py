@@ -217,7 +217,7 @@ def open_granule(
 
     Parameters
     ----------
-    fpath : str
+    filepath : str
         Filepath of GPM granule dataset
     scan_mode : str
         The radar products have the following scan modes
