@@ -76,6 +76,7 @@ def _get_ges_disc_list_path(url):
     if len(list_content) == 0:
         raise ValueError(f"The GES DISC {url} directory is empty.")
     list_path = [f"{url}/{s}" for s in list_content]
+    print(list_path)
     return list_path
 
 
