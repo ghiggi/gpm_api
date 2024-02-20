@@ -420,13 +420,7 @@ def _define_filepath(
 
 def get_filepath_from_filename(filename, storage, product_type):
     """Convert GPM file names to the <storage> file path."""
-    # Retrieve the filename
-    filename = os.path.basename(filename)
-    # Retrieve relevant info from filename
-    try:
-        info = get_info_from_filepath(filename)
-    except ValueError:
-        raise ValueError(f"Impossible to infer file information from '{filename}'")
+    info = get_info_from_filepath(filename)
     product = info["product"]
     version = int(re.findall("\\d+", info["version"])[0])
     date = info["start_time"].date()

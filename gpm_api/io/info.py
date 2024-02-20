@@ -133,8 +133,8 @@ def _get_info_from_filename(filename):
     except ValueError:
         try:
             info_dict = _parse_jaxa_filename(filename)
-        except:
-            raise ValueError(f"{filename} can not be parsed. Report the issue.")
+        except Exception:
+            raise ValueError(f"Impossible to infer file information from '{filename}'")
 
     # Add product information
     # - ATTENTION: can not be inferred for products not defined in etc/product.yml

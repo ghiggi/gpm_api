@@ -28,6 +28,7 @@
 import glob
 import os
 import pathlib
+import re
 
 from gpm_api.configs import get_base_dir
 from gpm_api.io.checks import check_base_dir
@@ -181,7 +182,7 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
 ############################
 
 
-def get_local_daily_filepaths(product, product_type, date, version, verbose=True):
+def get_local_daily_filepaths(product, product_type, date, version, verbose=True, base_dir=None):
     """
     Retrieve GPM data filepaths on the local disk directory of a specific day and product.
 
@@ -199,7 +200,7 @@ def get_local_daily_filepaths(product, product_type, date, version, verbose=True
         Whether to print processing details. The default is True.
     """
     # Retrieve the local GPM base directory
-    base_dir = get_base_dir()
+    base_dir = get_base_dir(base_dir=base_dir)
     base_dir = check_base_dir(base_dir)
 
     # Retrieve the directory on disk where the data are stored
@@ -224,13 +225,13 @@ def get_local_daily_filepaths(product, product_type, date, version, verbose=True
     return filepaths
 
 
-def define_local_filepath(product, product_type, date, version, filename):
+def define_local_filepath(product, product_type, date, version, filename, base_dir=None):
     """Define local file path.
 
     This function is called by get_filepath_from_filename(filename, storage, product_type).
     """
     # Retrieve the local GPM base directory
-    base_dir = get_base_dir()
+    base_dir = get_base_dir(base_dir=base_dir)
     base_dir = check_base_dir(base_dir)
 
     # Define disk directory path
@@ -242,6 +243,38 @@ def define_local_filepath(product, product_type, date, version, filename):
         version=version,
     )
     # Define disk file path
+    filepath = os.path.join(dir_tree, filename)
+    return filepath
+
+
+def get_local_dir_tree_from_filename(filepath, product_type="RS", base_dir=None):
+    """Return directory tree from a GPM filename or filepath."""
+    from gpm_api.io.info import get_info_from_filepath
+
+    base_dir = get_base_dir(base_dir=base_dir)
+    base_dir = check_base_dir(base_dir)
+    # Retrieve file info
+    info = get_info_from_filepath(filepath)
+    product = info["product"]
+    version = int(re.findall("\\d+", info["version"])[0])
+    date = info["start_time"].date()
+    # Retrieve directory tree
+    dir_tree = get_local_product_directory(
+        base_dir=base_dir,
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
+    )
+    return dir_tree
+
+
+def get_local_filepath_from_filename(filepath, product_type="RS", base_dir=None):
+    """Return the local filepath of a GPM file or filepath."""
+    filename = os.path.basename(filepath)
+    dir_tree = get_local_dir_tree_from_filename(
+        filepath, product_type=product_type, base_dir=base_dir
+    )
     filepath = os.path.join(dir_tree, filename)
     return filepath
 
@@ -276,7 +309,7 @@ def list_files(dir_path, glob_pattern, recursive=False):
     return filepaths
 
 
-def get_local_filepaths(product, version=7, product_type="RS"):
+def get_local_filepaths(product, version=7, product_type="RS", base_dir=None):
     """
     Retrieve all GPM filepaths on the local disk directory for a specific product.
 
@@ -291,7 +324,7 @@ def get_local_filepaths(product, version=7, product_type="RS"):
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
     """
     # Retrieve the local GPM base directory
-    base_dir = get_base_dir()
+    base_dir = get_base_dir(base_dir=base_dir)
     base_dir = check_base_dir(base_dir)
 
     # Retrieve the local directory where the data are stored
