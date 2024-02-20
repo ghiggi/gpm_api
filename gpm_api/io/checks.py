@@ -46,6 +46,7 @@ def check_base_dir(base_dir):
     base_dir: str
         Base directory where the GPM directory is located.
     """
+    base_dir = str(base_dir)  # deal with PathLib path
     # Check base_dir does not end with /
     if base_dir[-1] == os.path.sep:
         base_dir = base_dir[0:-1]

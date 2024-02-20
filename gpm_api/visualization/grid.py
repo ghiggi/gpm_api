@@ -172,6 +172,7 @@ def plot_grid_map(
         )
     # Plot with cartopy imshow
     else:
+        da = da.squeeze()  # remove time if dim=1
         p = _plot_grid_map_cartopy(
             da=da,
             x=x,

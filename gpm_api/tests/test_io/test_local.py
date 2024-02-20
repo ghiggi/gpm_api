@@ -31,16 +31,49 @@ import datetime
 from typing import Dict
 from pytest_mock import MockerFixture
 from typing import List
+
 from gpm_api.io.products import available_products, get_product_category
+
 from gpm_api.io import local
 
 
-def test_get_local_filepaths(
-    mock_configuration: Dict[str, str],
-    mocker: MockerFixture,
+def create_fake_file(
+    base_dir,
+    filename="dummy.HDF5",
+    product="2A-DPR",
+    product_type="RS",
+    date=datetime.date(2022, 1, 1),
+    version=7,
 ):
+    from gpm_api.io.checks import check_base_dir
+    from gpm_api.io.local import get_local_product_directory
+
+    base_dir = check_base_dir(base_dir)
+    product_dir_path = get_local_product_directory(
+        base_dir=base_dir, product=product, product_type=product_type, version=version, date=date
+    )
+    # Create directory
+    os.makedirs(product_dir_path, exist_ok=True)
+    # Define filepath
+    filepath = os.path.join(product_dir_path, filename)
+    # Create fake file
+    with open(filepath, "w") as f:
+        f.write("Hello World")
+    return filepath
+
+
+def test_get_local_filepaths(mock_configuration: Dict[str, str], mocker: MockerFixture, tmp_path):
+    # import pathlib
+    # tmp_path = pathlib.Path("/tmp/dummy")
+    # Create GPM base directory
+    base_dir = tmp_path / "GPM"
+    base_dir.mkdir(parents=True)
+
+    # Mock base dir
+    # TODO: with gpm_api.config !!!
+    mocker.patch("gpm_api.io.local.get_gpm_base_dir", return_value=base_dir)
+
     product = "2A-DPR"
-    product_category = "RADAR"
     product_type = "RS"
     version = 7
 
@@ -53,39 +86,33 @@ def test_get_local_filepaths(
 
     assert returned_filepaths == []
 
-    # Mock glob.glob to return a list of filepaths
-    mock_filenames = [
-        "file1.HDF5",
-        "file2.HDF5",
-    ]
+    # Create fake_files
+    filepath1 = create_fake_file(
+        base_dir=base_dir,
+        filename="file1.HDF5",
+        product=product,
+        product_type=product_type,
+        version=version,
+    )
+    filepath2 = create_fake_file(
+        base_dir=base_dir,
+        filename="file2.HDF5",
+        product=product,
+        product_type=product_type,
+        version=version,
+    )
+    expected_filepaths = [filepath1, filepath2]
 
-    def mock_glob(pattern):
-        return [os.path.join(pattern.rstrip("*"), filename) for filename in mock_filenames]
+    # Mock base dir
+    # TODO: with gpm_api.config !!!
+    mocker.patch("gpm_api.io.local.get_gpm_base_dir", return_value=base_dir)
 
-    mocker.patch("gpm_api.io.local.glob.glob", side_effect=mock_glob)
-    mocker.patch("gpm_api.io.local.os.path.exists", return_value=True)
-
+    # Retrieve available filepaths
     returned_filepaths = local.get_local_filepaths(
         product=product,
         product_type=product_type,
         version=version,
     )
-
-    expected_filepaths = [
-        os.path.join(
-            mock_configuration["gpm_base_dir"],
-            "GPM",
-            product_type,
-            f"V0{version}",
-            product_category,
-            product,
-            "*",
-            "*",
-            "*",
-            filename,
-        )
-        for filename in mock_filenames
-    ]
     assert returned_filepaths == expected_filepaths
 
 

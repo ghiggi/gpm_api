@@ -27,6 +27,7 @@
 """This module contains functions defining where to download GPM data on the local machine."""
 import glob
 import os
+import pathlib
 
 from gpm_api.configs import get_gpm_base_dir
 from gpm_api.io.checks import check_base_dir
@@ -251,6 +252,30 @@ def define_local_filepath(product, product_type, date, version, filename):
 #################
 
 
+def _recursive_glob(dir_path, glob_pattern):
+    # ** search for all files recursively
+    # glob_pattern = os.path.join(base_dir, "**", "metadata", f"{station_name}.yml")
+    # metadata_filepaths = glob.glob(glob_pattern, recursive=True)
+
+    dir_path = pathlib.Path(dir_path)
+    return [str(path) for path in dir_path.rglob(glob_pattern)]
+
+
+def list_paths(dir_path, glob_pattern, recursive=False):
+    """Return a list of filepaths and directory paths."""
+    if not recursive:
+        return glob.glob(os.path.join(dir_path, glob_pattern))
+    else:
+        return _recursive_glob(dir_path, glob_pattern)
+
+
+def list_files(dir_path, glob_pattern, recursive=False):
+    """Return a list of filepaths (exclude directory paths)."""
+    paths = list_paths(dir_path, glob_pattern, recursive=recursive)
+    filepaths = [f for f in paths if os.path.isfile(f)]
+    return filepaths
+
+
 def get_local_filepaths(product, version=7, product_type="RS"):
     """
     Retrieve all GPM filepaths on the local disk directory for a specific product.
@@ -282,7 +307,5 @@ def get_local_filepaths(product, version=7, product_type="RS"):
         return []
 
     # Retrieve the filepaths
-    glob_pattern = os.path.join(product_dir, "*", "*", "*", "*")
-
-    filepaths = sorted(glob.glob(glob_pattern))
+    filepaths = list_files(product_dir, glob_pattern="*", recursive=True)
     return filepaths
