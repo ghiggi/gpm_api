@@ -25,47 +25,16 @@
 
 # -----------------------------------------------------------------------------.
 """This module defines pytest fixtures available across all test modules."""
-
+import os
 import pytest
 import datetime
-from typing import Any, List, Dict, Tuple, Iterable
-from gpm_api.io.products import get_info_dict, available_products
+from typing import Any, List, Dict, Tuple
+from gpm_api.io.products import get_info_dict
 from gpm_api.utils import geospatial
 import posixpath as pxp
 import ntpath as ntp
-import gpm_api.configs
-import os
+
 from pytest_mock import MockerFixture
-from unittest.mock import patch
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_configuration() -> Iterable[Dict[str, str]]:
-    """Patch the user configuration for entire session
-
-    Doing this will retrieve the configuration from pytest memory and not
-    alter the local configuration in ~/.config_gpm_api.yml
-    """
-
-    mocked_configuration = {
-        "username_pps": "testuser",
-        "password_pps": "testuser",
-        "username_earthdata": "testuser",
-        "password_earthdata": "testuser",
-        "gpm_base_dir": os.path.join(
-            os.getcwd(),
-            "gpm_api",
-            "tests",
-            "resources",
-        ),
-    }
-
-    with patch.object(
-        gpm_api.configs,
-        "read_gpm_api_configs",
-        return_value=mocked_configuration,
-    ):
-        yield mocked_configuration
 
 
 @pytest.fixture

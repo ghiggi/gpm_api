@@ -24,24 +24,40 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module create a global donfig configuration file."""
+"""This module create a donfig utility
+
+See https://donfig.readthedocs.io/en/latest/configuration.html for more info.
+"""
 
 from donfig import Config
 
-# GPM-API main configuration object
-# See https://donfig.readthedocs.io/en/latest/configuration.html for more info.
+from gpm_api.configs import read_configs
+
+
+def _get_default_configs():
+    """Retrieve the default GPM-API settings from the ``.config_gpm_api.yml`` file."""
+    try:
+        config_dict = read_configs()
+        config_dict = {key: value for key, value in config_dict.items() if value is not None}
+    except Exception:
+        config_dict = {}
+    return config_dict
 
 
 _CONFIG_DEFAULTS = {
+    "base_dir": None,
+    "username_pps": None,
+    "password_pps": None,
+    "username_earthdata": None,
+    "password_earthdata": None,
     "warn_non_contiguous_scans": True,
     "warn_non_regular_timesteps": True,
     "warn_invalid_geolocation": True,
     "warn_multiple_product_versions": True,
     "viz_hide_antimeridian_data": True,
 }
+_CONFIG_DEFAULTS.update(_get_default_configs())
 
 _CONFIG_PATHS = []
 
-config = Config("gpm_api", defaults=[_CONFIG_DEFAULTS], paths=_CONFIG_PATHS)
-
-# gpm_api.config.pprint()
+config = Config("gpm", defaults=[_CONFIG_DEFAULTS], paths=_CONFIG_PATHS)

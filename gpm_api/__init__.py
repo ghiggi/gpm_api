@@ -30,8 +30,10 @@ from importlib.metadata import PackageNotFoundError, version
 # os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"  # noqa
 import gpm_api.accessor  # noqa
 from gpm_api._config import config  # noqa
-from gpm_api.configs import define_gpm_api_configs as define_configs  # noqa
-from gpm_api.configs import read_gpm_api_configs as read_configs  # noqa
+from gpm_api.configs import (
+    define_configs,  # noqa
+    read_configs,  # noqa
+)
 from gpm_api.dataset.dataset import open_dataset  # noqa
 from gpm_api.dataset.datatree import open_datatree  # noqa
 from gpm_api.dataset.granule import open_granule  # noqa

@@ -38,10 +38,10 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 from gpm_api.configs import (
-    get_earthdata_password,
-    get_earthdata_username,
-    get_pps_password,
-    get_pps_username,
+    get_password_earthdata,
+    get_password_pps,
+    get_username_earthdata,
+    get_username_pps,
 )
 from gpm_api.io.checks import (
     check_date,
@@ -300,11 +300,11 @@ def _get_storage_username_password(storage):
     """Retrieve username and password depending on the 'storage'."""
     # Retrieve username and password
     if storage == "pps":
-        username = get_pps_username()
-        password = get_pps_password()
+        username = get_username_pps()
+        password = get_password_pps()
     else:
-        username = get_earthdata_username()
-        password = get_earthdata_password()
+        username = get_username_earthdata()
+        password = get_password_earthdata()
     return username, password
 
 

@@ -29,6 +29,7 @@ import pytest
 import os
 import datetime
 import platform
+import gpm_api.configs
 from typing import Any, List, Dict
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
@@ -40,7 +41,6 @@ from gpm_api.utils.warnings import GPMDownloadWarning
 
 
 def test_construct_curl_pps_cmd(
-    mock_configuration: Dict[str, str],
     remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
@@ -67,8 +67,8 @@ def test_construct_curl_pps_cmd(
         "--retry 5 --retry-delay 10 --url {remote_filepath} -o {local_filepath}"
     )
 
-    username_pps = mock_configuration["username_pps"]
-    password_pps = mock_configuration["password_pps"]
+    username_pps = "test_username_pps"
+    password_pps = "test_password_pps"
 
     for remote_filepath in remote_filepaths:
         path = dl.curl_pps_cmd(
@@ -97,7 +97,6 @@ def test_construct_curl_pps_cmd(
 
 
 def test_construct_wget_pps_cmd(
-    mock_configuration: Dict[str, str],
     remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
 ) -> None:
@@ -123,8 +122,8 @@ def test_construct_wget_pps_cmd(
         "--tries=5 -O {local_filepath} {remote_filepath}"
     )
 
-    username_pps = mock_configuration["username_pps"]
-    password_pps = mock_configuration["password_pps"]
+    username_pps = "test_username_pps"
+    password_pps = "test_password_pps"
 
     for remote_filepath in remote_filepaths:
         path = dl.wget_pps_cmd(
@@ -236,28 +235,27 @@ class TestGetFilepathsFromFilenames:
 
     filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
 
-    def test_local(
-        self,
-        mock_configuration: Dict[str, str],
-    ) -> None:
-        assert dl.get_filepaths_from_filenames(
-            filepaths=[self.filename],
-            storage="local",
-            product_type="RS",
-        ) == [
-            os.path.join(
-                mock_configuration["gpm_base_dir"],
-                "GPM",
-                "RS",
-                "V07",
-                "RADAR",
-                "2A-DPR",
-                "2020",
-                "07",
-                "05",
-                self.filename,
-            )
-        ]
+    def test_local(self) -> None:
+        base_dir = "dummy/base_dir/path"
+        with gpm_api.config.set({"base_dir": base_dir}):
+            assert dl.get_filepaths_from_filenames(
+                filepaths=[self.filename],
+                storage="local",
+                product_type="RS",
+            ) == [
+                os.path.join(
+                    base_dir,
+                    "GPM",
+                    "RS",
+                    "V07",
+                    "RADAR",
+                    "2A-DPR",
+                    "2020",
+                    "07",
+                    "05",
+                    self.filename,
+                )
+            ]
 
     def test_pps(self) -> None:
         assert dl.get_filepaths_from_filenames(

@@ -29,9 +29,9 @@ import datetime
 import pytest
 from pytest_mock.plugin import MockerFixture
 from typing import List
+import gpm_api
 from gpm_api.io import pps
 from gpm_api.io.products import available_products
-import gpm_api.configs as cfg
 
 
 def test_get_pps_nrt_product_dir(products: List[str]) -> None:
@@ -94,12 +94,12 @@ class TestGetPPSFileList:
         mock_process.communicate.return_value = (b"file1.txt\nfile2.txt", b"")
         mocker.patch("subprocess.Popen", return_value=mock_process, autospec=True)
 
-        # Mock get_pps_username and get_pps_password to return dummy values
-        mocker.patch.object(cfg, "get_pps_username", return_value="user", autospec=True)
-        mocker.patch.object(cfg, "get_pps_password", return_value="pass", autospec=True)
-
-        filepaths = pps._try_get_pps_file_list(url)
-        assert filepaths == ["file1.txt", "file2.txt"], "File paths do not match expected output"
+        with gpm_api.config.set({"username_pps": "user", "password_pps": "pass"}):
+            filepaths = pps._try_get_pps_file_list(url)
+            assert filepaths == [
+                "file1.txt",
+                "file2.txt",
+            ], "File paths do not match expected output"
 
     def test_try_get_pps_file_list_unavailable_server(self, mocker: MockerFixture):
         url = "http://example.com/products/"
@@ -109,14 +109,12 @@ class TestGetPPSFileList:
         mock_process.communicate.return_value = (b"", b"")
         mocker.patch("subprocess.Popen", return_value=mock_process, autospec=True)
 
-        mocker.patch.object(cfg, "get_pps_username", return_value="user", autospec=True)
-        mocker.patch.object(cfg, "get_pps_password", return_value="pass", autospec=True)
-
-        with pytest.raises(ValueError) as excinfo:
-            pps._try_get_pps_file_list(url)
-        assert "The PPS server is currently unavailable." in str(
-            excinfo.value
-        ), "Expected ValueError not raised for unavailable server"
+        with gpm_api.config.set({"username_pps": "user", "password_pps": "pass"}):
+            with pytest.raises(ValueError) as excinfo:
+                pps._try_get_pps_file_list(url)
+            assert "The PPS server is currently unavailable." in str(
+                excinfo.value
+            ), "Expected ValueError not raised for unavailable server"
 
     def test_try_get_pps_file_list_no_data_found(self, mocker: MockerFixture):
         url = "http://example.com/products/"
@@ -126,14 +124,12 @@ class TestGetPPSFileList:
         mock_process.communicate.return_value = (b"<html></html>", b"")
         mocker.patch("subprocess.Popen", return_value=mock_process, autospec=True)
 
-        mocker.patch.object(cfg, "get_pps_username", return_value="user", autospec=True)
-        mocker.patch.object(cfg, "get_pps_password", return_value="pass", autospec=True)
-
-        with pytest.raises(ValueError) as excinfo:
-            pps._try_get_pps_file_list(url)
-        assert "No data found on PPS." in str(
-            excinfo.value
-        ), "Expected ValueError not raised for no data found"
+        with gpm_api.config.set({"username_pps": "user", "password_pps": "pass"}):
+            with pytest.raises(ValueError) as excinfo:
+                pps._try_get_pps_file_list(url)
+            assert "No data found on PPS." in str(
+                excinfo.value
+            ), "Expected ValueError not raised for no data found"
 
     @pytest.mark.parametrize("verbose", [True, False])
     def test_get_pps_file_list(self, mocker: MockerFixture, verbose):

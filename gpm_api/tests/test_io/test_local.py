@@ -28,10 +28,8 @@
 
 import os
 import datetime
-from typing import Dict
-from pytest_mock import MockerFixture
 from typing import List
-
+import gpm_api
 from gpm_api.io.products import available_products, get_product_category
 
 from gpm_api.io import local
@@ -62,58 +60,50 @@ def create_fake_file(
     return filepath
 
 
-def test_get_local_filepaths(mock_configuration: Dict[str, str], mocker: MockerFixture, tmp_path):
-    # import pathlib
-    # tmp_path = pathlib.Path("/tmp/dummy")
+def test_get_local_filepaths(tmp_path):
+    """Test get_local_filepaths returns a list of the available filepaths."""
     # Create GPM base directory
     base_dir = tmp_path / "GPM"
     base_dir.mkdir(parents=True)
-
-    # Mock base dir
-    # TODO: with gpm_api.config !!!
-    mocker.patch("gpm_api.io.local.get_gpm_base_dir", return_value=base_dir)
 
     product = "2A-DPR"
     product_type = "RS"
     version = 7
 
-    # Test with non-existent files
-    returned_filepaths = local.get_local_filepaths(
-        product=product,
-        product_type=product_type,
-        version=version,
-    )
+    with gpm_api.config.set({"base_dir": base_dir}):
+        # Test with non-existent files
+        returned_filepaths = local.get_local_filepaths(
+            product=product,
+            product_type=product_type,
+            version=version,
+        )
 
-    assert returned_filepaths == []
+        assert returned_filepaths == []
 
-    # Create fake_files
-    filepath1 = create_fake_file(
-        base_dir=base_dir,
-        filename="file1.HDF5",
-        product=product,
-        product_type=product_type,
-        version=version,
-    )
-    filepath2 = create_fake_file(
-        base_dir=base_dir,
-        filename="file2.HDF5",
-        product=product,
-        product_type=product_type,
-        version=version,
-    )
-    expected_filepaths = [filepath1, filepath2]
+        # Create fake_files
+        filepath1 = create_fake_file(
+            base_dir=base_dir,
+            filename="file1.HDF5",
+            product=product,
+            product_type=product_type,
+            version=version,
+        )
+        filepath2 = create_fake_file(
+            base_dir=base_dir,
+            filename="file2.HDF5",
+            product=product,
+            product_type=product_type,
+            version=version,
+        )
+        expected_filepaths = [filepath1, filepath2]
 
-    # Mock base dir
-    # TODO: with gpm_api.config !!!
-    mocker.patch("gpm_api.io.local.get_gpm_base_dir", return_value=base_dir)
-
-    # Retrieve available filepaths
-    returned_filepaths = local.get_local_filepaths(
-        product=product,
-        product_type=product_type,
-        version=version,
-    )
-    assert returned_filepaths == expected_filepaths
+        # Test it retrieve the available (fake) files
+        returned_filepaths = local.get_local_filepaths(
+            product=product,
+            product_type=product_type,
+            version=version,
+        )
+        assert returned_filepaths == sorted(expected_filepaths)
 
 
 def test__get_local_dir_pattern(
@@ -159,41 +149,40 @@ def test_get_local_product_base_directory(
 
     date = datetime.datetime.strptime("2021-01-01", "%Y-%m-%d").date()
 
-    # TODO: define in gpm_api.config !!!
     base_dir = os.path.join(tmpdir, "gpm_api_data")
+    with gpm_api.config.set({"base_dir": base_dir}):
+        for product in products:
+            for product_type in product_types:
+                for version in versions:
+                    dir_path = local.get_local_product_directory(
+                        base_dir=base_dir,
+                        product=product,
+                        product_type=product_type,
+                        version=version,
+                        date=date,
+                    )
 
-    for product in products:
-        for product_type in product_types:
-            for version in versions:
-                dir_path = local.get_local_product_directory(
-                    base_dir=base_dir,
-                    product=product,
-                    product_type=product_type,
-                    version=version,
-                    date=date,
-                )
-
-                # Work only on product if product_type are compatible
-                if product in available_products(product_types=product_type):
-                    product_category = get_product_category(product)
-                    if product_type == "NRT":
-                        assert "V0" not in dir_path
-                        assert dir_path == os.path.join(
-                            base_dir,
-                            os.path.join("GPM", product_type, product_category, product),
-                            date.strftime("%Y"),
-                            date.strftime("%m"),
-                            date.strftime("%d"),
-                        )
-                    elif product_type == "RS":
-                        assert str(version) in dir_path
-                        # Literal
-                        assert dir_path == os.path.join(
-                            base_dir,
-                            os.path.join(
-                                "GPM", product_type, f"V0{version}", product_category, product
-                            ),
-                            date.strftime("%Y"),
-                            date.strftime("%m"),
-                            date.strftime("%d"),
-                        )
+                    # Work only on product if product_type are compatible
+                    if product in available_products(product_types=product_type):
+                        product_category = get_product_category(product)
+                        if product_type == "NRT":
+                            assert "V0" not in dir_path
+                            assert dir_path == os.path.join(
+                                base_dir,
+                                os.path.join("GPM", product_type, product_category, product),
+                                date.strftime("%Y"),
+                                date.strftime("%m"),
+                                date.strftime("%d"),
+                            )
+                        elif product_type == "RS":
+                            assert str(version) in dir_path
+                            # Literal
+                            assert dir_path == os.path.join(
+                                base_dir,
+                                os.path.join(
+                                    "GPM", product_type, f"V0{version}", product_category, product
+                                ),
+                                date.strftime("%Y"),
+                                date.strftime("%m"),
+                                date.strftime("%d"),
+                            )

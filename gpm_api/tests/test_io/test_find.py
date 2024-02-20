@@ -28,10 +28,9 @@
 import datetime
 import os
 from typing import Any, Dict, List, Tuple
-
 import pytest
 from pytest_mock.plugin import MockerFixture
-
+import gpm_api
 from gpm_api.io import find
 from gpm_api.io.products import available_products
 from gpm_api.utils.warnings import GPMDownloadWarning
@@ -72,60 +71,61 @@ class TestGetDailyFilepaths:
     def test_local_existing_files(
         self,
         check,  # For non-failing asserts
-        mock_configuration: Dict[str, str],
         mocker: MockerFixture,
         product_info: Dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "local" storage with existing (mocked) files"""
 
+        base_dir = "dummy/path/to/base_dir"
         storage = "local"
 
         # Mock os.listdir to return a list of filenames
         mocker.patch("gpm_api.io.local.os.listdir", return_value=self.mock_filenames)
         mocker.patch("gpm_api.io.local.os.path.exists", return_value=True)
 
-        # Test with existing files (mocked)
-        for product_type in ["RS", "NRT"]:
-            for product in available_products(product_types=product_type):
-                info = product_info[product]
-                version = info["available_versions"][-1]
-                product_category = info["product_category"]
+        with gpm_api.config.set({"base_dir": base_dir}):
+            # Test with existing files (mocked)
+            for product_type in ["RS", "NRT"]:
+                for product in available_products(product_types=product_type):
+                    info = product_info[product]
+                    version = info["available_versions"][-1]
+                    product_category = info["product_category"]
 
-                returned_filepaths = _get_all_daily_filepaths(
-                    storage=storage,
-                    date=self.date,
-                    product=product,
-                    product_type=product_type,
-                    version=version,
-                    verbose=True,
-                )
+                    returned_filepaths = _get_all_daily_filepaths(
+                        storage=storage,
+                        date=self.date,
+                        product=product,
+                        product_type=product_type,
+                        version=version,
+                        verbose=True,
+                    )
 
-                expected_filepath_elements = [
-                    mock_configuration["gpm_base_dir"],
-                    "GPM",
-                    product_type,
-                ]
-
-                if product_type == "RS":
-                    expected_filepath_elements.append(f"V0{version}")
-
-                expected_filepath_elements.extend(
-                    [
-                        product_category,
-                        product,
-                        self.date.strftime("%Y"),
-                        self.date.strftime("%m"),
-                        self.date.strftime("%d"),
+                    expected_filepath_elements = [
+                        base_dir,
+                        "GPM",
+                        product_type,
                     ]
-                )
 
-                expected_filepaths = [
-                    os.path.join(*expected_filepath_elements, filename)
-                    for filename in self.mock_filenames
-                ]
+                    if product_type == "RS":
+                        expected_filepath_elements.append(f"V0{version}")
 
-                with check:
-                    assert returned_filepaths == expected_filepaths
+                    expected_filepath_elements.extend(
+                        [
+                            product_category,
+                            product,
+                            self.date.strftime("%Y"),
+                            self.date.strftime("%m"),
+                            self.date.strftime("%d"),
+                        ]
+                    )
+
+                    expected_filepaths = [
+                        os.path.join(*expected_filepath_elements, filename)
+                        for filename in self.mock_filenames
+                    ]
+
+                    with check:
+                        assert returned_filepaths == expected_filepaths
 
     @pytest.fixture
     def mock_get_pps_file_list(
