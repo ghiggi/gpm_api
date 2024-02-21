@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Sat Dec 10 19:06:20 2022
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains functions to visualize GPM-API ORBIT data."""
 import functools
 
 import cartopy.crs as ccrs
@@ -155,10 +176,11 @@ def _remove_invalid_outer_cross_track(xr_obj, x="lon"):
     lon = np.asanyarray(xr_obj[x].transpose("cross_track", "along_track"))
     isna = np.all(np.isnan(lon), axis=1)
     if isna[0] or isna[-1]:
-        # Find the index where the first False value occurs
-        start_index = np.argmax(isna is False)
+        is_valid = ~isna
+        # Find the index where coordinates start to be valid
+        start_index = np.argmax(is_valid)
         # Find the index where the first False value occurs (from the end)
-        end_index = len(isna) - np.argmax(isna[::-1] is False)
+        end_index = len(is_valid) - np.argmax(is_valid[::-1])
         # Define slice
         slc = slice(start_index, end_index)
         # Subset object
@@ -190,7 +212,7 @@ def _call_over_contiguous_scans(function):
             # - Get slices with contiguous scans and valid geolocation
             list_slices = get_slices_regular(da)
             if len(list_slices) == 0:
-                return ValueError("No regular scans available. Impossible to plot.")
+                raise ValueError("No regular scans available. Impossible to plot.")
         else:
             list_slices = [slice(0, None)]
 
@@ -341,7 +363,7 @@ def plot_orbit_mesh(
     # - Define plot_kwargs to display only the mesh
     plot_kwargs["facecolor"] = "none"
     plot_kwargs["alpha"] = 1
-    plot_kwargs["edgecolors"] = (edgecolors,)
+    plot_kwargs["edgecolors"] = (edgecolors,)  # Introduce bugs in Cartopy !
     plot_kwargs["linewidth"] = (linewidth,)
     plot_kwargs["antialiased"] = True
 
@@ -374,12 +396,6 @@ def plot_orbit_image(
     check_is_spatial_2d(da)
     check_contiguous_scans(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
-
-    # - Define default x and y
-    # if x is None:
-    #     x = "along_track"
-    # if y is None:
-    #     y = "cross_track"
 
     # - Initialize figure
     if ax is None:

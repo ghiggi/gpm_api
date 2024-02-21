@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Thu Oct 26 17:04:07 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains functions to find data on local and NASA servers."""
 import datetime
 import warnings
 
@@ -22,7 +43,7 @@ from gpm_api.io.checks import (
     check_valid_time_request,
 )
 from gpm_api.io.filter import filter_filepaths
-from gpm_api.io.ges_disc import get_gesdisc_daily_filepaths
+from gpm_api.io.ges_disc import get_ges_disc_daily_filepaths
 from gpm_api.io.info import get_version_from_filepaths
 from gpm_api.io.local import get_local_daily_filepaths
 from gpm_api.io.pps import get_pps_daily_filepaths
@@ -55,7 +76,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
             verbose=verbose,
         )
     elif storage == "ges_disc":
-        filepaths = get_gesdisc_daily_filepaths(
+        filepaths = get_ges_disc_daily_filepaths(
             product=product,
             product_type=product_type,
             date=date,
@@ -147,7 +168,7 @@ def find_daily_filepaths(
 
     Returns
     -------
-    pps_fpaths: list
+    pps_filepaths: list
         List of file paths on the NASA PPS server.
     available_version: list
         List of available versions.

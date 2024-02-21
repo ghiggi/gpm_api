@@ -1,37 +1,47 @@
-#!/usr/bin/env python3
-"""
-Created on Fri Jul 28 13:50:05 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains functions to sanitize GPM-API Dataset coordinates."""
 import functools
 import os
-import warnings
 
 import numpy as np
 
-from gpm_api.utils.warnings import GPM_Warning
-from gpm_api.utils.yaml import read_yaml_file
+from gpm_api.utils.yaml import read_yaml
 
 
 def ensure_valid_coords(ds, raise_error=False):
-    from gpm_api import config
-
-    # invalid_coords = np.logical_or(ds["lon"].data == -9999.9,
-    #                                ds["lat"].data == -9999.9)
+    """Ensure geographic coordinates are within expected range."""
     invalid_coords = np.logical_or(
         np.logical_or(ds["lon"].data < -180, ds["lon"].data > 180),
         np.logical_or(ds["lat"].data < -90, ds["lat"].data > 90),
     )
     if np.any(invalid_coords):
-        # Raise error or add warning
-        msg = "Invalid coordinate in the granule."
         if raise_error:
-            raise ValueError(msg)
-        else:
-            if config.get("warn_invalid_spatial_coordinates"):
-                warnings.warn(msg, GPM_Warning)
-
+            raise ValueError("Invalid geographic coordinate in the granule.")
         da_invalid_coords = ds["lon"].copy()
         da_invalid_coords.data = invalid_coords
         # For each variable, set NaN value where invalid coordinates
@@ -106,8 +116,8 @@ def get_pmw_frequency_dict():
     """Get PMW info dictionary."""
     from gpm_api import _root_path
 
-    fpath = os.path.join(_root_path, "gpm_api", "etc", "pmw_frequency.yml")
-    return read_yaml_file(fpath)
+    filepath = os.path.join(_root_path, "gpm_api", "etc", "pmw_frequency.yml")
+    return read_yaml(filepath)
 
 
 @functools.lru_cache(maxsize=None)
@@ -166,7 +176,7 @@ def set_coordinates(ds, product, scan_mode):
 
     # Add range_id coordinate
     if "range" in list(ds.dims):
-        range_id = np.arange(ds.dims["range"])
+        range_id = np.arange(ds.sizes["range"])
         ds = ds.assign_coords({"gpm_range_id": ("range", range_id)})
 
     # Add wished coordinates

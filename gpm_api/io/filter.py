@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Thu Oct 13 11:30:46 2022
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains functions to filter files according to user specifics."""
 import datetime
 import re
 
@@ -171,16 +192,16 @@ def filter_filepaths(
     # Filter filepaths
     filepaths = [
         _filter_filepath(
-            fpath,
+            filepath,
             product=product,
             version=version,
             start_time=start_time,
             end_time=end_time,
         )
-        for fpath in filepaths
+        for filepath in filepaths
     ]
     # Remove None from the list
-    filepaths = [fpath for fpath in filepaths if fpath is not None]
+    filepaths = [filepath for filepath in filepaths if filepath is not None]
     return filepaths
 
 

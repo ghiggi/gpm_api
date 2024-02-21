@@ -1,12 +1,40 @@
+# -----------------------------------------------------------------------------.
+# MIT License
+
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module test the granule checks utilities."""
+
+
 import numpy as np
-from typing import Union
 import xarray as xr
 
 import pytest
 from pytest_mock import MockerFixture
 
 from gpm_api.utils import checks
-from utils import (
+from gpm_api.tests.test_utils.utils import (
     create_dataset_with_coordinate,
     create_fake_datetime_array_from_hours_list,
     create_orbit_time_array,
@@ -38,6 +66,43 @@ def test_is_contiguous_granule() -> None:
     expected_bool_array = np.array([True, True, False, True, True, True])
     returned_bool_array = checks._is_contiguous_granule(granule_ids)
     np.testing.assert_array_equal(returned_bool_array, expected_bool_array)
+
+
+class TestHasContiguousGranules:
+    """Test has_contiguous_granules"""
+
+    def test_grid(
+        self,
+        set_is_grid_to_true: None,
+    ) -> None:
+        # Test True case
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2])
+        ds = create_dataset_with_coordinate("time", time)
+        assert checks.has_contiguous_granules(ds)
+
+        # Test False case
+        time = create_fake_datetime_array_from_hours_list([0, 1, 2, 7, 8, 9])
+        ds = create_dataset_with_coordinate("time", time)
+        assert not checks.has_contiguous_granules(ds)
+
+    def test_orbit(
+        self,
+        set_is_orbit_to_true: None,
+    ) -> None:
+        # Test True case
+        granule_ids = np.array([0, 1, 2])
+        ds = create_dataset_with_coordinate("gpm_granule_id", granule_ids)
+        assert checks.has_contiguous_granules(ds)
+
+        checks.check_contiguous_granules(ds)
+
+        # Test False case
+        granule_ids = np.array([0, 1, 2, 7, 8, 9])
+        ds = create_dataset_with_coordinate("gpm_granule_id", granule_ids)
+        assert not checks.has_contiguous_granules(ds)
+
+        with pytest.raises(ValueError):
+            checks.check_contiguous_granules(ds)
 
 
 class TestGetSlicesContiguousGranules:
@@ -306,24 +371,6 @@ class TestCheckRegularTime:
             checks.check_regular_time(ds)
 
 
-def test_check_cross_track() -> None:
-    """Test _check_cross_track decorator"""
-
-    @checks._check_cross_track
-    def identity(xr_obj: Union[xr.Dataset, xr.DataArray]) -> Union[xr.Dataset, xr.DataArray]:
-        return xr_obj
-
-    # Test with cross_track
-    da = xr.DataArray(np.arange(10), dims=["cross_track"])
-    identity(da)
-    # No error raised
-
-    # Test without cross_track
-    da = xr.DataArray(np.arange(10))
-    with pytest.raises(ValueError):
-        identity(da)
-
-
 def test_get_along_track_scan_distance() -> None:
     """Test _get_along_track_scan_distance"""
 
@@ -373,6 +420,24 @@ class TestContinuousScans:
         ds["gpm_granule_id"] = np.ones(self.n_along_track)
         ds["time"] = time
 
+        return ds
+
+    @pytest.fixture
+    def ds_contiguous_two_scans(
+        self,
+        ds_contiguous: xr.Dataset,
+    ) -> xr.Dataset:
+        ds = ds_contiguous.copy(deep=True)
+        ds = ds.isel({"along_track": slice(0, 2)})
+        return ds
+
+    @pytest.fixture
+    def ds_contiguous_three_scans(
+        self,
+        ds_contiguous: xr.Dataset,
+    ) -> xr.Dataset:
+        ds = ds_contiguous.copy(deep=True)
+        ds = ds.isel({"along_track": slice(0, 3)})
         return ds
 
     @pytest.fixture
@@ -479,81 +544,160 @@ class TestContinuousScans:
         assert not checks.has_contiguous_scans(ds_non_contiguous_granule_id)
         assert not checks.has_contiguous_scans(ds_non_contiguous_both)
 
+    def test_get_slices_contiguous_scans(
+        self,
+        ds_contiguous: xr.Dataset,
+        ds_contiguous_two_scans: xr.Dataset,
+        ds_contiguous_three_scans: xr.Dataset,
+        ds_non_contiguous_lon: xr.Dataset,
+    ) -> None:
+        # Check contiguous scans
+        assert checks.get_slices_contiguous_scans(ds_contiguous) == [slice(0, 10)]
+
+        # Check with only two scans --> []
+        assert checks.get_slices_contiguous_scans(ds_contiguous_two_scans) == []
+
+        # Check with at least 3 scans
+        assert checks.get_slices_contiguous_scans(ds_contiguous_three_scans) == [slice(0, 3)]
+
+        # Check non-contiguous scans
+        assert checks.get_slices_contiguous_scans(ds_non_contiguous_lon) == [
+            slice(0, 5),
+            slice(5, 10),
+        ]
+
+    def test_get_slices_non_contiguous_scans(
+        self,
+        ds_contiguous: xr.Dataset,
+        ds_contiguous_two_scans: xr.Dataset,
+        ds_contiguous_three_scans: xr.Dataset,
+        ds_non_contiguous_lon: xr.Dataset,
+    ) -> None:
+        # Check contiguous scans
+        assert checks.get_slices_non_contiguous_scans(ds_contiguous) == []
+
+        # Check with only two scans --> []
+        assert checks.get_slices_non_contiguous_scans(ds_contiguous_two_scans) == []
+
+        # Check with at least 3 scans
+        assert checks.get_slices_non_contiguous_scans(ds_contiguous_three_scans) == []
+
+        # Check non-contiguous scans
+        assert checks.get_slices_non_contiguous_scans(ds_non_contiguous_lon) == [slice(5, 5)]
+
 
 class TestValidGeolocation:
     n_along_track = 10
     invalid_idx = 5
 
     @pytest.fixture
-    def ds_valid(self) -> xr.Dataset:
+    def ds_orbit_valid(self) -> xr.Dataset:
         # Values along track
         lon = np.arange(self.n_along_track, dtype=float)
 
         # Add cross-track dimension
-        lon = lon[np.newaxis, :]
+        lon = np.vstack((lon[np.newaxis, :], lon[np.newaxis, :]))
+        lat = lon.copy()
         time = np.zeros(self.n_along_track)
 
         ds = xr.Dataset()
         ds["lon"] = (("cross_track", "along_track"), lon)
-        ds["time"] = time
-
+        ds["lat"] = (("cross_track", "along_track"), lat)
+        ds["time"] = (("along_track"), time)
         return ds
 
     @pytest.fixture
-    def ds_invalid(
+    def ds_orbit_valid_with_one_cross_track_nan(self, ds_orbit_valid) -> xr.Dataset:
+        ds = ds_orbit_valid.copy(deep=True)
+        ds["lon"].data[0] = np.nan
+        return ds
+
+    @pytest.fixture
+    def ds_orbit_invalid(
         self,
-        ds_valid: xr.Dataset,
+        ds_orbit_valid: xr.Dataset,
     ) -> xr.Dataset:
-        ds = ds_valid.copy(deep=True)
+        ds = ds_orbit_valid.copy(deep=True)
+        ds["lon"][0, self.invalid_idx] = np.nan
+        return ds
 
-        lon = ds["lon"].values.copy()
-        lon[0, self.invalid_idx] = np.nan
-        ds["lon"] = (("cross_track", "along_track"), lon)
-
+    @pytest.fixture
+    def ds_orbit_all_invalid(
+        self,
+        ds_orbit_valid: xr.Dataset,
+    ) -> xr.Dataset:
+        ds = ds_orbit_valid.copy(deep=True)
+        ds["lon"].data[:, :] = np.nan
         return ds
 
     def test_is_valid_geolocation(
         self,
         set_is_orbit_to_true: None,
-        ds_valid: xr.Dataset,
-        ds_invalid: xr.Dataset,
+        ds_orbit_valid: xr.Dataset,
+        ds_orbit_invalid: xr.Dataset,
     ) -> None:
         """Test _is_valid_geolocation"""
 
         # Valid
-        valid = checks._is_valid_geolocation(ds_valid)
+        valid = checks._is_valid_geolocation(ds_orbit_valid)
         assert np.all(valid)
 
         # Invalid
-        valid = checks._is_valid_geolocation(ds_invalid)
-        assert np.sum(valid) == self.n_along_track - 1
+        valid = checks._is_valid_geolocation(ds_orbit_invalid)
+        assert np.sum(valid.all(dim="cross_track")) == self.n_along_track - 1
 
     def test_check_valid_geolocation(
         self,
         set_is_orbit_to_true: None,
-        ds_valid: xr.Dataset,
-        ds_invalid: xr.Dataset,
+        ds_orbit_valid: xr.Dataset,
+        ds_orbit_invalid: xr.Dataset,
     ) -> None:
         """Test check_valid_geolocation"""
 
         # Valid
-        checks.check_valid_geolocation(ds_valid)
+        checks.check_valid_geolocation(ds_orbit_valid)
         # No error raised
 
         # Invalid
         with pytest.raises(ValueError):
-            checks.check_valid_geolocation(ds_invalid)
+            checks.check_valid_geolocation(ds_orbit_invalid)
 
     def test_has_valid_geolocation(
         self,
         set_is_orbit_to_true: None,
-        ds_valid: xr.Dataset,
-        ds_invalid: xr.Dataset,
+        ds_orbit_valid: xr.Dataset,
+        ds_orbit_invalid: xr.Dataset,
     ) -> None:
         """Test has_valid_geolocation"""
 
-        assert checks.has_valid_geolocation(ds_valid)
-        assert not checks.has_valid_geolocation(ds_invalid)
+        assert checks.has_valid_geolocation(ds_orbit_valid)
+        assert not checks.has_valid_geolocation(ds_orbit_invalid)
+
+    def test_get_slices_valid_geolocation(
+        self,
+        ds_orbit_valid: xr.Dataset,
+        ds_orbit_valid_with_one_cross_track_nan: xr.Dataset,
+        ds_orbit_invalid: xr.Dataset,
+        ds_orbit_all_invalid: xr.Dataset,
+    ) -> None:
+        """Test get_slices_valid_geolocation"""
+
+        # Test valid geolocation
+        assert checks.get_slices_valid_geolocation(ds_orbit_valid) == [slice(0, 10)]
+
+        # Test when on cross-track line (along the entire along-track) is entirely nan
+        assert checks.get_slices_valid_geolocation(ds_orbit_valid_with_one_cross_track_nan) == [
+            slice(0, 10)
+        ]
+
+        # Test when scattered nan across lons/lats array
+        assert checks.get_slices_valid_geolocation(ds_orbit_invalid) == [
+            slice(0, 5, None),
+            slice(6, 10, None),
+        ]
+
+        # Test when all nan coordinates
+        assert checks.get_slices_valid_geolocation(ds_orbit_all_invalid) == []
 
 
 class TestWobblingSwath:
@@ -629,6 +773,58 @@ class TestIsRegular:
         # Mock has_regular_time to return False
         mock_has_regular_time.return_value = False
         assert not checks.is_regular(ds)
+
+
+class TestGetSlicesRegular:
+    @pytest.fixture
+    def ds_orbit(self) -> xr.Dataset:
+        # Values along track
+        n_along_track = 10
+        lon = np.arange(n_along_track, dtype=float)
+        # Add cross-track dimension
+        lon = lon[np.newaxis, :]
+        # Create dataset
+        ds = xr.Dataset()
+        ds["lon"] = (("cross_track", "along_track"), lon)
+        ds["lat"] = (("cross_track", "along_track"), lon)
+        granule_ids = np.array([0, 0, 0, 1, 1, 1, 2, 2, 7, 8])
+        ds = ds.assign_coords({"gpm_granule_id": ("along_track", granule_ids)})
+        return ds
+
+    @pytest.fixture
+    def ds_grid(self) -> xr.Dataset:
+        lon = np.arange(10, dtype=float)
+        lat = np.arange(10, dtype=float)
+        hours = [0, 1, 2, 7, 8, 9]
+        time = create_fake_datetime_array_from_hours_list(hours)
+
+        ds = xr.Dataset()
+        ds["lon"] = (("lon"), lon)
+        ds["lat"] = (("lat"), lat)
+        ds["time"] = (("time"), time)
+        return ds
+
+    def test_orbit_get_slices_regular(self, ds_orbit):
+        expected_slices = [slice(0, 8), slice(8, 10)]
+        results = checks.get_slices_regular(ds_orbit)
+        assert expected_slices == results
+
+    def test_grid_get_slices_regular(self, ds_grid):
+        expected_slices = [slice(0, 3), slice(3, 6)]
+        results = checks.get_slices_regular(ds_grid)
+        assert expected_slices == results
+
+
+def test_check_criteria() -> None:
+    """Test _check_criteria"""
+    assert "all" == checks._check_criteria(criteria="all")
+    assert "any" == checks._check_criteria(criteria="any")
+
+    with pytest.raises(ValueError):
+        checks._check_criteria(None)
+
+    with pytest.raises(ValueError):
+        checks._check_criteria("invalid_criteria")
 
 
 def test_get_slices_var_equals() -> None:

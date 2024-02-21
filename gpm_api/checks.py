@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Thu Jul 13 14:32:40 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module defines functions providing GPM-API Dataset information."""
 import numpy as np
 import xarray as xr
 
@@ -145,15 +166,31 @@ def is_grid(xr_obj):
 
 
 def check_is_orbit(xr_obj):
-    "Check is a GPM orbit object."
+    "Check is a GPM ORBIT object."
     if not is_orbit(xr_obj):
         raise ValueError("Expecting a GPM ORBIT object.")
 
 
 def check_is_grid(xr_obj):
-    "Check is a GPM grid object."
+    "Check is a GPM GRID object."
     if not is_grid(xr_obj):
         raise ValueError("Expecting a GPM GRID object.")
+
+
+def check_is_gpm_object(xr_obj):
+    "Check is a GPM object (GRID or ORBIT)."
+    if not is_orbit(xr_obj) and not is_grid(xr_obj):
+        raise ValueError("Unrecognized GPM xarray object.")
+
+
+def check_has_cross_track_dimension(xr_obj):
+    if "cross_track" not in xr_obj.dims:
+        raise ValueError("The 'cross-track' dimension is not available.")
+
+
+def check_has_along_track_dimension(xr_obj):
+    if "along_track" not in xr_obj.dims:
+        raise ValueError("The 'along_track' dimension is not available.")
 
 
 def _is_spatial_2d_datarray(da, strict):

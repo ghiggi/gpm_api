@@ -74,7 +74,7 @@ print(t_elapsed, "seconds")  # 102.6 seconds
 
 ####-------------------------------------------------------------------------.
 #### Test multiple download at once
-from gpm_api.io.download import get_fpaths_from_fnames, filter_download_list
+from gpm_api.io.download import get_filepaths_from_filenames, filter_download_list
 from gpm_api.io.find import find_filepaths
 
 pps_filepaths = find_filepaths(
@@ -87,7 +87,7 @@ pps_filepaths = find_filepaths(
     verbose=verbose,
 )
 
-local_filepaths = get_fpaths_from_fnames(
+local_filepaths = get_filepaths_from_filenames(
     pps_filepaths,
     storage="local",
     product_type=product_type,

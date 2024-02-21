@@ -1,15 +1,36 @@
-#!/usr/bin/env python3
-"""
-Created on Thu Oct 13 17:45:37 2022
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains the routines required to search data on the NASA PPS servers."""
 import datetime
 import subprocess
 
 from dateutil.relativedelta import relativedelta
 
-from gpm_api.configs import get_pps_password, get_pps_username
+from gpm_api.configs import get_password_pps, get_username_pps
 from gpm_api.io.checks import (
     check_product_type,
     check_product_validity,
@@ -206,10 +227,10 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
 ############################
 
 
-def __get_pps_file_list(url_product_dir):
+def _try_get_pps_file_list(url_product_dir):
     # Retrieve GPM-API configs
-    username = get_pps_username()
-    password = get_pps_password()
+    username = get_username_pps()
+    password = get_password_pps()
     # Ensure url_file_list ends with "/"
     if url_product_dir[-1] != "/":
         url_product_dir = url_product_dir + "/"
@@ -254,7 +275,7 @@ def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
         Default is False. Whether to specify when data are not available for a specific date.
     """
     try:
-        filepaths = __get_pps_file_list(url_product_dir)
+        filepaths = _try_get_pps_file_list(url_product_dir)
     except Exception as e:
         # If url not exist, raise an error
         if "The PPS server is currently unavailable." in str(e):
@@ -315,7 +336,10 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
 
 
 def define_pps_filepath(product, product_type, date, version, filename):
-    """Define PPS filepath from filename."""
+    """Define PPS filepath from filename.
+
+    This function is called by get_filepath_from_filename(filename, storage, product_type).
+    """
     # Retrieve product directory url
     url_product_dir = get_pps_product_directory(
         product=product,
@@ -325,8 +349,8 @@ def define_pps_filepath(product, product_type, date, version, filename):
         server_type="data",
     )
     # Define PPS filepath
-    fpath = f"{url_product_dir}/{filename}"
-    return fpath
+    filepath = f"{url_product_dir}/{filename}"
+    return filepath
 
 
 ####--------------------------------------------------------------------------.
@@ -356,4 +380,5 @@ def find_first_pps_granule_filepath(product: str, product_type: str, version: in
     )
     if len(pps_filepaths) == 0:
         raise ValueError(f"No PPS files found for {product} product around {start_time}.")
+    pps_filepaths = sorted(pps_filepaths)
     return pps_filepaths[0]

@@ -1,3 +1,30 @@
+# -----------------------------------------------------------------------------.
+# MIT License
+
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module test the geospatial utilities."""
 import numpy as np
 import pytest
 from pytest_mock import MockFixture
@@ -166,6 +193,11 @@ def test_get_extent() -> None:
     returned_extent = geospatial.get_extent(ds, padding=padding)
     assert returned_extent == expected_extent
 
+    padding = (0.1, 0.1, 0.2, 0.2)
+    expected_extent = (-10.1, 20.1, -30.2, 40.2)
+    returned_extent = geospatial.get_extent(ds, padding=padding)
+    assert returned_extent == expected_extent
+
     # Test with invalid padding
     with pytest.raises(TypeError):
         geospatial.get_extent(ds, padding="invalid")
@@ -232,9 +264,9 @@ def test_crop_by_country(
     country = "Wakanda"
     extent = (-10, 20, -30, 40)
 
-    # Mock _get_country_extent_dictionary
+    # Mock read_countries_extent_dictionary
     mocker.patch(
-        "gpm_api.utils.geospatial._get_country_extent_dictionary",
+        "gpm_api.utils.geospatial.read_countries_extent_dictionary",
         return_value={country: extent},
     )
 
@@ -255,9 +287,9 @@ def test_crop_by_continent(
     continent = "Middle Earth"
     extent = (-10, 20, -30, 40)
 
-    # Mock _get_continent_extent_dictionary
+    # Mock read_continents_extent_dictionary
     mocker.patch(
-        "gpm_api.utils.geospatial._get_continent_extent_dictionary",
+        "gpm_api.utils.geospatial.read_continents_extent_dictionary",
         return_value={continent: extent},
     )
 
@@ -339,9 +371,9 @@ def test_get_crop_slices_by_country(
     country = "Froopyland"
     extent = (-10, 20, -30, 40)
 
-    # Mock _get_country_extent_dictionary
+    # Mock read_countries_extent_dictionary
     mocker.patch(
-        "gpm_api.utils.geospatial._get_country_extent_dictionary",
+        "gpm_api.utils.geospatial.read_countries_extent_dictionary",
         return_value={country: extent},
     )
 
@@ -360,9 +392,9 @@ def test_get_crop_slices_by_continent(
     continent = "Atlantis"
     extent = (-10, 20, -30, 40)
 
-    # Mock _get_continent_extent_dictionary
+    # Mock read_continents_extent_dictionary
     mocker.patch(
-        "gpm_api.utils.geospatial._get_continent_extent_dictionary",
+        "gpm_api.utils.geospatial.read_continents_extent_dictionary",
         return_value={continent: extent},
     )
 

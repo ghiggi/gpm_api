@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Wed Aug  2 12:11:11 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module provide utilities to write GPM Geographic Buckets Apache Parquet files."""
 import os
 
 import dask
@@ -26,7 +47,7 @@ from gpm_api.utils.timing import print_task_elapsed_time
 
 
 def write_granule_bucket(
-    src_fpath,
+    src_filepath,
     bucket_base_dir,
     open_granule_kwargs={},
     preprocessing_function=None,
@@ -54,7 +75,7 @@ def write_granule_bucket(
     """
     # Retrieve dataframe
     df = get_granule_dataframe(
-        src_fpath,
+        src_filepath,
         open_granule_kwargs=open_granule_kwargs,
         preprocessing_function=preprocessing_function,
         ds_to_df_function=ds_to_df_function,
@@ -78,14 +99,14 @@ def write_granule_bucket(
 
     # Define unique prefix name so to add files to the bucket archive
     # - This prevent risk of overwriting
-    # - If df is pandas.dataframe -->  f"{fname_prefix}_" + "{i}.parquet"
-    # - if df is a dask.dataframe -->  f"{fname_prefix}_dask.partition_{part_index}"
-    fname_prefix = os.path.splitext(os.path.basename(src_fpath))[0]
+    # - If df is pandas.dataframe -->  f"{filename_prefix}_" + "{i}.parquet"
+    # - if df is a dask.dataframe -->  f"{filename_prefix}_dask.partition_{part_index}"
+    filename_prefix = os.path.splitext(os.path.basename(src_filepath))[0]
 
     write_partitioned_dataset(
         df=df,
         base_dir=bucket_base_dir,
-        fname_prefix=fname_prefix,
+        filename_prefix=filename_prefix,
         partitioning=partitioning,
         format=format,
         use_threads=use_threads,
@@ -96,7 +117,7 @@ def write_granule_bucket(
 ####--------------------------------------------------------------------------.
 #### GPM Granules Routines
 def _try_write_granule_bucket(
-    src_fpath,
+    src_filepath,
     # Bucket configuration
     bucket_base_dir,
     open_granule_kwargs,
@@ -117,7 +138,7 @@ def _try_write_granule_bucket(
         # synchronous
         with dask.config.set(scheduler="single-threaded"):
             _ = write_granule_bucket(
-                src_fpath=src_fpath,
+                src_filepath=src_filepath,
                 bucket_base_dir=bucket_base_dir,
                 open_granule_kwargs=open_granule_kwargs,
                 ds_to_df_function=ds_to_df_function,
@@ -137,7 +158,7 @@ def _try_write_granule_bucket(
             info = None
     except Exception as e:
         # Define tuple to return
-        info = src_fpath, str(e)
+        info = src_filepath, str(e)
     return info
 
 
@@ -148,7 +169,7 @@ def split_list_in_blocks(values, block_size):
 
 @print_task_elapsed_time(prefix="Granules Bucketing Operation Terminated.")
 def write_granules_bucket(
-    fpaths,
+    filepaths,
     # Bucket configuration
     bucket_base_dir,
     open_granule_kwargs,
@@ -176,12 +197,12 @@ def write_granules_bucket(
     from gpm_api.utils.parallel import compute_list_delayed
 
     # Split long list of files in blocks
-    list_blocks = split_list_in_blocks(fpaths, block_size=max_dask_total_tasks)
+    list_blocks = split_list_in_blocks(filepaths, block_size=max_dask_total_tasks)
 
     # Execute tasks by blocks to avoid dask overhead
     n_blocks = len(list_blocks)
 
-    for i, block_fpaths in enumerate(list_blocks):
+    for i, block_filepaths in enumerate(list_blocks):
         print(f"Executing tasks block {i}/{n_blocks}")
 
         # Loop over granules
@@ -192,7 +213,7 @@ def write_granules_bucket(
 
         list_results = [
             func(
-                src_fpath=src_fpath,
+                src_filepath=src_filepath,
                 bucket_base_dir=bucket_base_dir,
                 open_granule_kwargs=open_granule_kwargs,
                 ds_to_df_function=ds_to_df_function,
@@ -208,7 +229,7 @@ def write_granules_bucket(
                 use_threads=use_threads,
                 **writer_kwargs,
             )
-            for src_fpath in block_fpaths
+            for src_filepath in block_filepaths
         ]
 
         # If delayed, execute the tasks
@@ -219,8 +240,8 @@ def write_granules_bucket(
 
         # Process results to detect errors
         list_errors = [error_info for error_info in list_results if error_info is not None]
-        for src_fpath, error_str in list_errors:
-            print(f"An error occurred while processing {src_fpath}: {error_str}")
+        for src_filepath, error_str in list_errors:
+            print(f"An error occurred while processing {src_filepath}: {error_str}")
 
         # If parallel=True, retrieve client, clean the memory and restart
         if parallel:
@@ -239,7 +260,7 @@ def write_granules_bucket(
 # --> Adapt code to use write_partitioned_dataset
 def write_parquet_dataset(
     df,
-    parquet_fpath,
+    parquet_filepath,
     partition_on,
     name_function=None,
     schema="infer",
@@ -263,7 +284,7 @@ def write_parquet_dataset(
 
     # Write Parquet Dataset
     df.to_parquet(
-        parquet_fpath,
+        parquet_filepath,
         engine="pyarrow",
         # Index option
         write_index=write_index,
@@ -286,7 +307,7 @@ def write_parquet_dataset(
 
 
 # def write_partitioned_parquet(
-#     df, parquet_fpath, xbin_size, ybin_size, xbin_name, ybin_name, partition_size="100MB"
+#     df, parquet_filepath, xbin_size, ybin_size, xbin_name, ybin_name, partition_size="100MB"
 # ):
 #     """Write a geographically partitioned Parquet Dataset.
 
@@ -313,12 +334,12 @@ def write_parquet_dataset(
 #     df = df.repartition(partition_size=partition_size) # maybe not needed
 
 #     # Write Parquet Dataset
-#     write_parquet_dataset(df=df, parquet_fpath=parquet_fpath, partition_on=[xbin_name, ybin_name])
+#     write_parquet_dataset(df=df, parquet_filepath=parquet_filepath, partition_on=[xbin_name, ybin_name])
 
 
 # def write_granule_bucket(
-#     src_fpath,
-#     dst_fpath,
+#     src_filepath,
+#     dst_filepath,
 #     open_granule_kwargs={},
 #     preprocessing_function=None,
 #     ds_to_df_function=ds_to_df_function,
@@ -330,7 +351,7 @@ def write_parquet_dataset(
 # ):
 #     # Retrieve dataframe
 #     df = get_granule_dataframe(
-#         src_fpath,
+#         src_filepath,
 #         open_granule_kwargs=open_granule_kwargs,
 #         preprocessing_function=preprocessing_function,
 #         ds_to_df_function=ds_to_df_function,
@@ -340,7 +361,7 @@ def write_parquet_dataset(
 #     # Write Parquet Dataset
 #     write_partitioned_parquet(
 #         df=df,
-#         parquet_fpath=dst_fpath,
+#         parquet_filepath=dst_filepath,
 #         xbin_size=xbin_size,
 #         ybin_size=ybin_size,
 #         xbin_name=xbin_name,
@@ -350,8 +371,8 @@ def write_parquet_dataset(
 ####--------------------------------------------------------------------------.
 #### GPM Granules Routines OLD
 # def _try_write_granule_bucket(
-#     src_fpath,
-#     dst_fpath,
+#     src_filepath,
+#     dst_filepath,
 #     open_granule_kwargs,
 #     preprocessing_function,
 #     filtering_function,
@@ -364,8 +385,8 @@ def write_parquet_dataset(
 #         # synchronous
 #         with dask.config.set(scheduler="single-threaded"):
 #             _ = write_granule_bucket(
-#                 src_fpath=src_fpath,
-#                 dst_fpath=dst_fpath,
+#                 src_filepath=src_filepath,
+#                 dst_filepath=dst_filepath,
 #                 open_granule_kwargs=open_granule_kwargs,
 #                 preprocessing_function=preprocessing_function,
 #                 filtering_function=filtering_function,
@@ -376,7 +397,7 @@ def write_parquet_dataset(
 #             info = None
 #     except Exception as e:
 #         # Define tuple to return
-#         info = src_fpath, str(e)
+#         info = src_filepath, str(e)
 #     return info
 
 
@@ -391,18 +412,18 @@ def write_parquet_dataset(
 #     return dict_list
 
 
-# def define_granule_bucket_fpath(bucket_base_dir, fpath):
+# def define_granule_bucket_filepath(bucket_base_dir, filepath):
 #     """Define GPM Granule Parquet Dataset filepath."""
-#     start_time = get_key_from_filepath(fpath, "start_time")
+#     start_time = get_key_from_filepath(filepath, "start_time")
 #     time_tree = get_time_tree(start_time)
 #     time_dir = os.path.join(bucket_base_dir, time_tree)
 #     os.makedirs(time_dir, exist_ok=True)
-#     parquet_fpath = os.path.join(time_dir, os.path.basename(fpath) + ".parquet")
-#     return parquet_fpath
+#     parquet_filepath = os.path.join(time_dir, os.path.basename(filepath) + ".parquet")
+#     return parquet_filepath
 
 
 # def write_granules_buckets(
-#     fpaths,
+#     filepaths,
 #     bucket_base_dir,
 #     open_granule_kwargs,
 #     preprocessing_function,
@@ -421,7 +442,7 @@ def write_parquet_dataset(
 #     from gpm_api.utils.parallel import compute_list_delayed
 
 #     src_dst_dict = {
-#         src_fpath: define_granule_bucket_fpath(bucket_base_dir, src_fpath) for src_fpath in fpaths
+#         src_filepath: define_granule_bucket_filepath(bucket_base_dir, src_filepath) for src_filepath in filepaths
 #     }
 
 #     if not force:
@@ -447,8 +468,8 @@ def write_parquet_dataset(
 
 #         list_results = [
 #             func(
-#                 src_fpath=src_fpath,
-#                 dst_fpath=dst_fpath,
+#                 src_filepath=src_filepath,
+#                 dst_filepath=dst_filepath,
 #                 open_granule_kwargs=open_granule_kwargs,
 #                 preprocessing_function=preprocessing_function,
 #                 ds_to_df_function=ds_to_df_function,
@@ -456,7 +477,7 @@ def write_parquet_dataset(
 #                 xbin_size=xbin_size,
 #                 ybin_size=ybin_size,
 #             )
-#             for src_fpath, dst_fpath in src_dst_dict.items()
+#             for src_filepath, dst_filepath in src_dst_dict.items()
 #         ]
 #         # If delayed, execute the tasks
 #         if parallel:
@@ -466,8 +487,8 @@ def write_parquet_dataset(
 
 #         # Process results to detect errors
 #         list_errors = [error_info for error_info in list_results if error_info is not None]
-#         for src_fpath, error_str in list_errors:
-#             print(f"An error occurred while processing {src_fpath}: {error_str}")
+#         for src_filepath, error_str in list_errors:
+#             print(f"An error occurred while processing {src_filepath}: {error_str}")
 
 #         # If parallel=True, retrieve client, clean the memory and restart
 #         if parallel:
@@ -483,7 +504,7 @@ def write_parquet_dataset(
 @print_task_elapsed_time(prefix="Dataset Bucket Operation Terminated.")
 def write_dataset_bucket(
     ds,
-    bucket_fpath,
+    bucket_filepath,
     open_granule_kwargs={},
     preprocessing_function=None,
     ds_to_df_function=ds_to_dask_df_function,
@@ -494,7 +515,7 @@ def write_dataset_bucket(
     xbin_name="lonbin",
     ybin_name="latbin",
     # Writer arguments
-    fname_prefix="part",
+    filename_prefix="part",
     format="parquet",
     use_threads=True,
     **writer_kwargs,
@@ -523,7 +544,7 @@ def write_dataset_bucket(
     # Write bucket
     write_partitioned_dataset(
         df=df,
-        base_dir=bucket_fpath,
+        base_dir=bucket_filepath,
         partitioning=partitioning,
         format=format,
         use_threads=use_threads,

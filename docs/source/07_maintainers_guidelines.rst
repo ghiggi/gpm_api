@@ -1,5 +1,5 @@
 ========================
-Maintainers guidelines
+Maintainers Guidelines
 ========================
 
 
@@ -11,7 +11,6 @@ List of the core contributors
 
 * Current Release Manager : Ghiggi Gionata
 * Testing Team : Ghiggi Gionata
-
 
 
 Versions guidelines
@@ -29,7 +28,8 @@ Given a version number in the MAJOR.MINOR.PATCH (eg., X.Y.Z) format, here are th
 Breaking vs. non-breaking changes
 -----------------------------------
 
-Since GPM-API is used by a broad ecosystem of both API consumers and implementers, it needs a strict definition of what changes are “non-breaking” and are therefore allowed in MINOR and PATCH releases.
+Since GPM-API is used by a broad ecosystem of both API consumers and implementers,
+it needs a strict definition of what changes are “non-breaking” and are therefore allowed in MINOR and PATCH releases.
 
 In the GPM-API spec, a breaking change is any change that requires either consumers or implementers to modify their code for it to continue to function correctly.
 
@@ -41,58 +41,85 @@ Examples of breaking changes include:
 Examples of non-breaking changes include :
 
 - Fix a bug.
-- Adding new functionalities to GPM-API that don’t affect the behavior of the API directly.
+- Adding new functionalities to GPM-API that don't affect the behavior of the API directly.
 - Updating the documentation.
-- Internal function refactoring that doesn’t affect the behavior of the software directly.
-
-
-
-
-One implication of this policy is that clients should be prepared to ignore the presence of unexpected fields in responses and unexpected values for enums. This is necessary to preserve compatibility between PATCH versions within the same MINOR version range, since optional fields and enum values can be added as non-breaking changes.
+- Internal function refactoring that doesn't affect the behavior of the software directly.
 
 
 Ongoing version support
 -----------------------------------
 
-GPM-API major releases aims to move the community forward, focusing on specifications stabilization and major feature additions, rather than backwards-compatibility. GPM-API minor releases will be backwards compatible. We strongly recommend adopting the latest release of GPM-API into production within 6 months for major releases, and 4 months for minor releases.
+GPM-API major releases aims to move the community forward, focusing on specifications stabilization and major feature additions, rather than backwards-compatibility.
+GPM-API minor releases will be backwards compatible.
+We strongly recommend adopting the latest release of GPM-API into production within 6 months for major releases, and 4 months for minor releases.
 
-The `LTE <https://www.epfl.ch/labs/lte/>`_ does not guarantee any period of support or maintenance. Recommended versions are supported and maintained by the `LTE <https://www.epfl.ch/labs/lte/>`_  and our community – we provide updated guidance and documentation, track issues, and provide bug fixes and critical updates in the form of hotfixes for these versions. Releases that are 2 years or older may be considered as deprecated.
+The maintaners do their best but does not guarantee any period of support or maintenance.
 
-Refer to the list of Recommended Releases to see current releases and more details.
-
-
+Releases that are 2 years or older may be considered as deprecated.
 
 
 Documentation pipeline
 ========================
 
-GPM-API’s documentation is built using Sphinx. All documentation lives in the ``docs/`` directory of the project repository.
+GPM-API's documentation is built using the powerful `Sphinx <https://www.sphinx-doc.org/en/master/>`_ framework,
+styled with `Book Theme <https://sphinx-book-theme.readthedocs.io/en/stable/index.html>`_.
+
+All documentation source files are neatly organized in the ``docs/`` directory within the project's repository.
 
 
-Manual documentation creation
------------------------------
+Documentation generation
+--------------------------
 
-After editing the source files, the documentation can be generated locally:
+To build the documentation locally, follow the next three steps.
+
+1. Set up the python environment for building the documentation
+
+	The python packages required to build the documentation are listed in the
+	`environment.yaml <https://github.com/ghiggi/gpm_api/blob/main/docs/environment.yaml>`_ file.
+
+	For an efficient setup, we recommend creating a dedicated virtual environment.
+	Navigate to the ``docs/`` directory and execute the following command.
+	This will create a new environment and install the required packages:
+
+	.. code-block:: bash
+
+		conda create -f environment.yaml
+
+2. Activate the virtual environment
+
+	Once the environment is ready, activate it using:
+
+	.. code-block:: bash
+
+	   	conda activate build-doc-gpm-api
 
 
-.. code-block:: bash
+3. Generate the documentation
 
-	cd docs
-	make html
+	With the environment set and activated, you're ready to generate the documentation.
+	Execute:
 
+	.. code-block:: bash
 
-The output of the previous command should be checked for warnings and errors. If the code is changed (new functions or classes), then the GPM-API documentation files located in ``docs/source/api`` are automatically regenerated.
+		make clean html
 
+	This command will build the HTML version of the documentation.
+	It first cleans previous builds (``make clean``) and then generates fresh documentation (``html``).
 
-Automatic (Github) documentation creation
-------------------------------------------
+	.. note:: It's important to review the output of the command. Look out for warnings or errors and address them to ensure the documentation is accurate and complete.
 
+By following these steps, you should have a local version of the GPM-API documentation
+in the ``docs/build/html/`` directory, ready for review or deployment!
 
-One webhook is defined in the repository to trigger the publication process to readthedoc.io.
+Documentation deployment
+--------------------------
+
+A webhook is defined in the GitHub repository to trigger automatically the publication process to `ReadTheDocs <https://about.readthedocs.com/?ref=readthedocs.com>`__
+after each Pull Request.
 
 This webhook is linked to the GPM-API core developer.
 
-.. image:: /static/documentation_pipepline.png
+.. image:: /static/documentation_pipeline.png
 
 Ghiggi Gionata owns the `ReadTheDoc <https://readthedocs.org/>`__ account.
 
@@ -102,7 +129,7 @@ Package releases pipeline
 
 One  `GitHub Action <https://github.com/ghiggi/gpm_api/actions>`_ is defined to trigger the packaging and the upload on `pypi.org <https://pypi.org/project/gpm-api/>`_.
 
-.. image:: /static/package_pipepline.png
+.. image:: /static/package_pipeline.png
 
 The `PyPi <https://pypi.org/>`__ project is shared beween the core contributors.
 
@@ -135,13 +162,13 @@ Currently, on each Pull Request, GitHub Actions are configured as follow:
 +====================================================================================================+==================================================================+==============================================================================================+===========================================+
 | `Pytest  <https://docs.pytest.org>`__                                                              | Execute unit tests and functional tests                          |                                                                                              |                                           |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
-| `Black <https://black.readthedocs.io/en/stable/>`__                                                | Python code formatter                                            |                                                                                              | No python version (Black version 22.8.0)  |
+| `Black <https://black.readthedocs.io/en/stable/>`__                                                | Python code formatter                                            |                                                                                              |                                           |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
-| `Ruff  <https://github.com/charliermarsh/ruff>`__                                                  | Python linter                                                    |                                                                                              | (Ruff version 0.0.2570)                   |
+| `Ruff  <https://github.com/charliermarsh/ruff>`__                                                  | Python linter                                                    |                                                                                              |                                           |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
-| `pre-commit.ci   <https://pre-commit.ci/>`__                                                       | Run pre-commit as defined in pre-commit-config.yaml              |                                                                                              |                                           |
+| `pre-commit.ci   <https://pre-commit.ci/>`__                                                       | Run pre-commit as defined in `.pre-commit-config.yaml <https://github.com/ghiggi/gpm_api/blob/main/.pre-commit-config.yaml>`__                                  |                                           |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
-| Coverage                                                                                           | Measure the code coverage of the project's unit tests            |                                                                                              | all versions according to GitHub workflow |
+| `Coverage   <https://coverage.readthedocs.io/>`__                                                  | Measure the code coverage of the project's unit tests            |                                                                                              | all versions according to GitHub workflow |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
 | `CodeCov    <https://about.codecov.io/>`__                                                         | Uses the "coverage" package to generate a code coverage report.  | `GPM-API  <https://app.codecov.io/gh/ghiggi/gpm_api>`__                                      | all versions according to GitHub workflow |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
@@ -149,7 +176,7 @@ Currently, on each Pull Request, GitHub Actions are configured as follow:
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
 | `CodeBeat      <https://codebeat.co/>`__                                                           | Automated code review and analysis tools                         | `GPM-API <https://codebeat.co/projects/github-com-ghiggi/gpm_api>`__                         | all versions according to GitHub workflow |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
-| `CodeScene <https://codescene.com/>`__                                                             | Automated code review and analysis tools                         |                                                                                              | all versions according to GitHub workflow |
+| `CodeScene <https://codescene.com/>`__                                                             | Automated code review and analysis tools                         | `GPM-API  <https://codescene.io/projects/36767/>`__                                          | all versions according to GitHub workflow |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
 | `CodeFactor <https://www.codefactor.io/>`__                                                        | Automated code review and analysis tools                         | `GPM-API <https://www.codefactor.io/repository/github/ghiggi/gpm_api>`__                     | all versions according to GitHub workflow |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+

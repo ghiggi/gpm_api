@@ -1,7 +1,35 @@
+# -----------------------------------------------------------------------------.
+# MIT License
+
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module defines pytest fixtures available across all test modules."""
+import os
 import pytest
 import datetime
-from typing import Any, List, Dict, Tuple, Iterable
-from gpm_api.io.products import get_info_dict, available_products
+from typing import Any, List, Dict, Tuple
+from gpm_api.io.products import get_info_dict
 from gpm_api.utils import geospatial
 import posixpath as pxp
 import ntpath as ntp
@@ -14,52 +42,20 @@ import xarray as xr
 from gpm_api.tests.utils.fake_datasets import get_orbit_dataarray, get_grid_dataarray
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mock_configuration() -> Iterable[Dict[str, str]]:
-    """Patch the user configuration for entire session
-
-    Doing this will retrieve the configuration from pytest memory and not
-    alter the local configuration in ~/.config_gpm_api.yml
-    """
-
-    mocked_configuration = {
-        "username_pps": "testuser",
-        "password_pps": "testuser",
-        "username_earthdata": "testuser",
-        "password_earthdata": "testuser",
-        "gpm_base_dir": os.path.join(
-            os.getcwd(),
-            "gpm_api",
-            "tests",
-            "resources",
-        ),
-    }
-
-    with patch.object(
-        gpm_api.configs,
-        "read_gpm_api_configs",
-        return_value=mocked_configuration,
-    ):
-        yield mocked_configuration
-
-
 @pytest.fixture
 def product_types() -> List[str]:
     """Return a list of all product types from the info dict"""
-    product_types = []
-    for product, info_dict in get_info_dict().items():
-        product_types += info_dict["product_types"]
+    from gpm_api.io.products import get_available_product_types
 
-    product_types = list(set(product_types))  # Dedup list
-
-    return product_types
+    return get_available_product_types()
 
 
 @pytest.fixture
 def product_categories() -> List[str]:
     """Return a list of product categories from the info dict"""
+    from gpm_api.io.products import get_available_product_categories
 
-    return list(set([info_dict["product_category"] for info_dict in get_info_dict().values()]))
+    return get_available_product_categories()
 
 
 @pytest.fixture
@@ -68,6 +64,32 @@ def product_levels() -> List[str]:
     from gpm_api.io.products import get_available_product_levels
 
     return get_available_product_levels(full=False)  #  ["1A", "1B", "1C", "2A", "2B", "3B"]
+
+
+@pytest.fixture
+def full_product_levels() -> List[str]:
+    """Return a list of full product levels from the info dict"""
+    from gpm_api.io.products import get_available_product_levels
+
+    return get_available_product_levels(
+        full=True
+    )  # ["1A", "1B", "1C", "2A", "2A-CLIM", "2A-ENV", "2B", "3B-HHR""]
+
+
+@pytest.fixture
+def sensors() -> List[str]:
+    """Return a list of sensors from the info dict"""
+    from gpm_api.io.products import get_available_sensors
+
+    return get_available_sensors()  # ['AMSR2', 'AMSRE', 'AMSUB', 'ATMS', 'DPR', ...]
+
+
+@pytest.fixture
+def satellites() -> List[str]:
+    """Return a list of satellites from the info dict"""
+    from gpm_api.io.products import get_available_satellites
+
+    return get_available_satellites()  # ['GCOMW1', 'GPM', 'METOPA', 'METOPB',  'METOPC', ...]
 
 
 @pytest.fixture
@@ -178,7 +200,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "year": 2020,
             "month": 7,
             "day": 5,
-            "product": "1B-Ka",
+            "product": "1B-Ku",
             "product_category": "radar",
             "product_type": "RS",
             "start_time": datetime.datetime(2020, 7, 5, 23, 10, 0),
@@ -418,12 +440,12 @@ ExtentDictionary = Dict[str, Tuple[float, float, float, float]]
 
 @pytest.fixture
 def country_extent_dictionary() -> ExtentDictionary:
-    return geospatial._get_country_extent_dictionary()
+    return geospatial.read_countries_extent_dictionary()
 
 
 @pytest.fixture
 def continent_extent_dictionary() -> ExtentDictionary:
-    return geospatial._get_continent_extent_dictionary()
+    return geospatial.read_continents_extent_dictionary()
 
 
 @pytest.fixture(scope="function")

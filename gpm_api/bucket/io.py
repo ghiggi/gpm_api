@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Wed Aug  2 16:10:28 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module provide utilities to search GPM Geographic Buckets files."""
 import os
 
 
@@ -40,7 +61,7 @@ def _get_parquet_file_list(bin_dir_path):
     return key, file_list
 
 
-def _get_fpaths_by_bin_parallel(list_bin_dir_path):
+def _get_filepaths_by_bin_parallel(list_bin_dir_path):
     """Retrieve a dictionary with the list of filepaths for each bucket bin."""
     import concurrent
 
@@ -60,12 +81,12 @@ def _get_fpaths_by_bin_parallel(list_bin_dir_path):
     return results
 
 
-def get_fpaths_by_bin(base_dir, parallel=True):
+def get_filepaths_by_bin(base_dir, parallel=True):
     """Retrieve a dictionary with the list of filepaths for each bucket bin."""
     list_bin_dir_path = _retrieve_list_bin_dir_path(base_dir)
     list_bin_dir_path = list_bin_dir_path
     if parallel:
-        results = _get_fpaths_by_bin_parallel(list_bin_dir_path)
+        results = _get_filepaths_by_bin_parallel(list_bin_dir_path)
     else:
         results = {}
         for bin_dir_path in list_bin_dir_path:

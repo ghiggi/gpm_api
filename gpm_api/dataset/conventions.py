@@ -1,9 +1,31 @@
-#!/usr/bin/env python3
-"""
-Created on Tue Jul 18 17:33:38 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains functions to enforce CF-conventions into the GPM-API objects."""
+import datetime
 import warnings
 
 from gpm_api.checks import (
@@ -17,7 +39,7 @@ from gpm_api.dataset.decoding.cf import apply_cf_decoding
 from gpm_api.dataset.decoding.coordinates import set_coordinates
 from gpm_api.dataset.decoding.dataarray_attrs import standardize_dataarrays_attrs
 from gpm_api.dataset.decoding.routines import decode_variables
-from gpm_api.utils.checks import is_regular
+from gpm_api.utils.checks import has_valid_geolocation, is_regular
 from gpm_api.utils.time import (
     ensure_time_validity,
     subset_by_time,
@@ -28,23 +50,27 @@ EPOCH = "seconds since 1970-01-01 00:00:00"
 
 
 def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=False):
-    """Check time period start_time, end_time is covered.
+    """Check time period start_time, end_time is covered with a tolerance of 5 seconds.
 
     If raise_error=True, raise error if time period is not covered.
     If raise_error=False, it raise a GPM warning.
 
     """
+    # Define tolerance in seconds
+    tolerance = datetime.timedelta(seconds=5)
+
     # Get first and last timestep from xr.Dataset
     first_start = ds["time"].data[0].astype("M8[s]").tolist()
     last_end = ds["time"].data[-1].astype("M8[s]").tolist()
     # Check time period is covered
     msg = ""
-    if start_time and first_start > start_time:
-        msg = f"The dataset start at {first_start}, although the specified start_time is {start_time}."
-    if end_time and last_end < end_time:
-        msg1 = f"The dataset end_time {last_end} occurs before the specified end_time {end_time}."
+    if start_time and first_start - tolerance > start_time:
+        msg = f"The dataset start at {first_start}, although the specified start_time is {start_time}. "
+    if end_time and last_end + tolerance < end_time:
+        msg1 = f"The dataset end_time {last_end} occurs before the specified end_time {end_time}. "
         msg = msg[:-1] + "; and t" + msg1[1:] if msg != "" else msg1
     if msg != "":
+        msg += "Some granules may be missing!"
         if raise_error:
             raise ValueError(msg)
         else:
@@ -149,6 +175,7 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     # Warn if:
     # - non-contiguous scans in orbit data
     # - non-regular timesteps in grid data
+    # - invalid geolocation coordinates
     try:
         if is_grid(ds):
             if config.get("warn_non_contiguous_scans"):
@@ -156,6 +183,10 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
                     msg = "Missing timesteps across the dataset !"
                     warnings.warn(msg, GPM_Warning)
         elif is_orbit(ds):
+            if config.get("warn_invalid_geolocation"):
+                if not has_valid_geolocation(ds):
+                    msg = "Presence of invalid geolocation coordinates !"
+                    warnings.warn(msg, GPM_Warning)
             if config.get("warn_non_contiguous_scans"):
                 if not is_regular(ds):
                     msg = "Presence of non-contiguous scans !"
@@ -164,11 +195,4 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
         pass
 
     ###-----------------------------------------------------------------------.
-    ## Check geolocation latitude/longitude coordinates
-    # TODO: check_valid_geolocation
-    # TODO: ensure_valid_geolocation (1 spurious pixel)
-    # TODO: ds_gpm.gpm_api.valid_geolocation
-
-    ###-----------------------------------------------------------------------.
-
     return ds

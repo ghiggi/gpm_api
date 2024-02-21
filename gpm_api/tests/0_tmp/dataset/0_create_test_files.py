@@ -113,12 +113,12 @@ def _copy_datasets(src_group, dst_group, subset_size=5):
             _copy_datasets(h5_obj, subgroup, subset_size=subset_size)
 
 
-def create_test_hdf5(src_fpath, dst_fpath):
+def create_test_hdf5(src_filepath, dst_filepath):
     # Open source HDF5 file
-    src_file = h5py.File(src_fpath, "r")
+    src_file = h5py.File(src_filepath, "r")
 
     # Create empty HDF5 file
-    dst_file = h5py.File(dst_fpath, "w")
+    dst_file = h5py.File(dst_filepath, "w")
 
     # Write a subset of the source HDF5 groups and leafs into the new HDF5 file
     _copy_datasets(src_file, dst_file, subset_size=10)
@@ -134,37 +134,37 @@ def create_test_hdf5(src_fpath, dst_fpath):
 # ------------------------------------------------------------------------------.
 ## Create small HDF5 for testing !
 dst_dir = "/tmp"
-src_fpath = "/home/ghiggi/data/GPM/RS/V07/RADAR/2A-DPR/2022/07/06/2A.GPM.DPR.V9-20211125.20220706-S043937-E061210.047456.V07A.HDF5"
-src_fpath = "/home/ghiggi/data/GPM/RS/V07/PMW/1A-GMI/2020/08/01/1A.GPM.GMI.COUNT2021.20200801-S105247-E122522.036508.V07A.HDF5"
-src_fpath = "/home/ghiggi/data/GPM/RS/V07/PMW/1C-GMI/2020/08/01/1C.GPM.GMI.XCAL2016-C.20200801-S105247-E122522.036508.V07A.HDF5"
-src_fpath = "/home/ghiggi/data/GPM/RS/V07/PMW/2A-GMI/2022/07/06/2A.GPM.GMI.GPROF2021v1.20220706-S183242-E200515.047465.V07A.HDF5"
+src_filepath = "/home/ghiggi/data/GPM/RS/V07/RADAR/2A-DPR/2022/07/06/2A.GPM.DPR.V9-20211125.20220706-S043937-E061210.047456.V07A.HDF5"
+src_filepath = "/home/ghiggi/data/GPM/RS/V07/PMW/1A-GMI/2020/08/01/1A.GPM.GMI.COUNT2021.20200801-S105247-E122522.036508.V07A.HDF5"
+src_filepath = "/home/ghiggi/data/GPM/RS/V07/PMW/1C-GMI/2020/08/01/1C.GPM.GMI.XCAL2016-C.20200801-S105247-E122522.036508.V07A.HDF5"
+src_filepath = "/home/ghiggi/data/GPM/RS/V07/PMW/2A-GMI/2022/07/06/2A.GPM.GMI.GPROF2021v1.20220706-S183242-E200515.047465.V07A.HDF5"
 
 # BUG with IMERG
-# src_fpath = "/home/ghiggi/data/GPM/RS/V07/IMERG/IMERG-FR/2016/03/09/3B-HHR.MS.MRG.3IMERG.20160309-S100000-E102959.0600.V07A.HDF5"
+# src_filepath = "/home/ghiggi/data/GPM/RS/V07/IMERG/IMERG-FR/2016/03/09/3B-HHR.MS.MRG.3IMERG.20160309-S100000-E102959.0600.V07A.HDF5"
 
 
-dst_fpath = os.path.join(dst_dir, os.path.basename(src_fpath))
+dst_filepath = os.path.join(dst_dir, os.path.basename(src_filepath))
 create_test_hdf5(
-    src_fpath=src_fpath,
-    dst_fpath=dst_fpath,
+    src_filepath=src_filepath,
+    dst_filepath=dst_filepath,
 )
 
 ## Test it open correctly
-ds = gpm_api.open_granule(dst_fpath)
+ds = gpm_api.open_granule(dst_filepath)
 ds
 
 # ------------------------------------------------------------------------------.
 # DEBUG
 # Open source HDF5 file
-# src_file = h5py.File(src_fpath, "r")
+# src_file = h5py.File(src_filepath, "r")
 
-# # dt = datatree.open_datatree(src_fpath, engine="netcdf4")
+# # dt = datatree.open_datatree(src_filepath, engine="netcdf4")
 # # name, h5_obj = list(src_file["/FS/PRE"].items())[0] # 2A-DPR
 # # name, h5_obj = list(src_file["/Grid"].items())[0]   # IMERG-FR
 
 # # Create empty HDF5 file
-# dst_fpath = os.path.join(dst_dir, os.path.basename(src_fpath))
-# dst_file = h5py.File(dst_fpath, "w")
+# dst_filepath = os.path.join(dst_dir, os.path.basename(src_filepath))
+# dst_file = h5py.File(dst_filepath, "w")
 
 # # Write a subset of the source HDF5 groups and leafs into the new HDF5 file
 # _copy_datasets(src_file, dst_file, subset_size=10)
@@ -179,9 +179,9 @@ ds
 # ------------------------------------------------------------------------------.
 
 
-# dt = open_datatree(src_fpath)
+# dt = open_datatree(src_filepath)
 
-# dt = open_datatree(dst_fpath)
+# dt = open_datatree(dst_filepath)
 # dt.attrs
 # dt["FS"].attrs
 # dt["FS"]["SLV"].attrs

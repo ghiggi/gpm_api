@@ -17,7 +17,7 @@ jobs:
         experimental: [false]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
@@ -32,7 +32,7 @@ jobs:
 
       - name: Install the package
         run: |
-          pip install -e .[image,dev]
+          pip install -e ".[dev]"
 
       - name: Test with pytest
         run: |

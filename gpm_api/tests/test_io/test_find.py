@@ -1,10 +1,36 @@
+# -----------------------------------------------------------------------------.
+# MIT License
+
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module test the file search routines."""
 import datetime
 import os
 from typing import Any, Dict, List, Tuple
-
 import pytest
 from pytest_mock.plugin import MockerFixture
-
+import gpm_api
 from gpm_api.io import find
 from gpm_api.io.products import available_products
 from gpm_api.utils.warnings import GPMDownloadWarning
@@ -45,67 +71,68 @@ class TestGetDailyFilepaths:
     def test_local_existing_files(
         self,
         check,  # For non-failing asserts
-        mock_configuration: Dict[str, str],
         mocker: MockerFixture,
         product_info: Dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "local" storage with existing (mocked) files"""
 
+        base_dir = "dummy/path/to/base_dir"
         storage = "local"
 
         # Mock os.listdir to return a list of filenames
         mocker.patch("gpm_api.io.local.os.listdir", return_value=self.mock_filenames)
         mocker.patch("gpm_api.io.local.os.path.exists", return_value=True)
 
-        # Test with existing files (mocked)
-        for product_type in ["RS", "NRT"]:
-            for product in available_products(product_types=product_type):
-                info = product_info[product]
-                version = info["available_versions"][-1]
-                product_category = info["product_category"]
+        with gpm_api.config.set({"base_dir": base_dir}):
+            # Test with existing files (mocked)
+            for product_type in ["RS", "NRT"]:
+                for product in available_products(product_types=product_type):
+                    info = product_info[product]
+                    version = info["available_versions"][-1]
+                    product_category = info["product_category"]
 
-                returned_filepaths = _get_all_daily_filepaths(
-                    storage=storage,
-                    date=self.date,
-                    product=product,
-                    product_type=product_type,
-                    version=version,
-                    verbose=True,
-                )
+                    returned_filepaths = _get_all_daily_filepaths(
+                        storage=storage,
+                        date=self.date,
+                        product=product,
+                        product_type=product_type,
+                        version=version,
+                        verbose=True,
+                    )
 
-                expected_filepath_elements = [
-                    mock_configuration["gpm_base_dir"],
-                    "GPM",
-                    product_type,
-                ]
-
-                if product_type == "RS":
-                    expected_filepath_elements.append(f"V0{version}")
-
-                expected_filepath_elements.extend(
-                    [
-                        product_category,
-                        product,
-                        self.date.strftime("%Y"),
-                        self.date.strftime("%m"),
-                        self.date.strftime("%d"),
+                    expected_filepath_elements = [
+                        base_dir,
+                        "GPM",
+                        product_type,
                     ]
-                )
 
-                expected_filepaths = [
-                    os.path.join(*expected_filepath_elements, filename)
-                    for filename in self.mock_filenames
-                ]
+                    if product_type == "RS":
+                        expected_filepath_elements.append(f"V0{version}")
 
-                with check:
-                    assert returned_filepaths == expected_filepaths
+                    expected_filepath_elements.extend(
+                        [
+                            product_category,
+                            product,
+                            self.date.strftime("%Y"),
+                            self.date.strftime("%m"),
+                            self.date.strftime("%d"),
+                        ]
+                    )
+
+                    expected_filepaths = [
+                        os.path.join(*expected_filepath_elements, filename)
+                        for filename in self.mock_filenames
+                    ]
+
+                    with check:
+                        assert returned_filepaths == expected_filepaths
 
     @pytest.fixture
     def mock_get_pps_file_list(
         self,
         mocker: MockerFixture,
     ) -> None:
-        """Mock gpm_api.io.pps.__get_pps_file_list, which uses curl to get a list of files"""
+        """Mock gpm_api.io.pps._try_get_pps_file_list, which uses curl to get a list of files"""
 
         def mocked_get_pps_file_list(url_product_dir: str) -> List[str]:
             # Remove the base URL, assuming they have the following format:
@@ -114,7 +141,7 @@ class TestGetDailyFilepaths:
             url_without_base = url_product_dir.split("/text")[1]
             return [f"{url_without_base}/{filename}" for filename in self.mock_filenames]
 
-        mocker.patch("gpm_api.io.pps.__get_pps_file_list", side_effect=mocked_get_pps_file_list)
+        mocker.patch("gpm_api.io.pps._try_get_pps_file_list", side_effect=mocked_get_pps_file_list)
 
     def test_pps_rs_version_7(
         self,
@@ -478,6 +505,7 @@ def test_find_filepaths(
     Since find_filepaths relies on find_daily_filepaths, we can mock
     find_daily_filepaths and only test some cases here.
     """
+    # TODO: test for all products?
 
     storage = "pps"
     version = 7
@@ -514,9 +542,9 @@ def test_find_filepaths(
     assert returned_filepaths == returned_filepaths_parallel
 
     # Check all find_daily_filepaths kwargs passed
-    returned_filepath = returned_filepaths[
-        -1
-    ]  # Take last filepath, because "verbose" is not passed to first date
+    returned_filepath = returned_filepaths[-1]
+
+    # Take last filepath, because "verbose" is not passed to first date
     assert f"storage:{storage}" in returned_filepath
     assert f"version:{version}" in returned_filepath
     assert f"product:{product}" in returned_filepath

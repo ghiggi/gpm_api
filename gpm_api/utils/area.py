@@ -9,6 +9,10 @@ from dask.array import map_blocks
 ### SwathDefinition --> geographic coordinates --> computation in ECEF (xyz)
 ### AreaDefinition --> proj coordinates --> computation in projection space !
 
+# quadrilateral_corners / quadmesh
+# get_lonlat_corners
+# get_projection_corners
+
 
 def _infer_interval_breaks(coord, axis=0):
     """Infer the outer and inner midpoints of 2D coordinate arrays.
@@ -201,6 +205,8 @@ def is_vertex_clockwise(vertex):
     # TODO: use pyresample.future in future
     # --> Check elementwise?
     # https://stackoverflow.com/questions/9473570/polygon-vertices-clockwise-or-counterclockwise
+    # We should check on the sphere
+    # - pyresample boundary PR and spherical PR ... move in separate package?
     from pyresample import SwathDefinition
 
     is_clockwise = SwathDefinition._corner_is_clockwise(

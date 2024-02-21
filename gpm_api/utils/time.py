@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Mon Oct 31 13:24:41 2022
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains utilities for time processing."""
 import numpy as np
 import pandas as pd
 
@@ -109,13 +130,6 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
     """
     Fill NaT values using an interpolation method.
 
-    Notes:
-    - Depending on the interpolation method (i.e. linear) the infilled values
-      could have ns resolution.
-
-    - For further information refers to
-      https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.interpolate.html
-
     Parameters
     ----------
     method : str, default 'linear'
@@ -123,33 +137,37 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
         * 'linear': Treat the timesteps as equally spaced.
         * 'pad': Fill in NaTs using existing values.
         * 'nearest', 'zero', 'slinear', 'quadratic', 'cubic', 'spline',
-          'barycentric', 'polynomial': Passed to `scipy.interpolate.interp1d`.
-          Both 'polynomial' and 'spline' require that you also specify an
-          `order` (int), e.g. ``interpolate_nat(method='polynomial', order=5)``.
+        'barycentric', 'polynomial': Passed to `scipy.interpolate.interp1d`.
+        Both 'polynomial' and 'spline' require that you also specify an
+        `order` (int), e.g. ``interpolate_nat(method='polynomial', order=5)``.
         * 'krogh', 'piecewise_polynomial', 'spline', 'pchip', 'akima',
-          'cubicspline': Wrappers around the SciPy interpolation methods of
-          similar names. See `Notes` in
-          https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.interpolate.html
+        'cubicspline': Wrappers around the SciPy interpolation methods of
+        similar names. See `Notes` in https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.interpolate.html
+
     limit : int, optional
         Maximum number of consecutive NaTs to fill. Must be greater than 0.
     limit_direction : {{'forward', 'backward', 'both'}}, Optional
         Consecutive NaTs will be filled in this direction.
+
         If limit is specified:
             * If 'method' is 'pad' or 'ffill', 'limit_direction' must be 'forward'.
-            * If 'method' is 'backfill' or 'bfill', 'limit_direction' must be
-              'backwards'.
+            * If 'method' is 'backfill' or 'bfill', 'limit_direction' must be 'backwards'.
+
         If 'limit' is not specified:
-            * If 'method' is 'backfill' or 'bfill', the default is 'backward'
-            * else the default is 'forward'
+            * If 'method' is 'backfill' or 'bfill', the default is 'backward' else the default is 'forward'
+
     limit_area : {{`None`, 'inside', 'outside'}}, default None
         If limit is specified, consecutive NaTs will be filled with this restriction.
         * ``None``: No fill restriction.
         * 'inside': Only fill NaTs surrounded by valid values (interpolate).
         * 'outside': Only fill NaTs outside valid values (extrapolate).
-    **kwargs : optional
-        Keyword arguments to pass on to the interpolating function.
 
-     Returns
+    Notes
+    -----
+    Depending on the interpolation method (i.e. linear) the infilled values could have ns resolution.
+    For further information refers to https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.interpolate.html
+
+    Returns
     -------
     timesteps, np.array
         Timesteps array of type datetime64[ns]

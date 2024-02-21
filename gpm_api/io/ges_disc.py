@@ -1,9 +1,31 @@
-#!/usr/bin/env python3
-"""
-Created on Mon Oct  9 12:44:42 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains the routines required to search data on the NASA GES DISC servers"""
+
 import datetime
 import re
 import subprocess
@@ -17,12 +39,15 @@ from gpm_api.io.products import get_product_info, is_trmm_product
 
 
 def _get_ges_disc_url_content(url):
-    cmd = f"wget -O - {url}"
+    # cmd = f"wget -O - {url}"
+    cmd = f"curl -L {url}"
     args = cmd.split()
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = process.communicate()[0].decode()
     # Check if server is available
     if stdout == "":
+        raise ValueError(f"The requested url {url} was not found on the GES DISC server.")
+    if "The requested URL was not found on this server" in stdout:
         raise ValueError(f"The requested url {url} was not found on the GES DISC server.")
     return stdout
 
@@ -44,22 +69,14 @@ def _get_href_value(input_string):
 def _get_ges_disc_list_path(url):
     # Retrieve url content
     # - If it returns something, means url is correct
-    wget_output = _get_ges_disc_url_content(url)
+    output = _get_ges_disc_url_content(url)
     # Retrieve content
-    list_content = [_get_href_value(s) for s in wget_output.split("alt=")[4:]]
+    list_content = [_get_href_value(s) for s in output.split("alt=")[4:]]
     list_content = [s for s in list_content if s != ""]
     if len(list_content) == 0:
         raise ValueError(f"The GES DISC {url} directory is empty.")
     list_path = [f"{url}/{s}" for s in list_content]
     return list_path
-
-
-# # Empty directory
-# url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07/"
-# url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07"
-
-# # Unexisting directory
-# url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07/2020"
 
 
 ####--------------------------------------------------------------------------.
@@ -159,7 +176,7 @@ def get_ges_disc_product_directory(product, date, version):
 ############################
 
 
-def _get_gesdisc_file_list(url_product_dir, product, date, version, verbose=True):
+def _get_ges_disc_file_list(url_product_dir, product, date, version, verbose=True):
     """
     Retrieve NASA GES DISC filepaths for a specific day and product.
 
@@ -194,7 +211,12 @@ def _get_gesdisc_file_list(url_product_dir, product, date, version, verbose=True
     return filepaths
 
 
-def get_gesdisc_daily_filepaths(product, product_type, date, version, verbose=True):
+def _check_gesc_disc_product_type(product, product_type):
+    if product_type == "NRT" and "IMERG" not in product:
+        raise ValueError("The only available NRT products on GES DISC are IMERG-ER and IMERG-FR")
+
+
+def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=True):
     """
     Retrieve the NASA GES DISC file paths available at a given date.
 
@@ -212,13 +234,12 @@ def get_gesdisc_daily_filepaths(product, product_type, date, version, verbose=Tr
         Whether to specify when data are not available for a specific date.
         The default is True.
     """
-    if product_type == "NRT" and "IMERG" not in product:
-        raise ValueError("The only available NRT products on GES DISC are IMERG-ER and IMERG-FR")
+    _check_gesc_disc_product_type(product=product, product_type=product_type)
     # Retrieve server urls of NASA GES DISC
     url_product_dir = get_ges_disc_product_directory(product=product, date=date, version=version)
     # Retrieve GES DISC filepaths
     # - If empty: return []
-    filepaths = _get_gesdisc_file_list(
+    filepaths = _get_ges_disc_file_list(
         url_product_dir=url_product_dir,
         product=product,
         date=date,
@@ -228,15 +249,17 @@ def get_gesdisc_daily_filepaths(product, product_type, date, version, verbose=Tr
     return filepaths
 
 
-def define_gesdisc_filepath(product, product_type, date, version, filename):
+def define_ges_disc_filepath(product, product_type, date, version, filename):
     """Define GES DISC filepath from filename.
+
+    This function is called by get_filepath_from_filename(filename, storage, product_type).
 
     Parameters
     ----------
     product : str
         GPM product acronym. See gpm_api.available_products().
     product_type : str
-            GPM product type. Not used for GES DISC.
+        GPM product type. Not used for GES DISC.
     date : datetime
         Single date for which to retrieve the data.
     version : int
@@ -244,10 +267,9 @@ def define_gesdisc_filepath(product, product_type, date, version, filename):
     filename : str
         Name of the GPM file.
     """
-    if product_type == "NRT" and "IMERG" not in product:
-        raise ValueError("The only available NRT products on GES DISC are IMERG-ER and IMERG-FR")
+    _check_gesc_disc_product_type(product=product, product_type=product_type)
     # Retrieve product directory url
     url_product_dir = get_ges_disc_product_directory(product=product, date=date, version=version)
     # Define GES DISC filepath
-    fpath = f"{url_product_dir}/{filename}"
-    return fpath
+    filepath = f"{url_product_dir}/{filename}"
+    return filepath

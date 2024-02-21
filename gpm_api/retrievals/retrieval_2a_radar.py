@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Fri Jul 28 16:07:37 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains GPM RADAR 2A products community-based retrivals."""
 import numpy as np
 import xarray as xr
 
@@ -372,8 +393,8 @@ def retrieve_SHI(
 
     SHI is used to compute the Probability of Severe Hail (POSH) and Maximum Estimated Size of Hail (MESH).
     SHI applies a thermally weighted vertical integration of reflectivity from the melting level
-      to the top of the storm, neglecting any reflectivity less than 40 dBZ,
-      thereby attempting to capture only the ice content of a storm.
+    to the top of the storm, neglecting any reflectivity less than 40 dBZ,
+    thereby attempting to capture only the ice content of a storm.
 
     Reference: Witt et al., 1998
 
@@ -451,8 +472,8 @@ def retrieve_MESH(ds):
     Also known as the Maximum Expected Hail Size (MEHS).
 
     The “size” in MESH refers to the maximum diameter (in mm) of a hailstone.
-    It's an indicator that transforms SHI into hail size by fitting SHI to a chosen
-      percentile of maximum observed hail size (using a power-law)
+    It's an indicator that transforms SHI into hail size by fitting SHI to a
+    chosen percentile of maximum observed hail size (using a power-law)
     """
     da_shi = retrieve_SHI(ds)
     da_mesh = 2.54 * da_shi**0.5
@@ -469,8 +490,7 @@ def retrieve_POSH(ds):
     The probability of 0.75-inch diameter hail occurring.
 
     When SHI = WT, POSH = 50%.
-    Output probabilities are rounded off to the nearest 10%, to avoid
-      conveying an unrealistic degree of precision.
+    Output probabilities are rounded off to the nearest 10%, to avoid conveying an unrealistic degree of precision.
     """
     # Retrieve zero-degree height
     da_height_0 = ds["heightZeroDeg"]

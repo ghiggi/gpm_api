@@ -1,9 +1,31 @@
-#!/usr/bin/env python3
-"""
-Created on Sun Aug 14 20:49:06 2022
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module provide tools to extraction information from the granules' filenames."""
+
 import datetime
 import os
 import re
@@ -14,15 +36,15 @@ from gpm_api.io.products import get_products_pattern_dict
 
 ####---------------------------------------------------------------------------
 ########################
-#### FNAME PATTERNS ####
+#### filename PATTERNS ####
 ########################
 # General pattern for all GPM products
-NASA_RS_FNAME_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{granule_id}.{version}.{data_format}"  # noqa
-NASA_NRT_FNAME_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{version}.{data_format}"  # noqa
+NASA_RS_filename_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{granule_id}.{version}.{data_format}"  # noqa
+NASA_NRT_filename_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{version}.{data_format}"  # noqa
 
 # General pattern for all JAXA products
 # - Pattern for 1B-Ku and 1B-Ka
-JAXA_FNAME_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_time:%H%M}_{granule_id}_{product_level:2s}{product_type}_{algorithm:s}_{version}.{data_format}"  # noqa
+JAXA_filename_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_time:%H%M}_{granule_id}_{product_level:2s}{product_type}_{algorithm:s}_{version}.{data_format}"  # noqa
 
 
 ####---------------------------------------------------------------------------.
@@ -31,17 +53,17 @@ JAXA_FNAME_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_
 ##########################
 
 
-def _parse_gpm_fname(fname):
+def _parse_gpm_filename(filename):
     from trollsift import Parser
 
     # Retrieve information from filename
     try:
-        p = Parser(NASA_RS_FNAME_PATTERN)
-        info_dict = p.parse(fname)
+        p = Parser(NASA_RS_filename_PATTERN)
+        info_dict = p.parse(filename)
         product_type = "RS"
     except ValueError:
-        p = Parser(NASA_NRT_FNAME_PATTERN)
-        info_dict = p.parse(fname)
+        p = Parser(NASA_NRT_filename_PATTERN)
+        info_dict = p.parse(filename)
         product_type = "NRT"
 
     # Retrieve correct start_time and end_time
@@ -66,11 +88,11 @@ def _parse_gpm_fname(fname):
     return info_dict
 
 
-def _parse_jaxa_fname(fname):
+def _parse_jaxa_filename(filename):
     from trollsift import Parser
 
-    p = Parser(JAXA_FNAME_PATTERN)
-    info_dict = p.parse(fname)
+    p = Parser(JAXA_filename_PATTERN)
+    info_dict = p.parse(filename)
     # Retrieve correct start_time and end_time
     start_datetime = info_dict["start_date_time"]
     end_time = info_dict["end_time"]
@@ -104,43 +126,43 @@ def _parse_jaxa_fname(fname):
     return info_dict
 
 
-def _get_info_from_filename(fname):
+def _get_info_from_filename(filename):
     """Retrieve file information dictionary from filename."""
     try:
-        info_dict = _parse_gpm_fname(fname)
+        info_dict = _parse_gpm_filename(filename)
     except ValueError:
         try:
-            info_dict = _parse_jaxa_fname(fname)
-        except:
-            raise ValueError(f"{fname} can not be parsed. Report the issue.")
+            info_dict = _parse_jaxa_filename(filename)
+        except Exception:
+            raise ValueError(f"Impossible to infer file information from '{filename}'")
 
     # Add product information
     # - ATTENTION: can not be inferred for products not defined in etc/product.yml
-    info_dict["product"] = get_product_from_filepath(fname)
+    info_dict["product"] = get_product_from_filepath(filename)
 
     # Return info dictionary
     return info_dict
 
 
-def get_info_from_filepath(fpath):
+def get_info_from_filepath(filepath):
     """Retrieve file information dictionary from filepath."""
-    if not isinstance(fpath, str):
-        raise TypeError("'fpath' must be a string.")
-    fname = os.path.basename(fpath)
-    return _get_info_from_filename(fname)
+    if not isinstance(filepath, str):
+        raise TypeError("'filepath' must be a string.")
+    filename = os.path.basename(filepath)
+    return _get_info_from_filename(filename)
 
 
-def get_key_from_filepath(fpath, key):
+def get_key_from_filepath(filepath, key):
     """Extract specific key information from a list of filepaths."""
-    value = get_info_from_filepath(fpath)[key]
+    value = get_info_from_filepath(filepath)[key]
     return value
 
 
-def get_key_from_filepaths(fpaths, key):
+def get_key_from_filepaths(filepaths, key):
     """Extract specific key information from a list of filepaths."""
-    if isinstance(fpaths, str):
-        fpaths = [fpaths]
-    return [get_key_from_filepath(fpath, key=key) for fpath in fpaths]
+    if isinstance(filepaths, str):
+        filepaths = [filepaths]
+    return [get_key_from_filepath(filepath, key=key) for filepath in filepaths]
 
 
 ####--------------------------------------------------------------------------.
@@ -159,7 +181,7 @@ def get_product_from_filepath(filepath):
 def get_product_from_filepaths(filepaths):
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-    list_product = [get_product_from_filepath(fpath) for fpath in filepaths]
+    list_product = [get_product_from_filepath(filepath) for filepath in filepaths]
     return list_product
 
 
@@ -173,7 +195,7 @@ def get_version_from_filepath(filepath, integer=True):
 def get_version_from_filepaths(filepaths, integer=True):
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-    list_version = [get_version_from_filepath(fpath, integer=integer) for fpath in filepaths]
+    list_version = [get_version_from_filepath(filepath, integer=integer) for filepath in filepaths]
     return list_version
 
 

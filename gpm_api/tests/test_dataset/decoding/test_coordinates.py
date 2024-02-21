@@ -3,11 +3,6 @@ from typing import List
 from gpm_api.dataset.decoding import coordinates as co
 
 
-def test_ensure_valid_coords():
-    # TODO: Requires sample ds to work
-    pass
-
-
 def test_get_pmw_frequency_dict() -> None:
     """Test that a dictionary is returned"""
 

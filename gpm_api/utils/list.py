@@ -1,15 +1,32 @@
-#!/usr/bin/env python3
-"""
-Created on Thu Oct 26 18:09:38 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
 
-# TODO: flatten_list was previously defined in pps.py, download.py, groups_variable.py
-# -->
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains functions for list processing."""
 
 
-# download.py
 def flatten_list(nested_list):
     """Flatten a nested list into a single-level list."""
 
@@ -23,24 +40,3 @@ def flatten_list(nested_list):
         if isinstance(nested_list, list)
         else [nested_list]
     )
-
-
-# groups_variable.py
-# def flatten_list(nested_list):
-#     flat_list = []
-#     for item in nested_list:
-#         if isinstance(item, list):
-#             flat_list.extend(flatten_list(item))
-#         else:
-#             flat_list.append(item)
-#     return flat_list
-
-### PPS.PY
-# def flatten_list(nested_list):
-
-#     """Flatten a nested list into a single-level list."""
-#     return (
-#         [item for sublist in nested_list for item in sublist]
-#         if isinstance(nested_list, list)
-#         else [nested_list]
-#     )

@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Wed Aug  2 12:14:51 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module provide utilities for the creation of GPM Geographic Buckets."""
 import math
 import time
 
@@ -15,7 +36,7 @@ import pyarrow as pa
 import xarray as xr
 
 import gpm_api
-from gpm_api.bucket.io import get_fpaths_by_bin
+from gpm_api.bucket.io import get_filepaths_by_bin
 from gpm_api.dataset.granule import remove_unused_var_dims
 from gpm_api.utils.timing import print_task_elapsed_time
 
@@ -152,7 +173,7 @@ def convert_ds_to_df(
 
 
 def get_granule_dataframe(
-    fpath,
+    filepath,
     open_granule_kwargs={},
     preprocessing_function=None,
     ds_to_df_function=ds_to_dask_df_function,
@@ -160,7 +181,7 @@ def get_granule_dataframe(
     precompute_granule=False,
 ):
     # Open granule
-    ds = gpm_api.open_granule(fpath, **open_granule_kwargs)
+    ds = gpm_api.open_granule(filepath, **open_granule_kwargs)
 
     # Convert to dataframe
     df = convert_ds_to_df(
@@ -332,7 +353,7 @@ def estimate_row_group_size(df, size="200MB"):
 @print_task_elapsed_time(prefix="Bucket Merging Terminated.")
 def merge_granule_buckets(
     bucket_base_dir,
-    bucket_fpath,
+    bucket_filepath,
     xbin_name="lonbin",
     ybin_name="latbin",
     row_group_size="500MB",
@@ -347,7 +368,7 @@ def merge_granule_buckets(
      ----------
      bucket_base_dir : str
          Base directory of the per-granule bucket archive.
-     bucket_fpath : str
+     bucket_filepath : str
          File path of the final bucket archive.
      xbin_name : str, optional
          Name of the binned column used to partition the data along the x dimension.
@@ -393,7 +414,7 @@ def merge_granule_buckets(
     # Identify Parquet filepaths for each bin
     print("Searching of Parquet files has started.")
     t_i = time.time()
-    bin_path_dict = get_fpaths_by_bin(bucket_base_dir)
+    bin_path_dict = get_filepaths_by_bin(bucket_base_dir)
     n_geographic_bins = len(bin_path_dict)
     t_f = time.time()
     t_elapsed = round((t_f - t_i) / 60, 1)
@@ -402,29 +423,29 @@ def merge_granule_buckets(
 
     # Retrieve list of bins and associated filepaths
     list_bin_names = list(bin_path_dict.keys())
-    list_bin_fpaths = list(bin_path_dict.values())
+    list_bin_filepaths = list(bin_path_dict.values())
 
     # Define meta and row_group_size
-    template_fpath = list_bin_fpaths[0][0]
+    template_filepath = list_bin_filepaths[0][0]
     template_bin_name = list_bin_names[0]
-    template_df_pd = _read_parquet_bin_files([template_fpath], bin_name=template_bin_name)
+    template_df_pd = _read_parquet_bin_files([template_filepath], bin_name=template_bin_name)
     meta = make_meta(template_df_pd)
     row_group_size = estimate_row_group_size(template_df_pd, size=row_group_size)
 
     # TODO: debug
     # list_bin_names = list_bin_names[0:10]
-    # list_bin_fpaths = list_bin_fpaths[0:10]
+    # list_bin_filepaths = list_bin_filepaths[0:10]
 
     # Read dataframes for each geographic bin
     print("Lazy reading of dataframe has started")
-    df = dd.from_map(_read_parquet_bin_files, list_bin_fpaths, list_bin_names, meta=meta)
+    df = dd.from_map(_read_parquet_bin_files, list_bin_filepaths, list_bin_names, meta=meta)
 
     # Write Parquet Dataset
     print("Parquet Dataset writing has started")
     partitioning = [xbin_name, ybin_name]
     write_parquet_dataset(
         df=df,
-        parquet_fpath=bucket_fpath,
+        parquet_filepath=bucket_filepath,
         partition_on=partitioning,
         row_group_size=row_group_size,
         compression=compression,
@@ -439,7 +460,7 @@ def merge_granule_buckets(
     #     df=df,
     #     base_dir,
     #     partitioning,
-    #     fname_prefix="part",
+    #     filename_prefix="part",
     #     format="parquet",
     #     use_threads=True,
     #     **writer_kwargs,

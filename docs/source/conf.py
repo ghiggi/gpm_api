@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import shutil
 import sys
 
 # sys.path.insert(0, os.path.abspath(".."))
@@ -21,8 +22,23 @@ sys.path.insert(0, os.path.join(os.path.abspath("../.."), "gpm_api"))
 # -- Project information -----------------------------------------------------
 
 project = "gpm_api"
-copyright = "LTE - Environmental Remote Sensing Lab - EPFL"
-author = "LTE - Environmental Remote Sensing Lab - EPFL"
+copyright = "Gionata Ghiggi"
+author = "Gionata Ghiggi"
+
+
+# -- Copy Jupyter Notebook Tutorials------------------------------------------
+root_path = os.path.dirname(os.path.dirname(os.getcwd()))
+filenames = [
+    "tutorial_02_IMERG.ipynb",
+    "tutorial_02_PMW_1C.ipynb",
+    "tutorial_02_PMW_2A.ipynb",
+    "tutorial_02_RADAR_2A.ipynb",
+]
+for filename in filenames:
+    in_path = os.path.join(root_path, "tutorials", filename)
+    out_path = os.path.join(os.getcwd(), "tutorials", filename)
+    shutil.copyfile(in_path, out_path)
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -33,7 +49,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
-    "sphinx.ext.autosectionlabel",
+    # "sphinx.ext.autosectionlabel",
     "nbsphinx",
     "sphinx_mdinclude",
 ]
@@ -57,7 +73,15 @@ html_theme = "sphinx_book_theme"
 html_title = "GPM-API"
 html_theme_options = {
     "repository_url": "https://github.com/ghiggi/gpm_api",
+    "repository_branch": "main",
     "use_repository_button": True,
+    "use_edit_page_button": True,
+    # "use_source_button": True,
+    "use_issues_button": True,
+    # "use_repository_button": True,
+    "use_download_button": True,
+    # "use_sidenotes": True,
+    "show_toc_level": 2,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

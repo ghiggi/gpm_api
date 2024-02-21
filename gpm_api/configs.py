@@ -1,16 +1,37 @@
-#!/usr/bin/env python3
-"""
-Created on Thu Mar  9 11:46:07 2023
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module define and retrieve the GPM-API configurations."""
 import os
 import platform
 import shutil
 from subprocess import Popen
 from typing import Dict
 
-import yaml
+from gpm_api.utils.yaml import read_yaml, write_yaml
 
 
 ####--------------------------------------------------------------------------.
@@ -35,8 +56,6 @@ def set_ges_disc_authentification(username, password):
     None.
 
     """
-    # TODO
-    # - Write earthdata login and password to gpm_api config yaml
     urs = "urs.earthdata.nasa.gov"  # Earthdata URL to call for authentication
     home_dir_path = os.path.expanduser("~") + os.sep
 
@@ -62,33 +81,28 @@ def set_ges_disc_authentification(username, password):
         print("Copied .dodsrc to:", os.getcwd())
 
 
-def _read_yaml_file(fpath):
-    """Read a YAML file into dictionary."""
-    with open(fpath) as f:
-        dictionary = yaml.safe_load(f)
-    return dictionary
+def _define_config_filepath():
+    """Define the config YAML file path."""
+    # Retrieve user home directory
+    home_directory = os.path.expanduser("~")
+    # Define path where .config_gpm_api.yaml file should be located
+    filepath = os.path.join(home_directory, ".config_gpm_api.yml")
+    return filepath
 
 
-def _write_yaml_file(dictionary, fpath, sort_keys=False):
-    """Write dictionary to YAML file."""
-    with open(fpath, "w") as f:
-        yaml.dump(dictionary, f, sort_keys=sort_keys)
-    return
-
-
-def define_gpm_api_configs(
-    gpm_base_dir: str,
-    username_pps: str,
-    password_pps: str,
-    username_earthdata=None,
-    password_earthdata=None,
+def define_configs(
+    base_dir: str = None,
+    username_pps: str = None,
+    password_pps: str = None,
+    username_earthdata: str = None,
+    password_earthdata: str = None,
 ):
     """
     Defines the GPM-API configuration file with the given credentials and base directory.
 
     Parameters
     ----------
-    gpm_base_dir : str
+    base_dir : str
         The base directory where GPM data are stored.
     username_pps : str, optional
         The username for the NASA GPM PPS account.
@@ -106,8 +120,20 @@ def define_gpm_api_configs(
     used for authentication when making GPM-API requests.
 
     """
-    config_dict = {}
-    config_dict["gpm_base_dir"] = gpm_base_dir
+    # Define path to .config_gpm_api.yaml file
+    filepath = _define_config_filepath()
+
+    # If the config exists, read it and update it ;)
+    if os.path.exists(filepath):
+        config_dict = read_yaml(filepath)
+        action_msg = "updated"
+    else:
+        config_dict = {}
+        action_msg = "written"
+
+    # Add GPM-API Base directory
+    if base_dir is not None:
+        config_dict["base_dir"] = str(base_dir)  # deal with Pathlib
 
     # Define PPS authentication parameters
     if isinstance(username_pps, str) and isinstance(password_pps, str):
@@ -118,22 +144,16 @@ def define_gpm_api_configs(
     if isinstance(username_earthdata, str) and isinstance(password_earthdata, str):
         config_dict["username_earthdata"] = username_earthdata
         config_dict["password_earthdata"] = password_earthdata
-        set_ges_disc_authentification(username_earthdata, password_earthdata)
-
-    # Retrieve user home directory
-    home_directory = os.path.expanduser("~")
-
-    # Define path to .config_gpm_api.yaml file
-    fpath = os.path.join(home_directory, ".config_gpm_api.yml")
+        if not os.environ.get("PYTEST_CURRENT_TEST"):  # run this only if not executing tests !
+            set_ges_disc_authentification(username_earthdata, password_earthdata)
 
     # Write the GPM-API config file
-    _write_yaml_file(config_dict, fpath, sort_keys=False)
+    write_yaml(config_dict, filepath, sort_keys=False)
 
-    print("The GPM-API config file has been written successfully!")
-    return
+    print(f"The GPM-API config file has been {action_msg} successfully!")
 
 
-def read_gpm_api_configs() -> Dict[str, str]:
+def read_configs() -> Dict[str, str]:
     """
     Reads the GPM-API configuration file and returns a dictionary with the configuration settings.
 
@@ -154,48 +174,56 @@ def read_gpm_api_configs() -> Dict[str, str]:
     This function reads the YAML configuration file located at ~/.config_gpm_api.yml, which
     should contain the GPM-API credentials and base directory specified by `gpm_api.define_configs()`.
     """
-    # Retrieve user home directory
-    home_directory = os.path.expanduser("~")
-    # Define path where .config_gpm_api.yaml file should be located
-    fpath = os.path.join(home_directory, ".config_gpm_api.yml")
-    if not os.path.exists(fpath):
+    # Define path to .config_gpm_api.yaml file
+    filepath = _define_config_filepath()
+    # Check it exists
+    if not os.path.exists(filepath):
         raise ValueError(
             "The GPM-API config file has not been specified. Use gpm_api.define_configs to specify it !"
         )
     # Read the GPM-API config file
-    config_dict = _read_yaml_file(fpath)
+    config_dict = read_yaml(filepath)
     return config_dict
 
 
 ####--------------------------------------------------------------------------.
 def _get_config_key(key):
-    """Return the config key if `value` is None."""
-    value = read_gpm_api_configs().get(key, None)
+    """Return the config key if `value` is not None."""
+    import gpm_api
+
+    value = gpm_api.config.get(key, None)
     if value is None:
-        raise ValueError(f"The GPM-API {key} parameter has not been defined ! ")
+        raise ValueError("The '{key}' is not specified in the GPM-API configuration file.")
     return value
 
 
-def get_gpm_base_dir():
+def get_base_dir(base_dir=None):
     """Return the GPM base directory."""
-    return _get_config_key(key="gpm_base_dir")
+    import gpm_api
+
+    if base_dir is None:
+        base_dir = gpm_api.config.get("base_dir")
+    if base_dir is None:
+        raise ValueError("The 'base_dir' is not specified in the GPM-API configuration file.")
+    base_dir = str(base_dir)  # convert Path to str
+    return base_dir
 
 
-def get_pps_username():
+def get_username_pps():
     """Return the GPM-API PPS username."""
     return _get_config_key(key="username_pps")
 
 
-def get_pps_password():
+def get_password_pps():
     """Return the GPM-API PPS password."""
     return _get_config_key(key="password_pps")
 
 
-def get_earthdata_username():
+def get_username_earthdata():
     """Return the GPM-API EarthData username."""
     return _get_config_key(key="username_earthdata")
 
 
-def get_earthdata_password():
+def get_password_earthdata():
     """Return the GPM-API EarthData password."""
     return _get_config_key(key="password_earthdata")
