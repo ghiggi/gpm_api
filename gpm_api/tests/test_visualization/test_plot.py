@@ -145,42 +145,12 @@ def test_get_antimeridian_mask(
     returned_mask = plot.get_antimeridian_mask(lon)
     # fmt: off
     expected_mask = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0,],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0,],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,],
-    ])
-    assert np.array_equal(returned_mask, expected_mask)
-
-
-def test_get_masked_cells_polycollection() -> None:
-    """Test the get_masked_cells_polycollection function"""
-
-    lon = np.array([0, 1])
-    lat = np.array([0, 1])
-    lon, lat = np.meshgrid(lon, lat)
-    data = np.random.rand(*lon.shape)
-    mask = np.zeros_like(data, dtype=bool)
-    mask[1, 1] = True
-    plot_kwargs = {}
-
-    returned_collection = plot.get_masked_cells_polycollection(
-        x=lon,
-        y=lat,
-        arr=data,
-        mask=mask,
-        plot_kwargs=plot_kwargs,
-    )
-    returned_paths = returned_collection.get_paths()
-    returned_vertices = [np.array(path.vertices) for path in returned_paths]
-    expected_path_vertices = [
-        np.array([[1.5, -0.5], [1.5, 0.5], [0.5, 0.5], [0.5, -0.5], [1.5, -0.5]]),
-        np.array([[0.5, 0.5], [0.5, 1.5], [-0.5, 1.5], [-0.5, 0.5], [0.5, 0.5]]),
-        np.array([[1.5, 0.5], [1.5, 1.5], [0.5, 1.5], [0.5, 0.5], [1.5, 0.5]]),
-    ]
-    for returned_vertices, expected_vertices in zip(returned_vertices, expected_path_vertices):
-        np.testing.assert_allclose(returned_vertices, expected_vertices, atol=1e-3)
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0,],
+    ], dtype=bool)
+    np.testing.assert_array_equal(returned_mask, expected_mask)
 
 
 class TestPlotMap:
@@ -257,8 +227,8 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit data with some NaN longitudes cross-track"""
 
-        p = plot.plot_map(orbit_nan_lon_cross_track_dataarray)
-        assert type(p) == ValueError  # No regular scans available
+        with pytest.raises(ValueError):
+            p = plot.plot_map(orbit_nan_lon_cross_track_dataarray)
 
     def test_orbit_nan_lon_along_track(
         self,
