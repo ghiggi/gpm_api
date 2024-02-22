@@ -334,6 +334,26 @@ class TestPlotImage:
         p = plot.plot_image(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name(self))
 
+    def test_orbit_cbar_kwargs(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with colorbar keyword arguments"""
+
+        cbar_kwargs = {"ticklabels": [42, 43, 44, 45, 46]}
+
+        p = plot.plot_image(orbit_dataarray, cbar_kwargs=cbar_kwargs)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+    def test_orbit_no_cbar(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data without colorbar"""
+
+        p = plot.plot_image(orbit_dataarray, add_colorbar=False)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
     def test_grid(
         self,
         grid_dataarray: xr.DataArray,
@@ -433,8 +453,23 @@ class TestPlotMapMesh:
         save_and_check_figure(figure=p.figure, name=get_test_name(self))
 
 
-def test_plot_map_mesh_centroids(
-    orbit_dataarray: xr.DataArray,
-) -> None:
-    p = plot.plot_map_mesh_centroids(orbit_dataarray)
-    save_and_check_figure(figure=p.figure, name=get_test_name())
+class TestPlotMapMeshCentroids:
+    """Test the plot_map_mesh_centroids function"""
+
+    def test_orbit(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data"""
+
+        p = plot.plot_map_mesh_centroids(orbit_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+    def test_grid(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data"""
+
+        p = plot.plot_map_mesh_centroids(grid_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))

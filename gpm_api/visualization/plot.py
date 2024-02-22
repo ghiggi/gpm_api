@@ -443,7 +443,7 @@ def _plot_xr_imshow(
     add_colorbar=True,
     plot_kwargs={},
     cbar_kwargs={},
-    xarray_colorbar=True,
+    xarray_colorbar=True,  # remove
     visible_colorbar=True,
 ):
     """Plot imshow with xarray.
