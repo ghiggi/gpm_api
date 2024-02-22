@@ -420,6 +420,7 @@ def _define_filepath(
 
 def get_filepath_from_filename(filename, storage, product_type):
     """Convert GPM file names to the <storage> file path."""
+    filename = os.path.basename(filename)
     info = get_info_from_filepath(filename)
     product = info["product"]
     version = int(re.findall("\\d+", info["version"])[0])
@@ -760,7 +761,6 @@ def _download_daily_data(
     local_filepaths = get_filepaths_from_filenames(
         remote_filepaths, storage="local", product_type=product_type
     )
-
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
     remote_filepaths, local_filepaths = filter_download_list(
