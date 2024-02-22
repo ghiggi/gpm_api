@@ -34,7 +34,9 @@ def save_and_check_figure(
     if not os.path.exists(reference_path):
         os.makedirs(plots_dir_path, exist_ok=True)
         plt.savefig(reference_path)
-        pytest.skip("Reference figure did not exist. Created it.")
+        pytest.skip(
+            "Reference figure did not exist. Created it. To clone existing test data instead, run `git submodule update --init`."
+        )
 
     # Save current figure to temporary file
     tmp_file = tempfile.NamedTemporaryFile(suffix=image_extension, delete=False)
@@ -172,6 +174,16 @@ class TestPlotMap:
         """Test plotting orbit data going over the antimeridian"""
 
         plot.plot_map(orbit_antimeridian_dataarray)
+        save_and_check_figure(get_test_name(self))
+
+    def test_orbit_antimeridian_recenter(
+        self,
+        orbit_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data going over the antimeridian with recentering"""
+
+        crs_proj = ccrs.PlateCarree(central_longitude=180)
+        plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(get_test_name(self))
 
     def test_orbit_antimeridian_projection(

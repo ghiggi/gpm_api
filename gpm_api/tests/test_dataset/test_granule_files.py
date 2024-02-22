@@ -71,7 +71,9 @@ def test_open_granule_on_real_files():
     granules_dir_path = os.path.join(_root_path, "gpm_api", "tests", "data", "granules")
 
     if not os.path.exists(granules_dir_path):
-        pytest.skip("Test granules not found. Please run `python generate_test_granule_data.py`.")
+        pytest.skip(
+            "Test granules not found. Please run `git submodule update --init` to clone existing test data, or `python generate_test_granule_data.py` to generate new test data."
+        )
 
     cut_dir_path = os.path.join(granules_dir_path, "cut")
 
