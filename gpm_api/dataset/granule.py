@@ -145,7 +145,6 @@ def _get_scan_mode_dataset(
 
     # Assign global attributes
     ds.attrs = attrs
-
     return ds
 
 
@@ -290,13 +289,13 @@ def open_granule(
     ds:  xarray.Dataset
 
     """
-    # Get product and version
-    product = get_product_from_filepath(filepath)
-    version = get_version_from_filepath(filepath)
-
     # Check variables and groups
     variables = check_variables(variables)
     groups = check_groups(groups)
+
+    # Get product and version
+    product = get_product_from_filepath(filepath)
+    version = get_version_from_filepath(filepath)
 
     # Check scan_mode
     scan_mode = check_scan_mode(scan_mode, product, version)

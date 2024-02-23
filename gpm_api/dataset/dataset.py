@@ -261,12 +261,14 @@ def open_dataset(
     xarray.Dataset
 
     """
-    ## Check scan_mode
-    scan_mode = check_scan_mode(scan_mode, product, version=version)
     ## Check valid product and variables
     product = check_product(product, product_type=product_type)
     variables = check_variables(variables)
     groups = check_groups(groups)
+
+    ## Check scan_mode
+    scan_mode = check_scan_mode(scan_mode, product, version=version)
+
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
     start_time, end_time = check_valid_time_request(start_time, end_time, product)
