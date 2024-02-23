@@ -25,11 +25,11 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to visualize GPM-API GRID data."""
-import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
 from gpm_api.checks import check_is_spatial_2d
 from gpm_api.utils.utils_cmap import get_colorbar_settings
+from gpm_api.visualization.facetgrid import CartopyFacetGrid
 from gpm_api.visualization.plot import (
     _plot_cartopy_imshow,
     #  _plot_mpl_imshow,
@@ -67,6 +67,10 @@ def _plot_grid_map_cartopy(
     # - Add cartopy background
     if add_background:
         ax = plot_cartopy_background(ax)
+
+    # - Sanitize plot_kwargs passed by FacetGrid
+    facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
+    _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
@@ -107,37 +111,67 @@ def _plot_grid_map_facetgrid(
     cbar_kwargs={},
     **plot_kwargs,
 ):
-    """Plot DataArray 2D field with xarray."""
+    """Plot 2D fields with FacetGrid."""
     # - Check inputs
     if ax is not None:
         raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
     subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
 
-    # - Add info required to plot on cartopy axes within FacetGrid
-    plot_kwargs.update({"subplot_kws": subplot_kwargs})
-    plot_kwargs.update({"transform": ccrs.PlateCarree()})
+    # Retrieve GPM-API defaults cmap and cbar kwargs
+    variable = da.name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(
+        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    )
 
-    # - Plot with FacetGrid
-    p = plot_grid_image(
-        da=da,
+    # Create FacetGrid
+    # - If share_x=True and share_y=True, empty subplots force cartopy extent to global extent
+    fc = CartopyFacetGrid(
+        data=da,
+        subplot_kws=subplot_kwargs,
+        col=plot_kwargs.pop("col", None),
+        row=plot_kwargs.pop("row", None),
+        col_wrap=plot_kwargs.pop("col_wrap", None),
+        # aspect=1,
+        # size=3,
+        sharex=False,
+        sharey=False,
+        **fig_kwargs,
+    )
+
+    # Plot the orbits
+    extent = plot_kwargs.pop("extent", None)
+    fc = fc.map_dataarray(
+        _plot_grid_map_cartopy,
         x=x,
         y=y,
-        ax=None,
-        add_colorbar=add_colorbar,
+        add_colorbar=False,
+        add_background=add_background,
         interpolation=interpolation,
-        fig_kwargs={},
-        cbar_kwargs={},
+        cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
 
-    # - Add cartopy background to each subplot
-    if add_background:
-        for ax in p.axs.flatten():
-            plot_cartopy_background(ax)
+    # Remove duplicated gridline labels
+    fc.remove_duplicated_gridline_labels()
 
-    # - Return mappable
-    return p
+    # Restrict extent
+    # - TODO: it requires a fix to fc.add_colorbar() to enable to call it outside this function
+    #   when add_colorbar=True and fig.tight_layout() is called !
+    # - TODO: once fixed, do not called it inside ! It's a user choice outside
+    if extent is not None:
+        fc.set_extent(extent=extent)
+
+    # Add colorbar
+    if add_colorbar:
+        # Set figure tight layout
+        # - Necessary to currently nicely display then the subplots and the colorbar
+        # - If called again after calling add_colorbar, everything goes messed up
+        # - This call restricts further modification of axis (i.e. set_extent) !!!
+        # TODO: try to remove by updating add_colorbar
+        fc.fig.tight_layout()
+        fc.add_colorbar(**cbar_kwargs)
+    return fc
 
 
 def plot_grid_map(
@@ -203,13 +237,14 @@ def plot_grid_image(
 ):
     """Plot DataArray 2D image."""
     # Check inputs
-    # check_is_spatial_2d(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # Initialize figure
     if ax is None:
-        # - If col and row are not provided (not FacetedGrid), initialize
+        # If col and row are not provided (not FacetedGrid), initialize
         if "col" not in plot_kwargs and "row" not in plot_kwargs:
+            if "rgb" not in plot_kwargs:
+                check_is_spatial_2d(da)
             fig, ax = plt.subplots(**fig_kwargs)
         # Add fig_kwargs to plot_kwargs for FacetGrid initialization
         else:
@@ -219,18 +254,6 @@ def plot_grid_image(
     plot_kwargs, cbar_kwargs = get_colorbar_settings(
         name=da.name, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
     )
-
-    # # - Plot with matplotlib
-    # p = _plot_mpl_imshow(ax=ax,
-    #                      da=da,
-    #                      x="lon",
-    #                      y="lat",
-    #                      interpolation=interpolation,
-    #                      add_colorbar=add_colorbar,
-    #                      plot_kwargs=plot_kwargs,
-    #                      cbar_kwargs=cbar_kwargs,
-    #                      ticklabels=ticklabels,
-    # )
 
     # - Plot with xarray
     p = _plot_xr_imshow(
@@ -243,7 +266,7 @@ def plot_grid_image(
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
     )
-    print(p.axes)
+
     if ax is not None:
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
