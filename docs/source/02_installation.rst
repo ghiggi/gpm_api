@@ -5,7 +5,7 @@ Installation
 
 We define here two types of installation:
 
-- `Installation for standard users`_ : for users who want to process data.
+- `Installation for standard users`_: for users who want to process data.
 
 - `Installation for contributors`_: for contributors who want to enrich the project (eg. add a new features).
 

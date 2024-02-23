@@ -210,7 +210,7 @@ def _call_over_contiguous_scans(function):
             check_is_spatial_2d(da)
 
             # - Get slices with contiguous scans and valid geolocation
-            list_slices = get_slices_regular(da)
+            list_slices = get_slices_regular(da, min_size=2, min_n_scans=2)
             if len(list_slices) == 0:
                 raise ValueError("No regular scans available. Impossible to plot.")
         else:

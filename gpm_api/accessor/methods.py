@@ -315,10 +315,10 @@ class GPM_Base_Accessor:
 
         return get_slices_regular_time(self._obj, tolerance=tolerance, min_size=min_size)
 
-    def get_slices_contiguous_scans(self, min_size=2):
+    def get_slices_contiguous_scans(self, min_size=2, min_n_scans=3):
         from gpm_api.utils.checks import get_slices_contiguous_scans
 
-        return get_slices_contiguous_scans(self._obj, min_size=min_size)
+        return get_slices_contiguous_scans(self._obj, min_size=min_size, min_n_scans=min_n_scans)
 
     def get_slices_contiguous_granules(self, min_size=2):
         from gpm_api.utils.checks import get_slices_contiguous_granules
@@ -330,10 +330,10 @@ class GPM_Base_Accessor:
 
         return get_slices_valid_geolocation(self._obj, min_size=min_size)
 
-    def get_slices_regular(self, min_size=None):
+    def get_slices_regular(self, min_size=None, min_n_scans=3):
         from gpm_api.utils.checks import get_slices_regular
 
-        return get_slices_regular(self._obj, min_size=min_size)
+        return get_slices_regular(self._obj, min_size=min_size, min_n_scans=min_n_scans)
 
     #### Plotting utility
     def plot_transect_line(

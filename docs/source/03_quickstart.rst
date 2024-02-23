@@ -44,13 +44,13 @@ The configuration file will be created in the user's home directory under the na
     password_pps = "<your PPS password>"  # likely your mail, all in lowercase
     username_earthdata = "<your EarthData username>"
     password_earthdata = "<your EarthData password>"
-    gpm_base_dir = "<path/to/a/local/directory/>"  # where to download all GPM data
+    base_dir = "<path/to/a/local/directory/>"  # where to download all GPM data
     gpm_api.define_configs(
         username_pps=username,
         password_pps=password,
         username_earthdata=username_earthdata,
         password_earthdata=password_earthdata,
-        gpm_base_dir=gpm_base_dir,
+        base_dir=base_dir,
     )
 
     # You can check that the config file has been correctly created with:
