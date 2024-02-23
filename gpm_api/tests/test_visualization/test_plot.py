@@ -10,6 +10,7 @@ from matplotlib import (
 )
 import numpy as np
 import tempfile
+from typing import Optional
 import xarray as xr
 
 
@@ -26,13 +27,16 @@ mse_tolerance = 5e-3
 
 
 def save_and_check_figure(
-    figure: mpl_figure.Figure,
-    name: str,
+    figure: Optional[mpl_figure.Figure] = None,
+    name: str = "",
 ) -> None:
     """Save the current figure to a temporary location and compare it to the reference figure
 
     If the reference figure does not exist, it is created and the test is skipped.
     """
+
+    if figure is None:
+        figure = plt.gcf()
 
     # Save reference figure if it does not exist
     reference_path = os.path.join(plots_dir_path, name + image_extension)
@@ -82,6 +86,18 @@ def get_test_name(
     name_parts.append(inspect.stack()[1][3])
 
     return "-".join(name_parts)
+
+
+# Fixtures #####################################################################
+
+
+@pytest.fixture
+def prevent_show(
+    mocker: MockerFixture,
+) -> None:
+    """Prevent the show method of the pyplot module to be called"""
+
+    mocker.patch("matplotlib.pyplot.show")
 
 
 # Tests ########################################################################
@@ -554,12 +570,9 @@ class TestPlotLabels:
     def test_generator(
         self,
         orbit_labels_dataarray: xr.DataArray,
-        mocker: MockerFixture,
+        prevent_show: None,
     ) -> None:
         """Test plotting orbit data form a generator"""
-
-        # Mock plt.show to avoid showing the figure
-        mocker.patch("matplotlib.pyplot.show")
 
         da_list = [
             (0, orbit_labels_dataarray),
@@ -569,3 +582,71 @@ class TestPlotLabels:
 
         p = plot.plot_labels(generator, label_name=self.label_name)  # only last plot is returned
         save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+
+class TestPlotPatches:
+    """Test the plot_patches function"""
+
+    def test_orbit(
+        self,
+        orbit_dataarray: xr.DataArray,
+        prevent_show: None,
+    ) -> None:
+        """Test plotting orbit data"""
+
+        da_list = [
+            (0, orbit_dataarray),
+            (1, orbit_dataarray),
+        ]
+        generator = (t for t in da_list)
+        plot.plot_patches(generator)  # does not return plotter
+        save_and_check_figure(name=get_test_name(self))
+
+    def test_orbit_dataset(
+        self,
+        orbit_dataarray: xr.DataArray,
+        prevent_show: None,
+    ) -> None:
+        """Test plotting orbit data from a dataset"""
+
+        variable_name = "variable"
+        ds = xr.Dataset({variable_name: orbit_dataarray})
+        ds_list = [
+            (0, ds),
+            (1, ds),
+        ]
+        generator = (t for t in ds_list)
+
+        # Test with missing variable
+        with pytest.raises(ValueError):
+            plot.plot_patches(generator)
+
+        plot.plot_patches(generator, variable=variable_name)  # does not return plotter
+        save_and_check_figure(name=get_test_name(self))
+
+    def test_grid(
+        self,
+        grid_dataarray: xr.DataArray,
+        prevent_show: None,
+    ) -> None:
+        """Test plotting grid data"""
+
+        da_list = [
+            (0, grid_dataarray),
+            (1, grid_dataarray),
+        ]
+        generator = (t for t in da_list)
+        plot.plot_patches(generator)  # does not return plotter
+        save_and_check_figure(name=get_test_name(self))
+
+    def test_invalid(
+        self,
+    ) -> None:
+        """Test invalid data"""
+
+        invalid_list = [
+            (0, xr.DataArray()),
+            (1, xr.DataArray()),
+        ]
+        generator = (t for t in invalid_list)
+        plot.plot_patches(generator)  # passes without error
