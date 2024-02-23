@@ -2,6 +2,7 @@ import cartopy.crs as ccrs
 import inspect
 import os
 import pytest
+from pytest_mock import MockerFixture
 from matplotlib import (
     image as mpl_image,
     figure as mpl_figure,
@@ -472,4 +473,99 @@ class TestPlotMapMeshCentroids:
         """Test plotting grid data"""
 
         p = plot.plot_map_mesh_centroids(grid_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+
+class TestPlotLabels:
+    """Test the plot_labels function"""
+
+    label_name = "label"
+
+    @pytest.fixture
+    def orbit_labels_dataarray(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> xr.DataArray:
+        """Create an orbit data array with label coordinates"""
+
+        labels = np.random.randint(0, 10, orbit_dataarray.shape)
+        orbit_dataarray = orbit_dataarray.assign_coords(
+            {self.label_name: (("cross_track", "along_track"), labels)}
+        )
+        return orbit_dataarray
+
+    @pytest.fixture
+    def grid_labels_dataarray(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> xr.DataArray:
+        """Create a grid data array with label coordinates"""
+
+        labels = np.random.randint(0, 10, grid_dataarray.shape)
+        grid_dataarray = grid_dataarray.assign_coords({self.label_name: (("lat", "lon"), labels)})
+        return grid_dataarray
+
+    def test_orbit(
+        self,
+        orbit_labels_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data"""
+
+        p = plot.plot_labels(orbit_labels_dataarray, label_name=self.label_name)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+    def test_orbit_dataset(
+        self,
+        orbit_labels_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data from a dataset"""
+
+        ds = xr.Dataset({self.label_name: orbit_labels_dataarray[self.label_name]})
+        p = plot.plot_labels(ds, label_name=self.label_name)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+    def test_orbit_labels_dataarray(
+        self,
+        orbit_labels_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data from labels data array directly"""
+
+        p = plot.plot_labels(orbit_labels_dataarray[self.label_name])
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+    def test_orbit_exceed_labels(
+        self,
+        orbit_labels_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with too many labels for colorbar"""
+
+        p = plot.plot_labels(orbit_labels_dataarray, label_name=self.label_name, max_n_labels=5)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+    def test_grid(
+        self,
+        grid_labels_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data"""
+
+        p = plot.plot_labels(grid_labels_dataarray, label_name=self.label_name)
+        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+
+    def test_generator(
+        self,
+        orbit_labels_dataarray: xr.DataArray,
+        mocker: MockerFixture,
+    ) -> None:
+        """Test plotting orbit data form a generator"""
+
+        # Mock plt.show to avoid showing the figure
+        mocker.patch("matplotlib.pyplot.show")
+
+        da_list = [
+            (0, orbit_labels_dataarray),
+            (1, orbit_labels_dataarray),
+        ]
+        generator = (t for t in da_list)
+
+        p = plot.plot_labels(generator, label_name=self.label_name)  # only last plot is returned
         save_and_check_figure(figure=p.figure, name=get_test_name(self))
