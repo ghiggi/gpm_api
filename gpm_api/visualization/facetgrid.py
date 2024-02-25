@@ -4,8 +4,10 @@ Created on Fri Feb 23 17:14:18 2024
 
 @author: ghiggi
 """
-from collections.abc import Hashable, Iterable
-from typing import Any
+import itertools
+import warnings
+from collections.abc import Hashable
+from typing import Any, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -80,37 +82,175 @@ class CartopyFacetGrid(FacetGrid):
     def __init__(
         self,
         data,
-        col: Hashable | None = None,
-        row: Hashable | None = None,
-        col_wrap: int | None = None,
-        sharex: bool = False,
-        sharey: bool = False,
-        figsize: Iterable[float] | None = None,
-        aspect: float = 1,
-        size: float = 3,
-        subplot_kws: dict[str, Any] | None = None,
+        col: Union[Hashable, None] = None,
+        row: Union[Hashable, None] = None,
+        col_wrap: Union[int, None] = None,
+        axes_pad: tuple[float, float] = None,
+        add_colorbar: bool = True,
+        cbar_kwargs: dict = {},
+        fig_kwargs: dict = {},
+        subplot_kws: Union[dict[str, Any], None] = None,
     ) -> None:
-        # Initialize the base FacetGrid
-        super().__init__(
-            data,
-            col=col,
-            row=row,
-            col_wrap=col_wrap,
-            sharex=sharex,
-            sharey=sharey,
-            figsize=figsize,
-            aspect=aspect,
-            size=size,
-            subplot_kws=subplot_kws,
+        """
+        Parameters
+        ----------
+        data : DataArray or Dataset
+            DataArray or Dataset to be plotted.
+        row, col : str
+            Dimension names that define subsets of the data, which will be drawn
+            on separate facets in the grid.
+        col_wrap : int, optional
+            "Wrap" the grid the for the column variable after this number of columns,
+            adding rows if ``col_wrap`` is less than the number of facets.
+        figsize : Iterable of float or None, optional
+            A tuple (width, height) of the figure in inches.
+            If set, overrides ``size`` and ``aspect``.
+        subplot_kws : dict, optional
+            Dictionary of keyword arguments for Matplotlib subplots
+            (:py:func:`matplotlib.pyplot.subplots`).
+
+        """
+        import matplotlib.pyplot as plt
+        from cartopy.mpl.geoaxes import GeoAxes
+        from mpl_toolkits.axes_grid1 import ImageGrid
+
+        # Handle corner case of nonunique coordinates
+        rep_col = col is not None and not data[col].to_index().is_unique
+        rep_row = row is not None and not data[row].to_index().is_unique
+        if rep_col or rep_row:
+            raise ValueError(
+                "Coordinates used for faceting cannot " "contain repeated (nonunique) values."
+            )
+
+        # single_group is the grouping variable, if there is exactly one
+        if col and row:
+            single_group = False
+            nrow = len(data[row])
+            ncol = len(data[col])
+            nfacet = nrow * ncol
+            if col_wrap is not None:
+                warnings.warn("Ignoring col_wrap since both col and row were passed")
+        elif row and not col:
+            single_group = row
+        elif not row and col:
+            single_group = col
+        else:
+            raise ValueError("Pass a coordinate name as an argument for row or col")
+
+        # Compute grid shape
+        if single_group:
+            nfacet = len(data[single_group])
+            if col:
+                # idea - could add heuristic for nice shapes like 3x4
+                ncol = nfacet
+            if row:
+                ncol = 1
+            if col_wrap is not None:
+                # Overrides previous settings
+                ncol = col_wrap
+            nrow = int(np.ceil(nfacet / ncol))
+
+        # Set the subplot kwargs
+        subplot_kws = {} if subplot_kws is None else subplot_kws
+
+        # Define axes
+        projection = subplot_kws["projection"]
+        axes_class = (GeoAxes, dict(projection=projection))
+
+        # Define axis spacing
+        if axes_pad is None:
+            axes_pad = (0.1, 0.3)
+
+        # Define colorbar settings
+        orientation = cbar_kwargs.get("orientation", "vertical")
+        cbar_pad = cbar_kwargs.get("pad", 0.2)
+        cbar_size = cbar_kwargs.get("size", "3%")
+        if add_colorbar:
+            cbar_mode = "single"
+            if orientation == "vertical":
+                cbar_location = "right"
+            else:
+                cbar_location = "bottom"
+        else:
+            cbar_mode = None
+            cbar_location = "right"  # unused
+
+        # Initialize figure and axes
+        fig = plt.figure(**fig_kwargs)
+        image_grid = ImageGrid(
+            fig,
+            111,
+            axes_class=axes_class,
+            nrows_ncols=(nrow, ncol),
+            axes_pad=axes_pad,  # Padding or (horizontal padding, vertical padding) between axes, in inches
+            cbar_location=cbar_location,
+            cbar_mode=cbar_mode,
+            cbar_pad=cbar_pad,
+            cbar_size=cbar_size,
+            # direction="row", # plot row by row
+            # label_mode="L",  # does not matter with cartopy plot
         )
+
+        # Extract axes like subplots
+        axs = np.array(image_grid.axes_all).reshape(nrow, ncol)
+
+        # Delete empty axis (to avoid bad layout)
+        n_subplots = nrow * ncol
+        if nfacet != n_subplots:
+            for i in range(nfacet, n_subplots):
+                fig.delaxes(axs.flatten()[i])
+
+        # Set up the lists of names for the row and column facet variables
+        col_names = list(data[col].to_numpy()) if col else []
+        row_names = list(data[row].to_numpy()) if row else []
+
+        if single_group:
+            full = [{single_group: x} for x in data[single_group].to_numpy()]
+            empty = [None for x in range(nrow * ncol - len(full))]
+            name_dict_list = full + empty
+        else:
+            rowcols = itertools.product(row_names, col_names)
+            name_dict_list = [{row: r, col: c} for r, c in rowcols]
+
+        name_dicts = np.array(name_dict_list).reshape(nrow, ncol)
+
+        # Set up the class attributes
+        # ---------------------------
+
+        # First the public API
+        self.data = data
+        self.name_dicts = name_dicts
+        self.fig = fig
+        self.image_grid = image_grid
+        self.axs = axs
+        self.row_names = row_names
+        self.col_names = col_names
+
+        # guides
+        self.figlegend = None
+        self.quiverkey = None
+        self.cbar = None
+
+        # Next the private variables
+        self._single_group = single_group
+        self._nrow = nrow
+        self._row_var = row
+        self._ncol = ncol
+        self._col_var = col
+        self._col_wrap = col_wrap
+        self.row_labels = [None] * nrow
+        self.col_labels = [None] * ncol
+        self._x_var = None
+        self._y_var = None
+        self._cmap_extend = None
+        self._mappables = []
+        self._finalized = False
 
     def _finalize_grid(self, *axlabels) -> None:
         """Finalize the annotations and layout of FacetGrid."""
         if not self._finalized:
             self.set_axis_labels(*axlabels)
             self.set_titles()
-            # self.fig.tight_layout() # THIS MUST BE MASKED TO AVOID STILL MODIFY AXIS !
-
             for ax, namedict in zip(self.axs.flat, self.name_dicts.flat):
                 if namedict is None:
                     ax.set_visible(False)
@@ -132,7 +272,9 @@ class CartopyFacetGrid(FacetGrid):
         # Accept ticklabels as kwargs
         ticklabels = kwargs.pop("ticklabels", None)
         # Display the colorbar
-        self.cbar = self.fig.colorbar(self._mappables[-1], ax=list(self.axs.flat), **kwargs)
+        self.cbar = self.image_grid.cbar_axes[0].colorbar(
+            self._mappables[-1], ax=list(self.axs.flat), **kwargs
+        )
         # Add the ticklabels
         if ticklabels is not None:
             self.cbar.ax.set_yticklabels(ticklabels)
@@ -175,15 +317,15 @@ class CartopyFacetGrid(FacetGrid):
             except Exception:
                 pass
 
-    def set_map_layout(self):
+        # Readjust map layout
+        self.optimize_layout()
+
+    def adapt_fig_size(self):
         """
         Adjusts the figure height of the plot based on the aspect ratio of cartopy subplots.
 
-        This function is intended to be called after all plotting has been completed. It operates under the assumption
-        that all subplots within the figure share the same aspect ratio.
-
-        Adjust the margins with fc.fig.subplots_adjust(wspace,...) before calling
-        this function.
+        This function is intended to be called after all plotting has been completed.
+        It operates under the assumption that all subplots within the figure share the same aspect ratio.
 
         The implementation is inspired by Mathias Hauser's mplotutils set_map_layout function.
         """
@@ -216,7 +358,9 @@ class CartopyFacetGrid(FacetGrid):
 
         # Determine the number of rows and columns of subplots in the figure.
         # This information is crucial for calculating the new height of the figure.
-        nrow, ncol, __, __ = ax.get_subplotspec().get_geometry()
+        # nrow, ncol, __, __ = ax.get_subplotspec().get_geometry()
+        nrow = self._nrow
+        ncol = self._ncol
 
         # Calculate the width of a single plot, considering the left and right margins,
         # the number of columns, and the space between columns.
@@ -244,3 +388,12 @@ class CartopyFacetGrid(FacetGrid):
 
     def remove_title_dimension_prefix(self):
         self.map(lambda: _remove_title_dimension_prefix(plt.gca()))
+
+    def set_title(self, title, horizontalalignment="center", **kwargs):
+        self.fig.suptitle(title, horizontalalignment=horizontalalignment, **kwargs)
+
+    def optimize_layout(self):
+        self.adapt_fig_size()
+        with warnings.catch_warnings(record=False):
+            warnings.simplefilter("ignore", UserWarning)
+            self.fig.tight_layout()
