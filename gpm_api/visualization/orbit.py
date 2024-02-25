@@ -37,7 +37,7 @@ from gpm_api.utils.checks import (
     get_slices_regular,
 )
 from gpm_api.utils.utils_cmap import get_colorbar_settings
-from gpm_api.visualization.facetgrid import CartopyFacetGrid
+from gpm_api.visualization.facetgrid import CartopyFacetGrid, define_subplots_adjust_kwargs
 from gpm_api.visualization.plot import (
     _plot_cartopy_pcolormesh,
     #  _plot_mpl_imshow,
@@ -525,7 +525,7 @@ def _plot_orbit_map_facetgrid(
     # Create FacetGrid
     # - If share_x=True and share_y=True, empty subplots force cartopy extent to global extent
     fc = CartopyFacetGrid(
-        data=da,
+        data=da.compute(),
         subplot_kws=subplot_kwargs,
         col=plot_kwargs.pop("col", None),
         row=plot_kwargs.pop("row", None),
@@ -537,8 +537,12 @@ def _plot_orbit_map_facetgrid(
         **fig_kwargs,
     )
 
-    # Plot the orbits
+    # Extract FacetGrid options
     extent = plot_kwargs.pop("extent", None)
+    title = plot_kwargs.pop("title", None)
+    subplots_adjust_kwargs = plot_kwargs.pop("subplots_adjust_kwargs", None)
+
+    # Plot the orbits
     fc = fc.map_dataarray(
         _plot_orbit_map_cartopy,
         x=x,
@@ -558,8 +562,22 @@ def _plot_orbit_map_facetgrid(
     # - TODO: it requires a fix to fc.add_colorbar() to enable to call it outside this function
     #   when add_colorbar=True and fig.tight_layout() is called !
     # - TODO: once fixed, do not called it inside ! It's a user choice outside
-    if extent is not None:
-        fc.set_extent(extent=extent)
+    fc.set_extent(extent=extent)
+
+    # Define subplot_adjust_kwargs
+    subplots_adjust_kwargs = define_subplots_adjust_kwargs(
+        subplots_adjust_kwargs, add_colorbar, cbar_kwargs=cbar_kwargs
+    )
+
+    # Adjust spacing between subplots
+    fc.fig.subplots_adjust(**subplots_adjust_kwargs)
+
+    # Add suptitle
+    if title is not None:
+        fc.fig.suptitle(title, horizontalalignment="right")
+
+    # Adjust the figure height for a nice layout
+    fc.set_map_layout()
 
     # Add colorbar
     if add_colorbar:
@@ -568,6 +586,6 @@ def _plot_orbit_map_facetgrid(
         # - If called again after calling add_colorbar, everything goes messed up
         # - This call restricts further modification of axis (i.e. set_extent) !!!
         # TODO: try to remove by updating add_colorbar
-        fc.fig.tight_layout()
+        # fc.fig.tight_layout()
         fc.add_colorbar(**cbar_kwargs)
     return fc
