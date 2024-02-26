@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 
 from gpm_api.checks import check_is_spatial_2d
 from gpm_api.utils.utils_cmap import get_colorbar_settings
-from gpm_api.visualization.facetgrid import CartopyFacetGrid
+from gpm_api.visualization.facetgrid import CartopyFacetGrid, ImageFacetGrid
 from gpm_api.visualization.plot import (
     _plot_cartopy_imshow,
     #  _plot_mpl_imshow,
@@ -150,8 +150,8 @@ def _plot_grid_map_facetgrid(
         **plot_kwargs,
     )
 
-    # Remove duplicated gridline labels
-    fc.remove_duplicated_gridline_labels()
+    # Remove duplicated axis labels
+    fc.remove_duplicated_axis_labels()
 
     # Add colorbar
     if add_colorbar:
@@ -179,7 +179,6 @@ def plot_grid_map(
 ):
     """Plot DataArray 2D field with cartopy."""
     # Plot FacetGrid with xarray imshow
-    # - TODO: add supertitle, better scale colorbar if cartopy axes !
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_grid_map_facetgrid(
             da=da,
@@ -214,7 +213,7 @@ def plot_grid_map(
     return p
 
 
-def plot_grid_image(
+def _plot_grid_image(
     da,
     x=None,
     y=None,
@@ -231,14 +230,13 @@ def plot_grid_image(
 
     # Initialize figure
     if ax is None:
-        # If col and row are not provided (not FacetedGrid), initialize
-        if "col" not in plot_kwargs and "row" not in plot_kwargs:
-            if "rgb" not in plot_kwargs:
-                check_is_spatial_2d(da)
-            fig, ax = plt.subplots(**fig_kwargs)
-        # Add fig_kwargs to plot_kwargs for FacetGrid initialization
-        else:
-            plot_kwargs.update(fig_kwargs)
+        if "rgb" not in plot_kwargs:
+            check_is_spatial_2d(da)
+        fig, ax = plt.subplots(**fig_kwargs)
+
+    # - Sanitize plot_kwargs passed by FacetGrid
+    facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
+    _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
     plot_kwargs, cbar_kwargs = get_colorbar_settings(
@@ -257,9 +255,9 @@ def plot_grid_image(
         cbar_kwargs=cbar_kwargs,
     )
 
-    if ax is not None:
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
+    # Add axis labels
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
 
     # - Return mappable
     return p
@@ -313,3 +311,100 @@ def plot_grid_mesh(
     )
     # - Return mappable
     return p
+
+
+def plot_grid_image(
+    da,
+    x="lon",
+    y="lat",
+    ax=None,
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
+):
+    """Plot DataArray 2D field with cartopy."""
+    # Plot FacetGrid with xarray imshow
+    if "col" in plot_kwargs or "row" in plot_kwargs:
+        p = _plot_grid_image_facetgrid(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+
+    # Plot with cartopy imshow
+    else:
+        da = da.squeeze()  # remove time if dim=1
+        p = _plot_grid_image(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    # - Return imagepable
+    return p
+
+
+def _plot_grid_image_facetgrid(
+    da,
+    x="lon",
+    y="lat",
+    ax=None,
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
+):
+    """Plot 2D fields with FacetGrid."""
+    # - Check inputs
+    if ax is not None:
+        raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+
+    # Retrieve GPM-API defaults cmap and cbar kwargs
+    variable = da.name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(
+        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    )
+
+    # Create FacetGrid
+    fc = ImageFacetGrid(
+        data=da.compute(),
+        col=plot_kwargs.pop("col", None),
+        row=plot_kwargs.pop("row", None),
+        col_wrap=plot_kwargs.pop("col_wrap", None),
+        figsize=fig_kwargs.pop("fig_size", None),
+    )
+
+    # Plot the maps
+    fc = fc.map_dataarray(
+        _plot_grid_image,
+        x=x,
+        y=y,
+        add_colorbar=False,
+        interpolation=interpolation,
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+
+    # Remove duplicated axis labels
+    fc.remove_duplicated_axis_labels()
+
+    # Add colorbar
+    if add_colorbar:
+        fc.add_colorbar(**cbar_kwargs)
+
+    return fc

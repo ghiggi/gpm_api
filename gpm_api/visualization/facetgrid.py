@@ -6,68 +6,17 @@ Created on Fri Feb 23 17:14:18 2024
 """
 import itertools
 import warnings
+from abc import ABC, abstractmethod
 from collections.abc import Hashable
 from typing import Any, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from cartopy.mpl.geoaxes import GeoAxes
+from mpl_toolkits.axes_grid1 import ImageGrid
 from xarray.plot.facetgrid import FacetGrid
 from xarray.plot.utils import label_from_attrs
-
-
-def define_subplots_adjust_kwargs(subplots_adjust_kwargs, add_colorbar, cbar_kwargs):
-    if subplots_adjust_kwargs is None:
-        colorbar_space = 0.25
-        left_margin = 0.025
-        right_margin = 0.025
-        bottom_margin = 0.05
-        top_margin = 0.12
-        wspace = 0  # 0.1
-
-        # Adjust the margins manually for colorbar
-        if add_colorbar:
-            orientation = cbar_kwargs.get("orientation", "vertical")
-            if orientation == "vertical":
-                right = 1 - colorbar_space
-                left = left_margin
-                bottom = bottom_margin
-                top = 1 - top_margin
-                hspace = 0  # 0.05 originally
-            else:  # horizontal
-                right = 1 - right_margin
-                left = left_margin
-                bottom = colorbar_space
-                top = 1 - top_margin
-                hspace = 0.1
-                if "pad" not in cbar_kwargs:
-                    cbar_kwargs["pad"] = 0.05
-        else:
-            top = 1 - top_margin
-            bottom = bottom_margin
-            right = 1 - right_margin
-            left = left_margin
-            hspace = 0.08
-
-        subplots_adjust_kwargs = {
-            "left": left,
-            "right": right,
-            "top": top,
-            "bottom": bottom,
-            "hspace": hspace,
-            "wspace": wspace,
-        }
-    return subplots_adjust_kwargs
-
-
-def remove_gridline_bottom_labels(ax):
-    gl = ax._gridliners[0]
-    gl.bottom_labels = False
-
-
-def remove_gridline_left_labels(ax):
-    gl = ax._gridliners[0]
-    gl.left_labels = False
 
 
 def _remove_title_dimension_prefix(ax):
@@ -78,7 +27,79 @@ def _remove_title_dimension_prefix(ax):
     ax.set_title(title)
 
 
-class CartopyFacetGrid(FacetGrid):
+class CustomFacetGrid(FacetGrid, ABC):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @abstractmethod
+    def _remove_bottom_ticks_and_labels(self, ax):
+        """Method removing axis ticks and labels on the bottom of the subplots."""
+        pass
+
+    @abstractmethod
+    def _remove_left_ticks_and_labels(self, ax):
+        """Method removing axis ticks and labels on the left of the subplots."""
+        pass
+
+    @abstractmethod
+    def _draw_colorbar(self, cbar_kwargs):
+        """Method adding a colorbar to the figure."""
+        pass
+
+    def remove_duplicated_axis_labels(self):
+        """Remove axis labels which are not located on the left or bottom of the figure."""
+        n_rows, n_cols = self.axs.shape
+        missing_bottom_plots = [not ax.has_data() for ax in self.axs[n_rows - 1]]
+        idx_bottom_plots = np.where(missing_bottom_plots)[0]
+
+        # Remove bottom axis labels from all subplots except the bottom ones
+        if n_rows > 1:
+            for i in range(0, n_rows - 1):
+                for j in range(0, n_cols):
+                    if not (i == n_rows - 2 and j in idx_bottom_plots):
+                        self._remove_bottom_ticks_and_labels(ax=self.axs[i, j])
+        # Remove left axis labels from all subplots except the left ones
+        if n_cols > 1:
+            for i in range(0, n_rows):
+                for j in range(1, n_cols):
+                    self._remove_left_ticks_and_labels(ax=self.axs[i, j])
+
+    def add_colorbar(self, **cbar_kwargs) -> None:
+        """Draw a colorbar."""
+        cbar_kwargs = cbar_kwargs.copy()
+        # Check for extend in cmap
+        if self._cmap_extend is not None:
+            cbar_kwargs.setdefault("extend", self._cmap_extend)
+        # Don't pass 'extend' as kwarg if it is in the mappable
+        if hasattr(self._mappables[-1], "extend"):
+            cbar_kwargs.pop("extend", None)
+        # If label not specified, use the datarray name or attributes
+        if "label" not in cbar_kwargs:
+            assert isinstance(self.data, xr.DataArray)
+            cbar_kwargs.setdefault("label", label_from_attrs(self.data))
+        # Accept ticklabels as kwargs
+        ticklabels = cbar_kwargs.pop("ticklabels", None)
+        # Draw the colorbar
+        self._draw_colorbar(cbar_kwargs=cbar_kwargs)
+        # Add ticklabel
+        if ticklabels is not None:
+            self.cbar.ax.set_yticklabels(ticklabels)
+
+    def remove_title_dimension_prefix(self):
+        """Remove the dimension prefix from the subplot labels."""
+        self.map(lambda: _remove_title_dimension_prefix(plt.gca()))
+
+    def set_title(self, title, horizontalalignment="center", **kwargs):
+        """Add a title above all sublots.
+
+        The y argument controls the spacing to the subplots.
+        Decreasing or increasing the y argument (from a default value of 1)
+        reduce/increase the spacing.
+        """
+        self.fig.suptitle(title, horizontalalignment=horizontalalignment, **kwargs)
+
+
+class CartopyFacetGrid(CustomFacetGrid):
     def __init__(
         self,
         data,
@@ -110,10 +131,6 @@ class CartopyFacetGrid(FacetGrid):
             (:py:func:`matplotlib.pyplot.subplots`).
 
         """
-        import matplotlib.pyplot as plt
-        from cartopy.mpl.geoaxes import GeoAxes
-        from mpl_toolkits.axes_grid1 import ImageGrid
-
         # Handle corner case of nonunique coordinates
         rep_col = col is not None and not data[col].to_index().is_unique
         rep_row = row is not None and not data[row].to_index().is_unique
@@ -256,67 +273,34 @@ class CartopyFacetGrid(FacetGrid):
                     ax.set_visible(False)
             self._finalized = True
 
-    def add_colorbar(self, **kwargs) -> None:
-        """Draw a colorbar."""
-        kwargs = kwargs.copy()
-        # Check for extend in cmap
-        if self._cmap_extend is not None:
-            kwargs.setdefault("extend", self._cmap_extend)
-        # Don't pass 'extend' as kwarg if it is in the mappable
-        if hasattr(self._mappables[-1], "extend"):
-            kwargs.pop("extend", None)
-        # If label not specified, use the datarray name or attributes
-        if "label" not in kwargs:
-            assert isinstance(self.data, xr.DataArray)
-            kwargs.setdefault("label", label_from_attrs(self.data))
-        # Accept ticklabels as kwargs
-        ticklabels = kwargs.pop("ticklabels", None)
-        # Display the colorbar
+    def _draw_colorbar(self, cbar_kwargs):
+        """Method adding a colorbar to the figure."""
         self.cbar = self.image_grid.cbar_axes[0].colorbar(
-            self._mappables[-1], ax=list(self.axs.flat), **kwargs
+            self._mappables[-1], ax=list(self.axs.flat), **cbar_kwargs
         )
-        # Add the ticklabels
-        if ticklabels is not None:
-            self.cbar.ax.set_yticklabels(ticklabels)
 
-    def remove_duplicated_gridline_labels(self):
-        """Remove gridlines labels except at the border."""
-        n_rows, n_cols = self.axs.shape
+    def _remove_bottom_ticks_and_labels(self, ax):
+        """Remove Cartopy bottom gridlines labels."""
+        if isinstance(ax, GeoAxes):
+            gl = ax._gridliners[0]
+            gl.bottom_labels = False
 
-        missing_bottom_plots = [not ax.has_data() for ax in self.axs[n_rows - 1]]
-        idx_bottom_plots = np.where(missing_bottom_plots)[0]
-        has_missing_bottom_plots = len(idx_bottom_plots) > 0
-
-        # Remove bottom labels from all subplots except the bottom ones
-        if n_rows > 1:
-            for i in range(0, n_rows - 1):
-                for j in range(0, n_cols):
-                    if has_missing_bottom_plots and i == n_rows - 2 and j in idx_bottom_plots:
-                        pass
-                    else:
-                        try:
-                            remove_gridline_bottom_labels(ax=self.axs[i, j])
-                        except Exception:
-                            pass
-        if n_cols > 1:
-            for i in range(0, n_rows):
-                for j in range(1, n_cols):
-                    try:
-                        remove_gridline_left_labels(ax=self.axs[i, j])
-                    except Exception:
-                        pass
+    def _remove_left_ticks_and_labels(self, ax):
+        """Remove Cartopy left gridlines labels."""
+        if isinstance(ax, GeoAxes):
+            gl = ax._gridliners[0]
+            gl.left_labels = False
 
     def set_extent(self, extent):
-        """Set extent to all subplots."""
+        """Modify extent of all Cartopy subplots."""
+        from cartopy.mpl.geoaxes import GeoAxes
+
         if extent is None:
             return None
-
+        # Modify extent
         for ax in self.axs.flat:
-            try:
+            if isinstance(ax, GeoAxes):
                 ax.set_extent(extent)
-            except Exception:
-                pass
-
         # Readjust map layout
         self.optimize_layout()
 
@@ -386,14 +370,66 @@ class CartopyFacetGrid(FacetGrid):
         f.set_figwidth(width)
         f.set_figheight(height)
 
-    def remove_title_dimension_prefix(self):
-        self.map(lambda: _remove_title_dimension_prefix(plt.gca()))
-
-    def set_title(self, title, horizontalalignment="center", **kwargs):
-        self.fig.suptitle(title, horizontalalignment=horizontalalignment, **kwargs)
-
     def optimize_layout(self):
+        """Optimize the figure size and layout of the Figure.
+
+        This function must be called only once !
+        """
         self.adapt_fig_size()
         with warnings.catch_warnings(record=False):
             warnings.simplefilter("ignore", UserWarning)
             self.fig.tight_layout()
+
+
+class ImageFacetGrid(CustomFacetGrid):
+    def __init__(
+        self,
+        data,
+        col: Hashable | None = None,
+        row: Hashable | None = None,
+        col_wrap: int | None = None,
+        sharex: bool = False,
+        sharey: bool = False,
+        figsize=None,  # Iterable[float] | None = None,
+        aspect: float = 1,
+        size: float = 3,
+        subplot_kws: dict[str, Any] | None = None,
+    ) -> None:
+        # Initialize the base FacetGrid
+        super().__init__(
+            data,
+            col=col,
+            row=row,
+            col_wrap=col_wrap,
+            sharex=True,
+            sharey=True,
+            figsize=figsize,
+            aspect=aspect,
+            size=size,
+            subplot_kws=subplot_kws,
+        )
+
+    def _finalize_grid(self, *axlabels) -> None:
+        """Finalize the annotations and layout of FacetGrid."""
+        if not self._finalized:
+            # Add subplots titles
+            self.set_titles()
+            # Make empty subplots unvisible
+            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat):
+                if namedict is None:
+                    ax.set_visible(False)
+            self._finalized = True
+
+    def _draw_colorbar(self, cbar_kwargs):
+        """Draw the colorbar."""
+        self.cbar = self.fig.colorbar(self._mappables[-1], ax=list(self.axs.flat), **cbar_kwargs)
+
+    def _remove_bottom_ticks_and_labels(self, ax):
+        """Remove bottom ticks and labels."""
+        ax.tick_params(axis="x", length=0)
+        ax.set_xlabel("")
+
+    def _remove_left_ticks_and_labels(self, ax):
+        """Remove left ticks and labels."""
+        ax.tick_params(axis="y", length=0)
+        ax.set_ylabel("")
