@@ -315,6 +315,13 @@ def test__download_files(
     # Don't actually download anything, so mock the run function
     mocker.patch.object(dl, "run", autospec=True, return_value=None)
 
+    mock_config = {
+        "username_pps": "test_username_pps",
+        "password_pps": "test_password_pps",
+        "username_earthdata": "test_username_earthdata",
+        "password_earthdata": "test_password_earthdata",
+    }
+
     # Use server paths in fixture and try curl and wget
     for remote_filepath in remote_filepaths:
         local_filepath = os.path.join(
@@ -322,12 +329,13 @@ def test__download_files(
             "test_download_file_private",
             os.path.basename(remote_filepath),
         )
-        dl._download_files(
-            remote_filepaths=[remote_filepath],
-            local_filepaths=[local_filepath],
-            storage=storage,
-            transfer_tool=transfer_tool,
-        )
+        with gpm_api.config.set(mock_config):
+            dl._download_files(
+                remote_filepaths=[remote_filepath],
+                local_filepaths=[local_filepath],
+                storage=storage,
+                transfer_tool=transfer_tool,
+            )
 
     # Test non-existent transfer tool
     with pytest.raises(ValueError):
