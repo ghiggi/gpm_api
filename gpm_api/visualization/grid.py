@@ -124,11 +124,15 @@ def _plot_grid_map_facetgrid(
         name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
     )
 
+    projection = subplot_kwargs.get("projection", None)
+    if projection is None:
+        raise ValueError("Please specify a Cartopy projection in subplot_kwargs['projection'].")
+
     # Create FacetGrid
     optimize_layout = plot_kwargs.pop("optimize_layout", True)
     fc = CartopyFacetGrid(
         data=da.compute(),
-        subplot_kws=subplot_kwargs,
+        projection=projection,
         col=plot_kwargs.pop("col", None),
         row=plot_kwargs.pop("row", None),
         col_wrap=plot_kwargs.pop("col_wrap", None),
@@ -136,6 +140,8 @@ def _plot_grid_map_facetgrid(
         add_colorbar=add_colorbar,
         cbar_kwargs=cbar_kwargs,
         fig_kwargs=fig_kwargs,
+        facet_height=plot_kwargs.pop("facet_height", 3),
+        facet_aspect=plot_kwargs.pop("facet_aspect", 1),
     )
 
     # Plot the maps
@@ -386,7 +392,13 @@ def _plot_grid_image_facetgrid(
         col=plot_kwargs.pop("col", None),
         row=plot_kwargs.pop("row", None),
         col_wrap=plot_kwargs.pop("col_wrap", None),
-        figsize=fig_kwargs.pop("fig_size", None),
+        axes_pad=plot_kwargs.pop("axes_pad", None),
+        fig_kwargs=fig_kwargs,
+        cbar_kwargs=cbar_kwargs,
+        add_colorbar=add_colorbar,
+        aspect=plot_kwargs.pop("aspect", False),
+        facet_height=plot_kwargs.pop("facet_height", 3),
+        facet_aspect=plot_kwargs.pop("facet_aspect", 1),
     )
 
     # Plot the maps

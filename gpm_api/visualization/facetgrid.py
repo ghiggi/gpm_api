@@ -8,7 +8,7 @@ import itertools
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Hashable
-from typing import Any, Union
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,89 +28,20 @@ def _remove_title_dimension_prefix(ax):
 
 
 class CustomFacetGrid(FacetGrid, ABC):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    @abstractmethod
-    def _remove_bottom_ticks_and_labels(self, ax):
-        """Method removing axis ticks and labels on the bottom of the subplots."""
-        pass
-
-    @abstractmethod
-    def _remove_left_ticks_and_labels(self, ax):
-        """Method removing axis ticks and labels on the left of the subplots."""
-        pass
-
-    @abstractmethod
-    def _draw_colorbar(self, cbar_kwargs):
-        """Method adding a colorbar to the figure."""
-        pass
-
-    def remove_duplicated_axis_labels(self):
-        """Remove axis labels which are not located on the left or bottom of the figure."""
-        n_rows, n_cols = self.axs.shape
-        missing_bottom_plots = [not ax.has_data() for ax in self.axs[n_rows - 1]]
-        idx_bottom_plots = np.where(missing_bottom_plots)[0]
-
-        # Remove bottom axis labels from all subplots except the bottom ones
-        if n_rows > 1:
-            for i in range(0, n_rows - 1):
-                for j in range(0, n_cols):
-                    if not (i == n_rows - 2 and j in idx_bottom_plots):
-                        self._remove_bottom_ticks_and_labels(ax=self.axs[i, j])
-        # Remove left axis labels from all subplots except the left ones
-        if n_cols > 1:
-            for i in range(0, n_rows):
-                for j in range(1, n_cols):
-                    self._remove_left_ticks_and_labels(ax=self.axs[i, j])
-
-    def add_colorbar(self, **cbar_kwargs) -> None:
-        """Draw a colorbar."""
-        cbar_kwargs = cbar_kwargs.copy()
-        # Check for extend in cmap
-        if self._cmap_extend is not None:
-            cbar_kwargs.setdefault("extend", self._cmap_extend)
-        # Don't pass 'extend' as kwarg if it is in the mappable
-        if hasattr(self._mappables[-1], "extend"):
-            cbar_kwargs.pop("extend", None)
-        # If label not specified, use the datarray name or attributes
-        if "label" not in cbar_kwargs:
-            assert isinstance(self.data, xr.DataArray)
-            cbar_kwargs.setdefault("label", label_from_attrs(self.data))
-        # Accept ticklabels as kwargs
-        ticklabels = cbar_kwargs.pop("ticklabels", None)
-        # Draw the colorbar
-        self._draw_colorbar(cbar_kwargs=cbar_kwargs)
-        # Add ticklabel
-        if ticklabels is not None:
-            self.cbar.ax.set_yticklabels(ticklabels)
-
-    def remove_title_dimension_prefix(self):
-        """Remove the dimension prefix from the subplot labels."""
-        self.map(lambda: _remove_title_dimension_prefix(plt.gca()))
-
-    def set_title(self, title, horizontalalignment="center", **kwargs):
-        """Add a title above all sublots.
-
-        The y argument controls the spacing to the subplots.
-        Decreasing or increasing the y argument (from a default value of 1)
-        reduce/increase the spacing.
-        """
-        self.fig.suptitle(title, horizontalalignment=horizontalalignment, **kwargs)
-
-
-class CartopyFacetGrid(CustomFacetGrid):
     def __init__(
         self,
         data,
-        col: Union[Hashable, None] = None,
-        row: Union[Hashable, None] = None,
-        col_wrap: Union[int, None] = None,
-        axes_pad: tuple[float, float] = None,
+        col: Optional[Hashable] = None,
+        row: Optional[Hashable] = None,
+        col_wrap: Optional[int] = None,
+        axes_pad: Optional[Tuple[float, float]] = None,
+        aspect: bool = True,
         add_colorbar: bool = True,
+        facet_height: float = 3.0,
+        facet_aspect: float = 1.0,
         cbar_kwargs: dict = {},
         fig_kwargs: dict = {},
-        subplot_kws: Union[dict[str, Any], None] = None,
+        axes_class=None,
     ) -> None:
         """
         Parameters
@@ -123,13 +54,35 @@ class CartopyFacetGrid(CustomFacetGrid):
         col_wrap : int, optional
             "Wrap" the grid the for the column variable after this number of columns,
             adding rows if ``col_wrap`` is less than the number of facets.
-        figsize : Iterable of float or None, optional
-            A tuple (width, height) of the figure in inches.
-            If set, overrides ``size`` and ``aspect``.
-        subplot_kws : dict, optional
-            Dictionary of keyword arguments for Matplotlib subplots
-            (:py:func:`matplotlib.pyplot.subplots`).
-
+        axes_pad : float or (float, float), default: 0.02in
+           Padding or (horizontal padding, vertical padding) between axes, in
+           inches.
+        aspect : bool, default: True
+            Whether the axes aspect ratio follows the aspect ratio of the data
+            limits.
+        axes_class : subclass of `matplotlib.axes.Axes`, default: None
+        add_colorbar: bool, optional
+            Whether to add a colorbar to the figure.
+            The default is True.
+        cbar_kwargs : dict, optional
+            Dictionary of keyword arguments to pass to the colorbar.
+            The ``pad`` argument controls the space between the image axes and the colorbar axes.
+            The ``pad`` default is 0.2.
+            The ``size`` argument control the colorbar size. The default value is '3%'.
+            For other arguments, see :meth:`matplotlib:matplotlib.figure.Figure.colorbar`.
+        facet_height: float, optional
+            Height (in inches) of each facet. The default is 3.
+            This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
+        facet_aspect:  float, optional
+           Aspect ratio of each facet. The default is 1.
+           The facet width is determined by ``facet_height`` * ``facet_aspect``.
+           This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
+        fig_kwargs : dict, optional
+             Dictionary of keyword arguments to pass to the Figure.
+             Typical arguments include ``figsize`` and ``dpi``.
+             ``figsize`` is a tuple (width, height) of the figure in inches.
+             If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
+             (see :meth:`matplotlib:matplotlib.figure.Figure`).
         """
         # Handle corner case of nonunique coordinates
         rep_col = col is not None and not data[col].to_index().is_unique
@@ -167,13 +120,6 @@ class CartopyFacetGrid(CustomFacetGrid):
                 ncol = col_wrap
             nrow = int(np.ceil(nfacet / ncol))
 
-        # Set the subplot kwargs
-        subplot_kws = {} if subplot_kws is None else subplot_kws
-
-        # Define axes
-        projection = subplot_kws["projection"]
-        axes_class = (GeoAxes, dict(projection=projection))
-
         # Define axis spacing
         if axes_pad is None:
             axes_pad = (0.1, 0.3)
@@ -192,8 +138,24 @@ class CartopyFacetGrid(CustomFacetGrid):
             cbar_mode = None
             cbar_location = "right"  # unused
 
+        # Initialize figure size
+        # --> facet_height=size and facet_aspect=aspect in xarray FacetGrid
+        # --> We could provide this also as argument (fig_kwargs or **plot_kwargs?)
+        # --> Only used in figsize not specified !
+        figsize = fig_kwargs.pop("figsize", None)
+        if figsize is None:  # xarray FacetGrid defaults
+            facet_width = facet_height * facet_aspect  # Width (in inches) of each facet
+            figsize = [ncol * facet_width, nrow * facet_height]  # (width, height)
+            if add_colorbar:
+                cbar_space = 1
+                if orientation == "vertical":
+                    figsize[0] = figsize[0] + cbar_space  # extra width space
+                else:
+                    figsize[1] = figsize[1] + cbar_space  # extra height space
+            figsize = tuple(figsize)
+
         # Initialize figure and axes
-        fig = plt.figure(**fig_kwargs)
+        fig = plt.figure(figsize=figsize, **fig_kwargs)
         image_grid = ImageGrid(
             fig,
             111,
@@ -204,8 +166,9 @@ class CartopyFacetGrid(CustomFacetGrid):
             cbar_mode=cbar_mode,
             cbar_pad=cbar_pad,
             cbar_size=cbar_size,
+            aspect=aspect,
             # direction="row", # plot row by row
-            # label_mode="L",  # does not matter with cartopy plot
+            label_mode="all",  # does not matter with cartopy plot
         )
 
         # Extract axes like subplots
@@ -263,46 +226,73 @@ class CartopyFacetGrid(CustomFacetGrid):
         self._mappables = []
         self._finalized = False
 
-    def _finalize_grid(self, *axlabels) -> None:
-        """Finalize the annotations and layout of FacetGrid."""
-        if not self._finalized:
-            self.set_axis_labels(*axlabels)
-            self.set_titles()
-            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat):
-                if namedict is None:
-                    ax.set_visible(False)
-            self._finalized = True
+    @abstractmethod
+    def _remove_bottom_ticks_and_labels(self, ax):
+        """Method removing axis ticks and labels on the bottom of the subplots."""
+        pass
 
-    def _draw_colorbar(self, cbar_kwargs):
-        """Method adding a colorbar to the figure."""
+    @abstractmethod
+    def _remove_left_ticks_and_labels(self, ax):
+        """Method removing axis ticks and labels on the left of the subplots."""
+        pass
+
+    def remove_duplicated_axis_labels(self):
+        """Remove axis labels which are not located on the left or bottom of the figure."""
+        n_rows, n_cols = self.axs.shape
+        missing_bottom_plots = [not ax.has_data() for ax in self.axs[n_rows - 1]]
+        idx_bottom_plots = np.where(missing_bottom_plots)[0]
+        has_missing_bottom_plots = len(idx_bottom_plots) > 0
+
+        # Remove bottom axis labels from all subplots except the bottom ones
+        if n_rows > 1:
+            for i in range(0, n_rows - 1):
+                for j in range(0, n_cols):
+                    if has_missing_bottom_plots and i == n_rows - 2 and j in idx_bottom_plots:
+                        continue
+                    else:
+                        self._remove_bottom_ticks_and_labels(ax=self.axs[i, j])
+
+        # Remove left axis labels from all subplots except the left ones
+        if n_cols > 1:
+            for i in range(0, n_rows):
+                for j in range(1, n_cols):
+                    self._remove_left_ticks_and_labels(ax=self.axs[i, j])
+
+    def add_colorbar(self, **cbar_kwargs) -> None:
+        """Draw a colorbar."""
+        cbar_kwargs = cbar_kwargs.copy()
+        # Check for extend in cmap
+        if self._cmap_extend is not None:
+            cbar_kwargs.setdefault("extend", self._cmap_extend)
+        # Don't pass 'extend' as kwarg if it is in the mappable
+        if hasattr(self._mappables[-1], "extend"):
+            cbar_kwargs.pop("extend", None)
+        # If label not specified, use the datarray name or attributes
+        if "label" not in cbar_kwargs:
+            assert isinstance(self.data, xr.DataArray)
+            cbar_kwargs.setdefault("label", label_from_attrs(self.data))
+        # Accept ticklabels as kwargs
+        ticklabels = cbar_kwargs.pop("ticklabels", None)
+        # Draw the colorbar
         self.cbar = self.image_grid.cbar_axes[0].colorbar(
             self._mappables[-1], ax=list(self.axs.flat), **cbar_kwargs
         )
+        # Add ticklabel
+        if ticklabels is not None:
+            self.cbar.ax.set_yticklabels(ticklabels)
 
-    def _remove_bottom_ticks_and_labels(self, ax):
-        """Remove Cartopy bottom gridlines labels."""
-        if isinstance(ax, GeoAxes):
-            gl = ax._gridliners[0]
-            gl.bottom_labels = False
+    def remove_title_dimension_prefix(self):
+        """Remove the dimension prefix from the subplot labels."""
+        self.map(lambda: _remove_title_dimension_prefix(plt.gca()))
 
-    def _remove_left_ticks_and_labels(self, ax):
-        """Remove Cartopy left gridlines labels."""
-        if isinstance(ax, GeoAxes):
-            gl = ax._gridliners[0]
-            gl.left_labels = False
+    def set_title(self, title, horizontalalignment="center", **kwargs):
+        """Add a title above all sublots.
 
-    def set_extent(self, extent):
-        """Modify extent of all Cartopy subplots."""
-        from cartopy.mpl.geoaxes import GeoAxes
-
-        if extent is None:
-            return None
-        # Modify extent
-        for ax in self.axs.flat:
-            if isinstance(ax, GeoAxes):
-                ax.set_extent(extent)
-        # Readjust map layout
-        self.optimize_layout()
+        The y argument controls the spacing to the subplots.
+        Decreasing or increasing the y argument (from a default value of 1)
+        reduce/increase the spacing.
+        """
+        self.fig.suptitle(title, horizontalalignment=horizontalalignment, **kwargs)
 
     def adapt_fig_size(self):
         """
@@ -370,6 +360,109 @@ class CartopyFacetGrid(CustomFacetGrid):
         f.set_figwidth(width)
         f.set_figheight(height)
 
+
+class CartopyFacetGrid(CustomFacetGrid):
+    def __init__(
+        self,
+        data,
+        projection,
+        col: Optional[Hashable] = None,
+        row: Optional[Hashable] = None,
+        col_wrap: Optional[int] = None,
+        axes_pad: Optional[Tuple[float, float]] = None,
+        add_colorbar: bool = True,
+        cbar_kwargs: dict = {},
+        fig_kwargs: dict = {},
+        facet_height: float = 3.0,
+        facet_aspect: float = 1.0,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        data : DataArray or Dataset
+            DataArray or Dataset to be plotted.
+        projection: cartopy.crs
+            Cartopy projection.
+        row, col : str
+            Dimension names that define subsets of the data, which will be drawn
+            on separate facets in the grid.
+        col_wrap : int, optional
+            "Wrap" the grid the for the column variable after this number of columns,
+            adding rows if ``col_wrap`` is less than the number of facets.
+        axes_pad : float or (float, float), default: 0.02in
+           Padding or (horizontal padding, vertical padding) between axes, in
+           inches.
+        add_colorbar: bool, optional
+            Whether to add a colorbar to the figure.
+            The default is True.
+        cbar_kwargs : dict, optional
+            Dictionary of keyword arguments to pass to the colorbar.
+            The ``pad`` argument controls the space between the image axes and the colorbar axes.
+            The ``pad`` default is 0.2.
+            The ``size`` argument control the colorbar size. The default value is '3%'.
+            For other arguments, see :meth:`matplotlib:matplotlib.figure.Figure.colorbar`.
+        facet_height: float, optional
+            Height (in inches) of each facet. The default is 3.
+            This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
+        facet_aspect:  float, optional
+           Aspect ratio of each facet. The default is 1.
+           The facet width is determined by ``facet_height`` * ``facet_aspect``.
+           This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
+        fig_kwargs : dict, optional
+             Dictionary of keyword arguments to pass to the Figure.
+             Typical arguments include ``figsize`` and ``dpi``.
+             ``figsize`` is a tuple (width, height) of the figure in inches.
+             If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
+             (see :meth:`matplotlib:matplotlib.figure.Figure`).
+        """
+        # Define Cartopy axes
+        if projection is None:
+            raise ValueError("Please specify a Cartopy projection.")
+        axes_class = (GeoAxes, dict(projection=projection))
+
+        super().__init__(
+            data=data,
+            col=col,
+            row=row,
+            col_wrap=col_wrap,
+            axes_pad=axes_pad,
+            aspect=True,
+            add_colorbar=add_colorbar,
+            cbar_kwargs=cbar_kwargs,
+            fig_kwargs=fig_kwargs,
+            facet_height=facet_height,
+            facet_aspect=facet_aspect,
+            axes_class=axes_class,
+        )
+
+    def _finalize_grid(self, *axlabels) -> None:
+        """Finalize the annotations and layout of FacetGrid."""
+        if not self._finalized:
+            self.set_axis_labels(*axlabels)
+            self.set_titles()
+            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat):
+                if namedict is None:
+                    ax.set_visible(False)
+            self._finalized = True
+
+    def _remove_bottom_ticks_and_labels(self, ax):
+        """Remove Cartopy bottom gridlines labels."""
+        if isinstance(ax, GeoAxes):
+            try:
+                gl = ax._gridliners[0]
+                gl.bottom_labels = False
+            except Exception:
+                pass
+
+    def _remove_left_ticks_and_labels(self, ax):
+        """Remove Cartopy left gridlines labels."""
+        if isinstance(ax, GeoAxes):
+            try:
+                gl = ax._gridliners[0]
+                gl.left_labels = False
+            except Exception:
+                pass
+
     def optimize_layout(self):
         """Optimize the figure size and layout of the Figure.
 
@@ -380,33 +473,85 @@ class CartopyFacetGrid(CustomFacetGrid):
             warnings.simplefilter("ignore", UserWarning)
             self.fig.tight_layout()
 
+    def set_extent(self, extent):
+        """Modify extent of all Cartopy subplots."""
+        from cartopy.mpl.geoaxes import GeoAxes
+
+        if extent is None:
+            return None
+        # Modify extent
+        for ax in self.axs.flat:
+            if isinstance(ax, GeoAxes):
+                ax.set_extent(extent)
+        # Readjust map layout
+        self.optimize_layout()
+
 
 class ImageFacetGrid(CustomFacetGrid):
     def __init__(
         self,
         data,
-        col: Hashable | None = None,
-        row: Hashable | None = None,
-        col_wrap: int | None = None,
-        sharex: bool = False,
-        sharey: bool = False,
-        figsize=None,  # Iterable[float] | None = None,
-        aspect: float = 1,
-        size: float = 3,
-        subplot_kws: dict[str, Any] | None = None,
+        col: Optional[Hashable] = None,
+        row: Optional[Hashable] = None,
+        col_wrap: Optional[int] = None,
+        axes_pad: Optional[Tuple[float, float]] = None,
+        aspect: bool = False,
+        add_colorbar: bool = True,
+        cbar_kwargs: dict = {},
+        fig_kwargs: dict = {},
+        facet_height: float = 3.0,
+        facet_aspect: float = 1.0,
     ) -> None:
-        # Initialize the base FacetGrid
+        """
+        Parameters
+        ----------
+        data : DataArray or Dataset
+            DataArray or Dataset to be plotted.
+        row, col : str
+            Dimension names that define subsets of the data, which will be drawn
+            on separate facets in the grid.
+        col_wrap : int, optional
+            "Wrap" the grid the for the column variable after this number of columns,
+            adding rows if ``col_wrap`` is less than the number of facets.
+        axes_pad : float or (float, float), default: 0.02in
+           Padding or (horizontal padding, vertical padding) between axes, in inches.
+        aspect : bool, default: False
+            Whether the axes aspect ratio follows the aspect ratio of the data limits.
+        add_colorbar: bool, optional
+            Whether to add a colorbar to the figure.
+            The default is True.
+        cbar_kwargs : dict, optional
+            Dictionary of keyword arguments to pass to the colorbar.
+            The ``pad`` argument controls the space between the image axes and the colorbar axes.
+            The ``pad`` default is 0.2.
+            The ``size`` argument control the colorbar size. The default value is '3%'.
+            For other arguments, see :meth:`matplotlib:matplotlib.figure.Figure.colorbar`.
+        facet_height: float, optional
+            Height (in inches) of each facet. The default is 3.
+            This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
+        facet_aspect:  float, optional
+           Aspect ratio of each facet. The default is 1.
+           The facet width is determined by ``facet_height`` * ``facet_aspect``.
+           This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
+        fig_kwargs : dict, optional
+             Dictionary of keyword arguments to pass to the Figure.
+             Typical arguments include ``figsize`` and ``dpi``.
+             ``figsize`` is a tuple (width, height) of the figure in inches.
+             If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
+             (see :meth:`matplotlib:matplotlib.figure.Figure`).
+        """
         super().__init__(
-            data,
+            data=data,
             col=col,
             row=row,
             col_wrap=col_wrap,
-            sharex=True,
-            sharey=True,
-            figsize=figsize,
+            axes_pad=axes_pad,
             aspect=aspect,
-            size=size,
-            subplot_kws=subplot_kws,
+            add_colorbar=add_colorbar,
+            cbar_kwargs=cbar_kwargs,
+            fig_kwargs=fig_kwargs,
+            facet_height=facet_height,
+            facet_aspect=facet_aspect,
         )
 
     def _finalize_grid(self, *axlabels) -> None:
@@ -420,16 +565,15 @@ class ImageFacetGrid(CustomFacetGrid):
                     ax.set_visible(False)
             self._finalized = True
 
-    def _draw_colorbar(self, cbar_kwargs):
-        """Draw the colorbar."""
-        self.cbar = self.fig.colorbar(self._mappables[-1], ax=list(self.axs.flat), **cbar_kwargs)
-
     def _remove_bottom_ticks_and_labels(self, ax):
         """Remove bottom ticks and labels."""
-        ax.tick_params(axis="x", length=0)
+        ax.set_xticks([])
+        ax.set_xticklabels([])
         ax.set_xlabel("")
 
     def _remove_left_ticks_and_labels(self, ax):
         """Remove left ticks and labels."""
-        ax.tick_params(axis="y", length=0)
+        ax.set_yticks([])
+        ax.set_yticklabels([])
         ax.set_ylabel("")
+        ax.tick_params(axis="y", length=0)
