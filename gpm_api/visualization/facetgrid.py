@@ -7,7 +7,7 @@ Created on Fri Feb 23 17:14:18 2024
 import itertools
 import warnings
 from collections.abc import Hashable
-from typing import Any, Union
+from typing import Any, Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -82,14 +82,14 @@ class CartopyFacetGrid(FacetGrid):
     def __init__(
         self,
         data,
-        col: Union[Hashable, None] = None,
-        row: Union[Hashable, None] = None,
-        col_wrap: Union[int, None] = None,
-        axes_pad: tuple[float, float] = None,
+        col: Optional[Hashable] = None,
+        row: Optional[Hashable] = None,
+        col_wrap: Optional[int] = None,
+        axes_pad: Optional[Tuple[float, float]] = None,
         add_colorbar: bool = True,
         cbar_kwargs: dict = {},
         fig_kwargs: dict = {},
-        subplot_kws: Union[dict[str, Any], None] = None,
+        subplot_kws: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Parameters
