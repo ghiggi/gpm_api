@@ -9,13 +9,14 @@ Welcome to the GPM-API documentation!
 Here, you'll find everything you need to navigate through the data archive provided by the **Global Precipitation Measurement (GPM)** mission.
 
 The GPM data archive currently includes satellite data records that extend back to 1987.
-This extensive archive is the result of contributions from two spaceborne **radars** and a fleet of 35 **passive microwave (PMW)** sensors
+This extensive archive is the result of contributions from **2** spaceborne **radars** and a fleet of **35 passive microwave (PMW)** sensors
 that forms the so-called GPM constellation.
+
 The data are organized into various product levels, encompassing raw and calibrated observations (Level 1),
 intermediate geophysical retrieval products (Level 2), and integrated datasets from multiple satellites (Level 3).
 
-The GPM-API is a Python package designed to make your life easier, whether you aim to download some data, search for specific files, or jump into scientific analysis.
-Our goal with the GPM-API is to empower you to focus more on what you can discover and create with the data, rather than getting bogged down by the process of handling it.
+The **GPM-API** is a Python package designed to make your life easier, whether you aim to download some data, search for specific files, or jump into scientific analysis.
+Our goal is to empower you to focus more on what you can discover and create with the data, rather than getting bogged down by the process of handling it.
 
 With our software, you can:
 
@@ -31,9 +32,9 @@ With our software, you can:
 
 6. **Label Precipitation Events**: Identify specific precipitation events within the entire data archive.
 
-7. **Extract Spatio-Temporal Patches**: Create your own dataset to develop new algorithms.
+7. **Extract Spatio-Temporal Patches**: Create your own database to develop new algorithms and discover something new.
 
-8. **Geographically Bin Data**: Collect sensor measurements into a grid to perform statistical analysis.
+8. **Geographically Aggregate Data**: Collect sensor measurements into a grid or polygons to perform statistical analysis.
 
 9. **Access Scientific Retrievals**: Access community-based retrievals to enhance your analysis.
 

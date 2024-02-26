@@ -37,6 +37,7 @@ from gpm_api.utils.checks import (
     get_slices_regular,
 )
 from gpm_api.utils.utils_cmap import get_colorbar_settings
+from gpm_api.visualization.facetgrid import CartopyFacetGrid
 from gpm_api.visualization.plot import (
     _plot_cartopy_pcolormesh,
     #  _plot_mpl_imshow,
@@ -210,7 +211,7 @@ def _call_over_contiguous_scans(function):
             check_is_spatial_2d(da)
 
             # - Get slices with contiguous scans and valid geolocation
-            list_slices = get_slices_regular(da)
+            list_slices = get_slices_regular(da, min_size=2, min_n_scans=2)
             if len(list_slices) == 0:
                 raise ValueError("No regular scans available. Impossible to plot.")
         else:
@@ -275,7 +276,7 @@ def _call_over_contiguous_scans(function):
 
 
 @_call_over_contiguous_scans
-def plot_orbit_map(
+def _plot_orbit_map_cartopy(
     da,
     ax=None,
     x="lon",
@@ -303,6 +304,10 @@ def plot_orbit_map(
     # - Add cartopy background
     if add_background:
         ax = plot_cartopy_background(ax)
+
+    # - Sanitize plot_kwargs passed by FacetGrid
+    facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
+    _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
@@ -392,30 +397,30 @@ def plot_orbit_image(
     **plot_kwargs,
 ):
     """Plot GPM orbit granule as in image."""
+    # NOTE:
+    # - Code is almost equal to plot_grid_image
+    # - Refactor after developed test units
+
+    # ----------------------------------------------
     # - Check inputs
-    check_is_spatial_2d(da)
     check_contiguous_scans(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
-    # - Initialize figure
+    # Initialize figure
     if ax is None:
-        fig, ax = plt.subplots(**fig_kwargs)
+        # If col and row are not provided (not FacetedGrid), initialize
+        if "col" not in plot_kwargs and "row" not in plot_kwargs:
+            if "rgb" not in plot_kwargs:
+                check_is_spatial_2d(da)
+            fig, ax = plt.subplots(**fig_kwargs)
+        # Add fig_kwargs to plot_kwargs for FacetGrid initialization
+        else:
+            plot_kwargs.update(fig_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
     plot_kwargs, cbar_kwargs = get_colorbar_settings(
         name=da.name, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
     )
-
-    # # - Plot with matplotlib
-    # p = _plot_mpl_imshow(ax=ax,
-    #                      da=da,
-    #                      x="along_track",
-    #                      y="cross_track",
-    #                      interpolation=interpolation,
-    #                      add_colorbar=add_colorbar,
-    #                      plot_kwargs=plot_kwargs,
-    #                      cbar_kwargs=cbar_kwargs,
-    # )
 
     # - Plot with xarray
     p = _plot_xr_imshow(
@@ -428,8 +433,131 @@ def plot_orbit_image(
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
     )
-    p.axes.set_xlabel("Along-Track")
-    p.axes.set_ylabel("Cross-Track")
+
+    if ax is not None:
+        p.axes.set_xlabel("Along-Track")
+        p.axes.set_ylabel("Cross-Track")
 
     # - Return mappable
     return p
+
+
+def plot_orbit_map(
+    da,
+    ax=None,
+    x="lon",
+    y="lat",
+    add_colorbar=True,
+    add_swath_lines=True,
+    add_background=True,
+    rgb=False,
+    fig_kwargs={},
+    subplot_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
+):
+    """Plot DataArray 2D field with cartopy."""
+    # Plot FacetGrid with xarray imshow
+    # - TODO: add supertitle, better scale colorbar if cartopy axes !
+    if "col" in plot_kwargs or "row" in plot_kwargs:
+        p = _plot_orbit_map_facetgrid(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            add_swath_lines=add_swath_lines,
+            add_background=add_background,
+            rgb=rgb,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    # Plot with cartopy imshow
+    else:
+        da = da.squeeze()  # remove time if dim=1
+        p = _plot_orbit_map_cartopy(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            add_swath_lines=add_swath_lines,
+            add_background=add_background,
+            rgb=rgb,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    # - Return mappable
+    return p
+
+
+def _plot_orbit_map_facetgrid(
+    da,
+    x="lon",
+    y="lat",
+    ax=None,
+    add_colorbar=True,
+    add_swath_lines=True,
+    add_background=True,
+    rgb=False,
+    fig_kwargs={},
+    subplot_kwargs={},
+    cbar_kwargs={},
+    **plot_kwargs,
+):
+    """Plot 2D fields with FacetGrid."""
+    # - Check inputs
+    if ax is not None:
+        raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
+    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+    subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+
+    # Retrieve GPM-API defaults cmap and cbar kwargs
+    variable = da.name
+    plot_kwargs, cbar_kwargs = get_colorbar_settings(
+        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    )
+
+    # Create FacetGrid
+    optimize_layout = plot_kwargs.pop("optimize_layout", True)
+    fc = CartopyFacetGrid(
+        data=da.compute(),
+        subplot_kws=subplot_kwargs,
+        col=plot_kwargs.pop("col", None),
+        row=plot_kwargs.pop("row", None),
+        col_wrap=plot_kwargs.pop("col_wrap", None),
+        axes_pad=plot_kwargs.pop("axes_pad", None),
+        add_colorbar=add_colorbar,
+        cbar_kwargs=cbar_kwargs,
+        fig_kwargs=fig_kwargs,
+    )
+
+    # Plot the maps
+    fc = fc.map_dataarray(
+        _plot_orbit_map_cartopy,
+        x=x,
+        y=y,
+        add_colorbar=False,
+        add_background=add_background,
+        add_swath_lines=add_swath_lines,
+        rgb=rgb,
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+
+    # Remove duplicated gridline labels
+    fc.remove_duplicated_gridline_labels()
+
+    # Add colorbar
+    if add_colorbar:
+        fc.add_colorbar(**cbar_kwargs)
+
+    # Optimize layout
+    if optimize_layout:
+        fc.optimize_layout()
+
+    return fc

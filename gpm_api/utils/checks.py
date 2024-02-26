@@ -464,7 +464,7 @@ def _is_contiguous_scans(xr_obj):
 
 @check_is_orbit
 @check_has_along_track_dimension
-def get_slices_contiguous_scans(xr_obj, min_size=2):
+def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
     """
     Return a list of slices ensuring contiguous scans (and granules).
 
@@ -492,10 +492,11 @@ def get_slices_contiguous_scans(xr_obj, min_size=2):
     # Get number of scans
     n_scans = xr_obj["along_track"].shape[0]
 
-    # Define behaviour if less than 3 scan along track
+    # Define behaviour if less than 2/3 scan along track
     # --> Contiguity can't be verified without at least 3 slices !
+    # --> But for visualization purpose, if only 2 scans available, we want to plot it (and consider it contiguous)
     # --> Here we decide to return an empty list !
-    if n_scans < 3:
+    if n_scans < min_n_scans:
         list_slices = []
         return list_slices
 
@@ -899,7 +900,7 @@ def is_regular(xr_obj):
 
 
 @check_is_gpm_object
-def get_slices_regular(xr_obj, min_size=None):
+def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
     """
     Return a list of slices to select regular GPM objects.
 
@@ -917,6 +918,10 @@ def get_slices_regular(xr_obj, min_size=None):
     min_size : int
         Minimum size for a slice to be returned.
         If None, default to 1 for GRID objects, 2 for ORBIT objects.
+    min_n_scans : int
+        Minimum number of scans to be able to check for scan contiguity.
+        For visualization purpose, this value might want to be set to 2.
+        This parameter applies only to ORBIT objects.
 
     Returns
     -------
@@ -929,7 +934,9 @@ def get_slices_regular(xr_obj, min_size=None):
     if is_orbit(xr_obj):
         min_size = 2 if min_size is None else min_size
         # Get swath portions where there are not missing scans (and granules)
-        list_slices_contiguous = get_slices_contiguous_scans(xr_obj, min_size=min_size)
+        list_slices_contiguous = get_slices_contiguous_scans(
+            xr_obj, min_size=min_size, min_n_scans=min_n_scans
+        )
         # Get swath portions where there are valid geolocation
         list_slices_geolocation = get_slices_valid_geolocation(xr_obj, min_size=min_size)
         # Find swath portions meeting all the requirements

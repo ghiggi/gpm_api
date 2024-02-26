@@ -22,15 +22,15 @@ end_time = datetime.datetime.strptime("2016-03-09 11:00:00", "%Y-%m-%d %H:%M:%S"
 product = "2A-DPR"
 version = 7
 
-# gpm_api.download(
-#     product=product,
-#     start_time=start_time,
-#     end_time=end_time,
-#     version=version,
-#     progress_bar=True,
-#     n_threads=5,  # 8
-#     transfer_tool="curl",
-# )
+gpm_api.download(
+    product=product,
+    start_time=start_time,
+    end_time=end_time,
+    version=version,
+    progress_bar=True,
+    n_threads=2,  # 8
+    transfer_tool="curl",
+)
 
 ##-----------------------------------------------------------------------------.
 ####  Load GPM dataset

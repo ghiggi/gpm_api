@@ -184,21 +184,39 @@ def plot_cartopy_background(ax):
     return ax
 
 
-def plot_colorbar(p, ax, cbar_kwargs={}, size="5%", pad=0.1):
+def plot_colorbar(p, ax, cbar_kwargs={}):
     """Add a colorbar to a matplotlib/cartopy plot.
 
+    cbar_kwargs 'size' and 'pad' controls the size of the colorbar.
+    and the padding between the plot and the colorbar.
+
     p: matplotlib.image.AxesImage
-    ax:  cartopy.mpl.geoaxes.GeoAxesSubplot
+    ax:  cartopy.mpl.geoaxes.GeoAxesSubplot^
     """
     cbar_kwargs = cbar_kwargs.copy()  # otherwise pop ticklabels outside the function
     ticklabels = cbar_kwargs.pop("ticklabels", None)
+    orientation = cbar_kwargs.get("orientation", "vertical")
+
     divider = make_axes_locatable(ax)
-    cax = divider.new_horizontal(size=size, pad=pad, axes_class=plt.Axes)
+
+    if orientation == "vertical":
+        size = cbar_kwargs.get("size", "5%")
+        pad = cbar_kwargs.get("pad", 0.1)
+        cax = divider.append_axes("right", size=size, pad=pad, axes_class=plt.Axes)
+    elif orientation == "horizontal":
+        size = cbar_kwargs.get("size", "5%")
+        pad = cbar_kwargs.get("pad", 0.25)
+        cax = divider.append_axes("bottom", size=size, pad=pad, axes_class=plt.Axes)
+    else:
+        raise ValueError("Invalid orientation. Choose 'vertical' or 'horizontal'.")
 
     p.figure.add_axes(cax)
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
     if ticklabels is not None:
-        _ = cbar.ax.set_yticklabels(ticklabels)
+        if orientation == "vertical":
+            _ = cbar.ax.set_yticklabels(ticklabels)
+        else:  # horizontal
+            _ = cbar.ax.set_yticklabels(ticklabels)
     return cbar
 
 
