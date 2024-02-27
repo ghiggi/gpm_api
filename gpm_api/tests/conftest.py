@@ -448,6 +448,15 @@ def continent_extent_dictionary() -> ExtentDictionary:
     return geospatial.read_continents_extent_dictionary()
 
 
+@pytest.fixture
+def prevent_pyplot_show(
+    mocker: MockerFixture,
+) -> None:
+    """Prevent the show method of the pyplot module to be called"""
+
+    mocker.patch("matplotlib.pyplot.show")
+
+
 @pytest.fixture(scope="function")
 def orbit_dataarray() -> xr.DataArray:
     """Create orbit data array near 0 longitude and latitude"""

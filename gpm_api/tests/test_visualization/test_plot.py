@@ -1,106 +1,38 @@
+# -----------------------------------------------------------------------------.
+# MIT License
+
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
 import cartopy.crs as ccrs
-import inspect
-import os
 import pytest
-from pytest_mock import MockerFixture
-from matplotlib import (
-    image as mpl_image,
-    figure as mpl_figure,
-    pyplot as plt,
-)
+from matplotlib import pyplot as plt
 import numpy as np
-import tempfile
-from typing import Optional
 import xarray as xr
 
 
-from gpm_api import _root_path
 from gpm_api.visualization import plot
-
-
-plots_dir_path = os.path.join(_root_path, "gpm_api", "tests", "data", "plots")
-image_extension = ".png"
-mse_tolerance = 5e-3
-
-
-# Utils functions ##############################################################
-
-
-def save_and_check_figure(
-    figure: Optional[mpl_figure.Figure] = None,
-    name: str = "",
-) -> None:
-    """Save the current figure to a temporary location and compare it to the reference figure
-
-    If the reference figure does not exist, it is created and the test is skipped.
-    """
-
-    if figure is None:
-        figure = plt.gcf()
-
-    # Save reference figure if it does not exist
-    reference_path = os.path.join(plots_dir_path, name + image_extension)
-
-    if not os.path.exists(reference_path):
-        os.makedirs(plots_dir_path, exist_ok=True)
-        figure.savefig(reference_path)
-        pytest.skip(
-            "Reference figure did not exist. Created it. To clone existing test data instead, run `git submodule update --init`."
-        )
-
-    # Save current figure to temporary file
-    tmp_file = tempfile.NamedTemporaryFile(suffix=image_extension, delete=False)
-    figure.savefig(tmp_file.name)
-
-    # Compare reference and temporary file
-    reference = mpl_image.imread(reference_path)
-    tmp = mpl_image.imread(tmp_file.name)
-
-    mse = np.mean((reference - tmp) ** 2)
-    assert (
-        mse < mse_tolerance
-    ), f"Figure {tmp_file.name} is not the same as {name}{image_extension}. MSE {mse} > {mse_tolerance}"
-
-    # Remove temporary file if comparison was successful
-    tmp_file.close()
-    os.remove(tmp_file.name)
-    plt.close()
-
-
-def get_test_name(
-    class_instance=None,
-) -> str:
-    """Get a unique name for the calling function
-
-    If the function is a method of a class, pass the class instance as argument (self).
-    """
-
-    # Add module name
-    name_parts = [inspect.getmodulename(__file__)]
-
-    # Add class name
-    if class_instance is not None:
-        name_parts.append(class_instance.__class__.__name__)
-
-    # Add function name
-    name_parts.append(inspect.stack()[1][3])
-
-    return "-".join(name_parts)
-
-
-# Fixtures #####################################################################
-
-
-@pytest.fixture
-def prevent_show(
-    mocker: MockerFixture,
-) -> None:
-    """Prevent the show method of the pyplot module to be called"""
-
-    mocker.patch("matplotlib.pyplot.show")
-
-
-# Tests ########################################################################
+from utils import save_and_check_figure, get_test_name
 
 
 def test_is_generator() -> None:
@@ -187,7 +119,7 @@ class TestPlotMap:
         """Test plotting orbit data"""
 
         p = plot.plot_map(orbit_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_antimeridian(
         self,
@@ -196,7 +128,7 @@ class TestPlotMap:
         """Test plotting orbit data going over the antimeridian"""
 
         p = plot.plot_map(orbit_antimeridian_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_antimeridian_recenter(
         self,
@@ -206,7 +138,7 @@ class TestPlotMap:
 
         crs_proj = ccrs.PlateCarree(central_longitude=180)
         p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_antimeridian_projection(
         self,
@@ -216,7 +148,7 @@ class TestPlotMap:
 
         crs_proj = ccrs.Orthographic(180, 0)
         p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_pole(
         self,
@@ -225,7 +157,7 @@ class TestPlotMap:
         """Test plotting orbit data going over the south pole"""
 
         p = plot.plot_map(orbit_pole_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_pole_projection(
         self,
@@ -235,7 +167,7 @@ class TestPlotMap:
 
         crs_proj = ccrs.Orthographic(0, -30)
         p = plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_nan_cross_track(
         self,
@@ -244,7 +176,7 @@ class TestPlotMap:
         """Test plotting orbit data with NaN values at cross-track edges"""
 
         p = plot.plot_map(orbit_nan_cross_track_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_nan_along_track(
         self,
@@ -253,7 +185,7 @@ class TestPlotMap:
         """Test plotting orbit data with NaN values at along-track edges"""
 
         p = plot.plot_map(orbit_nan_along_track_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_nan_lon_cross_track(
         self,
@@ -271,7 +203,7 @@ class TestPlotMap:
         """Test plotting orbit data with some NaN latitudes along-track"""
 
         p = plot.plot_map(orbit_nan_lon_along_track_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_cbar_kwargs(
         self,
@@ -282,7 +214,7 @@ class TestPlotMap:
         cbar_kwargs = {"ticklabels": [42, 43, 44, 45, 46]}
 
         p = plot.plot_map(orbit_dataarray, cbar_kwargs=cbar_kwargs)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_rgb(
         self,
@@ -291,7 +223,7 @@ class TestPlotMap:
         """Test plotting orbit data with RGB flag"""
 
         p = plot.plot_map(orbit_rgb_dataarray, rgb=True)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_rgb_invalid(
         self,
@@ -309,7 +241,7 @@ class TestPlotMap:
         """Test plotting grid data"""
 
         p = plot.plot_map(grid_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid_antimeridian(
         self,
@@ -318,7 +250,7 @@ class TestPlotMap:
         """Test plotting grid data going over the antimeridian"""
 
         p = plot.plot_map(grid_antimeridian_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid_nan_lon(
         self,
@@ -327,7 +259,7 @@ class TestPlotMap:
         """Test plotting grid data with NaN longitudes"""
 
         p = plot.plot_map(grid_nan_lon_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_invalid(
         self,
@@ -349,7 +281,7 @@ class TestPlotImage:
         """Test plotting orbit data"""
 
         p = plot.plot_image(orbit_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_cbar_kwargs(
         self,
@@ -360,7 +292,7 @@ class TestPlotImage:
         cbar_kwargs = {"ticklabels": [42, 43, 44, 45, 46]}
 
         p = plot.plot_image(orbit_dataarray, cbar_kwargs=cbar_kwargs)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_no_cbar(
         self,
@@ -369,7 +301,7 @@ class TestPlotImage:
         """Test plotting orbit data without colorbar"""
 
         p = plot.plot_image(orbit_dataarray, add_colorbar=False)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid(
         self,
@@ -378,7 +310,7 @@ class TestPlotImage:
         """Test plotting grid data"""
 
         p = plot.plot_image(grid_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_invalid(
         self,
@@ -400,7 +332,7 @@ class TestPlotMapMesh:
         """Test plotting orbit data"""
 
         p = plot.plot_map_mesh(orbit_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_antimeridian(
         self,
@@ -409,7 +341,7 @@ class TestPlotMapMesh:
         """Test plotting orbit data going over the antimeridian"""
 
         p = plot.plot_map_mesh(orbit_antimeridian_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_antimeridian_projection(
         self,
@@ -421,7 +353,7 @@ class TestPlotMapMesh:
         p = plot.plot_map_mesh(
             orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj}
         )
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_pole(
         self,
@@ -430,7 +362,7 @@ class TestPlotMapMesh:
         """Test plotting orbit data going over the south pole"""
 
         p = plot.plot_map_mesh(orbit_pole_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_pole_projection(
         self,
@@ -440,7 +372,7 @@ class TestPlotMapMesh:
 
         crs_proj = ccrs.Orthographic(0, -30)
         p = plot.plot_map_mesh(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid(
         self,
@@ -449,7 +381,7 @@ class TestPlotMapMesh:
         """Test plotting grid data"""
 
         p = plot.plot_map_mesh(grid_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid_antimeridian(
         self,
@@ -458,7 +390,7 @@ class TestPlotMapMesh:
         """Test plotting grid data going over the antimeridian"""
 
         p = plot.plot_map_mesh(grid_antimeridian_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid_nan_lon(
         self,
@@ -467,7 +399,7 @@ class TestPlotMapMesh:
         """Test plotting grid data with NaN longitudes"""
 
         p = plot.plot_map_mesh(grid_nan_lon_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
 
 class TestPlotMapMeshCentroids:
@@ -480,7 +412,7 @@ class TestPlotMapMeshCentroids:
         """Test plotting orbit data"""
 
         p = plot.plot_map_mesh_centroids(orbit_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid(
         self,
@@ -489,7 +421,7 @@ class TestPlotMapMeshCentroids:
         """Test plotting grid data"""
 
         p = plot.plot_map_mesh_centroids(grid_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
 
 class TestPlotLabels:
@@ -528,7 +460,7 @@ class TestPlotLabels:
         """Test plotting orbit data"""
 
         p = plot.plot_labels(orbit_labels_dataarray, label_name=self.label_name)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_dataset(
         self,
@@ -538,7 +470,7 @@ class TestPlotLabels:
 
         ds = xr.Dataset({self.label_name: orbit_labels_dataarray[self.label_name]})
         p = plot.plot_labels(ds, label_name=self.label_name)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_labels_dataarray(
         self,
@@ -547,7 +479,7 @@ class TestPlotLabels:
         """Test plotting orbit data from labels data array directly"""
 
         p = plot.plot_labels(orbit_labels_dataarray[self.label_name])
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_exceed_labels(
         self,
@@ -556,7 +488,7 @@ class TestPlotLabels:
         """Test plotting orbit data with too many labels for colorbar"""
 
         p = plot.plot_labels(orbit_labels_dataarray, label_name=self.label_name, max_n_labels=5)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid(
         self,
@@ -565,12 +497,12 @@ class TestPlotLabels:
         """Test plotting grid data"""
 
         p = plot.plot_labels(grid_labels_dataarray, label_name=self.label_name)
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_generator(
         self,
         orbit_labels_dataarray: xr.DataArray,
-        prevent_show: None,
+        prevent_pyplot_show: None,
     ) -> None:
         """Test plotting orbit data form a generator"""
 
@@ -581,7 +513,7 @@ class TestPlotLabels:
         generator = (t for t in da_list)
 
         p = plot.plot_labels(generator, label_name=self.label_name)  # only last plot is returned
-        save_and_check_figure(figure=p.figure, name=get_test_name(self))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
 
 class TestPlotPatches:
@@ -590,7 +522,7 @@ class TestPlotPatches:
     def test_orbit(
         self,
         orbit_dataarray: xr.DataArray,
-        prevent_show: None,
+        prevent_pyplot_show: None,
     ) -> None:
         """Test plotting orbit data"""
 
@@ -600,12 +532,12 @@ class TestPlotPatches:
         ]
         generator = (t for t in da_list)
         plot.plot_patches(generator)  # does not return plotter
-        save_and_check_figure(name=get_test_name(self))
+        save_and_check_figure(name=get_test_name())
 
     def test_orbit_dataset(
         self,
         orbit_dataarray: xr.DataArray,
-        prevent_show: None,
+        prevent_pyplot_show: None,
     ) -> None:
         """Test plotting orbit data from a dataset"""
 
@@ -622,12 +554,12 @@ class TestPlotPatches:
             plot.plot_patches(generator)
 
         plot.plot_patches(generator, variable=variable_name)  # does not return plotter
-        save_and_check_figure(name=get_test_name(self))
+        save_and_check_figure(name=get_test_name())
 
     def test_grid(
         self,
         grid_dataarray: xr.DataArray,
-        prevent_show: None,
+        prevent_pyplot_show: None,
     ) -> None:
         """Test plotting grid data"""
 
@@ -637,7 +569,7 @@ class TestPlotPatches:
         ]
         generator = (t for t in da_list)
         plot.plot_patches(generator)  # does not return plotter
-        save_and_check_figure(name=get_test_name(self))
+        save_and_check_figure(name=get_test_name())
 
     def test_invalid(
         self,
