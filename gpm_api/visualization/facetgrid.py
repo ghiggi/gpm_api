@@ -229,12 +229,12 @@ class CustomFacetGrid(FacetGrid, ABC):
     @abstractmethod
     def _remove_bottom_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the bottom of the subplots."""
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def _remove_left_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the left of the subplots."""
-        pass
+        pass  # pragma: no cover
 
     def remove_duplicated_axis_labels(self):
         """Remove axis labels which are not located on the left or bottom of the figure."""
