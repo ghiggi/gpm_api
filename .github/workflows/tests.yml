@@ -41,6 +41,7 @@ jobs:
 
       - name: Install package
         run: |
+          pip uninstall matplotlib # have matplotlib reinstalled for consistent plotting tests
           pip install -e ".[dev]"
 
       - name: Test with pytest
