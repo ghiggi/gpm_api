@@ -42,7 +42,10 @@ from gpm_api.utils.time import (
     infill_timesteps,
     ensure_time_validity,
 )
-from utils import create_fake_datetime_array_from_hours_list, get_time_range
+from gpm_api.tests.test_utils.utils import (
+    create_fake_datetime_array_from_hours_list,
+    get_time_range,
+)
 
 
 N = float("nan")

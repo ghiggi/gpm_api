@@ -24,6 +24,8 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
+"""This module provide utility functions used in the unit tests for visualization."""
+
 import inspect
 from matplotlib import (
     image as mpl_image,

@@ -30,7 +30,10 @@ import pytest
 import xarray as xr
 
 from gpm_api.visualization import plot
-from utils import get_test_name, save_and_check_figure
+from gpm_api.tests.test_visualization.utils import (
+    get_test_name,
+    save_and_check_figure,
+)
 
 
 CHANNEL = "channel"

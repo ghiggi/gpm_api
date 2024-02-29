@@ -32,7 +32,10 @@ import xarray as xr
 
 
 from gpm_api.visualization import plot
-from utils import save_and_check_figure, get_test_name
+from gpm_api.tests.test_visualization.utils import (
+    get_test_name,
+    save_and_check_figure,
+)
 
 
 def test_is_generator() -> None:
