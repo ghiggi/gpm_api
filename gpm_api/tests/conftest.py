@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module defines pytest fixtures available across all test modules."""
-import os
 import pytest
 import datetime
 from typing import Any, List, Dict, Tuple
@@ -33,11 +32,8 @@ from gpm_api.io.products import get_info_dict
 from gpm_api.utils import geospatial
 import posixpath as pxp
 import ntpath as ntp
-import gpm_api.configs
 import numpy as np
-import os
 from pytest_mock import MockerFixture
-from unittest.mock import patch
 import xarray as xr
 from gpm_api.tests.utils.fake_datasets import get_orbit_dataarray, get_grid_dataarray
 

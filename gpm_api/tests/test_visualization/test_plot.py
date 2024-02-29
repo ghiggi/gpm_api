@@ -197,7 +197,7 @@ class TestPlotMap:
         """Test plotting orbit data with some NaN longitudes cross-track"""
 
         with pytest.raises(ValueError):
-            p = plot.plot_map(orbit_nan_lon_cross_track_dataarray)
+            plot.plot_map(orbit_nan_lon_cross_track_dataarray)
 
     def test_orbit_nan_lon_along_track(
         self,
