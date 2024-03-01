@@ -25,7 +25,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -48,9 +47,10 @@ dependencies = [
     "donfig",
     "trollsift",
     "pyresample",
-    "cartopy>=0.20.0",
+    "matplotlib>=3.8.3",
+    "cartopy>=0.22.0",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -59,7 +59,7 @@ dev = ["pre-commit",
        "pytest", "pytest-cov", "pytest-mock", "pydantic", "pytest-check",
        "pytest-watcher",
        "pip-tools", "bumpver", "twine", "wheel", "build", "setuptools>=61.0.0",
-       "ximage", "pyvista", "polars", "pyarrow", "matplotlib>=3.8.3",
+       "ximage", "pyvista", "polars", "pyarrow",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]
 
 [project.urls]
@@ -88,8 +88,6 @@ addopts = "--ignore=gpm_api/tests/0_tmp/ --cov --cov-report term-missing --cov-r
 line-length = 100
 # skip-string-normalization = true
 target-version = [
-    "py37",
-    "py38",
     "py39",
     "py310",
     "py311",
