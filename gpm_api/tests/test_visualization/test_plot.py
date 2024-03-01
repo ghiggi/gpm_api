@@ -274,6 +274,16 @@ class TestPlotMap:
         with pytest.raises(ValueError):
             plot.plot_map(orbit_dataarray, rgb=True)
 
+    def test_orbit_invalid_values(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with some invalid values"""
+
+        orbit_dataarray.data[1:4, 1:4] = np.nan
+        p = plot.plot_map(orbit_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
     def test_grid(
         self,
         grid_dataarray: xr.DataArray,
