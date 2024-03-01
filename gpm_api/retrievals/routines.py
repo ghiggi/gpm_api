@@ -104,6 +104,6 @@ def get_retrieval_variable(ds, name, *args, **kwargs):
         check_retrieval_validity(ds, name)
         return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
     if product in available_products(product_categories="PMW", product_levels="2A"):
-        module_name = "gpm_api.^retrievals.retrieval_2a_pmw"
+        module_name = "gpm_api.retrievals.retrieval_2a_pmw"
         check_retrieval_validity(ds, name)
         return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)

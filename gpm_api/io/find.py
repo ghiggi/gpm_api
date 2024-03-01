@@ -26,6 +26,7 @@
 # -----------------------------------------------------------------------------.
 """This module contains functions to find data on local and NASA servers."""
 import datetime
+import os
 import warnings
 
 import dask
@@ -336,3 +337,33 @@ def find_filepaths(
     filepaths = sorted(filepaths)
 
     return filepaths
+
+
+def find_associated_filepath(filepath, product, storage="local", product_type="RS", version=7):
+    """Return filepath of another product associated to the input filepath.
+
+    Please specify a product derived from the same sensor !
+    """
+    from gpm_api.io.info import get_key_from_filepath
+
+    filename = os.path.basename(filepath)
+    start_time = get_key_from_filepath(filename, key="start_time")
+    end_time = get_key_from_filepath(filename, key="end_time")
+    date = start_time.date()
+    candidate_filepaths, _ = find_daily_filepaths(
+        storage=storage,
+        date=date,
+        product=product,
+        product_type=product_type,
+        version=version,
+        start_time=start_time,
+        end_time=end_time,
+        verbose=False,
+    )
+    if len(candidate_filepaths) == 0:
+        raise ValueError(f"The {product} product associated to {filename} is not available.")
+    if len(candidate_filepaths) >= 2:
+        raise ValueError(
+            f"The are multiple {product} files associated to the {filename} file:  {candidate_filepaths}."
+        )
+    return candidate_filepaths[0]

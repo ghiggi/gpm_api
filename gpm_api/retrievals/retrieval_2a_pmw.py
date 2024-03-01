@@ -32,3 +32,12 @@ def retrieve_totalWaterPath(ds):
     da = ds["rainWaterPath"] + ds["cloudWaterPath"] + ds["iceWaterPath"]
     da.name = "totalWaterPath"
     return da
+
+
+def retrieve_liquidPrecipitation(ds):
+    """Retrieve clutter height."""
+    da = ds["surfacePrecipitation"] - ds["frozenPrecipitation"]
+    da.name = "liquidPrecipitation"
+    da.attrs = ds["surfacePrecipitation"].attrs.copy()
+    da.attrs["description"] = "surfacePrecipitation - frozenPrecipitation"
+    return da
