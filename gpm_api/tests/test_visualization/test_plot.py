@@ -31,8 +31,10 @@ import numpy as np
 import xarray as xr
 
 
+import gpm_api.configs
 from gpm_api.visualization import plot
 from gpm_api.tests.test_visualization.utils import (
+    expand_dims,
     get_test_name,
     save_and_check_figure,
 )
@@ -153,6 +155,17 @@ class TestPlotMap:
         p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
+    def test_orbit_antimeridian_not_masked(
+        self,
+        orbit_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data going over the antimeridian without masking (recentered)"""
+
+        crs_proj = ccrs.PlateCarree(central_longitude=180)
+        with gpm_api.config.set({"viz_hide_antimeridian_data": False}):
+            p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
+            save_and_check_figure(figure=p.figure, name=get_test_name())
+
     def test_orbit_pole(
         self,
         orbit_pole_dataarray: xr.DataArray,
@@ -221,12 +234,36 @@ class TestPlotMap:
 
     def test_orbit_rgb(
         self,
-        orbit_rgb_dataarray: xr.DataArray,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting orbit data with RGB flag"""
+        """Test plotting orbit RGB data"""
 
-        p = plot.plot_map(orbit_rgb_dataarray, rgb=True)
+        orbit_dataarray = expand_dims(orbit_dataarray, 3, channel="rgb", axis=2)
+        p = plot.plot_map(orbit_dataarray, rgb=True)
         save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgb_antimeridian(
+        self,
+        orbit_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGB data going over the antimeridian without masking (recentered)"""
+
+        orbit_dataarray = expand_dims(orbit_antimeridian_dataarray, 3, channel="rgb", axis=2)
+        crs_proj = ccrs.PlateCarree(central_longitude=180)
+        p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb=True)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgb_antimeridian_not_masked(
+        self,
+        orbit_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGB data going over the antimeridian without masking (recentered)"""
+
+        orbit_dataarray = expand_dims(orbit_antimeridian_dataarray, 3, channel="rgb", axis=2)
+        crs_proj = ccrs.PlateCarree(central_longitude=180)
+        with gpm_api.config.set({"viz_hide_antimeridian_data": False}):
+            p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb=True)
+            save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_rgb_invalid(
         self,
@@ -263,6 +300,16 @@ class TestPlotMap:
 
         p = plot.plot_map(grid_nan_lon_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_grid_time_dim(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data with time dimension"""
+
+        grid_dataarray = expand_dims(grid_dataarray, 4, "time")
+        with pytest.raises(ValueError):  # Expecting a 2D GPM field
+            plot.plot_map(grid_dataarray)
 
     def test_invalid(
         self,

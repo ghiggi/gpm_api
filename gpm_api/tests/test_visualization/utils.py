@@ -37,6 +37,7 @@ import os
 import pytest
 import tempfile
 from typing import Optional
+import xarray as xr
 
 from gpm_api import _root_path
 
@@ -111,3 +112,17 @@ def get_test_name() -> str:
     name_parts.append(inspect_stack[1][3])
 
     return "-".join(name_parts)
+
+
+def expand_dims(
+    dataarray: xr.DataArray,
+    size: int,
+    channel: str,
+    axis: Optional[int] = None,
+) -> xr.DataArray:
+    """Expand dimensions of a dataarray and fill with random data"""
+
+    dataarray = dataarray.expand_dims(dim={channel: size}, axis=axis)
+    np.random.seed(0)
+    dataarray.data = np.random.rand(*dataarray.data.shape)
+    return dataarray

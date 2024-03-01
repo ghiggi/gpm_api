@@ -551,17 +551,6 @@ def orbit_nan_lon_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
 
 
 @pytest.fixture(scope="function")
-def orbit_rgb_dataarray(orbit_dataarray) -> xr.DataArray:
-    """Create orbit data array near 0 longitude and latitude with RGB data"""
-
-    np.random.seed(0)
-
-    orbit_dataarray = orbit_dataarray.expand_dims(dim={"rgb": 3}, axis=2)
-    orbit_dataarray.data = np.random.rand(*orbit_dataarray.shape)
-    return orbit_dataarray
-
-
-@pytest.fixture(scope="function")
 def grid_dataarray() -> xr.DataArray:
     """Create grid data array near 0 longitude and latitude"""
 

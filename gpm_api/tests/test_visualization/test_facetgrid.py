@@ -24,34 +24,18 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-import numpy as np
 import pytest
 import xarray as xr
 
 from gpm_api.visualization import plot
 from gpm_api.tests.test_visualization.utils import (
+    expand_dims,
     get_test_name,
     save_and_check_figure,
 )
 
 
 CHANNEL = "channel"
-
-
-# Utils functions #############################################################
-
-
-def expand_dims(
-    dataarray: xr.DataArray,
-    size: int,
-    channel: str = CHANNEL,
-) -> xr.DataArray:
-    """Expand dimensions of a dataarray"""
-
-    dataarray = dataarray.expand_dims(dim={channel: size})
-    np.random.seed(0)
-    dataarray.data = np.random.rand(*dataarray.data.shape)
-    return dataarray
 
 
 # Fixtures ####################################################################
@@ -63,7 +47,7 @@ def orbit_dataarray_x4(
 ) -> xr.DataArray:
     """Return a dataarray with one extra dimension, 4 indices"""
 
-    return expand_dims(orbit_dataarray, 4)
+    return expand_dims(orbit_dataarray, 4, channel=CHANNEL)
 
 
 @pytest.fixture
@@ -72,7 +56,7 @@ def orbit_dataarray_x6(
 ) -> xr.DataArray:
     """Return a dataarray with one extra dimension, 6 indices"""
 
-    return expand_dims(orbit_dataarray, 6)
+    return expand_dims(orbit_dataarray, 6, channel=CHANNEL)
 
 
 @pytest.fixture
@@ -81,7 +65,7 @@ def grid_dataarray_x4(
 ) -> xr.DataArray:
     """Return a dataarray with one extra dimension, 4 indices"""
 
-    return expand_dims(grid_dataarray, 4)
+    return expand_dims(grid_dataarray, 4, channel=CHANNEL)
 
 
 # Tests #######################################################################
@@ -139,7 +123,7 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit data with one empty subplot"""
 
-        orbit_dataarray = expand_dims(orbit_dataarray, 3)
+        orbit_dataarray = expand_dims(orbit_dataarray, 3, channel=CHANNEL)
         p = plot.plot_map(orbit_dataarray, col=CHANNEL, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 

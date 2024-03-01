@@ -286,27 +286,6 @@ def _plot_cartopy_imshow(
     return p
 
 
-def _plot_rgb_pcolormesh(x, y, image, ax, **kwargs):
-    """Plot xarray RGB DataArray with non uniform-coordinates.
-
-    Matplotlib, cartopy and xarray pcolormesh currently does not support RGB(A) arrays.
-    This is a temporary workaround !
-    """
-    if len(image.shape) < 3 or image.shape[2] not in [3, 4]:
-        raise ValueError("Expecting RGB or RGB(A) arrays.")
-
-    colorTuple = image.reshape((image.shape[0] * image.shape[1], image.shape[2]))
-    im = ax.pcolormesh(
-        x,
-        y,
-        image[:, :, 1],  # dummy to work ...
-        color=colorTuple,
-        **kwargs,
-    )
-    # im.set_array(None)
-    return im
-
-
 def _plot_cartopy_pcolormesh(
     ax,
     da,
@@ -329,6 +308,11 @@ def _plot_cartopy_pcolormesh(
     x = da[x].data
     y = da[y].data
     arr = da.data
+
+    # If RGB, expect last dimension to have 3 channels
+    if rgb:
+        if arr.shape[-1] != 3:
+            raise ValueError("RGB array must have 3 channels in the last dimension.")
 
     # Infill invalid value and add mask if necessary
     x, y, arr = get_valid_pcolormesh_inputs(x, y, arr, rgb=rgb)
@@ -361,6 +345,10 @@ def _plot_cartopy_pcolormesh(
                     combined_mask = np.logical_or(arr.mask, antimeridian_mask)
                 arr = np.ma.masked_where(combined_mask, arr)
             else:
+                if rgb:
+                    antimeridian_mask = np.broadcast_to(
+                        np.expand_dims(antimeridian_mask, axis=-1), arr.shape
+                    )
                 arr = np.ma.masked_where(antimeridian_mask, arr)
 
             # Sanitize cmap bad color to avoid cartopy bug
@@ -373,18 +361,13 @@ def _plot_cartopy_pcolormesh(
                 plot_kwargs["cmap"] = cmap
 
     # Add variable field with cartopy
-    if not rgb:
-        p = ax.pcolormesh(
-            x,
-            y,
-            arr,
-            transform=ccrs.PlateCarree(),
-            **plot_kwargs,
-        )
-
-    # Add RGB
-    else:
-        p = _plot_rgb_pcolormesh(x, y, arr, ax=ax, **plot_kwargs)
+    p = ax.pcolormesh(
+        x,
+        y,
+        arr,
+        transform=ccrs.PlateCarree(),
+        **plot_kwargs,
+    )
 
     # Add colorbar
     # --> TODO: set axis proportion in a meaningful way ...
