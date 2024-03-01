@@ -13,24 +13,24 @@ jobs:
 
       - name: Ruff
         if: success() || failure()
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
         with:
           extra_args: ruff --all-files
 
       - name: Black
         if: success() || failure()
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
         with:
           extra_args: black --all-files
 
       - name: blackdoc
         if: success() || failure()
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
         with:
           extra_args: blackdoc --all-files
 
       - name: codespell
         if: success() || failure()
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
         with:
           extra_args: codespell --all-files
