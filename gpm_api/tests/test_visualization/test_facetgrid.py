@@ -194,6 +194,25 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, cbar_kwargs=cbar_kwargs)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
+    def test_orbit_extended_colorbar(
+        self,
+        orbit_dataarray_x4: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with extended colorbar"""
+
+        cbar_kwargs = {"extend": "both", "extendfrac": 0.03}
+        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, cbar_kwargs=cbar_kwargs)
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_orbit_high_aspect_ratio(
+        self,
+        orbit_dataarray_x4: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with high aspect ratio (that gets corrected)"""
+
+        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, facet_aspect=0.2)
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
     def test_grid(
         self,
         grid_dataarray_x4: xr.DataArray,
