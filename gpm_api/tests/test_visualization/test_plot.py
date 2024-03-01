@@ -181,7 +181,7 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit data going over the south pole on orthographic projection"""
 
-        crs_proj = ccrs.Orthographic(0, -30)
+        crs_proj = ccrs.Orthographic(0, -90)
         p = plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -420,7 +420,7 @@ class TestPlotMapMesh:
     ) -> None:
         """Test plotting orbit data going over the south pole on orthographic projection"""
 
-        crs_proj = ccrs.Orthographic(0, -30)
+        crs_proj = ccrs.Orthographic(0, -90)
         p = plot.plot_map_mesh(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
