@@ -26,6 +26,7 @@
 # -----------------------------------------------------------------------------.
 """This module provide utilities for the creation of GPM Geographic Buckets."""
 import math
+import os
 import time
 
 import dask
@@ -35,7 +36,6 @@ import pandas as pd
 import pyarrow as pa
 import xarray as xr
 
-import gpm_api
 from gpm_api.bucket.io import get_filepaths_by_bin
 from gpm_api.dataset.granule import remove_unused_var_dims
 from gpm_api.utils.timing import print_task_elapsed_time
@@ -140,58 +140,6 @@ def ds_to_dask_df_function(ds):
 
     # Drop unrequired columns (previous dataset dimensions)
     df = drop_undesired_columns(df)
-    return df
-
-
-def _check_is_callable_or_none(argument, argument_name):
-    if not (callable(argument) or argument is None):
-        raise TypeError(f"{argument_name} must be a function (or None).")
-
-
-def convert_ds_to_df(
-    ds, preprocessing_function, ds_to_df_function, filtering_function, precompute_granule=False
-):
-    # Check inputs
-    _check_is_callable_or_none(preprocessing_function, argument_name="preprocessing_function")
-    _check_is_callable_or_none(ds_to_df_function, argument_name="ds_to_df_function")
-    _check_is_callable_or_none(filtering_function, argument_name="filtering_function")
-
-    if precompute_granule:
-        ds = ds.compute()
-
-    # Preprocess xarray Dataset
-    if callable(preprocessing_function):
-        ds = preprocessing_function(ds)
-
-    # Convert xarray Dataset to dask.Dataframe
-    df = ds_to_df_function(ds)
-
-    # Filter the dataset
-    if callable(filtering_function):
-        df = filtering_function(df)
-    return df
-
-
-def get_granule_dataframe(
-    filepath,
-    open_granule_kwargs={},
-    preprocessing_function=None,
-    ds_to_df_function=ds_to_dask_df_function,
-    filtering_function=None,
-    precompute_granule=False,
-):
-    # Open granule
-    ds = gpm_api.open_granule(filepath, **open_granule_kwargs)
-
-    # Convert to dataframe
-    df = convert_ds_to_df(
-        ds=ds,
-        preprocessing_function=preprocessing_function,
-        ds_to_df_function=ds_to_df_function,
-        filtering_function=filtering_function,
-        precompute_granule=precompute_granule,
-    )
-
     return df
 
 
@@ -354,8 +302,6 @@ def estimate_row_group_size(df, size="200MB"):
 def merge_granule_buckets(
     bucket_base_dir,
     bucket_filepath,
-    xbin_name="lonbin",
-    ybin_name="latbin",
     row_group_size="500MB",
     compression="snappy",
     compression_level=None,
@@ -406,10 +352,6 @@ def merge_granule_buckets(
     from dask.dataframe.utils import make_meta
 
     from gpm_api.bucket.readers import _read_parquet_bin_files
-    from gpm_api.bucket.writers import write_parquet_dataset
-
-    # TODO: remove need of xbin_name and ybin_name  !
-    # --> Must be derived from source bucket !
 
     # Identify Parquet filepaths for each bin
     print("Searching of Parquet files has started.")
@@ -432,6 +374,11 @@ def merge_granule_buckets(
     meta = make_meta(template_df_pd)
     row_group_size = estimate_row_group_size(template_df_pd, size=row_group_size)
 
+    # Define xbin and ybin
+    partition_key_value_list = template_bin_name.split(os.path.sep)
+    xbin_name = partition_key_value_list[0].split("=")[0]
+    ybin_name = partition_key_value_list[1].split("=")[0]
+
     # TODO: debug
     # list_bin_names = list_bin_names[0:10]
     # list_bin_filepaths = list_bin_filepaths[0:10]
@@ -441,6 +388,19 @@ def merge_granule_buckets(
     df = dd.from_map(_read_parquet_bin_files, list_bin_filepaths, list_bin_names, meta=meta)
 
     # Write Parquet Dataset
+    # - Currently using dask
+    # - We should use write_partitioned_dataset ( pyarrow.dataset.write_dataset) instead
+    # --> Lazy open pyarrow Dataset, pyarrow.dataset.Dataset.to_batches()
+    # -->  pyarrow.RecordBatch
+    # -->  for record_batch in dataset.to_batches():
+    # --> https://arrow.apache.org/docs/python/generated/pyarrow.dataset.Dataset.html#pyarrow.dataset.Dataset.to_batches
+    # --> pyarrow.dataset.write_dataset
+
+    # --> Allow use multithreading instead of multiprocessing
+    # --> Read with multithreading and rewrite
+    # --> At the end add the dask metadata stuffs
+    # --> https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
+    # --> https://arrow.apache.org/docs/python/generated/pyarrow.parquet.write_metadata.html
     print("Parquet Dataset writing has started")
     partitioning = [xbin_name, ybin_name]
     write_parquet_dataset(
@@ -452,17 +412,54 @@ def merge_granule_buckets(
         compression_level=compression_level,
         **writer_kwargs,
     )
-
-    # TODO: Use write_partitioned_dataset instead !
-    # --> https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
-    # --> https://arrow.apache.org/docs/python/generated/pyarrow.parquet.write_metadata.html
-    # write_partitioned_dataset(
-    #     df=df,
-    #     base_dir,
-    #     partitioning,
-    #     filename_prefix="part",
-    #     format="parquet",
-    #     use_threads=True,
-    #     **writer_kwargs,
-    # )
     print("Parquet Dataset writing has completed")
+
+
+def write_parquet_dataset(
+    df,
+    parquet_filepath,
+    partition_on,
+    name_function=None,
+    schema="infer",
+    compression="snappy",
+    write_index=False,
+    custom_metadata=None,
+    write_metadata_file=True,  # create _metadata file
+    append=False,
+    overwrite=False,
+    ignore_divisions=False,
+    compute=True,
+    **writer_kwargs,
+):
+    # Adapt code to use write_partitioned_dataset
+    # Note: Append currently works only when using fastparquet
+    # Only used by merge_granule_buckets
+
+    # Define default naming scheme
+    if name_function is None:
+
+        def name_function(i):
+            return f"part.{i}.parquet"
+
+    # Write Parquet Dataset
+    df.to_parquet(
+        parquet_filepath,
+        engine="pyarrow",
+        # Index option
+        write_index=write_index,
+        # Metadata
+        custom_metadata=custom_metadata,
+        write_metadata_file=write_metadata_file,  # enable writing the _metadata file
+        # File structure
+        name_function=name_function,
+        partition_on=partition_on,
+        # Encoding
+        schema=schema,
+        compression=compression,
+        # Writing options
+        append=append,
+        overwrite=overwrite,
+        ignore_divisions=ignore_divisions,
+        compute=compute,
+        **writer_kwargs,
+    )

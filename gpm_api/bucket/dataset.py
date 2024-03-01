@@ -94,12 +94,15 @@ def write_partitioned_dataset(
     base_dir,
     partitioning,
     filename_prefix="part",
-    format="parquet",
-    use_threads=True,
     **writer_kwargs,
 ):
-    writer_kwargs["format"] = format
-    writer_kwargs["use_threads"] = use_threads
+    # Set default format to Parquet
+    if "format" not in writer_kwargs:
+        writer_kwargs["format"] = "parquet"
+    # Set default multithreaded parquet writing
+    if "use_threads" not in writer_kwargs:
+        writer_kwargs["use_threads"] = True
+
     if isinstance(df, dd.DataFrame):
         _write_dask_partitioned_dataset(
             df=df,

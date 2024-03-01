@@ -35,7 +35,7 @@ import pyarrow.parquet as pq
 
 def _read_parquet_bin_files(filepaths, bin_name):
     # Read the list of Parquet files
-    datasets = [pq.ParquetDataset(filepath, split_row_groups=False) for filepath in filepaths]
+    datasets = [pq.ParquetDataset(filepath) for filepath in filepaths]
     # Concatenate the datasets
     table = pa.concat_tables([dataset.read() for dataset in datasets])
     # Add partitioning columns
