@@ -8,7 +8,7 @@ import itertools
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Hashable
-from typing import Optional, Tuple
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,7 +34,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         col: Optional[Hashable] = None,
         row: Optional[Hashable] = None,
         col_wrap: Optional[int] = None,
-        axes_pad: Optional[Tuple[float, float]] = None,
+        axes_pad: Optional[tuple[float, float]] = None,
         aspect: bool = True,
         add_colorbar: bool = True,
         facet_height: float = 3.0,
@@ -367,7 +367,7 @@ class CartopyFacetGrid(CustomFacetGrid):
         col: Optional[Hashable] = None,
         row: Optional[Hashable] = None,
         col_wrap: Optional[int] = None,
-        axes_pad: Optional[Tuple[float, float]] = None,
+        axes_pad: Optional[tuple[float, float]] = None,
         add_colorbar: bool = True,
         cbar_kwargs: dict = {},
         fig_kwargs: dict = {},
@@ -492,7 +492,7 @@ class ImageFacetGrid(CustomFacetGrid):
         col: Optional[Hashable] = None,
         row: Optional[Hashable] = None,
         col_wrap: Optional[int] = None,
-        axes_pad: Optional[Tuple[float, float]] = None,
+        axes_pad: Optional[tuple[float, float]] = None,
         aspect: bool = False,
         add_colorbar: bool = True,
         cbar_kwargs: dict = {},

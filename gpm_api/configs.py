@@ -29,7 +29,6 @@ import os
 import platform
 import shutil
 from subprocess import Popen
-from typing import Dict
 
 from gpm_api.utils.yaml import read_yaml, write_yaml
 
@@ -153,7 +152,7 @@ def define_configs(
     print(f"The GPM-API config file has been {action_msg} successfully!")
 
 
-def read_configs() -> Dict[str, str]:
+def read_configs() -> dict[str, str]:
     """
     Reads the GPM-API configuration file and returns a dictionary with the configuration settings.
 
