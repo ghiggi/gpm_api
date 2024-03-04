@@ -157,7 +157,7 @@ def write_granule_bucket(
         xbin_size=xbin_size,
         ybin_size=ybin_size,
     )
-    
+
     # Write partitioned dataframe
     write_partitioned_dataset(
         df=df,

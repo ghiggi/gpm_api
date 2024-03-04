@@ -177,7 +177,7 @@ def assign_spatial_partitions(
     # Remove invalid coordinates
     df = df[~df[x_column].isna()]
     df = df[~df[y_column].isna()]
-        
+
     # Add spatial partitions columns to dataframe
     partition_columns = {
         xbin_name: get_bin_partition(df[x_column], bin_size=xbin_size),
@@ -423,8 +423,8 @@ def merge_granule_buckets(
         # Options to control open connections
         max_open_files=max_open_files,
     )
-    
-    # Write the metadata  
+
+    # Write the metadata
     print("Writing the metadata")
     # Write the ``_common_metadata`` parquet file without row groups statistics
     pq.write_metadata(table_schema, os.path.join(dst_bucket_dir, "_common_metadata"))
