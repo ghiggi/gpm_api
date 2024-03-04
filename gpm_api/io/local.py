@@ -25,13 +25,16 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions defining where to download GPM data on the local machine."""
+import datetime
 import glob
 import os
 import pathlib
 import re
+from collections import defaultdict
 
 from gpm_api.configs import get_base_dir
 from gpm_api.io.checks import check_base_dir
+from gpm_api.io.info import get_version_from_filepath
 from gpm_api.io.products import get_product_category
 
 ####--------------------------------------------------------------------------.
@@ -309,7 +312,45 @@ def list_files(dir_path, glob_pattern, recursive=False):
     return filepaths
 
 
-def get_local_filepaths(product, version=7, product_type="RS", base_dir=None):
+def _extract_path_year(path):
+    parts = path.split(os.sep)
+    year = parts[-4]
+    return int(year)
+
+
+def _extract_path_month(path):
+    parts = path.split(os.sep)
+    month = parts[-3]
+    return int(month)
+
+
+def _extract_path_doy(path):
+    parts = path.split(os.sep)
+    year = int(parts[-4])
+    month = int(parts[-3])
+    day = int(parts[-2])
+    doy = datetime.date(year, month, day).timetuple().tm_yday
+    return doy
+
+
+def _extract_version(path):
+    return get_version_from_filepath(path, integer=False)
+
+
+def group_filepaths_by_time_group(filepaths, group):
+    func_dict = {
+        "year": _extract_path_year,
+        "month": _extract_path_month,
+        "doy": _extract_path_doy,
+        "version": _extract_version,
+    }
+    func = func_dict[group]
+    filepaths_dict = defaultdict(list)
+    _ = [filepaths_dict[func(filepath)].append(filepath) for filepath in filepaths]
+    return filepaths_dict
+
+
+def get_local_filepaths(product, version=7, product_type="RS", base_dir=None, group=None):
     """
     Retrieve all GPM filepaths on the local disk directory for a specific product.
 
@@ -322,6 +363,9 @@ def get_local_filepaths(product, version=7, product_type="RS", base_dir=None):
         The default is 7.
     product_type : str, optional
         GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+    group: str, optional
+        Whether to group the filepaths in a dictionary by 'year', 'month', 'doy' or 'version'.
+        The default is None.
     """
     # Retrieve the local GPM base directory
     base_dir = get_base_dir(base_dir=base_dir)
@@ -341,4 +385,9 @@ def get_local_filepaths(product, version=7, product_type="RS", base_dir=None):
 
     # Retrieve the filepaths
     filepaths = list_files(product_dir, glob_pattern="*", recursive=True)
-    return sorted(filepaths)
+    filepaths = sorted(filepaths)
+
+    # Group by group if not None
+    if group is not None:
+        filepaths = group_filepaths_by_time_group(filepaths, group=group)
+    return filepaths
