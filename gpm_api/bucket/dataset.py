@@ -102,7 +102,11 @@ def write_partitioned_dataset(
     # Set default multithreaded parquet writing
     if "use_threads" not in writer_kwargs:
         writer_kwargs["use_threads"] = True
-
+    
+    # Do not write if empty dataframe
+    if df.size > 0:
+        return None
+    
     if isinstance(df, dd.DataFrame):
         _write_dask_partitioned_dataset(
             df=df,

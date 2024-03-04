@@ -150,14 +150,14 @@ def write_granule_bucket(
     # Add partitioning columns
     df = assign_spatial_partitions(
         df=df,
-        x_column="lat",
-        y_column="lon",
+        x_column="lon",
+        y_column="lat",
         xbin_name=xbin_name,
         ybin_name=ybin_name,
         xbin_size=xbin_size,
         ybin_size=ybin_size,
     )
-
+    
     # Write partitioned dataframe
     write_partitioned_dataset(
         df=df,
