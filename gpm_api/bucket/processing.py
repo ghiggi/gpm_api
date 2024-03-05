@@ -27,16 +27,19 @@
 """This module provide utilities for the creation of GPM Geographic Buckets."""
 import math
 import os
+import time
 
 import dask
 import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.dataset
-import pyarrow.parquet as pq
 import xarray as xr
+from tqdm import tqdm
 
+from gpm_api.bucket.io import get_filepaths_by_bin
 from gpm_api.dataset.granule import remove_unused_var_dims
+from gpm_api.io.local import group_filepaths_by_time_group
 from gpm_api.utils.timing import print_task_elapsed_time
 
 
@@ -102,7 +105,10 @@ def drop_undesired_columns(df):
 
 
 def ds_to_pd_df_function(ds):
-    """Default function to convert an xr.Dataset to a pandas.Dataframe."""
+    """Convert an xr.Dataset to a pandas.Dataframe.
+
+    This function expects a xr.Dataset with only 2D spatial DataArrays.
+    """
     # Drop unrelevant coordinates
     ds = remove_unused_var_dims(ds)
 
@@ -122,7 +128,10 @@ def ds_to_pd_df_function(ds):
 
 
 def ds_to_dask_df_function(ds):
-    """Default function to convert an xr.Dataset to a dask.Dataframe."""
+    """Convert an xr.Dataset to a dask.Dataframe.
+
+    This function expects a xr.Dataset with only 2D spatial DataArrays.
+    """
     # Drop unrelevant coordinates
     ds = remove_unused_var_dims(ds)
 
@@ -140,6 +149,9 @@ def ds_to_dask_df_function(ds):
     # Drop unrequired columns (previous dataset dimensions)
     df = drop_undesired_columns(df)
     return df
+
+
+####--------------------------------------------------------------------------------------------------------------------.
 
 
 def get_bin_partition(values, bin_size):
@@ -295,17 +307,17 @@ def estimate_row_group_size(df, size="200MB"):
 def merge_granule_buckets(
     src_bucket_dir,
     dst_bucket_dir,
-    row_group_size="500MB",
-    max_file_size="1GB",
+    row_group_size="400MB",
+    max_file_size="2GB",
     compression="snappy",
     compression_level=None,
     # Computing options
     max_open_files=0,
     use_threads=True,
     # Scanner options
-    batch_size=1_000_000,  # 131_072
-    batch_readahead=128,  # 16
-    fragment_readahead=32,  # 4
+    batch_size=131_072,
+    batch_readahead=16,
+    fragment_readahead=4,
 ):
     """
     Merge the per-granule bucket archive in a single optimized archive !
@@ -318,11 +330,11 @@ def merge_granule_buckets(
         Directory path of the final bucket archive.
     row_group_size : (int, str), optional
         Maximum number of rows in each written Parquet row group.
-        If specified as a string (i.e. "500 MB"), the equivalent row group size
-        number is estimated. The default is "500MB".
+        If specified as a string (i.e. "400 MB"), the equivalent row group size
+        number is estimated. The default is "400MB".
     max_file_size: str, optional
         The maximum size of each Parquet File. Ideally a multiple of row_group_size.
-        The default is "1GB".
+        The default is "2GB".
     compression : str, optional
         Specify the compression codec, either on a general basis or per-column.
         Valid values: {"none", "snappy", "gzip", "brotli", "lz4", "zstd"}.
@@ -351,264 +363,112 @@ def merge_granule_buckets(
     batch_readahead
         The number of batches to read ahead in a file.
         Increasing this number will increase RAM usage but could also improve IO utilization.
-        The default is 128.
+        The default is 16.
     fragment_readahead
         The number of files to read ahead.
         Increasing this number will increase RAM usage but could also improve IO utilization.
-        The default is 32.
+        The default is 4.
 
     Returns
     -------
     None.
 
     """
-    # Load the dataset
-    print("Start reading the granules bucket archive")
-    dataset = pa.dataset.dataset(src_bucket_dir, format="parquet", partitioning="hive")
+    # Identify Parquet filepaths for each bin
+    print("Searching of Parquet files has started.")
+    t_i = time.time()
+    bin_path_dict = get_filepaths_by_bin(src_bucket_dir)
+    n_geographic_bins = len(bin_path_dict)
+    t_f = time.time()
+    t_elapsed = round((t_f - t_i) / 60, 1)
+    print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
+    print(f"{n_geographic_bins} geographic bins to process.")
+
+    # Retrieve list of bins
+    list_bin_names = list(bin_path_dict.keys())
 
     # Retrieve table schema
-    table = pa.parquet.read_table(dataset.files[0])
-    table_schema = table.schema
+    template_filepath = bin_path_dict[list_bin_names[0]][0]
+    table = pa.parquet.read_table(template_filepath)
 
     # Estimate row_group_size (in number of rows)
     if isinstance(row_group_size, str):  # "200 MB"
         row_group_size = estimate_row_group_size(table, size=row_group_size)
         max_rows_per_group = row_group_size
-        min_rows_per_group = row_group_size - 10
+        min_rows_per_group = row_group_size
 
     # Estimate maximum number of file row (in number of rows)
     max_rows_per_file = estimate_row_group_size(table, size=max_file_size)
 
-    # Define new partitioning
-    new_partitioning = pa.dataset.partitioning(schema=dataset.partitioning.schema, flavor="hive")
+    # # Define file visitor for metadata collection
+    # metadata_collector = []
 
-    # Define scanner
-    scanner = dataset.scanner(
-        batch_size=batch_size,
-        batch_readahead=batch_readahead,
-        fragment_readahead=fragment_readahead,
-        use_threads=use_threads,
-    )
-    # Define file options
-    file_options = {}
-    file_options["compression"] = compression
-    file_options["write_statistics"] = True
-    file_options["compression_level"] = compression_level
+    # def file_visitor(written_file):
+    #     metadata_collector.append(written_file.metadata)
 
-    parquet_format = pa.dataset.ParquetFileFormat()
-    file_options = parquet_format.make_write_options(**file_options)
-
-    # Define file visitor for metadata collection
-    metadata_collector = []
-
-    def file_visitor(written_file):
-        metadata_collector.append(written_file.metadata)
-
-    # Rewrite dataset
     print("Start concatenating the granules bucket archive")
-    pa.dataset.write_dataset(
-        scanner,
-        dst_bucket_dir,
-        format="parquet",
-        partitioning=new_partitioning,
-        create_dir=True,
-        existing_data_behavior="overwrite_or_ignore",
-        use_threads=use_threads,
-        file_options=file_options,
-        file_visitor=file_visitor,
-        # Options for files size/rows
-        max_rows_per_file=max_rows_per_file,
-        min_rows_per_group=min_rows_per_group,
-        max_rows_per_group=max_rows_per_group,
-        # Options to control open connections
-        max_open_files=max_open_files,
-    )
 
-    # Write the metadata
-    print("Writing the metadata")
-    # Write the ``_common_metadata`` parquet file without row groups statistics
-    pq.write_metadata(table_schema, os.path.join(dst_bucket_dir, "_common_metadata"))
+    # Concatenate data within bins
+    # - Cannot rewrite directly the full pyarrow.dataset because there is no way to specify when
+    #    data from each partition have been scanned completely (and can be written to disk)
 
-    # Write the ``_metadata`` parquet file with row groups statistics of all files
-    pq.write_metadata(
-        table_schema,
-        os.path.join(dst_bucket_dir, "_metadata"),
-        metadata_collector=metadata_collector,
-    )
+    # bin_id = "latbin=0/lonbin=10"
+    # filepaths = bin_path_dict[bin_id]
+    n_bins = len(bin_path_dict)
+    for bin_id, filepaths in tqdm(bin_path_dict.items(), total=n_bins):
+        partition_dir = os.path.join(dst_bucket_dir, bin_id)
+        year_dict = group_filepaths_by_time_group(filepaths, group="year")
+        for year, year_filepaths in year_dict.items():
+            basename_template = f"{year}_" + "{i}.parquet"
+            # Read Dataset
+            dataset = pyarrow.dataset.dataset(year_filepaths, format="parquet")
 
+            # Define scanner
+            scanner = dataset.scanner(
+                batch_size=batch_size,
+                batch_readahead=batch_readahead,
+                fragment_readahead=fragment_readahead,
+                use_threads=use_threads,
+            )
 
-# def _get_bin_meta_template(filepath, bin_name):
-#     from dask.dataframe.utils import make_meta
+            # Define file options
+            file_options = {}
+            file_options["compression"] = compression
+            file_options["compression_level"] = compression_level
+            file_options["write_statistics"] = True
 
-#     from gpm_api.bucket.readers import _read_parquet_bin_files
+            parquet_format = pa.dataset.ParquetFileFormat()
+            file_options = parquet_format.make_write_options(**file_options)
 
-#     template_df = _read_parquet_bin_files([filepath], bin_name=bin_name)
-#     meta = make_meta(template_df)
-#     return meta
+            # Rewrite dataset
+            pa.dataset.write_dataset(
+                scanner,
+                base_dir=partition_dir,
+                format="parquet",
+                basename_template=basename_template,
+                # Directory options
+                create_dir=True,
+                existing_data_behavior="overwrite_or_ignore",
+                # Options
+                use_threads=use_threads,
+                file_options=file_options,
+                # file_visitor=file_visitor,
+                # Options for files size/rows
+                max_rows_per_file=max_rows_per_file,
+                min_rows_per_group=min_rows_per_group,
+                max_rows_per_group=max_rows_per_group,
+                # Options to control open connections
+                max_open_files=max_open_files,
+            )
 
+    # # Write the metadata
+    # print("Writing the metadata")
+    # # Write the ``_common_metadata`` parquet file without row groups statistics
+    # pq.write_metadata(table_schema, os.path.join(dst_bucket_dir, "_common_metadata"))
 
-# @print_task_elapsed_time(prefix="Bucket Merging Terminated.")
-# def merge_granule_buckets(
-#     bucket_base_dir,
-#     bucket_filepath,
-#     row_group_size="500MB",
-#     compression="snappy",
-#     compression_level=None,
-#     **writer_kwargs,
-# ):
-#     """
-#      Merge the per-granule bucket archive in a single  optimized archive !
-
-#      Parameters
-#      ----------
-#      bucket_base_dir : str
-#          Base directory of the per-granule bucket archive.
-#      bucket_filepath : str
-#          File path of the final bucket archive.
-#      xbin_name : str, optional
-#          Name of the binned column used to partition the data along the x dimension.
-#          The default is "lonbin".
-#      ybin_name : str, optional
-#          Name of the binned column used to partition the data along the y dimension.
-#          The default is "latbin".
-#      row_group_size : TYPE, optional
-#          Maximum number of rows in each written Parquet row group.
-#          If specified as a string (i.e. "500 MB"), the equivalent row group size
-#          number is estimated. The default is "500MB".
-#     compression : str, optional
-#          Specify the compression codec, either on a general basis or per-column.
-#          Valid values: {"none", "snappy", "gzip", "brotli", "lz4", "zstd"}.
-#          The default is "snappy".
-#      compression : int or dict, optional
-#          Specify the compression level for a codec, either on a general basis or per-column.
-#          If None is passed, arrow selects the compression level for the compression codec in use.
-#          The compression level has a different meaning for each codec, so you have
-#          to read the pyArrow documentation of the codec you are using.
-#          The default is compression_level=None.
-#      **writer_kwargs: dict
-#          Other writer options passed to dask.Dataframe.to_parquet, pyarrow.parquet.write_table
-#          and pyarrow.parquet.ParquetWriter.
-#          More information available at:
-#           - https://docs.dask.org/en/stable/generated/dask.dataframe.to_parquet.html
-#           - https://arrow.apache.org/docs/python/generated/pyarrow.parquet.write_table.html
-#           - https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetWriter.html
-
-#      Returns
-#      -------
-#      None.
-
-#     """
-#     from dask.dataframe.utils import make_meta
-
-#     from gpm_api.bucket.readers import _read_parquet_bin_files
-
-#     # Identify Parquet filepaths for each bin
-#     print("Searching of Parquet files has started.")
-#     t_i = time.time()
-#     bin_path_dict = get_filepaths_by_bin(bucket_base_dir)
-#     n_geographic_bins = len(bin_path_dict)
-#     t_f = time.time()
-#     t_elapsed = round((t_f - t_i) / 60, 1)
-#     print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
-#     print(f"{n_geographic_bins} geographic bins to process.")
-
-#     # Retrieve list of bins and associated filepaths
-#     list_bin_names = list(bin_path_dict.keys())
-#     list_bin_filepaths = list(bin_path_dict.values())
-
-#     # Define meta and row_group_size
-#     template_filepath = list_bin_filepaths[0][0]
-#     template_bin_name = list_bin_names[0]
-#     template_df_pd = _read_parquet_bin_files([template_filepath], bin_name=template_bin_name)
-#     meta = make_meta(template_df_pd)
-#     row_group_size = estimate_row_group_size(template_df_pd, size=row_group_size)
-
-#     # Define xbin and ybin
-#     partition_key_value_list = template_bin_name.split(os.path.sep)
-#     xbin_name = partition_key_value_list[0].split("=")[0]
-#     ybin_name = partition_key_value_list[1].split("=")[0]
-
-#     # TODO: debug
-#     # list_bin_names = list_bin_names[0:10]
-#     # list_bin_filepaths = list_bin_filepaths[0:10]
-
-#     # Read dataframes for each geographic bin
-#     print("Lazy reading of dataframe has started")
-#     df = dd.from_map(_read_parquet_bin_files, list_bin_filepaths, list_bin_names, meta=meta)
-
-#     # Write Parquet Dataset
-#     # - Currently using dask
-#     # - We should use write_partitioned_dataset ( pyarrow.dataset.write_dataset) instead
-#     # --> Lazy open pyarrow Dataset, pyarrow.dataset.Dataset.to_batches()
-#     # -->  pyarrow.RecordBatch
-#     # -->  for record_batch in dataset.to_batches():
-#     # --> https://arrow.apache.org/docs/python/generated/pyarrow.dataset.Dataset.html#pyarrow.dataset.Dataset.to_batches
-#     # --> pyarrow.dataset.write_dataset
-
-#     # --> Allow use multithreading instead of multiprocessing
-#     # --> Read with multithreading and rewrite
-#     # --> At the end add the dask metadata stuffs
-#     # --> https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
-#     # --> https://arrow.apache.org/docs/python/generated/pyarrow.parquet.write_metadata.html
-#     print("Parquet Dataset writing has started")
-#     partitioning = [xbin_name, ybin_name]
-#     write_parquet_dataset(
-#         df=df,
-#         parquet_filepath=bucket_filepath,
-#         partition_on=partitioning,
-#         row_group_size=row_group_size,
-#         compression=compression,
-#         compression_level=compression_level,
-#         **writer_kwargs,
-#     )
-#     print("Parquet Dataset writing has completed")
-
-
-# def write_parquet_dataset(
-#     df,
-#     parquet_filepath,
-#     partition_on,
-#     name_function=None,
-#     schema="infer",
-#     compression="snappy",
-#     write_index=False,
-#     custom_metadata=None,
-#     write_metadata_file=True,  # create _metadata file
-#     append=False,
-#     overwrite=False,
-#     ignore_divisions=False,
-#     compute=True,
-#     **writer_kwargs,
-# ):
-#     # Adapt code to use write_partitioned_dataset
-#     # Note: Append currently works only when using fastparquet
-#     # Only used by merge_granule_buckets
-
-#     # Define default naming scheme
-#     if name_function is None:
-
-#         def name_function(i):
-#             return f"part.{i}.parquet"
-
-#     # Write Parquet Dataset
-#     df.to_parquet(
-#         parquet_filepath,
-#         engine="pyarrow",
-#         # Index option
-#         write_index=write_index,
-#         # Metadata
-#         custom_metadata=custom_metadata,
-#         write_metadata_file=write_metadata_file,  # enable writing the _metadata file
-#         # File structure
-#         name_function=name_function,
-#         partition_on=partition_on,
-#         # Encoding
-#         schema=schema,
-#         compression=compression,
-#         # Writing options
-#         append=append,
-#         overwrite=overwrite,
-#         ignore_divisions=ignore_divisions,
-#         compute=compute,
-#         **writer_kwargs,
-#     )
+    # # Write the ``_metadata`` parquet file with row groups statistics of all files
+    # pq.write_metadata(
+    #     table_schema,
+    #     os.path.join(dst_bucket_dir, "_metadata"),
+    #     metadata_collector=metadata_collector,
+    # )

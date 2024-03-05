@@ -53,6 +53,7 @@ def write_dataset_bucket(
     ybin_name="latbin",
     # Writer arguments
     filename_prefix="part",
+    row_group_size="500MB",
     **writer_kwargs,
 ):
     """Write a geographically partitioned Parquet Dataset of a GPM Dataset."""
@@ -65,8 +66,8 @@ def write_dataset_bucket(
     # Add partitioning columns
     df = assign_spatial_partitions(
         df=df,
-        x_column="lat",
-        y_column="lon",
+        x_column="lon",
+        y_column="lat",
         xbin_name=xbin_name,
         ybin_name=ybin_name,
         xbin_size=xbin_size,
@@ -78,6 +79,7 @@ def write_dataset_bucket(
         df=df,
         base_dir=bucket_filepath,
         partitioning=partitioning,
+        row_group_size=row_group_size,
         **writer_kwargs,
     )
 
@@ -98,6 +100,7 @@ def write_granule_bucket(
     xbin_name="lonbin",
     ybin_name="latbin",
     # Writer kwargs
+    row_group_size="500MB",
     **writer_kwargs,
 ):
     """Write a geographically partitioned Parquet Dataset of a GPM granules.
@@ -120,6 +123,10 @@ def write_granule_bucket(
          Longitude bin size. The default is 15.
      xbin_size : int
          Latitude bin size. The default is 15.
+    row_group_size : (int, str), optional
+        Maximum number of rows in each written Parquet row group.
+        If specified as a string (i.e. "500 MB"), the equivalent row group size
+        number is estimated. The default is "500MB".
     **writer_kwargs: dict
         Optional arguments to be passed to the pyarrow Dataset Writer.
         Common arguments are 'format' and 'use_threads'.
@@ -164,46 +171,23 @@ def write_granule_bucket(
         base_dir=bucket_base_dir,
         filename_prefix=filename_prefix,
         partitioning=partitioning,
+        row_group_size=row_group_size,
         **writer_kwargs,
     )
 
 
 ####--------------------------------------------------------------------------.
 #### GPM Granules Routines
-def _try_write_granule_bucket(
-    src_filepath,
-    # Bucket configuration
-    bucket_base_dir,
-    ds_to_df_converter,
-    # Partitioning arguments
-    xbin_size=15,
-    ybin_size=15,
-    xbin_name="lonbin",
-    ybin_name="latbin",
-    # Writer kwargs
-    use_threads=True,
-    **writer_kwargs,
-):
+def _try_write_granule_bucket(**kwargs):
     try:
         # synchronous
         with dask.config.set(scheduler="single-threaded"):
-            _ = write_granule_bucket(
-                src_filepath=src_filepath,
-                bucket_base_dir=bucket_base_dir,
-                ds_to_df_converter=ds_to_df_converter,
-                # Partitioning arguments
-                xbin_size=xbin_size,
-                ybin_size=ybin_size,
-                xbin_name=xbin_name,
-                ybin_name=ybin_name,
-                # Writer kwargs
-                use_threads=use_threads,
-                **writer_kwargs,
-            )
+            _ = write_granule_bucket(**kwargs)
             # If works, return None
             info = None
     except Exception as e:
         # Define tuple to return
+        src_filepath = kwargs["src_filepath"]
         info = src_filepath, str(e)
     return info
 
@@ -229,6 +213,7 @@ def write_granules_bucket(
     max_concurrent_tasks=None,
     max_dask_total_tasks=500,
     # Writer kwargs
+    row_group_size="500MB",
     **writer_kwargs,
 ):
     """Write a geographically partitioned Parquet Dataset of GPM granules.
@@ -261,6 +246,10 @@ def write_granules_bucket(
      max_dask_total_tasks : None
          The maximum number of Dask tasks to be scheduled.
          The default is 500.
+    row_group_size : (int, str), optional
+        Maximum number of rows in each written Parquet row group.
+        If specified as a string (i.e. "500 MB"), the equivalent row group size
+        number is estimated. The default is "500MB".
     **writer_kwargs: dict
         Optional arguments to be passed to the pyarrow Dataset Writer.
         Common arguments are 'format' and 'use_threads'.
@@ -284,7 +273,7 @@ def write_granules_bucket(
     n_blocks = len(list_blocks)
 
     for i, block_filepaths in enumerate(list_blocks):
-        print(f"Executing tasks block {i}/{n_blocks}")
+        print(f"Executing tasks block {i+1}/{n_blocks}")
 
         # Loop over granules
         if parallel:
@@ -303,6 +292,7 @@ def write_granules_bucket(
                 xbin_name=xbin_name,
                 ybin_name=ybin_name,
                 # Writer kwargs
+                row_group_size=row_group_size,
                 **writer_kwargs,
             )
             for src_filepath in block_filepaths

@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions defining where to download GPM data on the local machine."""
-import datetime
 import glob
 import os
 import pathlib
@@ -34,7 +33,7 @@ from collections import defaultdict
 
 from gpm_api.configs import get_base_dir
 from gpm_api.io.checks import check_base_dir
-from gpm_api.io.info import get_version_from_filepath
+from gpm_api.io.info import get_key_from_filepath, get_version_from_filepath
 from gpm_api.io.products import get_product_category
 
 ####--------------------------------------------------------------------------.
@@ -313,23 +312,18 @@ def list_files(dir_path, glob_pattern, recursive=False):
 
 
 def _extract_path_year(path):
-    parts = path.split(os.sep)
-    year = parts[-4]
-    return int(year)
+    year = get_key_from_filepath(path, key="start_time").year
+    return year
 
 
 def _extract_path_month(path):
-    parts = path.split(os.sep)
-    month = parts[-3]
-    return int(month)
+    month = get_key_from_filepath(path, key="start_time").month
+    return month
 
 
 def _extract_path_doy(path):
-    parts = path.split(os.sep)
-    year = int(parts[-4])
-    month = int(parts[-3])
-    day = int(parts[-2])
-    doy = datetime.date(year, month, day).timetuple().tm_yday
+    start_time = get_key_from_filepath(path, key="start_time")
+    doy = start_time.timetuple().tm_yday
     return doy
 
 
