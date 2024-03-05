@@ -36,6 +36,7 @@ from gpm_api.visualization.plot import (
     _plot_xr_imshow,
     _preprocess_figure_args,
     _preprocess_subplot_kwargs,
+    add_optimize_layout_method,
     create_grid_mesh_data_array,
     plot_cartopy_background,
 )
@@ -69,6 +70,9 @@ def _plot_grid_map_cartopy(
         ax = plot_cartopy_background(ax)
 
     # - Sanitize plot_kwargs passed by FacetGrid
+    plot_kwargs = plot_kwargs.copy()
+    is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
+
     facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
     _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
@@ -94,6 +98,11 @@ def _plot_grid_map_cartopy(
         cbar_kwargs=cbar_kwargs,
         add_colorbar=add_colorbar,
     )
+
+    # - Monkey patch the mappable instance to add optimize_layout
+    if not is_facetgrid:
+        p = add_optimize_layout_method(p)
+
     # - Return mappable
     return p
 
@@ -231,16 +240,18 @@ def _plot_grid_image(
     **plot_kwargs,
 ):
     """Plot DataArray 2D image."""
-    # Check inputs
+    # - Check inputs
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
-    # Initialize figure
+    # - Initialize figure
     if ax is None:
         if "rgb" not in plot_kwargs:
             check_is_spatial_2d(da)
         fig, ax = plt.subplots(**fig_kwargs)
 
     # - Sanitize plot_kwargs passed by FacetGrid
+    plot_kwargs = plot_kwargs.copy()
+    is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
     facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
     _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
@@ -261,9 +272,13 @@ def _plot_grid_image(
         cbar_kwargs=cbar_kwargs,
     )
 
-    # Add axis labels
+    # - Add axis labels
     ax.set_xlabel("Longitude")
     ax.set_ylabel("Latitude")
+
+    # - Monkey patch the mappable instance to add optimize_layout
+    if not is_facetgrid:
+        p = add_optimize_layout_method(p)
 
     # - Return mappable
     return p
@@ -315,6 +330,10 @@ def plot_grid_mesh(
         plot_kwargs=plot_kwargs,
         add_colorbar=False,
     )
+
+    # - Monkey patch the mappable instance to add optimize_layout
+    p = add_optimize_layout_method(p)
+
     # - Return mappable
     return p
 

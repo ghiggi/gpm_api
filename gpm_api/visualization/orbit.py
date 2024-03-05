@@ -44,6 +44,7 @@ from gpm_api.visualization.plot import (
     _plot_xr_imshow,
     _preprocess_figure_args,
     _preprocess_subplot_kwargs,
+    add_optimize_layout_method,
     plot_cartopy_background,
 )
 
@@ -222,7 +223,7 @@ def _call_over_contiguous_scans(function):
         p = None
         x = user_kwargs["x"]
         y = user_kwargs["y"]
-
+        is_facetgrid = user_kwargs.get("_is_facetgrid", False)
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
             if not rgb:
@@ -270,6 +271,10 @@ def _call_over_contiguous_scans(function):
             p = function(**tmp_kwargs)
             # p.set_alpha(alpha)
 
+        # Monkey patch the mappable instance to add optimize_layout
+        if not is_facetgrid:
+            p = add_optimize_layout_method(p)
+
         return p
 
     return wrapper
@@ -306,6 +311,7 @@ def _plot_orbit_map_cartopy(
         ax = plot_cartopy_background(ax)
 
     # - Sanitize plot_kwargs passed by FacetGrid
+    plot_kwargs = plot_kwargs.copy()
     facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
     _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
@@ -406,13 +412,15 @@ def _plot_orbit_image(
     check_contiguous_scans(da)
     _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
-    # Initialize figure
+    # - Initialize figure
     if ax is None:
         if "rgb" not in plot_kwargs:
             check_is_spatial_2d(da)
         fig, ax = plt.subplots(**fig_kwargs)
 
     # - Sanitize plot_kwargs passed by FacetGrid
+    plot_kwargs = plot_kwargs.copy()
+    is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
     facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
     _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
@@ -433,9 +441,13 @@ def _plot_orbit_image(
         cbar_kwargs=cbar_kwargs,
     )
 
-    # Add axis labels
+    # - Add axis labels
     p.axes.set_xlabel("Along-Track")
     p.axes.set_ylabel("Cross-Track")
+
+    # - Monkey patch the mappable instance to add optimize_layout
+    if not is_facetgrid:
+        p = add_optimize_layout_method(p)
 
     # - Return mappable
     return p

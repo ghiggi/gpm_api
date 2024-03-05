@@ -66,6 +66,82 @@ def _preprocess_subplot_kwargs(subplot_kwargs):
     return subplot_kwargs
 
 
+def _call_optimize_layout(self):
+    """Optimize the figure layout."""
+    adapt_fig_size(ax=self.axes)
+    self.figure.tight_layout()
+
+
+def add_optimize_layout_method(p):
+    """Add a method to optimize the figure layout using monkey patching."""
+    p.optimize_layout = _call_optimize_layout.__get__(p, type(p))
+    return p
+
+
+def adapt_fig_size(ax, nrow=1, ncol=1):
+    """
+    Adjusts the figure height of the plot based on the aspect ratio of cartopy subplots.
+
+    This function is intended to be called after all plotting has been completed.
+    It operates under the assumption that all subplots within the figure share the same aspect ratio.
+
+    Assumes that the first axis in the collection of axes is representative of all others.
+    This means that all subplots are expected to have the same aspect ratio and size.
+
+    The implementation is inspired by Mathias Hauser's mplotutils set_map_layout function.
+    """
+    # Determine the number of rows and columns of subplots in the figure.
+    # This information is crucial for calculating the new height of the figure.
+    # nrow, ncol, __, __ = ax.get_subplotspec().get_geometry()
+
+    # Access the figure object from the axis to manipulate its properties.
+    fig = ax.get_figure()
+
+    # Retrieve the current size of the figure in inches.
+    width, original_height = fig.get_size_inches()
+
+    # A call to draw the canvas is required to make sure the geometry of the figure is up-to-date.
+    # This ensures that subsequent calculations for adjusting the layout are based on the latest state.
+    fig.canvas.draw()
+
+    # Extract subplot parameters to understand the figure's layout.
+    # These parameters include the margins of the figure and the spaces between subplots.
+    bottom = fig.subplotpars.bottom
+    top = fig.subplotpars.top
+    left = fig.subplotpars.left
+    right = fig.subplotpars.right
+    hspace = fig.subplotpars.hspace  # vertical space between subplots
+    wspace = fig.subplotpars.wspace  # horizontal space between subplots
+
+    # Calculate the aspect ratio of the data in the subplot.
+    # This ratio is used to adjust the height of the figure to match the aspect ratio of the data.
+    aspect = ax.get_data_ratio()
+
+    # Calculate the width of a single plot, considering the left and right margins,
+    # the number of columns, and the space between columns.
+    wp = (width - width * (left + (1 - right))) / (ncol + (ncol - 1) * wspace)
+
+    # Calculate the height of a single plot using its width and the data aspect ratio.
+    hp = wp * aspect
+
+    # Calculate the new height of the figure, taking into account the number of rows,
+    # the space between rows, and the top and bottom margins.
+    height = (hp * (nrow + ((nrow - 1) * hspace))) / (1.0 - (bottom + (1 - top)))
+
+    # Check if the new height is significantly reduced (more than halved).
+    if original_height / height > 2:
+        # Calculate the scale factor to adjust the figure size closer to the original.
+        scale_factor = original_height / height / 2
+
+        # Apply the scale factor to both width and height to maintain the aspect ratio.
+        width *= scale_factor
+        height *= scale_factor
+
+    # Apply the calculated width and height to adjust the figure size.
+    fig.set_figwidth(width)
+    fig.set_figheight(height)
+
+
 def get_extent(da, x="lon", y="lat"):
     # TODO: compute corners array to estimate the extent
     # - OR increase by 1° in everydirection and then wrap between -180, 180,90,90
