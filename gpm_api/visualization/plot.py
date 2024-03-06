@@ -66,6 +66,82 @@ def _preprocess_subplot_kwargs(subplot_kwargs):
     return subplot_kwargs
 
 
+def _call_optimize_layout(self):
+    """Optimize the figure layout."""
+    adapt_fig_size(ax=self.axes)
+    self.figure.tight_layout()
+
+
+def add_optimize_layout_method(p):
+    """Add a method to optimize the figure layout using monkey patching."""
+    p.optimize_layout = _call_optimize_layout.__get__(p, type(p))
+    return p
+
+
+def adapt_fig_size(ax, nrow=1, ncol=1):
+    """
+    Adjusts the figure height of the plot based on the aspect ratio of cartopy subplots.
+
+    This function is intended to be called after all plotting has been completed.
+    It operates under the assumption that all subplots within the figure share the same aspect ratio.
+
+    Assumes that the first axis in the collection of axes is representative of all others.
+    This means that all subplots are expected to have the same aspect ratio and size.
+
+    The implementation is inspired by Mathias Hauser's mplotutils set_map_layout function.
+    """
+    # Determine the number of rows and columns of subplots in the figure.
+    # This information is crucial for calculating the new height of the figure.
+    # nrow, ncol, __, __ = ax.get_subplotspec().get_geometry()
+
+    # Access the figure object from the axis to manipulate its properties.
+    fig = ax.get_figure()
+
+    # Retrieve the current size of the figure in inches.
+    width, original_height = fig.get_size_inches()
+
+    # A call to draw the canvas is required to make sure the geometry of the figure is up-to-date.
+    # This ensures that subsequent calculations for adjusting the layout are based on the latest state.
+    fig.canvas.draw()
+
+    # Extract subplot parameters to understand the figure's layout.
+    # These parameters include the margins of the figure and the spaces between subplots.
+    bottom = fig.subplotpars.bottom
+    top = fig.subplotpars.top
+    left = fig.subplotpars.left
+    right = fig.subplotpars.right
+    hspace = fig.subplotpars.hspace  # vertical space between subplots
+    wspace = fig.subplotpars.wspace  # horizontal space between subplots
+
+    # Calculate the aspect ratio of the data in the subplot.
+    # This ratio is used to adjust the height of the figure to match the aspect ratio of the data.
+    aspect = ax.get_data_ratio()
+
+    # Calculate the width of a single plot, considering the left and right margins,
+    # the number of columns, and the space between columns.
+    wp = (width - width * (left + (1 - right))) / (ncol + (ncol - 1) * wspace)
+
+    # Calculate the height of a single plot using its width and the data aspect ratio.
+    hp = wp * aspect
+
+    # Calculate the new height of the figure, taking into account the number of rows,
+    # the space between rows, and the top and bottom margins.
+    height = (hp * (nrow + ((nrow - 1) * hspace))) / (1.0 - (bottom + (1 - top)))
+
+    # Check if the new height is significantly reduced (more than halved).
+    if original_height / height > 2:
+        # Calculate the scale factor to adjust the figure size closer to the original.
+        scale_factor = original_height / height / 2
+
+        # Apply the scale factor to both width and height to maintain the aspect ratio.
+        width *= scale_factor
+        height *= scale_factor
+
+    # Apply the calculated width and height to adjust the figure size.
+    fig.set_figwidth(width)
+    fig.set_figheight(height)
+
+
 def get_extent(da, x="lon", y="lat"):
     # TODO: compute corners array to estimate the extent
     # - OR increase by 1° in everydirection and then wrap between -180, 180,90,90
@@ -885,3 +961,169 @@ def plot_patches(
         except:
             pass
     return
+
+
+####--------------------------------------------------------------------------.
+
+
+def get_inset_bounds(
+    ax, loc="upper right", inset_height=0.2, inside_figure=True, aspect_ratio=1, y_spacing=0.06
+):
+    """
+    Calculate the bounds for an inset axes in a matplotlib figure.
+
+    This function computes the normalized figure coordinates for placing an inset axes within a figure,
+    based on the specified location, size, and whether the inset should be fully inside the figure bounds.
+    It is designed to be used with matplotlib figures to facilitate the addition of insets (e.g., for maps
+    or zoomed plots) at predefined positions.
+
+    Parameters
+    ----------
+    loc : str
+        The location of the inset within the figure. Valid options are 'lower left', 'lower right',
+        'upper left', and 'upper right'. The default is 'upper right'.
+    inset_height : float
+        The size of the inset height, specified as a fraction of the figure's height.
+        For example, a value of 0.2 indicates that the inset's height will be 20% of the figure's height.
+        The aspect ratio will govern the inset_width.
+    inside_figure : bool, optional
+        Determines whether the inset is constrained to be fully inside the figure bounds. If `True` (default),
+        the inset is placed fully within the figure. If `False`, the inset can extend beyond the figure's edges,
+        allowing for a half-outside placement.
+    aspect_ratio : float, optional
+        The width-to-height ratio of the inset figure.
+        A value greater than 1 indicates an inset figure wider than it is tall,
+        and a value less than 1 indicates an inset figure taller than it is wide.
+        The default value is 1.0, indicating a square inset figure.
+
+    Returns
+    -------
+    inset_bounds : list of float
+        The calculated bounds of the inset, in the format [x0, y0, width, height], where `x0` and `y0`
+        are the normalized figure coordinates of the lower left corner of the inset, and `width` and
+        `height` are the normalized width and height of the inset, respectively.
+
+    """
+    # Get the bounding box of the parent axes in figure coordinates
+    bbox = ax.get_position()
+    parent_width = bbox.width
+    parent_height = bbox.height
+
+    # Compute the inset width percentage (relative to the parent axes)
+    # - Take into account possible different aspect ratios
+    inset_height_abs = inset_height * parent_height
+    inset_width_abs = inset_height_abs * aspect_ratio
+    inset_width = inset_width_abs / parent_width
+    loc_mapping = {
+        "upper right": (1 - inset_width, 1 - inset_height),
+        "upper left": (0, 1 - inset_height),
+        "lower right": (1 - inset_width, 0),
+        "lower left": (0, 0),
+    }
+    inset_x, inset_y = loc_mapping[loc]
+
+    # Adjust for insets that are allowed to be half outside of the figure
+    if not inside_figure:
+        inset_x += inset_width / 2 * (-1 if loc.endswith("left") else 1)
+        inset_y += inset_height / 2 * (-1 if loc.startswith("lower") else 1)
+
+    inset_bounds = [inset_x, inset_y, inset_width, inset_height]
+    return inset_bounds
+
+
+def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, inside_figure=True):
+    """
+    Adds an inset map to a matplotlib axis using Cartopy, highlighting the extent of the main plot.
+
+    This function creates a smaller map inset within a larger map plot to show a global view or
+    contextual location of the main plot's extent.
+
+    It uses Cartopy for map projections and plotting, and it outlines the extent of the main plot
+    within the inset to provide geographical context.
+
+    Parameters
+    ----------
+    ax : (matplotlib.axes.Axes, cartopy.mpl.geoaxes.GeoAxes)
+        The main matplotlib or cartopy axis object where the geographic data is plotted.
+    loc : str, optional
+        The location of the inset map within the main plot.
+        Options include 'lower left', 'lower right', 'upper left', 'upper right'.
+        The default is 'upper left'.
+    inset_height : float
+        The size of the inset height, specified as a fraction of the figure's height.
+        For example, a value of 0.2 indicates that the inset's height will be 20% of the figure's height.
+        The aspect ratio (of the map inset) will govern the inset_width.
+    inside_figure : bool, optional
+        Determines whether the inset is constrained to be fully inside the figure bounds. If `True` (default),
+        the inset is placed fully within the figure. If `False`, the inset can extend beyond the figure's edges,
+        allowing for a half-outside placement.
+    projection: cartopy.crs.Projection
+        A cartopy projection. If None, am Orthographic projection centered on the extent center is used.
+
+    Returns
+    -------
+    ax2 : cartopy.mpl.geoaxes.GeoAxes
+        The Cartopy GeoAxesSubplot object for the inset map.
+
+    Notes
+    -----
+    The function adjusts the extent of the inset map based on the main plot's extent, adding a
+    slight padding for visual clarity. It then overlays a red outline indicating the main plot's
+    geographical extent.
+
+    Examples
+    --------
+    >>> p = da.gpm_api.plot_map()
+    >>> add_map_inset(ax=p.axes, loc="upper left", inset_height=0.15)
+
+    This example creates a main plot with a specified extent and adds an upper-left inset map
+    showing the global context of the main plot's extent.
+    """
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    from shapely import Polygon
+
+    from gpm_api.utils.geospatial import extend_geographic_extent
+
+    # Retrieve extent and bounds
+    extent = ax.get_extent()
+    extent = extend_geographic_extent(extent, padding=0.5)
+    bounds = [extent[i] for i in [0, 2, 1, 3]]
+    # Create Cartopy Polygon
+    polygon = Polygon.from_bounds(*bounds)
+    # Define Orthographic projection
+    if projection is None:
+        lon_min, lon_max, lat_min, lat_max = extent
+        projection = ccrs.Orthographic(
+            central_latitude=(lat_min + lat_max) / 2, central_longitude=(lon_min + lon_max) / 2
+        )
+
+    # Define aspect ratio of the map inset
+    aspect_ratio = float(np.diff(projection.x_limits) / np.diff(projection.y_limits).item())
+
+    # Define inset location relative to main plot (ax) in normalized units
+    # - Lower-left corner of inset Axes, and its width and height
+    # - [x0, y0, width, height]
+    inset_bounds = get_inset_bounds(
+        ax=ax,
+        loc=loc,
+        inset_height=inset_height,
+        inside_figure=inside_figure,
+        aspect_ratio=aspect_ratio,
+    )
+
+    # ax2 = plt.axes(inset_bounds, projection=projection)
+    ax2 = ax.inset_axes(
+        inset_bounds,
+        projection=projection,
+    )
+
+    # Add global map
+    ax2.set_global()
+    ax2.add_feature(cfeature.LAND)
+    ax2.add_feature(cfeature.OCEAN)
+    # Add extent polygon
+    _ = ax2.add_geometries(
+        [polygon], ccrs.PlateCarree(), facecolor="none", edgecolor="red", linewidth=0.3
+    )
+    return ax2

@@ -606,6 +606,18 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             self._obj, temperature=temperature, variable_temperature=variable_temperature
         )
 
+    def to_pandas_dataframe(self):
+        """Convert xr.Dataset to Pandas Dataframe. Expects xr.Dataset with only 2D spatial DataArrays."""
+        from gpm_api.bucket.processing import ds_to_pd_df_function
+
+        return ds_to_pd_df_function(self._obj)
+
+    def to_dask_dataframe(self):
+        """Convert xr.Dataset to Dask Dataframe. Expects xr.Dataset with only 2D spatial DataArrays."""
+        from gpm_api.bucket.processing import ds_to_dask_df_function
+
+        return ds_to_dask_df_function(self._obj)
+
 
 @xr.register_dataarray_accessor("gpm_api")
 class GPM_DataArray_Accessor(GPM_Base_Accessor):

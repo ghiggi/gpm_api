@@ -56,6 +56,10 @@ def decode_variables(ds, product):
     if product in available_products(product_categories="PMW", product_levels="2A"):
         ds = _get_decoding_function("gpm_api.dataset.decoding.decode_2a_pmw")(ds)
 
+    # Decode variables of 2A-<PMW> products
+    if product in available_products(product_categories="PMW", product_levels="1C"):
+        ds = _get_decoding_function("gpm_api.dataset.decoding.decode_1c_pmw")(ds)
+
     # if ds.attrs.get("TotalQualityCode"):
     #     TotalQualityCode = ds.attrs.get("TotalQualityCode")
     #     ds["TotalQualityCode"] = xr.DataArray(

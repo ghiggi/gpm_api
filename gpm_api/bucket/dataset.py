@@ -30,13 +30,41 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.dataset
 
+from gpm_api.bucket.processing import estimate_row_group_size
+
 
 #### Dataset Writers
-def _write_pd_partitioned_dataset(df, base_dir, filename_prefix, partitioning, **writer_kwargs):
+def _preprocess_writer_kwargs(writer_kwargs, df):
+    # Set default format to Parquet
+    if "format" not in writer_kwargs:
+        writer_kwargs["format"] = "parquet"
+    # Set default multithreaded parquet writing
+    if "use_threads" not in writer_kwargs:
+        writer_kwargs["use_threads"] = True
+
     # Sanitize writer_kwargs
     _ = writer_kwargs.pop("create_dir", None)
     _ = writer_kwargs.pop("existing_data_behavior", None)
     _ = writer_kwargs.pop("partitioning_flavor", None)
+
+    # Define row_group_size
+    row_group_size = writer_kwargs.pop("row_group_size", None)
+    min_rows_per_group = writer_kwargs.get("min_rows_per_group", None)
+    max_rows_per_group = writer_kwargs.get("max_rows_per_group", 1024 * 1024)  # pyarrow default
+    if "min_rows_per_group" not in writer_kwargs and row_group_size is not None:
+        if isinstance(row_group_size, str):
+            min_rows_per_group = estimate_row_group_size(df, size=row_group_size)
+        else:
+            min_rows_per_group = row_group_size
+        writer_kwargs["min_rows_per_group"] = min_rows_per_group
+        if min_rows_per_group > max_rows_per_group:
+            writer_kwargs["max_rows_per_group"] = min_rows_per_group
+    return writer_kwargs
+
+
+def _write_pd_partitioned_dataset(df, base_dir, filename_prefix, partitioning, **writer_kwargs):
+    # Preprocess writer kwargs
+    writer_kwargs = _preprocess_writer_kwargs(writer_kwargs=writer_kwargs, df=df)
 
     # Define basename template
     basename_template = f"{filename_prefix}_" + "{i}.parquet"
@@ -94,12 +122,12 @@ def write_partitioned_dataset(
     base_dir,
     partitioning,
     filename_prefix="part",
-    format="parquet",
-    use_threads=True,
     **writer_kwargs,
 ):
-    writer_kwargs["format"] = format
-    writer_kwargs["use_threads"] = use_threads
+    # Do not write if empty dataframe
+    if df.size == 0:
+        return None
+
     if isinstance(df, dd.DataFrame):
         _write_dask_partitioned_dataset(
             df=df,

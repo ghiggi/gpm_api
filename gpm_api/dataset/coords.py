@@ -81,9 +81,13 @@ def get_grid_coords(dt, scan_mode):
     lon = np.asanyarray(dt[scan_mode]["lon"].data)
     lat = np.asanyarray(dt[scan_mode]["lat"].data)
     time = attrs["StartGranuleDateTime"][:-1]
-    time = np.array(
-        np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1
-    )  # TODO: document why + 30 min
+    # Set time to the end of the accumulation period
+    # - IMERG provide the average rain rate (mm/hr) over the half-hour period
+    # - The StartGranuleDateTime indicates the start of the time accumulation
+    # - So here we specify the time of measurement as start of the time accumulation  + the time of accumulation
+    # TODO: add start_time and end_time coordinates to avoid doubts
+    # TODO: add attribute to time explaining is the end of the accumulation period
+    time = np.array(np.datetime64(time) + np.timedelta64(30, "m"), ndmin=1)
     coords = {
         "time": time,
         "lon": lon,

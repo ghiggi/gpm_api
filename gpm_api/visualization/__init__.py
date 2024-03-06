@@ -26,6 +26,7 @@
 # -----------------------------------------------------------------------------.
 """This directory contains the GPM-API data visualization tools."""
 from gpm_api.visualization.plot import (
+    add_map_inset,
     plot_image,
     plot_labels,
     plot_map,
@@ -39,4 +40,5 @@ __all__ = [
     "plot_map",
     "plot_image",
     "plot_map_mesh",
+    "add_map_inset",
 ]
