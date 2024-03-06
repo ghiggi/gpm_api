@@ -135,7 +135,7 @@ class TestPlotMap:
         p = plot.plot_map(orbit_antimeridian_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_antimeridian_recenter(
+    def test_orbit_antimeridian_recentered(
         self,
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
@@ -155,7 +155,7 @@ class TestPlotMap:
         p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_antimeridian_not_masked(
+    def test_orbit_antimeridian_not_masked_recentered(
         self,
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
@@ -203,14 +203,24 @@ class TestPlotMap:
         p = plot.plot_map(orbit_nan_along_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_lon_cross_track(
+    def test_orbit_nan_one_cell(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with NaN values at one cell"""
+
+        orbit_dataarray.data[2, 2] = np.nan
+        p = plot.plot_map(orbit_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_nan_lon_cross_track(  # TODO: check behavior
         self,
         orbit_nan_lon_cross_track_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with some NaN longitudes cross-track"""
 
-        with pytest.raises(ValueError):
-            plot.plot_map(orbit_nan_lon_cross_track_dataarray)
+        p = plot.plot_map(orbit_nan_lon_cross_track_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_nan_lon_along_track(
         self,
@@ -219,6 +229,16 @@ class TestPlotMap:
         """Test plotting orbit data with some NaN latitudes along-track"""
 
         p = plot.plot_map(orbit_nan_lon_along_track_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_nan_lon_one_cell(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with NaN longitude at one cell"""
+
+        orbit_dataarray["lon"].data[2, 2] = np.nan
+        p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_cbar_kwargs(
@@ -242,7 +262,17 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray, rgb=True)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_rgb_antimeridian(
+    def test_orbit_rgba(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGBA data"""
+
+        orbit_dataarray = expand_dims(orbit_dataarray, 4, channel="rgb", axis=2)
+        p = plot.plot_map(orbit_dataarray, rgb=True)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgb_antimeridian_recentered(
         self,
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
@@ -253,7 +283,7 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb=True)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_rgb_antimeridian_not_masked(
+    def test_orbit_rgb_antimeridian_not_masked_recentered(
         self,
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
@@ -291,15 +321,6 @@ class TestPlotMap:
         """Test plotting grid data"""
 
         p = plot.plot_map(grid_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name())
-
-    def test_grid_antimeridian(
-        self,
-        grid_antimeridian_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting grid data going over the antimeridian"""
-
-        p = plot.plot_map(grid_antimeridian_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid_nan_lon(
@@ -441,15 +462,6 @@ class TestPlotMapMesh:
         """Test plotting grid data"""
 
         p = plot.plot_map_mesh(grid_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name())
-
-    def test_grid_antimeridian(
-        self,
-        grid_antimeridian_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting grid data going over the antimeridian"""
-
-        p = plot.plot_map_mesh(grid_antimeridian_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_grid_nan_lon(

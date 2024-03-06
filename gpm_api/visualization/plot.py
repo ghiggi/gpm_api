@@ -311,8 +311,8 @@ def _plot_cartopy_pcolormesh(
 
     # If RGB, expect last dimension to have 3 channels
     if rgb:
-        if arr.shape[-1] != 3:
-            raise ValueError("RGB array must have 3 channels in the last dimension.")
+        if arr.shape[-1] != 3 and arr.shape[-1] != 4:
+            raise ValueError("RGB array must have 3 or 4 channels in the last dimension.")
 
     # Infill invalid value and add mask if necessary
     x, y, arr = get_valid_pcolormesh_inputs(x, y, arr, rgb=rgb)

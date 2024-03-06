@@ -134,7 +134,7 @@ class TestPlotMap:
         """Test plotting orbit data while specifying extent"""
 
         extent = [0, 20, 0, 20]
-        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2)
+        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, optimize_layout=False)
         p.remove_title_dimension_prefix()
         p.set_extent(extent)
         save_and_check_figure(figure=p.fig, name=get_test_name())
@@ -188,15 +188,6 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, cbar_kwargs=cbar_kwargs)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
-    def test_orbit_high_aspect_ratio(
-        self,
-        orbit_dataarray_x4: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data with high aspect ratio (that gets corrected)"""
-
-        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, facet_aspect=0.2)
-        save_and_check_figure(figure=p.fig, name=get_test_name())
-
     def test_grid(
         self,
         grid_dataarray_x4: xr.DataArray,
@@ -217,6 +208,15 @@ class TestPlotImage:
         """Test plotting orbit data"""
 
         p = plot.plot_image(orbit_dataarray_x4, col=CHANNEL, col_wrap=2)
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_orbit_high_aspect_ratio(
+        self,
+        orbit_dataarray_x4: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with high aspect ratio (that gets corrected)"""
+
+        p = plot.plot_image(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, facet_aspect=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_grid(
