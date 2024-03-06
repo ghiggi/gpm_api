@@ -24,17 +24,12 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-import cartopy.crs as ccrs
 import pytest
-from matplotlib import pyplot as plt
-import numpy as np
 import xarray as xr
 
 
-import gpm_api.configs
 from gpm_api.visualization import orbit
 from gpm_api.tests.test_visualization.utils import (
-    expand_dims,
     get_test_name,
     save_and_check_figure,
 )

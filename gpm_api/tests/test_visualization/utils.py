@@ -117,12 +117,12 @@ def get_test_name() -> str:
 def expand_dims(
     dataarray: xr.DataArray,
     size: int,
-    channel: str,
+    dim: str,
     axis: Optional[int] = None,
 ) -> xr.DataArray:
     """Expand dimensions of a dataarray and fill with random data"""
 
-    dataarray = dataarray.expand_dims(dim={channel: size}, axis=axis)
+    dataarray = dataarray.expand_dims(dim={dim: size}, axis=axis)
     np.random.seed(0)
     dataarray.data = np.random.rand(*dataarray.data.shape)
     return dataarray

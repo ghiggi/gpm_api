@@ -35,37 +35,49 @@ from gpm_api.tests.test_visualization.utils import (
 )
 
 
-CHANNEL = "channel"
+EXTRA_DIM = "auxiliary_dim"
+EXTRA_DIM_2 = "auxiliary_dim_2"
 
 
 # Fixtures ####################################################################
 
 
 @pytest.fixture
-def orbit_dataarray_x4(
+def orbit_dataarray_4_frames(
     orbit_dataarray: xr.DataArray,
 ) -> xr.DataArray:
-    """Return a dataarray with one extra dimension, 4 indices"""
+    """Return a dataarray with one extra dimension of shape 4"""
 
-    return expand_dims(orbit_dataarray, 4, channel=CHANNEL)
+    return expand_dims(orbit_dataarray, 4, dim=EXTRA_DIM)
 
 
 @pytest.fixture
-def orbit_dataarray_x6(
+def orbit_dataarray_6_frames(
     orbit_dataarray: xr.DataArray,
 ) -> xr.DataArray:
-    """Return a dataarray with one extra dimension, 6 indices"""
+    """Return a dataarray with one extra dimension of shape 6"""
 
-    return expand_dims(orbit_dataarray, 6, channel=CHANNEL)
+    return expand_dims(orbit_dataarray, 6, dim=EXTRA_DIM)
 
 
 @pytest.fixture
-def grid_dataarray_x4(
+def orbit_dataarray_2x2_frames(
+    orbit_dataarray: xr.DataArray,
+) -> xr.DataArray:
+    """Return a dataarray with two extra dimensions of shape 2"""
+
+    orbit_dataarray = expand_dims(orbit_dataarray, 2, dim=EXTRA_DIM)
+    orbit_dataarray = expand_dims(orbit_dataarray, 2, dim=EXTRA_DIM_2)
+    return orbit_dataarray
+
+
+@pytest.fixture
+def grid_dataarray_4_frames(
     grid_dataarray: xr.DataArray,
 ) -> xr.DataArray:
-    """Return a dataarray with one extra dimension, 4 indices"""
+    """Return a dataarray with one extra dimension of shape 4"""
 
-    return expand_dims(grid_dataarray, 4, channel=CHANNEL)
+    return expand_dims(grid_dataarray, 4, dim=EXTRA_DIM)
 
 
 # Tests #######################################################################
@@ -76,46 +88,41 @@ class TestPlotMap:
 
     def test_orbit(
         self,
-        orbit_dataarray_x6: xr.DataArray,
+        orbit_dataarray_6_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data using col argument"""
 
-        p = plot.plot_map(orbit_dataarray_x6, col=CHANNEL, col_wrap=3)
+        p = plot.plot_map(orbit_dataarray_6_frames, col=EXTRA_DIM, col_wrap=3)
         p.set_title("Title")
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_row(
         self,
-        orbit_dataarray_x6: xr.DataArray,
+        orbit_dataarray_6_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data using row argument"""
 
-        p = plot.plot_map(orbit_dataarray_x6, row=CHANNEL, col_wrap=3)
+        p = plot.plot_map(orbit_dataarray_6_frames, row=EXTRA_DIM, col_wrap=3)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_col_row(
         self,
-        orbit_dataarray: xr.DataArray,
+        orbit_dataarray_2x2_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data using row and col arguments"""
 
-        channel1 = "channel1"
-        channel2 = "channel2"
-
-        orbit_dataarray = expand_dims(orbit_dataarray, 2, channel=channel1)
-        orbit_dataarray = expand_dims(orbit_dataarray, 2, channel=channel2)
         # Calling with call_wrap=1, which should be ignored
-        p = plot.plot_map(orbit_dataarray, col=channel1, row=channel2, col_wrap=1)
+        p = plot.plot_map(orbit_dataarray_2x2_frames, col=EXTRA_DIM, row=EXTRA_DIM_2, col_wrap=1)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_no_col_row(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data without valid col or row argument"""
 
         with pytest.raises(ValueError):
-            plot.plot_map(orbit_dataarray_x4, col=None)
+            plot.plot_map(orbit_dataarray_4_frames, col=None)
 
     def test_orbit_one_empty_subplot(
         self,
@@ -123,78 +130,86 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit data with one empty subplot"""
 
-        orbit_dataarray = expand_dims(orbit_dataarray, 3, channel=CHANNEL)
-        p = plot.plot_map(orbit_dataarray, col=CHANNEL, col_wrap=2)
+        orbit_dataarray = expand_dims(orbit_dataarray, 3, dim=EXTRA_DIM)
+        p = plot.plot_map(orbit_dataarray, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_extent(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data while specifying extent"""
 
         extent = [0, 20, 0, 20]
-        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, optimize_layout=False)
+        p = plot.plot_map(
+            orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, optimize_layout=False
+        )
         p.remove_title_dimension_prefix()
         p.set_extent(extent)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_non_unique_index(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with non-unique channel index"""
 
-        orbit_dataarray_x4[CHANNEL] = [0, 1, 1, 2]
+        orbit_dataarray_4_frames[EXTRA_DIM] = [0, 1, 1, 2]
         with pytest.raises(ValueError):
-            plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2)
+            plot.plot_map(orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
 
     def test_orbit_no_colorbar(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data without colorbar"""
 
-        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, add_colorbar=False)
+        p = plot.plot_map(orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, add_colorbar=False)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_horizontal_colorbar(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with a horizontal colorbar"""
 
         cbar_kwargs = {"orientation": "horizontal"}
-        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, cbar_kwargs=cbar_kwargs)
+        p = plot.plot_map(
+            orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, cbar_kwargs=cbar_kwargs
+        )
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_colorbar_ticks(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with custom colorbar tick labels"""
 
         cbar_kwargs = {"ticklabels": [42, 43, 44, 45]}
-        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, cbar_kwargs=cbar_kwargs)
+        p = plot.plot_map(
+            orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, cbar_kwargs=cbar_kwargs
+        )
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_extended_colorbar(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with extended colorbar"""
 
         cbar_kwargs = {"extend": "both", "extendfrac": 0.03}
-        p = plot.plot_map(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, cbar_kwargs=cbar_kwargs)
+        p = plot.plot_map(
+            orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, cbar_kwargs=cbar_kwargs
+        )
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_grid(
         self,
-        grid_dataarray_x4: xr.DataArray,
+        grid_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
 
-        p = plot.plot_map(grid_dataarray_x4, col=CHANNEL, col_wrap=2)
+        p = plot.plot_map(grid_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
 
@@ -203,27 +218,27 @@ class TestPlotImage:
 
     def test_orbit(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
 
-        p = plot.plot_image(orbit_dataarray_x4, col=CHANNEL, col_wrap=2)
+        p = plot.plot_image(orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_high_aspect_ratio(
         self,
-        orbit_dataarray_x4: xr.DataArray,
+        orbit_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with high aspect ratio (that gets corrected)"""
 
-        p = plot.plot_image(orbit_dataarray_x4, col=CHANNEL, col_wrap=2, facet_aspect=2)
+        p = plot.plot_image(orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, facet_aspect=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_grid(
         self,
-        grid_dataarray_x4: xr.DataArray,
+        grid_dataarray_4_frames: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
 
-        p = plot.plot_image(grid_dataarray_x4, col=CHANNEL, col_wrap=2)
+        p = plot.plot_image(grid_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
