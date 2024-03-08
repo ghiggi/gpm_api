@@ -528,11 +528,11 @@ def orbit_nan_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
 def orbit_nan_lon_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
     """Create orbit data array near 0 longitude and latitude with some NaN longitudes (cross-track)"""
 
-    cross_track_index = 1
-    missing_size = 1
+    padding_size = 1
 
     lon = orbit_dataarray["lon"]
-    lon[cross_track_index : cross_track_index + missing_size, :] = float("nan")
+    lon[0:padding_size, :] = float("nan")
+    lon[-padding_size:, :] = float("nan")
 
     return orbit_dataarray
 
@@ -542,7 +542,7 @@ def orbit_nan_lon_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
     """Create orbit data array near 0 longitude and latitude with some NaN longitudes (along-track)"""
 
     along_track_index = 5
-    missing_size = 2
+    missing_size = 1
 
     lon = orbit_dataarray["lon"]
     lon[:, along_track_index : along_track_index + missing_size] = float("nan")

@@ -203,7 +203,7 @@ class TestPlotMap:
         p = plot.plot_map(orbit_nan_along_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_one_cell(
+    def test_orbit_nan_values(
         self,
         orbit_dataarray: xr.DataArray,
     ) -> None:
@@ -213,11 +213,11 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_lon_cross_track(  # TODO: check behavior
+    def test_orbit_nan_lon_outer_cross_track(
         self,
         orbit_nan_lon_cross_track_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting orbit data with some NaN longitudes cross-track"""
+        """Test plotting orbit data with some NaN longitudes on the outer cross-track cells"""
 
         p = plot.plot_map(orbit_nan_lon_cross_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -237,7 +237,17 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit data with NaN longitude at one cell"""
 
-        orbit_dataarray["lon"].data[2, 2] = np.nan
+        orbit_dataarray["lon"].data[1, 3] = np.nan
+        p = plot.plot_map(orbit_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_nan_lon_one_cell_centerline(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with NaN longitude at one cell on the cross-track centerline"""
+
+        orbit_dataarray["lon"].data[2, 3] = np.nan
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
