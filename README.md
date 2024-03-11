@@ -122,7 +122,7 @@ ds = gpm_api.open_dataset(product=product,
 
 To discover all GPM-API download, manipulation, analysis and plotting utilities, or how to contribute your custom retrieval to GPM-API:
 - please read the software documentation available at [https://gpm-api.readthedocs.io/en/latest/](https://gpm-api.readthedocs.io/en/latest/).
-- dive into the Jupyter Notebooks [Tutorials][tutorial_link] tutorials.
+- dive into the Jupyter Notebooks [Tutorials][tutorial_link].
 
 -----------------------------------------------------------------------------------------
 
