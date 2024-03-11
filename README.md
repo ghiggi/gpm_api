@@ -121,7 +121,7 @@ ds = gpm_api.open_dataset(product=product,
 #### 📖 Explore the GPM-API documentation
 
 To discover all GPM-API download, manipulation, analysis and plotting utilities, or how to contribute your custom retrieval to GPM-API:
-- please read the software documentation available at [[https://disdrodb.readthedocs.io/en/latest/](https://gpm-api.readthedocs.io/en/latest/)].
+- please read the software documentation available at [[https://gpm-api.readthedocs.io/en/latest/](https://gpm-api.readthedocs.io/en/latest/)].
 - dive into the Jupyter Notebooks [Tutorials][tutorial_link] tutorials.
 
 -----------------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ The associated python scripts are also provided in the `tutorial` folder.
 [PPS_link]: https://gpm.nasa.gov/data/sources/pps-research
 [tutorial_link]: https://github.com/ghiggi/gpm_api/tree/master#tutorials-and-examples
 
-[pip_link]: https://pypi.org/project/gstools
+[pip_link]: https://pypi.org/project/gpm-api
 [conda_link]: https://docs.conda.io/en/latest/miniconda.html
 [conda_forge_link]: https://github.com/conda-forge/gpm-api-feedstock#installing-gpm-api
 [conda_pip]: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-pkgs.html#installing-non-conda-packages
