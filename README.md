@@ -35,7 +35,7 @@ gpm_api.available_products(product_types="NRT") # near-real-time products
 ```
 
 Before starting using GPM-API, we highly suggest to save into a configuration file:
-1. your credentials to access the [NASA Precipitation Processing System (PPS) servers][PPS_link]
+1. your credentials to access the [NASA Precipitation Processing System (PPS) servers](https://gpm.nasa.gov/data/sources/pps-research)
 2. the directory on the local disk where to save the GPM dataset of interest.
 
 To facilitate the creation of the configuration file, you can run the following script:
@@ -122,7 +122,7 @@ ds = gpm_api.open_dataset(product=product,
 
 To discover all GPM-API download, manipulation, analysis and plotting utilities, or how to contribute your custom retrieval to GPM-API:
 - please read the software documentation available at [https://gpm-api.readthedocs.io/en/latest/](https://gpm-api.readthedocs.io/en/latest/).
-- dive into the Jupyter Notebooks [Tutorials][tutorial_link].
+- dive into the Jupyter Notebooks [Tutorials](https://github.com/ghiggi/gpm_api/tree/main/tutorials).
 
 -----------------------------------------------------------------------------------------
 
@@ -139,6 +139,9 @@ conda install gpm-api
 
 In case conda-forge is not set up for your system yet, see the easy to follow instructions on [conda-forge][conda_forge_link].
 
+[conda_link]: https://docs.conda.io/en/latest/miniconda.html
+[conda_forge_link]: https://github.com/conda-forge/gpm-api-feedstock#installing-gpm-api
+
 ### pip
 
 GPM-API can be installed also via [pip][pip_link] on Linux, Mac, and Windows.
@@ -152,7 +155,11 @@ Then, install the GPM-API package by typing the following command in the termina
 pip install gpm-api
 ```
 
-To install the latest development version via pip, see the [documentation][doc_install_link].
+To install the latest development version via pip, see the [documentation][dev_install_link].
+
+[pip_link]: https://pypi.org/project/gpm-api
+[winpy_link]: https://winpython.github.io/
+[dev_install_link]: https://gpm-api.readthedocs.io/en/latest/02_installation.html#installation-for-contributors
 
 ## 💭 Feedback and Contributing Guidelines
 
@@ -163,9 +170,9 @@ Feel free to also open a [GitHub Issue](https://github.com/ghiggi/gpm_api/issues
 
 ## Citation
 
-You can cite the GPM-API software by:
+If you are using GPM-API in your publication please cite our Zenodo repository:
 
-> Ghiggi Gionata & XXXX . ghiggi/gpm_api. Zenodo. https://doi.org/10.5281/zenodo.7753488
+> Ghiggi Gionata. ghiggi/gpm_api. Zenodo. [![https://doi.org/10.5281/zenodo.7753488](https://zenodo.org/badge/286664485.svg?style=flat)](https://doi.org/10.5281/zenodo.7753488)
 
 If you want to cite a specific software version, have a look at the [Zenodo site](https://doi.org/10.5281/zenodo.7753488).
 
@@ -191,35 +198,6 @@ These tutorial are also available as Jupyter Notebooks and in Google Colab:
 - 3. Introduction to image patch extraction [[Notebook][tut3_patch_link]][[Colab][colab3_patch_link]]
 
 The associated python scripts are also provided in the `tutorial` folder.
-
-## Requirements:
-
-- [xarray](https://docs.xarray.dev/en/stable/)
-- [dask](https://www.dask.org/)
-- [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
-- [pyresample](https://pyresample.readthedocs.io/en/latest/)
-- [h5py](https://github.com/h5py/h5py)
-- [curl](https://curl.se/)
-- [wget](https://www.gnu.org/software/wget/)
-
-### Optional
-
-- [zarr](https://zarr.readthedocs.io/en/stable/)
-- [dask_image](https://image.dask.org/en/latest/)
-- [skimage](https://scikit-image.org/)
-
-[PPS_link]: https://gpm.nasa.gov/data/sources/pps-research
-[tutorial_link]: https://github.com/ghiggi/gpm_api/tree/master#tutorials-and-examples
-
-[pip_link]: https://pypi.org/project/gpm-api
-[conda_link]: https://docs.conda.io/en/latest/miniconda.html
-[conda_forge_link]: https://github.com/conda-forge/gpm-api-feedstock#installing-gpm-api
-[conda_pip]: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-pkgs.html#installing-non-conda-packages
-[pipiflag]: https://pip-python3.readthedocs.io/en/latest/reference/pip_install.html?highlight=i#cmdoption-i
-[winpy_link]: https://winpython.github.io/
-
-[doc_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/
-[doc_install_link]: https://gpm_api.readthedocs.io/projects/gpm_api/en/stable/#pip
 
 [tut1_download_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
 [colab1_download_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
@@ -250,3 +228,20 @@ The associated python scripts are also provided in the `tutorial` folder.
 
 [tut3_patch_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
 [colab3_patch_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
+
+## Requirements:
+
+- [xarray](https://docs.xarray.dev/en/stable/)
+- [dask](https://www.dask.org/)
+- [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
+- [pyresample](https://pyresample.readthedocs.io/en/latest/)
+- [h5py](https://github.com/h5py/h5py)
+- [curl](https://curl.se/)
+- [wget](https://www.gnu.org/software/wget/)
+
+### Optional
+
+- [zarr](https://zarr.readthedocs.io/en/stable/)
+- [dask_image](https://image.dask.org/en/latest/)
+- [skimage](https://scikit-image.org/)
+
