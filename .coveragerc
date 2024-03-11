@@ -10,7 +10,6 @@ omit =
 	gpm_api/encoding/*
 	gpm_api/etc/*
 	gpm_api/retrieval/*
-	gpm_api/tests/*
 	gpm_api/_version.py
 
 [report]

@@ -24,39 +24,45 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module provide utility functions used in the unit tests."""
-
-import numpy as np
-from typing import Union
+import pytest
 import xarray as xr
 
-from gpm_api.utils import checks as gpm_checks
+
+from gpm_api.visualization import orbit
+from gpm_api.tests.test_visualization.utils import (
+    get_test_name,
+    save_and_check_figure,
+)
 
 
-def create_fake_datetime_array_from_hours_list(hours: Union[list, np.ndarray]) -> np.ndarray:
-    """Convert list of integers and NaNs into a np.datetime64 array"""
-
-    start_time = np.array(["2020-12-31 00:00:00"]).astype("M8[ns]")
-    hours = np.array(hours).astype("m8[h]")
-    time = start_time + hours
-    return time
+VARIABLE = "variable"
 
 
-def get_time_range(start_hour: int, end_hour: int) -> np.ndarray:
-    return create_fake_datetime_array_from_hours_list(np.arange(start_hour, end_hour))
+# Fixtures ######################################################################
 
 
-def create_dataset_with_coordinate(coord_name: str, coord_values: np.ndarray) -> xr.Dataset:
-    """Create a dataset with a single coordinate"""
+@pytest.fixture
+def orbit_dataset(
+    orbit_dataarray: xr.DataArray,
+) -> xr.Dataset:
+    """Return a dataset with a single variable"""
 
-    ds = xr.Dataset()
-    ds[coord_name] = coord_values
-    return ds
+    return xr.Dataset({VARIABLE: orbit_dataarray})
 
 
-def create_orbit_time_array(time_template: Union[list, np.ndarray]) -> np.ndarray:
-    """Create a time array with ORBIT_TIME_TOLERANCE as unit"""
+def test_plot_swath(
+    orbit_dataset: xr.Dataset,
+) -> None:
+    """Test the plot_swath function"""
 
-    start_time = np.datetime64("2020-12-31T00:00:00", "ns")
-    time = np.array([start_time + gpm_checks.ORBIT_TIME_TOLERANCE * t for t in time_template])
-    return time
+    p = orbit.plot_swath(orbit_dataset)
+    save_and_check_figure(figure=p.figure, name=get_test_name())
+
+
+def test_plot_swath_lines(
+    orbit_dataset: xr.Dataset,
+) -> None:
+    """Test the plot_swath_lines function"""
+
+    p = orbit.plot_swath_lines(orbit_dataset)
+    save_and_check_figure(figure=p.figure, name=get_test_name())

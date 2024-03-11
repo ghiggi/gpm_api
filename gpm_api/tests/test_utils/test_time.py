@@ -42,7 +42,10 @@ from gpm_api.utils.time import (
     infill_timesteps,
     ensure_time_validity,
 )
-from utils import create_fake_datetime_array_from_hours_list, get_time_range
+from gpm_api.tests.test_utils.utils import (
+    create_fake_datetime_array_from_hours_list,
+    get_time_range,
+)
 
 
 N = float("nan")
@@ -127,7 +130,7 @@ class TestSubsetByTime:
         lat = np.arange(5)
         lon = np.arange(5)
         time = np.random.rand(len(lat), len(lon)) * 1e9
-        time = np.array(time, dtype="datetime64[s]")
+        time = np.array(time, dtype="datetime64[ns]")
         da = xr.DataArray(time, coords=[("lat", lat), ("lon", lon)])
         ds = xr.Dataset({"time": da})
 

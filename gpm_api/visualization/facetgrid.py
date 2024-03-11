@@ -8,7 +8,7 @@ import itertools
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Hashable
-from typing import Optional, Tuple
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,7 +36,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         col: Optional[Hashable] = None,
         row: Optional[Hashable] = None,
         col_wrap: Optional[int] = None,
-        axes_pad: Optional[Tuple[float, float]] = None,
+        axes_pad: Optional[tuple[float, float]] = None,
         aspect: bool = True,
         add_colorbar: bool = True,
         facet_height: float = 3.0,
@@ -231,12 +231,10 @@ class CustomFacetGrid(FacetGrid, ABC):
     @abstractmethod
     def _remove_bottom_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the bottom of the subplots."""
-        pass
 
     @abstractmethod
     def _remove_left_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the left of the subplots."""
-        pass
 
     def remove_duplicated_axis_labels(self):
         """Remove axis labels which are not located on the left or bottom of the figure."""
@@ -319,7 +317,7 @@ class CartopyFacetGrid(CustomFacetGrid):
         col: Optional[Hashable] = None,
         row: Optional[Hashable] = None,
         col_wrap: Optional[int] = None,
-        axes_pad: Optional[Tuple[float, float]] = None,
+        axes_pad: Optional[tuple[float, float]] = None,
         add_colorbar: bool = True,
         cbar_kwargs: dict = {},
         fig_kwargs: dict = {},
@@ -444,7 +442,7 @@ class ImageFacetGrid(CustomFacetGrid):
         col: Optional[Hashable] = None,
         row: Optional[Hashable] = None,
         col_wrap: Optional[int] = None,
-        axes_pad: Optional[Tuple[float, float]] = None,
+        axes_pad: Optional[tuple[float, float]] = None,
         aspect: bool = False,
         add_colorbar: bool = True,
         cbar_kwargs: dict = {},

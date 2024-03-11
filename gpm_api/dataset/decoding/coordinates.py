@@ -111,7 +111,7 @@ def _add_radar_coordinates(ds, product, scan_mode):
     return ds
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_pmw_frequency_dict():
     """Get PMW info dictionary."""
     from gpm_api import _root_path
@@ -120,7 +120,7 @@ def get_pmw_frequency_dict():
     return read_yaml(filepath)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_pmw_frequency(sensor, scan_mode):
     """Get product info dictionary."""
     pmw_dict = get_pmw_frequency_dict()

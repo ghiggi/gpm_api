@@ -85,7 +85,7 @@ from gpm_api.utils.yaml import read_yaml
 ####--------------------------------------------------------------------------.
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_info_dict():
     """Get product info dictionary."""
     from gpm_api import _root_path
@@ -183,7 +183,7 @@ def filter_info_dict_by_time(info_dict, start_time, end_time):
     return new_info_dict
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_products_pattern_dict():
     """Return the filename pattern* associated to all GPM products."""
     info_dict = get_info_dict()
@@ -196,7 +196,7 @@ def get_products_pattern_dict():
 #### Product utilities
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_product_info(product):
     """Provide the product info dictionary."""
     if not isinstance(product, str):
@@ -350,7 +350,7 @@ def get_available_versions():
     return [4, 5, 6, 7]
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_available_products():
     """Get the list of all available products."""
     info_dict = get_info_dict()
@@ -362,7 +362,7 @@ def get_available_product_types():
     return ["RS", "NRT"]
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_available_product_levels(full=False):
     """Get the list of all available product levels."""
     if not full:
@@ -373,14 +373,14 @@ def get_available_product_levels(full=False):
     return _get_unique_key_values(info_dict, key=key)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_available_product_categories():
     """Get the list of all available product categories."""
     info_dict = get_info_dict()
     return _get_unique_key_values(info_dict, key="product_category")
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_available_satellites(prefix_with_sensor=False):
     """Get the list of all available satellites."""
     info_dict = get_info_dict()
@@ -389,7 +389,7 @@ def get_available_satellites(prefix_with_sensor=False):
     )
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_available_sensors(suffix_with_satellite=False):
     """Get the list of all available sensors."""
     info_dict = get_info_dict()

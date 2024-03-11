@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module defines pytest fixtures available across all test modules."""
-import os
 import pytest
 import datetime
 from typing import Any, List, Dict, Tuple
@@ -33,8 +32,10 @@ from gpm_api.io.products import get_info_dict
 from gpm_api.utils import geospatial
 import posixpath as pxp
 import ntpath as ntp
-
+import numpy as np
 from pytest_mock import MockerFixture
+import xarray as xr
+from gpm_api.tests.utils.fake_datasets import get_orbit_dataarray, get_grid_dataarray
 
 
 @pytest.fixture
@@ -441,3 +442,151 @@ def country_extent_dictionary() -> ExtentDictionary:
 @pytest.fixture
 def continent_extent_dictionary() -> ExtentDictionary:
     return geospatial.read_continents_extent_dictionary()
+
+
+@pytest.fixture
+def prevent_pyplot_show(
+    mocker: MockerFixture,
+) -> None:
+    """Prevent the show method of the pyplot module to be called"""
+
+    mocker.patch("matplotlib.pyplot.show")
+
+
+@pytest.fixture(scope="function")
+def orbit_dataarray() -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude"""
+
+    return get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def orbit_antimeridian_dataarray() -> xr.DataArray:
+    """Create orbit data array going over the antimeridian"""
+
+    return get_orbit_dataarray(
+        start_lon=160,
+        start_lat=0,
+        end_lon=-170,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def orbit_pole_dataarray() -> xr.DataArray:
+    """Create orbit data array going over the south pole"""
+
+    return get_orbit_dataarray(
+        start_lon=-30,
+        start_lat=-70,
+        end_lon=150,
+        end_lat=-75,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+
+
+@pytest.fixture(scope="function")
+def orbit_nan_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with NaN cross-track edges"""
+
+    padding_size = 2
+
+    data = orbit_dataarray.data
+    data[0:padding_size, :] = float("nan")
+    data[-padding_size:, :] = float("nan")
+
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
+def orbit_nan_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with NaN along-track edges"""
+
+    padding_size = 2
+
+    data = orbit_dataarray.data
+    data[:, 0:padding_size] = float("nan")
+    data[:, -padding_size:] = float("nan")
+
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
+def orbit_nan_lon_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with some NaN longitudes (cross-track)"""
+
+    padding_size = 1
+
+    lon = orbit_dataarray["lon"]
+    lon[0:padding_size, :] = float("nan")
+    lon[-padding_size:, :] = float("nan")
+
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
+def orbit_nan_lon_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
+    """Create orbit data array near 0 longitude and latitude with some NaN longitudes (along-track)"""
+
+    along_track_index = 5
+    missing_size = 1
+
+    lon = orbit_dataarray["lon"]
+    lon[:, along_track_index : along_track_index + missing_size] = float("nan")
+
+    return orbit_dataarray
+
+
+@pytest.fixture(scope="function")
+def grid_dataarray() -> xr.DataArray:
+    """Create grid data array near 0 longitude and latitude"""
+
+    return get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+
+
+@pytest.fixture(scope="function")
+def grid_antimeridian_dataarray() -> xr.DataArray:
+    """Create grid data array going over the antimeridian"""
+
+    return get_grid_dataarray(
+        start_lon=160,
+        start_lat=-5,
+        end_lon=-170,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+
+
+@pytest.fixture(scope="function")
+def grid_nan_lon_dataarray(grid_dataarray) -> xr.DataArray:
+    """Create grid data array near 0 longitude and latitude with some NaN longitudes"""
+
+    lon_index = 5
+    missing_size = 2
+
+    lon = grid_dataarray["lon"].data.copy()
+    lon[lon_index : lon_index + missing_size] = float("nan")
+    grid_dataarray["lon"] = lon
+
+    return grid_dataarray

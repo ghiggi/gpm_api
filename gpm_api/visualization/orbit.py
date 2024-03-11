@@ -533,7 +533,7 @@ def _plot_orbit_map_facetgrid(
     )
     # Retrieve projection
     projection = subplot_kwargs.get("projection", None)
-    if projection is None:
+    if projection is None:  # _preprocess_subplots_kwargs should set a default projection
         raise ValueError("Please specify a Cartopy projection in subplot_kwargs['projection'].")
 
     # Create FacetGrid

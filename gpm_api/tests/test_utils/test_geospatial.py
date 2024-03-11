@@ -32,8 +32,72 @@ from typing import Dict, Tuple
 import xarray as xr
 
 from gpm_api.utils import geospatial
+from gpm_api.tests.utils.fake_datasets import get_grid_dataarray, get_orbit_dataarray
 
 ExtentDictionary = Dict[str, Tuple[float, float, float, float]]
+
+
+# Fixtures #####################################################################
+
+
+@pytest.fixture
+def orbit_dataarray() -> xr.DataArray:
+    return get_orbit_dataarray(
+        start_lon=-50,
+        start_lat=-1,
+        end_lon=50,
+        end_lat=1,
+        width=1e5,
+        n_along_track=11,
+        n_cross_track=3,
+    )
+
+
+@pytest.fixture
+def orbit_dataarray_multiple_prime_meridian_crossings() -> xr.DataArray:
+    """Orbit dataset that crosses the prime meridian multiple times"""
+
+    da = get_orbit_dataarray(
+        start_lon=-50,
+        start_lat=-1,
+        end_lon=50,
+        end_lat=1,
+        width=1e5,
+        n_along_track=11,
+        n_cross_track=3,
+    )
+
+    cross_track_tiled = da.cross_track.data
+    along_track_tiled = np.arange(len(da.along_track) * 2)
+    data_tiled = np.tile(da.data, (1, 2))
+    lon_tiled = np.tile(da.lon.data, (1, 2))
+    lat_tiled = np.tile(da.lat.data, (1, 2))
+    granule_id_tiled = np.tile(da.gpm_granule_id.data, 2)
+
+    da_tiled = xr.DataArray(
+        data_tiled,
+        coords={"cross_track": cross_track_tiled, "along_track": along_track_tiled},
+    )
+    da_tiled.coords["lat"] = (("cross_track", "along_track"), lat_tiled)
+    da_tiled.coords["lon"] = (("cross_track", "along_track"), lon_tiled)
+    da_tiled.coords["gpm_granule_id"] = ("along_track", granule_id_tiled)
+
+    return da_tiled
+
+
+@pytest.fixture
+def grid_dataarray() -> xr.DataArray:
+    return get_grid_dataarray(
+        start_lon=-50,
+        start_lat=-50,
+        end_lon=50,
+        end_lat=50,
+        n_lon=11,
+        n_lat=11,
+    )
+
+
+# Tests ########################################################################
 
 
 def test_get_country_extent(
@@ -153,57 +217,6 @@ def test_get_extent() -> None:
         geospatial.get_extent(ds)
 
 
-@pytest.fixture
-def orbit_dataset() -> xr.Dataset:
-    # Values along track
-    lon = np.arange(-50, 51, 10)
-    lat = np.zeros_like(lon)
-
-    # Add cross track dimension
-    lat = lat[np.newaxis, :]
-    lon = lon[np.newaxis, :]
-
-    # Create dataset
-    ds = xr.Dataset()
-    ds["lat"] = (("cross_track", "along_track"), lat)
-    ds["lon"] = (("cross_track", "along_track"), lon)
-
-    return ds
-
-
-@pytest.fixture
-def orbit_dataset_multiple_prime_meridian_crossings() -> xr.Dataset:
-    """Orbit dataset that crosses the prime meridian multiple times"""
-
-    # Values along track
-    lon = np.arange(-50, 51, 10)
-    lon = np.tile(lon, 2)
-    lat = np.zeros_like(lon)
-
-    # Add cross track dimension
-    lat = lat[np.newaxis, :]
-    lon = lon[np.newaxis, :]
-
-    # Create dataset
-    ds = xr.Dataset()
-    ds["lat"] = (("cross_track", "along_track"), lat)
-    ds["lon"] = (("cross_track", "along_track"), lon)
-
-    return ds
-
-
-@pytest.fixture
-def grid_dataarray() -> xr.DataArray:
-    lon = np.arange(-50, 51, 10)
-    lat = np.arange(-50, 51, 10)
-    data = np.zeros((len(lat), len(lon)))
-
-    # Create data array
-    da = xr.DataArray(data, coords={"lat": lat, "lon": lon})
-
-    return da
-
-
 class TestCrop:
     """Test crop"""
 
@@ -211,20 +224,20 @@ class TestCrop:
 
     def test_crop_orbit(
         self,
-        orbit_dataset: xr.Dataset,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
-        ds = geospatial.crop(orbit_dataset, self.extent)
+        ds = geospatial.crop(orbit_dataarray, self.extent)
         expected_lon = [-10, 0, 10, 20]
-        np.testing.assert_array_equal(ds.lon.values[0], expected_lon)
+        np.testing.assert_array_almost_equal(ds.lon.values[0], expected_lon, decimal=2)
 
     def test_orbit_multiple_crossings(
         self,
-        orbit_dataset_multiple_prime_meridian_crossings: xr.Dataset,
+        orbit_dataarray_multiple_prime_meridian_crossings: xr.DataArray,
     ) -> None:
         """Test with multiple crosses of extent"""
 
         with pytest.raises(ValueError):
-            geospatial.crop(orbit_dataset_multiple_prime_meridian_crossings, self.extent)
+            geospatial.crop(orbit_dataarray_multiple_prime_meridian_crossings, self.extent)
 
     def test_grid(
         self,
@@ -301,30 +314,30 @@ class TestCropSlicesByExtent:
 
     def test_orbit(
         self,
-        orbit_dataset: xr.Dataset,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
-        slices = geospatial.get_crop_slices_by_extent(orbit_dataset, self.extent)
+        slices = geospatial.get_crop_slices_by_extent(orbit_dataarray, self.extent)
         expected_slices = [{"along_track": slice(4, 8)}]
         assert slices == expected_slices
 
     def test_orbit_multiple_crossings(
         self,
-        orbit_dataset_multiple_prime_meridian_crossings: xr.Dataset,
+        orbit_dataarray_multiple_prime_meridian_crossings: xr.DataArray,
     ) -> None:
         slices = geospatial.get_crop_slices_by_extent(
-            orbit_dataset_multiple_prime_meridian_crossings, self.extent
+            orbit_dataarray_multiple_prime_meridian_crossings, self.extent
         )
         expected_slices = [{"along_track": slice(4, 8)}, {"along_track": slice(15, 19)}]
         assert slices == expected_slices
 
     def test_orbit_outside(
         self,
-        orbit_dataset: xr.Dataset,
+        orbit_dataarray: xr.DataArray,
     ) -> None:
         with pytest.raises(ValueError):
-            geospatial.get_crop_slices_by_extent(orbit_dataset, self.extent_outside_lon)
+            geospatial.get_crop_slices_by_extent(orbit_dataarray, self.extent_outside_lon)
         with pytest.raises(ValueError):
-            geospatial.get_crop_slices_by_extent(orbit_dataset, self.extent_outside_lat)
+            geospatial.get_crop_slices_by_extent(orbit_dataarray, self.extent_outside_lat)
 
     def test_grid(
         self,

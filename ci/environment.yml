@@ -2,7 +2,7 @@ name: gpm_api
 channels:
   - conda-forge
 dependencies:
-  - cartopy>=0.20.0
+  - cartopy>=0.22.0
   - click
   - donfig
   - dask
