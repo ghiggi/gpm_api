@@ -71,18 +71,18 @@ documentation = "https://gpm-api.readthedocs.io"
 changelog = "https://github.com/ghiggi/gpm_api/blob/main/CHANGELOG.md"
 
 [tool.setuptools_scm]
-write_to = "gpm_api/_version.py"
+write_to = "gpm/_version.py"
 
 [tool.setuptools]
-packages = ["gpm_api"] # explicitly list the packages in modules
+packages = ["gpm"] # explicitly list the packages in modules
 
 [project.scripts]
-download_gpm_daily_data="gpm_api.scripts.download_gpm_daily_data:download_gpm_daily_data"
-download_gpm_monthly_data="gpm_api.scripts.download_gpm_monthly_data:download_gpm_monthly_data"
-download_gpm_files="gpm_api.scripts.download_gpm_files:download_gpm_files"
+download_gpm_daily_data="gpm.scripts.download_gpm_daily_data:download_gpm_daily_data"
+download_gpm_monthly_data="gpm.scripts.download_gpm_monthly_data:download_gpm_monthly_data"
+download_gpm_files="gpm.scripts.download_gpm_files:download_gpm_files"
 
 [tool.pytest.ini_options]
-addopts = "--ignore=gpm_api/tests/0_tmp/ --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
+addopts = "--ignore=gpm/tests/0_tmp/ --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
 
 [tool.black]
 line-length = 100
@@ -112,7 +112,7 @@ unfixable = []
 # Exclude a variety of commonly ignored directories.
 exclude = [
     "dev*",
-    "gpm_api/test*",
+    "gpm/test*",
     ".bzr",
     ".direnv",
     ".eggs",

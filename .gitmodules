@@ -1,3 +1,0 @@
-[submodule "gpm_api/tests/data"]
-	path = gpm_api/tests/data
-	url = git@github.com:ghiggi/gpm_api_test_data.git

@@ -115,7 +115,7 @@ copying its acquisition time, and leveraging the GPM API for data visualization 
 
 .. code-block:: python
 
-    import gpm_api
+    import gpm
 
     product = "2A-DPR"
     product_type = "NRT"  # if ~48 h from real-time data, otherwise "RS" (Research) ...
@@ -126,7 +126,7 @@ copying its acquisition time, and leveraging the GPM API for data visualization 
     end_time = datetime.datetime(2020, 7, 22, 2, 30, 5)
 
     # Download data over specific time periods
-    gpm_api.download(
+    gpm.download(
         product=product,
         product_type=product_type,
         version=version,
@@ -134,7 +134,7 @@ copying its acquisition time, and leveraging the GPM API for data visualization 
         end_time=end_time,
         storage=storage,
     )
-    ds = gpm_api.open_dataset(
+    ds = gpm.open_dataset(
         product=product,
         product_type=product_type,
         version=version,
@@ -143,7 +143,7 @@ copying its acquisition time, and leveraging the GPM API for data visualization 
     )
 
     # Plot a specific variable of the dataset
-    ds["Tc"].gpm_api.plot_map()
+    ds["Tc"].gpm.plot_map()
 
 
 If you're interested in measurements from other satellites, the `JAXA Global Rainfall Watch <https://sharaku.eorc.jaxa.jp/GSMaP/index.htm>`_

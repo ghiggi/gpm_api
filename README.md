@@ -27,10 +27,10 @@ of the products of the Global Precipitation Measurement Mission (GPM) data archi
 The list of available products can be retrieved using:
 
 ```python
-import gpm_api
+import gpm
 
-gpm_api.available_products(product_types="RS")  # research products
-gpm_api.available_products(product_types="NRT") # near-real-time products
+gpm.available_products(product_types="RS")  # research products
+gpm.available_products(product_types="NRT") # near-real-time products
 
 ```
 
@@ -41,17 +41,17 @@ Before starting using GPM-API, we highly suggest to save into a configuration fi
 To facilitate the creation of the configuration file, you can run the following script:
 
 ```python
-import gpm_api
+import gpm
 
 username = "<your PPS username>" # likely your mail
 password = "<your PPS password>" # likely your mail
 base_dir = "<path/to/directory/GPM"  # path to the directory where to download the data
-gpm_api.define_configs(username_pps=username,
+gpm.define_configs(username_pps=username,
                        password_pps=password,
                        base_dir=base_dir)
 
 # You can check that the config file has been correctly created with:
-configs = gpm_api.read_configs()
+configs = gpm.read_configs()
 print(configs)
 
 ```
@@ -62,7 +62,7 @@ print(configs)
 Now you can either start to download GPM data within python:
 
 ```python
-import gpm_api
+import gpm
 import datetime
 
 product = "2A-DPR"
@@ -72,7 +72,7 @@ version = 7
 start_time = datetime.datetime(2020,7, 22, 0, 1, 11)
 end_time = datetime.datetime(2020,7, 22, 0, 23, 5)
 
-gpm_api.download(product=product,
+gpm.download(product=product,
                  product_type=product_type,
                  version=version,
                  n_threads=2,
@@ -92,16 +92,16 @@ or from the terminal using i.e. `download_daily_gpm_data <product> <year> <month
 A GPM granule can be opened in python using:
 
 ```python
-import gpm_api
+import gpm
 
-ds = gpm_api.open_granule(<path_to_granule>)
+ds = gpm.open_granule(<path_to_granule>)
 
 ```
 
 while multiple granules over a specific time period can be opened using:
 
 ```python
-import gpm_api
+import gpm
 import datetime
 
 product = "2A-DPR"
@@ -110,7 +110,7 @@ version = 7
 
 start_time = datetime.datetime(2020,7, 22, 0, 1, 11)
 end_time = datetime.datetime(2020,7, 22, 0, 23, 5)
-ds = gpm_api.open_dataset(product=product,
+ds = gpm.open_dataset(product=product,
                           product_type=product_type,
                           version=version
                           start_time=start_time,
@@ -244,4 +244,3 @@ The associated python scripts are also provided in the `tutorial` folder.
 - [zarr](https://zarr.readthedocs.io/en/stable/)
 - [dask_image](https://image.dask.org/en/latest/)
 - [skimage](https://scikit-image.org/)
-

@@ -16,7 +16,7 @@ import sys
 
 # sys.path.insert(0, os.path.abspath(".."))
 sys.path.insert(0, os.path.abspath("../.."))
-sys.path.insert(0, os.path.join(os.path.abspath("../.."), "gpm_api"))
+sys.path.insert(0, os.path.join(os.path.abspath("../.."), "gpm"))
 # sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 # -- Project information -----------------------------------------------------
@@ -98,7 +98,7 @@ def run_apidoc(_):
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
 
-    module_dir = os.path.join(cur_dir, "..", "..", "gpm_api")
+    module_dir = os.path.join(cur_dir, "..", "..", "gpm")
     output_dir = os.path.join(cur_dir, "api")
     main(["-f", "-o", output_dir, module_dir])
 

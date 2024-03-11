@@ -34,18 +34,18 @@ as well as other parameters such as the directory on your local machine where to
 save the GPM dataset of interest.
 
 To facilitate the creation of the configuration file, you can adapt and run the following script in Python.
-The configuration file will be created in the user's home directory under the name `.config_gpm_api.yaml`.
+The configuration file will be created in the user's home directory under the name `.config_gpm.yaml`.
 
 .. code-block:: python
 
-    import gpm_api
+    import gpm
 
     username_pps = "<your PPS username>"  # likely your mail, all in lowercase
     password_pps = "<your PPS password>"  # likely your mail, all in lowercase
     username_earthdata = "<your EarthData username>"
     password_earthdata = "<your EarthData password>"
     base_dir = "<path/to/a/local/directory/>"  # where to download all GPM data
-    gpm_api.define_configs(
+    gpm.define_configs(
         username_pps=username,
         password_pps=password,
         username_earthdata=username_earthdata,
@@ -54,7 +54,7 @@ The configuration file will be created in the user's home directory under the na
     )
 
     # You can check that the config file has been correctly created with:
-    configs = gpm_api.read_configs()
+    configs = gpm.read_configs()
     print(configs)
 
 
@@ -69,10 +69,10 @@ To list the available "RS" and "NRT" products, you can use the following command
 
 .. code-block:: python
 
-    import gpm_api
+    import gpm
 
-    gpm_api.available_products(product_types="RS")  # research products
-    gpm_api.available_products(product_types="NRT")  # near-real-time products
+    gpm.available_products(product_types="RS")  # research products
+    gpm.available_products(product_types="NRT")  # near-real-time products
 
 
 
@@ -80,10 +80,10 @@ You can also search for a specific category of products:
 
 .. code-block:: python
 
-    gpm_api.available_products(product_categories="PMW")  # Passive Microwave
-    gpm_api.available_products(product_categories="RADAR")
-    gpm_api.available_products(product_categories="CMB")  # Combined products
-    gpm_api.available_products(product_categories="IMERG")
+    gpm.available_products(product_categories="PMW")  # Passive Microwave
+    gpm.available_products(product_categories="RADAR")
+    gpm.available_products(product_categories="CMB")  # Combined products
+    gpm.available_products(product_categories="IMERG")
 
 
 
@@ -91,21 +91,21 @@ specific product levels:
 
 .. code-block:: python
 
-    gpm_api.available_products(product_levels="1C")
-    gpm_api.available_products(product_levels=["1B", "1C"])
-    gpm_api.available_products(product_levels="2A")
+    gpm.available_products(product_levels="1C")
+    gpm.available_products(product_levels=["1B", "1C"])
+    gpm.available_products(product_levels="2A")
 
-    gpm_api.available_products(product_levels="2A", product_categories="RADAR")
-    gpm_api.available_products(product_levels="2A", product_categories="PMW")
+    gpm.available_products(product_levels="2A", product_categories="RADAR")
+    gpm.available_products(product_levels="2A", product_categories="PMW")
 
 
 specific time periods:
 
 .. code-block:: python
 
-    gpm_api.available_products(end_time="1995-01-31")  # from the start of the mission to 1995-01-31
-    gpm_api.available_products(start_time="2014-01-01", end_time="2016", product_categories="PMW")
-    gpm_api.available_products(start_time="2019-01-01")  # from 2019-01-01 to the present
+    gpm.available_products(end_time="1995-01-31")  # from the start of the mission to 1995-01-31
+    gpm.available_products(start_time="2014-01-01", end_time="2016", product_categories="PMW")
+    gpm.available_products(start_time="2019-01-01")  # from 2019-01-01 to the present
 
 
 
@@ -113,21 +113,21 @@ specific sensors or satellites:
 
 .. code-block:: python
 
-    gpm_api.available_products(satellites="GPM")
-    gpm_api.available_products(satellites="TRMM")
-    gpm_api.available_products(satellites="GPM", product_categories="PMW")
-    gpm_api.available_products(satellites="TRMM", product_categories="RADAR")
+    gpm.available_products(satellites="GPM")
+    gpm.available_products(satellites="TRMM")
+    gpm.available_products(satellites="GPM", product_categories="PMW")
+    gpm.available_products(satellites="TRMM", product_categories="RADAR")
 
-    gpm_api.available_products(sensors="SSMIS")
-    gpm_api.available_products(sensors="SSMI")
+    gpm.available_products(sensors="SSMIS")
+    gpm.available_products(sensors="SSMI")
 
 
 A list of available satellites and sensors can be retrieved using:
 
 .. code-block:: python
 
-    gpm_api.available_satellites()
-    gpm_api.available_sensors()
+    gpm.available_satellites()
+    gpm.available_sensors()
 
 
 Download the data
@@ -139,7 +139,7 @@ To download the data in Python, you can adapt the following code snippet:
 
 .. code-block:: python
 
-    import gpm_api
+    import gpm
     import datetime
 
     product = "2A-DPR"
@@ -151,7 +151,7 @@ To download the data in Python, you can adapt the following code snippet:
     end_time = datetime.datetime(2020, 7, 22, 2, 30, 5)
 
     # Download data over specific time periods
-    gpm_api.download(
+    gpm.download(
         product=product,
         product_type=product_type,
         version=version,
@@ -161,7 +161,7 @@ To download the data in Python, you can adapt the following code snippet:
     )
 
     # Download data over a specific day
-    gpm_api.download_daily_data(
+    gpm.download_daily_data(
         year=2022,
         month=1,
         day=1,
@@ -211,15 +211,15 @@ while the name "dataset" is used to refer to a collection of granules.
 
 GPM-API enables to open single or multiple granules into an xarray Dataset, an object designed for working with labeled multi-dimensional arrays.
 
-The `gpm_api.open_granule(filepath)` opens a single file into xarray by providing the path of the file of interest.
+The `gpm.open_granule(filepath)` opens a single file into xarray by providing the path of the file of interest.
 
-The `gpm_api.open_dataset` function enable to open a collection of granules over a period of interest.
+The `gpm.open_dataset` function enable to open a collection of granules over a period of interest.
 
 The following example shows how to download and open a dataset over a specific time period:
 
 .. code-block:: python
 
-    import gpm_api
+    import gpm
     import datetime
 
     product = "1C-GMI"
@@ -231,7 +231,7 @@ The following example shows how to download and open a dataset over a specific t
     end_time = datetime.datetime(2020, 7, 22, 2, 30, 5)
 
     # Download data over a specific time period
-    gpm_api.download(
+    gpm.download(
         product=product,
         product_type=product_type,
         version=version,
@@ -241,7 +241,7 @@ The following example shows how to download and open a dataset over a specific t
     )
 
     # Open the dataset over a specific time period
-    ds = gpm_api.open_dataset(
+    ds = gpm.open_dataset(
         product=product,
         product_type=product_type,
         version=version,
@@ -250,7 +250,7 @@ The following example shows how to download and open a dataset over a specific t
     )
 
     # Plot a specific variable of the dataset
-    ds["Tc"].gpm_api.plot_map()
+    ds["Tc"].gpm.plot_map()
 
 
 You are now ready to explore the various :ref:`tutorials <tutorials>` available in the documentation and learn more about the GPM-API functionalities.

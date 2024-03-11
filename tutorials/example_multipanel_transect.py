@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import ximage  # noqa
 
-import gpm_api
+import gpm
 
 # Matplotlib settings
 matplotlib.rcParams["axes.facecolor"] = [0.9, 0.9, 0.9]
@@ -44,7 +44,7 @@ product_type = "RS"
 #### Download products
 # for product in products:
 #     print(product)
-#     gpm_api.download(product=product,
+#     gpm.download(product=product,
 #                       product_type=product_type,
 #                       version = version,
 #                       start_time=start_time,
@@ -77,7 +77,7 @@ product_var_dict = {
 dict_product = {}
 # product, variables = list(product_var_dict.items())[0]
 for product, variables in product_var_dict.items():
-    ds = gpm_api.open_dataset(
+    ds = gpm.open_dataset(
         product=product,
         start_time=start_time,
         end_time=end_time,
@@ -105,7 +105,7 @@ ds_dpr = ds_dpr.ximage.label(
     label_name=label_name,
     sort_by="area",
 )
-gpm_api.plot_labels(ds_dpr["label_precip_area"])
+gpm.plot_labels(ds_dpr["label_precip_area"])
 
 # Have a look at such areas
 da_patch_gen = ds_dpr.ximage.label_patches(
@@ -114,7 +114,7 @@ da_patch_gen = ds_dpr.ximage.label_patches(
     centered_on="label_bbox",
     variable="precipRateNearSurface",
 )
-gpm_api.plot_patches(da_patch_gen, variable="precipRateNearSurface")
+gpm.plot_patches(da_patch_gen, variable="precipRateNearSurface")
 
 # Extract isel_dict(s) for each area
 list_isel_dicts = ds_dpr.ximage.label_patches_isel_dicts(
@@ -131,32 +131,32 @@ isel_dict = list_isel_dicts[label_id][0]
 
 # Visualize it
 ds_aoi = ds_dpr.isel(isel_dict)
-ds_aoi.gpm_api.plot_map(variable="precipRateNearSurface")
+ds_aoi.gpm.plot_map(variable="precipRateNearSurface")
 
 ####--------------------------------------------------------------------------.
 #### Crop datasets to area of interest
 # Retrieve extent and time period
-extent = ds_aoi.gpm_api.extent(padding=0.5)
-aoi_start_time = ds_aoi.gpm_api.start_time - datetime.timedelta(minutes=10)
-aoi_end_time = ds_aoi.gpm_api.end_time + datetime.timedelta(minutes=10)
+extent = ds_aoi.gpm.extent(padding=0.5)
+aoi_start_time = ds_aoi.gpm.start_time - datetime.timedelta(minutes=10)
+aoi_end_time = ds_aoi.gpm.end_time + datetime.timedelta(minutes=10)
 
 # Subset datasets to the time period of interest
-ds_dpr = ds_dpr.gpm_api.subset_by_time_slice(slice=slice(aoi_start_time, aoi_end_time))
-ds_slh = ds_slh.gpm_api.subset_by_time_slice(slice=slice(aoi_start_time, aoi_end_time))
-ds_csh = ds_csh.gpm_api.subset_by_time_slice(slice=slice(aoi_start_time, aoi_end_time))
+ds_dpr = ds_dpr.gpm.subset_by_time_slice(slice=slice(aoi_start_time, aoi_end_time))
+ds_slh = ds_slh.gpm.subset_by_time_slice(slice=slice(aoi_start_time, aoi_end_time))
+ds_csh = ds_csh.gpm.subset_by_time_slice(slice=slice(aoi_start_time, aoi_end_time))
 
 # Crop the datasets
-ds_dpr = ds_dpr.gpm_api.crop(extent)
-ds_slh = ds_slh.gpm_api.crop(extent)
-ds_csh = ds_csh.gpm_api.crop(extent)
+ds_dpr = ds_dpr.gpm.crop(extent)
+ds_slh = ds_slh.gpm.crop(extent)
+ds_csh = ds_csh.gpm.crop(extent)
 
 ####--------------------------------------------------------------------------.
 #### Compute DFR
 # - zFactorMeasured # Raw
 # - zFactorFinal    # Corrected
-ds_dpr["dfrMeasured"] = ds_dpr.gpm_api.retrieve("dfrMeasured")
-ds_dpr["dfrFinal"] = ds_dpr.gpm_api.retrieve("dfrFinal")
-ds_dpr["dfrFinalNearSurface "] = ds_dpr.gpm_api.retrieve("dfrFinalNearSurface")
+ds_dpr["dfrMeasured"] = ds_dpr.gpm.retrieve("dfrMeasured")
+ds_dpr["dfrFinal"] = ds_dpr.gpm.retrieve("dfrFinal")
+ds_dpr["dfrFinalNearSurface "] = ds_dpr.gpm.retrieve("dfrFinalNearSurface")
 
 ####--------------------------------------------------------------------------.
 #### Extract transect
@@ -170,16 +170,16 @@ transect_kwargs = {
 }
 variable = "precipRate"
 direction = "cross_track"  # "along_track"
-transect_slices = ds_dpr.gpm_api.define_transect_slices(
+transect_slices = ds_dpr.gpm.define_transect_slices(
     direction=direction,
     variable=variable,
     transect_kwargs=transect_kwargs,
 )
 
 # Extract the transect
-ds_dpr_transect = ds_dpr.gpm_api.select_spatial_3d_variables().isel(transect_slices)
-ds_csh_transect = ds_csh.gpm_api.select_spatial_3d_variables().isel(transect_slices)
-ds_slh_transect = ds_slh.gpm_api.select_spatial_3d_variables().isel(transect_slices)
+ds_dpr_transect = ds_dpr.gpm.select_spatial_3d_variables().isel(transect_slices)
+ds_csh_transect = ds_csh.gpm.select_spatial_3d_variables().isel(transect_slices)
+ds_slh_transect = ds_slh.gpm.select_spatial_3d_variables().isel(transect_slices)
 
 ds_dpr_transect = ds_dpr_transect.compute()
 ds_csh_transect = ds_csh_transect.compute()
@@ -193,8 +193,8 @@ np.testing.assert_equal(ds_dpr_transect["lon"].data, ds_slh_transect["lon"].data
 np.testing.assert_equal(ds_dpr_transect["lat"].data, ds_slh_transect["lat"].data)
 
 # Visualize transect position
-p = ds_dpr.gpm_api.plot_map(variable="precipRateNearSurface")
-ds_dpr_transect.gpm_api.plot_transect_line(ax=p.axes, color="black")
+p = ds_dpr.gpm.plot_map(variable="precipRateNearSurface")
+ds_dpr_transect.gpm.plot_transect_line(ax=p.axes, color="black")
 
 ####---------------------------------------------------------------------------.
 #### Create multipanel [Z,DFR,R,LH]
@@ -213,37 +213,37 @@ fig.set_facecolor("w")
 
 # Z Ku
 da_transect = ds_dpr_transect["zFactorFinal"].sel(radar_frequency="Ku")
-p = da_transect.gpm_api.plot_transect(ax=axs[0, 0])
+p = da_transect.gpm.plot_transect(ax=axs[0, 0])
 p.axes.set_title("Ku-band Z Corrected")
 p.axes.set_ylim(ylim)
 
 # Z Ka
 da_transect = ds_dpr_transect["zFactorFinal"].sel(radar_frequency="Ka")
-p = da_transect.gpm_api.plot_transect(ax=axs[1, 0])
+p = da_transect.gpm.plot_transect(ax=axs[1, 0])
 p.axes.set_title("Ka-band Z Corrected")
 p.axes.set_ylim(ylim)
 
 # DFR
 da_transect = ds_dpr_transect["dfrFinal"]
-p = da_transect.gpm_api.plot_transect(ax=axs[2, 0])
+p = da_transect.gpm.plot_transect(ax=axs[2, 0])
 p.axes.set_title("DFR Corrected")
 p.axes.set_ylim(ylim)
 
 # Precip
 da_transect = ds_dpr_transect["precipRate"]
-p = da_transect.gpm_api.plot_transect(ax=axs[0, 1])
+p = da_transect.gpm.plot_transect(ax=axs[0, 1])
 p.axes.set_title("Precipitation Intensity")
 p.axes.set_ylim(ylim)
 
 # CSH
 da_transect = ds_csh_transect["latentHeating"]
-p = da_transect.gpm_api.plot_transect(ax=axs[1, 1])
+p = da_transect.gpm.plot_transect(ax=axs[1, 1])
 p.axes.set_title("CSH Latent Heating")
 p.axes.set_ylim(ylim)
 
 # SLH
 da_transect = ds_slh_transect["latentHeating"]
-p = da_transect.gpm_api.plot_transect(ax=axs[2, 1])
+p = da_transect.gpm.plot_transect(ax=axs[2, 1])
 p.axes.set_title("SLH Latent Heating")
 p.axes.set_ylim(ylim)
 
@@ -279,42 +279,42 @@ fig.set_facecolor("w")
 
 # Z Ku
 da_transect = ds_dpr_transect["zFactorFinal"].sel(radar_frequency="Ku")
-p = da_transect.gpm_api.plot_transect(ax=axs[0, 0])
+p = da_transect.gpm.plot_transect(ax=axs[0, 0])
 p.axes.set_title("Ku-band Z Corrected")
 p.axes.set_ylim(ylim)
 p.colorbar.remove()
 
 # Z Ka
 da_transect = ds_dpr_transect["zFactorFinal"].sel(radar_frequency="Ka")
-p = da_transect.gpm_api.plot_transect(ax=axs[1, 0])
+p = da_transect.gpm.plot_transect(ax=axs[1, 0])
 p.axes.set_title("Ka-band Z Corrected")
 p.axes.set_ylim(ylim)
 p.colorbar.remove()
 
 # DFR
 da_transect = ds_dpr_transect["dfrFinal"]
-p = da_transect.gpm_api.plot_transect(ax=axs[2, 0])
+p = da_transect.gpm.plot_transect(ax=axs[2, 0])
 p.axes.set_title("DFR Corrected")
 p.axes.set_ylim(ylim)
 p.colorbar.remove()
 
 # Ku measured
 da_transect = ds_dpr_transect["zFactorMeasured"].sel(radar_frequency="Ku")
-p = da_transect.gpm_api.plot_transect(ax=axs[0, 1])
+p = da_transect.gpm.plot_transect(ax=axs[0, 1])
 p.axes.set_title("Ku-band Z Measured")
 p.axes.set_ylim(ylim)
 
 
 # Ka measured
 da_transect = ds_dpr_transect["zFactorMeasured"].sel(radar_frequency="Ka")
-p = da_transect.gpm_api.plot_transect(ax=axs[1, 1])
+p = da_transect.gpm.plot_transect(ax=axs[1, 1])
 p.axes.set_title("Ka-band Z Measured")
 p.axes.set_ylim(ylim)
 
 
 # DFR measured
 da_transect = ds_dpr_transect["dfrMeasured"]
-p = da_transect.gpm_api.plot_transect(ax=axs[2, 1])
+p = da_transect.gpm.plot_transect(ax=axs[2, 1])
 p.axes.set_title("DFR Measured")
 p.axes.set_ylim(ylim)
 

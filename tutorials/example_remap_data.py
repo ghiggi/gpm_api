@@ -12,7 +12,7 @@ import ximage  # noqa
 from matplotlib.colors import LogNorm
 from pyresample.kd_tree import resample_nearest
 
-import gpm_api
+import gpm
 
 ##----------------------------------------------------------------------------.
 #### Download data
@@ -21,7 +21,7 @@ end_time = datetime.datetime.strptime("2016-03-09 11:00:00", "%Y-%m-%d %H:%M:%S"
 product = "2A-DPR"
 version = 7
 
-gpm_api.download(
+gpm.download(
     product=product,
     start_time=start_time,
     end_time=end_time,
@@ -33,7 +33,7 @@ gpm_api.download(
 
 ##-----------------------------------------------------------------------------.
 ####  Load GPM dataset
-ds = gpm_api.open_dataset(
+ds = gpm.open_dataset(
     product=product,
     start_time=start_time,
     end_time=end_time,
@@ -76,7 +76,7 @@ label_id, da_patch = list_label_patches[patch_idx]
 ##----------------------------------------------------------------------------.
 #### Resample Swath data into bounding box optimal AreaDefinition
 # Retrieve SwathDefinition
-swath_def = da_patch.gpm_api.pyresample_area
+swath_def = da_patch.gpm.pyresample_area
 
 # Define optimal AreaDefinition on SwathDefinition bounding box
 # - The default is the Oblique Mercator (omerc)

@@ -10,7 +10,7 @@ import cartopy.crs as ccrs
 import matplotlib
 import matplotlib.pyplot as plt
 
-import gpm_api
+import gpm
 
 # Matplotlib settings
 matplotlib.rcParams["axes.facecolor"] = [0.9, 0.9, 0.9]
@@ -42,7 +42,7 @@ product_type = "RS"
 #### Download products
 # for product in products:
 #     print(product)
-#     gpm_api.download(product=product,
+#     gpm.download(product=product,
 #                       product_type=product_type,
 #                       version = version,
 #                       start_time=start_time,
@@ -72,7 +72,7 @@ product_var_dict = {
 dict_product = {}
 # product, variables = list(product_var_dict.items())[0]
 for product, variables in product_var_dict.items():
-    ds = gpm_api.open_dataset(
+    ds = gpm.open_dataset(
         product=product,
         start_time=start_time,
         end_time=end_time,
@@ -92,8 +92,8 @@ bbox = [-110, -70, 18, 32]
 bbox_extent = [-94, -89, 22.5, 27.5]
 
 # Crop dataset
-ds_dpr = dict_product["2A-DPR"].gpm_api.crop(bbox)
-ds_gmi = dict_product["2A-GMI"].gpm_api.crop(bbox)
+ds_dpr = dict_product["2A-DPR"].gpm.crop(bbox)
+ds_gmi = dict_product["2A-GMI"].gpm.crop(bbox)
 
 ####--------------------------------------------------------------------------.
 #### Extract transect passing across the maximum intensity region
@@ -107,7 +107,7 @@ transect_kwargs = {
 variable = "precipRate"
 direction = "cross_track"  # "along_track"
 
-ds_dpr_transect = ds_dpr.gpm_api.select_transect(
+ds_dpr_transect = ds_dpr.gpm.select_transect(
     direction=direction, variable=variable, transect_kwargs=transect_kwargs
 )
 ds_dpr_transect = ds_dpr_transect.compute()
@@ -123,9 +123,9 @@ crs_proj = ccrs.PlateCarree()
 # Create figure
 da = ds_dpr["precipRateNearSurface"]
 fig, ax = plt.subplots(subplot_kw={"projection": crs_proj}, figsize=figsize, dpi=dpi)
-p = da.gpm_api.plot_map(ax=ax, add_colorbar=True)
-ds_dpr_transect.gpm_api.plot_transect_line(ax=ax, color="black")
-title = da.gpm_api.title(time_idx=0)
+p = da.gpm.plot_map(ax=ax, add_colorbar=True)
+ds_dpr_transect.gpm.plot_transect_line(ax=ax, color="black")
+title = da.gpm.title(time_idx=0)
 ax.set_title(title)
 ax.set_extent(bbox_extent)
 plt.show()
@@ -157,21 +157,21 @@ fig, axs = plt.subplots(
 ax = axs[0]
 
 da = ds_dpr["precipRateNearSurface"]
-p = da.gpm_api.plot_map(ax=ax, add_colorbar=False)
-ds_dpr_transect.gpm_api.plot_transect_line(ax=ax, color="black")
-title = da.gpm_api.title(add_timestep=False)
+p = da.gpm.plot_map(ax=ax, add_colorbar=False)
+ds_dpr_transect.gpm.plot_transect_line(ax=ax, color="black")
+title = da.gpm.title(add_timestep=False)
 ax.set_title(title)
 ax.set_extent(bbox_extent)
 
 # Plot GPM GMI
 ax = axs[1]
 da = ds_gmi["surfacePrecipitation"]
-p = da.gpm_api.plot_map(ax=ax, add_colorbar=True)
-ds_dpr_transect.gpm_api.plot_transect_line(
+p = da.gpm.plot_map(ax=ax, add_colorbar=True)
+ds_dpr_transect.gpm.plot_transect_line(
     ax=ax, color="black", add_direction=False, line_kwargs={"linestyle": "-", "alpha": 0.6}
 )
-ds_dpr.gpm_api.plot_swath_lines(ax=ax, alpha=0.4)
-title = da.gpm_api.title(add_timestep=False)
+ds_dpr.gpm.plot_swath_lines(ax=ax, alpha=0.4)
+title = da.gpm.title(add_timestep=False)
 ax.set_title(title)
 ax.set_extent(bbox_extent)
 ax.yaxis.set_ticklabels("")
@@ -189,8 +189,8 @@ fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
 
 da_transect = ds_dpr_transect["precipRate"]
 da_transect = da_transect.where(da_transect > 0.1)
-p = da_transect.gpm_api.plot_transect(ax=ax, zoom=True)
-title = da_transect.gpm_api.title(add_timestep=False)
+p = da_transect.gpm.plot_transect(ax=ax, zoom=True)
+title = da_transect.gpm.title(add_timestep=False)
 ax.set_title(title)
 
 plt.show()
