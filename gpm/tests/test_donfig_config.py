@@ -50,7 +50,7 @@ def test_donfig_takes_config_yaml_file(tmp_path, mocker):
     import gpm
 
     # Mock to save config YAML at custom location
-    config_fpath = str(tmp_path / ".config_gpm.yml")
+    config_fpath = str(tmp_path / ".config_gpm.yaml")
     mocker.patch("gpm.configs._define_config_filepath", return_value=config_fpath)
 
     # Initialize config YAML
