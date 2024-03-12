@@ -29,7 +29,11 @@ import matplotlib.pyplot as plt
 
 from gpm import get_plot_kwargs
 from gpm.checks import check_is_spatial_2d
-from gpm.visualization.facetgrid import CartopyFacetGrid, ImageFacetGrid
+from gpm.visualization.facetgrid import (
+    CartopyFacetGrid,
+    ImageFacetGrid,
+    sanitize_facetgrid_plot_kwargs,
+)
 from gpm.visualization.plot import (
     _plot_cartopy_imshow,
     #  _plot_mpl_imshow,
@@ -69,12 +73,9 @@ def _plot_grid_map_cartopy(
     if add_background:
         ax = plot_cartopy_background(ax)
 
-    # - Sanitize plot_kwargs passed by FacetGrid
-    plot_kwargs = plot_kwargs.copy()
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
-
-    facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
-    _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
+    plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
@@ -249,11 +250,9 @@ def _plot_grid_image(
             check_is_spatial_2d(da)
         fig, ax = plt.subplots(**fig_kwargs)
 
-    # - Sanitize plot_kwargs passed by FacetGrid
-    plot_kwargs = plot_kwargs.copy()
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
-    facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
-    _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
+    plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(

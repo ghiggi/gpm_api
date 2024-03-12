@@ -29,6 +29,16 @@ def _remove_title_dimension_prefix(ax):
     ax.set_title(title)
 
 
+def sanitize_facetgrid_plot_kwargs(plot_kwargs):
+    """Remove defaults values set by FacetGrid.map_dataarray."""
+    plot_kwargs = plot_kwargs.copy()
+    is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
+    if is_facetgrid:
+        facet_grid_args = ["vmin", "vmax", "extend", "levels", "add_labels", "_is_facetgrid"]
+        _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
+    return plot_kwargs
+
+
 class CustomFacetGrid(FacetGrid, ABC):
     def __init__(
         self,

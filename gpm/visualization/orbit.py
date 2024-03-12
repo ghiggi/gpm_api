@@ -37,7 +37,11 @@ from gpm.utils.checks import (
     check_contiguous_scans,
     get_slices_regular,
 )
-from gpm.visualization.facetgrid import CartopyFacetGrid, ImageFacetGrid
+from gpm.visualization.facetgrid import (
+    CartopyFacetGrid,
+    ImageFacetGrid,
+    sanitize_facetgrid_plot_kwargs,
+)
 from gpm.visualization.plot import (
     _plot_cartopy_pcolormesh,
     #  _plot_mpl_imshow,
@@ -310,10 +314,8 @@ def _plot_orbit_map_cartopy(
     if add_background:
         ax = plot_cartopy_background(ax)
 
-    # - Sanitize plot_kwargs passed by FacetGrid
-    plot_kwargs = plot_kwargs.copy()
-    facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
-    _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
+    plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
@@ -418,11 +420,9 @@ def _plot_orbit_image(
             check_is_spatial_2d(da)
         fig, ax = plt.subplots(**fig_kwargs)
 
-    # - Sanitize plot_kwargs passed by FacetGrid
-    plot_kwargs = plot_kwargs.copy()
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
-    facet_grid_args = ["levels", "extend", "add_labels", "_is_facetgrid"]
-    _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
+    plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(
