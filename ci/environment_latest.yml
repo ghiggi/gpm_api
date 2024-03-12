@@ -15,11 +15,9 @@ dependencies:
   - xarray
   - xarray-datatree
   - ximage
+  - pycolorbar
   # testing
   - pytest
   - pytest-cov
   - pytest-mock
   - pydantic
-  - pip
-  - pip:
-    - pycolorbar
