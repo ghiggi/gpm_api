@@ -12,8 +12,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
-gpm_api/__pycache__/
-gpm_api/utils/__pycache__/
+gpm/__pycache__/
+gpm/utils/__pycache__/
 
 # C extensions
 *.so
@@ -38,7 +38,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 _version.py
-gpm_api/_version.py
+gpm/_version.py
 
 
 # PyInstaller

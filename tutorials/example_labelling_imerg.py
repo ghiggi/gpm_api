@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import ximage  # noqa
 
-import gpm_api
+import gpm
 
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
@@ -19,7 +19,7 @@ product_type = "RS"
 version = 6
 
 # Download the data
-# gpm_api.download(
+# gpm.download(
 #     product=product,
 #     product_type=product_type,
 #     version=version,
@@ -33,7 +33,7 @@ version = 6
 
 
 # Load IMERG dataset
-ds = gpm_api.open_dataset(
+ds = gpm.open_dataset(
     product=product,
     product_type=product_type,
     version=version,
@@ -86,8 +86,8 @@ xr_obj[label_name].ximage.plot_labels()
 xr_obj[label_name].isel(lat=slice(0, 100), lon=slice(0, 100)).ximage.plot_labels()
 xr_obj[label_name].isel(lat=slice(0, 500), lon=slice(0, 500)).ximage.plot_labels()
 
-# Plot label subsets with gpm_api (nice axis with orbit data)
-gpm_api.plot_labels(
+# Plot label subsets with gpm (nice axis with orbit data)
+gpm.plot_labels(
     xr_obj[label_name],
     add_colorbar=True,
     interpolation="nearest",
@@ -130,7 +130,7 @@ patch_gen = xr_obj.ximage.label_patches(
 # list_da = list(patch_gen)
 # label_id, da = list_da[0]
 for label_id, da in patch_gen:
-    p = gpm_api.plot_labels(
+    p = gpm.plot_labels(
         da[label_name],
         add_colorbar=True,
         interpolation="nearest",

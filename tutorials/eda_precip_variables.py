@@ -11,7 +11,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-import gpm_api
+import gpm
 
 ####--------------------------------------------------------------------------.
 #### Define matplotlib settings
@@ -55,7 +55,7 @@ product_type = "RS"
 #### Download products
 for product in products:
     print(product)
-    gpm_api.download(
+    gpm.download(
         product=product,
         product_type=product_type,
         version=version,
@@ -73,7 +73,7 @@ for product in products:
 #### Open datasets
 dict_product = {}
 for product, variables in product_var_dict.items():
-    ds = gpm_api.open_dataset(
+    ds = gpm.open_dataset(
         product=product,
         start_time=start_time,
         end_time=end_time,

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import ximage  # noqa
 
-import gpm_api
+import gpm
 
 start_time = datetime.datetime.strptime("2019-07-13 11:00:00", "%Y-%m-%d %H:%M:%S")
 end_time = datetime.datetime.strptime("2019-07-13 13:00:00", "%Y-%m-%d %H:%M:%S")
@@ -19,7 +19,7 @@ product_type = "RS"
 version = 6
 
 # Download the data
-# gpm_api.download(
+# gpm.download(
 #     product=product,
 #     product_type=product_type,
 #     version=version,
@@ -33,7 +33,7 @@ version = 6
 
 
 # Load IMERG dataset
-ds = gpm_api.open_dataset(
+ds = gpm.open_dataset(
     product=product,
     product_type=product_type,
     version=version,
@@ -83,8 +83,8 @@ plt.show()
 # Plot label with ximage
 xr_obj[label_name].ximage.plot_labels()
 
-# Plot label with gpm_api
-gpm_api.plot_labels(xr_obj[label_name])
+# Plot label with gpm
+gpm.plot_labels(xr_obj[label_name])
 
 # ----------------------------------------------------------------------------.
 ##################################
@@ -139,10 +139,10 @@ da_patch_gen = xr_obj.ximage.label_patches(
     verbose=verbose,
 )
 
-gpm_api.plot_patches(da_patch_gen, variable=variable, interpolation="nearest")
+gpm.plot_patches(da_patch_gen, variable=variable, interpolation="nearest")
 
 
 # list_patch = list(da_patch_gen)
 # label_id, da_patch = list_patch[7]
 # for label_id, da_patch in list_patch:
-#     da_patch.gpm_api.plot_image()
+#     da_patch.gpm.plot_image()

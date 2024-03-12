@@ -1,16 +1,16 @@
 [run]
 source =
-	gpm_api
+	gpm
 omit =
 	*dev*
 	*docs*
 	*tutorials*
-	gpm_api/bucket/*
-	gpm_api/cli/*
-	gpm_api/encoding/*
-	gpm_api/etc/*
-	gpm_api/retrieval/*
-	gpm_api/_version.py
+	gpm/bucket/*
+	gpm/cli/*
+	gpm/encoding/*
+	gpm/etc/*
+	gpm/retrieval/*
+	gpm/_version.py
 
 [report]
 exclude_lines =

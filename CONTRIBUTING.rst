@@ -245,7 +245,7 @@ Refer to the table below for a comprehensive summary of all CI tools employed to
 
 GPM-API tests are written using the third-party `pytest <https://docs.pytest.org>`_ package. Every code change must be tested !
 
-The tests are organized within the ``/gpm_api/tests`` directory and are structured to comprehensively assess various aspects of the code.
+The tests are organized within the ``/gpm/tests`` directory and are structured to comprehensively assess various aspects of the code.
 
 These tests are integral to the development process and are automatically triggered on GitHub upon any new commits or updates to a Pull Request.
 The Continuous Integration (CI) on GitHub runs tests and analyzes code coverage using multiple versions of Python,
@@ -283,13 +283,13 @@ Run tests in a specific sub-directory:
 
 .. code-block:: bash
 
-    pytest gpm_api/tests/<test_subdirectory>/
+    pytest gpm/tests/<test_subdirectory>/
 
 Run a particular test module:
 
 .. code-block:: bash
 
-    pytest gpm_api/tests/<test_subdirectory>/test_<module_name>.py
+    pytest gpm/tests/<test_subdirectory>/test_<module_name>.py
 
 These options provide flexibility, allowing you to efficiently target and validate specific components of the GPM-API software.
 

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import ximage  # noqa
 
-import gpm_api
+import gpm
 
 ####--------------------------------------------------------------------------.
 #### Define matplotlib settings
@@ -38,7 +38,7 @@ products_scan_mode_dict = {
 version = 7
 product_type = "RS"
 
-# gpm_api.download(
+# gpm.download(
 #     product=product,
 #     start_time=start_time,
 #     end_time=end_time,
@@ -54,7 +54,7 @@ dict_product = {}
 for product, scan_modes in products_scan_mode_dict.items():
     for scan_mode in scan_modes:
         name = product + "-" + scan_mode
-        ds = gpm_api.open_dataset(
+        ds = gpm.open_dataset(
             product=product,
             start_time=start_time,
             end_time=end_time,
@@ -78,8 +78,8 @@ ds_gmi_1c_s2 = dict_product["1C-GMI-S2"]
 
 ##----------------------------------------------------------------------------.
 #### Resample data from one swath to the other
-ds_gmi_1c_s1_r = ds_gmi_1c_s1.gpm_api.remap_on(ds_dpr)
-ds_gmi_1c_s2_r = ds_gmi_1c_s2.gpm_api.remap_on(ds_dpr)
+ds_gmi_1c_s1_r = ds_gmi_1c_s1.gpm.remap_on(ds_dpr)
+ds_gmi_1c_s2_r = ds_gmi_1c_s2.gpm.remap_on(ds_dpr)
 ds_gmi_1c = xr.concat([ds_gmi_1c_s1_r, ds_gmi_1c_s2_r], dim="pmw_frequency")
 
 gmi_2a_variables = [
@@ -89,7 +89,7 @@ gmi_2a_variables = [
     "rainWaterPath",  # kg/m2 .
     "iceWaterPath",  # kg/m2 .
 ]
-ds_gmi_2a_r = ds_gmi_2a_s1[gmi_2a_variables].gpm_api.remap_on(ds_dpr)
+ds_gmi_2a_r = ds_gmi_2a_s1[gmi_2a_variables].gpm.remap_on(ds_dpr)
 
 ##----------------------------------------------------------------------------.
 # Select DataArray
@@ -125,21 +125,21 @@ list_label_patches = list(patch_gen)
 label_id, da_dpr_patch = list_label_patches[patch_idx]
 
 # Retrieve AOI extent
-extent = da_dpr_patch.gpm_api.extent(padding=0)
-ds_gmi_1c_patch = ds_gmi_1c.gpm_api.crop(extent)
-ds_gmi_2a_r_patch = ds_gmi_2a_r.gpm_api.crop(extent)
+extent = da_dpr_patch.gpm.extent(padding=0)
+ds_gmi_1c_patch = ds_gmi_1c.gpm.crop(extent)
+ds_gmi_2a_r_patch = ds_gmi_2a_r.gpm.crop(extent)
 
 ds_gmi_1c_patch["Tc"] = ds_gmi_1c_patch["Tc"].compute()
 ds_gmi_2a_r_patch = ds_gmi_2a_r_patch.compute()
 
 # Plot DPR
-da_dpr_patch.gpm_api.plot_image()
+da_dpr_patch.gpm.plot_image()
 
 # Plot GMI-2A remapped data
 for var in ds_gmi_2a_r_patch.data_vars:
     da = ds_gmi_2a_r_patch[var]
     title = f"{product} {var}"
-    p = da.gpm_api.plot_image()
+    p = da.gpm.plot_image()
     p.axes.set_title(title)
     plt.show()
 
@@ -149,12 +149,12 @@ for var in ["Tc"]:  # ["Tc","Quality"]:
         da = ds_gmi_1c_patch[var].isel(pmw_frequency=i)
         frequency = da["pmw_frequency"].item()
         title = f"{product} {var} {frequency}"
-        p = da.gpm_api.plot_image()
+        p = da.gpm.plot_image()
         p.axes.set_title(title)
         plt.show()
 
 
-# ds_gmi_1c["Tc"].isel({"pmw_frequency": 0}).gpm_api.plot_image()
-# ds_gmi_1c["Tc"].isel({"pmw_frequency": 0}).gpm_api.plot_map()
+# ds_gmi_1c["Tc"].isel({"pmw_frequency": 0}).gpm.plot_image()
+# ds_gmi_1c["Tc"].isel({"pmw_frequency": 0}).gpm.plot_map()
 
 # -----------------------------------------------------------------------------.

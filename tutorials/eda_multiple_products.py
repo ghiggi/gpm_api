@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import ximage  # noqa
 
-import gpm_api
-from gpm_api.visualization import plot_labels
+import gpm
+from gpm.visualization import plot_labels
 
 ####--------------------------------------------------------------------------.
 #### Define matplotlib settings
@@ -36,7 +36,7 @@ products = ["2A-DPR", "2B-GPM-CORRA", "1C-GMI", "2A-GMI"]
 version = 7
 product_type = "RS"
 
-# gpm_api.download(
+# gpm.download(
 #     product=product,
 #     start_time=start_time,
 #     end_time=end_time,
@@ -50,7 +50,7 @@ product_type = "RS"
 #### Open datasets
 dict_product = {}
 for product in products:
-    ds = gpm_api.open_dataset(
+    ds = gpm.open_dataset(
         product=product,
         start_time=start_time,
         end_time=end_time,
@@ -112,7 +112,7 @@ label_id = 1
 for label_id in patches_isel_dicts.keys():
     label_patch_isel_dict = patches_isel_dicts[label_id][0]
     da_patch = da_precip.isel(label_patch_isel_dict)
-    da_patch.gpm_api.plot_map()
+    da_patch.gpm.plot_map()
 
 
 ####--------------------------------------------------------------------------.
@@ -124,13 +124,13 @@ label_patch_isel_dict = patches_isel_dicts[label_id][0]
 # Retrieve patch DataArray
 da_patch = da_precip.isel(label_patch_isel_dict)
 # Retrieve AOI extent
-extent = da_patch.gpm_api.extent(padding=0)
+extent = da_patch.gpm.extent(padding=0)
 
 ####--------------------------------------------------------------------------.
 #### Subset all product to the AOI
 dict_product_patch = {}
 for product, ds in dict_product.items():
-    dict_product_patch[product] = ds.gpm_api.crop(extent)
+    dict_product_patch[product] = ds.gpm.crop(extent)
 
 ####--------------------------------------------------------------------------.
 #### Compare 2A-GMI, 2B-GPM-CORRA and 2A-DPR surface precipitation
@@ -164,7 +164,7 @@ for product, list_vars in product_var_dict.items():
         print(product, var)
         name = product + " - " + var
         da = dict_product_patch[product][var]
-        p = da.gpm_api.plot_map()
+        p = da.gpm.plot_map()
         p.axes.set_extent(extent)
         p.axes.set_title(name)
         plt.show()
@@ -188,7 +188,7 @@ for product, list_vars in product_var_dict.items():
             tmp_da = da.isel(pmw_frequency=i)
             frequency = tmp_da["pmw_frequency"].item()
             title = f"{product} {frequency}"
-            p = tmp_da.gpm_api.plot_map(vmin=100, vmax=280)
+            p = tmp_da.gpm.plot_map(vmin=100, vmax=280)
             p.axes.set_extent(extent)
             p.axes.set_title(title)
             plt.show()
@@ -200,20 +200,20 @@ for product, list_vars in product_var_dict.items():
 da_lwc = dict_product_patch["2B-GPM-CORRA"]["cloudLiqWaterCont"].compute()
 da_iwc = dict_product_patch["2B-GPM-CORRA"]["cloudIceWaterCont"].compute()  # all NaN !
 
-da_clwp = da_lwc.gpm_api.integrate_profile_concentration(
+da_clwp = da_lwc.gpm.integrate_profile_concentration(
     name="cloudLiquidWaterPath", scale_factor=1000, units="kg/m²"
 )
-da_ciwp = da_iwc.gpm_api.integrate_profile_concentration(
+da_ciwp = da_iwc.gpm.integrate_profile_concentration(
     name="cloudIceWaterPath", scale_factor=1000, units="kg/m²"
 )
 np.unique(da_clwp)
 np.unique(da_ciwp)  # all NaN !
 
 da_clwp = da_clwp.compute()
-da_clwp.gpm_api.plot_map()
+da_clwp.gpm.plot_map()
 
 da_ciwp = da_ciwp.compute()
-da_ciwp.gpm_api.plot_map()
+da_ciwp.gpm.plot_map()
 
 # Assign values
 dict_product_patch["2B-GPM-CORRA"]["cloudLiquidWaterPath"] = da_clwp
@@ -237,24 +237,24 @@ for product, list_vars in product_var_dict.items():
         print(product, var)
         da = dict_product_patch[product][var]
         title = product + " - " + var
-        p = da.gpm_api.plot_map()
+        p = da.gpm.plot_map()
         p.axes.set_extent(extent)
         p.axes.set_title(title)
         plt.show()
 
 
 # da_clwp = dict_product_patch["2A-GMI"]["cloudWaterPath"]
-# da_clwp.gpm_api.plot_map()
+# da_clwp.gpm.plot_map()
 
 # da_iwp = dict_product_patch["2A-GMI"]["iceWaterPath"]
-# da_iwp.gpm_api.plot_map()
+# da_iwp.gpm.plot_map()
 
 # da_rlwp = dict_product_patch["2A-GMI"]["rainWaterPath"]
-# da_rlwp.gpm_api.plot_map()
+# da_rlwp.gpm.plot_map()
 
 # da_lwp = da_clwp + da_rlwp
 # da_lwp.name = "liquidWaterPath"
-# da_lwp.gpm_api.plot_map()
+# da_lwp.gpm.plot_map()
 
 
 ####--------------------------------------------------------------------------.
