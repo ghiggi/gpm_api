@@ -563,7 +563,7 @@ def remove_existing_crs_info(ds):
         _ = ds[var].attrs.pop("coordinates", None)
         _ = ds[var].encoding.pop("coordinates", None)
     crs_coords = _get_name_existing_crs_coords(ds)
-    ds = ds.drop(crs_coords)
+    ds = ds.drop_vars(crs_coords)
     return ds
 
 

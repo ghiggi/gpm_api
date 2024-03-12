@@ -32,7 +32,6 @@ from gpm.io.products import get_info_dict
 from gpm.utils import geospatial
 import posixpath as pxp
 import ntpath as ntp
-import numpy as np
 from pytest_mock import MockerFixture
 import xarray as xr
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray, get_grid_dataarray

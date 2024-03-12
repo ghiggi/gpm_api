@@ -815,7 +815,7 @@ def _replace_0_values(x):
     x = x.astype(float)
     x[x == 0] = np.nan
     # Infill from left values, and then from right (if x start with 0)
-    x = pd.Series(x).fillna(method="ffill").fillna(method="bfill").to_numpy()
+    x = pd.Series(x).ffill().bfill().to_numpy()
     # Reset original dtype
     x = x.astype(dtype)
     return x

@@ -256,8 +256,7 @@ class TestPlotMap:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with colorbar keyword arguments"""
-
-        cbar_kwargs = {"ticklabels": [42, 43, 44, 45, 46]}
+        cbar_kwargs = {"ticks": [0.1, 0.2, 0.4, 0.6, 0.8], "ticklabels": [42.5, 43, 44, 45, 46]}
 
         p = plot.plot_map(orbit_dataarray, cbar_kwargs=cbar_kwargs)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -389,8 +388,7 @@ class TestPlotImage:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with colorbar keyword arguments"""
-
-        cbar_kwargs = {"ticklabels": [42, 43, 44, 45, 46]}
+        cbar_kwargs = {"ticks": [0.1, 0.2, 0.4, 0.6, 0.8], "ticklabels": [42.5, 43, 44, 45, 46]}
 
         p = plot.plot_image(orbit_dataarray, cbar_kwargs=cbar_kwargs)
         save_and_check_figure(figure=p.figure, name=get_test_name())
