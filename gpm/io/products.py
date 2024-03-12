@@ -90,7 +90,7 @@ def get_info_dict():
     """Get product info dictionary."""
     from gpm import _root_path
 
-    filepath = os.path.join(_root_path, "gpm", "etc", "product_def.yml")
+    filepath = os.path.join(_root_path, "gpm", "etc", "products.yaml")
     return read_yaml(filepath)
 
 

@@ -1,0 +1,70 @@
+precipitation:
+  reference: precipitation_rate
+precipitationCal:
+  reference: precipitation_rate
+precipitationUncal:
+  reference: precipitation_rate
+IRprecipitation:
+  reference: precipitation_rate
+MWprecipitation:
+  reference: precipitation_rate
+IMERG_Solid:
+  cmap:
+    name: IMERG_Solid
+    bad_alpha: 0.5
+    bad_color: gray
+    over_color: '#8c149c'
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0.1
+    - 0.2
+    - 0.3
+    - 0.5
+    - 1
+    - 2
+    - 3
+    - 5
+    - 10
+    - 20
+    - 50
+  cbar:
+    extend: max
+    label: Precipitation intensity [$mm \ hr^{-1}$]
+  auxiliary:
+    category:
+    - GPM
+    - IMERG
+    - precipitation
+    - snowfall
+IMERG_Liquid:
+  cmap:
+    name: IMERG_Liquid
+    bad_alpha: 0.5
+    bad_color: gray
+    over_color: '#910000'
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0.1
+    - 0.2
+    - 0.3
+    - 0.5
+    - 1
+    - 2
+    - 3
+    - 5
+    - 10
+    - 20
+    - 50
+  cbar:
+    extend: max
+    label: Precipitation intensity [$mm \ hr^{-1}$]
+  auxiliary:
+    category:
+    - GPM
+    - IMERG
+    - precipitation
+    - rainfall

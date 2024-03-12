@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 
 import gpm
 from gpm.utils.geospatial import get_country_extent
-from gpm.utils.utils_cmap import get_colorbar_settings
 from gpm.visualization.plot import plot_cartopy_background
 
 start_time = datetime.datetime.strptime("2011-06-13 11:00:00", "%Y-%m-%d %H:%M:%S")
@@ -127,10 +126,10 @@ da.gpm.plot_map(ax=ax)
 da.gpm.plot_map(cmap="Spectral", norm=None, vmin=0.1, vmax=100)
 
 # - Using gpm pre-implemented colormap and colorbar settings
-plot_kwargs, cbar_kwargs = get_colorbar_settings("IMERG_Solid")
+plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("IMERG_Solid")
 da.gpm.plot_map(cbar_kwargs=cbar_kwargs, **plot_kwargs)
 
-plot_kwargs, cbar_kwargs = get_colorbar_settings("IMERG_Liquid")
+plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("IMERG_Liquid")
 da.gpm.plot_map(cbar_kwargs=cbar_kwargs, **plot_kwargs)
 
 # ---------------------------------------------------------------------
@@ -141,9 +140,9 @@ da_precip = ds_single_timestep[variable]
 da_liquid = da_precip.where(da_is_liquid, 0)
 da_solid = da_precip.where(~da_is_liquid, 0)
 
-plot_kwargs, cbar_kwargs = get_colorbar_settings("IMERG_Liquid")
+plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("IMERG_Liquid")
 p = da_liquid.gpm.plot_map(cbar_kwargs=cbar_kwargs, **plot_kwargs, add_colorbar=False)
-plot_kwargs, cbar_kwargs = get_colorbar_settings("IMERG_Solid")
+plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("IMERG_Solid")
 p = da_solid.gpm.plot_map(ax=p.axes, cbar_kwargs=cbar_kwargs, **plot_kwargs, add_colorbar=False)
 p.axes.set_title(label=da_solid.gpm.title())
 

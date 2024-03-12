@@ -31,12 +31,12 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 
+from gpm import get_plot_kwargs
 from gpm.checks import check_is_spatial_2d
 from gpm.utils.checks import (
     check_contiguous_scans,
     get_slices_regular,
 )
-from gpm.utils.utils_cmap import get_colorbar_settings
 from gpm.visualization.facetgrid import CartopyFacetGrid, ImageFacetGrid
 from gpm.visualization.plot import (
     _plot_cartopy_pcolormesh,
@@ -317,8 +317,8 @@ def _plot_orbit_map_cartopy(
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
     # - Specify colorbar label
     if "label" not in cbar_kwargs:
@@ -425,8 +425,8 @@ def _plot_orbit_image(
     _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=da.name, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=da.name, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
 
     # - Plot with xarray
@@ -528,8 +528,8 @@ def _plot_orbit_map_facetgrid(
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
     # Retrieve projection
     projection = subplot_kwargs.get("projection", None)
@@ -598,8 +598,8 @@ def _plot_orbit_image_facetgrid(
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
 
     # Create FacetGrid

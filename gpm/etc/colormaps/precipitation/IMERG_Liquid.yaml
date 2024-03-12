@@ -1,0 +1,19 @@
+colormap_type: LinearSegmentedColormap
+color_space: hex
+color_palette:
+- '#008114'
+- '#008b52'
+- '#00b330'
+- '#60d300'
+- '#b4e700'
+- '#fffb00'
+- '#ffc400'
+- '#ff9300'
+- '#ff0000'
+- '#c80000'
+auxiliary:
+  category:
+  - IMERG
+  - GPM
+  - precipitation
+  - rainfall

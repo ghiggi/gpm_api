@@ -1,0 +1,16 @@
+simulatedBrightTemp:
+  reference: brightness_temperature
+estimSurfPrecipTotRate:
+  reference: precipitation_rate
+OEestimSurfPrecipTotRate:
+  reference: precipitation_rate
+estimSurfPrecipLiqRate:
+  reference: precipitation_rate
+OEestimSurfPrecipLiqRate:
+  reference: precipitation_rate
+nearSurfPrecipTotRate:
+  reference: precipitation_rate
+nearSurfPrecipLiqRate:
+  reference: precipitation_rate
+precipTotRate:
+  reference: precipitation_rate

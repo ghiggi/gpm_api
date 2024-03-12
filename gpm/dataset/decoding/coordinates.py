@@ -116,7 +116,7 @@ def get_pmw_frequency_dict():
     """Get PMW info dictionary."""
     from gpm import _root_path
 
-    filepath = os.path.join(_root_path, "gpm", "etc", "pmw_frequency.yml")
+    filepath = os.path.join(_root_path, "gpm", "etc", "pmw", "frequencies.yaml")
     return read_yaml(filepath)
 
 

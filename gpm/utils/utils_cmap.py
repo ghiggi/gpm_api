@@ -222,7 +222,7 @@ COLOR_DICT = {
         "extend": "max",
         "label": "Precipitation intensity [$mm \\ hr^{-1}$]",
     },
-    "GPM_Z": {
+    "reflectivity": {
         "bad_color": "none",
         "bad_alpha": 0.5,
         "cmap": "Spectral_r",
@@ -234,7 +234,7 @@ COLOR_DICT = {
         "extendfrac": 0.05,
         "label": "Reflectivity [$dBZ$]",  # $Z_{e}$
     },
-    "GPM_DFR": {
+    "dual_frequency_ratio": {
         "bad_color": "none",
         "cmap": "turbo",
         # 'cmap_n': 10,
@@ -281,7 +281,7 @@ COLOR_DICT = {
         "extendfrac": 0.05,
         "label": "Latent Heating [K/hr]",
     },
-    "Brightness_Temperature": {
+    "brightness_temperature": {
         "bad_color": "gray",
         "bad_alpha": 0.5,
         "cmap": "Spectral_r",
@@ -381,7 +381,7 @@ COLOR_DICT = {
             160,
         ],
     },
-    "pysteps_mm/hr": {
+    "precipitation_rate": {
         "over_color": "darkred",
         "under_color": "none",
         "bad_color": "gray",
@@ -563,7 +563,7 @@ precip_variables = [
 ]
 
 for var in precip_variables:
-    COLOR_DICT[var] = COLOR_DICT["pysteps_mm/hr"]
+    COLOR_DICT[var] = COLOR_DICT["precipitation_rate"]
 
 reflectivity_variables = [
     "zFactorFinalNearSurface",
@@ -574,15 +574,15 @@ reflectivity_variables = [
     "REFC",
 ]
 for var in reflectivity_variables:
-    COLOR_DICT[var] = COLOR_DICT["GPM_Z"]
+    COLOR_DICT[var] = COLOR_DICT["reflectivity"]
 
 for var in ["dfrMeasured", "dfrFinal", "dfrFinalNearSurface"]:
-    COLOR_DICT[var] = COLOR_DICT["GPM_DFR"]
+    COLOR_DICT[var] = COLOR_DICT["dual_frequency_ratio"]
 
 
-COLOR_DICT["Tb"] = COLOR_DICT["Brightness_Temperature"]
-COLOR_DICT["Tc"] = COLOR_DICT["Brightness_Temperature"]
-COLOR_DICT["simulatedBrightTemp"] = COLOR_DICT["Brightness_Temperature"]
+COLOR_DICT["Tb"] = COLOR_DICT["brightness_temperature"]
+COLOR_DICT["Tc"] = COLOR_DICT["brightness_temperature"]
+COLOR_DICT["simulatedBrightTemp"] = COLOR_DICT["brightness_temperature"]
 
 
 ####--------------------------------------------------------------------------.

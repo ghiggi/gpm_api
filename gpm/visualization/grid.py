@@ -27,8 +27,8 @@
 """This module contains functions to visualize GPM-API GRID data."""
 import matplotlib.pyplot as plt
 
+from gpm import get_plot_kwargs
 from gpm.checks import check_is_spatial_2d
-from gpm.utils.utils_cmap import get_colorbar_settings
 from gpm.visualization.facetgrid import CartopyFacetGrid, ImageFacetGrid
 from gpm.visualization.plot import (
     _plot_cartopy_imshow,
@@ -78,8 +78,8 @@ def _plot_grid_map_cartopy(
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
 
     # - Specify colorbar label
@@ -129,8 +129,8 @@ def _plot_grid_map_facetgrid(
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
 
     projection = subplot_kwargs.get("projection", None)
@@ -256,8 +256,8 @@ def _plot_grid_image(
     _ = [plot_kwargs.pop(arg, None) for arg in facet_grid_args]
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=da.name, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=da.name, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
 
     # - Plot with xarray
@@ -401,8 +401,8 @@ def _plot_grid_image_facetgrid(
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=variable, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
 
     # Create FacetGrid
