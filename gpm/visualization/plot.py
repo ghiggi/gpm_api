@@ -269,6 +269,7 @@ def plot_colorbar(p, ax, cbar_kwargs={}):
     p: matplotlib.image.AxesImage
     ax:  cartopy.mpl.geoaxes.GeoAxesSubplot^
     """
+    print(cbar_kwargs)
     cbar_kwargs = cbar_kwargs.copy()  # otherwise pop ticklabels outside the function
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     orientation = cbar_kwargs.get("orientation", "vertical")
@@ -292,7 +293,7 @@ def plot_colorbar(p, ax, cbar_kwargs={}):
         if orientation == "vertical":
             _ = cbar.ax.set_yticklabels(ticklabels)
         else:  # horizontal
-            _ = cbar.ax.set_yticklabels(ticklabels)
+            _ = cbar.ax.set_xticklabels(ticklabels)
     return cbar
 
 
