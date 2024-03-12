@@ -429,8 +429,8 @@ def _plot_cartopy_pcolormesh(
 
             # Sanitize cmap bad color to avoid cartopy bug
             # - TODO cartopy requires bad_color to be transparent ...
-            if "cmap" in plot_kwargs:
-                cmap = plot_kwargs["cmap"]
+            cmap = plot_kwargs.get("cmap", None)
+            if cmap is not None:
                 bad = cmap.get_bad()
                 bad[3] = 0  # enforce to 0 (transparent)
                 cmap.set_bad(bad)
