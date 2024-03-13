@@ -38,11 +38,11 @@ from gpm.visualization.plot import (
     _plot_cartopy_imshow,
     #  _plot_mpl_imshow,
     _plot_xr_imshow,
-    _preprocess_figure_args,
-    _preprocess_subplot_kwargs,
     add_optimize_layout_method,
     create_grid_mesh_data_array,
-    plot_cartopy_background,
+    initialize_cartopy_plot,
+    preprocess_figure_args,
+    preprocess_subplot_kwargs,
 )
 
 
@@ -54,6 +54,7 @@ def _plot_grid_map_cartopy(
     add_colorbar=True,
     interpolation="nearest",
     add_background=True,
+    rgb=False,
     fig_kwargs={},
     subplot_kwargs={},
     cbar_kwargs={},
@@ -61,17 +62,16 @@ def _plot_grid_map_cartopy(
 ):
     """Plot DataArray 2D field with cartopy."""
     # - Check inputs
-    check_is_spatial_2d(da)  # TODO: allow RGB !
-    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+    if not rgb:
+        check_is_spatial_2d(da)
 
-    # - Initialize figure
-    if ax is None:
-        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
-        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-
-    # - Add cartopy background
-    if add_background:
-        ax = plot_cartopy_background(ax)
+    # - Initialize figure if necessary
+    ax = initialize_cartopy_plot(
+        ax=ax,
+        fig_kwargs=fig_kwargs,
+        subplot_kwargs=subplot_kwargs,
+        add_background=add_background,
+    )
 
     # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
@@ -125,8 +125,8 @@ def _plot_grid_map_facetgrid(
     # - Check inputs
     if ax is not None:
         raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
-    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
-    subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
+    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+    subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
@@ -242,7 +242,7 @@ def _plot_grid_image(
 ):
     """Plot DataArray 2D image."""
     # - Check inputs
-    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # - Initialize figure
     if ax is None:
@@ -298,17 +298,13 @@ def plot_grid_mesh(
     from gpm.visualization.orbit import _plot_cartopy_pcolormesh
 
     """Plot GPM grid mesh in a cartographic map."""
-    # - Check inputs
-    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
-
-    # - Initialize figure
-    if ax is None:
-        subplot_kwargs = _preprocess_subplot_kwargs(subplot_kwargs)
-        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-
-    # - Add cartopy background
-    if add_background:
-        ax = plot_cartopy_background(ax)
+    # - Initialize figure if necessary
+    ax = initialize_cartopy_plot(
+        ax=ax,
+        fig_kwargs=fig_kwargs,
+        subplot_kwargs=subplot_kwargs,
+        add_background=add_background,
+    )
 
     # - Create 2D mesh DataArray
     da = create_grid_mesh_data_array(xr_obj, x=x, y=y)
@@ -396,7 +392,7 @@ def _plot_grid_image_facetgrid(
     # - Check inputs
     if ax is not None:
         raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
-    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name

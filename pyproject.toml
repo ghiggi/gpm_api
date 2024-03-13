@@ -49,6 +49,7 @@ dependencies = [
     "pyresample",
     "matplotlib>=3.8.3",
     "cartopy>=0.22.0",
+    "scipy",
     "pycolorbar",
 ]
 requires-python = ">=3.9"

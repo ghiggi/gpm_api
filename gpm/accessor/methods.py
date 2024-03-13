@@ -355,8 +355,10 @@ class GPM_Base_Accessor:
         facecolor="orange",
         edgecolor="black",
         alpha=0.4,
+        fig_kwargs={},
+        subplot_kwargs={},
         add_background=True,
-        **kwargs,
+        **plot_kwargs,
     ):
         from gpm.visualization.orbit import plot_swath
 
@@ -367,14 +369,38 @@ class GPM_Base_Accessor:
             edgecolor=edgecolor,
             alpha=alpha,
             add_background=add_background,
-            **kwargs,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
         )
         return p
 
-    def plot_swath_lines(self, ax=None, x="lon", y="lat", linestyle="--", color="k", **kwargs):
+    def plot_swath_lines(
+        self,
+        ax=None,
+        x="lon",
+        y="lat",
+        linestyle="--",
+        color="k",
+        add_background=True,
+        fig_kwargs={},
+        subplot_kwargs={},
+        **plot_kwargs,
+    ):
         from gpm.visualization.orbit import plot_swath_lines
 
-        p = plot_swath_lines(self._obj, ax=ax, x=x, y=y, linestyle=linestyle, color=color, **kwargs)
+        p = plot_swath_lines(
+            self._obj,
+            ax=ax,
+            x=x,
+            y=y,
+            linestyle=linestyle,
+            color=color,
+            add_background=add_background,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
         return p
 
     def plot_map_mesh(

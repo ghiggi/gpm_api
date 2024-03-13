@@ -14,6 +14,7 @@ dependencies:
   - trollsift
   - xarray
   - xarray-datatree
+  - scipy
   - ximage
   - pycolorbar
   # testing

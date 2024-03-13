@@ -51,29 +51,29 @@ def test_is_generator() -> None:
     assert not plot.is_generator([1, 2, 3])
 
 
-def test_preprocess_figure_args() -> None:
-    """Test the _preprocess_figure_args function"""
+def testpreprocess_figure_args() -> None:
+    """Test the preprocess_figure_args function"""
 
     nothing = {}
     something = {"": 0}
 
     # Test with ax None
-    plot._preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=nothing)
-    plot._preprocess_figure_args(None, fig_kwargs=something, subplot_kwargs=nothing)
-    plot._preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=something)
+    plot.preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=nothing)
+    plot.preprocess_figure_args(None, fig_kwargs=something, subplot_kwargs=nothing)
+    plot.preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=something)
 
     # Test with ax not None
     ax = plt.subplot()
-    plot._preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=nothing)
+    plot.preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=nothing)
 
     with pytest.raises(ValueError):
-        plot._preprocess_figure_args(ax, fig_kwargs=something, subplot_kwargs=nothing)
+        plot.preprocess_figure_args(ax, fig_kwargs=something, subplot_kwargs=nothing)
 
     with pytest.raises(ValueError):
-        plot._preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=something)
+        plot.preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=something)
 
 
-class TestGetExtent:
+class TestGetDataArrayExtent:
     """Test the get_extent function"""
 
     def test_orbit(
@@ -82,7 +82,7 @@ class TestGetExtent:
     ) -> None:
         """Test getting the extent of orbit data"""
 
-        returned_extent = plot.get_extent(orbit_dataarray)
+        returned_extent = plot.get_dataarray_extent(orbit_dataarray)
         expected_extent = (-2.77663454, 22.65579744, -3.53830585, 18.64709521)
         np.testing.assert_allclose(returned_extent, expected_extent, rtol=1e-9)
 
@@ -92,7 +92,7 @@ class TestGetExtent:
     ) -> None:
         """Test getting the extent of grid data"""
 
-        returned_extent = plot.get_extent(grid_dataarray)
+        returned_extent = plot.get_dataarray_extent(grid_dataarray)
         expected_extent = (-5, 20, -5, 15)
         assert returned_extent == expected_extent
 
@@ -185,71 +185,99 @@ class TestPlotMap:
         p = plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_cross_track(
-        self,
-        orbit_nan_cross_track_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data with NaN values at cross-track edges"""
+    ## Test data with nan
 
-        p = plot.plot_map(orbit_nan_cross_track_dataarray)
+    def test_orbit_data_nan_cross_track(
+        self,
+        orbit_data_nan_cross_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit with NaN values in the data at cross-track edges"""
+
+        p = plot.plot_map(orbit_data_nan_cross_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_along_track(
+    def test_orbit_data_nan_along_track(
         self,
-        orbit_nan_along_track_dataarray: xr.DataArray,
+        orbit_data_nan_along_track_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting orbit data with NaN values at along-track edges"""
+        """Test plotting orbit with NaN values in the data at along-track edges"""
 
-        p = plot.plot_map(orbit_nan_along_track_dataarray)
+        p = plot.plot_map(orbit_data_nan_along_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_values(
+    def test_orbit_data_nan_values(
         self,
         orbit_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting orbit data with NaN values at one cell"""
+        """Test plotting orbit with NaN values in the data at one cell"""
 
         orbit_dataarray.data[2, 2] = np.nan
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_lon_outer_cross_track(
-        self,
-        orbit_nan_lon_cross_track_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data with some NaN longitudes on the outer cross-track cells"""
+    #### Test with NaN coordinates
 
-        p = plot.plot_map(orbit_nan_lon_cross_track_dataarray)
+    def test_orbit_nan_coordinate_at_one_cell(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with NaN coordinates at one cell"""
+        # NOTE: here we test linear interpolation of coordinates
+        orbit_dataarray["lon"].data[1, 3] = np.nan
+        orbit_dataarray["lat"].data[1, 3] = np.nan
+        p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_lon_along_track(
+    def test_orbit_nan_coordinate_at_corners(
         self,
-        orbit_nan_lon_along_track_dataarray: xr.DataArray,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with NaN coordinates at the swath corners."""
+        # NOTE: here we test nearest neighbour interpolation of coordinates
+        orbit_dataarray["lon"].data[0:2, 0:2] = np.nan
+        orbit_dataarray["lat"].data[0:2, 0:2] = np.nan
+        p = plot.plot_map(orbit_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_nan_coordinate_at_cross_track_center(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with NaN coordinates at one cell on the cross-track centerline"""
+        # NOTE: centerline used to identify contiguoues slices. So here assumed not contiguous.
+        orbit_dataarray["lon"].data[2, 3] = np.nan
+        orbit_dataarray["lat"].data[2, 3] = np.nan
+        p = plot.plot_map(orbit_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_nan_outer_cross_track(
+        self,
+        orbit_nan_outer_cross_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with some NaN coordinates on the outer cross-track cells"""
+
+        p = plot.plot_map(orbit_nan_outer_cross_track_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_nan_inner_cross_track(
+        self,
+        orbit_nan_inner_cross_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with all NaN coordinates on the outer cross-track cells"""
+
+        p = plot.plot_map(orbit_nan_inner_cross_track_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_nan_slice_along_track(
+        self,
+        orbit_nan_slice_along_track_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with some NaN latitudes along-track"""
 
-        p = plot.plot_map(orbit_nan_lon_along_track_dataarray)
+        p = plot.plot_map(orbit_nan_slice_along_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_nan_lon_one_cell(
-        self,
-        orbit_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data with NaN longitude at one cell"""
-
-        orbit_dataarray["lon"].data[1, 3] = np.nan
-        p = plot.plot_map(orbit_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name())
-
-    def test_orbit_nan_lon_one_cell_centerline(
-        self,
-        orbit_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data with NaN longitude at one cell on the cross-track centerline"""
-
-        orbit_dataarray["lon"].data[2, 3] = np.nan
-        p = plot.plot_map(orbit_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name())
+    #### Test colorbar kwargs
 
     def test_orbit_cbar_kwargs(
         self,

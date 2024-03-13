@@ -36,7 +36,7 @@ from gpm.checks import check_is_transect
 from gpm.utils.slices import ensure_is_slice, get_slice_size
 from gpm.visualization.plot import (
     _plot_xr_pcolormesh,
-    _preprocess_figure_args,
+    preprocess_figure_args,
 )
 
 
@@ -299,7 +299,7 @@ def plot_transect(
     """Plot GPM transect."""
     # - Check inputs
     check_is_transect(da)
-    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # - Initialize figure
     if ax is None:
