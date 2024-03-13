@@ -62,8 +62,8 @@ def plot_swath(
     edgecolor="black",
     alpha=0.4,
     add_background=True,
-    fig_kwargs={},
-    subplot_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM orbit granule."""
@@ -215,8 +215,8 @@ def plot_swath_lines(
     linestyle="--",
     color="k",
     add_background=True,
-    subplot_kwargs={},
-    fig_kwargs={},
+    subplot_kwargs=None,
+    fig_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM orbit granule swath lines."""
@@ -258,9 +258,9 @@ def _plot_orbit_map_cartopy(
     add_swath_lines=True,
     add_background=True,
     rgb=False,
-    fig_kwargs={},
-    subplot_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM orbit granule in a cartographic map."""
@@ -312,15 +312,15 @@ def _plot_orbit_image(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM orbit granule as in image."""
     # ----------------------------------------------
     # - Check inputs
     check_contiguous_scans(da)
-    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # - Initialize figure
     if ax is None:
@@ -370,8 +370,8 @@ def plot_orbit_mesh(
     edgecolors="k",
     linewidth=0.1,
     add_background=True,
-    fig_kwargs={},
-    subplot_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM orbit granule mesh in a cartographic map."""
@@ -415,16 +415,16 @@ def _plot_orbit_map_facetgrid(
     add_swath_lines=True,
     add_background=True,
     rgb=False,
-    fig_kwargs={},
-    subplot_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot 2D fields with FacetGrid."""
     # - Check inputs
     if ax is not None:
         raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
-    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
     subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
@@ -487,15 +487,15 @@ def _plot_orbit_image_facetgrid(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot 2D fields with FacetGrid."""
     # - Check inputs
     if ax is not None:
         raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
-    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
@@ -550,9 +550,9 @@ def plot_orbit_map(
     add_swath_lines=True,
     add_background=True,
     rgb=False,
-    fig_kwargs={},
-    subplot_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot DataArray 2D field with cartopy."""
@@ -600,8 +600,8 @@ def plot_orbit_image(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot DataArray 2D field with cartopy."""

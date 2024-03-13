@@ -51,20 +51,20 @@ def test_is_generator() -> None:
     assert not plot.is_generator([1, 2, 3])
 
 
-def testpreprocess_figure_args() -> None:
+def test_preprocess_figure_args() -> None:
     """Test the preprocess_figure_args function"""
 
     nothing = {}
     something = {"": 0}
 
     # Test with ax None
-    plot.preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=nothing)
-    plot.preprocess_figure_args(None, fig_kwargs=something, subplot_kwargs=nothing)
-    plot.preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=something)
+    _ = plot.preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=nothing)
+    _ = plot.preprocess_figure_args(None, fig_kwargs=something, subplot_kwargs=nothing)
+    _ = plot.preprocess_figure_args(None, fig_kwargs=nothing, subplot_kwargs=something)
 
     # Test with ax not None
     ax = plt.subplot()
-    plot.preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=nothing)
+    _ = plot.preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=nothing)
 
     with pytest.raises(ValueError):
         plot.preprocess_figure_args(ax, fig_kwargs=something, subplot_kwargs=nothing)

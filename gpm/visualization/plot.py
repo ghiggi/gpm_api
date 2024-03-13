@@ -238,15 +238,19 @@ def _interpolate_data(arr, method="linear"):
 ####--------------------------------------------------------------------------.
 
 
-def preprocess_figure_args(ax, fig_kwargs={}, subplot_kwargs={}):
+def preprocess_figure_args(ax, fig_kwargs=None, subplot_kwargs=None):
+    fig_kwargs = {} if fig_kwargs is None else fig_kwargs
+    subplot_kwargs = {} if subplot_kwargs is None else subplot_kwargs
     if ax is not None:
         if len(subplot_kwargs) >= 1:
             raise ValueError("Provide `subplot_kwargs`only if `ax`is None")
         if len(fig_kwargs) >= 1:
             raise ValueError("Provide `fig_kwargs` only if `ax`is None")
+    return fig_kwargs
 
 
 def preprocess_subplot_kwargs(subplot_kwargs):
+    subplot_kwargs = {} if subplot_kwargs is None else subplot_kwargs
     subplot_kwargs = subplot_kwargs.copy()
     if "projection" not in subplot_kwargs:
         subplot_kwargs["projection"] = ccrs.PlateCarree()
@@ -262,7 +266,9 @@ def initialize_cartopy_plot(
     """Initialize figure for cartopy plot if necessary."""
     # - Initialize figure
     if ax is None:
-        preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+        fig_kwargs = preprocess_figure_args(
+            ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs
+        )
         subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
         _, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
 
@@ -308,7 +314,7 @@ def plot_sides(sides, ax, **plot_kwargs):
     return p[0]
 
 
-def plot_colorbar(p, ax, cbar_kwargs={}):
+def plot_colorbar(p, ax, cbar_kwargs=None):
     """Add a colorbar to a matplotlib/cartopy plot.
 
     cbar_kwargs 'size' and 'pad' controls the size of the colorbar.
@@ -317,6 +323,7 @@ def plot_colorbar(p, ax, cbar_kwargs={}):
     p: matplotlib.image.AxesImage
     ax:  cartopy.mpl.geoaxes.GeoAxesSubplot^
     """
+    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
     cbar_kwargs = cbar_kwargs.copy()  # otherwise pop ticklabels outside the function
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     orientation = cbar_kwargs.get("orientation", "vertical")
@@ -381,7 +388,7 @@ def _plot_cartopy_imshow(
     interpolation="nearest",
     add_colorbar=True,
     plot_kwargs={},
-    cbar_kwargs={},
+    cbar_kwargs=None,
 ):
     """Plot imshow with cartopy."""
     # - Ensure image with correct dimensions orders
@@ -446,7 +453,7 @@ def _plot_cartopy_pcolormesh(
     add_colorbar=True,
     add_swath_lines=True,
     plot_kwargs={},
-    cbar_kwargs={},
+    cbar_kwargs=None,
 ):
     """Plot imshow with cartopy.
 
@@ -527,7 +534,7 @@ def _plot_mpl_imshow(
     interpolation="nearest",
     add_colorbar=True,
     plot_kwargs={},
-    cbar_kwargs={},
+    cbar_kwargs=None,
 ):
     """Plot imshow with matplotlib."""
     # - Ensure image with correct dimensions orders
@@ -586,7 +593,7 @@ def _plot_xr_imshow(
     interpolation="nearest",
     add_colorbar=True,
     plot_kwargs={},
-    cbar_kwargs={},
+    cbar_kwargs=None,
     xarray_colorbar=True,  # remove
     visible_colorbar=True,
 ):
@@ -599,7 +606,7 @@ def _plot_xr_imshow(
     # --> BUG with colorbar: https://github.com/pydata/xarray/issues/7014
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     if not add_colorbar:
-        cbar_kwargs = {}
+        cbar_kwargs = None
     p = da.plot.imshow(
         x=x,
         y=y,
@@ -640,12 +647,12 @@ def _plot_xr_pcolormesh(
     y,
     add_colorbar=True,
     plot_kwargs={},
-    cbar_kwargs={},
+    cbar_kwargs=None,
 ):
     """Plot pcolormesh with xarray."""
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     if not add_colorbar:
-        cbar_kwargs = {}
+        cbar_kwargs = None
     p = da.plot.pcolormesh(
         x=x,
         y=y,
@@ -673,9 +680,9 @@ def plot_map(
     add_background=True,
     rgb=False,
     interpolation="nearest",  # used only for GPM grid objects
-    fig_kwargs={},
-    subplot_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """
@@ -686,37 +693,37 @@ def plot_map(
     da : xr.DataArray
         xarray DataArray.
     x : str, optional
-        Longitude coordinate name. The default is "lon".
+        Longitude coordinate name. The default is `"lon"`.
     y : str, optional
-        Latitude coordinate name. The default is "lat".
+        Latitude coordinate name. The default is `"lat"`.
     ax : cartopy.GeoAxes, optional
         The cartopy GeoAxes where to plot the map.
-        If None, a figure is initialized using the
+        If `None`, a figure is initialized using the
         specified `fig_kwargs`and `subplot_kwargs`.
-        The default is None.
+        The default is `None`.
     add_colorbar : bool, optional
-        Whether to add a colorbar. The default is True.
+        Whether to add a colorbar. The default is `True`.
     add_swath_lines : bool, optional
-        Whether to plot the swath sides with a dashed line. The default is True.
+        Whether to plot the swath sides with a dashed line. The default is `True`.
         This argument only applies for ORBIT objects.
-    add_background : TYPE, optional
-        Whether to add the map background. The default is True.
+    add_background : bool, optional
+        Whether to add the map background. The default is `True`.
     rgb : bool, optional
-        Whether the input DataArray has a rgb dimension. The default is False.
+        Whether the input DataArray has a rgb dimension. The default is `False`.
     interpolation : str, optional
         Argument to be passed to imshow. Only applies for GRID objects.
-        The default is "nearest".
+        The default is `"nearest"`.
     fig_kwargs : dict, optional
         Figure options to be passed to plt.subplots.
-        The default is {}.
-        Only used if `ax` is None.
+        The default is `None`.
+        Only used if `ax` is `None`.
     subplot_kwargs : dict, optional
         Dictionary of keyword arguments for Matplotlib subplots.
-        Must contain the Cartopy CRS 'projection' if specified.
-        The default is {}.
-        Only used if `ax` is None.
+        Must contain the Cartopy CRS `'projection'` key if specified.
+        The default is `None`.
+        Only used if `ax` is `None`.
     cbar_kwargs : dict, optional
-        Colorbar options. The default is {}.
+        Colorbar options. The default is `None`.
     **plot_kwargs
         Additional arguments to be passed to the plotting function.
         Examples include `cmap`, `norm`, `vmin`, `vmax`, `levels`, ...
@@ -770,8 +777,8 @@ def plot_image(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """
@@ -784,31 +791,31 @@ def plot_image(
     x : str, optional
         X dimension name.
         If None, takes the second dimension.
-        The default is None.
+        The default is `None`.
     y : str, optional
         Y dimension name.
         If None, takes the first dimension.
-        The default is None.
+        The default is `None`.
     ax : cartopy.GeoAxes, optional
         The matplotlib axes where to plot the image.
         If None, a figure is initialized using the
         specified `fig_kwargs`.
-        The default is None.
+        The default is `None`.
     add_colorbar : bool, optional
-        Whether to add a colorbar. The default is True.
+        Whether to add a colorbar. The default is `True`.
     interpolation : str, optional
         Argument to be passed to imshow.
-        The default is "nearest".
+        The default is `"nearest"`.
     fig_kwargs : dict, optional
-        Figure options to be passed to plt.subplots.
-        The default is {}.
+        Figure options to be passed to `plt.subplots`.
+        The default is None.
         Only used if `ax` is None.
     subplot_kwargs : dict, optional
-        Subplot options to be passed to plt.subplots.
-        The default is {}.
-        Only used if `ax` is None.
+        Subplot options to be passed to `plt.subplots`.
+        The default is `None`.
+        Only used if `ax` is `None`.
     cbar_kwargs : dict, optional
-        Colorbar options. The default is {}.
+        Colorbar options. The default is `None`.
     **plot_kwargs
         Additional arguments to be passed to the plotting function.
         Examples include `cmap`, `norm`, `vmin`, `vmax`, `levels`, ...
@@ -867,14 +874,14 @@ def create_grid_mesh_data_array(xr_obj, x, y):
     xr_obj : xarray.DataArray or xarray.Dataset
         The input xarray object containing the 1D coordinate arrays.
     x : str
-        The name of the x-coordinate in xr_obj.
+        The name of the x-coordinate in `xr_obj`.
     y : str
-        The name of the y-coordinate in xr_obj.
+        The name of the y-coordinate in `xr_obj`.
 
     Returns
     -------
     da_mesh : xarray.DataArray
-        A 2D xarray DataArray with mesh coordinates for x and y, and NaN values for data points.
+        A 2D xarray DataArray with mesh coordinates for `x` and `y`, and NaN values for data points.
 
     Notes
     -----
@@ -906,8 +913,8 @@ def plot_map_mesh(
     edgecolors="k",
     linewidth=0.1,
     add_background=True,
-    fig_kwargs={},
-    subplot_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
     **plot_kwargs,
 ):
     from gpm.checks import is_orbit  # is_grid
@@ -954,24 +961,20 @@ def plot_map_mesh_centroids(
     c="r",
     s=1,
     add_background=True,
-    fig_kwargs={},
-    subplot_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM orbit granule mesh centroids in a cartographic map."""
     from gpm.checks import is_grid
 
-    # - Check inputs
-    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
-
-    # - Initialize figure
-    if ax is None:
-        subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
-        fig, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
-
-    # - Add cartopy background
-    if add_background:
-        ax = plot_cartopy_background(ax)
+    # - Initialize figure if necessary
+    ax = initialize_cartopy_plot(
+        ax=ax,
+        fig_kwargs=fig_kwargs,
+        subplot_kwargs=subplot_kwargs,
+        add_background=add_background,
+    )
 
     # - Retrieve centroids
     if is_grid(xr_obj):
@@ -996,7 +999,7 @@ def _plot_labels(
     add_colorbar=True,
     interpolation="nearest",
     cmap="Paired",
-    fig_kwargs={},
+    fig_kwargs=None,
     **plot_kwargs,
 ):
     """Plot labels.
@@ -1049,7 +1052,7 @@ def plot_labels(
     add_colorbar=True,
     interpolation="nearest",
     cmap="Paired",
-    fig_kwargs={},
+    fig_kwargs=None,
     **plot_kwargs,
 ):
     if is_generator(obj):
@@ -1084,8 +1087,8 @@ def plot_patches(
     variable=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot patches."""

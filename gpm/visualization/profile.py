@@ -156,7 +156,7 @@ def get_transect_slices(
     variable : TYPE, optional
         DESCRIPTION. The default is None.
     transect_kwargs : TYPE, optional
-        DESCRIPTION. The default is {}.
+        DESCRIPTION. The default is None.
 
     Returns
     -------
@@ -292,14 +292,14 @@ def plot_transect(
     ax=None,
     add_colorbar=True,
     zoom=True,
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM transect."""
     # - Check inputs
     check_is_transect(da)
-    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # - Initialize figure
     if ax is None:

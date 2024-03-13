@@ -55,9 +55,9 @@ def _plot_grid_map_cartopy(
     interpolation="nearest",
     add_background=True,
     rgb=False,
-    fig_kwargs={},
-    subplot_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot DataArray 2D field with cartopy."""
@@ -116,16 +116,16 @@ def _plot_grid_map_facetgrid(
     add_colorbar=True,
     interpolation="nearest",
     add_background=True,
-    fig_kwargs={},
-    subplot_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot 2D fields with FacetGrid."""
     # - Check inputs
     if ax is not None:
         raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
-    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
     subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
@@ -188,9 +188,9 @@ def plot_grid_map(
     add_colorbar=True,
     interpolation="nearest",
     add_background=True,
-    fig_kwargs={},
-    subplot_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot DataArray 2D field with cartopy."""
@@ -236,13 +236,13 @@ def _plot_grid_image(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot DataArray 2D image."""
     # - Check inputs
-    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # - Initialize figure
     if ax is None:
@@ -291,8 +291,8 @@ def plot_grid_mesh(
     edgecolors="k",
     linewidth=0.1,
     add_background=True,
-    fig_kwargs={},
-    subplot_kwargs={},
+    fig_kwargs=None,
+    subplot_kwargs=None,
     **plot_kwargs,
 ):
     from gpm.visualization.orbit import _plot_cartopy_pcolormesh
@@ -340,8 +340,8 @@ def plot_grid_image(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot DataArray 2D field with cartopy."""
@@ -384,15 +384,15 @@ def _plot_grid_image_facetgrid(
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot 2D fields with FacetGrid."""
     # - Check inputs
     if ax is not None:
         raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
-    preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name

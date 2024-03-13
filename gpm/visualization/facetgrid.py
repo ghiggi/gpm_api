@@ -51,8 +51,8 @@ class CustomFacetGrid(FacetGrid, ABC):
         add_colorbar: bool = True,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
-        cbar_kwargs: dict = {},
-        fig_kwargs: dict = {},
+        cbar_kwargs: dict = None,
+        fig_kwargs: dict = None,
         axes_class=None,
     ) -> None:
         """
@@ -137,6 +137,7 @@ class CustomFacetGrid(FacetGrid, ABC):
             axes_pad = (0.1, 0.3)
 
         # Define colorbar settings
+        cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
         orientation = cbar_kwargs.get("orientation", "vertical")
         cbar_pad = cbar_kwargs.get("pad", 0.2)
         cbar_size = cbar_kwargs.get("size", "3%")
@@ -154,6 +155,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         # --> facet_height=size and facet_aspect=aspect in xarray FacetGrid
         # --> We could provide this also as argument (fig_kwargs or **plot_kwargs?)
         # --> Only used in figsize not specified !
+        fig_kwargs = {} if fig_kwargs is None else fig_kwargs
         figsize = fig_kwargs.pop("figsize", None)
         if figsize is None:  # xarray FacetGrid defaults
             facet_width = facet_height * facet_aspect  # Width (in inches) of each facet
@@ -329,8 +331,8 @@ class CartopyFacetGrid(CustomFacetGrid):
         col_wrap: Optional[int] = None,
         axes_pad: Optional[tuple[float, float]] = None,
         add_colorbar: bool = True,
-        cbar_kwargs: dict = {},
-        fig_kwargs: dict = {},
+        cbar_kwargs: dict = None,
+        fig_kwargs: dict = None,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
@@ -455,8 +457,8 @@ class ImageFacetGrid(CustomFacetGrid):
         axes_pad: Optional[tuple[float, float]] = None,
         aspect: bool = False,
         add_colorbar: bool = True,
-        cbar_kwargs: dict = {},
-        fig_kwargs: dict = {},
+        cbar_kwargs: dict = None,
+        fig_kwargs: dict = None,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
