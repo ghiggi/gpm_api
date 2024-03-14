@@ -168,6 +168,23 @@ If a hook identifies an issue (signified by the pre-commit script exiting with a
 
 Further details about pre-commit hooks can be found in the Contributors Guidelines, specifically in the provided in the :ref:`Code quality control <code_quality_control>` section.
 
+Download the test data
+......................
+
+Some of GPM-API's tests require additional data to be downloaded.
+Ensure you have ssh keys set up for your GitHub account.
+If you did not yet clone GPM-API on your computer, run:
+
+.. code-block:: bash
+
+   git clone --recurse-submodules https://github.com/ghiggi/gpm_api.git
+
+If you already cloned GPM-API, run instead:
+
+.. code-block:: bash
+
+   git submodule update --init --recursive
+
 
 Run GPM-API on Jupyter Notebooks
 =====================================
