@@ -172,14 +172,8 @@ Download the test data
 ......................
 
 Some of GPM-API's tests require additional data to be downloaded.
-Ensure you have ssh keys set up for your GitHub account.
-If you did not yet clone GPM-API on your computer, run:
-
-.. code-block:: bash
-
-   git clone --recurse-submodules https://github.com/ghiggi/gpm_api.git
-
-If you already cloned GPM-API, run instead:
+First, ensure you have your GitHub account ssh keys `set up correctly <https://docs.github.com/articles/adding-a-new-ssh-key-to-your-github-account>_`.
+Then, from the within the ``gpm_api`` directory, run:
 
 .. code-block:: bash
 

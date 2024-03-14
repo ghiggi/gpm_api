@@ -335,9 +335,9 @@ Recommendation for the Pull Requests:
 Contributing to test data
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If your changes include updating test data, you may work with the ``gpm/tests/data`` directory as you would with any other git repository.
+If your changes include updating test data, you may work with the ``gpm/tests/data/`` directory as you would with any other git repository.
 You need to ask the maintainers to become a contributor on the `gpm_api_test_data <https://github.com/ghiggi/gpm_api_test_data>`_ repository to create a branch and a Pull Request.
-The API repository keeps track of the currently checked-out commit of the test-data repository. When the checked-out commit changes, you can register this change in the API repository by running
+The GPM-API repository keeps track of the currently checked-out commit of the test-data repository. When the checked-out commit changes, you can register this change in the GPM-API repository by running
 
 .. code-block:: bash
 
@@ -348,13 +348,41 @@ and committing.
 
 To submit your contribution that involves modifying test data, please follow this procedure.
 
-(A: API repository, B: test-data repository)
+(A: GPM-API repository, B: test-data repository)
 
 1. Make a *feature branch* for B
+
+.. code-block:: bash
+
+    cd gpm/tests/data
+    # Inside this directory, following git commands will apply to B
+    git checkout -b my-feature-branch
+    ...
+
 2. Have A point to the *feature branch* of B
+
+.. code-block:: bash
+
+    # From the root of the GPM-API repository
+    git add gpm/tests/data
+    git commit
+    ...
+
 3. Make two PRs (for A and B) and get both accepted
-4. Have the B’s PR merged into the *main branch*
-5. Update A to point to B’s *main branch* instead of *feature branch*
+4. Have the B’s PR merged into the B's *main branch*
+5. Update A to point to B’s updated *main branch* (instead of the old *feature branch*)
+
+.. code-block:: bash
+
+    # Checkout the main branch of the test-data repository
+    cd gpm/tests/data
+    git checkout main
+    git pull
+
+    cd ../../..
+    # From the root of the GPM-API repository, update the reference
+    git add gpm/tests/data
+
 6. Have A’s PR merged
 
 
