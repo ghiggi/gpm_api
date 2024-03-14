@@ -199,13 +199,14 @@ def _is_spatial_2d_datarray(da, strict):
     if not _is_expected_spatial_dims(spatial_dims):
         return False
     vertical_dims = _get_available_vertical_dims(da)
-    if not vertical_dims:
-        if strict:
-            if len(da.dims) == 2:
-                return True
-        else:
-            return True
-    return False
+
+    if vertical_dims:
+        return False
+
+    if strict and len(da.dims) != 2:
+        return False
+
+    return True
 
 
 def _is_spatial_3d_datarray(da, strict):
@@ -214,15 +215,14 @@ def _is_spatial_3d_datarray(da, strict):
     if not _is_expected_spatial_dims(spatial_dims):
         return False
     vertical_dims = _get_available_vertical_dims(da)
+
     if not vertical_dims:
         return False
-    else:
-        if strict:
-            if len(da.dims) == 2:
-                return True
-        else:
-            return True
-    return False
+
+    if strict and len(da.dims) != 3:
+        return False
+
+    return True
 
 
 def _is_transect_datarray(da, strict):
@@ -230,17 +230,15 @@ def _is_transect_datarray(da, strict):
     spatial_dims = list(_get_available_spatial_dims(da))
     if len(spatial_dims) != 1:
         return False
-
     vertical_dims = list(_get_available_vertical_dims(da))
+
     if not vertical_dims:
         return False
-    else:
-        if strict:
-            if len(da.dims) == 2:
-                return True
-        else:
-            return True
-    return False
+
+    if strict and len(da.dims) != 2:
+        return False
+
+    return True
 
 
 def _is_spatial_2d_dataset(ds, strict):
