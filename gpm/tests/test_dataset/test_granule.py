@@ -38,9 +38,6 @@ from gpm.dataset.conventions import finalize_dataset
 from gpm.utils.time import ensure_time_validity
 
 
-MAX_TIMESTAMP = 2**31 - 1
-
-
 # Tests for public functions ###################################################
 
 
@@ -162,7 +159,7 @@ def test_remove_dummy_variables():
         }
     )
 
-    expected_data_vars = ["real_var_1"]
+    expected_data_vars = ["lat_bnds", "lon_bnds", "real_var_1"]
     returned_dataset = granule._remove_dummy_variables(dataset)
     assert list(returned_dataset.data_vars) == expected_data_vars
 
@@ -317,18 +314,27 @@ def test_ensure_time_validity():
         construct_dataset_and_check_validation(datetimes_incomplete, datetimes)
 
 
-def _prepare_test_finalize_dataset(monkeypatch):
-    # Mock decoding coordinates
-    def mock_set_coordinates(ds, *args, **kwargs):
-        ds = ds.assign_coords({"decoding_coordinates": True})
-        return ds
-
-    monkeypatch.setattr(conventions, "set_coordinates", mock_set_coordinates)
-
+def get_sample_orbit_dataset():
     # Return a default dataset
-    da = xr.DataArray(np.random.rand(1, 1), dims=("other", "along_track"))
+    da = xr.DataArray(np.random.rand(1, 2, 2), dims=("other", "along_track", "cross_track"))
+    lon = xr.DataArray(np.random.rand(2, 2), dims=("cross_track", "along_track"))
+    lat = xr.DataArray(np.random.rand(2, 2), dims=("cross_track", "along_track"))
+    start_time = datetime(2018, 1, 1, 12, 30, 0)
+    end_time = datetime(2018, 1, 1, 12, 32, 0)
+    time = [start_time, end_time]
+    ds = xr.Dataset({"var": da, "time": time, "lon": lon, "lat": lat})
+    ds = ds.set_coords(["lon", "lat"])
+    return ds
+
+
+def get_sample_grid_dataset():
+    # Return a default dataset
+    da = xr.DataArray(np.random.rand(1, 1, 1, 1), dims=("lat", "lon", "time", "other"))
+    lon = xr.DataArray([1], dims=("lon"))
+    lat = xr.DataArray([2], dims=("lat"))
     time = [0]
-    ds = xr.Dataset({"var": da, "time": time})
+    ds = xr.Dataset({"var": da, "time": time, "lon": lon, "lat": lat})
+    ds = ds.set_coords(["lon", "lat"])
     return ds
 
 
@@ -337,12 +343,16 @@ def test_finalize_dataset_crs(monkeypatch):
 
     product = "product"
     scan_mode = "scan_mode"
-    time = [0]
-    da = xr.DataArray(np.random.rand(1, 1), dims=("other", "along_track"))
-    _prepare_test_finalize_dataset(monkeypatch)
+    ds = get_sample_orbit_dataset()
+
+    # Patch
+    def mock_set_coordinates(ds, *args, **kwargs):
+        ds = ds.assign_coords({"decoding_coordinates": True})
+        return ds
+
+    monkeypatch.setattr(conventions, "set_coordinates", mock_set_coordinates)
 
     # Check decoding coordinates
-    ds = xr.Dataset({"var": da, "time": time})
     ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     assert ds.coords["decoding_coordinates"].values
 
@@ -355,7 +365,7 @@ def test_finalize_dataset_crs(monkeypatch):
 
     monkeypatch.setattr(xr, "decode_cf", mock_decode_cf)
 
-    ds = xr.Dataset({"var": da, "time": time})
+    ds = get_sample_orbit_dataset()
     ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=True)
     assert ds.attrs["decoded"]
 
@@ -366,7 +376,7 @@ def test_finalize_dataset_crs(monkeypatch):
 
     monkeypatch.setattr(conventions, "set_dataset_crs", mock_set_dataset_crs)
 
-    ds = xr.Dataset({"var": da, "time": time})
+    ds = get_sample_orbit_dataset()
     ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     assert ds.attrs["crs"]
 
@@ -376,25 +386,24 @@ def test_finalize_dataset_reshaping(monkeypatch):
 
     product = "product"
     scan_mode = "scan_mode"
-    time = [0]
-    _prepare_test_finalize_dataset(monkeypatch)
 
-    da = xr.DataArray(np.random.rand(1, 1, 1), dims=("lat", "lon", "other"))
-    expected_dims = ("other", "lat", "lon")
-    ds = xr.Dataset({"var": da, "time": time})
+    # Test grid case
+    ds = get_sample_grid_dataset()  # (lat, lon, time, other)
     ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
+    expected_dims = ("time", "other", "lat", "lon")
     assert ds["var"].dims == expected_dims
 
-    da = xr.DataArray(np.random.rand(1, 1, 1), dims=("other", "cross_track", "along_track"))
+    # Test orbit case
+    ds = get_sample_orbit_dataset()  # (other, along_track, cross_track)
+    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     expected_dims = ("cross_track", "along_track", "other")
-    ds = xr.Dataset({"var": da, "time": time})
-    ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     assert ds["var"].dims == expected_dims
 
-    da = xr.DataArray(np.random.rand(1, 1), dims=("other", "along_track"))
-    expected_dims = ("along_track", "other")
-    ds = xr.Dataset({"var": da, "time": time})
+    # Test orbit case only along_track
+    ds = get_sample_orbit_dataset()
+    ds = ds.isel(cross_track=0)  # (other, along_track)
     ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
+    expected_dims = ("along_track", "other")
     assert ds["var"].dims == expected_dims
 
 
@@ -403,7 +412,7 @@ def test_finalize_dataset_time_subsetting(monkeypatch):
 
     product = "product"
     scan_mode = "scan_mode"
-    ds = _prepare_test_finalize_dataset(monkeypatch)
+    ds = get_sample_orbit_dataset()
 
     def mock_subset_by_time(ds, start_time, end_time):
         ds.attrs["start_time"] = start_time
@@ -412,8 +421,8 @@ def test_finalize_dataset_time_subsetting(monkeypatch):
 
     monkeypatch.setattr(conventions, "subset_by_time", mock_subset_by_time)
 
-    start_time = datetime.fromtimestamp(np.random.randint(0, MAX_TIMESTAMP))
-    end_time = datetime.fromtimestamp(np.random.randint(0, MAX_TIMESTAMP))
+    start_time = datetime(2018, 1, 1, 12, 30, 0)
+    end_time = datetime(2018, 1, 1, 12, 32, 0)
     ds = finalize_dataset(
         ds,
         product=product,
@@ -426,13 +435,12 @@ def test_finalize_dataset_time_subsetting(monkeypatch):
     assert ds.attrs["end_time"] == end_time
 
 
-def test_finalize_dataset_time_encoding(monkeypatch):
+def test_finalize_dataset_time_encoding():
     """Test time encoding int finalize_dataset"""
 
     product = "product"
     scan_mode = "scan_mode"
-    ds = _prepare_test_finalize_dataset(monkeypatch)
-
+    ds = get_sample_orbit_dataset()
     ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
     expected_time_encoding = {
         "units": "seconds since 1970-01-01 00:00:00",
@@ -446,7 +454,7 @@ def test_finalize_dataset_attrs(monkeypatch):
 
     product = "product"
     scan_mode = "scan_mode"
-    ds = _prepare_test_finalize_dataset(monkeypatch)
+    ds = get_sample_orbit_dataset()
 
     def mock_set_coords_attrs(ds, *args, **kwargs):
         ds.attrs["coords_attrs"] = True

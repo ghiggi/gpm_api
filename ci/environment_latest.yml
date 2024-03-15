@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - cartopy
+  - pyproj
   - click
   - donfig
   - dask
@@ -14,12 +15,11 @@ dependencies:
   - trollsift
   - xarray
   - xarray-datatree
+  - scipy
   - ximage
+  - pycolorbar
   # testing
   - pytest
   - pytest-cov
   - pytest-mock
-  - pydantic
-  - pip
-  - pip:
-    - pycolorbar
+  - deepdiff

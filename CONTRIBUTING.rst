@@ -268,7 +268,7 @@ The following tools are used:
 
 For contributors interested in running the tests locally:
 
-1. Ensure you have the :ref:`development environment <installation_standard>` correctly set up.
+1. Ensure you have the :ref:`development environment <installation_standard>` correctly set up. Make sure you also downloaded the additional test data.
 2. Navigate to the GPM-API root directory.
 3. Execute the following command to run the entire test suite:
 
@@ -296,7 +296,6 @@ These options provide flexibility, allowing you to efficiently target and valida
 .. note::
    Each test module must be prefixed with ``test_`` to be recognized and selected by pytest.
    This naming pattern is a standard convention in pytest and helps in the automatic discovery of test files.
-
 
 6. Push your changes to your fork repository
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -331,6 +330,60 @@ Recommendation for the Pull Requests:
    -  Provide a comprehensive description of the bug within your Pull Request. This aids reviewers in understanding the issue and the impact of your fix.
    -  If your Pull Request addresses a specific issue, add ``(fix #xxxx)`` in your PR title to link the PR to the issue and enhance the clarity of release logs. For example, the title of a PR fixing issue ``#3899`` would be ``<your PR title> (fix #3899)``.
    -  If applicable, ensure that your fix includes appropriate tests. Adding tests for your bug fix helps prevent future regressions and maintains the stability of the software.
+
+
+Contributing to test data
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If your changes modify the structure of the GPM-API xarray Dataset, you will likely need to update the test data in the ``gpm/tests/data/`` directory. This directory functions as a separate git directory, with its own history and remote repository.
+To update the test data, you need to ask the maintainers to become a contributor on the `gpm_api_test_data <https://github.com/ghiggi/gpm_api_test_data>`_ repository in order to create a branch and a Pull Request.
+The GPM-API repository keeps track of the currently checked-out commit of the test-data repository. When the checked-out commit changes, you can register this change in the GPM-API repository by running
+
+.. code-block:: bash
+
+    git add gpm/tests/data
+
+and committing.
+
+
+To submit your contribution that involves modifying test data, please follow this procedure.
+
+(A: GPM-API repository, B: test-data repository)
+
+1. Make a *feature branch* for B
+
+.. code-block:: bash
+
+    cd gpm/tests/data
+    # Inside this directory, following git commands will apply to B
+    git checkout -b my-feature-branch
+    ...
+
+2. Have A point to the *feature branch* of B
+
+.. code-block:: bash
+
+    # From the root of the GPM-API repository
+    git add gpm/tests/data
+    git commit
+    ...
+
+3. Make two PRs (for A and B) and get both accepted
+4. Have the B’s PR merged into the B's *main branch*
+5. Update A to point to B’s updated *main branch* (instead of the old *feature branch*)
+
+.. code-block:: bash
+
+    # Checkout the main branch of the test-data repository
+    cd gpm/tests/data
+    git checkout main
+    git pull
+
+    cd ../../..
+    # From the root of the GPM-API repository, update the reference
+    git add gpm/tests/data
+
+6. Have A’s PR merged
 
 
 Code review checklist

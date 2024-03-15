@@ -119,7 +119,7 @@ def test_invalid_filepaths():
             "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KAR_2007050002_0135_036081_1B😵_DAB_07A.h5"
         )
 
-    # Unknown product (not in product_def.yml)
+    # Unknown product (not in products.yaml)
     with pytest.raises(ValueError):
         info.get_info_from_filepath(
             "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/😥.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"

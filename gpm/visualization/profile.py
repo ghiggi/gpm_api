@@ -31,12 +31,12 @@ import numpy as np
 import pyproj
 import xarray as xr
 
+from gpm import get_plot_kwargs
 from gpm.checks import check_is_transect
 from gpm.utils.slices import ensure_is_slice, get_slice_size
-from gpm.utils.utils_cmap import get_colorbar_settings
 from gpm.visualization.plot import (
     _plot_xr_pcolormesh,
-    _preprocess_figure_args,
+    preprocess_figure_args,
 )
 
 
@@ -156,7 +156,7 @@ def get_transect_slices(
     variable : TYPE, optional
         DESCRIPTION. The default is None.
     transect_kwargs : TYPE, optional
-        DESCRIPTION. The default is {}.
+        DESCRIPTION. The default is None.
 
     Returns
     -------
@@ -292,24 +292,23 @@ def plot_transect(
     ax=None,
     add_colorbar=True,
     zoom=True,
-    fig_kwargs={},
-    cbar_kwargs={},
+    fig_kwargs=None,
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM transect."""
     # - Check inputs
     check_is_transect(da)
-    _preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # - Initialize figure
     if ax is None:
         fig, ax = plt.subplots(**fig_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
-    plot_kwargs, cbar_kwargs = get_colorbar_settings(
-        name=da.name, plot_kwargs=plot_kwargs, cbar_kwargs=cbar_kwargs
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=da.name, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
     )
-
     # - Select only vertical regions with data
     if zoom:
         da = da.gpm.slice_range_with_valid_data()

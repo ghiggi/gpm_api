@@ -60,8 +60,14 @@ def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=
     tolerance = datetime.timedelta(seconds=5)
 
     # Get first and last timestep from xr.Dataset
-    first_start = ds["time"].data[0].astype("M8[s]").tolist()
-    last_end = ds["time"].data[-1].astype("M8[s]").tolist()
+    if "time_bnds" not in ds:
+        first_start = ds["time"].data[0].astype("M8[s]").tolist()
+        last_end = ds["time"].data[-1].astype("M8[s]").tolist()
+    else:
+        time_bnds = ds["time_bnds"]
+        first_start = time_bnds.isel(nv=0).data[0].astype("M8[s]").tolist()
+        last_end = time_bnds.isel(nv=1).data[-1].astype("M8[s]").tolist()
+
     # Check time period is covered
     msg = ""
     if start_time and first_start - tolerance > start_time:
@@ -104,9 +110,11 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     ##------------------------------------------------------------------------.
     # Clean out HDF5 attributes
     # - CodeMissingValue --> _FillValue
-    # - FillValue --> _FillValue,
-    # - Units --> units,
-    # - Remove DimensionNames,
+    # - FillValue --> _FillValue
+    # - Units --> units
+    # - Remove DimensionNames
+    # - Sanitize LongName --> description
+
     # - Add <gpm_api_product> : <product> key : value
     ds = standardize_dataarrays_attrs(ds, product)
 
@@ -120,27 +128,33 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     # - _FillValue is moved from attrs to encoding !
     if decode_cf:
         ds = apply_cf_decoding(ds)
+    if "time_bnds" in ds:
+        ds["time_bnds"] = ds["time_bnds"].astype("M8[ns]").compute()
 
     ###-----------------------------------------------------------------------.
     ## Check swath time coordinate
-    # Ensure validity of the time dimension
+    # --> Ensure validity of the time dimension
     # - Infill up to 10 consecutive NaT
     # - Do not check for regular time dimension !
     ds = ensure_time_validity(ds, limit=10)
 
     ##------------------------------------------------------------------------.
     # Decode variables
-    ds = decode_variables(ds, product)
+    if config.get("decode_variables"):
+        ds = decode_variables(ds, product)
 
     ##------------------------------------------------------------------------.
     # Add CF-compliant coordinates attributes and encoding
     ds = set_coords_attrs(ds)
 
-    # Add time encoding
+    ##------------------------------------------------------------------------.
+    # Add time encodings
     encoding = {}
     encoding["units"] = EPOCH
     encoding["calendar"] = "proleptic_gregorian"
     ds["time"].encoding = encoding
+    if "time_bnds" in ds:
+        ds["time_bnds"].encoding = encoding
 
     ##------------------------------------------------------------------------.
     # Transpose to have (y, x) dimension order
@@ -168,7 +182,9 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     # - Raise warning if the time period is not fully covered
     # - The warning can raise if some data are not downloaded or some granule
     #   at the start/end of the period are empty
-    ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
+    # - Skip subsetting if time_bnds in dataset coordinates (i.e. IMERG case)
+    if "time_bnds" not in ds:
+        ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
     _check_time_period_coverage(ds, start_time=start_time, end_time=end_time, raise_error=False)
 
     ###-----------------------------------------------------------------------.
@@ -176,6 +192,9 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     # - non-contiguous scans in orbit data
     # - non-regular timesteps in grid data
     # - invalid geolocation coordinates
+    # --> Put lon/lat in memory first to avoid recomputing it
+    ds["lon"] = ds["lon"].compute()
+    ds["lat"] = ds["lat"].compute()
     try:
         if is_grid(ds):
             if config.get("warn_non_contiguous_scans"):

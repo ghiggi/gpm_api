@@ -47,6 +47,16 @@ image_extension = ".png"
 mse_tolerance = 5e-3
 
 
+def skip_tests_if_no_data() -> None:
+    """Skip tests if the test data does not exist"""
+
+    if not os.path.exists(plots_dir_path):
+        pytest.skip(
+            "Test images not found. Please run `git submodule update --init`. to clone existing test data.",
+            allow_module_level=True,
+        )
+
+
 def save_and_check_figure(
     figure: Optional[mpl_figure.Figure] = None,
     name: str = "",
@@ -63,7 +73,6 @@ def save_and_check_figure(
     reference_path = os.path.join(plots_dir_path, name + image_extension)
 
     if not os.path.exists(reference_path):
-        os.makedirs(plots_dir_path, exist_ok=True)
         figure.savefig(reference_path)
         pytest.skip(
             "Reference figure did not exist. Created it. To clone existing test data instead, run `git submodule update --init`."

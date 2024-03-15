@@ -1,0 +1,54 @@
+colormap_type: LinearSegmentedColormap
+color_space: rgb
+color_palette:
+- - 255
+  - 255
+  - 255
+- - 245
+  - 245
+  - 255
+- - 180
+  - 180
+  - 255
+- - 120
+  - 120
+  - 255
+- - 20
+  - 20
+  - 255
+- - 0
+  - 216
+  - 195
+- - 0
+  - 150
+  - 144
+- - 0
+  - 102
+  - 102
+- - 255
+  - 255
+  - 0
+- - 255
+  - 200
+  - 0
+- - 255
+  - 150
+  - 0
+- - 255
+  - 100
+  - 0
+- - 255
+  - 0
+  - 0
+- - 200
+  - 0
+  - 0
+- - 120
+  - 0
+  - 0
+- - 40
+  - 0
+  - 0
+auxiliary:
+   category: precipitation
+   source: Bureau of Meteorology (Australia)

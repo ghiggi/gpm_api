@@ -49,6 +49,9 @@ dependencies = [
     "pyresample",
     "matplotlib>=3.8.3",
     "cartopy>=0.22.0",
+    "pyproj",
+    "scipy",
+    "pycolorbar",
 ]
 requires-python = ">=3.9"
 dynamic = ["version"]
@@ -56,8 +59,8 @@ dynamic = ["version"]
 [project.optional-dependencies]
 dev = ["pre-commit",
        "black[jupyter]", "blackdoc", "codespell", "ruff",
-       "pytest", "pytest-cov", "pytest-mock", "pydantic", "pytest-check",
-       "pytest-watcher",
+       "pytest", "pytest-cov", "pytest-mock", "pytest-check",
+       "pytest-watcher", "deepdiff",
        "pip-tools", "bumpver", "twine", "wheel", "build", "setuptools>=61.0.0",
        "ximage", "pyvista", "polars", "pyarrow",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]

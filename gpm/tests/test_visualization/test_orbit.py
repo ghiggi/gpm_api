@@ -32,10 +32,14 @@ from gpm.visualization import orbit
 from gpm.tests.test_visualization.utils import (
     get_test_name,
     save_and_check_figure,
+    skip_tests_if_no_data,
 )
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray
+
+
+skip_tests_if_no_data()
 
 
 VARIABLE = "variable"

@@ -234,13 +234,14 @@ def ensure_time_validity(xr_obj, limit=10):
         GPM xarray object.
 
     """
+    attrs = xr_obj["time"].attrs
     timesteps = xr_obj["time"].values
     timesteps = infill_timesteps(timesteps, limit=limit)
     if "time" not in list(xr_obj.dims):
         xr_obj["time"].data = timesteps
     else:
         xr_obj = xr_obj.assign_coords({"time": timesteps})
-
+    xr_obj["time"].attrs = attrs
     return xr_obj
 
 

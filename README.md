@@ -47,8 +47,8 @@ username = "<your PPS username>" # likely your mail
 password = "<your PPS password>" # likely your mail
 base_dir = "<path/to/directory/GPM"  # path to the directory where to download the data
 gpm.define_configs(username_pps=username,
-                       password_pps=password,
-                       base_dir=base_dir)
+                   password_pps=password,
+                   base_dir=base_dir)
 
 # You can check that the config file has been correctly created with:
 configs = gpm.read_configs()
@@ -73,11 +73,11 @@ start_time = datetime.datetime(2020,7, 22, 0, 1, 11)
 end_time = datetime.datetime(2020,7, 22, 0, 23, 5)
 
 gpm.download(product=product,
-                 product_type=product_type,
-                 version=version,
-                 n_threads=2,
-                 start_time=start_time,
-                 end_time=end_time)
+             product_type=product_type,
+             version=version,
+             n_threads=2,
+             start_time=start_time,
+             end_time=end_time)
 
 ```
 
@@ -111,10 +111,10 @@ version = 7
 start_time = datetime.datetime(2020,7, 22, 0, 1, 11)
 end_time = datetime.datetime(2020,7, 22, 0, 23, 5)
 ds = gpm.open_dataset(product=product,
-                          product_type=product_type,
-                          version=version
-                          start_time=start_time,
-                          end_time=end_time)
+                      product_type=product_type,
+                      version=version
+                      start_time=start_time,
+                      end_time=end_time)
 ```
 
 -----------------------------------------------------------------------------------------

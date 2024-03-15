@@ -27,7 +27,12 @@
 """This module contains functions to decode GPM DPR, PR, Ka and Ku products."""
 import xarray as xr
 
-from gpm.dataset.decoding.utils import ceil_datarray, remap_numeric_array
+from gpm.dataset.decoding.utils import (
+    add_decoded_flag,
+    ceil_datarray,
+    is_dataarray_decoded,
+    remap_numeric_array,
+)
 
 
 def decode_landSurfaceType(da):
@@ -276,17 +281,17 @@ def decode_product(ds):
     ]
     # Decode such variables if present in the xarray object
     for variable in variables:
-        if variable in ds and ds[variable].attrs.get("gpm_api_decoded", "no") != "yes":
+        if variable in ds and not is_dataarray_decoded(ds[variable]):
             with xr.set_options(keep_attrs=True):
                 ds[variable] = _get_decoding_function(variable)(ds[variable])
-            ds[variable].attrs["gpm_api_decoded"] = "yes"
 
-    # Preprocess other variables
-    # --> Split 3D field in 2D fields
-    if (
-        "precipWaterIntegrated" in ds
-        and ds["precipWaterIntegrated"].attrs.get("gpm_api_decoded", "no") != "yes"
-    ):
+    # Added gpm_api_decoded flag
+    ds = add_decoded_flag(ds, variables=variables)
+
+    #### Preprocess other variables
+    #### - precipWaterIntegrated
+    if "precipWaterIntegrated" in ds and not is_dataarray_decoded(ds["precipWaterIntegrated"]):
+        # Extract variables
         ds["precipWaterIntegrated"] = ds["precipWaterIntegrated"] / 1000
         ds["precipWaterIntegrated_Liquid"] = ds["precipWaterIntegrated"].isel({"LS": 0})
         ds["precipWaterIntegrated_Solid"] = ds["precipWaterIntegrated"].isel({"LS": 1})
@@ -294,12 +299,32 @@ def decode_product(ds):
         ds["precipWaterIntegrated"] = (
             ds["precipWaterIntegrated_Liquid"] + ds["precipWaterIntegrated_Solid"]
         )
+        # Add units
         variables = [
             "precipWaterIntegrated_Liquid",
             "precipWaterIntegrated_Solid",
             "precipWaterIntegrated",
         ]
         for var in variables:
-            ds[var].attrs["gpm_api_decoded"] = "yes"
             ds[var].attrs["units"] = "kg/m^2"
+
+        # Add GPM-API decoded flag
+        ds = add_decoded_flag(ds, variables=variables)
+
+    #### - paramDSD
+    if "paramDSD" in ds and not is_dataarray_decoded(ds["paramDSD"]):
+        # Extract variables
+        da = ds["paramDSD"]
+        ds["dBNw"] = da.isel(DSD_params=0)
+        ds["Dm"] = da.isel(DSD_params=1)
+        ds["Nw"] = 10 ** (ds["dBNw"] / 10)
+        # Add units
+        ds["Dm"].attrs["units"] = "mm"
+        ds["Dm"].attrs["long_name"] = "Mass weighted mean diameter"
+        ds["dBNw"].attrs["units"] = "10log10(1/(mm*m^3))"
+        ds["Nw"].attrs["units"] = "1/(mm*m^3)"
+        # Add gpm_api_decoded flag
+        ds = add_decoded_flag(ds, variables=["dBNw", "Dm", "Nw"])
+        # Drop unused variable
+        ds = ds.drop_vars("paramDSD")
     return ds

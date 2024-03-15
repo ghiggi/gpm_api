@@ -1,0 +1,17 @@
+colormap_type: LinearSegmentedColormap
+color_space: name
+color_palette:
+- cyan
+- deepskyblue
+- dodgerblue
+- blue
+- chartreuse
+- limegreen
+- green
+- darkgreen
+- yellow
+- gold
+- orange
+- red
+- magenta
+- darkmagenta

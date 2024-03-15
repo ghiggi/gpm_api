@@ -54,10 +54,7 @@ def _remove_dummy_variables(ds):
     dummy_variables = [
         "Latitude",
         "Longitude",
-        # IMERG bnds
-        "time_bnds",
-        "lat_bnds",
-        "lon_bnds",
+        "time_bnds",  # added with coords dictionary !
     ]
     dummy_variables = np.array(dummy_variables)
     variables_to_drop = dummy_variables[np.isin(dummy_variables, list(ds.data_vars))]
@@ -142,6 +139,10 @@ def _get_scan_mode_dataset(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ds = ds.assign_coords(coords)
+        if "lon_bnds" in ds:
+            ds = ds.set_coords("lon_bnds")
+        if "lat_bnds" in ds:
+            ds = ds.set_coords("lat_bnds")
 
     # Assign global attributes
     ds.attrs = attrs
@@ -173,8 +174,11 @@ def unused_var_dims(ds):
 
 def remove_unused_var_dims(ds):
     """Remove coordinates and dimensions not used by the xr.Dataset variables."""
-    unused_dims = unused_var_dims(ds)
-    return ds.drop_dims(unused_dims)
+    if len(ds.data_vars) >= 1:
+        unused_dims = unused_var_dims(ds)
+        unused_dims = [dim for dim in unused_dims if dim not in ["latv", "lonv", "nv"]]
+        ds = ds.drop_dims(unused_dims)
+    return ds
 
 
 def _open_granule(
@@ -213,8 +217,8 @@ def _open_granule(
 
     ###-----------------------------------------------------------------------.
     # If there are dataset variables, remove coords and dimensions not exploited by data variables
-    if len(ds.data_vars) >= 1:
-        ds = remove_unused_var_dims(ds)
+    # - Except for nv, lonv, latv bounds dimensions
+    ds = remove_unused_var_dims(ds)
 
     ###-----------------------------------------------------------------------.
     # Return xr.Dataset

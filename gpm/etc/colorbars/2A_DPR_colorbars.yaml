@@ -1,0 +1,74 @@
+zFactorFinalNearSurface:
+  reference: reflectivity
+zFactorFinalESurface:
+  reference: reflectivity
+zFactorMeasured:
+  reference: reflectivity
+zFactorFinal:
+  reference: reflectivity
+dfrMeasured:
+  reference: dual_frequency_ratio
+dfrFinal:
+  reference: dual_frequency_ratio
+dfrFinalNearSurface:
+  reference: dual_frequency_ratio
+REFC:
+  reference: reflectivity
+precipRate:
+  reference: precipitation_rate
+precipRateNearSurface:
+  reference: precipitation_rate
+precipRateESurface:
+  reference: precipitation_rate
+precipRateESurface2:
+  reference: precipitation_rate
+precipRateAve24:
+  reference: precipitation_rate
+precipWaterIntegrated:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 20
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Total Precipitable Water [$kg \ m^{-2}$]
+Dm:
+  cmap:
+    name: plasma
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 2
+  cbar:
+    extend: both
+    label: $D_m$ [$mm$]
+dBNw:
+  cmap:
+    name: plasma
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: -1
+    vmax: 6
+  cbar:
+    extend: both
+    label: $N_w$ [10$\log{(mm^{-1} \ m^{-3})}$]
+Nw:
+  cmap:
+    name: plasma
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+  cbar:
+    extend: both
+    label: $N_w$ [$mm^{-1} \ m^{-3}$]

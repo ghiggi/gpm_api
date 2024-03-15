@@ -100,7 +100,8 @@ def run_apidoc(_):
 
     module_dir = os.path.join(cur_dir, "..", "..", "gpm")
     output_dir = os.path.join(cur_dir, "api")
-    main(["-f", "-o", output_dir, module_dir])
+    exclude = [os.path.join(module_dir, "tests")]
+    main(["-f", "-o", output_dir, module_dir, *exclude])
 
 
 def setup(app):

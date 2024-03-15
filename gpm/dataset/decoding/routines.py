@@ -53,12 +53,16 @@ def decode_variables(ds, product):
         ds = _get_decoding_function("gpm.dataset.decoding.decode_2a_radar")(ds)
 
     # Decode variables of 2A-<PMW> products
-    if product in available_products(product_categories="PMW", product_levels="2A"):
+    elif product in available_products(product_categories="PMW", product_levels="2A"):
         ds = _get_decoding_function("gpm.dataset.decoding.decode_2a_pmw")(ds)
 
-    # Decode variables of 2A-<PMW> products
-    if product in available_products(product_categories="PMW", product_levels="1C"):
+    # Decode variables of 1C-<PMW> products
+    elif product in available_products(product_categories="PMW", product_levels="1C"):
         ds = _get_decoding_function("gpm.dataset.decoding.decode_1c_pmw")(ds)
+
+    # Decode variables of IMERG products
+    elif product in available_products(product_categories="IMERG"):
+        ds = _get_decoding_function("gpm.dataset.decoding.decode_imerg")(ds)
 
     # if ds.attrs.get("TotalQualityCode"):
     #     TotalQualityCode = ds.attrs.get("TotalQualityCode")
