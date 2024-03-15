@@ -29,7 +29,7 @@ import numpy as np
 
 from gpm.utils.list import flatten_list
 
-WISHED_COORDS = ["height", "dataQuality", "SCorientation"]
+WISHED_COORDS = ["height", "SCorientation", "dataQuality"]
 
 
 def _get_groups_path(dt):

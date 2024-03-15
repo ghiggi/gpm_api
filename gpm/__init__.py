@@ -28,11 +28,14 @@ import os
 from importlib.metadata import PackageNotFoundError, version
 
 # os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"  # noqa
+import pycolorbar
+from pycolorbar import get_plot_kwargs  # noqa
+
 import gpm.accessor  # noqa
 from gpm._config import config  # noqa
-from gpm.configs import (
-    define_configs,  # noqa
-    read_configs,  # noqa
+from gpm.configs import (  # noqa
+    define_configs,
+    read_configs,
 )
 from gpm.dataset.dataset import open_dataset  # noqa
 from gpm.dataset.datatree import open_datatree  # noqa
@@ -65,6 +68,17 @@ from gpm.visualization.plot import plot_labels, plot_patches  # noqa
 
 _root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # noqa
 
+# Register colormaps and colorbars
+_colorbar_registered = False
+if not _colorbar_registered:
+    pycolorbar.register_colormaps(os.path.join(pycolorbar.etc_directory, "colormaps"))
+    pycolorbar.register_colormaps(
+        os.path.join(_root_path, "gpm", "etc", "colormaps"), verbose=False
+    )
+    pycolorbar.register_colorbars(os.path.join(_root_path, "gpm", "etc", "colorbars"))
+
+colormaps = pycolorbar.colormaps
+colorbars = pycolorbar.colorbars
 
 # Get version
 try:

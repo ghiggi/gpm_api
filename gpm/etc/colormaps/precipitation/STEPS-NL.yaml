@@ -1,0 +1,13 @@
+colormap_type: LinearSegmentedColormap
+color_space: name
+color_palette:
+- lightgrey
+- lightskyblue
+- deepskyblue
+- blue
+- darkblue
+- yellow
+- gold
+- darkorange
+- red
+- darkred

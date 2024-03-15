@@ -116,7 +116,7 @@ class TestPlotMap:
         """Test plotting orbit data using row and col arguments"""
 
         # Calling with call_wrap=1, which should be ignored
-        p = plot.plot_map(orbit_dataarray_2x2_frames, col=EXTRA_DIM, row=EXTRA_DIM_2, col_wrap=1)
+        p = plot.plot_map(orbit_dataarray_2x2_frames, col=EXTRA_DIM, row=EXTRA_DIM_2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_no_col_row(
@@ -189,7 +189,7 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit data with custom colorbar tick labels"""
 
-        cbar_kwargs = {"ticklabels": [42, 43, 44, 45]}
+        cbar_kwargs = {"ticks": [0.1, 0.2, 0.4, 0.6, 0.8], "ticklabels": [42.5, 43, 44, 45, 46]}
         p = plot.plot_map(
             orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, cbar_kwargs=cbar_kwargs
         )

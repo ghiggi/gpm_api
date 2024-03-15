@@ -1,0 +1,91 @@
+mostLikelyPrecipitation:
+  reference: precipitation_rate
+convectivePrecipitation:
+  reference: precipitation_rate
+frozenPrecipitation:
+  reference: precipitation_rate
+surfacePrecipitation:
+  reference: precipitation_rate
+totalWaterPath:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 20
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Total Precipitable Water [$kg \ m^{-2}$]
+rainWaterPath:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 5
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Rain Water Path [$kg \ m^{-2}$]
+cloudWaterPath:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 1
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Cloud Liquid Water Path [$kg \ m^{-2}$]
+cloudLiquidWaterPath:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 1
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Cloud Liquid Water Path [$kg \ m^{-2}$]
+liquidWaterPath:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.5
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Liquid Water Path [$kg \ m^{-2}$]
+iceWaterPath:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.5
+    vmax: 10
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Ice Water Path [$kg \ m^{-2}$]

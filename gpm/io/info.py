@@ -137,7 +137,7 @@ def _get_info_from_filename(filename):
             raise ValueError(f"Impossible to infer file information from '{filename}'")
 
     # Add product information
-    # - ATTENTION: can not be inferred for products not defined in etc/product.yml
+    # - ATTENTION: can not be inferred for products not defined in etc/products.yaml
     info_dict["product"] = get_product_from_filepath(filename)
 
     # Return info dictionary

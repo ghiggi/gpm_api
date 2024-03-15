@@ -355,8 +355,10 @@ class GPM_Base_Accessor:
         facecolor="orange",
         edgecolor="black",
         alpha=0.4,
+        fig_kwargs=None,
+        subplot_kwargs=None,
         add_background=True,
-        **kwargs,
+        **plot_kwargs,
     ):
         from gpm.visualization.orbit import plot_swath
 
@@ -367,14 +369,38 @@ class GPM_Base_Accessor:
             edgecolor=edgecolor,
             alpha=alpha,
             add_background=add_background,
-            **kwargs,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
         )
         return p
 
-    def plot_swath_lines(self, ax=None, x="lon", y="lat", linestyle="--", color="k", **kwargs):
+    def plot_swath_lines(
+        self,
+        ax=None,
+        x="lon",
+        y="lat",
+        linestyle="--",
+        color="k",
+        add_background=True,
+        fig_kwargs=None,
+        subplot_kwargs=None,
+        **plot_kwargs,
+    ):
         from gpm.visualization.orbit import plot_swath_lines
 
-        p = plot_swath_lines(self._obj, ax=ax, x=x, y=y, linestyle=linestyle, color=color, **kwargs)
+        p = plot_swath_lines(
+            self._obj,
+            ax=ax,
+            x=x,
+            y=y,
+            linestyle=linestyle,
+            color=color,
+            add_background=add_background,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
         return p
 
     def plot_map_mesh(
@@ -385,8 +411,8 @@ class GPM_Base_Accessor:
         edgecolors="k",
         linewidth=0.1,
         add_background=True,
-        fig_kwargs={},
-        subplot_kwargs={},
+        fig_kwargs=None,
+        subplot_kwargs=None,
         **plot_kwargs,
     ):
         from gpm.visualization.plot import plot_map_mesh
@@ -413,8 +439,8 @@ class GPM_Base_Accessor:
         c="r",
         s=1,
         add_background=True,
-        fig_kwargs={},
-        subplot_kwargs={},
+        fig_kwargs=None,
+        subplot_kwargs=None,
         **plot_kwargs,
     ):
         from gpm.visualization.plot import plot_map_mesh_centroids
@@ -507,9 +533,9 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         add_swath_lines=True,
         add_background=True,
         interpolation="nearest",  # used only for GPM grid object
-        fig_kwargs={},
-        subplot_kwargs={},
-        cbar_kwargs={},
+        fig_kwargs=None,
+        subplot_kwargs=None,
+        cbar_kwargs=None,
         **plot_kwargs,
     ):
         from gpm.visualization.plot import plot_map
@@ -540,8 +566,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         y=None,
         add_colorbar=True,
         interpolation="nearest",
-        fig_kwargs={},
-        cbar_kwargs={},
+        fig_kwargs=None,
+        cbar_kwargs=None,
         **plot_kwargs,
     ):
         from gpm.visualization.plot import plot_image
@@ -566,8 +592,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         ax=None,
         add_colorbar=True,
         zoom=True,
-        fig_kwargs={},
-        cbar_kwargs={},
+        fig_kwargs=None,
+        cbar_kwargs=None,
         **plot_kwargs,
     ):
         from gpm.visualization.profile import plot_transect
@@ -664,9 +690,9 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         add_background=True,
         interpolation="nearest",  # used only for GPM grid object
         rgb=False,
-        fig_kwargs={},
-        subplot_kwargs={},
-        cbar_kwargs={},
+        fig_kwargs=None,
+        subplot_kwargs=None,
+        cbar_kwargs=None,
         **plot_kwargs,
     ):
         from gpm.visualization.plot import plot_map
@@ -696,8 +722,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         y=None,
         add_colorbar=True,
         interpolation="nearest",
-        fig_kwargs={},
-        cbar_kwargs={},
+        fig_kwargs=None,
+        cbar_kwargs=None,
         **plot_kwargs,
     ):
         from gpm.visualization.plot import plot_image
@@ -721,8 +747,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         ax=None,
         add_colorbar=True,
         zoom=True,
-        fig_kwargs={},
-        cbar_kwargs={},
+        fig_kwargs=None,
+        cbar_kwargs=None,
         **plot_kwargs,
     ):
         from gpm.visualization.profile import plot_transect

@@ -46,12 +46,44 @@ gpm.config.set(
 )
 
 
+def remove_unfixed_attributes(ds):
+    # Remove history attribute
+    ds.attrs.pop("history")
+
+    # Remove attributes conflicting between python versions
+    if "crsWGS84" in ds.coords:
+        ds.coords["crsWGS84"].attrs.pop("crs_wkt")
+        ds.coords["crsWGS84"].attrs.pop("horizontal_datum_name")
+        ds.coords["crsWGS84"].attrs.pop("spatial_ref")
+    return ds
+
+
+def check_dataset_equality(cut_filepath):
+    processed_dir = os.path.dirname(cut_filepath.replace("cut", "processed"))
+    processed_filenames = os.listdir(processed_dir)
+    processed_filepaths = [
+        os.path.join(processed_dir, filename) for filename in processed_filenames
+    ]
+    scan_modes = [os.path.splitext(filename)[0] for filename in processed_filenames]
+    for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths):
+        ds = open_granule(cut_filepath, scan_mode=scan_mode).compute()
+        ds_expected = xr.open_dataset(processed_filepath).compute()
+
+        # Remove attributes that are allowed to change
+        ds_expected = remove_unfixed_attributes(ds_expected)
+        ds = remove_unfixed_attributes(ds)
+
+        # Check equality
+        xr.testing.assert_identical(ds, ds_expected)
+
+
 def test_open_granule_on_real_files():
     """Test open_granule on real files.
 
     Load cut granules and check that the new file is identical to the saved reference.
 
-    Run `python gpm/tests/test_dataset/generate_test_granule_data.py` to generate the test granules.
+    Run `python gpm/tests/data/scripts/generate_test_granule_data.py` or
+    "update_processed_test_data" to regenerate or update the test granules.
     The expected granules directory structure is:
 
     tests/data/granules
@@ -85,28 +117,19 @@ def test_open_granule_on_real_files():
 
         if len(cut_filepaths) == 0:
             raise ValueError("No test data found.")
-
+        # Execute checks over all datasets
+        list_failed_checks = []
         for cut_filepath in cut_filepaths:
-            print(cut_filepath)
-            processed_dir = os.path.dirname(cut_filepath.replace("cut", "processed"))
-            processed_filenames = os.listdir(processed_dir)
-            processed_filepaths = [
-                os.path.join(processed_dir, filename) for filename in processed_filenames
-            ]
-            scan_modes = [os.path.splitext(filename)[0] for filename in processed_filenames]
-            for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths):
-                ds = open_granule(cut_filepath, scan_mode=scan_mode).compute()
-                ds_expected = xr.open_dataset(processed_filepath).compute()
+            try:
+                check_dataset_equality(cut_filepath)
+            except Exception as e:
+                version, product = cut_filepath.split(os.sep)[-3:-1]
+                list_failed_checks.append((f"{version} of {product}", str(e)))
 
-                for _ds in [ds, ds_expected]:
-                    # Remove history attribute
-                    _ds.attrs.pop("history")
-
-                    # Remove attributes conflicting between python versions
-                    if "crsWGS84" in _ds.coords:
-                        _ds.coords["crsWGS84"].attrs.pop("crs_wkt")
-                        _ds.coords["crsWGS84"].attrs.pop("horizontal_datum_name")
-                        _ds.coords["crsWGS84"].attrs.pop("spatial_ref")
-
-                # Check equality
-                xr.testing.assert_identical(ds, ds_expected)
+        # Report which tests failed
+        if len(list_failed_checks) > 0:
+            failed_products = [product_id for (product_id, err) in list_failed_checks]
+            msg = (
+                f"Failed dataset comparison for {failed_products}. Errors are: {list_failed_checks}"
+            )
+            raise ValueError(msg)

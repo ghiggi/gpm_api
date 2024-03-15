@@ -31,10 +31,9 @@ from datatree import DataTree
 import numpy as np
 import pandas as pd
 import pytest
-from pytest import SaneEqualityArray
 import xarray as xr
 from gpm.dataset import coords
-
+from deepdiff import DeepDiff
 
 MAX_TIMESTAMP = 2**31 - 1
 
@@ -80,19 +79,21 @@ def test_get_orbit_coords():
     dt[scan_mode]["Latitude"] = lat
     dt.attrs["FileHeader"] = f"GranuleNumber={granule_id}"
 
-    # Test get_orbit_coords
+    # Test get_orbit_coords arrays values
     expected_coords = {
-        "lon": (["along_track", "cross_track"], lon),
-        "lat": (["along_track", "cross_track"], lat),
+        "lon": (["along_track", "cross_track"], lon.data),
+        "lat": (["along_track", "cross_track"], lat.data),
         "time": (["along_track"], time_array),
-        "gpm_id": (["along_track"], [f"{granule_id}-{i}" for i in range(shape[0])]),
+        "gpm_id": (["along_track"], np.array([f"{granule_id}-{i}" for i in range(shape[0])])),
         "gpm_granule_id": (["along_track"], np.repeat(granule_id, shape[0])),
         "gpm_cross_track_id": (["cross_track"], np.arange(shape[1])),
         "gpm_along_track_id": (["along_track"], np.arange(shape[0])),
     }
-    expected_coords = {k: (v[0], SaneEqualityArray(v[1])) for k, v in expected_coords.items()}
     returned_coords = coords.get_orbit_coords(dt, scan_mode)
-    assert returned_coords == expected_coords
+    returned_coords = {k: (list(da.dims), da.data) for k, da in returned_coords.items()}
+
+    diff = DeepDiff(expected_coords, returned_coords)
+    assert diff == {}, f"Dictionaries are not equal: {diff}"
 
 
 def test_get_grid_coords():
@@ -109,23 +110,26 @@ def test_get_grid_coords():
     time_formated = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
     ds = xr.Dataset()
-    # ds.coords["time"] = ("time", [time])
     ds.coords["lon"] = ("lon", lon)
     ds.coords["lat"] = ("lat", lat)
 
     dt = DataTree.from_dict({scan_mode: ds})
-    dt.attrs["FileHeader"] = f"StartGranuleDateTime={time_formated}"
+    dt.attrs["FileHeader"] = f"StartGranuleDateTime={time_formated};\nTimeInterval=HALF_HOUR;"
 
     # Test get_grid_coords
-    corrected_datetime = datetime.fromtimestamp(timestamp) + timedelta(minutes=30)
+    start_time = datetime.fromtimestamp(timestamp)
+    end_time = datetime.fromtimestamp(timestamp) + timedelta(minutes=30)
+    time_bnds = [[start_time, end_time]]
     expected_coords = {
-        "time": np.array([corrected_datetime]),
+        "time": np.array([end_time]).astype("M8[ns]"),
         "lon": lon,
         "lat": lat,
+        "time_bnds": np.array(time_bnds).astype("M8[ns]"),
     }
-    expected_coords = {k: SaneEqualityArray(v) for k, v in expected_coords.items()}
     returned_coords = coords.get_grid_coords(dt, scan_mode)
-    assert returned_coords == expected_coords
+    returned_coords = {k: da.data for k, da in returned_coords.items()}
+    diff = DeepDiff(expected_coords, returned_coords)
+    assert diff == {}, f"Dictionaries are not equal: {diff}"
 
 
 def test_get_coords(monkeypatch):

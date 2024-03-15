@@ -135,7 +135,9 @@ def read_countries_extent_dictionary():
     Returns:
         dict: A dictionary containing countries extent information.
     """
-    countries_extent_filepath = os.path.join(_root_path, "gpm", "etc", "country_extent.yaml")
+    countries_extent_filepath = os.path.join(
+        _root_path, "gpm", "etc", "geospatial", "country_extent.yaml"
+    )
     countries_extent_dict = read_yaml(countries_extent_filepath)
     return countries_extent_dict
 
@@ -206,7 +208,9 @@ def read_continents_extent_dictionary():
     Returns:
         dict: A dictionary containing the extents of continents.
     """
-    continents_extent_filepath = os.path.join(_root_path, "gpm", "etc", "continent_extent.yaml")
+    continents_extent_filepath = os.path.join(
+        _root_path, "gpm", "etc", "geospatial", "continent_extent.yaml"
+    )
     continents_extent_dict = read_yaml(continents_extent_filepath)
     return continents_extent_dict
 

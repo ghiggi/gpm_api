@@ -1,0 +1,165 @@
+reflectivity:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Reflectivity [$dBZ$]
+  auxiliary:
+    category:
+    - reflectivity
+dual_frequency_ratio:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -2
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $DFR_{Ku-Ka}$, [$dB$]
+latentHeating:
+  cmap:
+    name: RdBu_r
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: SymLogNorm
+    vmin: -400
+    vmax: 400
+    linthresh: 1
+    base: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Latent Heating [K/hr]
+brightness_temperature:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: gray
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Brightness Temperature [K]
+  auxiliary:
+    category: brightness_temperature
+probability_1:
+  cmap:
+    name: OrRd
+    bad_alpha: 0.5
+    bad_color: gray
+    over_color: none
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0.001
+    - 0.1
+    - 0.2
+    - 0.3
+    - 0.4
+    - 0.5
+    - 0.6
+    - 0.7
+    - 0.8
+    - 0.9
+    - 1.0
+  auxiliary:
+    category: probability
+    citation: pycolorbar
+    citation_url: pycolorbar
+    comment: 0.001 is set to display the 0s transparently
+probability_100:
+  cmap:
+    name: OrRd
+    bad_alpha: 0.5
+    bad_color: gray
+    over_color: none
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0.1
+    - 10
+    - 20
+    - 30
+    - 40
+    - 50
+    - 60
+    - 70
+    - 80
+    - 90
+    - 100
+  auxiliary:
+    category: probability
+    citation: pycolorbar
+    citation_url: pycolorbar
+    comment: 0.1 is set to display the 0s transparently
+precipitation_rate:
+  cmap:
+    name: STEPS-MCH
+    bad_alpha: 0.2
+    bad_color: gray
+    over_color: darkred
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0.08
+    - 0.16
+    - 0.25
+    - 0.4
+    - 0.63
+    - 1
+    - 1.6
+    - 2.5
+    - 4
+    - 6.3
+    - 10
+    - 16
+    - 25
+    - 40
+    - 63
+    - 100
+    - 160
+  cbar:
+    extend: max
+    extendrect: false
+    label: Precipitation intensity [$mm \ hr^{-1}$]
+  auxiliary:
+     category:
+     - pysteps
+     - precipitation
+reflectivity_pysteps:
+  cmap:
+    name: STEPS-MCH
+    bad_alpha: 0.5
+    bad_color: gray
+    over_color: darkred
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 10
+    - 15
+    - 20
+    - 25
+    - 30
+    - 35
+    - 40
+    - 45
+    - 50
+    - 55
+    - 60
+  auxiliary:
+     category:
+     - reflectivity
+     - pysteps

@@ -1,0 +1,23 @@
+colormap_type: LinearSegmentedColormap
+color_space: hex
+color_palette:
+- '#9c7e94'
+- '#640064'
+- '#AF00AF'
+- '#DC00DC'
+- '#3232C8'
+- '#0064FF'
+- '#009696'
+- '#00C832'
+- '#64FF00'
+- '#96FF00'
+- '#C8FF00'
+- '#FFFF00'
+- '#FFC800'
+- '#FFA000'
+- '#FF7D00'
+- '#E11900'
+auxiliary:
+  category:
+  - MeteoSwiss
+  - precipitation
