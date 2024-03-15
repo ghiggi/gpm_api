@@ -37,7 +37,11 @@ from gpm.tests.test_visualization.utils import (
     expand_dims,
     get_test_name,
     save_and_check_figure,
+    skip_tests_if_no_data,
 )
+
+
+skip_tests_if_no_data()
 
 
 def test_is_generator() -> None:
