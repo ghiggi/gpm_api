@@ -25,6 +25,8 @@
 
 # -----------------------------------------------------------------------------.
 """This module defines functions providing GPM-API Dataset information."""
+from itertools import chain
+
 import numpy as np
 import xarray as xr
 
@@ -79,7 +81,8 @@ def get_dataset_variables(ds, sort=False):
 def _get_available_spatial_dims(xr_obj):
     """Get xarray object available spatial dimensions."""
     dims = list(xr_obj.dims)
-    return tuple(np.array(SPATIAL_DIMS)[np.isin(SPATIAL_DIMS, dims)].tolist())
+    flattened_spatial_dims = list(chain.from_iterable(SPATIAL_DIMS))
+    return tuple(np.array(flattened_spatial_dims)[np.isin(flattened_spatial_dims, dims)].tolist())
 
 
 def _get_available_vertical_dims(xr_obj):

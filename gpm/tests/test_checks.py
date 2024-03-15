@@ -29,7 +29,7 @@ import pytest
 import xarray as xr
 
 from gpm import checks
-from gpm.dataset.dimensions import FREQUENCY_DIMS, VERTICAL_DIMS
+from gpm.dataset.dimensions import FREQUENCY_DIMS, SPATIAL_DIMS, VERTICAL_DIMS
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray
@@ -437,10 +437,7 @@ def test_get_spatial_dimensions() -> None:
 
     added_dims_list = [
         [],
-        ["along_track", "cross_track"],
-        ["lat", "lon"],
-        ["latitude", "longitude"],
-        ["x", "y"],
+        *SPATIAL_DIMS,
     ]
 
     for added_dims in added_dims_list:
