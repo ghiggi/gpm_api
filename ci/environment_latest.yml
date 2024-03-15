@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - cartopy
+  - pyproj
   - click
   - donfig
   - dask
@@ -21,4 +22,4 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-mock
-  - pydantic
+  - deepdiff
