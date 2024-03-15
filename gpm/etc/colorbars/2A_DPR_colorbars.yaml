@@ -38,7 +38,7 @@ precipWaterIntegrated:
     extend: max
     extendfrac: 0.05
     label: Total Precipitable Water [$kg \ m^{-2}$]
-GPM_Dm:
+Dm:
   cmap:
     name: plasma
     bad_alpha: 0.5
@@ -50,7 +50,7 @@ GPM_Dm:
   cbar:
     extend: both
     label: $D_m$ [$mm$]
-GPM_Nw:
+dBNw:
   cmap:
     name: plasma
     bad_alpha: 0.5
@@ -61,4 +61,14 @@ GPM_Nw:
     vmax: 6
   cbar:
     extend: both
-    label: $N_w$ [$\log{(mm^{-1} \ m^{-3})}$]
+    label: $N_w$ [10$\log{(mm^{-1} \ m^{-3})}$]
+Nw:
+  cmap:
+    name: plasma
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+  cbar:
+    extend: both
+    label: $N_w$ [$mm^{-1} \ m^{-3}$]

@@ -50,6 +50,7 @@ _CONFIG_DEFAULTS = {
     "password_pps": None,
     "username_earthdata": None,
     "password_earthdata": None,
+    "decode_variables": True,
     "warn_non_contiguous_scans": True,
     "warn_non_regular_timesteps": True,
     "warn_invalid_geolocation": True,

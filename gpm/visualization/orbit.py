@@ -90,7 +90,6 @@ def plot_swath(
     polygon = Polygon(boundary.vertices[::-1])
 
     # Plot the swath polygon
-
     p = ax.add_geometries(
         [polygon],
         crs=ccrs.Geodetic(),
@@ -132,8 +131,6 @@ def _call_over_contiguous_scans(function):
         # Get axis
         ax = args[1] if len(args) > 1 else kwargs.get("ax")
 
-        print(kwargs)
-        print(args)
         # Check data validity
         rgb = kwargs.get("rgb", False)
         if not rgb:

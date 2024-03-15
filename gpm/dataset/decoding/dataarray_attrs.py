@@ -25,6 +25,8 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to standardize GPM-API Dataset attributes."""
+import re
+
 import numpy as np
 
 
@@ -74,14 +76,7 @@ def _check_fillvalue_format(attrs):
     return attrs
 
 
-def _format_dataarray_attrs(da, product=None):
-    attrs = da.attrs
-
-    # Ensure fill values are numbers
-    # - If CodeMissingValue is present, it is used as _FillValue
-    # - _FillValue are moved to encoding by xr.decode_cf !
-    attrs = _check_fillvalue_format(attrs)
-
+def _sanitize_attributes(attrs):
     # Convert 'Units' to 'units'
     if not attrs.get("units", False) and attrs.get("Units", False):
         attrs["units"] = attrs.pop("Units")
@@ -91,6 +86,26 @@ def _format_dataarray_attrs(da, product=None):
 
     # Remove 'DimensionNames'
     attrs.pop("DimensionNames", None)
+
+    # Sanitize LongName if present
+    if "LongName" in attrs:
+        attrs["description"] = re.sub(
+            " +", " ", attrs["LongName"].replace("\n", " ").replace("\t", " ")
+        ).strip()
+        attrs.pop("LongName")
+    return attrs
+
+
+def _format_dataarray_attrs(da, product=None):
+    attrs = da.attrs
+
+    # Ensure fill values are numbers
+    # - If CodeMissingValue is present, it is used as _FillValue
+    # - _FillValue are moved to encoding by xr.decode_cf !
+    attrs = _check_fillvalue_format(attrs)
+
+    # Remove Units, DimensionNames and sanitize LongName
+    attrs = _sanitize_attributes(attrs)
 
     # Ensure encoding and source_dtype is a dtype string name
     if "dtype" in da.encoding:
@@ -114,6 +129,20 @@ def _format_dataarray_attrs(da, product=None):
 
 
 def standardize_dataarrays_attrs(ds, product):
+    # Sanitize variable attributes
     for var, da in ds.items():
         ds[var] = _format_dataarray_attrs(da, product)
+
+    # Drop attributes from bounds coordinates
+    # - https://github.com/pydata/xarray/issues/8368
+    # - Attribute is lost when writing to netcdf
+    bounds_coords = ["time_bnds", "lon_bnds", "lat_bnds"]
+    for bnds in bounds_coords:
+        if bnds in ds:
+            ds[bnds].attrs = {}
+
+    # Sanitize coordinates attributes
+    for coord in list(ds.coords):
+        ds[coord].attrs = _sanitize_attributes(ds[coord].attrs)
+
     return ds

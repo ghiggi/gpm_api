@@ -58,6 +58,7 @@ def _add_cmb_range_coordinate(ds, product, scan_mode):
         if scan_mode in ["NS", "KuKaGMI", "KuGMI", "KuTMI"]:
             range_values = np.arange(0, 88 * 250, step=250)
             ds = ds.assign_coords({"range": range_values})
+            ds["range"].attrs["units"] = "m"
     return ds
 
 
@@ -85,6 +86,7 @@ def _add_radar_range_coordinate(ds, product, scan_mode):
         if scan_mode in ["FS", "MS", "NS"]:
             range_values = np.arange(0, 176 * 125, step=125)
             ds = ds.assign_coords({"range": range_values})
+        ds["range"].attrs["units"] = "m"
     return ds
 
 
@@ -174,7 +176,7 @@ def set_coordinates(ds, product, scan_mode):
     if "cross_track" in list(ds.dims):
         ds = ensure_valid_coords(ds, raise_error=False)
 
-    # Add range_id coordinate
+    # Add gpm_range_id coordinate
     if "range" in list(ds.dims):
         range_id = np.arange(ds.sizes["range"])
         ds = ds.assign_coords({"gpm_range_id": ("range", range_id)})
@@ -185,6 +187,7 @@ def set_coordinates(ds, product, scan_mode):
     # Convert sunLocalTime to float
     if "sunLocalTime" in ds:
         ds = _parse_sun_local_time(ds)
+        ds = ds.set_coords("sunLocalTime")
 
     #### PMW
     # - 1C products

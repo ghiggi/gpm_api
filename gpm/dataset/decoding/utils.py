@@ -29,6 +29,19 @@ import dask.array
 import numpy as np
 
 
+def is_dataarray_decoded(da):
+    """Check if a DataArray has been decoded by GPM-API."""
+    return da.attrs.get("gpm_api_decoded", "no") == "yes"
+
+
+def add_decoded_flag(ds, variables):
+    """Add gpm_api_decoded flag to GPM-API decoded variables."""
+    for var in variables:
+        if var in ds:
+            ds[var].attrs["gpm_api_decoded"] = "yes"
+    return ds
+
+
 def remap_numeric_array(arr, remapping_dict):
     """Remap the values of a numeric array."""
     # TODO: implement that works with dask array also !

@@ -25,6 +25,12 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to decode GPM PMW 2A products."""
+import xarray as xr
+
+from gpm.dataset.decoding.utils import (
+    add_decoded_flag,
+    is_dataarray_decoded,
+)
 
 
 def decode_surfacePrecipitation(da):
@@ -206,7 +212,9 @@ def decode_product(ds):
     ]
     # Decode such variables if present in the xarray object
     for variable in variables:
-        if variable in ds and ds[variable].attrs.get("gpm_api_decoded", "no") != "yes":
-            ds[variable] = _get_decoding_function(variable)(ds[variable])
-            ds[variable].attrs["gpm_api_decoded"] = "yes"
+        if variable in ds and not is_dataarray_decoded(ds[variable]):
+            with xr.set_options(keep_attrs=True):
+                ds[variable] = _get_decoding_function(variable)(ds[variable])
+    # Added gpm_api_decoded flag
+    ds = add_decoded_flag(ds, variables=variables)
     return ds

@@ -228,6 +228,10 @@ def _get_proj_dim_coords(xr_obj):
 def _get_swath_dim_coords(xr_obj):
     """Determine the spatial 1D dimensions of the `xarray.DataArray`
 
+    Cases:
+    - 2D x/y coordinates with 2 dimensions (along-track-cross-track scan)
+    - 1D x/y coordinates with 1 dimensions (along-track nadir scan)
+
     Parameters
     ----------
     xr_obj : xr.Dataset or xr.DataArray
@@ -239,30 +243,36 @@ def _get_swath_dim_coords(xr_obj):
     """
     # Check for classical options
     list_options = [("lon", "lat"), ("longitude", "latitude")]
-    for dims in list_options:
-        dim_x = dims[0]
-        dim_y = dims[1]
-        if dim_x in xr_obj.coords and dim_y in xr_obj.coords:
-            if len(xr_obj[dim_x].dims) == 2 and len(xr_obj[dim_y].dims) == 2:
-                return dim_x, dim_y
+    for coords in list_options:
+        coords_x = coords[0]
+        coords_y = coords[1]
+        if coords_x in xr_obj.coords and coords_y in xr_obj.coords:
+            dims_x = list(xr_obj[coords_x].dims)
+            dims_y = list(xr_obj[coords_y].dims)
+            # 2D swath
+            if len(dims_x) == 2 and len(dims_y) == 2 and dims_x == dims_y:
+                return coords_x, coords_y
+            # Nadir-scan
+            if len(dims_x) == 1 and len(dims_y) == 1 and dims_x == dims_y:
+                return coords_x, coords_y
 
     # Otherwise look at available coordinates, and search for CF attributes
     # --> Look if coordinate has  2D dimension
     # --> Look if coordinate has standard_name "longitude" or "latitude"
     else:
-        x_dim = None
-        y_dim = None
+        coords_x = None
+        coords_y = None
         coords_names = list(xr_obj.coords)
         for coord in coords_names:
             # Select only lon/lat swath coordinates with dimension like ('y','x')
             if len(xr_obj[coord].dims) != 2:  # ('y', 'x'), ('cross_track', 'along_track')
                 continue
             attrs = xr_obj[coord].attrs
-            if attrs.get("standard_name", "").lower() in ("longitude"):
-                x_dim = coord
-            elif attrs.get("standard_name", "").lower() in ("latitude"):
-                y_dim = coord
-    return x_dim, y_dim
+            if attrs.get("standard_name", "INVALID").lower() in ("longitude"):
+                coords_x = coord
+            elif attrs.get("standard_name", "INVALID").lower() in ("latitude"):
+                coords_y = coord
+    return coords_x, coords_y
 
 
 def has_swath_coords(xr_obj):
@@ -440,9 +450,12 @@ def _grid_mapping_reference(ds, crs, grid_mapping_name):
     # Geographic CRS
     else:
         # If swath
+        # - 2D x/y with two dimensions
+        # - 1D x/y with one dimension (along-track nadir scan)
         if has_swath_coords(ds):
             lon_coord, lat_coord = _get_swath_dim_coords(ds)
             output = f"{grid_mapping_name}: {lat_coord} {lon_coord}"
+        # GRID - 1D x/y with 2 dimensions
         else:
             x_dim, y_dim = _get_proj_dim_coords(ds)
             if x_dim is None or y_dim is None:
