@@ -29,6 +29,7 @@ import pytest
 import xarray as xr
 
 from gpm import checks
+from gpm.dataset.dimensions import FREQUENCY_DIMS, VERTICAL_DIMS
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray
@@ -48,7 +49,7 @@ def make_dataset(dataarrays: list[xr.DataArray]) -> xr.Dataset:
 
 
 @pytest.fixture
-def orbit_3d_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
+def orbit_spatial_3d_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
     """Return a 3D orbit data array"""
 
     # Add a vertical dimension with shape larger than 1 to prevent squeezing
@@ -56,7 +57,7 @@ def orbit_3d_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
 
 
 @pytest.fixture
-def grid_3d_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
+def grid_spatial_3d_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
     """Return a 3D grid data array"""
 
     # Add a vertical dimension with shape larger than 1 to prevent squeezing
@@ -101,21 +102,21 @@ def invalid_dataset(orbit_dataarray: xr.DataArray) -> xr.Dataset:
 
 
 @pytest.fixture
-def orbit_3d_dataset(orbit_3d_dataarray: xr.DataArray) -> xr.Dataset:
+def orbit_spatial_3d_dataset(orbit_spatial_3d_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a 3D orbit dataset"""
 
-    return make_dataset([orbit_3d_dataarray, orbit_3d_dataarray])
+    return make_dataset([orbit_spatial_3d_dataarray, orbit_spatial_3d_dataarray])
 
 
 @pytest.fixture
-def grid_3d_dataset(grid_3d_dataarray: xr.DataArray) -> xr.Dataset:
+def grid_spatial_3d_dataset(grid_spatial_3d_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a 3D grid dataset"""
 
-    return make_dataset([grid_3d_dataarray, grid_3d_dataarray])
+    return make_dataset([grid_spatial_3d_dataarray, grid_spatial_3d_dataarray])
 
 
 @pytest.fixture
-def invalid_3d_dataset(orbit_dataarray: xr.DataArray) -> xr.Dataset:
+def invalid_spatial_3d_dataset(orbit_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a 3D invalid dataset"""
 
     return make_dataset([orbit_dataarray, xr.DataArray()])
@@ -285,23 +286,23 @@ def test_is_spatial_2d(
 
 
 def test_is_spatial_3d(
-    orbit_3d_dataarray: xr.DataArray,
-    grid_3d_dataarray: xr.DataArray,
-    orbit_3d_dataset: xr.Dataset,
-    grid_3d_dataset: xr.Dataset,
-    invalid_3d_dataset: xr.Dataset,
+    orbit_spatial_3d_dataarray: xr.DataArray,
+    grid_spatial_3d_dataarray: xr.DataArray,
+    orbit_spatial_3d_dataset: xr.Dataset,
+    grid_spatial_3d_dataset: xr.Dataset,
+    invalid_spatial_3d_dataset: xr.Dataset,
 ) -> None:
     """Test is_spatial_3d function"""
 
     # Data arrays
-    assert checks.is_spatial_3d(grid_3d_dataarray)
-    assert checks.is_spatial_3d(orbit_3d_dataarray)
+    assert checks.is_spatial_3d(grid_spatial_3d_dataarray)
+    assert checks.is_spatial_3d(orbit_spatial_3d_dataarray)
     assert not checks.is_spatial_3d(xr.DataArray())
 
     # Datasets
-    assert checks.is_spatial_3d(grid_3d_dataset)
-    assert checks.is_spatial_3d(orbit_3d_dataset)
-    assert not checks.is_spatial_3d(invalid_3d_dataset)
+    assert checks.is_spatial_3d(grid_spatial_3d_dataset)
+    assert checks.is_spatial_3d(orbit_spatial_3d_dataset)
+    assert not checks.is_spatial_3d(invalid_spatial_3d_dataset)
 
 
 def test_is_transect(
@@ -340,8 +341,8 @@ def test_check_is_spatial_2d(
 
 def test_check_is_spatial_3d(
     orbit_dataarray: xr.DataArray,
-    orbit_3d_dataarray: xr.DataArray,
-    orbit_3d_dataset: xr.Dataset,
+    orbit_spatial_3d_dataarray: xr.DataArray,
+    orbit_spatial_3d_dataset: xr.Dataset,
 ) -> None:
     """Test check_is_spatial_3d function"""
 
@@ -349,8 +350,8 @@ def test_check_is_spatial_3d(
         checks.check_is_spatial_3d(orbit_dataarray)
 
     # Should not raise exception
-    checks.check_is_spatial_3d(orbit_3d_dataarray)
-    checks.check_is_spatial_3d(orbit_3d_dataset)
+    checks.check_is_spatial_3d(orbit_spatial_3d_dataarray)
+    checks.check_is_spatial_3d(orbit_spatial_3d_dataset)
 
 
 def test_check_is_transect(
@@ -374,8 +375,8 @@ class TestGetVariables:
         self,
         orbit_dataarray: xr.DataArray,
         grid_dataarray: xr.DataArray,
-        orbit_3d_dataarray: xr.DataArray,
-        grid_3d_dataarray: xr.DataArray,
+        orbit_spatial_3d_dataarray: xr.DataArray,
+        grid_spatial_3d_dataarray: xr.DataArray,
         orbit_transect_dataarray: xr.DataArray,
         grid_transect_dataarray: xr.DataArray,
     ) -> xr.Dataset:
@@ -387,8 +388,8 @@ class TestGetVariables:
             [
                 orbit_dataarray,
                 grid_dataarray,
-                orbit_3d_dataarray,
-                grid_3d_dataarray,
+                orbit_spatial_3d_dataarray,
+                grid_spatial_3d_dataarray,
                 orbit_transect_dataarray,
                 grid_transect_dataarray,
                 da_frequency,
@@ -422,9 +423,7 @@ def test_get_vertical_dimension() -> None:
 
     added_dims_list = [
         [],
-        ["range"],
-        ["nBnEnv"],
-        ["height"],
+        *[[dim] for dim in VERTICAL_DIMS],
     ]
 
     for added_dims in added_dims_list:
@@ -456,7 +455,10 @@ def test_get_spatial_dimensions() -> None:
 def test__get_available_frequency_dims() -> None:
     """Test _get_available_frequency_dims function"""
 
-    added_dims_list = [(), ("radar_frequency",), ("pmw_frequency",)]
+    added_dims_list = [
+        (),
+        *[(dim,) for dim in FREQUENCY_DIMS],
+    ]
 
     for added_dims in added_dims_list:
         n_dims = 1 + len(added_dims)
@@ -506,8 +508,8 @@ def test__is_spatial_2d_datarray(
 def test__is_spatial_3d_datarray(
     orbit_dataarray: xr.DataArray,
     grid_dataarray: xr.DataArray,
-    orbit_3d_dataarray: xr.DataArray,
-    grid_3d_dataarray: xr.DataArray,
+    orbit_spatial_3d_dataarray: xr.DataArray,
+    grid_spatial_3d_dataarray: xr.DataArray,
 ) -> None:
     """Test _is_spatial_3d_datarray function"""
 
@@ -520,13 +522,13 @@ def test__is_spatial_3d_datarray(
     assert not checks._is_spatial_3d_datarray(da, strict=True)
 
     # With extra vertical dimension (therefore 3D)
-    assert checks._is_spatial_3d_datarray(grid_3d_dataarray, strict=False)
-    assert checks._is_spatial_3d_datarray(grid_3d_dataarray, strict=True)
-    assert checks._is_spatial_3d_datarray(orbit_3d_dataarray, strict=False)
-    assert checks._is_spatial_3d_datarray(orbit_3d_dataarray, strict=True)
+    assert checks._is_spatial_3d_datarray(grid_spatial_3d_dataarray, strict=False)
+    assert checks._is_spatial_3d_datarray(grid_spatial_3d_dataarray, strict=True)
+    assert checks._is_spatial_3d_datarray(orbit_spatial_3d_dataarray, strict=False)
+    assert checks._is_spatial_3d_datarray(orbit_spatial_3d_dataarray, strict=True)
 
     # With vertical and random extra dimensions
-    da = orbit_3d_dataarray.expand_dims("extra")
+    da = orbit_spatial_3d_dataarray.expand_dims("extra")
     assert checks._is_spatial_3d_datarray(da, strict=False)
     assert not checks._is_spatial_3d_datarray(da, strict=True)
 
@@ -537,7 +539,7 @@ def test__is_spatial_3d_datarray(
 def test__is_transect_datarray(
     orbit_dataarray: xr.DataArray,
     grid_dataarray: xr.DataArray,
-    orbit_3d_dataarray: xr.DataArray,
+    orbit_spatial_3d_dataarray: xr.DataArray,
     orbit_transect_dataarray: xr.DataArray,
     grid_transect_dataarray: xr.DataArray,
 ) -> None:
@@ -552,8 +554,8 @@ def test__is_transect_datarray(
     assert not checks._is_transect_datarray(da, strict=True)
 
     # With extra vertical dimension (therefore 3D)
-    assert not checks._is_transect_datarray(orbit_3d_dataarray, strict=False)
-    assert not checks._is_transect_datarray(orbit_3d_dataarray, strict=True)
+    assert not checks._is_transect_datarray(orbit_spatial_3d_dataarray, strict=False)
+    assert not checks._is_transect_datarray(orbit_spatial_3d_dataarray, strict=True)
 
     # Transect
     assert checks._is_transect_datarray(grid_transect_dataarray, strict=False)
@@ -586,18 +588,18 @@ def test__is_spatial_2d_dataset(
 
 
 def test__is_spatial_3d_dataset(
-    grid_3d_dataset: xr.Dataset,
-    orbit_3d_dataset: xr.Dataset,
-    invalid_3d_dataset: xr.Dataset,
+    grid_spatial_3d_dataset: xr.Dataset,
+    orbit_spatial_3d_dataset: xr.Dataset,
+    invalid_spatial_3d_dataset: xr.Dataset,
 ) -> None:
     """Test _is_spatial_3d_dataset function"""
 
     # Valid datasets
-    assert checks._is_spatial_3d_dataset(grid_3d_dataset, strict=True)
-    assert checks._is_spatial_3d_dataset(orbit_3d_dataset, strict=True)
+    assert checks._is_spatial_3d_dataset(grid_spatial_3d_dataset, strict=True)
+    assert checks._is_spatial_3d_dataset(orbit_spatial_3d_dataset, strict=True)
 
     # Invalid dataset
-    assert not checks._is_spatial_3d_dataset(invalid_3d_dataset, strict=True)
+    assert not checks._is_spatial_3d_dataset(invalid_spatial_3d_dataset, strict=True)
 
 
 def test__is_transect_dataset(
