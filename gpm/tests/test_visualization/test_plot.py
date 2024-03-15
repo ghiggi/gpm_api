@@ -39,6 +39,17 @@ from gpm.tests.test_visualization.utils import (
     save_and_check_figure,
 )
 
+# Fixtures imported from gpm.tests.conftest:
+# - orbit_dataarray
+# - orbit_antimeridian_dataarray
+# - orbit_pole_dataarray
+# - orbit_nan_cross_track_dataarray
+# - orbit_nan_along_track_dataarray
+# - orbit_nan_lon_cross_track_dataarray
+# - orbit_nan_lon_along_track_dataarray
+# - grid_dataarray
+# - grid_nan_lon_dataarray
+
 
 def test_is_generator() -> None:
     """Test the _is_generator function"""

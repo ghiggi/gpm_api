@@ -34,6 +34,10 @@ from gpm.tests.test_visualization.utils import (
     save_and_check_figure,
 )
 
+# Fixtures imported from gpm.tests.conftest:
+# - orbit_dataarray
+# - grid_dataarray
+
 
 EXTRA_DIM = "auxiliary_dim"
 EXTRA_DIM_2 = "auxiliary_dim_2"

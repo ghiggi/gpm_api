@@ -30,6 +30,10 @@ import xarray as xr
 
 from gpm import checks
 
+# Fixtures imported from gpm.tests.conftest:
+# - orbit_dataarray
+# - grid_dataarray
+
 
 # Utils functions ##############################################################
 

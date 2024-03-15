@@ -565,20 +565,6 @@ def grid_dataarray() -> xr.DataArray:
 
 
 @pytest.fixture(scope="function")
-def grid_antimeridian_dataarray() -> xr.DataArray:
-    """Create grid data array going over the antimeridian"""
-
-    return get_grid_dataarray(
-        start_lon=160,
-        start_lat=-5,
-        end_lon=-170,
-        end_lat=15,
-        n_lon=20,
-        n_lat=15,
-    )
-
-
-@pytest.fixture(scope="function")
 def grid_nan_lon_dataarray(grid_dataarray) -> xr.DataArray:
     """Create grid data array near 0 longitude and latitude with some NaN longitudes"""
 

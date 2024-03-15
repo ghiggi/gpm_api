@@ -34,11 +34,14 @@ from gpm.tests.test_visualization.utils import (
     save_and_check_figure,
 )
 
+# Fixtures imported from gpm.tests.conftest:
+# - orbit_dataarray
+
 
 VARIABLE = "variable"
 
 
-# Fixtures ######################################################################
+# Fixtures #####################################################################
 
 
 @pytest.fixture
@@ -48,6 +51,9 @@ def orbit_dataset(
     """Return a dataset with a single variable"""
 
     return xr.Dataset({VARIABLE: orbit_dataarray})
+
+
+# Tests ########################################################################
 
 
 def test_plot_swath(
