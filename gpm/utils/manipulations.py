@@ -173,10 +173,10 @@ def get_range_slices_with_valid_data(xr_obj, variable=None):
 
     # Identify first and last True occurrence
     n_bins = len(has_data)
+    if not has_data_arr.any():
+        raise ValueError(f"No valid data for variable {variable}.")
     first_true_index = np.argwhere(has_data_arr)[0]
     last_true_index = n_bins - np.argwhere(has_data_arr[::-1])[0] - 1
-    if len(first_true_index) == 0:
-        raise ValueError(f"No valid data for variable {variable}.")
     isel_dict = {vertical_dim: slice(first_true_index.item(), last_true_index.item() + 1)}
     return isel_dict
 
