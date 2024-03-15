@@ -335,8 +335,8 @@ Recommendation for the Pull Requests:
 Contributing to test data
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If your changes include updating test data, you may work with the ``gpm/tests/data/`` directory as you would with any other git repository.
-You need to ask the maintainers to become a contributor on the `gpm_api_test_data <https://github.com/ghiggi/gpm_api_test_data>`_ repository to create a branch and a Pull Request.
+If your changes modify the structure of the GPM-API xarray Dataset, you will likely need to update the test data in the ``gpm/tests/data/`` directory. This directory functions as a separate git directory, with its own history and remote repository.
+To update the test data, you need to ask the maintainers to become a contributor on the `gpm_api_test_data <https://github.com/ghiggi/gpm_api_test_data>`_ repository in order to create a branch and a Pull Request.
 The GPM-API repository keeps track of the currently checked-out commit of the test-data repository. When the checked-out commit changes, you can register this change in the GPM-API repository by running
 
 .. code-block:: bash

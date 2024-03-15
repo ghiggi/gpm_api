@@ -171,7 +171,7 @@ Further details about pre-commit hooks can be found in the Contributors Guidelin
 Download the test data
 ......................
 
-Some of GPM-API's tests require additional data to be downloaded.
+Some of GPM-API's tests require additional data to be executed. If you want to run the full GPM-API test suite on your local machine, you also need to download such additional test data.
 First, ensure you have your GitHub account ssh keys `set up correctly <https://docs.github.com/articles/adding-a-new-ssh-key-to-your-github-account>_`.
 Then, from the within the ``gpm_api`` directory, run:
 
