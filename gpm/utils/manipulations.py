@@ -34,8 +34,8 @@ def _get_vertical_dim(da):
     from gpm.checks import get_vertical_dimension
 
     vertical_dimension = get_vertical_dimension(da)
-    variable = da.name
     if len(vertical_dimension) == 0:
+        variable = da.name
         raise ValueError(f"The {variable} variable does not have a vertical dimension.")
     if len(vertical_dimension) != 1:
         raise ValueError("Only 1 vertical dimension allowed.")
@@ -170,11 +170,11 @@ def get_range_slices_with_valid_data(xr_obj, variable=None):
     # Get bool array where there are some data (not all nan)
     has_data = ~np.isnan(da).all(dim=dims)
     has_data_arr = has_data.data
+    if not has_data_arr.any():
+        raise ValueError(f"No valid data for variable {variable}.")
 
     # Identify first and last True occurrence
     n_bins = len(has_data)
-    if not has_data_arr.any():
-        raise ValueError(f"No valid data for variable {variable}.")
     first_true_index = np.argwhere(has_data_arr)[0]
     last_true_index = n_bins - np.argwhere(has_data_arr[::-1])[0] - 1
     isel_dict = {vertical_dim: slice(first_true_index.item(), last_true_index.item() + 1)}
@@ -203,6 +203,8 @@ def get_range_slices_within_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.
 
     # Get bool array indicating where data are in the value interval
     is_within_interval = np.logical_and(da >= vmin, da <= vmax)
+    if not is_within_interval.any():
+        raise ValueError(f"No data within the requested value interval for variable {variable}.")
 
     # Identify first and last True occurrence
     n_bins = len(da[vertical_dim])
@@ -213,8 +215,6 @@ def get_range_slices_within_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.
         - 1
         - np.flip(is_within_interval, axis=axis_idx).argmax(dim=vertical_dim).min().item()
     )
-    if len(first_true_index) == 0:
-        raise ValueError(f"No data within the requested value interval for variable {variable}.")
     isel_dict = {vertical_dim: slice(first_true_index, last_true_index + 1)}
     return isel_dict
 
@@ -232,14 +232,14 @@ def get_range_index_at_value(da, value):
     return idx
 
 
-def get_range_index_at_min(da, value):
+def get_range_index_at_min(da):
     """Retrieve index along the range dimension where the DataArray has max values."""
     vertical_dim = _get_vertical_dim(da)
     idx = da.argmin(dim=vertical_dim).compute()
     return idx
 
 
-def get_range_index_at_max(da, value):
+def get_range_index_at_max(da):
     """Retrieve index along the range dimension where the DataArray has minimum values values."""
     vertical_dim = _get_vertical_dim(da)
     idx = da.argmax(dim=vertical_dim).compute()

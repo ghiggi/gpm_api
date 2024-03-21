@@ -33,7 +33,12 @@ from gpm.dataset.dimensions import FREQUENCY_DIMS, SPATIAL_DIMS, VERTICAL_DIMS
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray
+# - orbit_spatial_3d_dataarray
+# - orbit_transect_dataarray
 # - grid_dataarray
+# - grid_spatial_3d_dataarray
+# - grid_transect_dataarray
+# - dataset_collection
 
 
 # Utils functions ##############################################################
@@ -46,38 +51,6 @@ def make_dataset(dataarrays: list[xr.DataArray]) -> xr.Dataset:
 
 
 # Fixtures #####################################################################
-
-
-@pytest.fixture
-def orbit_spatial_3d_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
-    """Return a 3D orbit data array"""
-
-    # Add a vertical dimension with shape larger than 1 to prevent squeezing
-    return orbit_dataarray.expand_dims(dim={"height": 2})
-
-
-@pytest.fixture
-def grid_spatial_3d_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
-    """Return a 3D grid data array"""
-
-    # Add a vertical dimension with shape larger than 1 to prevent squeezing
-    return grid_dataarray.expand_dims(dim={"height": 2})
-
-
-@pytest.fixture
-def orbit_transect_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
-    """Return a transect orbit data array"""
-
-    orbit_dataarray = orbit_dataarray.expand_dims(dim={"height": 2})
-    return orbit_dataarray.isel(along_track=0)
-
-
-@pytest.fixture
-def grid_transect_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
-    """Return a transect grid data array"""
-
-    grid_dataarray = grid_dataarray.expand_dims(dim={"height": 2})
-    return grid_dataarray.isel(lat=0)
 
 
 @pytest.fixture
@@ -370,33 +343,6 @@ def test_check_is_transect(
 
 
 class TestGetVariables:
-    @pytest.fixture
-    def dataset_collection(
-        self,
-        orbit_dataarray: xr.DataArray,
-        grid_dataarray: xr.DataArray,
-        orbit_spatial_3d_dataarray: xr.DataArray,
-        grid_spatial_3d_dataarray: xr.DataArray,
-        orbit_transect_dataarray: xr.DataArray,
-        grid_transect_dataarray: xr.DataArray,
-    ) -> xr.Dataset:
-        """Return a dataset with a variety of data arrays"""
-
-        da_frequency = xr.DataArray(np.zeros((0, 0)), dims=["other", "radar_frequency"])
-
-        return make_dataset(
-            [
-                orbit_dataarray,
-                grid_dataarray,
-                orbit_spatial_3d_dataarray,
-                grid_spatial_3d_dataarray,
-                orbit_transect_dataarray,
-                grid_transect_dataarray,
-                da_frequency,
-                xr.DataArray(),
-            ]
-        )
-
     def test_spatial_2d(self, dataset_collection: xr.Dataset) -> None:
         """Test get_spatial_2d_variables function"""
 

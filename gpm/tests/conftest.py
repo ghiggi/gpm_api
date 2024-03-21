@@ -32,6 +32,7 @@ from gpm.io.products import get_info_dict
 from gpm.utils import geospatial
 import posixpath as pxp
 import ntpath as ntp
+import numpy as np
 from pytest_mock import MockerFixture
 import xarray as xr
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray, get_grid_dataarray
@@ -452,6 +453,9 @@ def prevent_pyplot_show(
     mocker.patch("matplotlib.pyplot.show")
 
 
+#### Orbit Data Array
+
+
 @pytest.fixture(scope="function")
 def orbit_dataarray() -> xr.DataArray:
     """Create orbit data array near 0 longitude and latitude"""
@@ -497,7 +501,23 @@ def orbit_pole_dataarray() -> xr.DataArray:
     )
 
 
-#### Orbit Dataarray with NaN values
+@pytest.fixture(scope="function")
+def orbit_spatial_3d_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
+    """Return a 3D orbit data array"""
+
+    # Add a vertical dimension with shape larger than 1 to prevent squeezing
+    return orbit_dataarray.expand_dims(dim={"height": 2})
+
+
+@pytest.fixture
+def orbit_transect_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
+    """Return a transect orbit data array"""
+
+    orbit_dataarray = orbit_dataarray.expand_dims(dim={"height": 2})
+    return orbit_dataarray.isel(along_track=0)
+
+
+#### Orbit Data Array with NaN values
 
 
 @pytest.fixture(scope="function")
@@ -526,7 +546,7 @@ def orbit_data_nan_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
     return orbit_dataarray
 
 
-#### Orbit Dataarray with NaN coordinates
+#### Orbit Data Array with NaN coordinates
 
 
 @pytest.fixture(scope="function")
@@ -573,7 +593,7 @@ def orbit_nan_inner_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
     return orbit_dataarray
 
 
-#### Grid DataArray
+#### Grid Data Array
 
 
 @pytest.fixture(scope="function")
@@ -602,3 +622,49 @@ def grid_nan_lon_dataarray(grid_dataarray) -> xr.DataArray:
     grid_dataarray["lon"] = lon
 
     return grid_dataarray
+
+
+@pytest.fixture(scope="function")
+def grid_spatial_3d_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
+    """Return a 3D grid data array"""
+
+    # Add a vertical dimension with shape larger than 1 to prevent squeezing
+    return grid_dataarray.expand_dims(dim={"height": 2})
+
+
+@pytest.fixture
+def grid_transect_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
+    """Return a transect grid data array"""
+
+    grid_dataarray = grid_dataarray.expand_dims(dim={"height": 2})
+    return grid_dataarray.isel(lat=0)
+
+
+#### Datasets
+
+
+@pytest.fixture
+def dataset_collection(
+    orbit_dataarray: xr.DataArray,
+    grid_dataarray: xr.DataArray,
+    orbit_spatial_3d_dataarray: xr.DataArray,
+    grid_spatial_3d_dataarray: xr.DataArray,
+    orbit_transect_dataarray: xr.DataArray,
+    grid_transect_dataarray: xr.DataArray,
+) -> xr.Dataset:
+    """Return a dataset with a variety of data arrays"""
+
+    da_frequency = xr.DataArray(np.zeros((0, 0)), dims=["other", "radar_frequency"])
+
+    return xr.Dataset(
+        {
+            "variable_0": orbit_dataarray,
+            "variable_1": grid_dataarray,
+            "variable_2": orbit_spatial_3d_dataarray,
+            "variable_3": grid_spatial_3d_dataarray,
+            "variable_4": orbit_transect_dataarray,
+            "variable_5": grid_transect_dataarray,
+            "variable_6": da_frequency,
+            "variable_7": xr.DataArray(),
+        }
+    )
