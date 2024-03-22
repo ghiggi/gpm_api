@@ -90,14 +90,10 @@ DIM_DICT = {
 }
 
 SPATIAL_DIMS = [
-    "along_track",
-    "cross_track",
-    "lat",
-    "lon",  # choose whether to use instead latitude/longitude
-    "latitude",
-    "longitude",
-    "x",
-    "y",  # compatibility with satpy/gpm_geo i.e.
+    ["along_track", "cross_track"],
+    ["lat", "lon"],  # choose whether to use instead latitude/longitude
+    ["latitude", "longitude"],
+    ["x", "y"],  # compatibility with satpy/gpm_geo i.e.
 ]
 VERTICAL_DIMS = ["range", "nBnEnv", "height"]
 FREQUENCY_DIMS = ["radar_frequency", "pmw_frequency"]
