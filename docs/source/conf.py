@@ -49,9 +49,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.coverage",
     # "sphinx.ext.autosectionlabel",
     "nbsphinx",
     "sphinx_mdinclude",
+    "sphinxcontrib.youtube",
 ]
 
 

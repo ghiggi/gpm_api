@@ -203,58 +203,71 @@ def open_dataset(
     verbose=False,
 ):
     """
-    Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
+    Lazily map HDF5 data into ``xarray.Dataset`` with relevant GPM data and attributes.
 
     Note:
-    - gpm.open_dataset does not load GPM granules with the FileHeader flag 'EmptyGranule' != 'NOT_EMPTY'
-    - The group "ScanStatus" provides relevant data flags for Swath products.
-    - The variable "dataQuality" provides an overall quality flag status.
-      If dataQuality = 0, no issues have been detected.
-    - The variable "SCorientation" provides the orientation of the sensor
-      from the forward track of the satellite.
+
+    - ``gpm.open_dataset`` does not load GPM granules with the FileHeader flag ``'EmptyGranule' != 'NOT_EMPTY'``
+    - The group ``ScanStatus`` provides relevant data flags for Swath products.
+    - The variable ``dataQuality`` provides an overall quality flag status. If ``dataQuality = 0``, no issues
+      have been detected.
+    - The variable ``SCorientation`` provides the orientation of the sensor from the forward track of the satellite.
 
 
     Parameters
     ----------
     product : str
         GPM product acronym.
-    variables : list, str
-         Datasets names to extract from the HDF5 file.
-    groups : list, str
-         Groups from which to extract all variables.
-         The default is None.
     start_time : datetime.datetime
         Start time.
     end_time : datetime.datetime
         End time.
+    variables : list, str, optional
+        Variables to read from the HDF5 file.
+        The default is None (all variables).
+    groups : list, str, optional
+        HDF5 Groups from which to read all variables.
+        The default is None (all groups).
     scan_mode : str, optional
-        'NS' = Normal Scan --> For Ku band and DPR
-        'MS' = Matched Scans --> For Ka band and DPR
-        'HS' = High-sensitivity Scans --> For Ka band and DPR
-        For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'NS'.
-        For products '1B-Ka', '2A-Ka' and '2A-ENV-Ka', specify either 'MS' or 'HS'.
-        For product '2A-DPR', specify either 'NS', 'MS' or 'HS'.
-        For product '2A-ENV-DPR', specify either 'NS' or 'HS'.
+        Scan mode of the GPM product. The default is None.
+        Use ``gpm.available_scan_modes(product, version)`` to get the available scan modes for a specific product.
+        The radar products have the following scan modes:
+
+        - ``'FS'``: Full Scan. For Ku, Ka and DPR (since version 7 products).
+        - ``'NS'``: Normal Scan. For Ku band and DPR (till version 6 products).
+        - ``'MS'``: Matched Scan. For Ka band and DPR (till version 6 products).
+        - ``'HS'``: High-sensitivity Scan. For Ka band and DPR.
+
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``'RS'`` (Research) or ``'NRT'`` (Near-Real-Time).
+        The default is ``'RS'``.
     version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = 'RS'``.
         GPM data readers currently support version 4, 5, 6 and 7.
-    chunks : str, list, optional
-        Chunk size for dask. The default is {}.
-        Alternatively provide a list (with length equal to 'variables') specifying
-        the chunk size option for each variable.
+    chunks : int, dict, 'auto' or None, optional
+        Chunk size for dask array:
+
+        - ``chunks=-1`` loads the dataset with dask using a single chunk for all arrays.
+        - ``chunks={}`` loads the dataset with dask using the file chunks.
+        - ``chunks='auto'`` will use dask ``auto`` chunking taking into account the file chunks.
+
+        If you want to load data in memory directly, specify ``chunks=None``.
+        The default is ``{}``.
+
+        Hint: xarray’s lazy loading of remote or on-disk datasets is often but not always desirable.
+        Before performing computationally intense operations, load the dataset
+        entirely into memory by invoking ``ds.compute()``.
     decode_cf: bool, optional
-        Whether to decode the dataset. The default is False.
-    parallel : bool, default: False
-        If True, the dataset opening is performed in parallel using ``dask.delayed``.
-        If parallel=True, 'chunks' can not be None. The underlying data must be dask.Array.
-        The default is False.
+        Whether to decode the dataset. The default is ``False``.
     prefix_group: bool, optional
         Whether to add the group as a prefix to the variable names.
-        If you aim to save the Dataset to disk as netCDF or Zarr, you need to set prefix_group=False
+        If you aim to save the Dataset to disk as netCDF or Zarr, you need to set ``prefix_group=False``
         or later remove the prefix before writing the dataset.
-        The default is False.
+        The default is ``False``.
+    parallel : bool
+        If ``True``, the dataset are opened in parallel using ``dask.delayed``.
+        If ``parallel=True``, ``'chunks'`` can not be ``None``. The underlying data must be ``dask.Array``.
+        The default is ``False``.
 
     Returns
     -------

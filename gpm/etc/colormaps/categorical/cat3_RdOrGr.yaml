@@ -1,0 +1,9 @@
+colormap_type: ListedColormap
+color_space: name
+color_palette:
+- 'darkred'
+- 'darkorange'
+- 'darkgreen'
+auxiliary:
+  category:
+  - category_3

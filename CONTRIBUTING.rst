@@ -297,8 +297,10 @@ These options provide flexibility, allowing you to efficiently target and valida
    Each test module must be prefixed with ``test_`` to be recognized and selected by pytest.
    This naming pattern is a standard convention in pytest and helps in the automatic discovery of test files.
 
-6. Push your changes to your fork repository
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+6. Push your changes
+~~~~~~~~~~~~~~~~~~~~~~
+
+Once you have finished working on your changes, you can push your local changes to your fork repository.
 
 During this process, pre-commit hooks will be run. Your commit will be
 allowed only if quality requirements are fulfilled.
@@ -310,8 +312,8 @@ If you encounter errors, you can attempt to fix the formatting errors with the f
    pre-commit run --all-files
 
 
-7. Create a new Pull Request in GitHub.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+7. Create a new Pull Request
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Once your code has been uploaded into your GPM-API fork, you can create a Pull Request (PR) to the GPM-API main branch.
@@ -333,11 +335,18 @@ Recommendation for the Pull Requests:
 
 
 Contributing to test data
-~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
-If your changes modify the structure of the GPM-API xarray Dataset, you will likely need to update the test data in the ``gpm/tests/data/`` directory. This directory functions as a separate git directory, with its own history and remote repository.
-To update the test data, you need to ask the maintainers to become a contributor on the `gpm_api_test_data <https://github.com/ghiggi/gpm_api_test_data>`_ repository in order to create a branch and a Pull Request.
-The GPM-API repository keeps track of the currently checked-out commit of the test-data repository. When the checked-out commit changes, you can register this change in the GPM-API repository by running
+If your changes modify the structure of the GPM-API ``xarray.Dataset``,
+you will likely need to update the test data in the ``gpm/tests/data/`` directory.
+
+This directory functions as a separate git directory, with its own history and remote repository.
+To update the test data, you need to first ask the maintainers to become a contributor on the
+`gpm_api_test_data <https://github.com/ghiggi/gpm_api_test_data>`_ repository.
+Then you can create a branch with the new test data and open a Pull Request which updates the GPM-API test data.
+
+The GPM-API repository keeps track of the currently checked-out commit of the test-data repository.
+When the checked-out commit changes, you can register this change in the GPM-API repository by running
 
 .. code-block:: bash
 

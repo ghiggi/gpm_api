@@ -145,8 +145,9 @@ def _parse_attr_string(s):
 def decode_string(string):
     """Decode string dictionary.
 
-    Format: "<key>=<value>\n."
-    It removes ; and \t prior to parsing the string.
+    Format: ``"<key>=<value>\\n".``.
+
+    It removes ``;`` and ``\\t`` prior to parsing the string.
     """
     # Clean the string
     string = string.replace("\t", "").rstrip("\n")

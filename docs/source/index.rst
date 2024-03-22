@@ -67,7 +67,6 @@ Documentation
    03_quickstart
    04_tutorials
    05_advanced_tools
-   06_theory
    06_contributors_guidelines
    07_maintainers_guidelines
    08_authors
