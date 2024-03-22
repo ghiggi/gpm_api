@@ -52,10 +52,10 @@ def a_3d_dataarray() -> xr.DataArray:
     height = np.arange(n_height) * THICKNESS
 
     data = np.arange(n_height * n_x * n_y).reshape(n_height, n_x, n_y)
-    # reorder indices to (x, y, height)
-    data = np.moveaxis(data, 0, -1)
     data = data.astype(float)
-    return xr.DataArray(data, coords={"x": x, "y": y, "height": height})
+    da = xr.DataArray(data, coords={"height": height, "x": x, "y": y})
+    da = da.transpose("x", "y", "height")
+    return da
 
 
 @pytest.fixture
@@ -294,28 +294,6 @@ def test_get_height_at_temperature(
     np.testing.assert_allclose(returned_da.data, expected_data)
 
 
-def test_get_xr_dims_dict(
-    a_3d_dataarray: xr.DataArray,
-) -> None:
-    """Test get_xr_dims_dict function"""
-
-    expected_dict = {"x": 5, "y": 6, "height": 8}
-
-    # Test data array
-    returned_dict = manipulations.get_xr_dims_dict(a_3d_dataarray)
-    assert returned_dict == expected_dict
-
-    # Test dataset
-    ds = xr.Dataset({"variable": a_3d_dataarray})
-    returned_dict = manipulations.get_xr_dims_dict(ds)
-    assert returned_dict == expected_dict
-
-    # Test invalid
-    for invalid in [0, "", [], {}]:
-        with pytest.raises(TypeError):
-            manipulations.get_xr_dims_dict(invalid)
-
-
 def test_get_range_axis(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
@@ -341,9 +319,15 @@ def test_get_xr_shape(
 ) -> None:
     """Test get_xr_shape function"""
 
+    # Test with data array
     dimensions = ["x", "height"]
     returned_shape = manipulations.get_xr_shape(a_3d_dataarray, dimensions)
     expected_shape = [5, 8]
+    assert returned_shape == expected_shape
+
+    # Test with dataset
+    ds = xr.Dataset({"variable": a_3d_dataarray})
+    returned_shape = manipulations.get_xr_shape(ds, dimensions)
     assert returned_shape == expected_shape
 
 

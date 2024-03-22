@@ -233,14 +233,14 @@ def get_range_index_at_value(da, value):
 
 
 def get_range_index_at_min(da):
-    """Retrieve index along the range dimension where the DataArray has max values."""
+    """Retrieve index along the range dimension where the DataArray has minimum values."""
     vertical_dim = _get_vertical_dim(da)
     idx = da.argmin(dim=vertical_dim).compute()
     return idx
 
 
 def get_range_index_at_max(da):
-    """Retrieve index along the range dimension where the DataArray has minimum values values."""
+    """Retrieve index along the range dimension where the DataArray has maximum values."""
     vertical_dim = _get_vertical_dim(da)
     idx = da.argmax(dim=vertical_dim).compute()
     return idx
@@ -288,16 +288,6 @@ def get_height_at_temperature(da_height, da_temperature, temperature):
     return da_height_desired_temperature
 
 
-def get_xr_dims_dict(xr_obj):
-    """Get dimension dictionary."""
-    if isinstance(xr_obj, xr.DataArray):
-        return dict(zip(xr_obj.dims, xr_obj.shape))
-    elif isinstance(xr_obj, xr.Dataset):
-        return dict(xr_obj.dims)
-    else:
-        raise TypeError("Expecting xr.DataArray or xr.Dataset object")
-
-
 def get_range_axis(da):
     """Get range dimension axis index."""
     vertical_dim = _get_vertical_dim(da)
@@ -314,7 +304,7 @@ def get_dims_without(da, dims):
 
 def get_xr_shape(xr_obj, dims):
     """Get xarray shape for specific dimensions."""
-    dims_dict = get_xr_dims_dict(xr_obj)
+    dims_dict = xr_obj.sizes
     shape = [dims_dict[key] for key in dims]
     return shape
 
