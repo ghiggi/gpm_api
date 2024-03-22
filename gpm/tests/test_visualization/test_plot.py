@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 import cartopy.crs as ccrs
+import platform
 import pytest
 from matplotlib import pyplot as plt
 import numpy as np
@@ -52,6 +53,8 @@ from gpm.tests.test_visualization.utils import (
 # - grid_nan_lon_dataarray
 
 
+# TODO: Uncomment to skip all tests on Windows
+# pytestmark=pytest.mark.skipif(platform.system() == "Windows", reason="Minor figure differences on Windows")
 skip_tests_if_no_data()
 
 
@@ -243,6 +246,7 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
+    @pytest.mark.skipif(platform.system() == "Windows", reason="Minor figure difference on Windows")
     def test_orbit_nan_coordinate_at_corners(
         self,
         orbit_dataarray: xr.DataArray,

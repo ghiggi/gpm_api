@@ -40,6 +40,8 @@ from gpm.tests.test_visualization.utils import (
 # - grid_dataarray
 
 
+# TODO: Uncomment to skip all tests on Windows
+# pytestmark=pytest.mark.skipif(platform.system() == "Windows", reason="Minor figure differences on Windows")
 skip_tests_if_no_data()
 
 
