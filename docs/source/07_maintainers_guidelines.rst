@@ -46,6 +46,35 @@ Examples of non-breaking changes include :
 - Internal function refactoring that doesn't affect the behavior of the software directly.
 
 
+Release process
+---------------
+
+Before releasing a new version, the CHANGELOG.md file should be updated. Run
+
+.. code-block:: bash
+
+    make changelog X.Y.Z
+
+to update the CHANGELOG.md file with the list of issues and pull requests that have been closed since the last release.
+Manually add a description to the release if necessary.
+Then, commit the new CHANGELOG.md file.
+
+.. code-block:: bash
+
+    git add CHANGELOG.md
+    git commit -m "update CHANGELOG.md for version X.Y.Z"
+    git push
+
+Create a new tag to trigger the release process.
+
+.. code-block:: bash
+
+    git tag -a vX.Y.Z -m "Version X.Y.Z"
+    git push --tags
+
+On GitHub, edit the release description to add the list of changes from the CHANGELOG.md file.
+
+
 Ongoing version support
 -----------------------------------
 
