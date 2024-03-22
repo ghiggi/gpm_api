@@ -1,7 +1,5 @@
 # Changelog
 
-All notable changes to **GPM-API** will be documented in this file.
-
 ## [0.0.2] - Glorious Green - XXXX-XX-XX
 
 ### Enhancements
