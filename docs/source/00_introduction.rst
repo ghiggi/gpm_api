@@ -120,8 +120,9 @@ across the full range of microwave frequencies present in the GPM Constellation 
 This calibration process enhances the consistency and quality of derived precipitation estimates.
 
 The video here below provides an nice overview of the GPM Core Observatory satellite.
+
 ..  youtube:: eM78gFFxAII
-   :align: center
+  :align: center
 
 
 .. _gpm_dpr:
@@ -139,10 +140,10 @@ Together, KaPR and KuPR enable three-dimensional dual-frequency observations of 
 This capability spans from heavy rainfall in the tropics to weak rainfall in mid-to-high latitudes and snowfall in high-latitudes.
 
 .. figure:: https://www.eorc.jaxa.jp/GPM/image/overview-dpr.png
-   :alt: GPM DPR Overview
-   :align: center
+  :alt: GPM DPR Overview
+  :align: center
 
-   GPM DPR Overview
+  GPM DPR Overview
 
 Note, however, that despite its detailed insights into precipitation structure and dynamics,
 the DPR exhibits low sensitivity to light precipitation and drizzle, resulting in significant portions of the lightest precipitation going undetected.
@@ -198,10 +199,10 @@ Lower frequency channels are sensitive to heavy and moderate rainfall, while the
 A visual overview of the GMI channels is depicted in the figure below:
 
 .. figure:: https://gpm.nasa.gov/sites/default/files/2019-11/GMI-13-channels.jpg
-   :alt: GPM GMI channels
-   :align: center
+  :alt: GPM GMI channels
+  :align: center
 
-   Overview of the GPM GMI channels
+  Overview of the GPM GMI channels
 
 It's important to highlight that the channel footprint size decreases with increasing frequency,
 and the high-frequency channels are not aligned with the low-frequency channels.
@@ -219,7 +220,7 @@ ensuring consistency and accuracy in precipitation estimation across multiple sa
 
 .. _gpm_constellation:
 
-GPM constellation
+GPM Constellation
 --------------------
 
 The GPM constellation is composed by satellites of various space agencies , each equipped with microwave radiometers.
@@ -235,8 +236,8 @@ These changes are influenced by the number of operational sensors and their resp
 The operational timeline of the GPM constellation is depicted in the figure below.
 
 .. figure:: https://www.researchgate.net/profile/Daniel-Watters-3/publication/344906720/figure/fig1/AS:951371750719489@1603836109309/A-timeline-of-the-GPM-constellation-of-spaceborne-radars-and-passive-microwave.ppm
-   :alt: GPM Constellation Timeline
-   :align: center
+  :alt: GPM Constellation Timeline
+  :align: center
 
 It's important to note that not all existing PMW (Passive Microwave) sensors currently in orbit are part of the GPM constellation.
 For instance, the constellation does not include 7 Chinese FY-3 Microwave Radiation Imagers (MWRI) and 6 Microwave Humidity Sounders (MWHS),
@@ -252,7 +253,7 @@ You can find additional reference to all the sensors in the :ref:`useful_resourc
 The video here below illustrates the precipitation measurements acquired by the GPM constellation sensors over a 3-hour period.
 
 ..  youtube:: tHXHUc52SAw
-   :align: center
+  :align: center
 
 
 .. _gpm_sensors:
@@ -268,10 +269,74 @@ Radars
 ~~~~~~~~~~~~~~
 
 
+.. warning::
+
+SOON AVAILABLE
+
+
+
 PMW
 ~~~~
 
+Passive microwave sensors lack ranging capabilities like radars, such as determining the distance to precipitation particles.
+Instead, they measure upwelling microwave radiation at the top of the atmosphere within their Field Of View (FOV).
+This integrated signal depends on various factors including surface temperature and emissivity, as well as the temperature, absorption/emissivity,
+and scattering properties of precipitation, clouds, and atmospheric gases.
 
+When interpreting PMW measurements, it's crucial to consider atmospheric conditions (clear-sky vs. non-precipitating clouds and precipitating clouds)
+and distinguish between channel types (window vs. absorption bands) and microwave frequency (low vs. high).
+Furthermore, lower microwave frequencies correspond to channels with lower spatial resolution,
+complicating signal interpretation due to spatial variability within the FOV.
+
+Sensors utilizing window channels are termed "imagers" (e.g., TMI, SSMI, AMSR-E, ASMR2), while those using absorption channels are termed "sounders"
+(e.g., MHS, SAPHIR, ATMS). Nowadays, many satellites carry sensors with both imaging and sounding capabilities (e.g., SSMI/S, GMI) to exploit channel synergies.
+
+When selecting microwave frequencies for passive atmospheric sounding, it's necessary to ensure that the chosen frequencies are sensitive enough
+to detect the desired atmospheric properties, such as humidity, while also guaranteeing that the signal can penetrate through the atmosphere to the required altitude without being excessively absorbed or becoming saturated. This concept of penetration refers to the microwave signal's ability to travel through the atmosphere and reach the satellite sensor after being emitted by the Earth's surface or atmospheric constituents.
+
+Absorption/sounding channels focus on sensing signals primarily from atmospheric gases, such as water vapor and oxygen, and measure around their absorption lines.
+These lines represent specific frequencies at which atmospheric gases strongly absorb microwave radiation.
+For instance, oxygen absorption is significant at frequencies such as 50-60 GHz and 118 GHz,
+whereas water vapor absorption is notable at frequencies like 22.235 GHz and 183 GHz.
+These channels are particularly useful for profiling atmospheric temperature and humidity, respectively.
+
+The observed brightness temperature in these channels correlates with the dryness or warmth of the air mass.
+
+On the other hand, window channels predominantly capture signals from the Earth's surface and precipitation.
+They are less affected by atmospheric absorption compared to the absorption channels.
+Window channels operate across various frequencies, including 6-7 GHz, 10-11 GHz, 18.7 GHz, 23-24 GHz, 31.4 GHz, and 36-37 GHz.
+
+Notably, channels around 89 GHz and 150-165.5 GHz, while still considered "window" channels,
+exhibit increased sensitivity to atmospheric conditions, particularly regarding water vapor, cloud water content, and ice particles.
+
+In clear-sky conditions, window channels can directly observe the surface.
+In cloudy conditions, they still detect surface signals, but lower frequencies have a better ability to penetrate through the atmosphere,
+providing valuable insights into atmospheric conditions even in the presence of clouds.
+
+For clear-sky and non-precipitating clouds, dominant properties include absorption/emission and transmission.
+In non-precipitating clouds, for cloud droplets smaller than 1 mm radius, scattering is negligible.
+However, microwave scattering becomes relevant with frequencies above 50 GHz in the presence of ice particles.
+
+Using sounding sensors to estimate precipitation relies on detecting the scattering signature of ice particles with high-frequency channels,
+while imaging sensors exploit low-frequency channels to capture microwave emission from raindrops,
+and middle to high frequency channels to capture the scattering signature of ice particles.
+
+In intense precipitating clouds, scattering is the dominant property.
+Microwave scattering, known as the microwave depression, occurs due to ice particles reflecting upwelling microwave
+radiation back to the surface, thereby reducing the observed brightness temperature from space.
+Scattering signatures are highly sensitive to the size distribution, shapes, and densities of ice particles.
+
+Over the ocean, the contrast between cold water surface and warmer raindrops enables the identification of precipitation using low-frequency channels.
+However, over land, this contrast is minimal.
+Middle and high frequencies (e.g., 89 GHz and 183 GHz) are utilized to detect brightness temperature depressions caused by ice particle scattering against the warm land background.
+
+It's important to note that unlike infrared radiation, which is strongly tied with an object's temperature, the emitted microwave radiation is governed by the object's physical properties (which controls the microwave emissivity).
+
+Here below we illustrate the brightness temperature sensed by GMI on XXXX. Look at the BT depression over land in the high frequency channels, and the higher BT in the lower frequency channels over the ocean.
+
+.. warning::
+
+SOON AVAILABLE
 
 
 .. _gpm_data_archive:
@@ -298,7 +363,7 @@ Please note that the Near-Real-Time (``NRT``) products are available only on the
 The Research (``RS``) products are instead available on both the PPS and GES DISC with a delay of 2-3 days from NRT.
 
 The Japanese `JAXA G-Portal <https://gportal.jaxa.jp/gpr/?lang=en>`_ facilitates the retrieval of additional data,
-including AMSR, AMSR-E L2 products and the GSMaP global precipitation estimates.
+including the L2 products of AMSR and AMSR-E as well as the GSMaP global precipitation estimates.
 
 Similarly, the Chinese `FengYun Satellite Data Center <https://satellite.nsmc.org.cn/PortalSite/Data/DataView.aspx?currentculture=en-US>`_
 provides access to the PMR, MWRI, and MHWHS sensor products.
@@ -331,7 +396,7 @@ Geographic Binning Toolbox provided by the software.
 
 You can retrieve the list of products available through the GPM-API using the ``gpm.available_products()`` function.
 For a comprehensive online list of GPM products, refer to `this page <https://gpm.nasa.gov/data/directory>`_
-and `this page <https://storm.pps.eosdis.nasa.gov/storm/>`_.
+and `the STORM page <https://storm.pps.eosdis.nasa.gov/storm/>`_.
 
 It's important to note that GPM products are available in different versions.
 Currently, GPM-API offers access to versions 5, 6, and 7. Version 7 is the latest and is recommended for most applications.
@@ -372,6 +437,9 @@ Radar Precipitation
 ~~~~~~~~~~~~~~~~~~~~~
 
 
+.. warning::
+
+SOON AVAILABLE
 
 
 The intensity of instaneous precipitation estimates is capped at 300 mm/hr !**
@@ -384,10 +452,31 @@ Use ``gpm.available_products(category="RADAR", product_levels="2A")`` to list th
 PMW Precipitation
 ~~~~~~~~~~~~~~~~~~~~
 
-Max limit rain PMW ?
+A PMW sensor measures, at specific frequencies, the outcoming top of the atmosphere (TOA) microwave radiation within the instrument field of view (FOV).
+This radiation arises from the natural reflection and emission of the Earth's surface and by its gaseous, liquid, and solid atmospheric constituents.
+
+The signal sensed by PMW sensors is therefore an integrated measure of a complex interplay of processes occurring in the atmospheric column,
+which make the precipitation retrievals notoriously difficult.
+
+When the surface emissivity can be estimated accurately (i.e. over the oceans), the difference from the observed TOA microwave
+radiation at specific microwave bands can be exploited to obtain a reasonable estimate of the rain rate.
+However, over land and ice-covered surfaces where modeling surface emissivity is more challenging,
+the uncertainty in the precipitation retrievals increases substantially.
+Additionally, over snow-covered terrain, it's very hard to disentangle the scattering
+and emission signature of the snow in the air from the signature of snow on the ground.
+
+The Goddard Profiling Algorithm (GPROF) is used to retrieve precipitation estimates from all PMW sensors of the GPM constellation.
+GPROF use a Bayesian inversion technique in conjunction with a-priori database to constrain the candidate solutions based on auxiliary
+model-based parameters such surface temperature, surface type and total column water vapor.
+This a-priori database is build using observed DPR precipitation profiles and their associated brightness temperature signals.
+
+For a comprehensive understanding of the theoretical and mathematical foundations of the GPROF algorithm please
+refer to the `GPROF Algorithm Theoretical Basis Document (ATBD) <https://gpm.nasa.gov/resources/documents/gpm-gprof-algorithm-theoretical-basis-document-atbd>`_.
 
 Precipitation estimates derived from GPM Constellation sensors are available in the L2A products.
 Use ``gpm.available_products(category="PMW", product_levels="2A")`` to list the available products.
+
+**Please note that the intensity of instantanouos precipitation rate estimates are currently capped at 80 mm/hr !**
 
 
 .. _corra_precipitation:
@@ -407,7 +496,7 @@ that are physically consistent with both radar reflectivity profiles and brightn
 **It is important to note that the CORRA instantaneous precipitation rate estimates are currently capped at 80 mm/hr,
 while the radar-only products estimates are capped at 300 mm/hr !**
 
- The TRMM/GPM CORRA product can be accessed with GPM-API using the ``2B-TRMM-CORRA`` and ``2B-GPM-CORRA``  product acronyms.
+The TRMM/GPM CORRA product can be accessed with GPM-API using the ``2B-TRMM-CORRA`` and ``2B-GPM-CORRA``  product acronyms.
 
 For the theoretical and mathematical details of the combined radar/radiometer algorithm please
 refer to the `CORRA Algorithm Theoretical Basis Document (ATBD) <https://gpm.nasa.gov/resources/documents/gpm-combined-radar-radiometer-precipitation-algorithm-theoretical-basis>`_.
@@ -492,8 +581,11 @@ please refer to `Tao et al., 2022 <https://www.jstage.jst.go.jp/article/jmsj/100
 `Shige et al., 2009 <https://journals.ametsoc.org/view/journals/clim/22/20/2009jcli2919.1.xml>`_ respectively.
 
 
-Coincidence datasets
-=======================
+
+.. _coincidence_datasets:
+
+Coincidence Datasets
+------------------------
 
 Here below we detail some of the coincidence satellite datasets available within the TRMM and GPM era.
 None of the following datasets is currently supported by GPM-API but we welcome contributions to expand the API to include these datasets.
@@ -522,8 +614,8 @@ The AMSR-E - CloudSat dataset is particularly useful for developing and validati
 using CloudSat CPR data as a reference.
 
 
-TRMM/GPM - CloudSat
-~~~~~~~~~~~~~~~~~~~~~
+GPM - CloudSat
+~~~~~~~~~~~~~~~~~~~
 
 The TRMM/GPM-CloudSat Coincidence dataset collects satellite acquisitions (intersections) occurring
 within a small time window between the TRMM/GPM-Core satellites and the 94-GHz (W-band) CloudSat Profiling Radar (CPR).
@@ -535,7 +627,7 @@ These coincidences yield combined dual/triple-frequency radar profiles, incluudi
 
 Additionally, the dataset also includes collocated thermal and near-infrared measurements from the
 `Moderate Imaging Spectroradiometer (MODIS) <https://aqua.nasa.gov/modis>`_ imager
-onboard the Aqua satellite (channels 20 and 27–36).
+onboard the Aqua satellite (channels 20 and 27-36).
 
 This dataset serves various scientific purposes, including algorithm evaluation and development, identification of deficiencies,
 studies on snow and light rain sensitivity, exploration of cloud processes, radiative transfer simulations, and
@@ -573,11 +665,16 @@ and from the `Advanced Himawari Imager (AHI) <https://www.data.jma.go.jp/mscweb/
   SOON AVAILABLE
 
 
-Feature database
-=======================
+.. _feature_database:
+
+Features Database
+------------------
 
 Here below we provide details about several "feature" database derived from the TRMM and GPM sensors.
 While these datasets are not currently supported by the GPM-API, we welcome contributions to expand the API to include them.
+
+
+.. _tamu_cc:
 
 TAMU-CC Precipitation Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -590,13 +687,20 @@ The `website of Chuntao Liu <http://atmos.tamucc.edu/trmm/>`_ provides access to
 useful resources to gain insight into the `climatology of precipitation features <http://atmos.tamucc.edu/trmm/p_pfs.html>`_.
 
 
+.. _uw_storm_classification:
+
 UW Storm Classification
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The UW storm classification system (`Houze et al., 2015 <https://agupubs.onlinelibrary.wiley.com/doi/10.1002/2015RG000488>`)
+The UW storm classification system `Houze et al., 2015 <https://agupubs.onlinelibrary.wiley.com/doi/10.1002/2015RG000488>`_
 is based on the three-dimensional storm structure measured by the TRMM and GPM radars.
-It categorizes storms into five types: Isolated Shallow Echoes (ISE), Deep Convective Cores (DCC), Wide Convective Cores (WCC),
-Deep-Wide Convective Cores (DWC), and Broad Stratiform Rain areas (BSR).
+It categorizes storms into five types:
+
+- Isolated Shallow Echoes (ISE)
+- Deep Convective Cores (DCC)
+- Wide Convective Cores (WCC)
+- Deep-Wide Convective Cores (DWC)
+- Broad Stratiform Rain areas (BSR).
 
 Data are available for `TRMM here <http://trmm.atmos.washington.edu/>`_  and `GPM here <http://gpm.atmos.washington.edu/>`_
 
@@ -713,8 +817,8 @@ GPM-API currently provides only access to the version 6 and 7 of the IMERG produ
 
 We welcome contributions that enable GPM-API to access other precipitation products !
 
-GSMaP V6 is also available On Google Earth Engine: https://developers.google.com/earth-engine/datasets/catalog/JAXA_GPM_L3_GSMaP_v6_operational
-IMERG V6 is also available on Google Earth Engine: https://developers.google.com/earth-engine/datasets/catalog/NASA_GPM_L3_IMERG_V06
+Please also note that on Google Earth Engine are available the version 6 of `GSMaP <https://developers.google.com/earth-engine/datasets/catalog/JAXA_GPM_L3_GSMaP_v6_operational>`_
+and `IMERG <https://developers.google.com/earth-engine/datasets/catalog/NASA_GPM_L3_IMERG_V06>`_.
 
 GSMaP can be visualized on the `JAXA Global Rainfall Watch <https://sharaku.eorc.jaxa.jp/GSMaP/index.htm>`_,
 while IMERG on the `GPM IMERG Global Viewer <https://gpm.nasa.gov/data/visualization/global-viewer>`_ or the
@@ -831,9 +935,9 @@ and enthusiasts to explore educational resources and technical details.
      - Temporal Experiment for Storms and Tropical Systems Demonstration
      - | `CSU TEMPEST <https://tempest.colostate.edu/>`_
        | `eoPortal TEMPEST-D <https://www.eoportal.org/satellite-missions/tempest-d#launch>`_
-   * - Tomorrow.io Sounder
+   * - Tomorrow Sounder
      - Tomorrow.io Sounder
-     - `Tomorrow.io Sounder <https://www.tomorrow.io/space/sounder/>`_
+     - `Tomorrow Sounder <https://www.tomorrow.io/space/sounder/>`_
    * - TROPICS
      - Time-Resolved Observations of Precipitation structure and storm Intensity with a Constellation of Smallsats
      - | `MIT TROPICS <https://tropics.ll.mit.edu/CMS/tropics/>`_

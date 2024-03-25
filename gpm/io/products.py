@@ -448,7 +448,7 @@ def available_products(
     product_levels: (str or list), optional
         If ``None`` (default), provide products from all product levels.
         If ``str``, must be a valid product level.
-        Valid product levels are: ``1A``,``1B``,``1C``,``2A``,``2B``,``3B``.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
         The list of available sensors  also be retrieved using ``available_product_levels()``.
     versions: (int or list), optional
         If ``None`` (default), provide products from all versions.
@@ -466,12 +466,12 @@ def available_products(
     start_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time period over which to search for available products.
         The default is ``None`` (start of the GPM mission).
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64``, str
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     end_time : (datetime.datetime, datetime.date, np.datetime64, str)
         End time period over which to search for available products.
         The default is ``None`` (current time).
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64``, str
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
 
     Returns
@@ -578,7 +578,7 @@ def available_product_categories(
     product_levels: (str or list), optional
         If ``None`` (default), provide products from all product levels.
         If ``str``, must be a valid product level.
-        Valid product levels are: ``1A``,``1B``,``1C``,``2A``,``2B``,``3B``.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
         The list of available sensors  also be retrieved using ``available_product_levels()``.
     versions: (int or list), optional
         If ``None`` (default), provide products from all versions.
@@ -625,7 +625,7 @@ def available_satellites(
 ):
     """Provide a list of available GPM satellites.
 
-    If prefix_with_sensor=True, it prefixes the satellite name with the satellite name: {sensor}-{satellite}.
+    If ``prefix_with_sensor=True``, it prefixes the satellite name with the satellite name: ``{sensor}-{satellite}``.
 
     Parameters
     ----------
@@ -641,7 +641,7 @@ def available_satellites(
     product_levels: (str or list), optional
         If ``None`` (default), provide products from all product levels.
         If ``str``, must be a valid product level.
-        Valid product levels are: ``1A``,``1B``,``1C``,``2A``,``2B``,``3B``.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
         The list of available sensors  also be retrieved using ``available_product_levels()``.
     versions: (int or list), optional
         If ``None`` (default), provide products from all versions.
@@ -655,12 +655,12 @@ def available_satellites(
     start_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time period over which to search for available products.
         The default is ``None`` (start of the GPM mission).
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64``, str
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     end_time : (datetime.datetime, datetime.date, np.datetime64, str)
         End time period over which to search for available products.
         The default is ``None`` (current time).
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64``, str
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     prefix_with_sensor: bool, optional
         If ``True``, it prefixes the satellite name with the satellite name: ``{sensor}-{satellite}``.
@@ -706,7 +706,7 @@ def available_sensors(
 ):
     """Provide a list of available GPM sensors.
 
-    If suffix_with_satellite=True, it suffixes the sensor name with the satellite name: {sensor}-{satellite}.
+    If ``suffix_with_satellite=True``, it suffixes the sensor name with the satellite name: ``{sensor}-{satellite}``.
 
     Parameters
     ----------
@@ -722,7 +722,7 @@ def available_sensors(
     product_levels: (str or list), optional
         If ``None`` (default), provide products from all product levels.
         If ``str``, must be a valid product level.
-        Valid product levels are: ``1A``,``1B``,``1C``,``2A``,``2B``,``3B``.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
         The list of available sensors  also be retrieved using ``available_product_levels()``.
     versions: (int or list), optional
         If ``None`` (default), provide products from all versions.
@@ -736,16 +736,16 @@ def available_sensors(
     start_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time period over which to search for available products.
         The default is ``None`` (start of the GPM mission).
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64``, str
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     end_time : (datetime.datetime, datetime.date, np.datetime64, str)
         End time period over which to search for available products.
         The default is ``None`` (current time).
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64``, str
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     suffix_with_satellite: bool, optional
         If ``True``, it suffixes the sensor name with the satellite name: ``{sensor}-{satellite}``.
-        If ``False``(the default), it just return the name of the sensor.
+        If ``False`` (the default), it just return the name of the sensor.
 
     Returns
     -------

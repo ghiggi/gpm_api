@@ -853,10 +853,14 @@ def download_archive(
     ----------
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    start_time : datetime
+    start_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time.
-    end_time : datetime
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
+    end_time : (datetime.datetime, datetime.date, np.datetime64, str)
         End time.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int, optional

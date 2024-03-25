@@ -218,10 +218,14 @@ def open_dataset(
     ----------
     product : str
         GPM product acronym.
-    start_time : datetime.datetime
+    start_time :  (datetime.datetime, datetime.date, np.datetime64, str)
         Start time.
-    end_time : datetime.datetime
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
+    end_time :  (datetime.datetime, datetime.date, np.datetime64, str)
         End time.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     variables : list, str, optional
         Variables to read from the HDF5 file.
         The default is ``None`` (all variables).
