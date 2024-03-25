@@ -238,11 +238,11 @@ def write_granules_bucket(
          Latitude bin size. The default is 15.
      parallel : bool
          Whether to bucket several granules in parallel.
-         The default is True.
+         The default is ``True``.
      max_concurrent_tasks : None
          The maximum number of Dask tasks to be concurrently executed.
-         If None, let the Dask Scheduler to choose.
-         The default is None.
+         If ``None``, let the Dask Scheduler to choose.
+         The default is ``None``.
      max_dask_total_tasks : None
          The maximum number of Dask tasks to be scheduled.
          The default is 500.

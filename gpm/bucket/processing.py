@@ -341,7 +341,7 @@ def merge_granule_buckets(
         The default is "snappy".
     compression : int or dict, optional
         Specify the compression level for a codec, either on a general basis or per-column.
-        If None is passed, arrow selects the compression level for the compression codec in use.
+        If ``None`` is passed, arrow selects the compression level for the compression codec in use.
         The compression level has a different meaning for each codec, so you have
         to read the pyArrow documentation of the codec you are using.
         The default is compression_level=None.
@@ -355,7 +355,7 @@ def merge_granule_buckets(
     use_threads: bool, optional
         If enabled, then maximum parallelism will be used to read and write files (in multithreading).
         The number of threads is determined by the number of available CPU cores.
-        The default is True.
+        The default is ``True``.
     batch_size, int, optional
         The maximum row count for scanned record batches.
         If scanned record batches are overflowing memory then this value can be reduced to reduce the memory usage.

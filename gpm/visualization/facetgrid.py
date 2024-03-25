@@ -96,7 +96,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         axes_class : subclass of `matplotlib.axes.Axes`, default: None
         add_colorbar: bool, optional
             Whether to add a colorbar to the figure.
-            The default is True.
+            The default is ``True``.
         cbar_kwargs : dict, optional
             Dictionary of keyword arguments to pass to the colorbar.
             The ``pad`` argument controls the space between the image axes and the colorbar axes.
@@ -375,7 +375,7 @@ class CartopyFacetGrid(CustomFacetGrid):
            inches.
         add_colorbar: bool, optional
             Whether to add a colorbar to the figure.
-            The default is True.
+            The default is ``True``.
         cbar_kwargs : dict, optional
             Dictionary of keyword arguments to pass to the colorbar.
             The ``pad`` argument controls the space between the image axes and the colorbar axes.
@@ -500,7 +500,7 @@ class ImageFacetGrid(CustomFacetGrid):
             Whether the axes aspect ratio follows the aspect ratio of the data limits.
         add_colorbar: bool, optional
             Whether to add a colorbar to the figure.
-            The default is True.
+            The default is ``True``.
         cbar_kwargs : dict, optional
             Dictionary of keyword arguments to pass to the colorbar.
             The ``pad`` argument controls the space between the image axes and the colorbar axes.

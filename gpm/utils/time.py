@@ -51,10 +51,10 @@ def subset_by_time(xr_obj, start_time=None, end_time=None):
         A xarray object.
     start_time : datetime.datetime
         Start time.
-        By default is None
+        By default is ``None``
     end_time : datetime.datetime
         End time.
-        By default is None
+        By default is ``None``
 
     Returns
     -------

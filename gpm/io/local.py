@@ -43,7 +43,7 @@ from gpm.io.products import get_product_category
 
 
 def get_time_tree(date):
-    """Get time tree path <YYYY>/<MM>/<DD>."""
+    """Get time tree path ``<YYYY>/<MM>/<DD>``."""
     year = date.strftime("%Y")
     month = date.strftime("%m")
     day = date.strftime("%d")
@@ -58,20 +58,22 @@ def _get_local_dir_pattern(product, product_type, version):
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products()
+        GPM product name. See ``gpm.available_products()``.
     product_type : str
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
 
     Returns
     -------
 
     pattern : str
-        Directory base pattern.
-        If product_type == "RS": GPM/RS/V<version>/<product_category>/<product>
-        If product_type == "NRT": GPM/NRT/<product_category>/<product>
-        Product category are: RADAR, PMW, CMB, IMERG
+        Directory base pattern:
+
+        - If ``product_type == "RS"``: ``GPM/RS/V<version>/<product_category>/<product>``
+        - If ``product_type == "NRT"``: ``GPM/NRT/<product_category>/<product>``
+
+        Valid `product_category` are ``RADAR``, ``PMW``, ``CMB``, ``IMERG``.
 
     """
     # Define pattern
@@ -93,11 +95,11 @@ def _get_local_product_base_directory(base_dir, product, product_type, version):
     base_dir : str
         The base directory where to store GPM data.
     product : str
-        GPM product name. See: gpm.available_products()
+        GPM product name. See ``gpm.available_products()``.
     product_type : str
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
 
     Returns
     -------
@@ -114,17 +116,17 @@ def _get_local_product_base_directory(base_dir, product, product_type, version):
 def _get_local_directory_tree(product, product_type, date, version):
     """Return the local product directory tree.
 
-    The directory tree structure for product_type == "RS" is:
-        GPM/RS/V<version>/<product_category>/<product>/YYYY/MM/YY
-    The directory tree structure for product_type == "NRT" is:
-        GPM/NRT/<product_category>/<product>/YYYY/MM/YY
+    The directory tree structure for ``product_type``:
+
+    - ``RS`` is ``GPM/RS/V<version>/<product_category>/<product>/YYYY/MM/YY``
+    - ``NRT`` is ``GPM/NRT/<product_category>/<product>/YYYY/MM/YY``
 
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products().
-    product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product name. See ``gpm.available_products()``.
+    product_type : str
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     date : datetime.date
         Single date for which to retrieve the data.
     version : int
@@ -153,11 +155,11 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
     base_dir : str
         The base directory where to store GPM data.
     product : str
-        GPM product name. See: gpm.available_products()
+        GPM product name. See ``gpm.available_products()``.
     product_type : str
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     date : datetime.date
         Single date for which to retrieve the data.
 
@@ -166,9 +168,11 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
 
     product_dir_path : str
         Directory path where daily GPM data are located.
-        If product_type == "RS": <base_dir>/GPM/RS/V0<version>/<product_category>/<product>/<YYYY>/<MM>/<DD>
-        If product_type == "NRT": <base_dir>/GPM/NRT/<product_category>/<product>/<YYYY>/<MM>/<DD>
-        <product_category> are: RADAR, PMW, CMB, IMERG.
+
+        - If ``product_type == "RS"``: ``<base_dir>/GPM/RS/V0<version>/<product_category>/<product>/<YYYY>/<MM>/<DD>``
+        - If ``product_type == "NRT"``: ``<base_dir>/GPM/NRT/<product_category>/<product>/<YYYY>/<MM>/<DD>``
+
+        Valid `product_category` are ``RADAR``, ``PMW``, ``CMB``, ``IMERG``.
 
     """
     dir_structure = _get_local_directory_tree(
@@ -191,15 +195,15 @@ def get_local_daily_filepaths(product, product_type, date, version, verbose=True
     Parameters
     ----------
     product : str
-        GPM product acronym. See gpm.available_products()
+        GPM product acronym. See ``gpm.available_products()``.
     product_type : str
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     date : datetime
         Single date for which to retrieve the data.
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     verbose : bool, optional
-        Whether to print processing details. The default is True.
+        Whether to print processing details. The default is ``True``.
     """
     # Retrieve the local GPM base directory
     base_dir = get_base_dir(base_dir=base_dir)
@@ -351,15 +355,15 @@ def get_local_filepaths(product, version=7, product_type="RS", base_dir=None, gr
     Parameters
     ----------
     product : str
-        GPM product acronym. See gpm.available_products()
+        GPM product acronym. See ``gpm.available_products()``.
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
-        The default is 7.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
+        The default is version ``7``.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     group: str, optional
-        Whether to group the filepaths in a dictionary by 'year', 'month', 'doy' or 'version'.
-        The default is None.
+        Whether to group the filepaths in a dictionary by ``year``, ``month``, ``doy`` or ``version``.
+        The default is ``None``.
     """
     # Retrieve the local GPM base directory
     base_dir = get_base_dir(base_dir=base_dir)

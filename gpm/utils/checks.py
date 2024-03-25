@@ -250,7 +250,7 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
         GPM xarray object.
     tolerance : np.timedelta, optional
         The timedelta tolerance to define regular vs. non-regular timesteps.
-        The default is None.
+        The default is ``None``.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
         If GPM ORBIT object, it uses the ORBIT_TIME_TOLERANCE.
     min_size : int
@@ -303,7 +303,7 @@ def get_slices_non_regular_time(xr_obj, tolerance=None):
         GPM xarray object.
     tolerance : np.timedelta, optional
         The timedelta tolerance to define regular vs. non-regular timesteps.
-        The default is None.
+        The default is ``None``.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
         If GPM ORBIT object, it uses the ORBIT_TIME_TOLERANCE.
         It is discouraged to use this function for GPM ORBIT objects !
@@ -350,12 +350,12 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
         xarray object.
     tolerance : np.timedelta, optional
         The timedelta tolerance to define regular vs. non-regular timesteps.
-        The default is None.
+        The default is ``None``.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
         If GPM ORBIT object, it uses the ORBIT_TIME_TOLERANCE
     verbose : bool
         If True, it prints the time interval when the non contiguous scans occurs.
-        The default is True.
+        The default is ``True``.
 
     """
     list_discontinuous_slices = get_slices_non_regular_time(xr_obj, tolerance=tolerance)
@@ -917,7 +917,7 @@ def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
         GPM xarray object.
     min_size : int
         Minimum size for a slice to be returned.
-        If None, default to 1 for GRID objects, 2 for ORBIT objects.
+        If ``None``, default to 1 for GRID objects, 2 for ORBIT objects.
     min_n_scans : int
         Minimum number of scans to be able to check for scan contiguity.
         For visualization purpose, this value might want to be set to 2.

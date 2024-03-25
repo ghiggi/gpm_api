@@ -224,12 +224,12 @@ def open_dataset(
         End time.
     variables : list, str, optional
         Variables to read from the HDF5 file.
-        The default is None (all variables).
+        The default is ``None`` (all variables).
     groups : list, str, optional
         HDF5 Groups from which to read all variables.
-        The default is None (all groups).
+        The default is ``None`` (all groups).
     scan_mode : str, optional
-        Scan mode of the GPM product. The default is None.
+        Scan mode of the GPM product. The default is ``None``.
         Use ``gpm.available_scan_modes(product, version)`` to get the available scan modes for a specific product.
         The radar products have the following scan modes:
 
@@ -242,7 +242,7 @@ def open_dataset(
         GPM product type. Either ``'RS'`` (Research) or ``'NRT'`` (Near-Real-Time).
         The default is ``'RS'``.
     version : int, optional
-        GPM version of the data to retrieve if ``product_type = 'RS'``.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
         GPM data readers currently support version 4, 5, 6 and 7.
     chunks : int, dict, 'auto' or None, optional
         Chunk size for dask array:

@@ -89,17 +89,17 @@ def _filter_filepath(filepath, product=None, version=None, start_time=None, end_
     filepath : str
         Filepath string.
     product : str
-        GPM product name. See: gpm.available_products()
-        The default is None.
+        GPM product name. See ``gpm.available_products()``.
+        The default is ``None``.
     start_time : datetime.datetime
         Start time
-        The default is None.
+        The default is ``None``.
     end_time : datetime.datetime
         End time.
-        The default is None.
+        The default is ``None``.
     version: int
         GPM product version.
-        The default is None.
+        The default is ``None``.
 
     Returns
     -------
@@ -153,19 +153,19 @@ def filter_filepaths(
     filepaths : list
         List of filepaths.
     product : str
-        GPM product name. See: gpm.available_products()
-        The default is None.
+        GPM product name. See ``gpm.available_products()``.
+        The default is ``None``.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     start_time : datetime.datetime
         Start time
-        The default is None.
+        The default is ``None``.
     end_time : datetime.datetime
         End time.
-        The default is None.
+        The default is ``None``.
     version: int
         GPM product version.
-        The default is None.
+        The default is ``None``.
 
     Returns
     -------
@@ -214,9 +214,9 @@ def filter_by_product(filepaths, product, product_type="RS"):
     filepaths : list
         List of filepaths.
     product : str
-        GPM product name. See: gpm.available_products()
+        GPM product name. See ``gpm.available_products()``.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
 
     Returns
     ----------
@@ -263,9 +263,11 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
     filepaths : list
         List of filepaths.
     start_time : datetime.datetime
-        Start time. Will be set to GPM start mission time (1998-01-01) if None.
+        Start time.
+        If ``None``, will be set to GPM start mission time (1998-01-01).
     end_time : datetime.datetime
-        End time. Will be set to current time (`datetime.datetime.utcnow()`) if None.
+        End time.
+        If ``None`` will be set to current time using ``datetime.datetime.utcnow()``.
 
     Returns
     ----------

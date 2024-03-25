@@ -103,18 +103,19 @@ def _get_ges_disc_product_folder_name(product, version):
     return folder_name
 
 
-def _get_ges_disc_product_directory_tree(product, date, version):
+def get_ges_disc_product_directory_tree(product, date, version):
     """Return the GES DISC product directory tree.
 
     The directory tree structure is
-     - <product directory>/YYYY/DOY for L1 and L2 products (and IMERG half hourly)
-     - <product directory>/YYYY/MM for L3 daily products
-     - <product directory>/YYYY or <product directory>/YYYY/MM for L3 monthly products
+
+    - ``<product directory>/YYYY/DOY`` for L1 and L2 products (and IMERG half hourly)
+    - ``<product directory>/YYYY/MM`` for L3 daily products
+    - ``<product directory>/YYYY`` or ``<product directory>/YYYY/MM`` for L3 monthly products
 
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products() .
+        GPM product name. See ``gpm.available_products()``.
     date : datetime.date
         Single date for which to retrieve the data.
     version : int
@@ -148,10 +149,10 @@ def get_ges_disc_product_directory(product, date, version):
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products() .
+        GPM product name. See ``gpm.available_products()``.
     date : datetime.date
         Single date for which to retrieve the data.
-    version : int, optional
+    version : int
         GPM version of the data to retrieve.
 
     Returns
@@ -162,9 +163,7 @@ def get_ges_disc_product_directory(product, date, version):
     # Retrieve server URL
     url_server = _get_ges_disc_server(product)
     # Retrieve directory tree structure
-    dir_structure = _get_ges_disc_product_directory_tree(
-        product=product, date=date, version=version
-    )
+    dir_structure = get_ges_disc_product_directory_tree(product=product, date=date, version=version)
     # Define product directory where data are listed
     url_product_dir = f"{url_server}/{dir_structure}"
     return url_product_dir
@@ -189,11 +188,11 @@ def _get_ges_disc_file_list(url_product_dir, product, date, version, verbose=Tru
     url_product_dir : str
         The GES DISC product directory url.
     product : str
-        GPM product acronym. See gpm.available_products() .
+        GPM product acronym. See ``gpm.available_products()``.
     date : datetime
         Single date for which to retrieve the data.
     verbose : bool, optional
-        Default is False. Whether to specify when data are not available for a specific date.
+        Default is ``False``. Whether to specify when data are not available for a specific date.
     """
     try:
         filepaths = _get_ges_disc_list_path(url_product_dir)
@@ -223,7 +222,7 @@ def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=T
     Parameters
     ----------
     product : str
-        GPM product acronym. See gpm.available_products() .
+        GPM product acronym. See ``gpm.available_products()``.
     date : datetime
         Single date for which to retrieve the data.
     product_type : str
@@ -232,7 +231,7 @@ def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=T
         GPM version of the data to retrieve.
     verbose : bool, optional
         Whether to specify when data are not available for a specific date.
-        The default is True.
+        The default is ``True``.
     """
     _check_gesc_disc_product_type(product=product, product_type=product_type)
     # Retrieve server urls of NASA GES DISC
@@ -257,13 +256,13 @@ def define_ges_disc_filepath(product, product_type, date, version, filename):
     Parameters
     ----------
     product : str
-        GPM product acronym. See gpm.available_products().
+        GPM product acronym. See ``gpm.available_products()``.
     product_type : str
         GPM product type. Not used for GES DISC.
     date : datetime
         Single date for which to retrieve the data.
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     filename : str
         Name of the GPM file.
     """

@@ -360,7 +360,7 @@ def filter_download_list(remote_filepaths, local_filepaths, force_download=False
     remote_filepaths : str
         Filepaths on which GPM data are stored on PPS servers.
     force_download : boolean, optional
-        Whether to redownload data if already existing on disk. The default is False.
+        Whether to redownload data if already existing on disk. The default is ``False``.
 
     Returns
     -------
@@ -485,24 +485,24 @@ def download_files(
     filepaths: (str or list)
         List of GPM file names to download.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
         The default is "RS".
     storage : str, optional
         The remote repository from where to download.
-        Either "pps" or "ges_disc". The default is "pps".
+        Either ``pps`` or ``ges_disc``. The default is "pps".
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
-        Whether to display progress. The default is True.
+        Whether to display progress. The default is ``True``.
     transfer_tool : str, optional
-        Whether to use "curl" or "wget" for data download. The default is "curl".
+        Whether to use ``curl`` or ``wget`` for data download. The default is  ``curl``.
     verbose : bool, optional
-        Whether to print processing details. The default is False.
+        Whether to print processing details. The default is ``False``.
     force_download : boolean, optional
-        Whether to redownload data if already existing on disk. The default is False.
+        Whether to redownload data if already existing on disk. The default is ``False``.
     remove_corrupted : boolean, optional
        Whether to remove the corrupted files.
-       By default is True.
+       By default is ``True``.
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
 
@@ -698,7 +698,7 @@ def _download_daily_data(
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products()
+        GPM product name. See ``gpm.available_products()``.
     date : datetime
         Single date for which to retrieve the data.
     start_time : datetime.datetime
@@ -706,18 +706,18 @@ def _download_daily_data(
     end_time : datetime.datetime
         Filtering end time.
     product_type : str
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     storage : str
         The remote repository from where to download.
-        Either "pps" or "ges_disc".
+        Either ``pps`` or ``ges_disc``.
     n_threads : int
         Number of parallel downloads.
     progress_bar : bool
         Whether to display progress.
     transfer_tool : str
-        Whether to use "curl" or "wget" for data download.
+        Whether to use ``curl`` or ``wget`` for data download.
     force_download : boolean
         Whether to redownload data if already existing on disk.
     verbose : bool
@@ -852,37 +852,37 @@ def download_archive(
     Parameters
     ----------
     product : str
-        GPM product acronym. See gpm.available_products()
+        GPM product acronym. See ``gpm.available_products()``.
     start_time : datetime
         Start time.
     end_time : datetime
         End time.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     storage : str, optional
         The remote repository from where to download.
-        Either "pps" or "ges_disc". The default is "pps".
+        Either ``pps`` or ``ges_disc``. The default is ``pps``.
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
-        Whether to display progress. The default is True.
+        Whether to display progress. The default is ``True``.
     transfer_tool : str, optional
-        Whether to use "curl" or "wget" for data download. The default is "curl".
+        Whether to use ``curl`` or ``wget`` for data download. The default is  ``curl``.
     force_download : boolean, optional
-        Whether to redownload data if already existing on disk. The default is False.
+        Whether to redownload data if already existing on disk. The default is ``False``.
     verbose : bool, optional
-        Whether to print processing details. The default is False.
+        Whether to print processing details. The default is ``False``.
     check_integrity: bool, optional
         Check integrity of the downloaded files.
-        By default is True.
+        By default is ``True``.
     remove_corrupted: bool, optional
         Whether to remove the corrupted files.
-        By default is True.
+        By default is ``True``.
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
-        Only applies if check_integrity is True !
+        Only applies if ``check_integrity=True``!
     """
     # -------------------------------------------------------------------------.
     ## Checks input arguments

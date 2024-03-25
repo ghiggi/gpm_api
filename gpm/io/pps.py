@@ -89,7 +89,7 @@ def _get_pps_nrt_product_dir(product, date):
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products() .
+        GPM product name. See ``gpm.available_products()``.
     date : datetime.date
         Single date for which to retrieve the data.
         Note: this is currently only needed when retrieving IMERG data.
@@ -110,11 +110,11 @@ def _get_pps_rs_product_dir(product, date, version):
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products() .
+        GPM product name. See ``gpm.available_products()``. .
     date : datetime.date
         Single date for which to retrieve the data.
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     """
     version = check_product_version(version, product)
     product = check_product_validity(product, product_type="RS")
@@ -151,24 +151,24 @@ def _get_pps_directory_tree(product, product_type, date, version):
     """
     Retrieve the NASA PPS server directory tree where the GPM data are stored.
 
-    The directory tree structure for product_type="RS" is:
-        - <gpmallversions>/V0<version>/<pps_rs_dir>/YYYY/MM/DD
-        -  The L3 monthly products are saved in the YYYY/MM/01 directory
+    The directory tree structure for ``product_type="RS"`` is:
+        - ``<gpmallversions>/V0<version>/<pps_rs_dir>/YYYY/MM/DD``
+        -  The L3 monthly products are saved in the ``YYYY/MM/01`` directory
 
-    The directory tree structure for product_type="NRT" is:
-        - IMERG-ER and IMERG-FR: imerg/<early/late>/YYYY/MM/
-        - Otherwise <pps_nrt_dir>/
+    The directory tree structure for ``product_type="NRT"`` is:
+        - IMERG-ER and IMERG-FR: ``imerg/<early/late>/YYYY/MM/``
+        - Otherwise ``<pps_nrt_dir>/``
 
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products() .
+        GPM product name. See ``gpm.available_products()``. .
     product_type : str
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     date : datetime.date
         Single date for which to retrieve the data.
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
 
     Returns
     -------
@@ -192,15 +192,15 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
     Parameters
     ----------
     product : str
-        GPM product name. See: gpm.available_products() .
+        GPM product name. See ``gpm.available_products()``.
     product_type : str
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     date : datetime.date
         Single date for which to retrieve the data.
     version : int
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     server_type: str
-        Either "text" or "data"
+        Either ``text`` or ``data``
 
     Returns
     -------
@@ -260,7 +260,7 @@ def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
 
     The query is done using https !
     The function does not return the full PPS server url, but the filepath
-    from the server root: i.e: '/gpmdata/2020/07/05/radar/<...>.HDF5'
+    from the server root: i.e: ``'/gpmdata/2020/07/05/radar/<...>.HDF5'``
     The returned filepaths can includes more than one product !!!
 
     Parameters
@@ -268,11 +268,11 @@ def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
     url_product_dir : str
         The PPS product directory url.
     product : str
-        GPM product acronym. See gpm.available_products() .
+        GPM product acronym. See ``gpm.available_products()``.
     date : datetime
         Single date for which to retrieve the data.
     verbose : bool, optional
-        Default is False. Whether to specify when data are not available for a specific date.
+        Default is ``False``. Whether to specify when data are not available for a specific date.
     """
     try:
         filepaths = _try_get_pps_file_list(url_product_dir)
@@ -299,16 +299,16 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
     Parameters
     ----------
     product : str
-        GPM product acronym. See gpm.available_products() .
+        GPM product acronym. See ``gpm.available_products()``.
     date : datetime
         Single date for which to retrieve the data.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     verbose : bool, optional
         Whether to specify when data are not available for a specific date.
-        The default is True.
+        The default is ``True``.
     """
     # Retrieve url to product directory
     url_product_dir = get_pps_product_directory(
@@ -338,7 +338,7 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
 def define_pps_filepath(product, product_type, date, version, filename):
     """Define PPS filepath from filename.
 
-    This function is called by get_filepath_from_filename(filename, storage, product_type).
+    This function is called by ``get_filepath_from_filename(filename, storage, product_type)``.
     """
     # Retrieve product directory url
     url_product_dir = get_pps_product_directory(

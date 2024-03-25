@@ -150,13 +150,13 @@ def get_transect_slices(
     direction : TYPE, optional
         DESCRIPTION. The default is "cross_track".
     lon : TYPE, optional
-        DESCRIPTION. The default is None.
+        DESCRIPTION. The default is ``None``.
     lat : TYPE, optional
-        DESCRIPTION. The default is None.
+        DESCRIPTION. The default is ``None``.
     variable : TYPE, optional
-        DESCRIPTION. The default is None.
+        DESCRIPTION. The default is ``None``.
     transect_kwargs : TYPE, optional
-        DESCRIPTION. The default is None.
+        DESCRIPTION. The default is ``None``.
 
     Returns
     -------
