@@ -56,9 +56,9 @@ VERSION_WARNING = config.get("warn_multiple_product_versions")
 
 
 def _get_all_daily_filepaths(storage, date, product, product_type, version, verbose):
-    """Return the find_daily_filepaths_func.
+    """Return the ``find_daily_filepaths_func``.
 
-    This functions returns a tuple ([filepaths][available_version])
+    This functions returns a tuple ``([filepaths],[available_version])``.
     """
     if storage == "local":
         filepaths = get_local_daily_filepaths(
@@ -155,17 +155,17 @@ def find_daily_filepaths(
     date : datetime.date
         Single date for which to retrieve the data.
     product : str
-        GPM product acronym. See gpm.available_products()
+        GPM product acronym. See ``gpm.available_products()``.
     start_time : datetime.datetime
         Filtering start time.
     end_time : datetime.datetime
         Filtering end time.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     verbose : bool, optional
-        Default is False.
+        Default is ``False``.
 
     Returns
     -------
@@ -235,20 +235,20 @@ def find_filepaths(
     Parameters
     ----------
     product : str
-        GPM product acronym. See gpm.available_products()
+        GPM product acronym. See ``gpm.available_products()``.
     start_time : datetime.datetime
         Start time.
     end_time : datetime.datetime
         End time.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
     verbose : bool, optional
-        Whether to print processing details. The default is True.
+        Whether to print processing details. The default is ``True``.
     parallel : bool, optional
         Whether to loop over dates in parallel.
-        The default is True.
+        The default is ``True``.
 
     Returns
     -------

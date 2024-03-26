@@ -236,60 +236,50 @@ def open_granule(
     use_gpm_api_defaults=True,
 ):
     """
-    Create a lazy xarray.Dataset with relevant GPM data and attributes
+    Create a lazy ``xarray.Dataset`` with relevant GPM data and attributes
     for a specific granule.
 
     Parameters
     ----------
     filepath : str
         Filepath of GPM granule dataset
-    scan_mode : str
-        The radar products have the following scan modes
-        - 'FS' = Full Scan --> For Ku, Ka and DPR      (since version 7 products)
-        - 'NS' = Normal Scan --> For Ku band and DPR   (till version 6  products)
-        - 'MS' = Matched Scans --> For Ka band and DPR  (till version 6 for L2 products)
-        - 'HS' = High-sensitivity Scans --> For Ka band and DPR
-        For version 7:
-        - For products '1B-Ku', '2A-Ku' and '2A-ENV-Ku', specify 'FS'
-        - For products '1B-Ka' specify either 'MS' or 'HS'.
-        - For products '2A-Ka' and '2A-ENV-Ka' specify 'FS' or 'HS'.
-        - For products '2A-DPR' and '2A-ENV-DPR' specify either 'FS' or 'HS'
-        For version < 7:
-        - NS must be used instead of FS in Ku product.
-        - MS is available in DPR L2 products till version 6.
+    scan_mode : str, optional
+        Scan mode of the GPM product. The default is ``None``.
+        Use ``gpm.available_scan_modes(product, version)`` to get the available scan modes for a specific product.
+        The radar products have the following scan modes:
 
-        For product '2A-SLH', specify scan_mode = 'Swath'
-        For product '2A-<PMW>', specify scan_mode = 'S1'
-        For product '2B-GPM-CSH', specify scan_mode = 'Swath'.
-        For product '2B-GPM-CORRA', specify either 'KuKaGMI' or 'KuGMI'.
-        For product 'IMERG-ER','IMERG-LR' and 'IMERG-FR', specify scan_mode = 'Grid'.
+        - ``'FS'``: Full Scan. For Ku, Ka and DPR (since version 7 products).
+        - ``'NS'``: Normal Scan. For Ku band and DPR (till version 6 products).
+        - ``'MS'``: Matched Scan. For Ka band and DPR (till version 6 products).
+        - ``'HS'``: High-sensitivity Scan. For Ka band and DPR.
 
-        The above guidelines related to product version 7.
+    variables : list, str, optional
+        Variables to read from the HDF5 file.
+        The default is ``None`` (all variables).
+    groups : list, str, optional
+        HDF5 Groups from which to read all variables.
+        The default is ``None`` (all groups).
+    chunks : int, dict, 'auto' or None, optional
+        Chunk size for dask array:
 
-    variables : list, str
-         Datasets names to extract from the HDF5 file.
-    groups
-        Groups to extract from the HDF5 file.
-    chunks : str, list, optional
-        Chunk size for dask array. The default is '{}'.
-        If you want to load data in memory directly, specify chunks=None.
+        - ``chunks=-1`` loads the dataset with dask using a single chunk for all arrays.
+        - ``chunks={}`` loads the dataset with dask using the file chunks.
+        - ``chunks='auto'`` will use dask ``auto`` chunking taking into account the file chunks.
+
+        If you want to load data in memory directly, specify ``chunks=None``.
+        The default is ``{}``.
 
         Hint: xarray’s lazy loading of remote or on-disk datasets is often but not always desirable.
-        Before performing computationally intense operations, load the Dataset
-        entirely into memory by invoking ds.compute().
-
-        Custom chunks can be specified by: TODO
-        - Provide a list (with length equal to 'variables') specifying
-          the chunk size option for each variable.
+        Before performing computationally intense operations, load the dataset
+        entirely into memory by invoking ``ds.compute()``.
     decode_cf: bool, optional
-        Whether to decode the dataset. The default is False.
+        Whether to decode the dataset. The default is ``False``.
     prefix_group: bool, optional
         Whether to add the group as a prefix to the variable names.
-        THe default is True.
+        THe default is ``True``.
 
     Returns
     -------
-
     ds:  xarray.Dataset
 
     """

@@ -66,9 +66,9 @@ def check_filepaths_integrity(filepaths, remove_corrupted=True, verbose=True):
         List of file paths.
     remove_corrupted : bool, optional
        Whether to remove the corrupted files.
-       The default is True.
+       The default is ``True``.
     verbose : bool, optional
-        Whether to verbose the corrupted files. The default is True.
+        Whether to verbose the corrupted files. The default is ``True``.
 
     Returns
     -------
@@ -111,13 +111,13 @@ def check_archive_integrity(
     end_time : datetime.datetime
         End time.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
         GPM data readers currently support version 4, 5, 6 and 7.
     remove_corrupted : bool, optional
         Whether to remove the corrupted files.
-        The default is True.
+        The default is ``True``.
 
     Returns
     -------

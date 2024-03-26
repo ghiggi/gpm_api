@@ -790,15 +790,15 @@ def plot_image(
         xarray DataArray.
     x : str, optional
         X dimension name.
-        If None, takes the second dimension.
+        If ``None``, takes the second dimension.
         The default is `None`.
     y : str, optional
         Y dimension name.
-        If None, takes the first dimension.
+        If ``None``, takes the first dimension.
         The default is `None`.
     ax : cartopy.GeoAxes, optional
         The matplotlib axes where to plot the image.
-        If None, a figure is initialized using the
+        If ``None``, a figure is initialized using the
         specified `fig_kwargs`.
         The default is `None`.
     add_colorbar : bool, optional
@@ -808,7 +808,7 @@ def plot_image(
         The default is `"nearest"`.
     fig_kwargs : dict, optional
         Figure options to be passed to `plt.subplots`.
-        The default is None.
+        The default is ``None``.
         Only used if `ax` is None.
     subplot_kwargs : dict, optional
         Subplot options to be passed to `plt.subplots`.
@@ -1210,7 +1210,7 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
         the inset is placed fully within the figure. If `False`, the inset can extend beyond the figure's edges,
         allowing for a half-outside placement.
     projection: cartopy.crs.Projection
-        A cartopy projection. If None, am Orthographic projection centered on the extent center is used.
+        A cartopy projection. If ``None``, am Orthographic projection centered on the extent center is used.
 
     Returns
     -------

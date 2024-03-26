@@ -185,13 +185,12 @@ def check_time(time):
     ----------
     time : (datetime.datetime, datetime.date, np.datetime64, str)
         Time object.
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
 
     Returns
     -------
     time : datetime.datetime
-        datetime.datetime object
 
     """
     if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, np.ndarray, str)):

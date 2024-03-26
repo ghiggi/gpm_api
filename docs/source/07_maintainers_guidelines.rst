@@ -6,11 +6,11 @@ Maintainers Guidelines
 The section is dedicated to the GPM-API core developers (maintainers).
 
 
-List of the core contributors
-=================================
+Core contributors
+====================
 
 * Current Release Manager : Ghiggi Gionata
-* Testing Team : Ghiggi Gionata
+* Testing Team : Ghiggi Gionata, Son Pham-Ba
 
 
 Versions guidelines
@@ -47,17 +47,15 @@ Examples of non-breaking changes include :
 
 
 Release process
----------------
+----------------
 
-Before releasing a new version, the CHANGELOG.md file should be updated. Run
+Before releasing a new version, the ``CHANGELOG.md`` file should be updated.
 
-.. code-block:: bash
+Execute ``git tag`` to identify the last version and determine the new ``X.Y.Z`` version number.
+Then, run ``make changelog X.Y.Z`` to update the ``CHANGELOG.md`` file with the list of issues and pull requests that have been closed since the last release.
+Manually edit the ``CHANGELOG.md`` if necessary.
 
-    make changelog X.Y.Z
-
-to update the CHANGELOG.md file with the list of issues and pull requests that have been closed since the last release.
-Manually add a description to the release if necessary.
-Then, commit the new CHANGELOG.md file.
+Then, commit the new ``CHANGELOG.md`` file.
 
 .. code-block:: bash
 
@@ -65,14 +63,14 @@ Then, commit the new CHANGELOG.md file.
     git commit -m "update CHANGELOG.md for version X.Y.Z"
     git push
 
-Create a new tag to trigger the release process.
+Finally, create a new tag to trigger the release process.
 
 .. code-block:: bash
 
     git tag -a vX.Y.Z -m "Version X.Y.Z"
     git push --tags
 
-On GitHub, edit the release description to add the list of changes from the CHANGELOG.md file.
+On GitHub, edit the release description to add the list of changes from the ``CHANGELOG.md`` file.
 
 
 Ongoing version support
@@ -156,12 +154,15 @@ Ghiggi Gionata owns the `ReadTheDoc <https://readthedocs.org/>`__ account.
 Package releases pipeline
 ============================
 
-One  `GitHub Action <https://github.com/ghiggi/gpm_api/actions>`_ is defined to trigger the packaging and the upload on `pypi.org <https://pypi.org/project/gpm-api/>`_.
+A `GitHub Action <https://github.com/ghiggi/gpm_api/actions>`_ is configured to automate the packaging and uploading process to `PyPI <https://pypi.org/project/gpm-api/>`_.
+This action, detailed `here <https://github.com/ghiggi/gpm_api/blob/main/.github/workflows/release_to_pypi.yml>`_, triggers the packaging workflow depicted in the following image:
 
 .. image:: /static/package_pipeline.png
 
-The `PyPi <https://pypi.org/>`__ project is shared beween the core contributors.
+Upon the release of the package on PyPI, a conda-forge bot attempts to automatically update the `conda-forge recipe <https://github.com/conda-forge/gpm-api-feedstock/>`__.
+Once the conda-forge recipe is updated, a new conda-forge package is released.
 
+The PyPI project and the conda-forge recipes are collaboratively maintained by core contributors of the project.
 
 
 Reviewing process
@@ -180,11 +181,14 @@ The review process is the following:
 
 
 
-Continuous intergration (CI) testing tools
-===========================================
+Continuous Integration (CI)
+==============================
 
-Currently, on each Pull Request, GitHub Actions are configured as follow:
+Continuous integration (CI) is a crucial practice in modern software development, ensuring that code changes are regularly integrated into the main codebase.
+With CI, each commit or pull request triggers an automated process that verifies the integrity of the codebase, runs tests,
+and performs various checks to catch issues early in the development lifecycle.
 
+The table below summarizes the software tools utilized in our CI pipeline, descibes their respective aims and project pages.
 
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-------------------------------------------+
 |  Tools                                                                                             | Aim                                                              | Project page                                                                                 | Python version                            |

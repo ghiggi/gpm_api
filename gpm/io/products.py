@@ -142,20 +142,20 @@ def get_info_dict_subset(
 
 
 def filter_info_dict_by_time(info_dict, start_time, end_time):
-    """Filter info_dict by start_time and end_time.
+    """Filter ``info_dict`` by ``start_time`` and ``end_time``.
 
-    Assume that either start_time or end_time are not None.
+    Assume that either ``start_time`` or ``end_time`` are not ``None``.
 
     Parameters
     ----------
     start_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time.
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     end_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time.
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        Accepted types:  ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     """
     from gpm.io.filter import is_granule_within_time
 
@@ -210,13 +210,13 @@ def get_product_info(product):
 
 
 def get_product_start_time(product):
-    """Provide the product start_time."""
+    """Provide the product ``start_time``."""
     start_time = get_product_info(product)["start_time"]
     return start_time
 
 
 def get_product_end_time(product):
-    """Provide the product end_time."""
+    """Provide the product ``end_time``."""
     end_time = get_info_dict()[product]["end_time"]
     if end_time is None:
         end_time = datetime.datetime.utcnow()
@@ -231,9 +231,9 @@ def get_product_pattern(product):
 
 
 def get_product_category(product):
-    """Get the product_category of a GPM product.
+    """Get the ``product_category`` of a GPM product.
 
-    The product_category is used to organize file on disk.
+    The ``product_category`` is used to organize file on disk.
     """
     product_category = get_product_info(product).get("product_category", None)
     if product_category is None:
@@ -244,7 +244,7 @@ def get_product_category(product):
 
 
 def get_product_level(product, full=False):
-    """Get the product_level of a GPM product."""
+    """Get the ``product_level`` of a GPM product."""
     # TODO: Add L3 products: i.e  3B-HH3, 3B-DAY
     # Notes:
     # - "GPMCOR" --> 1B
@@ -263,7 +263,7 @@ def available_product_versions(product):
 
 
 def available_scan_modes(product, version):
-    """Return the available scan_modes for a given product (and specific version)."""
+    """Return the available ``scan_modes`` for a given product (and specific version)."""
     product_info = get_product_info(product)
     version = check_product_version(version, product)
     product = check_product_validity(product)
@@ -437,42 +437,42 @@ def available_products(
     Parameters
     ----------
     product_types : (str or list), optional
-        If None (default), provide all products (RS and NRT).
-        If 'RS', provide a list of all GPM RS products available for download.
-        If 'NRT', provide a list of all GPM NRT products available for download.
+        If ``None`` (default), provide all products (``RS`` and ``NRT``).
+        If ``RS``, provide a list of all GPM RS products available for download.
+        If ``NRT``, provide a list of all GPM NRT products available for download.
     product_categories: (str or list), optional
-        If None (default), provide products from all product categories.
-        If string, must be a valid product category.
-        Valid product categories are: 'PMW', 'RADAR', 'IMERG', 'CMB'.
-        The list of available sensors can also be retrieved using available_product_categories().
+        If ``None`` (default), provide products from all product categories.
+        If ``str``, must be a valid product category.
+        Valid product categories are: ``PMW``, ``RADAR``, ``IMERG``, ``CMB``.
+        The list of available sensors can also be retrieved using ``available_product_categories()``.
     product_levels: (str or list), optional
-        If None (default), provide products from all product levels.
-        If string, must be a valid product level.
-        Valid product levels are: '1A','1B','1C','2A','2B','3B'.
-        The list of available sensors  also be retrieved using available_product_levels().
+        If ``None`` (default), provide products from all product levels.
+        If ``str``, must be a valid product level.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
+        The list of available sensors  also be retrieved using ``available_product_levels()``.
     versions: (int or list), optional
-        If None (default), provide products from all versions.
-        If integer, must be a valid version.
-        Valid product levels are: '4', '5', '6', '7'.
-        The list of available sensors can also be retrieved using available_versions().
+        If ``None`` (default), provide products from all versions.
+        If ``int``, must be a valid version.
+        Valid product levels are: ``4``, ``5``, ``6``, ``7``.
+        The list of available sensors can also be retrieved using ``available_versions()``.
     satellites: (str or list), optional
-        If None (default), provide products from all satellites.
-        If str, must be a valid satellites.
-        The list of available satellites can be retrieved using available_satellites().
+        If ``None`` (default), provide products from all satellites.
+        If ``str``, must be a valid satellites.
+        The list of available satellites can be retrieved using ``available_satellites()``.
     sensors: (str or list), optional
-        If None (default), provide products from all sensors.
-        If str, must be a valid sensor.
-        The list of available sensors can be retrieved using available_sensors().
+        If ``None`` (default), provide products from all sensors.
+        If ``str``, must be a valid sensor.
+        The list of available sensors can be retrieved using ``available_sensors()``.
     start_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time period over which to search for available products.
-        The default is None (start of the GPM mission).
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        The default is ``None`` (start of the GPM mission).
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     end_time : (datetime.datetime, datetime.date, np.datetime64, str)
         End time period over which to search for available products.
-        The default is None (current time).
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        The default is ``None`` (current time).
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
 
     Returns
     -------
@@ -511,27 +511,27 @@ def available_product_levels(
     Parameters
     ----------
     product_types : (str or list), optional
-        If None (default), provide all products (RS and NRT).
-        If 'RS', provide a list of all GPM RS products available for download.
-        If 'NRT', provide a list of all GPM NRT products available for download.
+        If ``None`` (default), provide all products (``RS`` and ``NRT``).
+        If ``RS``, provide a list of all GPM RS products available for download.
+        If ``NRT``, provide a list of all GPM NRT products available for download.
     product_categories: (str or list), optional
-        If None (default), provide products from all product categories.
-        If string, must be a valid product category.
-        Valid product categories are: 'PMW', 'RADAR', 'IMERG', 'CMB'.
-        The list of available sensors can also be retrieved using available_product_categories().
+        If ``None`` (default), provide products from all product categories.
+        If ``str``, must be a valid product category.
+        Valid product categories are: ``PMW``, ``RADAR``, ``IMERG``, ``CMB``.
+        The list of available sensors can also be retrieved using ``available_product_categories()``.
     versions: (int or list), optional
-        If None (default), provide products from all versions.
-        If integer, must be a valid version.
-        Valid product levels are: '4', '5', '6', '7'.
-        The list of available sensors can also be retrieved using available_versions().
+        If ``None`` (default), provide products from all versions.
+        If ``int``, must be a valid version.
+        Valid product levels are: ``4``, ``5``, ``6``, ``7``.
+        The list of available sensors can also be retrieved using ``available_versions()``.
     satellites: (str or list), optional
-        If None (default), provide products from all satellites.
-        If str, must be a valid satellites.
-        The list of available satellites can be retrieved using available_satellites().
+        If ``None`` (default), provide products from all satellites.
+        If ``str``, must be a valid satellites.
+        The list of available satellites can be retrieved using ``available_satellites()``.
     sensors: (str or list), optional
-        If None (default), provide products from all sensors.
-        If str, must be a valid sensor.
-        The list of available sensors can be retrieved using available_sensors().
+        If ``None`` (default), provide products from all sensors.
+        If ``str``, must be a valid sensor.
+        The list of available sensors can be retrieved using ``available_sensors()``.
 
     Returns
     -------
@@ -572,27 +572,27 @@ def available_product_categories(
     Parameters
     ----------
     product_types : (str or list), optional
-        If None (default), provide all products (RS and NRT).
-        If 'RS', provide a list of all GPM RS products available for download.
-        If 'NRT', provide a list of all GPM NRT products available for download.
+        If ``None`` (default), provide all products (``RS`` and ``NRT``).
+        If ``RS``, provide a list of all GPM RS products available for download.
+        If ``NRT``, provide a list of all GPM NRT products available for download.
     product_levels: (str or list), optional
-        If None (default), provide products from all product levels.
-        If string, must be a valid product level.
-        Valid product levels are: '1A','1B','1C','2A','2B','3B'.
-        The list of available sensors  also be retrieved using available_product_levels().
+        If ``None`` (default), provide products from all product levels.
+        If ``str``, must be a valid product level.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
+        The list of available sensors  also be retrieved using ``available_product_levels()``.
     versions: (int or list), optional
-        If None (default), provide products from all versions.
-        If integer, must be a valid version.
-        Valid product levels are: '4', '5', '6', '7'.
-        The list of available sensors can also be retrieved using available_versions().
+        If ``None`` (default), provide products from all versions.
+        If ``int``, must be a valid version.
+        Valid product levels are: ``4``, ``5``, ``6``, ``7``.
+        The list of available sensors can also be retrieved using ``available_versions()``.
     satellites: (str or list), optional
-        If None (default), provide products from all satellites.
-        If str, must be a valid satellites.
-        The list of available satellites can be retrieved using available_satellites().
+        If ``None`` (default), provide products from all satellites.
+        If ``str``, must be a valid satellites.
+        The list of available satellites can be retrieved using ``available_satellites()``.
     sensors: (str or list), optional
-        If None (default), provide products from all sensors.
-        If str, must be a valid sensor.
-        The list of available sensors can be retrieved using available_sensors().
+        If ``None`` (default), provide products from all sensors.
+        If ``str``, must be a valid sensor.
+        The list of available sensors can be retrieved using ``available_sensors()``.
 
     Returns
     -------
@@ -625,46 +625,46 @@ def available_satellites(
 ):
     """Provide a list of available GPM satellites.
 
-    If prefix_with_sensor=True, it prefixes the satellite name with the satellite name: {sensor}-{satellite}.
+    If ``prefix_with_sensor=True``, it prefixes the satellite name with the satellite name: ``{sensor}-{satellite}``.
 
     Parameters
     ----------
     product_types : (str or list), optional
-        If None (default), provide all products (RS and NRT).
-        If 'RS', provide a list of all GPM RS products available for download.
-        If 'NRT', provide a list of all GPM NRT products available for download.
+        If ``None`` (default), provide all products (``RS`` and ``NRT``).
+        If ``RS``, provide a list of all GPM RS products available for download.
+        If ``NRT``, provide a list of all GPM NRT products available for download.
     product_categories: (str or list), optional
-        If None (default), provide products from all product categories.
-        If string, must be a valid product category.
-        Valid product categories are: 'PMW', 'RADAR', 'IMERG', 'CMB'.
-        The list of available sensors can also be retrieved using available_product_categories().
+        If ``None`` (default), provide products from all product categories.
+        If ``str``, must be a valid product category.
+        Valid product categories are: ``PMW``, ``RADAR``, ``IMERG``, ``CMB``.
+        The list of available sensors can also be retrieved using ``available_product_categories()``.
     product_levels: (str or list), optional
-        If None (default), provide products from all product levels.
-        If string, must be a valid product level.
-        Valid product levels are: '1A','1B','1C','2A','2B','3B'.
-        The list of available sensors  also be retrieved using available_product_levels().
+        If ``None`` (default), provide products from all product levels.
+        If ``str``, must be a valid product level.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
+        The list of available sensors  also be retrieved using ``available_product_levels()``.
     versions: (int or list), optional
-        If None (default), provide products from all versions.
-        If integer, must be a valid version.
-        Valid product levels are: '4', '5', '6', '7'.
-        The list of available sensors can also be retrieved using available_versions().
+        If ``None`` (default), provide products from all versions.
+        If ``int``, must be a valid version.
+        Valid product levels are: ``4``, ``5``, ``6``, ``7``.
+        The list of available sensors can also be retrieved using ``available_versions()``.
     sensors: (str or list), optional
-        If None (default), provide products from all sensors.
-        If str, must be a valid sensor.
-        The list of available sensors can be retrieved using available_sensors().
+        If ``None`` (default), provide products from all sensors.
+        If ``str``, must be a valid sensor.
+        The list of available sensors can be retrieved using ``available_sensors()``.
     start_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time period over which to search for available products.
-        The default is None (start of the GPM mission).
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        The default is ``None`` (start of the GPM mission).
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     end_time : (datetime.datetime, datetime.date, np.datetime64, str)
         End time period over which to search for available products.
-        The default is None (current time).
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        The default is ``None`` (current time).
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     prefix_with_sensor: bool, optional
-        If True, it prefixes the satellite name with the satellite name: {sensor}-{satellite}.
-        If False (the default), it just return the name of the satellite.
+        If ``True``, it prefixes the satellite name with the satellite name: ``{sensor}-{satellite}``.
+        If ``False`` (the default), it just return the name of the satellite.
 
     Returns
     -------
@@ -706,46 +706,46 @@ def available_sensors(
 ):
     """Provide a list of available GPM sensors.
 
-    If suffix_with_satellite=True, it suffixes the sensor name with the satellite name: {sensor}-{satellite}.
+    If ``suffix_with_satellite=True``, it suffixes the sensor name with the satellite name: ``{sensor}-{satellite}``.
 
     Parameters
     ----------
     product_types : (str or list), optional
-        If None (default), provide all products (RS and NRT).
-        If 'RS', provide a list of all GPM RS products available for download.
-        If 'NRT', provide a list of all GPM NRT products available for download.
+        If ``None`` (default), provide all products (``RS`` and ``NRT``).
+        If ``RS``, provide a list of all GPM RS products available for download.
+        If ``NRT``, provide a list of all GPM NRT products available for download.
     product_categories: (str or list), optional
-        If None (default), provide products from all product categories.
-        If string, must be a valid product category.
-        Valid product categories are: 'PMW', 'RADAR', 'IMERG', 'CMB'.
-        The list of available sensors can also be retrieved using available_product_categories().
+        If ``None`` (default), provide products from all product categories.
+        If ``str``, must be a valid product category.
+        Valid product categories are: ``PMW``, ``RADAR``, ``IMERG``, ``CMB``.
+        The list of available sensors can also be retrieved using ``available_product_categories()``.
     product_levels: (str or list), optional
-        If None (default), provide products from all product levels.
-        If string, must be a valid product level.
-        Valid product levels are: '1A','1B','1C','2A','2B','3B'.
-        The list of available sensors  also be retrieved using available_product_levels().
+        If ``None`` (default), provide products from all product levels.
+        If ``str``, must be a valid product level.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
+        The list of available sensors  also be retrieved using ``available_product_levels()``.
     versions: (int or list), optional
-        If None (default), provide products from all versions.
-        If integer, must be a valid version.
-        Valid product levels are: '4', '5', '6', '7'.
-        The list of available sensors can also be retrieved using available_versions().
+        If ``None`` (default), provide products from all versions.
+        If ``int``, must be a valid version.
+        Valid product levels are: ``4``, ``5``, ``6``, ``7``.
+        The list of available sensors can also be retrieved using ``available_versions()``.
     satellites: (str or list), optional
-        If None (default), provide products from all satellites.
-        If str, must be a valid satellites.
-        The list of available satellites can be retrieved using available_satellites().
+        If ``None`` (default), provide products from all satellites.
+        If ``str``, must be a valid satellites.
+        The list of available satellites can be retrieved using ``available_satellites()``.
     start_time : (datetime.datetime, datetime.date, np.datetime64, str)
         Start time period over which to search for available products.
-        The default is None (start of the GPM mission).
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        The default is ``None`` (start of the GPM mission).
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     end_time : (datetime.datetime, datetime.date, np.datetime64, str)
         End time period over which to search for available products.
-        The default is None (current time).
-        Accepted types: datetime.datetime, datetime.date, np.datetime64, str
-        If string type, it expects the isoformat 'YYYY-MM-DD hh:mm:ss'.
+        The default is ``None`` (current time).
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     suffix_with_satellite: bool, optional
-        If True, it suffixes the sensor name with the satellite name: {sensor}-{satellite}.
-        If False (the default), it just return the name of the sensor.
+        If ``True``, it suffixes the sensor name with the satellite name: ``{sensor}-{satellite}``.
+        If ``False`` (the default), it just return the name of the sensor.
 
     Returns
     -------

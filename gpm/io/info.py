@@ -169,7 +169,10 @@ def get_key_from_filepaths(filepaths, key):
 #########################################
 #### Product and version information ####
 #########################################
+
+
 def get_product_from_filepath(filepath):
+    """Infer granules ``product`` from file path."""
     patterns_dict = get_products_pattern_dict()
     for product, pattern in patterns_dict.items():
         if re.search(pattern, filepath):
@@ -179,6 +182,7 @@ def get_product_from_filepath(filepath):
 
 
 def get_product_from_filepaths(filepaths):
+    """Infer granules ``product`` from file paths."""
     if isinstance(filepaths, str):
         filepaths = [filepaths]
     list_product = [get_product_from_filepath(filepath) for filepath in filepaths]
@@ -186,6 +190,7 @@ def get_product_from_filepaths(filepaths):
 
 
 def get_version_from_filepath(filepath, integer=True):
+    """Infer granule ``version`` from file path."""
     version = get_key_from_filepath(filepath, key="version")
     if integer:
         version = int(re.findall("\\d+", version)[0])
@@ -193,6 +198,7 @@ def get_version_from_filepath(filepath, integer=True):
 
 
 def get_version_from_filepaths(filepaths, integer=True):
+    """Infer granules ``version`` from file paths."""
     if isinstance(filepaths, str):
         filepaths = [filepaths]
     list_version = [get_version_from_filepath(filepath, integer=integer) for filepath in filepaths]
@@ -200,21 +206,25 @@ def get_version_from_filepaths(filepaths, integer=True):
 
 
 def get_granule_from_filepaths(filepaths):
+    """Infer GPM Granule IDs from file paths."""
     list_id = get_key_from_filepaths(filepaths, key="granule_id")
     return list_id
 
 
 def get_start_time_from_filepaths(filepaths):
+    """Infer granules ``start_time`` from file paths."""
     list_start_time = get_key_from_filepaths(filepaths, key="start_time")
     return list_start_time
 
 
 def get_end_time_from_filepaths(filepaths):
+    """Infer granules ``end_time`` from file paths."""
     list_end_time = get_key_from_filepaths(filepaths, key="end_time")
     return list_end_time
 
 
 def get_start_end_time_from_filepaths(filepaths):
+    """Infer granules ``start_time`` and ``end_time`` from file paths."""
     list_start_time = get_key_from_filepaths(filepaths, key="start_time")
     list_end_time = get_key_from_filepaths(filepaths, key="end_time")
     return np.array(list_start_time), np.array(list_end_time)

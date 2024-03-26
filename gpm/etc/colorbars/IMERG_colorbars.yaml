@@ -6,8 +6,186 @@ precipitationUncal:
   reference: precipitation_rate
 IRprecipitation:
   reference: precipitation_rate
+HQobservationTime:
+  reference: MWobservationTime
+HQprecipitation:
+  reference: MWprecipitation
+IRkalmanFilterWeight:
+  reference: IRinfluence
 MWprecipitation:
-  reference: precipitation_rate
+  cmap:
+    name: STEPS-MCH
+    bad_alpha: 0.4
+    bad_color: gray
+    over_color: darkred
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0.08
+    - 0.16
+    - 0.25
+    - 0.4
+    - 0.63
+    - 1
+    - 1.6
+    - 2.5
+    - 4
+    - 6.3
+    - 10
+    - 16
+    - 25
+    - 40
+    - 63
+    - 100
+    - 160
+  cbar:
+    extend: max
+    extendrect: false
+    label: Precipitation intensity [$mm \ hr^{-1}$]
+  auxiliary:
+    category:
+    - GPM
+    - IMERG
+precipitationQualityIndex:
+  cmap:
+    name: cat3_RdOrGr
+    bad_alpha: 0.5
+    bad_color: gray
+    over_color: none
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0
+    - 0.5
+    - 0.75
+    - 1
+    ncolors: 3
+  cbar:
+    ticks:
+    - 0.25
+    - 0.625
+    - 0.875
+    ticklabels:
+    - Highly Uncertain
+    - Uncertain
+    - Reliable
+    extend: neither
+    label: Precipitation Quality Index
+  auxiliary:
+    category:
+    - GPM
+    - IMERG
+    comment: 0.001 is set to display the 0s transparently
+IRinfluence:
+  cmap:
+    name: OrRd
+    bad_alpha: 0.5
+    bad_color: gray
+    over_color: none
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 1
+    - 10
+    - 20
+    - 30
+    - 40
+    - 50
+    - 60
+    - 70
+    - 80
+    - 90
+    - 100
+  cbar:
+    extend: neither
+    label: IR precipitation influence [%]
+  auxiliary:
+    category:
+    - probability
+    - IMERG
+    comment: 1 is set to display the 0s transparently
+probabilityLiquidPrecipitation:
+  cmap:
+    name: Blues
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0
+    - 10
+    - 20
+    - 30
+    - 40
+    - 50
+    - 60
+    - 70
+    - 80
+    - 90
+    - 100
+  cbar:
+    extend: neither
+    label: Probability of Rainfall [%]
+  auxiliary:
+    category:
+    - probability
+    - IMERG
+randomError:
+  cmap:
+    name: STEPS-MCH
+    bad_alpha: 0.2
+    bad_color: gray
+    over_color: darkred
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+    - 0.24
+    - 0.4
+    - 0.63
+    - 1
+    - 1.6
+    - 2.5
+    - 4
+    - 6.3
+    - 10
+    - 16
+    - 25
+    - 40
+    - 63
+    - 100
+    - 160
+  cbar:
+    extend: max
+    extendrect: false
+    label: Uncertainty estimate [$mm \ hr^{-1}$]
+  auxiliary:
+     comment: RandomError smallest values is 0.24 mm/hr
+     category:
+     - IMERG
+     - precipitation
+MWobservationTime:
+  cmap:
+    name: Spectral
+    bad_alpha: 0
+    bad_color: gray
+    over_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 29
+  cbar:
+    extend: neither
+    label: PMW observation time lag [$minutes$]
+  auxiliary:
+    category:
+    - probability
+    - IMERG
+    comment: 0.1 is set to display the 0s transparently
 IMERG_Solid:
   cmap:
     name: IMERG_Solid

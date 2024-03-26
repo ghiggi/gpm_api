@@ -209,19 +209,19 @@ def check_archive_completeness(
     end_time : datetime.datetime
         End time.
     product_type : str, optional
-        GPM product type. Either 'RS' (Research) or 'NRT' (Near-Real-Time).
+        GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int, optional
-        GPM version of the data to retrieve if product_type = 'RS'.
+        GPM version of the data to retrieve if ``product_type = "RS"``.
         GPM data readers currently support version 4, 5, 6 and 7.
     download : bool, optional
         Whether to download the missing files.
-        The default is True.
+        The default is ``True``.
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     transfer_tool : str, optional
-        Whether to use "curl" or "wget" for data download. The default is "curl".
+        Whether to use ``curl`` or ``wget`` for data download. The default is  ``curl``.
     verbose : bool, optional
-        Whether to print processing details. The default is False.
+        Whether to print processing details. The default is ``False``.
     """
     ##--------------------------------------------------------------------.
     from gpm.io.download import download_archive

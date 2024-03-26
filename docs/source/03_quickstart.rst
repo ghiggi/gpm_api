@@ -2,7 +2,7 @@
 Quick Start
 ===========
 
-GPM-API allows to download data from the NASA Precipitation Processing System (PPS) and NASA GES DISC Archives.
+GPM-API allows to download data from the NASA Precipitation Processing System (PPS) and NASA GES DISC Data Archives.
 To download the data, it is necessary to first create two accounts and successively create the GPM-API configuration file.
 
 
@@ -13,16 +13,18 @@ To access the GPM data through the GES DISC Data Archive you need to have an `Ea
 If you don't have one, you can register on the `EarthData Portal <https://urs.earthdata.nasa.gov/>`__.
 
 Once you have an EarthData account, to access the GES DISC Data Archive you need to authorize
-the application `"NASA GESDISC DATA ARCHIVE"` by following the
+the application ``"NASA GESDISC DATA ARCHIVE"`` by following the
 instructions available at the following `link <https://disc.gsfc.nasa.gov/earthdata-login>`__.
 
 
 Register to the NASA PPS
 ---------------------------
 
-To register to the PPS servers, please follow the instructions available at the following `link  <https://registration.pps.eosdis.nasa.gov/registration/>`__.
+To register to the PPS servers, please follow the instructions available at the following
+`link  <https://registration.pps.eosdis.nasa.gov/registration/>`__.
 
-If you plan to use Near-Real Time (NRT) data stored on PPS, make sure to check the box stating that you are interested in the NRT products.
+If you plan to use Near-Real Time (NRT) data stored on PPS,
+make sure to check the box stating that you are interested in the NRT products.
 NRT products includes for example the IMERG Early and Late Runs products.
 
 
@@ -34,7 +36,7 @@ as well as other parameters such as the directory on your local machine where to
 save the GPM dataset of interest.
 
 To facilitate the creation of the configuration file, you can adapt and run the following script in Python.
-The configuration file will be created in the user's home directory under the name `.config_gpm.yaml`.
+The configuration file will be created in the user's home directory under the name ``.config_gpm.yaml``.
 
 .. code-block:: python
 
@@ -62,10 +64,10 @@ The configuration file will be created in the user's home directory under the na
 Search the product
 --------------------
 
-The products are organized in different categories, such as 'research' (RS) and 'Near-Real-Time' (NRT) products.
+The products are organized in different categories, such as 'research' (``RS``) and 'Near-Real-Time' (``NRT``) products.
 Please note that the **NRT products are only available through the PPS server**!!!.
 
-To list the available "RS" and "NRT" products, you can use the following command:
+To list the available ``"RS"`` and ``"NRT"`` products, you can use the following command:
 
 .. code-block:: python
 
@@ -192,7 +194,7 @@ and to download data over a specific period, you can use:
 
 .. code-block:: bash
 
-    download_gpm_data 2A-DPR --start-time "2022-07-22 00:01:11" --end-time "2022-07-22 00:23:05"
+    download_gpm_data 2A-DPR --start_time "2022-07-22 00:01:11" --end_time "2022-07-22 00:23:05"
 
 For more information on the available options, you can use the following commands:
 
@@ -206,14 +208,14 @@ For more information on the available options, you can use the following command
 Open the data
 ----------------
 
-Within the GPM-API, we use the name "granule" to refer to a single file,
-while the name "dataset" is used to refer to a collection of granules.
+Within the GPM-API, we use the name `granule` to refer to a single file,
+while the name `dataset`` is used to refer to a collection of granules.
 
-GPM-API enables to open single or multiple granules into an xarray Dataset, an object designed for working with labeled multi-dimensional arrays.
+GPM-API enables to open single or multiple granules into an ``xarray.Dataset``, an object designed for working with labeled multi-dimensional arrays.
 
-The `gpm.open_granule(filepath)` opens a single file into xarray by providing the path of the file of interest.
+The ``gpm.open_granule(filepath)`` opens a single file into xarray by providing the path of the file of interest.
 
-The `gpm.open_dataset` function enable to open a collection of granules over a period of interest.
+The ``gpm.open_dataset`` function enables to open a collection of granules over a period of interest.
 
 The following example shows how to download and open a dataset over a specific time period:
 
@@ -222,7 +224,7 @@ The following example shows how to download and open a dataset over a specific t
     import gpm
     import datetime
 
-    product = "1C-GMI"
+    product = "2A-DPR"
     product_type = "RS"
     version = 7
     storage = "pps"  # or "ges_disc"
@@ -250,7 +252,7 @@ The following example shows how to download and open a dataset over a specific t
     )
 
     # Plot a specific variable of the dataset
-    ds["Tc"].gpm.plot_map()
+    ds["precipRateNearSurface"].gpm.plot_map()
 
 
 You are now ready to explore the various :ref:`tutorials <tutorials>` available in the documentation and learn more about the GPM-API functionalities.

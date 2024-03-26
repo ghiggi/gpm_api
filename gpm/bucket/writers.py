@@ -105,42 +105,44 @@ def write_granule_bucket(
 ):
     """Write a geographically partitioned Parquet Dataset of a GPM granules.
 
-     Parameters
-     ----------
-     src_filepath : str
-         File path of the granule to store in the bucket archive.
-     bucket_base_dir: str
-         Base directory of the per-granule bucket archive.
-     ds_to_df_converter : callable,
+    Parameters
+    ----------
+    src_filepath : str
+        File path of the granule to store in the bucket archive.
+    bucket_base_dir: str
+        Base directory of the per-granule bucket archive.
+    ds_to_df_converter : callable,
         Function taking a granule filepath, opening it and returning a pandas or dask dataframe.
-     xbin_name : str, optional
-         Name of the binned column used to partition the data along the x dimension.
-         The default is "lonbin".
-     ybin_name : str, optional
-         Name of the binned column used to partition the data along the y dimension.
-         The default is "latbin".
-     xbin_size : int
-         Longitude bin size. The default is 15.
-     xbin_size : int
-         Latitude bin size. The default is 15.
+    xbin_name : str, optional
+        Name of the binned column used to partition the data along the x dimension.
+        The default is ``"lonbin"``.
+    ybin_name : str, optional
+        Name of the binned column used to partition the data along the y dimension.
+        The default is ``"latbin"``.
+    xbin_size : int
+        Longitude bin size. The default is 15.
+    xbin_size : int
+        Latitude bin size. The default is 15.
     row_group_size : (int, str), optional
         Maximum number of rows in each written Parquet row group.
-        If specified as a string (i.e. "500 MB"), the equivalent row group size
-        number is estimated. The default is "500MB".
+        If specified as a string (i.e. ``"500 MB"``), the equivalent row group size
+        number is estimated. The default is ``"500MB"``.
     **writer_kwargs: dict
         Optional arguments to be passed to the pyarrow Dataset Writer.
         Common arguments are 'format' and 'use_threads'.
-        The default file 'format' is 'parquet'.
-        The default 'use_threads' is 'True', which enable multithreaded file writing.
-        More information available at:
-         - https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
+        The default file ``format`` is ``'parquet'``.
+        The default ``use_threads`` is ``True``, which enable multithreaded file writing.
+        More information available at https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
 
     Notes
     -----
+    Example of partitioning:
+
     - Partition by 1° degree pixels: 64800 directories (360*180)
     - Partition by 5° degree pixels: 2592 directories (72*36)
     - Partition by 10° degree pixels: 648 directories (36*18)
     - Partition by 15° degree pixels: 288 directories (24*12)
+
     """
     # Define unique prefix name so to add files to the bucket archive
     # - This prevent risk of overwriting
@@ -218,34 +220,34 @@ def write_granules_bucket(
 ):
     """Write a geographically partitioned Parquet Dataset of GPM granules.
 
-     Parameters
-     ----------
-     filepaths : str
-         File paths of the GPM granules to store in the bucket archive.
-     bucket_base_dir: str
-         Base directory of the per-granule bucket archive.
-     ds_to_df_converter : callable,
-         Function taking a granule filepath, opening it and returning a pandas or dask dataframe.
-     xbin_name : str, optional
-         Name of the binned column used to partition the data along the x dimension.
-         The default is "lonbin".
-     ybin_name : str, optional
-         Name of the binned column used to partition the data along the y dimension.
-         The default is "latbin".
-     xbin_size : int
-         Longitude bin size. The default is 15.
-     xbin_size : int
-         Latitude bin size. The default is 15.
-     parallel : bool
-         Whether to bucket several granules in parallel.
-         The default is True.
-     max_concurrent_tasks : None
-         The maximum number of Dask tasks to be concurrently executed.
-         If None, let the Dask Scheduler to choose.
-         The default is None.
-     max_dask_total_tasks : None
-         The maximum number of Dask tasks to be scheduled.
-         The default is 500.
+    Parameters
+    ----------
+    filepaths : str
+        File paths of the GPM granules to store in the bucket archive.
+    bucket_base_dir: str
+        Base directory of the per-granule bucket archive.
+    ds_to_df_converter : callable,
+        Function taking a granule filepath, opening it and returning a pandas or dask dataframe.
+    xbin_name : str, optional
+        Name of the binned column used to partition the data along the x dimension.
+        The default is "lonbin".
+    ybin_name : str, optional
+        Name of the binned column used to partition the data along the y dimension.
+        The default is "latbin".
+    xbin_size : int
+        Longitude bin size. The default is 15.
+    xbin_size : int
+        Latitude bin size. The default is 15.
+    parallel : bool
+        Whether to bucket several granules in parallel.
+        The default is ``True``.
+    max_concurrent_tasks : None
+        The maximum number of Dask tasks to be concurrently executed.
+        If ``None``, let the Dask Scheduler to choose.
+        The default is ``None``.
+    max_dask_total_tasks : None
+        The maximum number of Dask tasks to be scheduled.
+        The default is 500.
     row_group_size : (int, str), optional
         Maximum number of rows in each written Parquet row group.
         If specified as a string (i.e. "500 MB"), the equivalent row group size
@@ -256,7 +258,7 @@ def write_granules_bucket(
         The default file 'format' is 'parquet'.
         The default 'use_threads' is 'True', which enable multithreaded file writing.
         More information available at:
-         - https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
+            - https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
 
     Notes
     -----

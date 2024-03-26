@@ -63,12 +63,12 @@ def get_dataset_title(
     ds : xr.Dataset
         GPM xarray Dataset.
     add_timestep : bool, optional
-        Whether to add time information to the title. The default is True.
+        Whether to add time information to the title. The default is ``True``.
         For GRID objects (like IMERG), the timestep is added only if
         the DataArray has 1 timestep.
     time_idx : int, optional
         Index of timestep to select, instead of selecting the middle.
-        The default is None.
+        The default is ``None``.
     resolution : str, optional
         The maximum temporal resolution to display.
         The default is "m" (for minutes).
@@ -120,14 +120,14 @@ def get_dataarray_title(
         GPM xarray DataArray.
     prefix_product : bool, optional
         Whether to add the GPM product as prefix.
-        The default is True.
+        The default is ``True``.
     add_timestep : bool, optional
-        Whether to add time information to the title. The default is True.
+        Whether to add time information to the title. The default is ``True``.
         For GRID objects (like IMERG), the timestep is added only if
         the DataArray has 1 timestep.
     time_idx : int, optional
         Index of timestep to select, instead of selecting the middle.
-        The default is None.
+        The default is ``None``.
     resolution : str, optional
         The maximum temporal resolution to display.
         The default is "m" (for minutes).
