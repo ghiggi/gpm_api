@@ -49,14 +49,11 @@ Examples of non-breaking changes include :
 Release process
 ----------------
 
-Before releasing a new version, the ``CHANGELOG.md`` file should be updated. Run
+Before releasing a new version, the ``CHANGELOG.md`` file should be updated.
 
-.. code-block:: bash
-
-    make changelog X.Y.Z
-
-to update the ``CHANGELOG.md`` file with the list of issues and pull requests that have been closed since the last release.
-Manually add a description to the release if necessary.
+Execute ``git tag`` to identify the last version and determine the new ``X.Y.Z`` version number.
+Then, run ``make changelog X.Y.Z`` to update the ``CHANGELOG.md`` file with the list of issues and pull requests that have been closed since the last release.
+Manually edit the ``CHANGELOG.md`` if necessary.
 
 Then, commit the new ``CHANGELOG.md`` file.
 
@@ -66,7 +63,7 @@ Then, commit the new ``CHANGELOG.md`` file.
     git commit -m "update CHANGELOG.md for version X.Y.Z"
     git push
 
-Create a new tag to trigger the release process.
+Finally, create a new tag to trigger the release process.
 
 .. code-block:: bash
 
@@ -184,7 +181,7 @@ The review process is the following:
 
 
 
-Continuous intergration (CI)
+Continuous Integration (CI)
 ==============================
 
 Continuous integration (CI) is a crucial practice in modern software development, ensuring that code changes are regularly integrated into the main codebase.

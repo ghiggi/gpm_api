@@ -268,7 +268,7 @@ The following tools are used:
 
 For contributors interested in running the tests locally:
 
-1. Ensure you have the :ref:`development environment <installation_standard>` correctly set up. Make sure you also downloaded the additional test data.
+1. Ensure you have the :ref:`development environment <installation_contributor>` correctly set up. Make sure you also downloaded the additional test data.
 2. Navigate to the GPM-API root directory.
 3. Execute the following command to run the entire test suite:
 
