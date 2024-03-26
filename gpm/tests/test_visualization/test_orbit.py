@@ -24,6 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
+import platform
 import pytest
 import xarray as xr
 
@@ -35,14 +36,20 @@ from gpm.tests.test_visualization.utils import (
     skip_tests_if_no_data,
 )
 
+# Fixtures imported from gpm.tests.conftest:
+# - orbit_dataarray
 
+
+pytestmark = pytest.mark.skipif(
+    platform.system() == "Windows", reason="Minor figure differences on Windows"
+)
 skip_tests_if_no_data()
 
 
 VARIABLE = "variable"
 
 
-# Fixtures ######################################################################
+# Fixtures #####################################################################
 
 
 @pytest.fixture
@@ -52,6 +59,9 @@ def orbit_dataset(
     """Return a dataset with a single variable"""
 
     return xr.Dataset({VARIABLE: orbit_dataarray})
+
+
+# Tests ########################################################################
 
 
 def test_plot_swath(
