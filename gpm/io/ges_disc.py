@@ -28,6 +28,7 @@
 
 import datetime
 import re
+import shlex
 import subprocess
 
 from gpm.io.products import get_product_info, is_trmm_product
@@ -41,8 +42,8 @@ from gpm.io.products import get_product_info, is_trmm_product
 def _get_ges_disc_url_content(url):
     # cmd = f"wget -O - {url}"
     cmd = f"curl -L {url}"
-    args = cmd.split()
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    list_cmd = shlex.split(cmd)
+    process = subprocess.Popen(list_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = process.communicate()[0].decode()
     # Check if server is available
     if stdout == "":

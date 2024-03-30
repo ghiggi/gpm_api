@@ -62,9 +62,9 @@ def test_construct_curl_pps_cmd(
 
     curl_truth = (
         "curl --ipv4 --insecure -n "
-        "--user {username}:{password} --ftp-ssl "
+        "--user '{username}:{password}' {ftps_flag} "
         "--header 'Connection: close' --connect-timeout 20 "
-        "--retry 5 --retry-delay 10 --url {remote_filepath} -o {local_filepath}"
+        "--retry 5 --retry-delay 10 --url {remote_filepath} -o '{local_filepath}'"
     )
 
     username_pps = "test_username_pps"
@@ -88,6 +88,7 @@ def test_construct_curl_pps_cmd(
             password=password_pps,
             remote_filepath=remote_filepath,
             local_filepath=local_filepath,
+            ftps_flag=dl.CURL_FTPS_FLAG,
         )
 
         # Check that the folder is created
@@ -117,9 +118,9 @@ def test_construct_wget_pps_cmd(
     ), f"Folder {os.path.dirname(local_filepath)} already exists"
 
     wget_truth = (
-        "wget -4 --ftp-user={username} --ftp-password={password} "
+        "wget -4 --ftp-user='{username}' --ftp-password='{password}' "
         "-e robots=off -np -R .html,.tmp -nH -c --read-timeout=10 "
-        "--tries=5 -O {local_filepath} {remote_filepath}"
+        "--tries=5 -O '{local_filepath}' {remote_filepath}"
     )
 
     username_pps = "test_username_pps"
@@ -297,7 +298,7 @@ def test_check_download_status(
 
 @pytest.mark.parametrize("transfer_tool", ["wget", "curl"])
 @pytest.mark.parametrize("storage", ["pps", "ges_disc"])
-def test__download_files(
+def test_private_download_files(
     remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
     mocker: MockerFixture,
@@ -351,6 +352,7 @@ def test_download_files(
     remote_filepaths: Dict[str, Dict[str, Any]],
     versions: List[str],
     mocker: MockerFixture,
+    tmp_path,
 ) -> None:
     """Test download_files function"""
 
@@ -361,16 +363,19 @@ def test_download_files(
     mocker.patch.object(dl, "check_filepaths_integrity", autospec=True, return_value=[])
 
     # Download a simple list of files
-    assert dl.download_files(filepaths=list(remote_filepaths.keys())) == []
+    with gpm.config.set({"base_dir": tmp_path}):
+        assert dl.download_files(filepaths=list(remote_filepaths.keys())) == []
+
+    # Test that a single filepath as a string also accepted as input
+    with gpm.config.set({"base_dir": tmp_path}):
+        remote_filepath = list(remote_filepaths.keys())[0]
+        assert dl.download_files(filepaths=remote_filepath) == []
 
     # Test that None filepaths returns None
     assert dl.download_files(filepaths=None) is None
 
     # Test that an empty list of filepaths returns None
     assert dl.download_files(filepaths=[]) is None
-
-    # Test that a single filepath as a string also accepted as input
-    assert dl.download_files(filepaths=list(remote_filepaths.keys())[0]) == []
 
     # Test that filetypes other than a list are not accepted
     with pytest.raises(TypeError):
