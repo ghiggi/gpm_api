@@ -752,12 +752,84 @@ def get_pyresample_swath(xr_obj):
         pyproj_crs = _get_geographic_crs(xr_obj)
     except Exception:
         pyproj_crs = None
+
     # Define SwathDefinition
-    swath_def = SwathDefinition(xr_obj[lons], xr_obj[lats], crs=pyproj_crs)
+    # - with xr.DataArray lat/lons
+    # - Otherwise fails https://github.com/pytroll/satpy/issues/1434
+    # - In old pyresample versions requiring
+    #   lons = np.ascontiguousarray(xr_obj[lons].data),
+    #   lats = np.ascontiguousarray(xr_obj[lons].data)
+    # to avoid 'ndarray is not C-contiguous' when resampling !
+    da_lons = xr.DataArray(xr_obj[lons].data, dims=["y", "x"])
+    da_lats = xr.DataArray(xr_obj[lats].data, dims=["y", "x"])
+
+    swath_def = SwathDefinition(da_lons, da_lats, crs=pyproj_crs)
     return swath_def
 
 
-# def get_pyresample_area(xr_obj) --> pyresample cf area
-# def _get_ds_area_extent
-# def _get_ds_resolution
-# def _get_ds_shape
+def _compute_extent(x_coords, y_coords):
+    """
+    Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+    This function assumes that the spacing between each pixel is uniform.
+    """
+    # Calculate the pixel size assuming uniform spacing between pixels
+    pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
+    pixel_size_y = (y_coords[-1] - y_coords[0]) / (len(y_coords) - 1)
+
+    # Adjust min and max to get the corners of the outer pixels
+    x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
+    y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
+
+    return [x_min, x_max, y_min, y_max]
+
+
+def get_pyresample_projection(xr_obj):
+    from pyresample import AreaDefinition
+
+    if not has_proj_coords(xr_obj):
+        raise ValueError("Not a GRID object.")
+
+    # Identify name of longitude and latitude coordinates
+    x, y = _get_proj_dim_coords(xr_obj)
+
+    # Retrieve geographic CRS if available
+    pyproj_crs = get_pyproj_crs(xr_obj)
+
+    # Retrieve x and y projection coordinates
+    x_coords = xr_obj[x].compute().data
+    y_coords = xr_obj[y].compute().data
+
+    # Retrieve shape
+    shape = (y_coords.shape[0], x_coords.shape[0])
+
+    # - Derive extent
+    extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
+
+    # Define SwathDefinition
+    # area_def = AreaDefinition(crs=pyproj_crs, shape=shape, area_extent=extent)
+    area_def = AreaDefinition(
+        "GRID_area",
+        "GRID_area",
+        "",
+        pyproj_crs,
+        width=shape[1],
+        height=shape[0],
+        area_extent=extent,
+    )
+    return area_def
+
+
+def get_pyresample_area(xr_obj):
+    """Define pyresample area from CF-compliant xarray object.
+
+    To be used by the pyresample accessor: ds.pyresample.area
+    """
+
+    if has_proj_coords(xr_obj):
+        area_def = get_pyresample_projection(xr_obj)
+        return area_def
+    if has_swath_coords(xr_obj):
+        swath_def = get_pyresample_swath(xr_obj)
+        return swath_def
+    else:
+        raise ValueError("Impossible to infer if a SwathDefinition or AreaDefinition.")

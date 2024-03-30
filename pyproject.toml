@@ -36,9 +36,9 @@ classifiers = [
 ]
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
-    "xarray",
-    "xarray-datatree",
-    "h5py", # TO DISCARD IN FUTURE
+    "xarray<=2024.2.0", # ongoing xarray datatree migration
+    "xarray-datatree",  # to be deprecated as soon datatree in xarray is working
+    "h5py", # to discard as soon as possible
     "netcdf4",
     "dask",
     "distributed",
@@ -46,8 +46,8 @@ dependencies = [
     "click",
     "donfig",
     "trollsift",
-    "pyresample",
-    "matplotlib>=3.8.3",
+
+    "matplotlib>=3.8.3", # introduce pcolormesh rgb
     "cartopy>=0.22.0",
     "pyproj",
     "scipy",
@@ -62,7 +62,7 @@ dev = ["pre-commit", "loghub",
        "pytest", "pytest-cov", "pytest-mock", "pytest-check", "pytest-sugar",
        "pytest-watcher", "deepdiff",
        "pip-tools", "bumpver", "twine", "wheel", "build", "setuptools>=61.0.0",
-       "ximage", "pyvista", "polars", "pyarrow",
+       "ximage", "pyvista", "polars", "pyarrow", "pyresample",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]
 
 [project.urls]

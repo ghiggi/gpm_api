@@ -79,13 +79,13 @@ class GPM_Base_Accessor:
 
     @property
     def pyresample_area(self):
-        from gpm.utils.geospatial import get_pyresample_area
+        from gpm.utils.pyresample import get_pyresample_area
 
         return get_pyresample_area(self._obj)
 
     def remap_on(self, dst_ds, radius_of_influence=20000, fill_value=np.nan):
         """Remap data from one dataset to another one."""
-        from gpm.utils.geospatial import remap
+        from gpm.utils.pyresample import remap
 
         return remap(
             self._obj, dst_ds=dst_ds, radius_of_influence=radius_of_influence, fill_value=fill_value

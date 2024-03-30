@@ -27,12 +27,10 @@
 """This module contains functions for geospatial processing."""
 import difflib
 import os
-import warnings
 from collections import namedtuple
 from typing import Union
 
 import numpy as np
-import xarray as xr
 
 from gpm import _root_path
 from gpm.checks import is_grid, is_orbit
@@ -481,97 +479,3 @@ def crop(xr_obj, extent):
         )
 
     return xr_obj_subset
-
-
-####---------------------------------------------------------------------------.
-#### TODO MOVE TO pyresample accessor !!!
-
-
-def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
-    """Remap data from one dataset to another one."""
-    from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
-
-    # Retrieve source and destination area
-    src_area = src_ds.gpm.pyresample_area
-    dst_area = dst_ds.gpm.pyresample_area
-
-    # Rename dimensions to x, y for pyresample compatibility
-    if src_ds.gpm.is_orbit:
-        src_ds = src_ds.swap_dims({"cross_track": "y", "along_track": "x"})
-    else:
-        src_ds = src_ds.swap_dims({"lat": "y", "lon": "x"})
-
-    # Define resampler
-    resampler = KDTreeNearestXarrayResampler(src_area, dst_area)
-    resampler.precompute(radius_of_influence=radius_of_influence)
-
-    # Retrieve valid variables
-    variables = [var for var in src_ds.data_vars if set(src_ds[var].dims).issuperset({"x", "y"})]
-
-    # Remap DataArrays
-    with warnings.catch_warnings(record=True):
-        da_dict = {var: resampler.resample(src_ds[var], fill_value=fill_value) for var in variables}
-
-    # Create Dataset
-    ds = xr.Dataset(da_dict)
-
-    # Set correct dimensions
-    if dst_ds.gpm.is_orbit:
-        ds = ds.swap_dims({"y": "cross_track", "x": "along_track"})
-    else:
-        ds = ds.swap_dims({"y": "lat", "x": "lon"})
-
-    # Add relevant coordinates of dst_ds
-    dst_available_coords = list(dst_ds.coords)
-    useful_coords = []
-    for coord in dst_available_coords:
-        if np.all(np.isin(dst_ds[coord].dims, ds.dims)):
-            useful_coords.append(coord)
-    dict_coords = {coord: dst_ds[coord] for coord in useful_coords}
-    ds = ds.assign_coords(dict_coords)
-    return ds
-
-
-def get_pyresample_area(xr_obj):
-    """It returns the corresponding pyresample area."""
-    from pyresample import SwathDefinition
-
-    # TODO: Implement as pyresample accessor
-    # --> ds.pyresample.area
-    # ds.crs.to_pyresample_area
-    # ds.crs.to_pyresample_swath
-
-    # If Orbit Granule --> Swath Definition
-    if is_orbit(xr_obj):
-        # Define SwathDefinition with xr.DataArray lat/lons
-        # - Otherwise fails https://github.com/pytroll/satpy/issues/1434
-
-        # Ensure correct dimension order
-        if "cross_track" in xr_obj.dims:
-            xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
-            lons = xr_obj["lon"].values
-            lats = xr_obj["lat"].values
-            # This has been fixed in pyresample very likely
-            # --> otherwise ValueError 'ndarray is not C-contiguous' when resampling
-            # lons = np.ascontiguousarray(lons)
-            # lats = np.ascontiguousarray(lats)
-            lons = xr.DataArray(lons, dims=["y", "x"])
-            lats = xr.DataArray(lats, dims=["y", "x"])
-            swath_def = SwathDefinition(lons, lats)
-        else:
-            try:
-                from gpm.dataset.crs import get_pyresample_swath
-
-                swath_def = get_pyresample_swath(xr_obj)
-            except Exception:
-                raise ValueError("Not a swath object.")
-        return swath_def
-
-    # If Grid Granule --> AreaDefinition
-    elif is_grid(xr_obj):
-        # Define AreaDefinition
-        # TODO: derive area_extent, projection, ...
-        raise NotImplementedError()
-    # Unknown
-    else:
-        raise NotImplementedError()

@@ -199,17 +199,3 @@ def get_quadmesh_vertices(x, y, order="counterclockwise"):
     # - Retrieve QuadMesh vertices (m*n, 4, 2)
     vertices = np.stack((x_bounds, y_bounds), axis=2)
     return vertices
-
-
-def is_vertex_clockwise(vertex):
-    # TODO: use pyresample.future in future
-    # --> Check elementwise?
-    # https://stackoverflow.com/questions/9473570/polygon-vertices-clockwise-or-counterclockwise
-    # We should check on the sphere
-    # - pyresample boundary PR and spherical PR ... move in separate package?
-    from pyresample import SwathDefinition
-
-    is_clockwise = SwathDefinition._corner_is_clockwise(
-        vertex[0][0], vertex[0][1], vertex[1][0], vertex[1][1], vertex[2][0], vertex[2][1]
-    )
-    return is_clockwise
