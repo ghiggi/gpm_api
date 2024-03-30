@@ -176,15 +176,19 @@ def check_pps_ports_are_open():
     result = subprocess.run(command, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         if "Couldn't connect to server" in result.stderr:
-            msg = "The ports in the range of 64000-65000 are not open for the the DNS names "
-            "'arthurhouftps.pps.eosdis.nasa.gov' and 'jsimpsonftps.pps.eosdis.nasa.gov'."
-            "Please modify your router and firewall settings for successful communication with the PPS data server."
+            msg = (
+                "The ports in the range of 64000-65000 are not open for the the DNS names "
+                + "'arthurhouftps.pps.eosdis.nasa.gov' and 'jsimpsonftps.pps.eosdis.nasa.gov'."
+                + "Please modify your router and firewall settings for successful communication "
+                + "with the PPS data server."
+            )
             raise ValueError(msg)
         else:
-            raise ValueError(
+            msg = (
                 "An undetermined connection error occurred while attempting to access the PPS. "
-                "The error is: {result.stderr}"
+                + "The error is: {result.stderr}"
             )
+            raise ValueError(msg)
     print("The ports in the range of 64000-65000 are open. You are ready to use GPM-API !")
 
 
