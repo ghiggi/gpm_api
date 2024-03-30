@@ -3,7 +3,7 @@ Contributors Guidelines
 
 Hi! Thanks for taking the time to contribute to GPM-API.
 
-You can contribute in many ways :
+You can contribute in many ways:
 
 - Join the `GitHub Discussions <https://github.com/ghiggi/gpm_api/discussions>`__
 - Report `issues <#issue-reporting>`__
@@ -180,7 +180,7 @@ Here is an example of a docstring:
 If you are using VS code, you can install the  `autoDocstring <https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring>`_
 extension to automatically create such preformatted docstring.
 
-You should configure VS code as follow :
+You should configure VS code as follow:
 
 
 .. image:: /static/vs_code_settings.png
