@@ -202,6 +202,17 @@ def test_check_remote_storage() -> None:
         checks.check_remote_storage(123)
 
 
+def test_check_transfer_tool_availability(mocker: MockerFixture):
+    """Test check_transfer_tool_availability()"""
+
+    # Check that if CURL is available, return True
+    assert checks.check_transfer_tool_availability("curl")
+
+    # Check that if WGET not available, return False
+    mocker.patch("subprocess.run", side_effect=CalledProcessError(1, ["wget", "--version"]))
+    assert not checks.check_transfer_tool_availability("wget")
+
+
 def test_check_transfer_tool(mocker: MockerFixture):
     """Test check_transfer_tool()"""
     # Assert "CURL" is available and return "CURL"
@@ -215,11 +226,12 @@ def test_check_transfer_tool(mocker: MockerFixture):
     assert f"'{invalid_tool}' is an invalid 'transfer_tool'." in str(exc_info.value)
 
     # Test the function with a valid transfer tool that is not installed
-    transfer_tool = "WGET"
-    mocker.patch("subprocess.run", side_effect=CalledProcessError(1, [transfer_tool, "--version"]))
+    original_flag = checks.WGET_IS_AVAILABLE
+    checks.WGET_IS_AVAILABLE = False
     with pytest.raises(ValueError) as exc_info:
-        checks.check_transfer_tool(transfer_tool)
-    assert f"{transfer_tool.upper()} is not installed on your machine !" in str(exc_info.value)
+        checks.check_transfer_tool("WGET")
+    assert f"WGET is not installed on your machine !" in str(exc_info.value)
+    checks.WGET_IS_AVAILABLE = original_flag
 
 
 def test_check_version(

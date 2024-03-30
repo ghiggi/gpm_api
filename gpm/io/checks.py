@@ -113,25 +113,39 @@ def check_remote_storage(storage):
     return storage.upper()
 
 
-def check_transfer_tool(transfer_tool):
-    """Check the transfer tool."""
-    valid_transfer_tools = ["CURL", "WGET"]
-    if transfer_tool not in valid_transfer_tools:
-        raise ValueError(
-            f"'{transfer_tool}' is an invalid 'transfer_tool'. Valid values are {valid_transfer_tools}."
-        )
-
-    # Check WGET or CURL is installed
+def check_transfer_tool_availability(transfer_tool):
+    """Check availability of a transfer_tool. Return True if available."""
     try:
-        # Attempt to run `wget --version` to check if wget is available
         subprocess.run(
             [transfer_tool, "--version"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             check=True,
         )
+        return True
     except Exception:
-        raise ValueError(f"{transfer_tool.upper()} is not installed on your machine !")
+        return False
+
+
+CURL_IS_AVAILABLE = check_transfer_tool_availability("curl")
+WGET_IS_AVAILABLE = check_transfer_tool_availability("wget")
+
+
+def check_transfer_tool(transfer_tool):
+    """Check the transfer tool."""
+    valid_transfer_tools = ["CURL", "WGET"]
+
+    if transfer_tool.upper() not in valid_transfer_tools:
+        raise ValueError(
+            f"'{transfer_tool}' is an invalid 'transfer_tool'. Valid values are {valid_transfer_tools}."
+        )
+
+    # Check WGET or CURL is installed
+    transfer_tool = transfer_tool.upper()
+    if transfer_tool == "CURL" and not CURL_IS_AVAILABLE:
+        raise ValueError("CURL is not installed on your machine !")
+    if transfer_tool == "WGET" and not WGET_IS_AVAILABLE:
+        raise ValueError("WGET is not installed on your machine !")
     return transfer_tool
 
 
