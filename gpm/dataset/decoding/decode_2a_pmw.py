@@ -58,9 +58,9 @@ def decode_cloudWaterPath(da):
     _FillValue is often reported as -9999.9, but in data the values are -9999.0 !
     """
     da = da.where(da >= 0)  # < 0 set to np.nan
-    da.attrs[
-        "description"
-    ] = "Total integrated cloud liquid water in the vertical atmospheric column"
+    da.attrs["description"] = (
+        "Total integrated cloud liquid water in the vertical atmospheric column"
+    )
     return da
 
 
