@@ -57,7 +57,7 @@ def check_no_duplicated_files(
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
-        storage="local",
+        storage="LOCAL",
         version=version,
         product=product,
         product_type=product_type,
@@ -188,7 +188,7 @@ def check_archive_completeness(
     version=None,
     product_type="RS",
     download=True,
-    transfer_tool="wget",
+    transfer_tool="WGET",
     n_threads=4,
     verbose=True,
 ):
@@ -233,7 +233,7 @@ def check_archive_completeness(
     ##--------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
-        storage="local",
+        storage="LOCAL",
         version=version,
         product=product,
         product_type=product_type,

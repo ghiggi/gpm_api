@@ -43,7 +43,7 @@ product_type = "RS"
 #     version=version,
 #     progress_bar=True,
 #     n_threads=5,  # 8
-#     transfer_tool="curl",
+#     transfer_tool="CURL",
 # )
 
 ####--------------------------------------------------------------------------.

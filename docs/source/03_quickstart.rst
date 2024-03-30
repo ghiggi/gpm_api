@@ -174,7 +174,7 @@ To download the data in Python, you can adapt the following code snippet:
     product = "2A-DPR"
     product_type = "RS"
     version = 7
-    storage = "pps"  # or "ges_disc"
+    storage = "PPS"  # or "GES_DISC"
 
     start_time = datetime.datetime(2020, 7, 22, 1, 10, 11)
     end_time = datetime.datetime(2020, 7, 22, 2, 30, 5)
@@ -254,7 +254,7 @@ The following example shows how to download and open a dataset over a specific t
     product = "2A-DPR"
     product_type = "RS"
     version = 7
-    storage = "pps"  # or "ges_disc"
+    storage = "PPS"  # or "GES_DISC"
 
     start_time = datetime.datetime(2020, 7, 22, 1, 10, 11)
     end_time = datetime.datetime(2020, 7, 22, 2, 30, 5)

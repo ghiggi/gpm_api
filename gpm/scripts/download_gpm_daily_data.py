@@ -42,10 +42,10 @@ sys.tracebacklimit = 0  # avoid full traceback error if occur
 @click.argument("month", type=int)
 @click.argument("day", type=int)
 @click.option("--product_type", type=str, show_default=True, default="RS")
-@click.option("--storage", type=str, show_default=True, default="pps")
+@click.option("--storage", type=str, show_default=True, default="PPS")
 @click.option("--version", type=int, show_default=True, default=None)
 @click.option("--n_threads", type=int, default=4)
-@click.option("--transfer_tool", type=str, default="curl")
+@click.option("--transfer_tool", type=str, default="CURL")
 @click.option("--progress_bar", type=bool, default=False)
 @click.option("--force_download", type=bool, default=False)
 @click.option("--check_integrity", type=bool, default=True)
@@ -59,9 +59,9 @@ def download_gpm_daily_data(
     day,
     product_type="RS",
     version=None,
-    storage="pps",
+    storage="PPS",
     n_threads=4,
-    transfer_tool="curl",
+    transfer_tool="CURL",
     progress_bar=False,
     force_download=False,
     check_integrity=True,

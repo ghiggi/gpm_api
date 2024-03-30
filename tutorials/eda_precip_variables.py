@@ -62,7 +62,7 @@ for product in products:
         start_time=start_time,
         end_time=end_time,
         force_download=False,
-        transfer_tool="curl",
+        transfer_tool="CURL",
         progress_bar=True,
         verbose=True,
         n_threads=2,
