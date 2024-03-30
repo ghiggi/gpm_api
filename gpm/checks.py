@@ -43,7 +43,7 @@ from gpm.dataset.dimensions import (
 # - is_grid, is_orbit currently also depends on gpm.dataset.crs._get_proj_dim_coords
 
 # - Code could be generalized to work with any satellite data format ???
-# - GPM ORBIT = pyresample Swath
+# - GPM ORBIT = pyresample SwathDefinition
 # - GPM GRID = pyresample AreaDefinition
 # - GPM ORBIT dimensions: (cross-track, along-track)
 # - GPM GRID dimensions: (lon, lat)

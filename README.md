@@ -234,13 +234,15 @@ The associated python scripts are also provided in the `tutorial` folder.
 - [xarray](https://docs.xarray.dev/en/stable/)
 - [dask](https://www.dask.org/)
 - [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
-- [pyresample](https://pyresample.readthedocs.io/en/latest/)
+- [pycolorbar](https://pycolorbar.readthedocs.io/en/latest/)
 - [h5py](https://github.com/h5py/h5py)
 - [curl](https://curl.se/)
-- [wget](https://www.gnu.org/software/wget/)
+
 
 ### Optional
 
 - [zarr](https://zarr.readthedocs.io/en/stable/)
-- [dask_image](https://image.dask.org/en/latest/)
-- [skimage](https://scikit-image.org/)
+- [ximage](https://github.com/ghiggi/ximage)
+- [pyresample](https://pyresample.readthedocs.io/en/latest/)
+- [pyvista](https://docs.pyvista.org/version/stable/)
+- [wget](https://www.gnu.org/software/wget/)
