@@ -237,7 +237,7 @@ These changes are influenced by the number of operational sensors and their resp
 
 The operational timeline of the GPM constellation is depicted in the figure below.
 
-.. figure:: https://www.researchgate.net/profile/Daniel-Watters-3/publication/344906720/figure/fig1/AS:951371750719489@1603836109309/A-timeline-of-the-GPM-constellation-of-spaceborne-radars-and-passive-microwave.ppm
+.. image:: /static/timeline.png
   :alt: GPM Constellation Timeline
   :align: center
 
@@ -347,7 +347,7 @@ For instance, oxygen absorption is significant at frequencies such as 50-60 GHz 
 whereas water vapor absorption is notable at frequencies like 22.235 GHz and 183 GHz.
 These channels are particularly useful for profiling atmospheric temperature and humidity, respectively.
 
-The observed brightness temperature in these channels correlates with the dryness or warmth of the air mass.
+The observed brightness temperature (BT) in these channels correlates with the dryness or warmth of the air mass.
 
 On the other hand, window channels predominantly capture signals from the Earth's surface and precipitation.
 They are less affected by atmospheric absorption compared to the absorption channels.
@@ -375,17 +375,15 @@ Scattering signatures are highly sensitive to the size distribution, shapes, and
 
 Over the ocean, the contrast between cold water surface and warmer raindrops enables the identification of precipitation using low-frequency channels.
 However, over land, this contrast is minimal.
-Middle and high frequencies (e.g., 89 GHz and 183 GHz) are utilized to detect brightness temperature depressions caused by ice particle scattering against the warm land background.
+Middle and high frequencies (e.g., 89 GHz and 183 GHz) are utilized to detect BT depressions caused by ice particle scattering against the warm land background.
 
 It's important to note that unlike infrared radiation, which is strongly tied with an object's temperature, the emitted microwave radiation
 is governed by the object's physical properties (which controls the microwave emissivity).
 
-Here below we illustrate the brightness temperature sensed by GMI on XXXX. Look at the BT depression over land in
-the high frequency channels, and the higher BT in the lower frequency channels over the ocean.
+Here below we display the BTs sensed by GMI Hurricane Ida's landfall on August 29, 2021, at 15:13:00 UTC.
+Please note the BT depression over land in the high frequency channels, and the higher BT in the lower frequency channels over the ocean.
 
-.. warning::
-
-  SOON AVAILABLE
+.. image:: /static/example_pmw_frequency.png
 
 
 .. _gpm_data_archive:
@@ -787,70 +785,13 @@ It categorizes storms into five types:
 Data are available for `TRMM here <http://trmm.atmos.washington.edu/>`_  and `GPM here <http://gpm.atmos.washington.edu/>`_.
 
 
-.. _satellite_precipitation_measurements:
+.. _tropical_cyclones_database:
 
-Real-Time Instantanuous Measurements
--------------------------------------
-
-If you're interested in exploring near-surface precipitation data in almost real-time from the
-GPM DPR or GMI sensors, the `JAXA GPM Real-Time Monitor <https://sharaku.eorc.jaxa.jp/trmm/RT3/index.html>`_ is a valuable tool.
-This platform also allows for the visualization of data from the TRMM PR and TMI going back to 1998.
-
-This tool makes it easy to identify when and where the GPM satellites are detecting precipitation.
-
-If you spot a precipitating system on the monitor that interests you, activating the  ``Observation Time`` toggle on the
-lower left will enable you to obtain the sensor's acquisition time with minute-level accuracy.
-
-By copying such acquisition time, you can easily download, analyze and visualize the corresponding data using the GPM API.
-
-The GIF and code snippet here below showcases the step-by-step process for identifying an interesting precipitation event,
-copying its acquisition time, and leveraging the GPM API for data visualization and analysis.
-
-
-.. code-block:: python
-
-    import gpm
-    import datetime
-
-    product = "2A-DPR"
-    product_type = "NRT"  # if ~48 h from real-time data, otherwise "RS" (Research) ...
-    version = 7
-
-    start_time = datetime.datetime(2020, 7, 22, 1, 10, 11)
-    end_time = datetime.datetime(2020, 7, 22, 2, 30, 5)
-
-    # Download data over specific time periods
-    gpm.download(
-        product=product,
-        product_type=product_type,
-        version=version,
-        start_time=start_time,
-        end_time=end_time,
-    )
-    # Open the dataset
-    ds = gpm.open_dataset(
-        product=product,
-        product_type=product_type,
-        version=version,
-        start_time=start_time,
-        end_time=end_time,
-    )
-
-    # Plot a specific variable of the dataset
-    ds["precipRateNearSurface"].gpm.plot_map()
-
-
-If you're interested in measurements from other satellites, the `JAXA Global Rainfall Watch <https://sharaku.eorc.jaxa.jp/GSMaP/index.htm>`_
-allows you to visualize the :ref:`GPM PMW constellation <gpm_constellation>` swath coverage over a 1-hour period.
-This is achieved by activating the ``Time and Satellite`` toggle located in the top right corner of the interface.
-
-.. _tropical_cyclones_measurements:
-
-Tropical Cyclones Measurements
--------------------------------
+Tropical Cyclones Database
+---------------------------
 
 The JAXA-EORC Tropical Cyclones `Real Time Monitoring <https://sharaku.eorc.jaxa.jp/cgi-bin/typhoon_rt/main.cgi?lang=en>`_
-and `Database <https://sharaku.eorc.jaxa.jp/TYP_DB/index.html>`_ websites provides quicklooks of
+and `Database <https://sharaku.eorc.jaxa.jp/TYP_DB/index.html>`_ websites provide quicklooks of
 the latest and past tropical cyclones satellite acquisitions of DPR, GMI and AMSR2 sensors.
 
 
@@ -876,6 +817,66 @@ The `Tropical Cyclone related Precipitation Feature` (TC-PF) database is a subse
 Please refer to `Jiang et al., 2011 <https://journals.ametsoc.org/view/journals/apme/50/6/2011jamc2662.1.xml>`_ for more information on the TC-PF database.
 Data are available at `this link <https://ghrc.nsstc.nasa.gov/pub/tcpf/tcpf-L1/data/>`_.
 
+
+.. _online_data_explorer:
+
+Online Data Explorer
+---------------------------
+
+The `JAXA GPM Real-Time Monitor <https://sharaku.eorc.jaxa.jp/trmm/RT3/index.html>`_ website allows you to
+visualize near-surface precipitation measurements by TRMM and GPM sensors, from near-real-time back to 1998.
+
+The tool is straightforward to use, whether you are checking if TRMM/GPM sensed a particular precipitation system
+or simply want to explore precipitation patterns around the world.
+
+If you spot a precipitating system that interests you, activating the  ``Observation Time`` toggle on the
+lower left will enable you to obtain the sensor's acquisition time with minute-level accuracy.
+
+By copying such acquisition time, you can easily download, analyze and visualize the corresponding data using the GPM API.
+
+The GIF and code snippet here below showcases the step-by-step process for identifying an interesting precipitation event,
+copying its acquisition time, and leveraging the GPM API for data visualization and analysis.
+
+.. image:: /static/example_jaxa_monitor.gif
+
+
+.. code-block:: python
+
+    import gpm
+    import datetime
+
+    product = "2A-DPR"
+    product_type = "RS"  # "NRT" if less than ~48 h from real-time data
+    version = 7
+
+    start_time = datetime.datetime.strptime("2020/09/17 22:30:00", "%Y/%m/%d %H:%M:%S")
+    end_time = datetime.datetime.strptime("2020/09/17 22:32:00", "%Y/%m/%d %H:%M:%S")
+
+    # Download data over specific time periods
+    gpm.download(
+        product=product,
+        product_type=product_type,
+        version=version,
+        start_time=start_time,
+        end_time=end_time,
+    )
+
+    # Open the dataset
+    ds = gpm.open_dataset(
+        product=product,
+        product_type=product_type,
+        version=version,
+        start_time=start_time,
+        end_time=end_time,
+    )
+
+    # Plot a specific variable of the dataset
+    p = ds["precipRateNearSurface"].gpm.plot_map()
+
+
+If you're interested in measurements from other satellites, the `JAXA Global Rainfall Watch <https://sharaku.eorc.jaxa.jp/GSMaP/index.htm>`_
+allows you to visualize the :ref:`GPM PMW constellation <gpm_constellation>` swath coverage over a 1-hour period.
+This is achieved by activating the ``Time and Satellite`` toggle located in the top right corner of the interface.
 
 .. _global_precipitation_products:
 
