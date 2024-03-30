@@ -38,7 +38,6 @@ keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
     "xarray<=2024.2.0", # ongoing xarray datatree migration
     "xarray-datatree",  # to be deprecated as soon datatree in xarray is working
-    "h5py", # to discard as soon as possible
     "netcdf4",
     "dask",
     "distributed",
@@ -62,7 +61,7 @@ dev = ["pre-commit", "loghub",
        "pytest", "pytest-cov", "pytest-mock", "pytest-check", "pytest-sugar",
        "pytest-watcher", "deepdiff",
        "pip-tools", "bumpver", "twine", "wheel", "build", "setuptools>=61.0.0",
-       "ximage", "pyvista", "polars", "pyarrow", "pyresample",
+       "ximage", "pyvista", "polars", "pyarrow", "pyresample", "h5py",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]
 
 [project.urls]

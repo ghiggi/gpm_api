@@ -27,7 +27,7 @@
 """This module contains functions that check the GPM files integrity."""
 import os
 
-import h5py
+import xarray as xr
 
 from gpm.io.checks import (
     check_product,
@@ -38,12 +38,23 @@ from gpm.io.find import find_filepaths
 
 
 def get_corrupted_filepaths(filepaths):
+    """Return the file paths of corrupted files."""
     l_corrupted = []
     for filepath in filepaths:
-        # Load hdf granule file
         try:
-            hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
-            hdf.close()
+            # Try open the HDF file
+
+            # DataTree.close() does not work yet!
+            # dt = datatree.open_datatree(filepath, engine="netcdf4")
+            # dt.close()
+
+            # h5py it's an heavy dependency !
+            # hdf = h5py.File(filepath, "r")  # h5py._hl.files.File
+            # hdf.close()
+
+            ds = xr.open_dataset(filepath, engine="netcdf4", group="")
+            ds.close()
+
         except OSError:
             l_corrupted.append(filepath)
     return l_corrupted
