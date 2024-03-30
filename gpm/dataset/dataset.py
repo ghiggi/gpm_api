@@ -293,7 +293,7 @@ def open_dataset(
     ##------------------------------------------------------------------------.
     # Find filepaths
     filepaths = find_filepaths(
-        storage="local",
+        storage="LOCAL",
         version=version,
         product=product,
         product_type=product_type,

@@ -54,9 +54,9 @@ class TestGetDailyFilepaths:
     def test_local_non_existent_files(
         self,
     ) -> None:
-        """Test _get_all_daily_filepaths for "local" storage with non-existent files"""
+        """Test _get_all_daily_filepaths for "LOCAL" storage with non-existent files"""
 
-        storage = "local"
+        storage = "LOCAL"
 
         returned_filepaths = _get_all_daily_filepaths(
             storage=storage,
@@ -74,10 +74,10 @@ class TestGetDailyFilepaths:
         mocker: MockerFixture,
         product_info: Dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "local" storage with existing (mocked) files"""
+        """Test _get_all_daily_filepaths for "LOCAL" storage with existing (mocked) files"""
 
         base_dir = "dummy/path/to/base_dir"
-        storage = "local"
+        storage = "LOCAL"
 
         # Mock os.listdir to return a list of filenames
         mocker.patch("gpm.io.local.os.listdir", return_value=self.mock_filenames)
@@ -149,9 +149,9 @@ class TestGetDailyFilepaths:
         mock_get_pps_file_list: None,
         product_info: Dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "pps" storage with RS version 7 products"""
+        """Test _get_all_daily_filepaths for "PPS" storage with RS version 7 products"""
 
-        storage = "pps"
+        storage = "PPS"
         product_type = "RS"
         version = 7
 
@@ -178,9 +178,9 @@ class TestGetDailyFilepaths:
         mock_get_pps_file_list: None,
         product_info: Dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "pps" storage with RS lower version products"""
+        """Test _get_all_daily_filepaths for "PPS" storage with RS lower version products"""
 
-        storage = "pps"
+        storage = "PPS"
         product_type = "RS"
 
         for product in available_products(product_types=product_type):
@@ -210,9 +210,9 @@ class TestGetDailyFilepaths:
         mock_get_pps_file_list: None,
         product_info: Dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "pps" storage with NRT products (except IMERG)"""
+        """Test _get_all_daily_filepaths for "PPS" storage with NRT products (except IMERG)"""
 
-        storage = "pps"
+        storage = "PPS"
         product_type = "NRT"
 
         for product in available_products(product_types=product_type):
@@ -242,9 +242,9 @@ class TestGetDailyFilepaths:
         mock_get_pps_file_list: None,
         product_info: Dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "pps" storage with NRT IMERG products"""
+        """Test _get_all_daily_filepaths for "PPS" storage with NRT IMERG products"""
 
-        storage = "pps"
+        storage = "PPS"
         product_type = "NRT"
         product_category = "IMERG"
 
@@ -273,7 +273,7 @@ class TestGetDailyFilepaths:
         product_info: Dict[str, dict],
         mocker: MockerFixture,
     ) -> None:
-        storage = "pps"
+        storage = "PPS"
         product = "1A-GMI"
         version = 7
         info = product_info[product]
@@ -314,9 +314,9 @@ class TestGetDailyFilepaths:
         mock_get_ges_disc_list_path: None,
         product_info: Dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "ges_disc" storage"""
+        """Test _get_all_daily_filepaths for "GES_DISC" storage"""
 
-        storage = "ges_disc"
+        storage = "GES_DISC"
         version = 7
 
         for product, info in product_info.items():
@@ -491,7 +491,7 @@ def test_find_daily_filepaths(
 
     # Check empty filepaths list
     patch_get_all_daily_filepaths.side_effect = lambda **kwargs: []
-    kwargs["storage"] = "local"
+    kwargs["storage"] = "LOCAL"
     returned_filepaths, returned_versions = find_daily_filepaths(**kwargs)
     assert returned_filepaths == []
     assert returned_versions == []
@@ -507,7 +507,7 @@ def test_find_filepaths(
     """
     # TODO: test for all products?
 
-    storage = "pps"
+    storage = "PPS"
     version = 7
     product = "2A-DPR"
     product_type = "RS"

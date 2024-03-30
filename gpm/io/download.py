@@ -129,7 +129,7 @@ CURL_FTPS_FLAG = "--ftp-ssl" if Version(CURL_VERSION) <= Version("7.20.0") else 
 def check_valid_pps_credentials(verbose=True):
     """Check validity of PPS credentials."""
     ftp_host = "arthurhouftps.pps.eosdis.nasa.gov"
-    username, password = _get_storage_username_password("pps")
+    username, password = _get_storage_username_password("PPS")
     try:
         with ftplib.FTP_TLS(ftp_host) as ftp:
             ftp.login(user=username, passwd=password)
@@ -156,7 +156,7 @@ def check_pps_ports_are_open():
     # Check PPS server is online
     check_pps_available(verbose=False)
     # Test port (64000-65000) are open
-    username, password = _get_storage_username_password("pps")
+    username, password = _get_storage_username_password("PPS")
     command = [
         "curl",
         "--ipv4",
@@ -382,8 +382,8 @@ def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
 def _get_single_file_cmd_function(transfer_tool, storage):
     """Return command definition function."""
     dict_fun = {
-        "pps": {"wget": wget_pps_cmd, "curl": curl_pps_cmd},
-        "ges_disc": {"wget": wget_ges_disc_cmd, "curl": curl_ges_disc_cmd},
+        "PPS": {"WGET": wget_pps_cmd, "CURL": curl_pps_cmd},
+        "GES_DISC": {"WGET": wget_ges_disc_cmd, "CURL": curl_ges_disc_cmd},
     }
     func = dict_fun[storage][transfer_tool]
     return func
@@ -392,7 +392,7 @@ def _get_single_file_cmd_function(transfer_tool, storage):
 def _get_storage_username_password(storage):
     """Retrieve username and password depending on the 'storage'."""
     # Retrieve username and password
-    if storage == "pps":
+    if storage == "PPS":
         username = get_username_pps()
         password = get_password_pps()
     else:
@@ -484,9 +484,9 @@ def filter_download_list(remote_filepaths, local_filepaths, force_download=False
 
 def _get_func_filepath_definition(storage):
     dict_fun = {
-        "local": define_local_filepath,
-        "pps": define_pps_filepath,
-        "ges_disc": define_ges_disc_filepath,
+        "LOCAL": define_local_filepath,
+        "PPS": define_pps_filepath,
+        "GES_DISC": define_ges_disc_filepath,
     }
     func = dict_fun[storage]
     return func
@@ -561,9 +561,9 @@ def get_filepaths_from_filenames(filepaths, storage, product_type):
 def download_files(
     filepaths,
     product_type="RS",
-    storage="pps",
+    storage="PPS",
     n_threads=4,
-    transfer_tool="curl",
+    transfer_tool="CURL",
     force_download=False,
     remove_corrupted=True,
     progress_bar=False,
@@ -582,7 +582,7 @@ def download_files(
         The default is "RS".
     storage : str, optional
         The remote repository from where to download.
-        Either ``pps`` or ``ges_disc``. The default is "pps".
+        Either ``pps`` or ``ges_disc``. The default is "PPS".
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
@@ -630,7 +630,7 @@ def download_files(
         filepaths, storage=storage, product_type=product_type
     )
     local_filepaths = get_filepaths_from_filenames(
-        filepaths, storage="local", product_type=product_type
+        filepaths, storage="LOCAL", product_type=product_type
     )
 
     # If force_download is False, select only data not present on disk
@@ -852,7 +852,7 @@ def _download_daily_data(
     # -------------------------------------------------------------------------.
     # Define disk filepaths
     local_filepaths = get_filepaths_from_filenames(
-        remote_filepaths, storage="local", product_type=product_type
+        remote_filepaths, storage="LOCAL", product_type=product_type
     )
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
@@ -929,9 +929,9 @@ def download_archive(
     end_time,
     product_type="RS",
     version=None,
-    storage="pps",
+    storage="PPS",
     n_threads=4,
-    transfer_tool="curl",
+    transfer_tool="CURL",
     progress_bar=False,
     force_download=False,
     check_integrity=True,
@@ -1075,9 +1075,9 @@ def download_daily_data(
     day,
     product_type="RS",
     version=None,
-    storage="pps",
+    storage="PPS",
     n_threads=10,
-    transfer_tool="curl",
+    transfer_tool="CURL",
     progress_bar=False,
     force_download=False,
     check_integrity=True,
@@ -1116,9 +1116,9 @@ def download_monthly_data(
     month,
     product_type="RS",
     version=None,
-    storage="pps",
+    storage="PPS",
     n_threads=10,
-    transfer_tool="curl",
+    transfer_tool="CURL",
     progress_bar=False,
     force_download=False,
     check_integrity=True,

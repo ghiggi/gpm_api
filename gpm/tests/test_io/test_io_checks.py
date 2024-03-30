@@ -165,7 +165,7 @@ def test_check_storage() -> None:
 
     # Check valid storage
     valid_storage = ["ges_disc", "pps", "local", "GES_DISC", "PPS", "LOCAL"]
-    expected_return = ["ges_disc", "pps", "local", "ges_disc", "pps", "local"]
+    expected_return = ["GES_DISC", "PPS", "LOCAL", "GES_DISC", "PPS", "LOCAL"]
 
     for storage, expected in zip(valid_storage, expected_return):
         returned_storage = checks.check_storage(storage)
@@ -186,7 +186,7 @@ def test_check_remote_storage() -> None:
 
     # Check valid storage
     valid_storage = ["ges_disc", "pps", "GES_DISC", "PPS"]
-    expected_return = ["ges_disc", "pps", "ges_disc", "pps"]
+    expected_return = ["GES_DISC", "PPS", "GES_DISC", "PPS"]
 
     for storage, expected in zip(valid_storage, expected_return):
         returned_storage = checks.check_remote_storage(storage)
@@ -204,8 +204,8 @@ def test_check_remote_storage() -> None:
 
 def test_check_transfer_tool(mocker: MockerFixture):
     """Test check_transfer_tool()"""
-    # Assert "curl" is available and return "curl"
-    transfer_tool = "curl"  # "wget" is not mandatory
+    # Assert "CURL" is available and return "CURL"
+    transfer_tool = "CURL"  # "WGET" is not mandatory
     assert checks.check_transfer_tool(transfer_tool=transfer_tool) == transfer_tool
 
     # Test the function with an invalid transfer tool
@@ -215,7 +215,7 @@ def test_check_transfer_tool(mocker: MockerFixture):
     assert f"'{invalid_tool}' is an invalid 'transfer_tool'." in str(exc_info.value)
 
     # Test the function with a valid transfer tool that is not installed
-    transfer_tool = "wget"
+    transfer_tool = "WGET"
     mocker.patch("subprocess.run", side_effect=CalledProcessError(1, [transfer_tool, "--version"]))
     with pytest.raises(ValueError) as exc_info:
         checks.check_transfer_tool(transfer_tool)

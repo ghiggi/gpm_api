@@ -60,7 +60,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
 
     This functions returns a tuple ``([filepaths],[available_version])``.
     """
-    if storage == "local":
+    if storage == "LOCAL":
         filepaths = get_local_daily_filepaths(
             product=product,
             product_type=product_type,
@@ -68,7 +68,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
             version=version,
             verbose=verbose,
         )
-    elif storage == "pps":
+    elif storage == "PPS":
         filepaths = get_pps_daily_filepaths(
             product=product,
             product_type=product_type,
@@ -76,7 +76,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
             version=version,
             verbose=verbose,
         )
-    elif storage == "ges_disc":
+    elif storage == "GES_DISC":
         filepaths = get_ges_disc_daily_filepaths(
             product=product,
             product_type=product_type,
@@ -190,7 +190,7 @@ def find_daily_filepaths(
         verbose=verbose,
     )
     if len(filepaths) == 0:
-        if storage == "local" and verbose:
+        if storage == "LOCAL" and verbose:
             version_str = str(int(version))
             print(
                 f"The GPM product {product} (V0{version_str}) on date {date} has not been downloaded !"
@@ -277,7 +277,7 @@ def find_filepaths(
 
     # -------------------------------------------------------------------------.
     # If NRT, all data lies in a single directory at PPS
-    if storage == "pps" and product_type == "NRT":
+    if storage == "PPS" and product_type == "NRT":
         dates = [dates[0]]
         parallel = False
 
@@ -339,7 +339,7 @@ def find_filepaths(
     return filepaths
 
 
-def find_associated_filepath(filepath, product, storage="local", product_type="RS", version=7):
+def find_associated_filepath(filepath, product, storage="LOCAL", product_type="RS", version=7):
     """Return filepath of another product associated to the input filepath.
 
     Please specify a product derived from the same sensor !

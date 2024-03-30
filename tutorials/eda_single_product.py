@@ -29,7 +29,7 @@ gpm.download(
     version=version,
     progress_bar=True,
     n_threads=2,  # 8
-    transfer_tool="curl",
+    transfer_tool="CURL",
 )
 
 ##-----------------------------------------------------------------------------.

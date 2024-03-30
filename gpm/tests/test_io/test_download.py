@@ -53,7 +53,7 @@ def test_construct_curl_pps_cmd(
     local_filepath = os.path.join(
         tmpdir,
         datetime.datetime.utcnow().isoformat().replace(":", "-"),
-        "curl",
+        "CURL",
         "output_file.hdf5",
     )
     assert not os.path.exists(
@@ -110,7 +110,7 @@ def test_construct_wget_pps_cmd(
     local_filepath = os.path.join(
         tmpdir,
         datetime.datetime.utcnow().isoformat().replace(":", "-"),
-        "wget",
+        "WGET",
         "output_file.hdf5",
     )
     assert not os.path.exists(
@@ -241,7 +241,7 @@ class TestGetFilepathsFromFilenames:
         with gpm.config.set({"base_dir": base_dir}):
             assert dl.get_filepaths_from_filenames(
                 filepaths=[self.filename],
-                storage="local",
+                storage="LOCAL",
                 product_type="RS",
             ) == [
                 os.path.join(
@@ -261,14 +261,14 @@ class TestGetFilepathsFromFilenames:
     def test_pps(self) -> None:
         assert dl.get_filepaths_from_filenames(
             filepaths=[self.filename],
-            storage="pps",
+            storage="PPS",
             product_type="RS",
         ) == [f"ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/{self.filename}"]
 
     def test_ges_disc(self) -> None:
         assert dl.get_filepaths_from_filenames(
             filepaths=[self.filename],
-            storage="ges_disc",
+            storage="GES_DISC",
             product_type="RS",
         ) == [
             f"https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L2/GPM_2ADPR.07/2020/187/{self.filename}"
@@ -278,7 +278,7 @@ class TestGetFilepathsFromFilenames:
         with pytest.raises(ValueError):
             dl.get_filepaths_from_filenames(
                 filepaths=["invalid_filename"],
-                storage="local",
+                storage="LOCAL",
                 product_type="RS",
             )
 
@@ -296,8 +296,8 @@ def test_check_download_status(
         assert dl._check_download_status([1, 0, 1], product, True) is True  # Some failed download
 
 
-@pytest.mark.parametrize("transfer_tool", ["wget", "curl"])
-@pytest.mark.parametrize("storage", ["pps", "ges_disc"])
+@pytest.mark.parametrize("transfer_tool", ["WGET", "CURL"])
+@pytest.mark.parametrize("storage", ["PPS", "GES_DISC"])
 def test_private_download_files(
     remote_filepaths: Dict[str, Dict[str, Any]],
     tmpdir: str,
@@ -310,7 +310,7 @@ def test_private_download_files(
     Uses tmpdir to create a unique path for each test and mocker to mock the
     download function
     """
-    if platform.system() == "Windows" and transfer_tool == "wget":
+    if platform.system() == "Windows" and transfer_tool == "WGET":
         return None
 
     # Don't actually download anything, so mock the run function
@@ -387,7 +387,7 @@ def test_download_files(
     assert dl.download_files(filepaths=list(remote_filepaths.keys())) == None
 
 
-@pytest.mark.parametrize("storage", ["pps", "ges_disc"])
+@pytest.mark.parametrize("storage", ["PPS", "GES_DISC"])
 def test__download_daily_data(
     tmpdir: str,
     versions: List[str],
@@ -425,7 +425,7 @@ def test__download_daily_data(
                         start_time=None,
                         end_time=None,
                         n_threads=4,
-                        transfer_tool="curl",
+                        transfer_tool="CURL",
                         progress_bar=True,
                         force_download=False,
                         verbose=True,
@@ -564,7 +564,7 @@ def test_ensure_files_completness(
         verbose=verbose,
         # Dummy
         product_type="RS",
-        transfer_tool="wget",
+        transfer_tool="WGET",
         n_threads=1,
         progress_bar=True,
     )
@@ -594,7 +594,7 @@ def test_ensure_archive_completness(
         end_time="dummy",
         version=7,
         product_type="RS",
-        transfer_tool="wget",
+        transfer_tool="WGET",
         n_threads=1,
         progress_bar=True,
     )
