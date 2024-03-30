@@ -3,7 +3,7 @@ Contributors Guidelines
 
 Hi! Thanks for taking the time to contribute to GPM-API.
 
-You can contribute in many ways :
+You can contribute in many ways:
 
 - Join the `GitHub Discussions <https://github.com/ghiggi/gpm_api/discussions>`__
 - Report `issues <#issue-reporting>`__
@@ -17,7 +17,6 @@ You can contribute in many ways :
 We use GitHub to host code, to track issues and feature requests, as well as accept Pull Requests.
 We use `GitHub flow <https://docs.github.com/en/get-started/quickstart/github-flow>`__.
 So all code changes happen through Pull Requests (PRs).
-
 
 **First Time Contributors ?**
 
@@ -69,20 +68,17 @@ This proactive approach helps us continuously evolve and better serve the needs 
 Contributing process
 -----------------------
 
-**How to contribute ?**
+In this section we explain the steps that each developer must follow to contribute to the GPM-API repository.
 
-
-Here is a brief overview of the steps that each GPM-API developer must follow to contribute to the repository.
-
-1. Fork the repository.
-2. Create a new branch for each contribution.
-3. Work on your changes.
-4. Test your changes.
-5. Push your local changes to your fork repository.
-6. Create a new Pull Request in GitHub.
-
+The collaborative process is illustrated in the following diagram:
 
 .. image:: /static/collaborative_process.png
+
+and each step is detailed in the following subsections:
+
+.. contents::
+   :depth: 1
+   :local:
 
 
 1. Fork the repository
@@ -124,10 +120,11 @@ For example, if you are adding a new feature, you can create a new branch with t
    git checkout -b add-feature-<name>
 
 
-3. Work on your changes
+3. Add your code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
+Now you can start working on your changes.
+You can add new features, fix bugs, improve the documentation, refactor the code, or optimize the code.
 When you are working on your changes, please stick with the repository's coding style and documentation rules.
 
 **Code Style**
@@ -183,7 +180,7 @@ Here is an example of a docstring:
 If you are using VS code, you can install the  `autoDocstring <https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring>`_
 extension to automatically create such preformatted docstring.
 
-You should configure VS code as follow :
+You should configure VS code as follow:
 
 
 .. image:: /static/vs_code_settings.png
@@ -193,7 +190,7 @@ The convention we adopt for our docstrings is the numpydoc string convention.
 
 .. _code_quality_control:
 
-4. Code quality control
+4. Check code quality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -239,11 +236,12 @@ Refer to the table below for a comprehensive summary of all CI tools employed to
 +----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
 
 
+5. Check code functionality
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-5. Code testing with pytest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Every code change must be tested !
 
-GPM-API tests are written using the third-party `pytest <https://docs.pytest.org>`_ package. Every code change must be tested !
+GPM-API tests are written using the third-party `pytest <https://docs.pytest.org>`_ package.
 
 The tests are organized within the ``/gpm/tests`` directory and are structured to comprehensively assess various aspects of the code.
 
@@ -312,11 +310,11 @@ If you encounter errors, you can attempt to fix the formatting errors with the f
    pre-commit run --all-files
 
 
-7. Create a new Pull Request
+7. Create a Pull Request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Once your code has been uploaded into your GPM-API fork, you can create a Pull Request (PR) to the GPM-API main branch.
+Once your code has been uploaded into your GPM-API fork, you can create a GitHub Pull Request (PR) to the GPM-API main branch.
 
 Recommendation for the Pull Requests:
 

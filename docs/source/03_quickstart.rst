@@ -16,6 +16,11 @@ Once you have an EarthData account, to access the GES DISC Data Archive you need
 the application ``"NASA GESDISC DATA ARCHIVE"`` by following the
 instructions available at the following `link <https://disc.gsfc.nasa.gov/earthdata-login>`__.
 
+.. note::
+    For enhanced security and command-line robustness,
+    refrain from including single quotes ('), double quotes ("), blank spaces, or backslashes (\\)
+    in both usernames and passwords
+
 
 Register to the NASA PPS
 ---------------------------
@@ -26,6 +31,11 @@ To register to the PPS servers, please follow the instructions available at the 
 If you plan to use Near-Real Time (NRT) data stored on PPS,
 make sure to check the box stating that you are interested in the NRT products.
 NRT products includes for example the IMERG Early and Late Runs products.
+
+.. note::
+    For enhanced security and command-line robustness,
+    refrain from including single quotes ('), double quotes ("), blank spaces, or backslashes (\\)
+    in both usernames and passwords.
 
 
 Create the GPM-API configuration file
@@ -48,17 +58,34 @@ The configuration file will be created in the user's home directory under the na
     password_earthdata = "<your EarthData password>"
     base_dir = "<path/to/a/local/directory/>"  # where to download all GPM data
     gpm.define_configs(
-        username_pps=username,
-        password_pps=password,
+        username_pps=username_pps,
+        password_pps=password_pps,
         username_earthdata=username_earthdata,
         password_earthdata=password_earthdata,
         base_dir=base_dir,
     )
 
-    # You can check that the config file has been correctly created with:
+Now please close and restart the python session to make sure that the configuration file is correctly loaded.
+You can check that the configuration file has been correctly created with:
+
+.. code-block:: python
+
+    import gpm
+
     configs = gpm.read_configs()
     print(configs)
 
+To download data from the NASA PPS server, it's essential to enable access to ports
+in the range of 64000-65000 for the servers ``arthurhouftps.pps.eosdis.nasa.gov`` and
+``jsimpsonftps.pps.eosdis.nasa.gov``.
+While this access is typically pre-configured, some firewall or router setups may necessitate manual permission for these ports.
+You can verify port accessibility with the following command:
+
+.. code-block:: python
+
+    from gpm.io.download import check_pps_ports_are_open
+
+    check_pps_ports_are_open()
 
 
 Search the product

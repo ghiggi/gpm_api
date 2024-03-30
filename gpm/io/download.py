@@ -26,9 +26,11 @@
 # -----------------------------------------------------------------------------.
 """This module contains the routines required to download data from the NASA PPS and GES DISC servers."""
 import datetime
+import ftplib
 import os
 import platform
 import re
+import shlex
 import subprocess
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -36,6 +38,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
+from packaging.version import Version
 
 from gpm.configs import (
     get_password_earthdata,
@@ -98,6 +101,97 @@ from gpm.utils.warnings import GPMDownloadWarning
 # --connect-timeout 20: limits time curl spend trying to connect to the host to 20 secs
 # -o : write to file instead of stdout
 
+
+####--------------------------------------------------------------------------.
+#####################################
+#### CURL Backward Compatibility ####
+#####################################
+def get_curl_version():
+    """Get curl version."""
+    result = subprocess.run(["curl", "--version"], capture_output=True, text=True)
+    # Example output: curl 7.68.0 (x86_64-pc-linux-gnu) ...
+    version_match = re.search(r"curl (\d+\.\d+\.\d+)", result.stdout)
+    if version_match:
+        return version_match.group(1)
+    else:
+        raise RuntimeError("Could not determine curl version")
+
+
+CURL_VERSION = get_curl_version()
+CURL_FTPS_FLAG = "--ftp-ssl" if Version(CURL_VERSION) <= Version("7.20.0") else "--ssl"
+
+####--------------------------------------------------------------------------.
+####################
+#### PPS Checks ####
+####################
+
+
+def check_valid_pps_credentials(verbose=True):
+    """Check validity of PPS credentials."""
+    ftp_host = "arthurhouftps.pps.eosdis.nasa.gov"
+    username, password = _get_storage_username_password("pps")
+    try:
+        with ftplib.FTP_TLS(ftp_host) as ftp:
+            ftp.login(user=username, passwd=password)
+            ftp.prot_p()  # Switch to secure data connection
+        if verbose:
+            print("The PPS username and password are valid.")
+    except Exception as e:
+        str_error = str(e)
+        if "Login incorrect" in str_error:
+            raise ValueError("Invalid PPS username or password.")
+        else:
+            raise ValueError(f"The PPS server {ftp_host} is not available.")
+
+
+def check_pps_available(verbose=True):
+    """Check PPS server is available."""
+    check_valid_pps_credentials(verbose=False)
+    if verbose:
+        print("The PPS server is available.")
+
+
+def check_pps_ports_are_open():
+    """Check 64000-65000 ports are open for PPS."""
+    # Check PPS server is online
+    check_pps_available(verbose=False)
+    # Test port (64000-65000) are open
+    username, password = _get_storage_username_password("pps")
+    command = [
+        "curl",
+        "--ipv4",
+        "--insecure",
+        "-n",
+        "-v",
+        "--retry",
+        "0",
+        "--retry-delay",
+        "1",
+        "--user",
+        f"{username}:{password}",
+        "--ssl",
+        "--url",
+        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/README.TXT",
+    ]
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        if "Couldn't connect to server" in result.stderr:
+            msg = (
+                "The ports in the range of 64000-65000 are not open for the the DNS names "
+                + "'arthurhouftps.pps.eosdis.nasa.gov' and 'jsimpsonftps.pps.eosdis.nasa.gov'."
+                + "Please modify your router and firewall settings for successful communication "
+                + "with the PPS data server."
+            )
+            raise ValueError(msg)
+        else:
+            msg = (
+                "An undetermined connection error occurred while attempting to access the PPS. "
+                + "The error is: {result.stderr}"
+            )
+            raise ValueError(msg)
+    print("The ports in the range of 64000-65000 are open. You are ready to use GPM-API !")
+
+
 ####--------------------------------------------------------------------------.
 ##########################
 #### Download Utility ####
@@ -106,11 +200,12 @@ from gpm.utils.warnings import GPMDownloadWarning
 
 def _get_commands_futures(executor, commands):
     """Submit commands and return futures dictionary."""
+    # We use shlex to correctly deal with \\ on windows.  Arguments must be entoured by '<argument>'
     dict_futures = {
         executor.submit(
             subprocess.check_call,
-            cmd,
-            shell=True,
+            shlex.split(cmd),
+            shell=False,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         ): (i, cmd)
@@ -186,7 +281,7 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
     # Run without progress bar
     else:
         if (n_threads == 1) and (verbose is True):
-            results = [subprocess.run(cmd, shell=True) for cmd in commands]
+            results = [subprocess.run(shlex.split(cmd), shell=False) for cmd in commands]
             status = [result.returncode == 0 for result in results]
         else:
             with ThreadPoolExecutor(max_workers=n_threads) as executor:
@@ -218,13 +313,11 @@ def curl_pps_cmd(remote_filepath, local_filepath, username, password):
     # - Base cmd: curl -4 --ftp-ssl --user [user name]:[password] -n [url]
     # - With curl > 7.71 the flag -k (or --insecure) is required  to avoid unauthorized access
     # - Define authentication settings
-    auth = (
-        f"--ipv4 --insecure -n --user {username}:{password} --ftp-ssl --header 'Connection: close'"
-    )
+    auth = f"--ipv4 --insecure -n --user '{username}:{password}' {CURL_FTPS_FLAG} --header 'Connection: close'"
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"  # --verbose
     # - Define command
-    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
     return cmd
 
 
@@ -233,11 +326,11 @@ def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=N
     urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
 
     # - Define authentication settings
-    auth = f"-n -c {urs_cookies_path} -b {urs_cookies_path} -LJ"
+    auth = f"-n -c '{urs_cookies_path}' -b '{urs_cookies_path}' -L"
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"
     # - Define command
-    cmd = f"curl {auth} {options} --url {remote_filepath} -o {local_filepath}"
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
     return cmd
 
 
@@ -251,11 +344,11 @@ def wget_pps_cmd(remote_filepath, local_filepath, username, password):
     ## Define WGET command
     # - Base cmd: wget -4 --ftp-user=[user name] –-ftp-password=[password] -O
     # - Define authentication settings
-    auth = f"-4 --ftp-user={username} --ftp-password={password} -e robots=off"
+    auth = f"-4 --ftp-user='{username}' --ftp-password='{password}' -e robots=off"
     # - Define options
     options = "-np -R .html,.tmp -nH -c --read-timeout=10 --tries=5"
     # - Define command
-    cmd = f"wget {auth} {options} -O {local_filepath} {remote_filepath}"
+    cmd = f"wget {auth} {options} -O '{local_filepath}' {remote_filepath}"
     return cmd
 
 
@@ -265,7 +358,7 @@ def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
     urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
 
     # Define authentication settings
-    auth = f"--load-cookies {urs_cookies_path} --save-cookies {urs_cookies_path} --keep-session-cookies"
+    auth = f"--load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' --keep-session-cookies"
 
     # Define wget options
     options = "-c --read-timeout=10 --tries=5 -nH -np --content-disposition"
@@ -275,10 +368,10 @@ def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
 
     # Define command
     if os_name == "Windows":
-        window_options = f"--user={username} --ask-password"
-        cmd = f"wget {auth} {options} {window_options} {remote_filepath} -O {local_filepath}"
+        window_options = f"--user='{username}' --ask-password"
+        cmd = f"wget {auth} {options} {window_options} {remote_filepath} -O '{local_filepath}'"
     else:  # os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
-        cmd = f"wget {auth} {options} {remote_filepath} -O {local_filepath}"
+        cmd = f"wget {auth} {options} {remote_filepath} -O '{local_filepath}'"
     return cmd
 
 

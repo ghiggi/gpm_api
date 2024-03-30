@@ -59,7 +59,7 @@ dynamic = ["version"]
 [project.optional-dependencies]
 dev = ["pre-commit", "loghub",
        "black[jupyter]", "blackdoc", "codespell", "ruff",
-       "pytest", "pytest-cov", "pytest-mock", "pytest-check",
+       "pytest", "pytest-cov", "pytest-mock", "pytest-check", "pytest-sugar",
        "pytest-watcher", "deepdiff",
        "pip-tools", "bumpver", "twine", "wheel", "build", "setuptools>=61.0.0",
        "ximage", "pyvista", "polars", "pyarrow",

@@ -27,7 +27,6 @@
 """This module define and retrieve the GPM-API configurations."""
 import os
 import platform
-import shutil
 from subprocess import Popen
 
 from gpm.utils.yaml import read_yaml, write_yaml
@@ -74,10 +73,6 @@ def set_ges_disc_authentification(username, password):
     # Set appropriate permissions for Linux/macOS
     if platform.system() != "Windows":
         Popen("chmod og-rw ~/.netrc", shell=True)
-    else:
-        # Copy dodsrc to working directory in Windows
-        shutil.copy2(home_dir_path + ".dodsrc", os.getcwd())
-        print("Copied .dodsrc to:", os.getcwd())
 
 
 def _define_config_filepath():
@@ -192,7 +187,7 @@ def _get_config_key(key):
 
     value = gpm.config.get(key, None)
     if value is None:
-        raise ValueError("The '{key}' is not specified in the GPM-API configuration file.")
+        raise ValueError(f"The '{key}' is not specified in the GPM-API configuration file.")
     return value
 
 
