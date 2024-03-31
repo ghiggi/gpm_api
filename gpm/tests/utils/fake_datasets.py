@@ -124,6 +124,4 @@ def get_grid_dataarray(
     data = np.random.rand(n_lat, n_lon)
 
     # Create data array
-    da = xr.DataArray(data, coords={"lat": lat, "lon": lon})
-
-    return da
+    return xr.DataArray(data, coords={"lat": lat, "lon": lon})

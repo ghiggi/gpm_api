@@ -133,8 +133,7 @@ def _ensure_valid_start_date(start_date, product):
     else:
         min_start_date = "1987-07-09 00:00:00"
     min_start_date = datetime.datetime.fromisoformat(min_start_date)
-    start_date = max(start_date, min_start_date)
-    return start_date
+    return max(start_date, min_start_date)
 
 
 def find_daily_filepaths(
@@ -334,9 +333,7 @@ def find_filepaths(
 
     # -------------------------------------------------------------------------.
     # Return sorted filepaths
-    filepaths = sorted(filepaths)
-
-    return filepaths
+    return sorted(filepaths)
 
 
 def find_associated_filepath(filepath, product, storage="LOCAL", product_type="RS", version=7):

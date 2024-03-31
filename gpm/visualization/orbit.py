@@ -90,7 +90,7 @@ def plot_swath(
     polygon = Polygon(boundary.vertices[::-1])
 
     # Plot the swath polygon
-    p = ax.add_geometries(
+    return ax.add_geometries(
         [polygon],
         crs=ccrs.Geodetic(),
         facecolor=facecolor,
@@ -98,7 +98,6 @@ def plot_swath(
         alpha=alpha,
         **plot_kwargs,
     )
-    return p
 
 
 def _remove_invalid_outer_cross_track(xr_obj, coord="lon"):
@@ -236,10 +235,9 @@ def plot_swath_lines(
     side_top, side_bottom = _get_swath_line_sides(lon, lat)
 
     # - Plot swath lines
-    p = plot_sides(
+    return plot_sides(
         sides=[side_top, side_bottom], ax=ax, linestyle=linestyle, color=color, **plot_kwargs
     )
-    return p
 
 
 ####----------------------------------------------------------------------------
@@ -287,7 +285,7 @@ def _plot_orbit_map_cartopy(
         cbar_kwargs["label"] = f"{variable} [{unit}]"
 
     # - Add variable field with cartopy
-    p = _plot_cartopy_pcolormesh(
+    return _plot_cartopy_pcolormesh(
         ax=ax,
         da=da,
         x=x,
@@ -299,7 +297,6 @@ def _plot_orbit_map_cartopy(
         rgb=rgb,
     )
     # - Return mappable
-    return p
 
 
 def _plot_orbit_image(
@@ -388,7 +385,7 @@ def plot_orbit_mesh(
     plot_kwargs["antialiased"] = True
 
     # - Add variable field with cartopy
-    p = _plot_cartopy_pcolormesh(
+    return _plot_cartopy_pcolormesh(
         da=da,
         ax=ax,
         x=x,
@@ -397,7 +394,6 @@ def plot_orbit_mesh(
         add_colorbar=False,
     )
     # - Return mappable
-    return p
 
 
 ####----------------------------------------------------------------------------

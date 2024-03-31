@@ -54,8 +54,7 @@ def a_3d_dataarray() -> xr.DataArray:
     data = np.arange(n_height * n_x * n_y).reshape(n_height, n_x, n_y)
     data = data.astype(float)
     da = xr.DataArray(data, coords={"height": height, "x": x, "y": y})
-    da = da.transpose("x", "y", "height")
-    return da
+    return da.transpose("x", "y", "height")
 
 
 @pytest.fixture
@@ -64,9 +63,7 @@ def binnable_orbit_dataarray(
 ) -> xr.DataArray:
     n_range = 8
     da = orbit_dataarray.expand_dims(dim={"range": n_range})
-    da = da.assign_coords({"gpm_range_id": ("range", np.arange(n_range))})
-
-    return da
+    return da.assign_coords({"gpm_range_id": ("range", np.arange(n_range))})
 
 
 # Public functions #############################################################

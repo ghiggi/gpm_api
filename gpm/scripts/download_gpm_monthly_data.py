@@ -87,4 +87,4 @@ def download_gpm_monthly_data(
         retry=retry,
     )
 
-    return None
+    return

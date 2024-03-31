@@ -177,14 +177,13 @@ def _concat_datasets(l_datasets):
     concat_dim = "time" if is_grid else "along_track"
 
     # Concatenate the datasets
-    ds = xr.concat(
+    return xr.concat(
         l_datasets,
         dim=concat_dim,
         coords="minimal",  # "all"
         compat="override",
         combine_attrs="override",
     )
-    return ds
 
 
 def open_dataset(

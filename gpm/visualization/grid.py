@@ -327,10 +327,9 @@ def plot_grid_mesh(
     )
 
     # - Monkey patch the mappable instance to add optimize_layout
-    p = add_optimize_layout_method(p)
+    return add_optimize_layout_method(p)
 
     # - Return mappable
-    return p
 
 
 def plot_grid_image(

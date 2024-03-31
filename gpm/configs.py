@@ -80,8 +80,7 @@ def _define_config_filepath():
     # Retrieve user home directory
     home_directory = os.path.expanduser("~")
     # Define path where .config_gpm.yaml file should be located
-    filepath = os.path.join(home_directory, ".config_gpm.yaml")
-    return filepath
+    return os.path.join(home_directory, ".config_gpm.yaml")
 
 
 def define_configs(
@@ -176,8 +175,7 @@ def read_configs() -> dict[str, str]:
             "The GPM-API config file has not been specified. Use gpm.define_configs to specify it !"
         )
     # Read the GPM-API config file
-    config_dict = read_yaml(filepath)
-    return config_dict
+    return read_yaml(filepath)
 
 
 ####--------------------------------------------------------------------------.
@@ -199,8 +197,7 @@ def get_base_dir(base_dir=None):
         base_dir = gpm.config.get("base_dir")
     if base_dir is None:
         raise ValueError("The 'base_dir' is not specified in the GPM-API configuration file.")
-    base_dir = str(base_dir)  # convert Path to str
-    return base_dir
+    return str(base_dir)  # convert Path to str
 
 
 def get_username_pps():

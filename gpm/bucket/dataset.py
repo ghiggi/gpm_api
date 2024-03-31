@@ -126,7 +126,7 @@ def write_partitioned_dataset(
 ):
     # Do not write if empty dataframe
     if df.size == 0:
-        return None
+        return
 
     if isinstance(df, dd.DataFrame):
         _write_dask_partitioned_dataset(

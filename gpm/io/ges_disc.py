@@ -76,8 +76,7 @@ def _get_ges_disc_list_path(url):
     list_content = [s for s in list_content if s != ""]
     if len(list_content) == 0:
         raise ValueError(f"The GES DISC {url} directory is empty.")
-    list_path = [f"{url}/{s}" for s in list_content]
-    return list_path
+    return [f"{url}/{s}" for s in list_content]
 
 
 ####--------------------------------------------------------------------------.
@@ -100,8 +99,7 @@ def _get_ges_disc_server(product):
 
 def _get_ges_disc_product_folder_name(product, version):
     dir_pattern = get_product_info(product)["ges_disc_dir"]
-    folder_name = f"{dir_pattern}.0{version}"
-    return folder_name
+    return f"{dir_pattern}.0{version}"
 
 
 def get_ges_disc_product_directory_tree(product, date, version):
@@ -132,13 +130,12 @@ def get_ges_disc_product_directory_tree(product, date, version):
 
     # Specify the directory tree
     # --> TODO: currently specified only for L1 and L2
-    directory_tree = "/".join(
+    return "/".join(
         [
             folder_name,
             datetime.datetime.strftime(date, "%Y/%j"),
         ]
     )
-    return directory_tree
 
 
 def get_ges_disc_product_directory(product, date, version):
@@ -166,8 +163,7 @@ def get_ges_disc_product_directory(product, date, version):
     # Retrieve directory tree structure
     dir_structure = get_ges_disc_product_directory_tree(product=product, date=date, version=version)
     # Define product directory where data are listed
-    url_product_dir = f"{url_server}/{dir_structure}"
-    return url_product_dir
+    return f"{url_server}/{dir_structure}"
 
 
 ####--------------------------------------------------------------------------.
@@ -201,13 +197,14 @@ def _get_ges_disc_file_list(url_product_dir, product, date, version, verbose=Tru
         # If url not exist, raise an error
         if "was not found on the GES DISC server" in str(e):
             raise e
-        else:
-            # If no filepath (empty directory), print message if verbose=True
-            if verbose:
-                version_str = str(int(version))
-                msg = f"No data found on GES DISC on date {date} for product {product} (V0{version_str})"
-                print(msg)
-            filepaths = []
+        # If no filepath (empty directory), print message if verbose=True
+        if verbose:
+            version_str = str(int(version))
+            msg = (
+                f"No data found on GES DISC on date {date} for product {product} (V0{version_str})"
+            )
+            print(msg)
+        filepaths = []
     return filepaths
 
 
@@ -239,14 +236,13 @@ def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=T
     url_product_dir = get_ges_disc_product_directory(product=product, date=date, version=version)
     # Retrieve GES DISC filepaths
     # - If empty: return []
-    filepaths = _get_ges_disc_file_list(
+    return _get_ges_disc_file_list(
         url_product_dir=url_product_dir,
         product=product,
         date=date,
         version=version,
         verbose=verbose,
     )
-    return filepaths
 
 
 def define_ges_disc_filepath(product, product_type, date, version, filename):
@@ -271,5 +267,4 @@ def define_ges_disc_filepath(product, product_type, date, version, filename):
     # Retrieve product directory url
     url_product_dir = get_ges_disc_product_directory(product=product, date=date, version=version)
     # Define GES DISC filepath
-    filepath = f"{url_product_dir}/{filename}"
-    return filepath
+    return f"{url_product_dir}/{filename}"

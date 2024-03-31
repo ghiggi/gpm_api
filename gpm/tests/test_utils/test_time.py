@@ -287,8 +287,7 @@ def create_test_dataset():
     """Create a mock xarray.Dataset for testing."""
     times = pd.date_range("2023-01-01", periods=10, freq="D")
     data = np.random.rand(10, 2, 2)  # Random data for the sake of example
-    ds = xr.Dataset({"my_data": (("time", "x", "y"), data)}, coords={"time": times})
-    return ds
+    return xr.Dataset({"my_data": (("time", "x", "y"), data)}, coords={"time": times})
 
 
 def test_get_dataset_start_end_time():

@@ -62,9 +62,8 @@ def is_granule_within_time(start_time, end_time, file_start_time, file_end_time)
     #                ------------->
     is_case3 = file_start_time < end_time and file_end_time > end_time
     # - Check if one of the conditions occurs
-    is_within = is_case1 or is_case2 or is_case3
+    return is_case1 or is_case2 or is_case3
     # - Return boolean
-    return is_within
 
 
 ####--------------------------------------------------------------------------.
@@ -201,8 +200,7 @@ def filter_filepaths(
         for filepath in filepaths
     ]
     # Remove None from the list
-    filepaths = [filepath for filepath in filepaths if filepath is not None]
-    return filepaths
+    return [filepath for filepath in filepaths if filepath is not None]
 
 
 def filter_by_product(filepaths, product, product_type="RS"):
@@ -243,7 +241,7 @@ def filter_by_product(filepaths, product, product_type="RS"):
 
     # -------------------------------------------------------------------------.
     # Subset by specific product
-    filepaths = [
+    return [
         filepath
         for filepath in filepaths
         if _string_match(pattern=product_pattern, string=filepath)
@@ -251,7 +249,6 @@ def filter_by_product(filepaths, product, product_type="RS"):
 
     # -------------------------------------------------------------------------.
     # Return valid filepaths
-    return filepaths
 
 
 def filter_by_time(filepaths, start_time=None, end_time=None):
@@ -315,9 +312,8 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
     # - Get idx where one of the cases occur
     idx_select = np.logical_or(idx_select1, idx_select2, idx_select3)
     # - Select filepaths
-    filepaths = list(np.array(filepaths)[idx_select])
+    return list(np.array(filepaths)[idx_select])
     # -------------------------------------------------------------------------.
-    return filepaths
 
 
 def filter_by_version(filepaths, version):
@@ -356,6 +352,5 @@ def filter_by_version(filepaths, version):
     # -------------------------------------------------------------------------.
     # Select valid filepaths
     idx_select = np.array(l_version) == version
-    filepaths = list(np.array(filepaths)[idx_select])
+    return list(np.array(filepaths)[idx_select])
     # -------------------------------------------------------------------------.
-    return filepaths

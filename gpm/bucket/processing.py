@@ -100,8 +100,7 @@ def drop_undesired_columns(df):
     """Drop undesired columns like dataset dimensions without coordinates."""
     undesired_columns = ["cross_track", "along_track", "crsWGS84"]
     undesired_columns = [column for column in undesired_columns if column in df.columns]
-    df = df.drop(columns=undesired_columns)
-    return df
+    return df.drop(columns=undesired_columns)
 
 
 def ds_to_pd_df_function(ds):
@@ -123,8 +122,7 @@ def ds_to_pd_df_function(ds):
     df = df.reset_index()
 
     # Drop unrequired columns (previous dataset dimensions)
-    df = drop_undesired_columns(df)
-    return df
+    return drop_undesired_columns(df)
 
 
 def ds_to_dask_df_function(ds):
@@ -147,8 +145,7 @@ def ds_to_dask_df_function(ds):
     df = ensure_pyarrow_string_columns(df)
 
     # Drop unrequired columns (previous dataset dimensions)
-    df = drop_undesired_columns(df)
-    return df
+    return drop_undesired_columns(df)
 
 
 ####--------------------------------------------------------------------------------------------------------------------.
@@ -195,8 +192,7 @@ def assign_spatial_partitions(
         xbin_name: get_bin_partition(df[x_column], bin_size=xbin_size),
         ybin_name: get_bin_partition(df[y_column], bin_size=ybin_size),
     }
-    df = df.assign(**partition_columns)
-    return df
+    return df.assign(**partition_columns)
 
 
 def _convert_size_to_bytes(size_str):
@@ -299,8 +295,7 @@ def estimate_row_group_size(df, size="200MB"):
     size_bytes = convert_size_to_bytes(size)
     n_rows = len(df)
     memory_per_row = memory_used / n_rows
-    row_group_size = math.floor(size_bytes / memory_per_row)
-    return row_group_size
+    return math.floor(size_bytes / memory_per_row)
 
 
 @print_task_elapsed_time(prefix="Bucket Merging Terminated.")

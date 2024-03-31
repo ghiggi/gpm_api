@@ -39,8 +39,7 @@ def get_n_decimals(number):
         return 0  # No decimal point found
 
     # Count the number of characters after the decimal point
-    n_decimals = len(number_str) - decimal_index - 1
-    return n_decimals
+    return len(number_str) - decimal_index - 1
 
 
 def get_lat_bins(bin_spacing):
@@ -63,16 +62,14 @@ def get_lon_labels(bin_spacing):
     n_decimals = get_n_decimals(bin_spacing)
     lon_buckets = get_lon_bins(bin_spacing)
     lon_labels = lon_buckets[0:-1] + bin_spacing / 2
-    lon_labels = lon_labels.round(n_decimals + 1)
-    return lon_labels
+    return lon_labels.round(n_decimals + 1)
 
 
 def get_lat_labels(bin_spacing):
     n_decimals = get_n_decimals(bin_spacing)
     lat_buckets = get_lat_bins(bin_spacing)
     lat_labels = lat_buckets[0:-1] + bin_spacing / 2
-    lat_labels = lat_labels.round(n_decimals + 1)
-    return lat_labels
+    return lat_labels.round(n_decimals + 1)
 
 
 def get_cut_lat_breaks_labels(bin_spacing):
@@ -103,13 +100,12 @@ def pl_add_geographic_bins(
 ):
     cut_lon_breaks, cut_lon_labels = get_cut_lon_breaks_labels(bin_spacing)
     cut_lat_breaks, cut_lat_labels = get_cut_lat_breaks_labels(bin_spacing)
-    df = df.with_columns(
+    return df.with_columns(
         pl.col(x_column).cut(cut_lon_breaks, labels=cut_lon_labels).alias(xbin_column),
         pl.col(y_column).cut(cut_lat_breaks, labels=cut_lat_labels).alias(ybin_column),
     )
     # df.filter(pl.col(xbin_column) == "outside_left")
     # df.filter(pl.col(xbin_column) == "outside_right")
-    return df
 
 
 def pl_df_to_xarray(df, xbin_column, ybin_column, bin_spacing):
@@ -135,6 +131,4 @@ def pl_df_to_xarray(df, xbin_column, ybin_column, bin_spacing):
 
     # Reshape to xarray
     ds = df_stats_pd.to_xarray()
-    ds = ds.rename({xbin_column: "longitude", ybin_column: "latitude"})
-
-    return ds
+    return ds.rename({xbin_column: "longitude", ybin_column: "latitude"})

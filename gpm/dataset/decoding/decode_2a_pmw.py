@@ -38,8 +38,7 @@ def decode_surfacePrecipitation(da):
 
     _FillValue is often reported as -9999.9, but in data the values are -9999.0 !
     """
-    da = da.where(da != -9999.0)
-    return da
+    return da.where(da != -9999.0)
 
 
 def decode_rainWaterPath(da):
@@ -79,8 +78,7 @@ def decode_sunGlintAngle(da):
 
     Set -88 value (sun below horizon) to np.nan
     """
-    da = da.where(da >= 0)  # < 0 set to np.nan
-    return da
+    return da.where(da >= 0)  # < 0 set to np.nan
 
 
 def decode_airmassLiftIndex(da):
@@ -216,5 +214,4 @@ def decode_product(ds):
             with xr.set_options(keep_attrs=True):
                 ds[variable] = _get_decoding_function(variable)(ds[variable])
     # Added gpm_api_decoded flag
-    ds = add_decoded_flag(ds, variables=variables)
-    return ds
+    return add_decoded_flag(ds, variables=variables)

@@ -136,14 +136,12 @@ def decode_flagAnvil(da):
 
 def decode_zFactorMeasured(da):
     """Decode the 2A-<RADAR> variable flagBB."""
-    da = da.where(da >= -80)  # Make -29999 and -28888 -> NaN
-    return da
+    return da.where(da >= -80)  # Make -29999 and -28888 -> NaN
 
 
 def decode_attenuationNP(da):
     """Decode the 2A-<RADAR> variable flagBB."""
-    da = da.where(da >= 0)  # Make -19999.8 -> NaN
-    return da
+    return da.where(da >= 0)  # Make -19999.8 -> NaN
 
 
 def decode_flagBB(da):
@@ -191,56 +189,47 @@ def decode_flagGraupelHail(da):
 
 def decode_widthBB(da):
     """Decode the 2A-<RADAR> variable widthBB."""
-    da = da.where(da >= 0)  # -1111.1 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111.1 is set to np.nan
 
 
 def decode_heightBB(da):
     """Decode the 2A-<RADAR> variable heightBB."""
-    da = da.where(da >= 0)  # -1111.1 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111.1 is set to np.nan
 
 
 def decode_binBBPeak(da):
     """Decode the 2A-<RADAR> variable binBBPeak."""
-    da = da.where(da >= 0)  # -1111 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111 is set to np.nan
 
 
 def decode_binBBTop(da):
     """Decode the 2A-<RADAR> variable binBBTop."""
-    da = da.where(da >= 0)  # -1111 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111 is set to np.nan
 
 
 def decode_binBBBottom(da):
     """Decode the 2A-<RADAR> variable binBBBottom."""
-    da = da.where(da >= 0)  # -1111 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111 is set to np.nan
 
 
 def decode_binDFRmMLBottom(da):
     """Decode the 2A-<RADAR> variable binDFRmMLBottom."""
-    da = da.where(da >= 0)  # -1111 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111 is set to np.nan
 
 
 def decode_binDFRmMLTop(da):
     """Decode the 2A-<RADAR> variable binDFRmMLTop."""
-    da = da.where(da >= 0)  # -1111 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111 is set to np.nan
 
 
 def decode_binHeavyIcePrecipTop(da):
     """Decode the 2A-<RADAR> variable binHeavyIcePrecipTop."""
-    da = da.where(da >= 0)  # -1111 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111 is set to np.nan
 
 
 def decode_binHeavyIcePrecipBottom(da):
     """Decode the 2A-<RADAR> variable binHeavyIcePrecipBottom."""
-    da = da.where(da >= 0)  # -1111 is set to np.nan
-    return da
+    return da.where(da >= 0)  # -1111 is set to np.nan
 
 
 def _get_decoding_function(variable):

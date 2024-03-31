@@ -12,7 +12,7 @@ from h5py.h5ds import get_scale_name
 
 def _get_fixed_dimensions():
     """Dimensions over which to not subset the GPM HDF5 files."""
-    fixed_dims = [
+    return [
         # Elevations / Range
         "nBnPSD",
         "nBnPSDhi",
@@ -36,7 +36,6 @@ def _get_fixed_dimensions():
         "nchannel5",
         "nchannel6",
     ]
-    return fixed_dims
 
 
 def _get_subset_shape_chunks(h5_obj, subset_size):

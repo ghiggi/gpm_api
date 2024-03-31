@@ -65,7 +65,7 @@ def get_orbit_coords(dt, scan_mode):
     cross_track_id = np.arange(n_cross_track)
     gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, along_track_id)]
 
-    coords = {
+    return {
         "lon": xr.DataArray(lon, dims=["along_track", "cross_track"]),
         "lat": xr.DataArray(lat, dims=["along_track", "cross_track"]),
         "time": xr.DataArray(time, dims="along_track"),
@@ -74,7 +74,6 @@ def get_orbit_coords(dt, scan_mode):
         "gpm_cross_track_id": xr.DataArray(cross_track_id, dims="cross_track"),
         "gpm_along_track_id": xr.DataArray(along_track_id, dims="along_track"),
     }
-    return coords
 
 
 def get_time_delta_from_time_interval(time_interval):
@@ -114,21 +113,19 @@ def get_grid_coords(dt, scan_mode):
     time_bnds = xr.DataArray(time_bnds, dims=("time", "nv"))
 
     # Define dictionary with coordinates (DataArray)
-    coords = {
+    return {
         "time": time,
         "lon": dt[scan_mode]["lon"],
         "lat": dt[scan_mode]["lat"],
         "time_bnds": time_bnds,
     }
-    return coords
 
 
 def get_coords(dt, scan_mode):
     """Get coordinates from GPM objects."""
-    coords = (
+    return (
         get_grid_coords(dt, scan_mode) if scan_mode == "Grid" else get_orbit_coords(dt, scan_mode)
     )
-    return coords
 
 
 def _subset_dict_by_dataset(ds, dictionary):
@@ -137,8 +134,7 @@ def _subset_dict_by_dataset(ds, dictionary):
     names = list(ds.coords) + list(ds.data_vars)
     # Select valid keys
     valid_keys = [key for key in names if key in dictionary]
-    dictionary = {k: dictionary[k] for k in valid_keys}
-    return dictionary
+    return {k: dictionary[k] for k in valid_keys}
 
 
 def get_coords_attrs_dict(ds):
@@ -199,8 +195,7 @@ def get_coords_attrs_dict(ds):
     }
 
     # Select required attributes
-    attrs_dict = _subset_dict_by_dataset(ds, attrs_dict)
-    return attrs_dict
+    return _subset_dict_by_dataset(ds, attrs_dict)
 
 
 def _set_attrs_dict(ds, attrs_dict):

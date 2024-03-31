@@ -193,8 +193,7 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
         limit_area=limit_area,
     )
     # Convert back to numpy array input dtype
-    timesteps = series.to_numpy().astype(timesteps_dtype)
-    return timesteps
+    return series.to_numpy().astype(timesteps_dtype)
 
 
 def infill_timesteps(timesteps, limit):
@@ -304,10 +303,9 @@ def regularize_dataset(
     )
 
     # Regularize dataset and fill with NA values
-    ds_reindexed = ds.reindex(
+    return ds.reindex(
         {"time": new_time_index},
         method=method,  # do not fill gaps
         # tolerance=tolerance,  # mismatch in seconds
         fill_value=fill_value,
     )
-    return ds_reindexed

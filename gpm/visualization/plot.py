@@ -138,8 +138,7 @@ def get_antimeridian_mask(lons, buffer=True):
     mask[row_idx, col_idx] = 1
     # Buffer by 1 in all directions to avoid plotting cells neighbour to those crossing the antimeridian
     # --> This should not be needed, but it's needed to avoid cartopy bugs !
-    mask = binary_dilation(mask)
-    return mask
+    return binary_dilation(mask)
 
 
 def infill_invalid_coords(xr_obj, x="lon", y="lat"):
@@ -360,8 +359,7 @@ def get_dataarray_extent(da, x="lon", y="lat"):
     # Get the minimum and maximum longitude and latitude values
     lon_min, lon_max = da[x].min(), da[x].max()
     lat_min, lat_max = da[y].min(), da[y].max()
-    extent = (lon_min, lon_max, lat_min, lat_max)
-    return extent
+    return (lon_min, lon_max, lat_min, lat_max)
 
 
 def _compute_extent(x_coords, y_coords):
@@ -899,10 +897,9 @@ def create_grid_mesh_data_array(xr_obj, x, y):
     dummy_values = np.full(X.shape, np.nan)
 
     # Create a new DataArray with 2D coordinates and NaN values
-    da_mesh = xr.DataArray(
+    return xr.DataArray(
         dummy_values, coords={x: (("y", "x"), X), y: (("y", "x"), Y)}, dims=("y", "x")
     )
-    return da_mesh
 
 
 def plot_map_mesh(
@@ -983,10 +980,9 @@ def plot_map_mesh_centroids(
     lat = xr_obj[y].values
 
     # - Plot centroids
-    p = ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
+    return ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
 
     # - Return mappable
-    return p
 
 
 ####--------------------------------------------------------------------------.
@@ -1034,7 +1030,7 @@ def _plot_labels(
     # Define appropriate colormap
     plot_kwargs, cbar_kwargs = get_label_colorbar_settings(label_indices, cmap="Paired")
     # Plot image
-    p = plot_image(
+    return plot_image(
         dataarray,
         interpolation=interpolation,
         add_colorbar=add_colorbar,
@@ -1042,7 +1038,6 @@ def _plot_labels(
         fig_kwargs=fig_kwargs,
         **plot_kwargs,
     )
-    return p
 
 
 def plot_labels(
@@ -1179,8 +1174,7 @@ def get_inset_bounds(
         inset_x += inset_width / 2 * (-1 if loc.endswith("left") else 1)
         inset_y += inset_height / 2 * (-1 if loc.startswith("lower") else 1)
 
-    inset_bounds = [inset_x, inset_y, inset_width, inset_height]
-    return inset_bounds
+    return [inset_x, inset_y, inset_width, inset_height]
 
 
 def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, inside_figure=True):

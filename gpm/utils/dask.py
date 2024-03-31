@@ -34,12 +34,12 @@ def trim_memory() -> int:
     if os_name == "Linux":
         libc = ctypes.CDLL("libc.so.6")
         return libc.malloc_trim(0)
-    elif os_name == "Windows":
-        # Windows does not have a direct equivalent
-        pass
-    elif os_name == "Darwin":
-        # macOS (Darwin) does not have a direct equivalent
-        pass
+    # elif os_name == "Windows":
+    #     # Windows does not have a direct equivalent
+    #     pass
+    # elif os_name == "Darwin":
+    #     # macOS (Darwin) does not have a direct equivalent
+    #     pass
     return -1  # Indicate no operation was performed
 
 

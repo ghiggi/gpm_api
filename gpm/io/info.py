@@ -154,8 +154,7 @@ def get_info_from_filepath(filepath):
 
 def get_key_from_filepath(filepath, key):
     """Extract specific key information from a list of filepaths."""
-    value = get_info_from_filepath(filepath)[key]
-    return value
+    return get_info_from_filepath(filepath)[key]
 
 
 def get_key_from_filepaths(filepaths, key):
@@ -185,8 +184,7 @@ def get_product_from_filepaths(filepaths):
     """Infer granules ``product`` from file paths."""
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-    list_product = [get_product_from_filepath(filepath) for filepath in filepaths]
-    return list_product
+    return [get_product_from_filepath(filepath) for filepath in filepaths]
 
 
 def get_version_from_filepath(filepath, integer=True):
@@ -201,26 +199,22 @@ def get_version_from_filepaths(filepaths, integer=True):
     """Infer granules ``version`` from file paths."""
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-    list_version = [get_version_from_filepath(filepath, integer=integer) for filepath in filepaths]
-    return list_version
+    return [get_version_from_filepath(filepath, integer=integer) for filepath in filepaths]
 
 
 def get_granule_from_filepaths(filepaths):
     """Infer GPM Granule IDs from file paths."""
-    list_id = get_key_from_filepaths(filepaths, key="granule_id")
-    return list_id
+    return get_key_from_filepaths(filepaths, key="granule_id")
 
 
 def get_start_time_from_filepaths(filepaths):
     """Infer granules ``start_time`` from file paths."""
-    list_start_time = get_key_from_filepaths(filepaths, key="start_time")
-    return list_start_time
+    return get_key_from_filepaths(filepaths, key="start_time")
 
 
 def get_end_time_from_filepaths(filepaths):
     """Infer granules ``end_time`` from file paths."""
-    list_end_time = get_key_from_filepaths(filepaths, key="end_time")
-    return list_end_time
+    return get_key_from_filepaths(filepaths, key="end_time")
 
 
 def get_start_end_time_from_filepaths(filepaths):

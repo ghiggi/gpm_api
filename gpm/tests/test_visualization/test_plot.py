@@ -585,10 +585,9 @@ class TestPlotLabels:
         """Create an orbit data array with label coordinates"""
 
         labels = np.random.randint(0, 10, orbit_dataarray.shape)
-        orbit_dataarray = orbit_dataarray.assign_coords(
+        return orbit_dataarray.assign_coords(
             {self.label_name: (("cross_track", "along_track"), labels)}
         )
-        return orbit_dataarray
 
     @pytest.fixture
     def grid_labels_dataarray(
@@ -598,8 +597,7 @@ class TestPlotLabels:
         """Create a grid data array with label coordinates"""
 
         labels = np.random.randint(0, 10, grid_dataarray.shape)
-        grid_dataarray = grid_dataarray.assign_coords({self.label_name: (("lat", "lon"), labels)})
-        return grid_dataarray
+        return grid_dataarray.assign_coords({self.label_name: (("lat", "lon"), labels)})
 
     def test_orbit(
         self,

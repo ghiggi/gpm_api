@@ -33,8 +33,7 @@ import numpy as np
 def convert_string_to_number(string):
     if string.isdigit():
         return int(string)
-    else:
-        return float(string)
+    return float(string)
 
 
 def ensure_dtype_name(dtype):

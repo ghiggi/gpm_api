@@ -80,8 +80,7 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
         if np.all(np.isin(dst_ds[coord].dims, ds.dims)):
             useful_coords.append(coord)
     dict_coords = {coord: dst_ds[coord] for coord in useful_coords}
-    ds = ds.assign_coords(dict_coords)
-    return ds
+    return ds.assign_coords(dict_coords)
 
 
 def get_pyresample_area(xr_obj):

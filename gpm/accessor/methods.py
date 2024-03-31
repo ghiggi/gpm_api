@@ -339,7 +339,7 @@ class GPM_Base_Accessor:
     ):
         from gpm.visualization.profile import plot_transect_line
 
-        p = plot_transect_line(
+        return plot_transect_line(
             self._obj,
             ax=ax,
             add_direction=add_direction,
@@ -347,7 +347,6 @@ class GPM_Base_Accessor:
             line_kwargs=line_kwargs,
             **common_kwargs,
         )
-        return p
 
     def plot_swath(
         self,
@@ -362,7 +361,7 @@ class GPM_Base_Accessor:
     ):
         from gpm.visualization.orbit import plot_swath
 
-        p = plot_swath(
+        return plot_swath(
             self._obj,
             ax=ax,
             facecolor=facecolor,
@@ -373,7 +372,6 @@ class GPM_Base_Accessor:
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def plot_swath_lines(
         self,
@@ -389,7 +387,7 @@ class GPM_Base_Accessor:
     ):
         from gpm.visualization.orbit import plot_swath_lines
 
-        p = plot_swath_lines(
+        return plot_swath_lines(
             self._obj,
             ax=ax,
             x=x,
@@ -401,7 +399,6 @@ class GPM_Base_Accessor:
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def plot_map_mesh(
         self,
@@ -417,7 +414,7 @@ class GPM_Base_Accessor:
     ):
         from gpm.visualization.plot import plot_map_mesh
 
-        p = plot_map_mesh(
+        return plot_map_mesh(
             xr_obj=self._obj,
             x=x,
             y=y,
@@ -429,7 +426,6 @@ class GPM_Base_Accessor:
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def plot_map_mesh_centroids(
         self,
@@ -445,7 +441,7 @@ class GPM_Base_Accessor:
     ):
         from gpm.visualization.plot import plot_map_mesh_centroids
 
-        p = plot_map_mesh_centroids(
+        return plot_map_mesh_centroids(
             self._obj,
             x=x,
             y=y,
@@ -457,7 +453,6 @@ class GPM_Base_Accessor:
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
-        return p
 
 
 @xr.register_dataset_accessor("gpm")
@@ -513,14 +508,13 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
     ):
         from gpm.visualization.title import get_dataset_title
 
-        title = get_dataset_title(
+        return get_dataset_title(
             self._obj,
             add_timestep=add_timestep,
             time_idx=time_idx,
             resolution=resolution,
             timezone=timezone,
         )
-        return title
 
     def plot_map(
         self,
@@ -541,7 +535,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         from gpm.visualization.plot import plot_map
 
         da = self._obj[variable]
-        p = plot_map(
+        return plot_map(
             da,
             ax=ax,
             x=x,
@@ -556,7 +550,6 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def plot_image(
         self,
@@ -573,7 +566,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         from gpm.visualization.plot import plot_image
 
         da = self._obj[variable]
-        p = plot_image(
+        return plot_image(
             da,
             ax=ax,
             x=x,
@@ -584,7 +577,6 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def plot_transect(
         self,
@@ -599,7 +591,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         from gpm.visualization.profile import plot_transect
 
         da = self._obj[variable]
-        p = plot_transect(
+        return plot_transect(
             da,
             ax=ax,
             add_colorbar=add_colorbar,
@@ -608,7 +600,6 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def available_retrievals(self):
         """Available GPM-API retrievals for that GPM product."""
@@ -670,7 +661,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     ):
         from gpm.visualization.title import get_dataarray_title
 
-        title = get_dataarray_title(
+        return get_dataarray_title(
             self._obj,
             prefix_product=prefix_product,
             add_timestep=add_timestep,
@@ -678,7 +669,6 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             resolution=resolution,
             timezone=timezone,
         )
-        return title
 
     def plot_map(
         self,
@@ -698,7 +688,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         from gpm.visualization.plot import plot_map
 
         da = self._obj
-        p = plot_map(
+        return plot_map(
             da,
             ax=ax,
             x=x,
@@ -713,7 +703,6 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def plot_image(
         self,
@@ -729,7 +718,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         from gpm.visualization.plot import plot_image
 
         da = self._obj
-        p = plot_image(
+        return plot_image(
             da,
             ax=ax,
             x=x,
@@ -740,7 +729,6 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def plot_transect(
         self,
@@ -754,7 +742,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         from gpm.visualization.profile import plot_transect
 
         da = self._obj
-        p = plot_transect(
+        return plot_transect(
             da,
             ax=ax,
             add_colorbar=add_colorbar,
@@ -763,7 +751,6 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-        return p
 
     def integrate_profile_concentration(self, name, scale_factor=None, units=None):
         from gpm.utils.manipulations import integrate_profile_concentration

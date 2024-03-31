@@ -40,8 +40,7 @@ def _get_groups_path(dt):
 def _get_groups_names(dt):
     """Return the groups name."""
     group_path = _get_groups_path(dt)
-    groups = [path.split("/")[-1] for path in group_path]
-    return groups
+    return [path.split("/")[-1] for path in group_path]
 
 
 def _get_variables(dt):
@@ -85,12 +84,11 @@ def _get_variables_path_dict(dt, scan_mode):
     The variables associated to the <scan_mode> node are also returned !
     The <scan_mode> is node is represented by ''.
     """
-    dict_vars = {
+    return {
         var: group
         for group in _get_available_groups(dt, scan_mode, name=False)
         for var in _get_variables(dt[scan_mode][group])
     }
-    return dict_vars
 
 
 def _get_variables_group_dict(dt, scan_mode):
@@ -99,12 +97,11 @@ def _get_variables_group_dict(dt, scan_mode):
     The variables associated to the <scan_mode> node are also returned !
     The <scan_mode> is node is represented by ''.
     """
-    dict_vars = {
+    return {
         var: group
         for group in _get_available_groups(dt, scan_mode, name=True)
         for var in _get_variables(dt[scan_mode][group])
     }
-    return dict_vars
 
 
 def _get_group_variables_dict(dt, scan_mode, name=True):
@@ -125,16 +122,14 @@ def _get_group_variables_dict(dt, scan_mode, name=True):
 def _get_available_variables(dt, scan_mode):
     """Return available variables."""
     dict_vars = _get_variables_path_dict(dt, scan_mode)
-    variables = list(dict_vars.keys())
-    return variables
+    return list(dict_vars.keys())
 
 
 def _get_availables_variables_in_groups(dt, scan_mode, groups):
     """Return available variables in specific groups."""
     dict_group = _get_group_variables_dict(dt, scan_mode, name=True)
     list_variables = [dict_group[group] for group in groups]
-    variables = flatten_list(list_variables)
-    return variables
+    return flatten_list(list_variables)
 
 
 def _check_valid_variables(variables, dataset_variables):

@@ -34,6 +34,7 @@ import numpy as np
 
 from gpm import _root_path
 from gpm.checks import is_grid, is_orbit
+from gpm.utils.decorators import check_is_gpm_object
 from gpm.utils.slices import get_list_slices_from_indices
 from gpm.utils.yaml import read_yaml
 
@@ -122,8 +123,7 @@ def extend_geographic_extent(extent, padding: Union[int, float, tuple, list] = 0
     xmax = min(xmax + padding[1], 180)
     ymin = max(ymin - padding[2], -90)
     ymax = min(ymax + padding[3], 90)
-    new_extent = Extent(xmin, xmax, ymin, ymax)
-    return new_extent
+    return Extent(xmin, xmax, ymin, ymax)
 
 
 def read_countries_extent_dictionary():
@@ -136,8 +136,7 @@ def read_countries_extent_dictionary():
     countries_extent_filepath = os.path.join(
         _root_path, "gpm", "etc", "geospatial", "country_extent.yaml"
     )
-    countries_extent_dict = read_yaml(countries_extent_filepath)
-    return countries_extent_dict
+    return read_yaml(countries_extent_filepath)
 
 
 def get_country_extent(name, padding=0.2):
@@ -188,15 +187,13 @@ def get_country_extent(name, padding=0.2):
     valid_countries_lower = list(countries_lower_extent_dict)
     if name.lower() in valid_countries_lower:
         extent = countries_lower_extent_dict[name.lower()]
-        extent = extend_geographic_extent(extent, padding=padding)
-        return extent
-    else:
-        possible_match = difflib.get_close_matches(name, valid_countries, n=1, cutoff=0.6)
-        if len(possible_match) == 0:
-            raise ValueError("Provide a valid country name.")
-        else:
-            possible_match = possible_match[0]
-            raise ValueError(f"No matching country. Maybe are you looking for '{possible_match}'?")
+        return extend_geographic_extent(extent, padding=padding)
+    # Identify possible match and raise error
+    possible_match = difflib.get_close_matches(name, valid_countries, n=1, cutoff=0.6)
+    if len(possible_match) == 0:
+        raise ValueError("Provide a valid country name.")
+    possible_match = possible_match[0]
+    raise ValueError(f"No matching country. Maybe are you looking for '{possible_match}'?")
 
 
 def read_continents_extent_dictionary():
@@ -209,8 +206,7 @@ def read_continents_extent_dictionary():
     continents_extent_filepath = os.path.join(
         _root_path, "gpm", "etc", "geospatial", "continent_extent.yaml"
     )
-    continents_extent_dict = read_yaml(continents_extent_filepath)
-    return continents_extent_dict
+    return read_yaml(continents_extent_filepath)
 
 
 def get_continent_extent(name: str, padding: Union[int, float, tuple, list] = 0):
@@ -254,17 +250,13 @@ def get_continent_extent(name: str, padding: Union[int, float, tuple, list] = 0)
     valid_continent_lower = list(continent_lower_extent_dict)
     if name.lower() in valid_continent_lower:
         extent = continent_lower_extent_dict[name.lower()]
-        extent = extend_geographic_extent(extent, padding=padding)
-        return extent
-    else:
-        possible_match = difflib.get_close_matches(name, valid_continent, n=1, cutoff=0.6)
-        if len(possible_match) == 0:
-            raise ValueError(f"Provide a valid continent name from {valid_continent}.")
-        else:
-            possible_match = possible_match[0]
-            raise ValueError(
-                f"No matching continent. Maybe are you looking for '{possible_match}'?"
-            )
+        return extend_geographic_extent(extent, padding=padding)
+    # Identify possible match and raise error
+    possible_match = difflib.get_close_matches(name, valid_continent, n=1, cutoff=0.6)
+    if len(possible_match) == 0:
+        raise ValueError(f"Provide a valid continent name from {valid_continent}.")
+    possible_match = possible_match[0]
+    raise ValueError(f"No matching continent. Maybe are you looking for '{possible_match}'?")
 
 
 def unwrap_longitude_degree(x, period=360):
@@ -313,8 +305,7 @@ def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
             "The object cross the dateline. The extent can't be currently defined."
         )
     extent = Extent(np.nanmin(lon), np.nanmax(lon), np.nanmin(lat), np.nanmax(lat))
-    extent = extend_geographic_extent(extent, padding=padding)
-    return extent
+    return extend_geographic_extent(extent, padding=padding)
 
 
 def crop_by_country(xr_obj, name: str):
@@ -359,6 +350,7 @@ def crop_by_continent(xr_obj, name: str):
     return crop(xr_obj=xr_obj, extent=extent)
 
 
+@check_is_gpm_object
 def get_crop_slices_by_extent(xr_obj, extent):
     """Compute the xarray object slices which are within the specified extent.
 
@@ -387,23 +379,18 @@ def get_crop_slices_by_extent(xr_obj, extent):
 
         # Retrieve list of along_track slices isel_dict
         list_slices = get_list_slices_from_indices(idx_col)
-        list_isel_dicts = [{"along_track": slc} for slc in list_slices]
-        return list_isel_dicts
-
-    elif is_grid(xr_obj):
-        lon = xr_obj["lon"].values
-        lat = xr_obj["lat"].values
-        idx_col = np.where((lon >= extent[0]) & (lon <= extent[1]))[0]
-        idx_row = np.where((lat >= extent[2]) & (lat <= extent[3]))[0]
-        # If no data in the bounding box in current granule, return empty list
-        if idx_row.size == 0 or idx_col.size == 0:
-            raise ValueError("No data inside the provided bounding box.")
-        lat_slices = get_list_slices_from_indices(idx_row)[0]
-        lon_slices = get_list_slices_from_indices(idx_col)[0]
-        isel_dict = {"lon": lon_slices, "lat": lat_slices}
-        return isel_dict
-    else:
-        raise NotImplementedError("")
+        return [{"along_track": slc} for slc in list_slices]
+    # If GRID
+    lon = xr_obj["lon"].values
+    lat = xr_obj["lat"].values
+    idx_col = np.where((lon >= extent[0]) & (lon <= extent[1]))[0]
+    idx_row = np.where((lat >= extent[2]) & (lat <= extent[3]))[0]
+    # If no data in the bounding box in current granule, return empty list
+    if idx_row.size == 0 or idx_col.size == 0:
+        raise ValueError("No data inside the provided bounding box.")
+    lat_slices = get_list_slices_from_indices(idx_row)[0]
+    lon_slices = get_list_slices_from_indices(idx_col)[0]
+    return {"lon": lon_slices, "lat": lat_slices}
 
 
 def get_crop_slices_by_continent(xr_obj, name):
@@ -466,16 +453,11 @@ def crop(xr_obj, extent):
             raise ValueError(
                 "The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !."
             )
-        xr_obj_subset = xr_obj.isel(list_isel_dicts[0])
-
-    elif is_grid(xr_obj):
+        return xr_obj.isel(list_isel_dicts[0])
+    if is_grid(xr_obj):
         isel_dict = get_crop_slices_by_extent(xr_obj, extent)
-        xr_obj_subset = xr_obj.isel(isel_dict)
-    else:
-        orbit_dims = ("cross_track", "along_track")
-        grid_dims = ("lon", "lat")
-        raise ValueError(
-            f"Dataset not recognized. Expecting dimensions {orbit_dims} or {grid_dims}."
-        )
-
-    return xr_obj_subset
+        return xr_obj.isel(isel_dict)
+    # Otherwise raise informative error
+    orbit_dims = ("cross_track", "along_track")
+    grid_dims = ("lon", "lat")
+    raise ValueError(f"Dataset not recognized. Expecting dimensions {orbit_dims} or {grid_dims}.")

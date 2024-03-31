@@ -431,8 +431,7 @@ class TestContinuousScans:
         ds_contiguous: xr.Dataset,
     ) -> xr.Dataset:
         ds = ds_contiguous.copy(deep=True)
-        ds = ds.isel({"along_track": slice(0, 2)})
-        return ds
+        return ds.isel({"along_track": slice(0, 2)})
 
     @pytest.fixture
     def ds_contiguous_three_scans(
@@ -440,8 +439,7 @@ class TestContinuousScans:
         ds_contiguous: xr.Dataset,
     ) -> xr.Dataset:
         ds = ds_contiguous.copy(deep=True)
-        ds = ds.isel({"along_track": slice(0, 3)})
-        return ds
+        return ds.isel({"along_track": slice(0, 3)})
 
     @pytest.fixture
     def ds_non_contiguous_lon(
@@ -789,8 +787,7 @@ class TestGetSlicesRegular:
         ds["lon"] = (("cross_track", "along_track"), lon)
         ds["lat"] = (("cross_track", "along_track"), lon)
         granule_ids = np.array([0, 0, 0, 1, 1, 1, 2, 2, 7, 8])
-        ds = ds.assign_coords({"gpm_granule_id": ("along_track", granule_ids)})
-        return ds
+        return ds.assign_coords({"gpm_granule_id": ("along_track", granule_ids)})
 
     @pytest.fixture
     def ds_grid(self) -> xr.Dataset:

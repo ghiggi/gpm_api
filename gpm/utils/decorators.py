@@ -34,12 +34,18 @@ from gpm.checks import check_is_grid as check_is_grid_fun
 from gpm.checks import check_is_orbit as check_is_orbit_fun
 
 
+def _get_xr_obj(args, kwargs):
+    if "xr_obj" in kwargs:
+        return kwargs["xr_obj"]
+    return args[0]
+
+
 def check_is_orbit(function):
     """Decorator function to check if input is a GPM ORBIT object. Raise ValueError if not."""
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        xr_obj = args[0]
+        xr_obj = _get_xr_obj(args, kwargs)
         check_is_orbit_fun(xr_obj)
         return function(*args, **kwargs)
 
@@ -51,7 +57,7 @@ def check_is_grid(function):
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        xr_obj = args[0]
+        xr_obj = _get_xr_obj(args, kwargs)
         check_is_grid_fun(xr_obj)
         return function(*args, **kwargs)
 
@@ -63,7 +69,7 @@ def check_is_gpm_object(function):
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        xr_obj = args[0]
+        xr_obj = _get_xr_obj(args, kwargs)
         check_is_gpm_object_fun(xr_obj)
         return function(*args, **kwargs)
 
@@ -77,8 +83,7 @@ def check_has_cross_track_dimension(function):
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        # Write decorator function logic here
-        xr_obj = args[0]
+        xr_obj = _get_xr_obj(args, kwargs)
         check_has_cross_track_dimension_fun(xr_obj)
         return function(*args, **kwargs)
 
@@ -92,8 +97,7 @@ def check_has_along_track_dimension(function):
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        # Write decorator function logic here
-        xr_obj = args[0]
+        xr_obj = _get_xr_obj(args, kwargs)
         check_has_along_track_dimension_fun(xr_obj)
         return function(*args, **kwargs)
 

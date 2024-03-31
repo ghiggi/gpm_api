@@ -323,8 +323,7 @@ def get_sample_orbit_dataset():
     end_time = datetime(2018, 1, 1, 12, 32, 0)
     time = [start_time, end_time]
     ds = xr.Dataset({"var": da, "time": time, "lon": lon, "lat": lat})
-    ds = ds.set_coords(["lon", "lat"])
-    return ds
+    return ds.set_coords(["lon", "lat"])
 
 
 def get_sample_grid_dataset():
@@ -334,8 +333,7 @@ def get_sample_grid_dataset():
     lat = xr.DataArray([2], dims=("lat"))
     time = [0]
     ds = xr.Dataset({"var": da, "time": time, "lon": lon, "lat": lat})
-    ds = ds.set_coords(["lon", "lat"])
-    return ds
+    return ds.set_coords(["lon", "lat"])
 
 
 def test_finalize_dataset_crs(monkeypatch):
@@ -347,8 +345,7 @@ def test_finalize_dataset_crs(monkeypatch):
 
     # Patch
     def mock_set_coordinates(ds, *args, **kwargs):
-        ds = ds.assign_coords({"decoding_coordinates": True})
-        return ds
+        return ds.assign_coords({"decoding_coordinates": True})
 
     monkeypatch.setattr(conventions, "set_coordinates", mock_set_coordinates)
 

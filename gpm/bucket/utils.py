@@ -37,8 +37,7 @@ def _get_bin_edges(vmin, vmax, size):
 def _get_bin_midpoints(vmin, vmax, size):
     """Get bin midpoints."""
     edges = _get_bin_edges(vmin=vmin, vmax=vmax, size=size)
-    midpoints = edges[:-1] + np.diff(edges) / 2
-    return midpoints
+    return edges[:-1] + np.diff(edges) / 2
 
 
 def create_spatial_bin_empty_df(
@@ -61,9 +60,7 @@ def create_spatial_bin_empty_df(
     )
 
     # Create an empty DataFrame with the MultiIndex
-    empty_df = pd.DataFrame(index=multi_index)
-
-    return empty_df
+    return pd.DataFrame(index=multi_index)
 
 
 def add_bin_column(df, column, bin_size, vmin, vmax, bin_name, add_midpoint=True):
@@ -112,7 +109,7 @@ def add_spatial_bins(
         add_midpoint=add_bin_midpoint,
     )
     # Define y bins
-    df = add_bin_column(
+    return add_bin_column(
         df=df,
         column=y,
         bin_size=ybin_size,
@@ -121,4 +118,3 @@ def add_spatial_bins(
         bin_name=ybin_name,
         add_midpoint=add_bin_midpoint,
     )
-    return df

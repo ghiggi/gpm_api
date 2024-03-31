@@ -116,11 +116,9 @@ def _get_pyproj_crs_cf_dict(crs):
 def _get_proj_coord_unit(crs, dim):
     "Return the coordinate unit of a projected CRS."
     axis_info = crs.axis_info[dim]
-    units = None
     if hasattr(axis_info, "unit_conversion_factor"):
         unit_factor = axis_info.unit_conversion_factor
-        units = f"{unit_factor} metre" if unit_factor != 1 else "metre"
-        return units
+        return f"{unit_factor} metre" if unit_factor != 1 else "metre"
     return None
 
 
@@ -128,8 +126,7 @@ def _get_obj(ds, inplace=False):
     """Return a dataset copy if inplace=False."""
     if inplace:
         return ds
-    else:
-        return ds.copy(deep=True)
+    return ds.copy(deep=True)
 
 
 def _get_dataarray_with_spatial_dims(xr_obj):
@@ -433,8 +430,7 @@ def _add_crs_coord(ds, crs, grid_mapping_name="spatial_ref"):
     # Add attributes to CRS variable
     spatial_ref.attrs.update(attrs)
     # Add the CRS coordinate to the xr.Dataset
-    ds = ds.assign_coords({grid_mapping_name: spatial_ref})
-    return ds
+    return ds.assign_coords({grid_mapping_name: spatial_ref})
 
 
 def _grid_mapping_reference(ds, crs, grid_mapping_name):
@@ -496,8 +492,7 @@ def _get_spatial_coordinates(xr_obj):
     """Return the spatial coordinates."""
     coords1 = _get_proj_dim_coords(xr_obj)
     coords2 = _get_swath_dim_coords(xr_obj)
-    coords = [coord for coord in (coords1 + coords2) if coord is not None]
-    return coords
+    return [coord for coord in (coords1 + coords2) if coord is not None]
 
 
 def _get_spatial_dims(xr_obj):
@@ -506,8 +501,7 @@ def _get_spatial_dims(xr_obj):
     list_dims = []
     for coord in coords:
         _ = [list_dims.append(dim) for dim in list(xr_obj[coord].dims)]
-    spatial_dims = list(set(list_dims))
-    return spatial_dims
+    return list(set(list_dims))
 
 
 def _get_variables_with_spatial_dims(ds):
@@ -527,8 +521,7 @@ def _get_variables_with_spatial_dims(ds):
             list_spatial_variables.append(var)
     # Remove spatial coordinates from the list
     coords = _get_spatial_coordinates(ds)
-    spatial_variables = set(list_spatial_variables).difference(coords)
-    return spatial_variables
+    return set(list_spatial_variables).difference(coords)
 
 
 def _add_variables_crs_attrs(ds, crs, grid_mapping_name):
@@ -576,8 +569,7 @@ def remove_existing_crs_info(ds):
         _ = ds[var].attrs.pop("coordinates", None)
         _ = ds[var].encoding.pop("coordinates", None)
     crs_coords = _get_name_existing_crs_coords(ds)
-    ds = ds.drop_vars(crs_coords)
-    return ds
+    return ds.drop_vars(crs_coords)
 
 
 def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
@@ -613,8 +605,7 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
 
     # Add CF attributes 'grid_mapping' (and 'coordinates' for swath)
     # - To relevant variables and coordinates
-    ds = _add_variables_crs_attrs(ds=ds, crs=crs, grid_mapping_name=grid_mapping_name)
-    return ds
+    return _add_variables_crs_attrs(ds=ds, crs=crs, grid_mapping_name=grid_mapping_name)
 
 
 def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
@@ -656,8 +647,7 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
         )
     # Simplify grid_mapping if possible
     # - For compatibility with GDAL, if only 1 CRS is specified !
-    ds = simplify_grid_mapping_values(ds)
-    return ds
+    return simplify_grid_mapping_values(ds)
 
 
 ####---------------------------------------------------------------------------.
@@ -699,8 +689,7 @@ def _get_list_pyproj_crs(xr_obj):
     list_crs_names = _get_crs_coordinates(xr_obj)
     if len(list_crs_names) == 0:
         raise ValueError("No CRS coordinate in the dataset.")
-    list_crs = [pyproj.CRS.from_cf(xr_obj[crs_coord].attrs) for crs_coord in list_crs_names]
-    return list_crs
+    return [pyproj.CRS.from_cf(xr_obj[crs_coord].attrs) for crs_coord in list_crs_names]
 
 
 def _get_geographic_crs(xr_obj):
@@ -710,8 +699,7 @@ def _get_geographic_crs(xr_obj):
         raise ValueError("More than 1 geographic CRS is specified")
     if len(list_geographic_crs) == 0:
         raise ValueError("No geographic CRS is specified")
-    crs = list_geographic_crs[0]
-    return crs
+    return list_geographic_crs[0]
 
 
 def get_pyproj_crs(xr_obj):
@@ -734,8 +722,7 @@ def get_pyproj_crs(xr_obj):
         if len(list_crs) != 1:
             raise ValueError("A DataArray should have only 1 projected CRS.")
     # Return crs
-    crs = list_crs[0]
-    return crs
+    return list_crs[0]
 
 
 def get_pyresample_swath(xr_obj):
@@ -763,8 +750,7 @@ def get_pyresample_swath(xr_obj):
     da_lons = xr.DataArray(xr_obj[lons].data, dims=["y", "x"])
     da_lats = xr.DataArray(xr_obj[lats].data, dims=["y", "x"])
 
-    swath_def = SwathDefinition(da_lons, da_lats, crs=pyproj_crs)
-    return swath_def
+    return SwathDefinition(da_lons, da_lats, crs=pyproj_crs)
 
 
 def _compute_extent(x_coords, y_coords):
@@ -807,7 +793,7 @@ def get_pyresample_projection(xr_obj):
 
     # Define SwathDefinition
     # area_def = AreaDefinition(crs=pyproj_crs, shape=shape, area_extent=extent)
-    area_def = AreaDefinition(
+    return AreaDefinition(
         "GRID_area",
         "GRID_area",
         "",
@@ -816,7 +802,6 @@ def get_pyresample_projection(xr_obj):
         height=shape[0],
         area_extent=extent,
     )
-    return area_def
 
 
 def get_pyresample_area(xr_obj):
@@ -826,10 +811,7 @@ def get_pyresample_area(xr_obj):
     """
 
     if has_proj_coords(xr_obj):
-        area_def = get_pyresample_projection(xr_obj)
-        return area_def
+        return get_pyresample_projection(xr_obj)
     if has_swath_coords(xr_obj):
-        swath_def = get_pyresample_swath(xr_obj)
-        return swath_def
-    else:
-        raise ValueError("Impossible to infer if a SwathDefinition or AreaDefinition.")
+        return get_pyresample_swath(xr_obj)
+    raise ValueError("Impossible to infer if a SwathDefinition or AreaDefinition.")

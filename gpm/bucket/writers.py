@@ -83,7 +83,7 @@ def write_dataset_bucket(
         **writer_kwargs,
     )
 
-    return None
+    return
 
 
 ####--------------------------------------------------------------------------.
@@ -195,8 +195,7 @@ def _try_write_granule_bucket(**kwargs):
 
 
 def split_list_in_blocks(values, block_size):
-    list_blocks = [values[i : i + block_size] for i in range(0, len(values), block_size)]
-    return list_blocks
+    return [values[i : i + block_size] for i in range(0, len(values), block_size)]
 
 
 @print_task_elapsed_time(prefix="Granules Bucketing Operation Terminated.")
@@ -317,7 +316,7 @@ def write_granules_bucket(
             clean_memory(client)
             client.restart()
 
-    return None
+    return
 
 
 ####--------------------------------------------------------------------------.

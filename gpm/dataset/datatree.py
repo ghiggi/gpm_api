@@ -57,8 +57,7 @@ def open_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True):
         raise ValueError(e)
 
     # Assign dimension names
-    dt = _rename_datatree_dimensions(dt, use_api_defaults=use_api_defaults)
-    return dt
+    return _rename_datatree_dimensions(dt, use_api_defaults=use_api_defaults)
 
 
 def check_non_empty_granule(dt, filepath):
@@ -92,15 +91,13 @@ def _identify_error(e, filepath):
         # os.remove(filepath) # TODO: gpm_api flag !
         msg = f"The file {filepath} is corrupted and is being removed. It must be redownload."
         raise ValueError(msg)
-    elif "[Errno -51] NetCDF: Unknown file format" in error_str:
+    if "[Errno -51] NetCDF: Unknown file format" in error_str:
         msg = f"The GPM-API is not currently able to read the file format of {filepath}. Report the issue please."
         raise ValueError(msg)
-    elif "lock" in error_str:
+    if "lock" in error_str:
         msg = "Unfortunately, HDF locking is occurring."
         msg += "Export the environment variable HDF5_USE_FILE_LOCKING = 'FALSE' into your environment (i.e. in the .bashrc).\n"  # noqa
         msg += f"The error is: '{error_str}'."
         raise ValueError(msg)
-    else:
-        msg = f"The following file is corrupted. Error is {e}. Redownload the file."
-        raise ValueError(msg)
-    return
+    msg = f"The following file is corrupted. Error is {e}. Redownload the file."
+    raise ValueError(msg)

@@ -79,8 +79,7 @@ def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=
         msg += "Some granules may be missing!"
         if raise_error:
             raise ValueError(msg)
-        else:
-            warnings.warn(msg, GPM_Warning, stacklevel=1)
+        warnings.warn(msg, GPM_Warning, stacklevel=1)
 
 
 def reshape_dataset(ds):
