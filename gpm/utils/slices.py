@@ -207,8 +207,7 @@ def list_slices_flatten(list_slices):
     flat_list = []
     for sublist in list_slices:
         if isinstance(sublist, list):
-            for item in sublist:
-                flat_list.append(item)
+            flat_list += sublist
         else:
             flat_list.append(sublist)
     return flat_list
