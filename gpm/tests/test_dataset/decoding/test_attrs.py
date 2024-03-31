@@ -8,7 +8,7 @@ from gpm.dataset.decoding.dataarray_attrs import (
 
 
 def test_convert_string_to_number() -> None:
-    """Test that a string is converted to a number"""
+    """Test that a string is converted to a number."""
     assert convert_string_to_number("1") == 1
     assert convert_string_to_number("1.0") == 1.0
     assert convert_string_to_number("1.0e-3") == 1.0e-3
@@ -22,7 +22,7 @@ def test_convert_string_to_number() -> None:
 
 
 def test_ensure_dtype_name() -> None:
-    """Test that a dtype is returned as a string name"""
+    """Test that a dtype is returned as a string name."""
     # Test with dtype
     assert ensure_dtype_name(np.dtype("float32")) == "float32"
     assert ensure_dtype_name(np.dtype("int32")) == "int32"

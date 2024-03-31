@@ -45,7 +45,7 @@ from gpm.utils.warnings import GPMDownloadWarning
 
 
 class TestGetDailyFilepaths:
-    """Test _get_all_daily_filepaths"""
+    """Test _get_all_daily_filepaths."""
 
     date = datetime.datetime(2020, 12, 31)
     mock_filenames = [
@@ -56,7 +56,7 @@ class TestGetDailyFilepaths:
     def test_local_non_existent_files(
         self,
     ) -> None:
-        """Test _get_all_daily_filepaths for "LOCAL" storage with non-existent files"""
+        """Test _get_all_daily_filepaths for "LOCAL" storage with non-existent files."""
         storage = "LOCAL"
 
         returned_filepaths = _get_all_daily_filepaths(
@@ -75,7 +75,7 @@ class TestGetDailyFilepaths:
         mocker: MockerFixture,
         product_info: dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "LOCAL" storage with existing (mocked) files"""
+        """Test _get_all_daily_filepaths for "LOCAL" storage with existing (mocked) files."""
         base_dir = "dummy/path/to/base_dir"
         storage = "LOCAL"
 
@@ -132,7 +132,7 @@ class TestGetDailyFilepaths:
         self,
         mocker: MockerFixture,
     ) -> None:
-        """Mock gpm.io.pps._try_get_pps_file_list, which uses curl to get a list of files"""
+        """Mock gpm.io.pps._try_get_pps_file_list, which uses curl to get a list of files."""
 
         def mocked_get_pps_file_list(url_product_dir: str) -> list[str]:
             # Remove the base URL, assuming they have the following format:
@@ -149,7 +149,7 @@ class TestGetDailyFilepaths:
         check,  # For non-failing asserts
         product_info: dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "PPS" storage with RS version 7 products"""
+        """Test _get_all_daily_filepaths for "PPS" storage with RS version 7 products."""
         storage = "PPS"
         product_type = "RS"
         version = 7
@@ -177,7 +177,7 @@ class TestGetDailyFilepaths:
         check,  # For non-failing asserts
         product_info: dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "PPS" storage with RS lower version products"""
+        """Test _get_all_daily_filepaths for "PPS" storage with RS lower version products."""
         storage = "PPS"
         product_type = "RS"
 
@@ -208,7 +208,7 @@ class TestGetDailyFilepaths:
         check,  # For non-failing asserts
         product_info: dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "PPS" storage with NRT products (except IMERG)"""
+        """Test _get_all_daily_filepaths for "PPS" storage with NRT products (except IMERG)."""
         storage = "PPS"
         product_type = "NRT"
 
@@ -239,7 +239,7 @@ class TestGetDailyFilepaths:
         check,  # For non-failing asserts
         product_info: dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "PPS" storage with NRT IMERG products"""
+        """Test _get_all_daily_filepaths for "PPS" storage with NRT IMERG products."""
         storage = "PPS"
         product_type = "NRT"
         product_category = "IMERG"
@@ -296,7 +296,7 @@ class TestGetDailyFilepaths:
         self,
         mocker: MockerFixture,
     ) -> None:
-        """Mock gpm.io.ges_disc._get_gesc_disc_list_path, which uses wget to get a list of files"""
+        """Mock gpm.io.ges_disc._get_gesc_disc_list_path, which uses wget to get a list of files."""
 
         def mocked_get_ges_disc_list_path(url: str) -> list[str]:
             return [f"{url}/{filename}" for filename in self.mock_filenames]
@@ -312,7 +312,7 @@ class TestGetDailyFilepaths:
         check,  # For non-failing asserts
         product_info: dict[str, dict],
     ) -> None:
-        """Test _get_all_daily_filepaths for "GES_DISC" storage"""
+        """Test _get_all_daily_filepaths for "GES_DISC" storage."""
         storage = "GES_DISC"
         version = 7
 
@@ -339,7 +339,7 @@ class TestGetDailyFilepaths:
                 assert returned_filepaths == expected_filepaths
 
     def test_invalid_storage(self) -> None:
-        """Test _get_all_daily_filepaths for invalid "storage" argument"""
+        """Test _get_all_daily_filepaths for invalid "storage" argument."""
         storage = "invalid"
         product = "1C-GMI"
         product_type = "RS"
@@ -358,7 +358,7 @@ class TestGetDailyFilepaths:
 
 @pytest.mark.filterwarnings("error")
 def test_check_correct_version() -> None:
-    """Test _check_correct_version"""
+    """Test _check_correct_version."""
     product = "2A-DPR"
     version = 7
     filepath_template = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V0{}A.HDF5"
@@ -399,7 +399,7 @@ def test_check_correct_version() -> None:
 def test_find_daily_filepaths(
     mocker: MockerFixture,
 ) -> None:
-    """Test find_daily_filepaths"""
+    """Test find_daily_filepaths."""
     storage = "storage"
     date = datetime.datetime(2020, 12, 31)
     product = "product"

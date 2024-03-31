@@ -35,7 +35,7 @@ from gpm.utils import decorators
 
 
 def test_check_has_cross_track_dimension() -> None:
-    """Test check_has_cross_track_dimension decorator"""
+    """Test check_has_cross_track_dimension decorator."""
 
     @decorators.check_has_cross_track_dimension
     def identity(xr_obj: Union[xr.Dataset, xr.DataArray]) -> Union[xr.Dataset, xr.DataArray]:
@@ -52,7 +52,7 @@ def test_check_has_cross_track_dimension() -> None:
 
 
 def test_check_has_along_track_dimension() -> None:
-    """Test check_has_along_track_dimension decorator"""
+    """Test check_has_along_track_dimension decorator."""
 
     @decorators.check_has_along_track_dimension
     def identity(xr_obj: Union[xr.Dataset, xr.DataArray]) -> Union[xr.Dataset, xr.DataArray]:

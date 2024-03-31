@@ -34,7 +34,7 @@ from gpm.utils import slices as gpm_slices
 
 
 def test_get_list_slices_from_indices() -> None:
-    """Test get_list_slices_from_indices"""
+    """Test get_list_slices_from_indices."""
     # Check expected behavior
     indices = [0, 1, 2, 4, 5, 8]
     expected_slices = [slice(0, 3), slice(4, 6), slice(8, 9)]
@@ -55,7 +55,7 @@ def test_get_list_slices_from_indices() -> None:
 
 
 def test_get_indices_from_list_slices() -> None:
-    """Test get_indices_from_list_slices"""
+    """Test get_indices_from_list_slices."""
     # Check expected behavior
     slices = [slice(0, 3), slice(4, 6), slice(8, 9)]
     expected_indices = [0, 1, 2, 4, 5, 8]
@@ -77,7 +77,7 @@ def test_get_indices_from_list_slices() -> None:
 
 
 def test_list_slices_intersection() -> None:
-    """Test list_slices_intersection"""
+    """Test list_slices_intersection."""
     slices = [
         [slice(0, 3), slice(4, 7)],  # 0 1 2|  4 5 6|
         [slice(2, 5), slice(5, 8)],  #     2 3 4|5 6 7
@@ -119,7 +119,7 @@ def test_list_slices_intersection() -> None:
 
 
 def test_list_slices_union() -> None:
-    """Test list_slices_union"""
+    """Test list_slices_union."""
     slices = [
         [slice(0, 3), slice(4, 7)],
         [slice(4, 7), slice(7, 10)],
@@ -136,7 +136,7 @@ def test_list_slices_union() -> None:
 
 
 def test_list_slices_difference() -> None:
-    """Test list_slices_difference"""
+    """Test list_slices_difference."""
     # Base cases
     assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 2)]) == [slice(3, 6)]
     assert gpm_slices.list_slices_difference([slice(3, 6)], [slice(1, 3)]) == [slice(3, 6)]
@@ -186,7 +186,7 @@ def test_list_slices_difference() -> None:
 
 
 def test_list_slices_combine() -> None:
-    """Test list_slices_combine"""
+    """Test list_slices_combine."""
     slices = [
         [slice(0, 3), slice(4, 7)],
         [slice(4, 7), slice(7, 10)],
@@ -203,7 +203,7 @@ def test_list_slices_combine() -> None:
 
 
 def test_list_slices_simplify() -> None:
-    """Test list_slices_simplify"""
+    """Test list_slices_simplify."""
     slices = [slice(0, 3), slice(4, 7), slice(4, 7), slice(7, 10)]
     expected_list = [slice(0, 3), slice(4, 10)]
     returned_list = gpm_slices.list_slices_simplify(slices)
@@ -217,7 +217,7 @@ def test_list_slices_simplify() -> None:
 
 
 def test_list_slices_sort() -> None:
-    """Test list_slices_sort"""
+    """Test list_slices_sort."""
     slices = [
         [slice(1, 3)],
         [slice(0, 10), slice(2, 4)],
@@ -228,7 +228,7 @@ def test_list_slices_sort() -> None:
 
 
 def test_list_slices_filter() -> None:
-    """Test list_slices_filter"""
+    """Test list_slices_filter."""
     slices = [slice(0, 1), slice(0, 10), slice(0, 20)]
 
     # Test without filter
@@ -250,7 +250,7 @@ def test_list_slices_filter() -> None:
 
 
 def test_list_slices_flatten() -> None:
-    """Test list_slices_flatten"""
+    """Test list_slices_flatten."""
     slices = [[slice(1, 7934)], [slice(1, 2), slice(3, 4)]]
     expected_list = [slice(1, 7934), slice(1, 2), slice(3, 4)]
     returned_list = gpm_slices.list_slices_flatten(slices)
@@ -263,7 +263,7 @@ def test_list_slices_flatten() -> None:
 
 
 def test_get_list_slices_from_bool_arr() -> None:
-    """Test get_list_slices_from_bool_arr"""
+    """Test get_list_slices_from_bool_arr."""
     #             0      1     2     3      4      5     6
     bool_array = [False, True, True, False, False, True, False]
 
@@ -325,7 +325,7 @@ def test_get_list_slices_from_bool_arr() -> None:
 
 
 def test_ensure_is_slice() -> None:
-    """Test ensure_is_slice"""
+    """Test ensure_is_slice."""
     # Test case for an integer input
     assert gpm_slices.ensure_is_slice(5) == slice(5, 6)
 
@@ -350,7 +350,7 @@ def test_ensure_is_slice() -> None:
 
 
 def test_get_slice_size() -> None:
-    """Test get_slice_size"""
+    """Test get_slice_size."""
     assert gpm_slices.get_slice_size(slice(1, 10)) == 9
 
     # Test non-slice input
@@ -359,7 +359,7 @@ def test_get_slice_size() -> None:
 
 
 def test_pad_slice():
-    """Test pad_slice"""
+    """Test pad_slice."""
     # Always step = 1
 
     test_slice = slice(2, 8)
@@ -375,7 +375,7 @@ def test_pad_slice():
 
 
 def test_pad_slices():
-    """Test pad_slices"""
+    """Test pad_slices."""
     test_slices = [slice(2, 8), slice(1, 9)]
 
     # Integer padding and shape
@@ -414,7 +414,7 @@ def test_pad_slices():
 
 
 def test_enlarge_slice():
-    """Test enlarge_slice"""
+    """Test enlarge_slice."""
     test_slice = slice(3, 5)
     min_start = 1
     max_stop = 10
@@ -465,7 +465,7 @@ def test_enlarge_slice():
 
 
 def test_enlarge_slices():
-    """Test enlarge_slices"""
+    """Test enlarge_slices."""
     test_slices = [slice(3, 5), slice(6, 8)]
 
     # Integer min_size and shape

@@ -52,7 +52,7 @@ mse_tolerance = 5e-3
 
 
 def skip_tests_if_no_data() -> None:
-    """Skip tests if the test data does not exist"""
+    """Skip tests if the test data does not exist."""
     if not os.path.exists(plots_dir_path):
         pytest.skip(
             "Test images not found. Please run `git submodule update --init`. to clone existing test data.",
@@ -64,7 +64,7 @@ def save_and_check_figure(
     figure: Optional[mpl_figure.Figure] = None,
     name: str = "",
 ) -> None:
-    """Save the current figure to a temporary location and compare it to the reference figure
+    """Save the current figure to a temporary location and compare it to the reference figure.
 
     If the reference figure does not exist, it is created and the test is skipped.
     """
@@ -101,7 +101,7 @@ def save_and_check_figure(
 
 
 def get_test_name() -> str:
-    """Get a unique name for the calling function
+    """Get a unique name for the calling function.
 
     If the function is a method of a class, pass the class instance as argument (self).
     """
@@ -131,7 +131,7 @@ def expand_dims(
     dim: str,
     axis: Optional[int] = None,
 ) -> xr.DataArray:
-    """Expand dimensions of a dataarray and fill with random data"""
+    """Expand dimensions of a dataarray and fill with random data."""
     dataarray = dataarray.expand_dims(dim={dim: size}, axis=axis)
     np.random.seed(0)
     dataarray.data = np.random.rand(*dataarray.data.shape)

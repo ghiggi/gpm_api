@@ -34,7 +34,7 @@ from gpm.io import ges_disc
 
 
 def test_get_ges_disc_list_path():
-    """Test _get_ges_disc_list_path"""
+    """Test _get_ges_disc_list_path."""
     # Empty directory
     url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07/"
     with pytest.raises(ValueError) as excinfo:

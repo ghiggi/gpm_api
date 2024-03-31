@@ -367,6 +367,7 @@ def get_dataarray_extent(da, x="lon", y="lat"):
 
 def _compute_extent(x_coords, y_coords):
     """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+
     This function assumes that the spacing between each pixel is uniform.
     """
     # Calculate the pixel size assuming uniform spacing between pixels
@@ -861,8 +862,9 @@ def plot_image(
 
 
 def create_grid_mesh_data_array(xr_obj, x, y):
-    """Create a 2D xarray DataArray with mesh coordinates based on the 1D coordinate arrays
-    from an existing xarray object (Dataset or DataArray).
+    """Create a 2D mesh coordinates DataArray.
+
+    Takes as input the 1D coordinate arrays from an existing xarray object (Dataset or DataArray).
 
     The function creates a 2D grid (mesh) of x and y coordinates and initializes
     the data values to NaN.

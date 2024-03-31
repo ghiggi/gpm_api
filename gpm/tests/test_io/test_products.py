@@ -151,7 +151,7 @@ class TestGetInfoDictSubset:
             assert isinstance(result, dict)
 
     def test_bad_value(self):
-        """Test get_info_dict_subset with bad arguments"""
+        """Test get_info_dict_subset with bad arguments."""
         list_kwargs = [
             {"sensors": "BAD"},
             {"satellites": "BAD"},

@@ -63,7 +63,7 @@ def _get_pps_data_server(product_type):
 
 
 def _get_pps_nrt_product_folder_name(product):
-    """ "Retrieve NASA PPS server folder name for NRT product_type."""
+    """Retrieve NASA PPS server folder name for NRT product_type."""
     folder_name = get_product_info(product).get("pps_nrt_dir", None)
     if folder_name is None:
         raise ValueError(
@@ -73,7 +73,7 @@ def _get_pps_nrt_product_folder_name(product):
 
 
 def _get_pps_rs_product_folder_name(product):
-    """ "Retrieve NASA PPS server folder name for RS product_type."""
+    """Retrieve NASA PPS server folder name for RS product_type."""
     folder_name = get_product_info(product).get("pps_rs_dir", None)
     if folder_name is None:
         raise ValueError(

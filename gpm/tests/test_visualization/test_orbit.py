@@ -57,7 +57,7 @@ VARIABLE = "variable"
 def orbit_dataset(
     orbit_dataarray: xr.DataArray,
 ) -> xr.Dataset:
-    """Return a dataset with a single variable"""
+    """Return a dataset with a single variable."""
     return xr.Dataset({VARIABLE: orbit_dataarray})
 
 
@@ -67,7 +67,7 @@ def orbit_dataset(
 def test_plot_swath(
     orbit_dataset: xr.Dataset,
 ) -> None:
-    """Test the plot_swath function"""
+    """Test the plot_swath function."""
     p = orbit.plot_swath(orbit_dataset)
     save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -75,6 +75,6 @@ def test_plot_swath(
 def test_plot_swath_lines(
     orbit_dataset: xr.Dataset,
 ) -> None:
-    """Test the plot_swath_lines function"""
+    """Test the plot_swath_lines function."""
     p = orbit.plot_swath_lines(orbit_dataset)
     save_and_check_figure(figure=p.figure, name=get_test_name())

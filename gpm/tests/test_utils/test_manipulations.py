@@ -72,7 +72,7 @@ def binnable_orbit_dataarray(
 def test_integrate_profile_concentration(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test integrate_profile_concentration function"""
+    """Test integrate_profile_concentration function."""
     returned_da = manipulations.integrate_profile_concentration(a_3d_dataarray, name="integrated")
 
     expected_data = np.sum(a_3d_dataarray.data * THICKNESS, axis=-1)
@@ -99,7 +99,7 @@ def test_integrate_profile_concentration(
 
 
 def test_check_variable_availabilty() -> None:
-    """Test check_variable_availabilty function"""
+    """Test check_variable_availabilty function."""
     variable = "variable"
     ds = xr.Dataset({"variable": xr.DataArray()})
 
@@ -112,7 +112,7 @@ def test_check_variable_availabilty() -> None:
 
 
 def test_get_variable_dataarray() -> None:
-    """Test get_variable_dataarray function"""
+    """Test get_variable_dataarray function."""
     variable = "variable"
     ds = xr.Dataset({"variable": xr.DataArray([1, 2, 3])})
     da = ds["variable"]
@@ -130,7 +130,7 @@ def test_get_variable_dataarray() -> None:
 def test_get_variable_at_bin(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test get_variable_at_bin function"""
+    """Test get_variable_at_bin function."""
     bins = xr.DataArray([2, 3, 5])
     expected_binned_data = a_3d_dataarray.data[:, :, [1, 2, 4]]
 
@@ -165,7 +165,7 @@ def test_get_variable_at_bin(
 def test_get_height_at_bin(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test get_height_at_bin function"""
+    """Test get_height_at_bin function."""
     ds = xr.Dataset({"height": a_3d_dataarray})
     bins = xr.DataArray([2, 3, 5])
     expected_binned_data = ds["height"].data[:, :, [1, 2, 4]]
@@ -176,7 +176,7 @@ def test_get_height_at_bin(
 def test_slice_range_with_valid_data(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test slice_range_with_valid_data function"""
+    """Test slice_range_with_valid_data function."""
     a_3d_dataarray.data[:, :, 0] = np.nan  # Fully removes this height level
     a_3d_dataarray.data[:2, :3, 1] = np.nan  # These are kept
     returned_da = manipulations.slice_range_with_valid_data(a_3d_dataarray)
@@ -192,7 +192,7 @@ def test_slice_range_with_valid_data(
 def test_slice_range_where_values(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test slice_range_where_values function"""
+    """Test slice_range_where_values function."""
     # Test with no values within range
     a_3d_dataarray.data[:, :, :] = 0
     vmin = 10
@@ -220,7 +220,7 @@ def test_slice_range_where_values(
 def test_slice_range_at_value(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test slice_range_at_value function"""
+    """Test slice_range_at_value function."""
     value = 100
     returned_slice = manipulations.slice_range_at_value(a_3d_dataarray, value)
     vertical_indices = np.abs(a_3d_dataarray - value).argmin(dim="height")
@@ -231,7 +231,7 @@ def test_slice_range_at_value(
 def test_slice_range_at_max_value(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test slice_range_at_max_value function"""
+    """Test slice_range_at_max_value function."""
     returned_slice = manipulations.slice_range_at_max_value(a_3d_dataarray)
     expected_slice = a_3d_dataarray.isel(height=-1).data
     np.testing.assert_allclose(returned_slice.data, expected_slice)
@@ -240,7 +240,7 @@ def test_slice_range_at_max_value(
 def test_slice_range_at_min_value(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test slice_range_at_min_value function"""
+    """Test slice_range_at_min_value function."""
     returned_slice = manipulations.slice_range_at_min_value(a_3d_dataarray)
     expected_slice = a_3d_dataarray.isel(height=0).data
     np.testing.assert_allclose(returned_slice.data, expected_slice)
@@ -251,7 +251,7 @@ def test_slice_range_at(
     variable: str,
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test slice_range_at_temperature and slice_range_at_height functions"""
+    """Test slice_range_at_temperature and slice_range_at_height functions."""
     manipulations_functions = {
         "airTemperature": manipulations.slice_range_at_temperature,
         "height": manipulations.slice_range_at_height,
@@ -268,7 +268,7 @@ def test_slice_range_at(
 def test_get_height_at_temperature(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test get_height_at_temperature function"""
+    """Test get_height_at_temperature function."""
     da_temperature = a_3d_dataarray.copy()
     da_height = a_3d_dataarray.copy()
     da_height.data[:] = da_height.data[:] + 500
@@ -282,7 +282,7 @@ def test_get_height_at_temperature(
 def test_get_range_axis(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test get_range_axis function"""
+    """Test get_range_axis function."""
     returned_index = manipulations.get_range_axis(a_3d_dataarray)
     assert returned_index == 2
 
@@ -290,7 +290,7 @@ def test_get_range_axis(
 def test_get_dims_without(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test get_dims_without function"""
+    """Test get_dims_without function."""
     removeds_dims = ["x", "height"]
     returned_dims = manipulations.get_dims_without(a_3d_dataarray, removeds_dims)
     expected_dims = ["y"]
@@ -300,7 +300,7 @@ def test_get_dims_without(
 def test_get_xr_shape(
     a_3d_dataarray: xr.DataArray,
 ) -> None:
-    """Test get_xr_shape function"""
+    """Test get_xr_shape function."""
     # Test with data array
     dimensions = ["x", "height"]
     returned_shape = manipulations.get_xr_shape(a_3d_dataarray, dimensions)
@@ -316,7 +316,7 @@ def test_get_xr_shape(
 def test_create_bin_idx_data_array(
     binnable_orbit_dataarray: xr.DataArray,
 ) -> None:
-    """Test create_bin_idx_data_array function"""
+    """Test create_bin_idx_data_array function."""
     dims = {"cross_track": 5, "along_track": 20, "range": 8}
 
     # Test with a data array
@@ -339,7 +339,7 @@ def test_create_bin_idx_data_array(
 def test_get_bright_band_mask(
     binnable_orbit_dataarray: xr.DataArray,
 ) -> None:
-    """Test get_bright_band_mask function"""
+    """Test get_bright_band_mask function."""
     ds = xr.Dataset({"variable": binnable_orbit_dataarray})
     ds["binBBTop"] = 4
     ds["binBBBottom"] = 6
@@ -351,7 +351,7 @@ def test_get_bright_band_mask(
 
 
 class TestGetPhaseMask:
-    """Test get_liquid_phase_mask and get_solid_phase_mask functions"""
+    """Test get_liquid_phase_mask and get_solid_phase_mask functions."""
 
     height_zero_deg = np.random.randint(3, 6, size=(5, 6)) * 8
     da_height_zero_deg = xr.DataArray(height_zero_deg, dims=["x", "y"])
@@ -372,7 +372,7 @@ class TestGetPhaseMask:
         self,
         phase_dataarray: xr.Dataset,
     ) -> None:
-        """Test get_liquid_phase_mask function"""
+        """Test get_liquid_phase_mask function."""
         returned_mask = manipulations.get_liquid_phase_mask(phase_dataarray)
         expected_mask = (
             phase_dataarray["height"].data[:, np.newaxis, np.newaxis] < self.height_zero_deg
@@ -383,7 +383,7 @@ class TestGetPhaseMask:
         self,
         phase_dataarray: xr.Dataset,
     ) -> None:
-        """Test get_solid_phase_mask function"""
+        """Test get_solid_phase_mask function."""
         returned_mask = manipulations.get_solid_phase_mask(phase_dataarray)
         expected_mask = (
             phase_dataarray["height"].data[:, np.newaxis, np.newaxis] >= self.height_zero_deg
@@ -396,7 +396,7 @@ class TestSelectVariables:
         self,
         dataset_collection: xr.Dataset,
     ) -> None:
-        """Test select_spatial_3d_variables function"""
+        """Test select_spatial_3d_variables function."""
         returned_ds = manipulations.select_spatial_3d_variables(dataset_collection)
         expected_ds = dataset_collection[["variable_2", "variable_3"]]
         xr.testing.assert_identical(returned_ds, expected_ds)
@@ -405,7 +405,7 @@ class TestSelectVariables:
         self,
         dataset_collection: xr.Dataset,
     ) -> None:
-        """Test select_spatial_2d_variables function"""
+        """Test select_spatial_2d_variables function."""
         returned_ds = manipulations.select_spatial_2d_variables(dataset_collection)
         expected_ds = dataset_collection[["variable_0", "variable_1"]]
         xr.testing.assert_identical(returned_ds, expected_ds)
@@ -414,7 +414,7 @@ class TestSelectVariables:
         self,
         dataset_collection: xr.Dataset,
     ) -> None:
-        """Test select_transect_variables function"""
+        """Test select_transect_variables function."""
         returned_ds = manipulations.select_transect_variables(dataset_collection)
         expected_ds = dataset_collection[["variable_4", "variable_5"]]
         xr.testing.assert_identical(returned_ds, expected_ds)
@@ -424,7 +424,7 @@ class TestSelectVariables:
 
 
 def test__get_vertical_dim() -> None:
-    """Test _get_vertical_dim function"""
+    """Test _get_vertical_dim function."""
     for vertical_dim in VERTICAL_DIMS:
         n_dims = 2
         da = xr.DataArray(np.zeros((0,) * n_dims), dims=["other", vertical_dim])

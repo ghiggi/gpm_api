@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains the routines required to search data on the NASA GES DISC servers"""
+"""Routines required to search data on the NASA GES DISC servers."""
 
 import datetime
 import re

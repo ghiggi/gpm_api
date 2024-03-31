@@ -80,8 +80,10 @@ DYNAMIC_GLOBAL_ATTRS = (
 
 
 def _is_str_list(s):
-    """Return a boolean indicating if the string start and end with brackets and can
-    be converted to a list.
+    """Check if the string start and end with brackets.
+
+    Return a boolean indicating if the string can be converted to a list.
+
     """
     if s.startswith("[") and s.endswith("]"):
         try:
@@ -139,7 +141,7 @@ def _parse_attr_string(s):
 
 
 def decode_string(string):
-    """Decode string dictionary.
+    r"""Decode string dictionary.
 
     Format: ``"<key>=<value>\\n".``.
 
@@ -192,7 +194,7 @@ def get_granule_attrs(dt):
 
 
 def add_history(ds):
-    """Add the history attribute to the xr.Dataset"""
+    """Add the history attribute to the xr.Dataset."""
     current_time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     history = f"Created by ghiggi/gpm_api software on {current_time}"
     ds.attrs["history"] = history

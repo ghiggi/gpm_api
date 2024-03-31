@@ -181,7 +181,7 @@ def _get_projection_coords_attrs(crs):
 
 
 def _get_proj_dim_coords(xr_obj):
-    """Determine the spatial 1D dimensions of the `xarray.DataArray`
+    """Determine the spatial 1D dimensions of the `xarray.DataArray`.
 
     Parameters
     ----------
@@ -227,7 +227,7 @@ def _get_proj_dim_coords(xr_obj):
 
 
 def _get_swath_dim_coords(xr_obj):
-    """Determine the spatial 1D dimensions of the `xarray.DataArray`
+    """Determine the spatial 1D dimensions of the `xarray.DataArray`.
 
     Cases:
     - 2D x/y coordinates with 2 dimensions (along-track-cross-track scan)
@@ -574,7 +574,7 @@ def remove_existing_crs_info(ds):
 
 
 def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
-    """Add CF-compliant CRS information to an xr.Dataset
+    """Add CF-compliant CRS information to an xr.Dataset.
 
     It assumes all dataset variables have same CRS !
     For projected CRS, it expects that the CRS dimension coordinates are specified.
@@ -611,7 +611,7 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
 
 
 def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
-    """Add CF-compliant CRS information to an xr.Dataset
+    """Add CF-compliant CRS information to an xr.Dataset.
 
     It assumes all dataset variables have same CRS !
     For projected CRS, it expects that the CRS dimension coordinates are specified.
@@ -736,6 +736,7 @@ def get_pyproj_crs(xr_obj):
 
 
 def get_pyresample_swath(xr_obj):
+    """Get pyresample SwathDefinition from CF-compliant xarray object."""
     from pyresample import SwathDefinition
 
     if not has_swath_coords(xr_obj):
@@ -765,6 +766,7 @@ def get_pyresample_swath(xr_obj):
 
 def _compute_extent(x_coords, y_coords):
     """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+
     This function assumes that the spacing between each pixel is uniform.
     """
     # Calculate the pixel size assuming uniform spacing between pixels
@@ -779,6 +781,7 @@ def _compute_extent(x_coords, y_coords):
 
 
 def get_pyresample_projection(xr_obj):
+    """Get pyresample AreaDefinition from CF-compliant xarray object."""
     from pyresample import AreaDefinition
 
     if not has_proj_coords(xr_obj):

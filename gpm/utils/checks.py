@@ -747,9 +747,7 @@ def has_valid_geolocation(xr_obj):
 
 
 def apply_on_valid_geolocation(function):
-    """A decorator that apply the get_slices_<function> only on portions of GPM ORBIT objects
-    with valid geolocation.
-    """
+    """Decorator appliying the input function on valid geolocation GPM ORBIT slices."""
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
