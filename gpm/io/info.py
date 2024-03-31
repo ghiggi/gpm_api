@@ -176,8 +176,7 @@ def get_product_from_filepath(filepath):
     for product, pattern in patterns_dict.items():
         if re.search(pattern, filepath):
             return product
-    else:
-        raise ValueError(f"GPM Product unknown for {filepath}.")
+    raise ValueError(f"GPM Product unknown for {filepath}.")
 
 
 def get_product_from_filepaths(filepaths):

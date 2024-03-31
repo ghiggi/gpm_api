@@ -205,24 +205,23 @@ def _get_proj_dim_coords(xr_obj):
         ):
             return dims
     # Otherwise look at available coordinates, and search for CF attributes
-    else:
-        x_dim = None
-        y_dim = None
-        coords_names = list(xr_obj.coords)
-        for coord in coords_names:
-            # Select only 1D coordinates with dimension name as the coordinate
-            if xr_obj[coord].dims != (coord,):
-                continue
-            # Retrieve coordinate attribute
-            attrs = xr_obj[coord].attrs
-            if (attrs.get("axis", "").upper() == "X") or (
-                attrs.get("standard_name", "").lower() in ("longitude", "projection_x_coordinate")
-            ):
-                x_dim = coord
-            elif (attrs.get("axis", "").upper() == "Y") or (
-                attrs.get("standard_name", "").lower() in ("latitude", "projection_y_coordinate")
-            ):
-                y_dim = coord
+    x_dim = None
+    y_dim = None
+    coords_names = list(xr_obj.coords)
+    for coord in coords_names:
+        # Select only 1D coordinates with dimension name as the coordinate
+        if xr_obj[coord].dims != (coord,):
+            continue
+        # Retrieve coordinate attribute
+        attrs = xr_obj[coord].attrs
+        if (attrs.get("axis", "").upper() == "X") or (
+            attrs.get("standard_name", "").lower() in ("longitude", "projection_x_coordinate")
+        ):
+            x_dim = coord
+        elif (attrs.get("axis", "").upper() == "Y") or (
+            attrs.get("standard_name", "").lower() in ("latitude", "projection_y_coordinate")
+        ):
+            y_dim = coord
     return x_dim, y_dim
 
 
@@ -260,19 +259,18 @@ def _get_swath_dim_coords(xr_obj):
     # Otherwise look at available coordinates, and search for CF attributes
     # --> Look if coordinate has  2D dimension
     # --> Look if coordinate has standard_name "longitude" or "latitude"
-    else:
-        coords_x = None
-        coords_y = None
-        coords_names = list(xr_obj.coords)
-        for coord in coords_names:
-            # Select only lon/lat swath coordinates with dimension like ('y','x')
-            if len(xr_obj[coord].dims) != 2:  # ('y', 'x'), ('cross_track', 'along_track')
-                continue
-            attrs = xr_obj[coord].attrs
-            if attrs.get("standard_name", "INVALID").lower() in ("longitude"):
-                coords_x = coord
-            elif attrs.get("standard_name", "INVALID").lower() in ("latitude"):
-                coords_y = coord
+    coords_x = None
+    coords_y = None
+    coords_names = list(xr_obj.coords)
+    for coord in coords_names:
+        # Select only lon/lat swath coordinates with dimension like ('y','x')
+        if len(xr_obj[coord].dims) != 2:  # ('y', 'x'), ('cross_track', 'along_track')
+            continue
+        attrs = xr_obj[coord].attrs
+        if attrs.get("standard_name", "INVALID").lower() in ("longitude"):
+            coords_x = coord
+        elif attrs.get("standard_name", "INVALID").lower() in ("latitude"):
+            coords_y = coord
     return coords_x, coords_y
 
 
@@ -449,20 +447,16 @@ def _grid_mapping_reference(ds, crs, grid_mapping_name):
         else:
             output = f"{grid_mapping_name}: {x_dim} {y_dim}"
     # Geographic CRS
+    elif has_swath_coords(ds):
+        lon_coord, lat_coord = _get_swath_dim_coords(ds)
+        output = f"{grid_mapping_name}: {lat_coord} {lon_coord}"
+    # GRID - 1D x/y with 2 dimensions
     else:
-        # If swath
-        # - 2D x/y with two dimensions
-        # - 1D x/y with one dimension (along-track nadir scan)
-        if has_swath_coords(ds):
-            lon_coord, lat_coord = _get_swath_dim_coords(ds)
-            output = f"{grid_mapping_name}: {lat_coord} {lon_coord}"
-        # GRID - 1D x/y with 2 dimensions
-        else:
-            x_dim, y_dim = _get_proj_dim_coords(ds)
-            if x_dim is None or y_dim is None:
-                warnings.warn("Projection coordinates are not present.", stacklevel=3)
-                output = f"{grid_mapping_name}"
-            output = f"{grid_mapping_name}: {x_dim} {y_dim}"
+        x_dim, y_dim = _get_proj_dim_coords(ds)
+        if x_dim is None or y_dim is None:
+            warnings.warn("Projection coordinates are not present.", stacklevel=3)
+            output = f"{grid_mapping_name}"
+        output = f"{grid_mapping_name}: {x_dim} {y_dim}"
     return output
 
 

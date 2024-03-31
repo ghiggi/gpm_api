@@ -218,7 +218,6 @@ class OrthogonalSlicesSlider:
         self.slices[0].copy_from(result[0])
         self.slices[1].copy_from(result[1])
         self.slices[2].copy_from(result[2])
-        return
 
 
 def add_3d_orthogonal_slices(vol, pl, x=None, y=None, z=None, add_sliders=False, **mesh_kwargs):

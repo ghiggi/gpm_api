@@ -108,7 +108,7 @@ from gpm.utils.warnings import GPMDownloadWarning
 #####################################
 def get_curl_version():
     """Get curl version."""
-    result = subprocess.run(["curl", "--version"], capture_output=True, text=True)
+    result = subprocess.run(["curl", "--version"], capture_output=True, text=True, check=False)
     # Example output: curl 7.68.0 (x86_64-pc-linux-gnu) ...
     version_match = re.search(r"curl (\d+\.\d+\.\d+)", result.stdout)
     if version_match:
@@ -275,15 +275,14 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
             status = _get_list_status_commands(dict_futures, pbar=pbar)
 
     # Run without progress bar
+    elif (n_threads == 1) and (verbose is True):
+        results = [subprocess.run(shlex.split(cmd), shell=False, check=False) for cmd in commands]
+        status = [result.returncode == 0 for result in results]
     else:
-        if (n_threads == 1) and (verbose is True):
-            results = [subprocess.run(shlex.split(cmd), shell=False) for cmd in commands]
-            status = [result.returncode == 0 for result in results]
-        else:
-            with ThreadPoolExecutor(max_workers=n_threads) as executor:
-                # Run commands and list those didn't work
-                dict_futures = _get_commands_futures(executor, commands)
-                status = _get_list_status_commands(dict_futures)
+        with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            # Run commands and list those didn't work
+            dict_futures = _get_commands_futures(executor, commands)
+            status = _get_list_status_commands(dict_futures)
 
     return status
 
@@ -659,9 +658,8 @@ def download_files(
             verbose=verbose,
             retry=retry - 1,
         )
-    else:
-        if verbose:
-            print(f"The requested files are now available on disk at {new_local_filepaths}.")
+    elif verbose:
+        print(f"The requested files are now available on disk at {new_local_filepaths}.")
 
     return l_corrupted
 
@@ -895,18 +893,17 @@ def _check_download_status(status, product, verbose):
     elif n_failed == n_remote_files:
         print(f"{n_failed} files were available, but the download failed !")
         return None
-    else:
-        if verbose:
-            if n_failed != 0:
-                print(f"The download of {n_failed} files failed.")
-            if n_downloads > 0:
-                print(f"{n_downloads} files has been download.")
-            if n_remote_files == n_downloads:
-                print(f"All the available GPM {product} product files are now on disk.")
-            else:
-                print(
-                    f"Not all the available GPM {product} product files are on disk. Retry the download !"
-                )
+    elif verbose:
+        if n_failed != 0:
+            print(f"The download of {n_failed} files failed.")
+        if n_downloads > 0:
+            print(f"{n_downloads} files has been download.")
+        if n_remote_files == n_downloads:
+            print(f"All the available GPM {product} product files are now on disk.")
+        else:
+            print(
+                f"Not all the available GPM {product} product files are on disk. Retry the download !"
+            )
     return True
 
 

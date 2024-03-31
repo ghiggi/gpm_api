@@ -95,7 +95,8 @@ def _check_correct_version(filepaths, product, version):
     So to archive data correctly on the user side, we check that the file version
     actually match the asked version, and otherwise we download the last available version.
     """
-    global VERSION_WARNING  # To just warn once. Maybe to be defined at each download call
+    # FIXME: Maybe to be defined/reset at each download call
+    global VERSION_WARNING  # To just warn once
 
     if len(filepaths) == 0:
         return filepaths, version

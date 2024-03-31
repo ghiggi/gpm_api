@@ -92,11 +92,10 @@ def reshape_dataset(ds):
     """
     if "lat" in ds.dims:
         ds = ds.transpose(..., "lat", "lon")
+    elif "cross_track" in ds.dims:
+        ds = ds.transpose("cross_track", "along_track", ...)
     else:
-        if "cross_track" in ds.dims:
-            ds = ds.transpose("cross_track", "along_track", ...)
-        else:
-            ds = ds.transpose("along_track", ...)
+        ds = ds.transpose("along_track", ...)
     return ds
 
 

@@ -153,7 +153,8 @@ select = [
     "PERF",
     # pandas-vet
     "PD",
-
+    # pylint
+    "PL",
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
@@ -170,6 +171,13 @@ ignore = [
     "PT011", # pytest raised error must be checked if match the expected error msg
     "PERF203",
     "PD901",
+    "PLW2901",
+    "PLW0603",
+    # Complexity rules
+    "PLR0913", # restrict max number of function argument
+    "PLR2004",
+    "PLR0912",
+    "PLR0915",
 
 ]
 
