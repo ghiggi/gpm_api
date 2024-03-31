@@ -70,8 +70,8 @@ def orbit_dataarray_multiple_prime_meridian_crossings() -> xr.DataArray:
     cross_track_tiled = da.cross_track.data
     along_track_tiled = np.arange(len(da.along_track) * 2)
     data_tiled = np.tile(da.data, (1, 2))
-    lon_tiled = np.tile(da.lon.data, (1, 2))
-    lat_tiled = np.tile(da.lat.data, (1, 2))
+    lon_tiled = np.tile(da["lon"].data, (1, 2))
+    lat_tiled = np.tile(da["lat"].data, (1, 2))
     granule_id_tiled = np.tile(da.gpm_granule_id.data, 2)
 
     da_tiled = xr.DataArray(
@@ -228,7 +228,7 @@ class TestCrop:
     ) -> None:
         ds = geospatial.crop(orbit_dataarray, self.extent)
         expected_lon = [-10, 0, 10, 20]
-        np.testing.assert_array_almost_equal(ds.lon.values[0], expected_lon, decimal=2)
+        np.testing.assert_array_almost_equal(ds.lon.to_numpy()[0], expected_lon, decimal=2)
 
     def test_orbit_multiple_crossings(
         self,
@@ -246,8 +246,8 @@ class TestCrop:
         da = geospatial.crop(grid_dataarray, self.extent)
         expected_lon = np.arange(-10, 21, 10)
         expected_lat = np.arange(-30, 41, 10)
-        np.testing.assert_array_equal(da.lon.values, expected_lon)
-        np.testing.assert_array_equal(da.lat.values, expected_lat)
+        np.testing.assert_array_equal(da["lon"].to_numpy(), expected_lon)
+        np.testing.assert_array_equal(da["lat"].to_numpy(), expected_lat)
 
     def test_invalid(self) -> None:
         da = xr.DataArray()
@@ -274,8 +274,8 @@ def test_crop_by_country(
     da = geospatial.crop_by_country(grid_dataarray, country)
     expected_lon = np.arange(-10, 21, 10)
     expected_lat = np.arange(-30, 41, 10)
-    np.testing.assert_array_equal(da.lon.values, expected_lon)
-    np.testing.assert_array_equal(da.lat.values, expected_lat)
+    np.testing.assert_array_equal(da["lon"].to_numpy(), expected_lon)
+    np.testing.assert_array_equal(da["lat"].to_numpy(), expected_lat)
 
 
 def test_crop_by_continent(
@@ -297,8 +297,8 @@ def test_crop_by_continent(
     da = geospatial.crop_by_continent(grid_dataarray, continent)
     expected_lon = np.arange(-10, 21, 10)
     expected_lat = np.arange(-30, 41, 10)
-    np.testing.assert_array_equal(da.lon.values, expected_lon)
-    np.testing.assert_array_equal(da.lat.values, expected_lat)
+    np.testing.assert_array_equal(da["lon"].to_numpy(), expected_lon)
+    np.testing.assert_array_equal(da["lat"].to_numpy(), expected_lat)
 
 
 class TestCropSlicesByExtent:

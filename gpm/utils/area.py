@@ -170,7 +170,7 @@ def _from_corners_to_bounds(corners, order="counterclockwise"):
     else:  # counterclockwise
         list_vertices = [top_left, bottom_left, bottom_right, top_right]
     if hasattr(corners, "chunks"):
-        bounds = dask.array.stack(list_vertices, axis=2)
+        bounds = dask.array.stack(list_vertices, axis=2)  # noqa
         # Rechunking over the vertices dimension is required !!!
         bounds = bounds.rechunk((bounds.chunks[0], bounds.chunks[1], 4))
     else:

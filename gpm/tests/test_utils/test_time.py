@@ -74,8 +74,8 @@ class TestSubsetByTime:
     ) -> None:
         start_time = type_wrapper(datetime.datetime(2020, 12, 31, 12, 0, 0))
         returned_da = subset_by_time(data_array, start_time=start_time, end_time=None)
-        assert returned_da["time"].values[0] == np.datetime64(start_time)
-        assert returned_da["time"].values[-1] == np.datetime64(self.time[-1])
+        assert returned_da["time"].to_numpy()[0] == np.datetime64(start_time)
+        assert returned_da["time"].to_numpy()[-1] == np.datetime64(self.time[-1])
         assert len(returned_da) == len(returned_da["time"])
 
     @pytest.mark.parametrize("type_wrapper", datetime_type_wrappers)
@@ -86,8 +86,8 @@ class TestSubsetByTime:
     ) -> None:
         end_time = type_wrapper(datetime.datetime(2020, 12, 31, 12, 0, 0))
         returned_da = subset_by_time(data_array, start_time=None, end_time=end_time)
-        assert returned_da["time"].values[0] == np.datetime64(self.time[0])
-        assert returned_da["time"].values[-1] == np.datetime64(end_time)
+        assert returned_da["time"].to_numpy()[0] == np.datetime64(self.time[0])
+        assert returned_da["time"].to_numpy()[-1] == np.datetime64(end_time)
         assert len(returned_da) == len(returned_da["time"])
 
     @pytest.mark.parametrize("type_wrapper", datetime_type_wrappers)
@@ -99,8 +99,8 @@ class TestSubsetByTime:
         start_time = type_wrapper(datetime.datetime(2020, 12, 31, 6, 0, 0))
         end_time = type_wrapper(datetime.datetime(2020, 12, 31, 18, 0, 0))
         returned_da = subset_by_time(data_array, start_time=start_time, end_time=end_time)
-        assert returned_da["time"].values[0] == np.datetime64(start_time)
-        assert returned_da["time"].values[-1] == np.datetime64(end_time)
+        assert returned_da["time"].to_numpy()[0] == np.datetime64(start_time)
+        assert returned_da["time"].to_numpy()[-1] == np.datetime64(end_time)
         assert len(returned_da) == len(returned_da["time"])
 
     @pytest.mark.parametrize("type_wrapper", datetime_type_wrappers)
@@ -117,8 +117,8 @@ class TestSubsetByTime:
         start_time = type_wrapper(datetime.datetime(2020, 12, 31, 6, 0, 0))
         end_time = type_wrapper(datetime.datetime(2020, 12, 31, 18, 0, 0))
         returned_ds = subset_by_time(ds, start_time=start_time, end_time=end_time)
-        assert returned_ds["time"].values[0] == np.datetime64(start_time)
-        assert returned_ds["time"].values[-1] == np.datetime64(end_time)
+        assert returned_ds["time"].to_numpy()[0] == np.datetime64(start_time)
+        assert returned_ds["time"].to_numpy()[-1] == np.datetime64(end_time)
 
     def test_no_dimension(self):
         da = xr.DataArray(42)  # Scalar value -> no dimension
@@ -163,8 +163,8 @@ def test_subset_by_time_slice():
     time_slice = slice(start_time, end_time)
 
     returned_da = subset_by_time_slice(da, time_slice)
-    assert returned_da["time"].values[0] == np.datetime64(start_time)
-    assert returned_da["time"].values[-1] == np.datetime64(end_time)
+    assert returned_da["time"].to_numpy()[0] == np.datetime64(start_time)
+    assert returned_da["time"].to_numpy()[-1] == np.datetime64(end_time)
     assert len(returned_da) == len(returned_da["time"])
 
 
@@ -292,8 +292,8 @@ def create_test_dataset():
 
 def test_get_dataset_start_end_time():
     ds = create_test_dataset()
-    expected_start_time = ds["time"].values[0]
-    expected_end_time = ds["time"].values[-1]
+    expected_start_time = ds["time"].to_numpy()[0]
+    expected_end_time = ds["time"].to_numpy()[-1]
 
     start_time, end_time = get_dataset_start_end_time(ds)
 
@@ -319,8 +319,8 @@ def test_regularize_dataset():
 
     # Check new time dimension coordinates
     expected_times = pd.date_range("2020-01-01", periods=7, freq=desired_freq)
-    assert np.array_equal(ds_regularized["time"].values, expected_times)
+    assert np.array_equal(ds_regularized["time"].to_numpy(), expected_times)
 
     # Get time index which were infilled
-    new_indices = np.where(np.isin(expected_times, ds["time"].values, invert=True))[0]
+    new_indices = np.where(np.isin(expected_times, ds["time"].to_numpy(), invert=True))[0]
     assert np.all(ds_regularized.isel(time=new_indices)["data"].data == fill_value)

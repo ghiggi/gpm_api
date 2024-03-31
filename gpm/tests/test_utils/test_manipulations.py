@@ -77,7 +77,7 @@ def test_integrate_profile_concentration(
     returned_da = manipulations.integrate_profile_concentration(a_3d_dataarray, name="integrated")
 
     expected_data = np.sum(a_3d_dataarray.data * THICKNESS, axis=-1)
-    np.testing.assert_allclose(returned_da.values, expected_data)
+    np.testing.assert_allclose(returned_da.to_numpy(), expected_data)
 
     # With scaling factor
     scale_factor = 2
@@ -88,7 +88,7 @@ def test_integrate_profile_concentration(
         scale_factor=scale_factor,
         units="units",
     )
-    np.testing.assert_allclose(returned_da.values, expected_data)
+    np.testing.assert_allclose(returned_da.to_numpy(), expected_data)
 
     # Missing units
     with pytest.raises(ValueError):
@@ -140,19 +140,19 @@ def test_get_variable_at_bin(
 
     # Test with a data array
     returned_da = manipulations.get_variable_at_bin(a_3d_dataarray, bins)
-    np.testing.assert_allclose(returned_da.values, expected_binned_data)
+    np.testing.assert_allclose(returned_da.to_numpy(), expected_binned_data)
 
     # Test with a dataset
     variable = "variable"
     ds = xr.Dataset({variable: a_3d_dataarray})
     returned_da = manipulations.get_variable_at_bin(ds, bins, variable)
-    np.testing.assert_allclose(returned_da.values, expected_binned_data)
+    np.testing.assert_allclose(returned_da.to_numpy(), expected_binned_data)
 
     # Test with bins in dataset
     bins_name = "bins"
     ds[bins_name] = bins
     returned_da = manipulations.get_variable_at_bin(ds, bins_name, variable)
-    np.testing.assert_allclose(returned_da.values, expected_binned_data)
+    np.testing.assert_allclose(returned_da.to_numpy(), expected_binned_data)
 
     with pytest.raises(TypeError):
         manipulations.get_variable_at_bin(ds, [2, 3, 5], variable)
@@ -175,7 +175,7 @@ def test_get_height_at_bin(
     bins = xr.DataArray([2, 3, 5])
     expected_binned_data = ds["height"].data[:, :, [1, 2, 4]]
     returned_da = manipulations.get_height_at_bin(ds, bins)
-    np.testing.assert_allclose(returned_da.values, expected_binned_data)
+    np.testing.assert_allclose(returned_da.to_numpy(), expected_binned_data)
 
 
 def test_slice_range_with_valid_data(
@@ -187,7 +187,7 @@ def test_slice_range_with_valid_data(
     a_3d_dataarray.data[:2, :3, 1] = np.nan  # These are kept
     returned_da = manipulations.slice_range_with_valid_data(a_3d_dataarray)
     expected_data = a_3d_dataarray.data[:, :, 1:]
-    np.testing.assert_allclose(returned_da.values, expected_data)
+    np.testing.assert_allclose(returned_da.to_numpy(), expected_data)
 
     # Test fully nan
     a_3d_dataarray.data[:, :, :] = np.nan

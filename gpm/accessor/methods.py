@@ -237,9 +237,9 @@ class GPM_Base_Accessor:
         from gpm.io.checks import check_time
 
         if "time" in self._obj.coords:
-            start_time = self._obj["time"].values[0]
+            start_time = self._obj["time"].to_numpy()[0]
         elif "gpm_time" in self._obj.coords:
-            start_time = self._obj["gpm_time"].values[0]
+            start_time = self._obj["gpm_time"].to_numpy()[0]
         else:
             raise ValueError("Time coordinate not found")
         return check_time(start_time)
@@ -249,9 +249,9 @@ class GPM_Base_Accessor:
         from gpm.io.checks import check_time
 
         if "time" in self._obj.coords:
-            end_time = self._obj["time"].values[-1]
+            end_time = self._obj["time"].to_numpy()[-1]
         elif "gpm_time" in self._obj.coords:
-            end_time = self._obj["gpm_time"].values[-1]
+            end_time = self._obj["gpm_time"].to_numpy()[-1]
         else:
             raise ValueError("Time coordinate not found")
         return check_time(end_time)

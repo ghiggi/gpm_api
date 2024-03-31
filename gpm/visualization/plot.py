@@ -396,8 +396,8 @@ def _plot_cartopy_imshow(
     arr = np.asanyarray(da.data)
 
     # - Compute coordinates
-    x_coords = da[x].values
-    y_coords = da[y].values
+    x_coords = da[x].to_numpy()
+    y_coords = da[y].to_numpy()
 
     # - Derive extent
     extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
@@ -887,8 +887,8 @@ def create_grid_mesh_data_array(xr_obj, x, y):
     The coordinate values are taken directly from the input 1D coordinate arrays, and the data values are set to NaN.
     """
     # Extract 1D coordinate arrays
-    x_coords = xr_obj[x].values
-    y_coords = xr_obj[y].values
+    x_coords = xr_obj[x].to_numpy()
+    y_coords = xr_obj[y].to_numpy()
 
     # Create 2D meshgrid for x and y coordinates
     X, Y = np.meshgrid(x_coords, y_coords, indexing="xy")
@@ -976,8 +976,8 @@ def plot_map_mesh_centroids(
     # - Retrieve centroids
     if is_grid(xr_obj):
         xr_obj = create_grid_mesh_data_array(xr_obj, x=x, y=y)
-    lon = xr_obj[x].values
-    lat = xr_obj[y].values
+    lon = xr_obj[x].to_numpy()
+    lat = xr_obj[y].to_numpy()
 
     # - Plot centroids
     return ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)

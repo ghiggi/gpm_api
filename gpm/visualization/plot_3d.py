@@ -44,7 +44,7 @@ def create_pyvista_2d_surface(data_array, spacing=(1, 1, 1), origin=(0, 0, 0)):
         spacing=spacing,
         origin=origin,
     )
-    data = data_array.values
+    data = data_array.to_numpy()
     data = data[:, ::-1]
     surf.point_data.set_array(data.flatten(order="F"), name=data_array.name)
     surf.set_active_scalars(data_array.name)
@@ -66,7 +66,7 @@ def create_pyvista_3d_volume(data_array, spacing=(1, 1, 0.25), origin=(0, 0, 0))
         spacing=spacing,
         origin=origin,
     )
-    data = data_array.values
+    data = data_array.to_numpy()
     data = data[:, ::-1, ::-1]
     vol.point_data.set_array(data.flatten(order="F"), name=data_array.name)
     vol.set_active_scalars(data_array.name)
