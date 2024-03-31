@@ -120,7 +120,8 @@ def subset_by_time_slice(xr_obj, slice):
 def is_nat(timesteps):
     """Return a boolean array indicating timesteps which are NaT."""
     # pd.isnull(np.datetime64('NaT'))
-    return pd.isnull(timesteps)
+    # pd.isna(np.datetime64('NaT'))
+    return pd.isna(timesteps)
 
 
 def has_nat(timesteps):
@@ -234,7 +235,7 @@ def ensure_time_validity(xr_obj, limit=10):
 
     """
     attrs = xr_obj["time"].attrs
-    timesteps = xr_obj["time"].values
+    timesteps = xr_obj["time"].to_numpy()
     timesteps = infill_timesteps(timesteps, limit=limit)
     if "time" not in list(xr_obj.dims):
         xr_obj["time"].data = timesteps
@@ -264,8 +265,8 @@ def get_dataset_start_end_time(ds: xr.Dataset, time_dim="time"):
         (``starting_time``, ``ending_time``)
 
     """
-    starting_time = ds[time_dim].values[0]
-    ending_time = ds[time_dim].values[-1]
+    starting_time = ds[time_dim].to_numpy()[0]
+    ending_time = ds[time_dim].to_numpy()[-1]
     return (starting_time, ending_time)
 
 

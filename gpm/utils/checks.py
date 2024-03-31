@@ -198,7 +198,7 @@ def has_missing_granules(xr_obj):
 
 def _get_timesteps(xr_obj):
     """Get timesteps with second precision from xarray object."""
-    timesteps = xr_obj["time"].values
+    timesteps = xr_obj["time"].to_numpy()
     return timesteps.astype("M8[s]")
 
 
@@ -387,13 +387,13 @@ def has_regular_time(xr_obj):
 
 def _select_lons_lats_centroids(xr_obj):
     if "cross_track" not in xr_obj.dims:
-        lons = xr_obj["lon"].values
-        lats = xr_obj["lat"].values
+        lons = xr_obj["lon"].to_numpy()
+        lats = xr_obj["lat"].to_numpy()
     else:
         # Select centroids coordinates in the middle of the cross_track scan
         middle_idx = int(xr_obj["cross_track"].shape[0] / 2)
-        lons = xr_obj["lon"].isel(cross_track=middle_idx).values
-        lats = xr_obj["lat"].isel(cross_track=middle_idx).values
+        lons = xr_obj["lon"].isel(cross_track=middle_idx).to_numpy()
+        lats = xr_obj["lat"].isel(cross_track=middle_idx).to_numpy()
     return lons, lats
 
 
@@ -832,7 +832,7 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
     from gpm.utils.slices import list_slices_intersection
 
     xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
-    lats = xr_obj["lat"].values
+    lats = xr_obj["lat"].to_numpy()
     lats_side0 = lats[0, :]
     lats_side2 = lats[-1, :]
     # Get valid slices

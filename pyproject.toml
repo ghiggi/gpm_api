@@ -151,6 +151,8 @@ select = [
     "SIM",
     # Perflint
     "PERF",
+    # pandas-vet
+    "PD",
 
     #---------------------
     #### Future rules ####
@@ -167,6 +169,7 @@ ignore = [
     "B006", # {} defaults in function arguments
     "PT011", # pytest raised error must be checked if match the expected error msg
     "PERF203",
+    "PD901",
 
 ]
 

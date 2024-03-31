@@ -279,7 +279,8 @@ def test_ensure_time_validity():
         ds = xr.Dataset({"time": da})
         returned_dataset = ensure_time_validity(ds)
         assert np.array_equal(
-            returned_dataset.time.values, np.array(expected_datetimes, dtype="datetime64[ns]")
+            returned_dataset["time"].to_numpy(),
+            np.array(expected_datetimes, dtype="datetime64[ns]"),
         )
 
     # Check with a single timestep
@@ -351,7 +352,7 @@ def test_finalize_dataset_crs(monkeypatch):
 
     # Check decoding coordinates
     ds = finalize_dataset(ds, product=product, scan_mode=scan_mode, decode_cf=False)
-    assert ds.coords["decoding_coordinates"].values
+    assert ds.coords["decoding_coordinates"].to_numpy()
 
     # Check CF decoding
     original_decode_cf = xr.decode_cf

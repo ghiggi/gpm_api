@@ -297,8 +297,8 @@ def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
     """
     padding = _check_padding(padding=padding)
 
-    lon = xr_obj["lon"].values
-    lat = xr_obj["lat"].values
+    lon = xr_obj["lon"].to_numpy()
+    lat = xr_obj["lat"].to_numpy()
 
     if _is_crossing_dateline(lon):
         raise NotImplementedError(
@@ -369,8 +369,8 @@ def get_crop_slices_by_extent(xr_obj, extent):
     """
     if is_orbit(xr_obj):
         xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
-        lon = xr_obj["lon"].values
-        lat = xr_obj["lat"].values
+        lon = xr_obj["lon"].to_numpy()
+        lat = xr_obj["lat"].to_numpy()
         idx_row, idx_col = np.where(
             (lon >= extent[0]) & (lon <= extent[1]) & (lat >= extent[2]) & (lat <= extent[3])
         )
@@ -381,8 +381,8 @@ def get_crop_slices_by_extent(xr_obj, extent):
         list_slices = get_list_slices_from_indices(idx_col)
         return [{"along_track": slc} for slc in list_slices]
     # If GRID
-    lon = xr_obj["lon"].values
-    lat = xr_obj["lat"].values
+    lon = xr_obj["lon"].to_numpy()
+    lat = xr_obj["lat"].to_numpy()
     idx_col = np.where((lon >= extent[0]) & (lon <= extent[1]))[0]
     idx_row = np.where((lat >= extent[2]) & (lat <= extent[3]))[0]
     # If no data in the bounding box in current granule, return empty list
