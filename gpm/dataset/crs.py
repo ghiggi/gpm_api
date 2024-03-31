@@ -443,7 +443,7 @@ def _grid_mapping_reference(ds, crs, grid_mapping_name):
     if crs.is_projected:
         x_dim, y_dim = _get_proj_dim_coords(ds)
         if x_dim is None or y_dim is None:
-            warnings.warn("Projection coordinates are not present.")
+            warnings.warn("Projection coordinates are not present.", stacklevel=3)
             output = f"{grid_mapping_name}"
         else:
             output = f"{grid_mapping_name}: {x_dim} {y_dim}"
@@ -459,7 +459,7 @@ def _grid_mapping_reference(ds, crs, grid_mapping_name):
         else:
             x_dim, y_dim = _get_proj_dim_coords(ds)
             if x_dim is None or y_dim is None:
-                warnings.warn("Projection coordinates are not present.")
+                warnings.warn("Projection coordinates are not present.", stacklevel=3)
                 output = f"{grid_mapping_name}"
             output = f"{grid_mapping_name}: {x_dim} {y_dim}"
     return output

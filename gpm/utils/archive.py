@@ -124,7 +124,7 @@ def check_time_period_coverage(filepaths, start_time, end_time, raise_error=Fals
         if raise_error:
             raise ValueError(msg)
         else:
-            warnings.warn(msg, GPM_Warning)
+            warnings.warn(msg, GPM_Warning, stacklevel=1)
 
 
 def get_time_period_with_missing_files(filepaths):

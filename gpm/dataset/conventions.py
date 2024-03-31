@@ -80,7 +80,7 @@ def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=
         if raise_error:
             raise ValueError(msg)
         else:
-            warnings.warn(msg, GPM_Warning)
+            warnings.warn(msg, GPM_Warning, stacklevel=1)
 
 
 def reshape_dataset(ds):
@@ -170,7 +170,7 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
         ds = set_dataset_crs(ds, crs=crs, grid_mapping_name="crsWGS84", inplace=False)
     except Exception:
         msg = "The CRS coordinate is not set because the dataset variables does not have 2D spatial dimensions."
-        warnings.warn(msg, GPM_Warning)
+        warnings.warn(msg, GPM_Warning, stacklevel=2)
 
     ##------------------------------------------------------------------------.
     # Add GPM-API global attributes
@@ -200,16 +200,16 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
             if config.get("warn_non_contiguous_scans"):
                 if not is_regular(ds):
                     msg = "Missing timesteps across the dataset !"
-                    warnings.warn(msg, GPM_Warning)
+                    warnings.warn(msg, GPM_Warning, stacklevel=2)
         elif is_orbit(ds):
             if config.get("warn_invalid_geolocation"):
                 if not has_valid_geolocation(ds):
                     msg = "Presence of invalid geolocation coordinates !"
-                    warnings.warn(msg, GPM_Warning)
+                    warnings.warn(msg, GPM_Warning, stacklevel=2)
             if config.get("warn_non_contiguous_scans"):
                 if not is_regular(ds):
                     msg = "Presence of non-contiguous scans !"
-                    warnings.warn(msg, GPM_Warning)
+                    warnings.warn(msg, GPM_Warning, stacklevel=2)
     except Exception:
         pass
 

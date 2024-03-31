@@ -114,7 +114,6 @@ def pl_add_geographic_bins(
 
 def pl_df_to_xarray(df, xbin_column, ybin_column, bin_spacing):
     df_stats_pd = df.to_pandas()
-    df_stats_pd.dtypes
 
     df_stats_pd[xbin_column] = df_stats_pd[xbin_column].astype(float)
     df_stats_pd[ybin_column] = df_stats_pd[ybin_column].astype(float)
@@ -130,8 +129,6 @@ def pl_df_to_xarray(df, xbin_column, ybin_column, bin_spacing):
 
     # Create an empty DataFrame with the MultiIndex
     empty_df = pd.DataFrame(index=multi_index)
-
-    empty_df
 
     # Create final dataframe
     df_stats_pd = empty_df.join(df_stats_pd, how="left")

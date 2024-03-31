@@ -71,7 +71,7 @@ InputAlgorithmVersions=n/a;\nInputGenerationDateTimes=n/a;\n
         "InputGenerationDateTimes",
     ]
 
-    for key, props in res.items():
+    for props in res.values():
         assert "\t" not in props, "Tab not removed"
         assert "\n" not in props, "New line not removed"
         assert ";" not in props, "Semicolon not removed"

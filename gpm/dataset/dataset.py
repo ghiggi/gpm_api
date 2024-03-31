@@ -93,7 +93,7 @@ def _try_open_granule(filepath, scan_mode, variables, groups, prefix_group, deco
         )
     except Exception as e:
         msg = f"The following error occurred while opening the {filepath} granule: {e}"
-        warnings.warn(msg, GPM_Warning)
+        warnings.warn(msg, GPM_Warning, stacklevel=3)
         ds = None
     return ds
 
@@ -355,7 +355,7 @@ def open_dataset(
     # Warns about missing granules
     if has_missing_granules(ds):
         msg = "The GPM Dataset has missing granules !"
-        warnings.warn(msg, GPM_Warning)
+        warnings.warn(msg, GPM_Warning, stacklevel=1)
 
     ##------------------------------------------------------------------------.
     # Return Dataset

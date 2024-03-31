@@ -94,7 +94,7 @@ class TestFilterFilepaths:
     ) -> None:
         # Count and assert 2019 paths
         count_2019 = 0
-        for remote_filepath, info_dict in remote_filepaths.items():
+        for info_dict in remote_filepaths.values():
             if (
                 info_dict["year"] == 2019
                 and info_dict["product"] == self.product
@@ -143,7 +143,7 @@ class TestFilterFilepaths:
         remote_filepaths: dict[str, dict[str, Any]],
     ) -> None:
         count_until_2019 = 0
-        for remote_filepath, info_dict in remote_filepaths.items():
+        for info_dict in remote_filepaths.values():
             if info_dict["year"] == 2019 and info_dict["product"] == self.product:
                 count_until_2019 += 1
         res = filter_filepaths(
@@ -162,7 +162,7 @@ class TestFilterFilepaths:
         function checks.check_start_end_time)"""
 
         count_from_2019 = 0
-        for remote_filepath, info_dict in remote_filepaths.items():
+        for info_dict in remote_filepaths.values():
             if info_dict["year"] >= 2019 and info_dict["product"] == self.product:
                 count_from_2019 += 1
 
@@ -215,7 +215,7 @@ def test_filter_by_time(remote_filepaths: dict[str, dict[str, Any]]) -> None:
     # Test year filtering
     # Count and assert 2019 paths
     count_2019 = 0
-    for remote_filepath, info_dict in remote_filepaths.items():
+    for info_dict in remote_filepaths.values():
         if info_dict["year"] == 2019:
             count_2019 += 1
 
@@ -247,7 +247,7 @@ def test_filter_by_time(remote_filepaths: dict[str, dict[str, Any]]) -> None:
 
     # Test empty start time
     count_until_2019 = 0
-    for remote_filepath, info_dict in remote_filepaths.items():
+    for info_dict in remote_filepaths.values():
         if info_dict["year"] == 2019:
             count_until_2019 += 1
     res = filter_by_time(
@@ -261,7 +261,7 @@ def test_filter_by_time(remote_filepaths: dict[str, dict[str, Any]]) -> None:
     # Test empty end time (should default to utcnow which will technically be
     # in the past by the time it gets to the function)
     count_from_2019 = 0
-    for remote_filepath, info_dict in remote_filepaths.items():
+    for info_dict in remote_filepaths.values():
         if info_dict["year"] >= 2019:
             count_from_2019 += 1
 
@@ -273,7 +273,7 @@ def test_filter_by_time(remote_filepaths: dict[str, dict[str, Any]]) -> None:
 
     # Test granule starting on previous day
     count_previous_day = 0
-    for remote_filepath, info_dict in remote_filepaths.items():
+    for info_dict in remote_filepaths.values():
         if info_dict["start_time"].day != info_dict["end_time"].day:
             count_previous_day += 1
 
@@ -295,7 +295,7 @@ def test_filter_by_product(
 
     # Check 2A-DPR
     products_2A_DPR = 0
-    for remote_filepath, info_dict in remote_filepaths.items():
+    for info_dict in remote_filepaths.values():
         # Ensure exists in remote_filepath list
         if info_dict["product"] == "2A-DPR":
             products_2A_DPR += 1
@@ -324,7 +324,7 @@ def test_filter_by_version(
     # Test each version
     for version in versions:
         paths_with_matching_version = 0
-        for remote_filepath, info_dict in remote_filepaths.items():
+        for info_dict in remote_filepaths.values():
             if info_dict["version"] == version:
                 paths_with_matching_version += 1
 

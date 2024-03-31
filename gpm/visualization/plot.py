@@ -1056,7 +1056,7 @@ def plot_labels(
     **plot_kwargs,
 ):
     if is_generator(obj):
-        for label_id, xr_obj in obj:
+        for _, xr_obj in obj:  # label_id, xr_obj
             p = _plot_labels(
                 xr_obj=xr_obj,
                 label_name=label_name,
@@ -1095,7 +1095,7 @@ def plot_patches(
     from gpm.visualization.plot import plot_image
 
     # Plot patches
-    for label_id, xr_patch in patch_gen:
+    for _, xr_patch in patch_gen:  # label_id, xr_obj
         if isinstance(xr_patch, xr.Dataset):
             if variable is None:
                 raise ValueError("'variable' must be specified when plotting xr.Dataset patches.")
