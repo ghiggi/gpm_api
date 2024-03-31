@@ -44,8 +44,7 @@ from gpm.io.checks import (
 
 
 def subset_by_time(xr_obj, start_time=None, end_time=None):
-    """
-    Filter a GPM xarray object by start_time and end_time.
+    """Filter a GPM xarray object by start_time and end_time.
 
     Parameters
     ----------
@@ -132,8 +131,7 @@ def has_nat(timesteps):
 
 
 def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, limit_area=None):
-    """
-    Fill NaT values using an interpolation method.
+    """Fill NaT values using an interpolation method.
 
     Parameters
     ----------
@@ -220,8 +218,7 @@ def infill_timesteps(timesteps, limit):
 
 
 def ensure_time_validity(xr_obj, limit=10):
-    """
-    Attempt to correct the time coordinate if less than 'limit' consecutive NaT values are present.
+    """Attempt to correct the time coordinate if less than 'limit' consecutive NaT values are present.
 
     It raise a ValueError if more than consecutive NaT occurs.
 
@@ -279,8 +276,7 @@ def regularize_dataset(
     method: Optional[str] = None,
     fill_value=dtypes.NA,
 ):
-    """
-    Regularize a dataset across time dimension with uniform resolution.
+    """Regularize a dataset across time dimension with uniform resolution.
 
     Parameters
     ----------

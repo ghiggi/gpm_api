@@ -37,6 +37,7 @@ def _infer_interval_breaks(coord, axis=0):
     breaks : np.array
         If axis = 0, it returns an array of shape [N+1, M]
         If axis = 0, it returns an array of shape [N, M+1]
+
     """
     # Determine the half-distance between coordinates
     coord = np.asarray(coord)

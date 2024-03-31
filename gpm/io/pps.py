@@ -83,8 +83,7 @@ def _get_pps_rs_product_folder_name(product):
 
 
 def _get_pps_nrt_product_dir(product, date):
-    """
-    Retrieve the NASA PPS server directory structure where NRT data are stored.
+    """Retrieve the NASA PPS server directory structure where NRT data are stored.
 
     Parameters
     ----------
@@ -93,6 +92,7 @@ def _get_pps_nrt_product_dir(product, date):
     date : datetime.date
         Single date for which to retrieve the data.
         Note: this is currently only needed when retrieving IMERG data.
+
     """
     folder_name = _get_pps_nrt_product_folder_name(product)
     # Specify the directory tree
@@ -104,8 +104,7 @@ def _get_pps_nrt_product_dir(product, date):
 
 
 def _get_pps_rs_product_dir(product, date, version):
-    """
-    Retrieve the NASA PPS server directory structure where RS data are stored.
+    """Retrieve the NASA PPS server directory structure where RS data are stored.
 
     Parameters
     ----------
@@ -115,6 +114,7 @@ def _get_pps_rs_product_dir(product, date, version):
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
+
     """
     version = check_product_version(version, product)
     product = check_product_validity(product, product_type="RS")
@@ -148,8 +148,7 @@ def _get_pps_rs_product_dir(product, date, version):
 
 
 def _get_pps_directory_tree(product, product_type, date, version):
-    """
-    Retrieve the NASA PPS server directory tree where the GPM data are stored.
+    """Retrieve the NASA PPS server directory tree where the GPM data are stored.
 
     The directory tree structure for ``product_type="RS"`` is:
         - ``<gpmallversions>/V0<version>/<pps_rs_dir>/YYYY/MM/DD``
@@ -174,6 +173,7 @@ def _get_pps_directory_tree(product, product_type, date, version):
     -------
     directory_tree : str
         DIrectory tree on the NASA PPS server where the data are stored.
+
     """
     product_type = check_product_type(product_type)
     if product_type == "NRT":
@@ -183,8 +183,7 @@ def _get_pps_directory_tree(product, product_type, date, version):
 
 
 def get_pps_product_directory(product, product_type, date, version, server_type):
-    """
-    Retrieve the NASA PPS server product directory path at specific date.
+    """Retrieve the NASA PPS server product directory path at specific date.
 
     The data list is retrieved using https.
     The data stored are retrieved using ftps.
@@ -206,6 +205,7 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
     -------
     url_product_dir : str
         url of the NASA PPS server where the data are listed.
+
     """
     # Retrieve server URL
     url_server = (
@@ -255,8 +255,7 @@ def _try_get_pps_file_list(url_product_dir):
 
 
 def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
-    """
-    Retrieve the filepaths of the files available on the NASA PPS server for a specific day.
+    """Retrieve the filepaths of the files available on the NASA PPS server for a specific day.
 
     The query is done using https !
     The function does not return the full PPS server url, but the filepath
@@ -273,6 +272,7 @@ def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
         Single date for which to retrieve the data.
     verbose : bool, optional
         Default is ``False``. Whether to specify when data are not available for a specific date.
+
     """
     try:
         filepaths = _try_get_pps_file_list(url_product_dir)
@@ -293,8 +293,7 @@ def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
 
 
 def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
-    """
-    Retrieve the complete url to the files available on the NASA PPS server for a specific day and product.
+    """Retrieve the complete url to the files available on the NASA PPS server for a specific day and product.
 
     Parameters
     ----------
@@ -309,6 +308,7 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
     verbose : bool, optional
         Whether to specify when data are not available for a specific date.
         The default is ``True``.
+
     """
     # Retrieve url to product directory
     url_product_dir = get_pps_product_directory(

@@ -56,8 +56,7 @@ def add_optimize_layout_method(p):
 
 
 def adapt_fig_size(ax, nrow=1, ncol=1):
-    """
-    Adjusts the figure height of the plot based on the aspect ratio of cartopy subplots.
+    """Adjusts the figure height of the plot based on the aspect ratio of cartopy subplots.
 
     This function is intended to be called after all plotting has been completed.
     It operates under the assumption that all subplots within the figure share the same aspect ratio.
@@ -367,8 +366,7 @@ def get_dataarray_extent(da, x="lon", y="lat"):
 
 
 def _compute_extent(x_coords, y_coords):
-    """
-    Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+    """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
     This function assumes that the spacing between each pixel is uniform.
     """
     # Calculate the pixel size assuming uniform spacing between pixels
@@ -686,8 +684,7 @@ def plot_map(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """
-    Plot data on a geographic map.
+    """Plot data on a geographic map.
 
     Parameters
     ----------
@@ -729,6 +726,7 @@ def plot_map(
         Additional arguments to be passed to the plotting function.
         Examples include `cmap`, `norm`, `vmin`, `vmax`, `levels`, ...
         For FacetGrid plots, specify `row`, `col` and `col_wrap`.
+
     """
     from gpm.checks import is_grid, is_orbit
     from gpm.visualization.grid import plot_grid_map
@@ -782,8 +780,7 @@ def plot_image(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """
-    Plot data using imshow.
+    """Plot data using imshow.
 
     Parameters
     ----------
@@ -821,6 +818,7 @@ def plot_image(
         Additional arguments to be passed to the plotting function.
         Examples include `cmap`, `norm`, `vmin`, `vmax`, `levels`, ...
         For FacetGrid plots, specify `row`, `col` and `col_wrap`.
+
     """
     # figsize, dpi, subplot_kw only used if ax is None
     from gpm.checks import is_grid, is_orbit
@@ -863,8 +861,7 @@ def plot_image(
 
 
 def create_grid_mesh_data_array(xr_obj, x, y):
-    """
-    Create a 2D xarray DataArray with mesh coordinates based on the 1D coordinate arrays
+    """Create a 2D xarray DataArray with mesh coordinates based on the 1D coordinate arrays
     from an existing xarray object (Dataset or DataArray).
 
     The function creates a 2D grid (mesh) of x and y coordinates and initializes
@@ -888,6 +885,7 @@ def create_grid_mesh_data_array(xr_obj, x, y):
     -----
     The resulting DataArray has dimensions named 'y' and 'x', corresponding to the y and x coordinates respectively.
     The coordinate values are taken directly from the input 1D coordinate arrays, and the data values are set to NaN.
+
     """
     # Extract 1D coordinate arrays
     x_coords = xr_obj[x].to_numpy()
@@ -1122,8 +1120,7 @@ def get_inset_bounds(
     inside_figure=True,
     aspect_ratio=1,
 ):
-    """
-    Calculate the bounds for an inset axes in a matplotlib figure.
+    """Calculate the bounds for an inset axes in a matplotlib figure.
 
     This function computes the normalized figure coordinates for placing an inset axes within a figure,
     based on the specified location, size, and whether the inset should be fully inside the figure bounds.
@@ -1184,8 +1181,7 @@ def get_inset_bounds(
 
 
 def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, inside_figure=True):
-    """
-    Adds an inset map to a matplotlib axis using Cartopy, highlighting the extent of the main plot.
+    """Adds an inset map to a matplotlib axis using Cartopy, highlighting the extent of the main plot.
 
     This function creates a smaller map inset within a larger map plot to show a global view or
     contextual location of the main plot's extent.
@@ -1230,6 +1226,7 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
 
     This example creates a main plot with a specified extent and adds an upper-left inset map
     showing the global context of the main plot's extent.
+
     """
     from shapely import Polygon
 

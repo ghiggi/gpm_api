@@ -36,7 +36,9 @@ def get_list_slices_from_indices(indices):
     """Return a list of slices from a list/array of integer indices.
 
     Example:
+    -------
         [0,1,2,4,5,8] --> [slices(0,3),slice(4,6), slice(8,9)]
+
     """
     if isinstance(indices, (int, float)):
         indices = [indices]
@@ -204,6 +206,7 @@ def list_slices_flatten(list_slices):
     --------
     [[slice(1, 7934, None)], [slice(1, 2, None)]] --> [slice(1, 7934, None), slice(1, 2, None)]
     [slice(1, 7934, None), slice(1, 2, None)] --> [slice(1, 7934, None), slice(1, 2, None)]
+
     """
     flat_list = []
     for sublist in list_slices:
@@ -233,6 +236,7 @@ def get_list_slices_from_bool_arr(bool_arr, include_false=True, skip_consecutive
     --> [False, False, True, False] --> [slice(2,4)]
     If include_false=False:
     --> [False, False, True, False] --> [slice(2,3)]
+
     """
     # Check the arguments
     if not include_false:
@@ -324,8 +328,7 @@ def get_slice_from_idx_bounds(idx_start, idx_end):
 
 
 def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
-    """
-    Increase/decrease the slice with the padding argument.
+    """Increase/decrease the slice with the padding argument.
 
     Does not ensure that all output slices have same size.
 
@@ -341,18 +344,18 @@ def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
     max_stop : int
         The maximum value for the stop of the new slice.
         The default is np.inf.
+
     Returns
     -------
     list_slices : TYPE
         The list of slices after applying padding.
-    """
 
+    """
     return slice(max(slc.start - padding, min_start), min(slc.stop + padding, max_stop))
 
 
 def pad_slices(list_slices, padding, valid_shape):
-    """
-    Increase/decrease the list of slices with the padding argument.
+    """Increase/decrease the list of slices with the padding argument.
 
     Parameters
     ----------
@@ -367,6 +370,7 @@ def pad_slices(list_slices, padding, valid_shape):
     -------
     list_slices : TYPE
         The list of slices after applying padding.
+
     """
     # Check the inputs
     if isinstance(padding, int):
@@ -397,8 +401,7 @@ def pad_slices(list_slices, padding, valid_shape):
 
 
 def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
-    """
-    Enlarge a slice object to have at least a size of min_size.
+    """Enlarge a slice object to have at least a size of min_size.
 
     The function enforces the left and right bounds of the slice by max_stop and min_start.
     If the original slice size is larger than min_size, the original slice will be returned.
@@ -415,6 +418,7 @@ def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
     max_stop : int
         The maximum value for the stop of the new slice.
         The default is np.inf.
+
     Returns
     -------
     slice
@@ -467,8 +471,7 @@ def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
 
 
 def enlarge_slices(list_slices, min_size, valid_shape):
-    """
-    Enlarge a list of slice object to have at least a size of min_size.
+    """Enlarge a list of slice object to have at least a size of min_size.
 
     The function enforces the left and right bounds of the slice to be between 0 and valid_shape.
     If the original slice size is larger than min_size, the original slice will be returned.
@@ -486,6 +489,7 @@ def enlarge_slices(list_slices, min_size, valid_shape):
     -------
     list_slices : list
         The list of slices after enlarging it (if necessary).
+
     """
     # Check the inputs
     if isinstance(min_size, int):

@@ -53,6 +53,7 @@ def _get_scheduler(get=None, collection=None):
     See Also
     --------
     dask.base.get_scheduler
+
     """
     try:
         import dask
@@ -139,8 +140,7 @@ def _open_valid_granules(
     chunks,
     parallel=False,
 ):
-    """
-    Open a list of HDF granules.
+    """Open a list of HDF granules.
 
     Corrupted granules are not returned !
 
@@ -152,6 +152,7 @@ def _open_valid_granules(
         List of xr.Datasets.
     list_closers : list
          List of xr.Datasets closers.
+
     """
     if parallel and chunks is None:
         return ValueError("If parallel=True, 'chunks' can not be None.")
@@ -202,8 +203,7 @@ def open_dataset(
     prefix_group=False,
     verbose=False,
 ):
-    """
-    Lazily map HDF5 data into ``xarray.Dataset`` with relevant GPM data and attributes.
+    """Lazily map HDF5 data into ``xarray.Dataset`` with relevant GPM data and attributes.
 
     Note:
 

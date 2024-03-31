@@ -151,7 +151,6 @@ class TestGetPPSFileList:
 
     def test_no_data_found_verbose(self, mocker: MockerFixture, capsys):
         """Test the 'No data found on PPS.' scenario with verbose=True."""
-
         url = "http://example.com/products/"
         product = "2A-DPR"
         version = 6
@@ -173,7 +172,6 @@ class TestGetPPSFileList:
 
     def test_unavailable_server(self, mocker: MockerFixture):
         """Test the 'The PPS server is currently unavailable.' error."""
-
         url = "BAD URL"
         product = "2A-DPR"
         version = 6
@@ -194,7 +192,6 @@ class TestGetPPSFileList:
 
     def test_undefined_error(self, mocker: MockerFixture):
         """Test undefined error handling."""
-
         url = "http://example.com/products/"
         product = "2A-DPR"
         version = 6

@@ -46,7 +46,6 @@ from gpm.utils import checks
 
 def test_get_missing_granule_numbers() -> None:
     """Test get_missing_granule_numbers"""
-
     # Test without missing granules
     granule_ids = np.arange(10)
     ds = create_dataset_with_coordinate("gpm_granule_id", granule_ids)
@@ -63,7 +62,6 @@ def test_get_missing_granule_numbers() -> None:
 
 def test_is_contiguous_granule() -> None:
     """Test _is_contiguous_granule"""
-
     # Test expected behavior (True added at the end)
     granule_ids = np.array([0, 1, 2, 7, 8, 9])
     expected_bool_array = np.array([True, True, False, True, True, True])
@@ -149,7 +147,6 @@ class TestGetSlicesContiguousGranules:
         mocker: MockerFixture,
     ) -> None:
         """Test neither grid nor orbit"""
-
         mocker.patch("gpm.utils.checks.is_grid", return_value=False)
         mocker.patch("gpm.utils.checks.is_orbit", return_value=False)
 
@@ -161,7 +158,6 @@ class TestGetSlicesContiguousGranules:
 
 def test_check_missing_granules() -> None:
     """Test check_missing_granules"""
-
     # Test without missing granules
     granule_ids = np.arange(10)
     ds = create_dataset_with_coordinate("gpm_granule_id", granule_ids)
@@ -211,7 +207,6 @@ class TestHasMissingGranules:
         mocker: MockerFixture,
     ) -> None:
         """Test neither grid nor orbit"""
-
         mocker.patch("gpm.utils.checks.is_grid", return_value=False)
         mocker.patch("gpm.utils.checks.is_orbit", return_value=False)
 
@@ -376,7 +371,6 @@ class TestCheckRegularTime:
 
 def test_get_along_track_scan_distance() -> None:
     """Test _get_along_track_scan_distance"""
-
     # Values along track
     lat = np.array([60, 60, 60])
     lon = np.array([0, 45, 90])
@@ -475,7 +469,6 @@ class TestContinuousScans:
         ds_non_contiguous_granule_id: xr.Dataset,
     ) -> xr.Dataset:
         """Create a dasaset with non contiguous lon and granule_id"""
-
         ds = ds_non_contiguous_granule_id.copy(deep=True)
 
         # Insert gap at same location as granule_id
@@ -491,7 +484,6 @@ class TestContinuousScans:
         ds_non_contiguous_both: xr.Dataset,
     ) -> None:
         """Test _is_contiguous_scans"""
-
         # Test contiguous
         contiguous = checks._is_contiguous_scans(ds_contiguous)
         assert np.all(contiguous)
@@ -517,7 +509,6 @@ class TestContinuousScans:
         ds_non_contiguous_both: xr.Dataset,
     ) -> None:
         """Test check_contiguous_scans"""
-
         # Test contiguous
         checks.check_contiguous_scans(ds_contiguous)
         # No error raised
@@ -541,7 +532,6 @@ class TestContinuousScans:
         ds_non_contiguous_both: xr.Dataset,
     ) -> None:
         """Test has_contiguous_scans"""
-
         assert checks.has_contiguous_scans(ds_contiguous)
         assert not checks.has_contiguous_scans(ds_non_contiguous_lon)
         assert not checks.has_contiguous_scans(ds_non_contiguous_granule_id)
@@ -640,7 +630,6 @@ class TestValidGeolocation:
         ds_orbit_invalid: xr.Dataset,
     ) -> None:
         """Test _is_valid_geolocation"""
-
         # Valid
         valid = checks._is_valid_geolocation(ds_orbit_valid)
         assert np.all(valid)
@@ -656,7 +645,6 @@ class TestValidGeolocation:
         ds_orbit_invalid: xr.Dataset,
     ) -> None:
         """Test check_valid_geolocation"""
-
         # Valid
         checks.check_valid_geolocation(ds_orbit_valid)
         # No error raised
@@ -672,7 +660,6 @@ class TestValidGeolocation:
         ds_orbit_invalid: xr.Dataset,
     ) -> None:
         """Test has_valid_geolocation"""
-
         assert checks.has_valid_geolocation(ds_orbit_valid)
         assert not checks.has_valid_geolocation(ds_orbit_invalid)
 
@@ -684,7 +671,6 @@ class TestValidGeolocation:
         ds_orbit_all_invalid: xr.Dataset,
     ) -> None:
         """Test get_slices_valid_geolocation"""
-
         # Test valid geolocation
         assert checks.get_slices_valid_geolocation(ds_orbit_valid) == [slice(0, 10)]
 
@@ -729,14 +715,12 @@ class TestWobblingSwath:
 
     def test_get_slices_non_wobbling_swath(self) -> None:
         """Test get_slices_non_wobbling_swath"""
-
         returned_slices = checks.get_slices_non_wobbling_swath(self.ds, threshold=self.threshold)
         expected_slices = [slice(0, 6 + 1), slice(9, 12 + 1)]
         assert returned_slices == expected_slices
 
     def test_get_slices_wobbling_swath(self) -> None:
         """Test get_slices_wobbling_swath"""
-
         returned_slices = checks.get_slices_wobbling_swath(self.ds, threshold=self.threshold)
         expected_slices = [slice(7, 9)]
         assert returned_slices == expected_slices
@@ -830,7 +814,6 @@ def test_check_criteria() -> None:
 
 def test_get_slices_var_equals() -> None:
     """Test get_slices_var_equals"""
-
     dim = "dimension"
     array = [0, 0, 1, 1, 2, 3]
     da = xr.DataArray(array, dims=[dim])
@@ -879,7 +862,6 @@ def test_get_slices_var_equals() -> None:
 
 def test_get_slices_var_between() -> None:
     """Test get_slices_var_between"""
-
     vmin = 5
     vmax = 10
 

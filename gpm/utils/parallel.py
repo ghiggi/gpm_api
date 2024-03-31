@@ -29,15 +29,17 @@ import dask
 
 
 def compute_list_delayed(list_delayed, max_concurrent_tasks=None):
-    """
-    Compute the list of Dask delayed objects in blocks of max_concurrent_tasks.
+    """Compute the list of Dask delayed objects in blocks of max_concurrent_tasks.
 
-    Parameters:
+    Parameters
+    ----------
     list_results (list): List of Dask delayed objects.
     max_concurrent_task (int): Maximum number of concurrent tasks to execute.
 
-    Returns:
+    Returns
+    -------
     list: List of computed results.
+
     """
     if max_concurrent_tasks is None:
         return dask.compute(*list_delayed)

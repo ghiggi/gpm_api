@@ -121,6 +121,7 @@ def get_ges_disc_product_directory_tree(product, date, version):
     -------
     directory_tree : str
         DIrectory tree on the NASA GESC DISC server where the data are stored.
+
     """
     # Retrieve foldername
     folder_name = _get_ges_disc_product_folder_name(product, version)
@@ -136,8 +137,7 @@ def get_ges_disc_product_directory_tree(product, date, version):
 
 
 def get_ges_disc_product_directory(product, date, version):
-    """
-    Retrieve the NASA GES DISC server product directory path at a specific date.
+    """Retrieve the NASA GES DISC server product directory path at a specific date.
 
     The data list is retrieved using https.
 
@@ -154,6 +154,7 @@ def get_ges_disc_product_directory(product, date, version):
     -------
     url_data_list : str
         url of the NASA GES DISC server where the data are stored.
+
     """
     # Retrieve server URL
     url_server = _get_ges_disc_server(product)
@@ -170,8 +171,7 @@ def get_ges_disc_product_directory(product, date, version):
 
 
 def _get_ges_disc_file_list(url_product_dir, product, date, version, verbose=True):
-    """
-    Retrieve NASA GES DISC filepaths for a specific day and product.
+    """Retrieve NASA GES DISC filepaths for a specific day and product.
 
     The query is done using https !
     The function does return the full GES DISC url file paths.
@@ -187,6 +187,7 @@ def _get_ges_disc_file_list(url_product_dir, product, date, version, verbose=Tru
         Single date for which to retrieve the data.
     verbose : bool, optional
         Default is ``False``. Whether to specify when data are not available for a specific date.
+
     """
     try:
         filepaths = _get_ges_disc_list_path(url_product_dir)
@@ -211,8 +212,7 @@ def _check_gesc_disc_product_type(product, product_type):
 
 
 def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=True):
-    """
-    Retrieve the NASA GES DISC file paths available at a given date.
+    """Retrieve the NASA GES DISC file paths available at a given date.
 
     Parameters
     ----------
@@ -227,6 +227,7 @@ def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=T
     verbose : bool, optional
         Whether to specify when data are not available for a specific date.
         The default is ``True``.
+
     """
     _check_gesc_disc_product_type(product=product, product_type=product_type)
     # Retrieve server urls of NASA GES DISC
@@ -259,6 +260,7 @@ def define_ges_disc_filepath(product, product_type, date, version, filename):
         GPM version of the data to retrieve if ``product_type = "RS"``.
     filename : str
         Name of the GPM file.
+
     """
     _check_gesc_disc_product_type(product=product, product_type=product_type)
     # Retrieve product directory url

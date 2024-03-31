@@ -12,7 +12,6 @@ def get_geodesic_path(
     offset_distance: float = 0,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute geodesic path between starting and ending coordinates"""
-
     geod = pyproj.Geod(ellps="sphere")
     r = geod.inv_intermediate(
         start_lon,
@@ -48,7 +47,6 @@ def get_geodesic_band(
     n_cross_track: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute coordinates of geodesic band"""
-
     lon_lines = []
     lat_lines = []
     offsets = np.linspace(-width / 2, width / 2, n_cross_track)
@@ -81,7 +79,6 @@ def get_orbit_dataarray(
     n_cross_track: int,
 ) -> xr.DataArray:
     """Create orbit data array on geodesic band"""
-
     np.random.seed(0)
     cross_track = np.arange(n_cross_track)
     along_track = np.arange(n_along_track)
@@ -117,7 +114,6 @@ def get_grid_dataarray(
     n_lat: int,
 ) -> xr.DataArray:
     """Create grid data array"""
-
     np.random.seed(0)
     lon = np.linspace(start_lon, end_lon, n_lon)
     lat = np.linspace(start_lat, end_lat, n_lat)

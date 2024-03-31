@@ -147,8 +147,7 @@ def get_transect_slices(
     variable=None,
     transect_kwargs={},
 ):
-    """
-    Define transect isel dictionary slices.
+    """Define transect isel dictionary slices.
 
     If lon and lat are provided, it returns the transect closest to such point.
     Otherwise, it returns the transect passing through the maximum value of 'variable'

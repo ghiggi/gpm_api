@@ -33,7 +33,6 @@ def get_time_str(timesteps, time_idx=None, resolution="m", timezone="UTC"):
 
     If an array, it takes the timesteps in the middle of the array.
     """
-
     if timesteps.size == 1:
         timestep = timesteps
     else:
@@ -51,8 +50,7 @@ def get_dataset_title(
     resolution="m",
     timezone="UTC",
 ):
-    """
-    Generate the GPM Dataset title.
+    """Generate the GPM Dataset title.
 
     Parameters
     ----------
@@ -107,8 +105,7 @@ def get_dataarray_title(
     resolution="m",
     timezone="UTC",
 ):
-    """
-    Generate the GPM xarray DataArray title.
+    """Generate the GPM xarray DataArray title.
 
     Parameters
     ----------

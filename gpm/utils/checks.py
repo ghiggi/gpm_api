@@ -80,8 +80,7 @@ def _is_contiguous_granule(granule_ids):
 
 @check_is_gpm_object
 def get_slices_contiguous_granules(xr_obj, min_size=2):
-    """
-    Return a list of slices ensuring contiguous granules.
+    """Return a list of slices ensuring contiguous granules.
 
     The minimum size of the output slices is 2.
 
@@ -100,6 +99,7 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
     list_slices : list
         List of slice object to select contiguous granules.
         Output format: [slice(start,stop), slice(start,stop),...]
+
     """
     if is_grid(xr_obj):
         return get_slices_regular_time(xr_obj, tolerance=None, min_size=min_size)
@@ -131,8 +131,7 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
 
 
 def check_missing_granules(xr_obj):
-    """
-    Check no missing granules in the GPM Dataset.
+    """Check no missing granules in the GPM Dataset.
 
     It assumes xr_obj is a GPM ORBIT object.
 
@@ -150,8 +149,7 @@ def check_missing_granules(xr_obj):
 
 
 def check_contiguous_granules(xr_obj):
-    """
-    Check no missing granules in the GPM Dataset.
+    """Check no missing granules in the GPM Dataset.
 
     It assumes xr_obj is a GPM ORBIT object.
 
@@ -232,8 +230,7 @@ def _is_regular_time(xr_obj, tolerance=None):
 
 
 def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
-    """
-    Return a list of slices ensuring timesteps to be regular.
+    """Return a list of slices ensuring timesteps to be regular.
 
     Output format: [slice(start,stop), slice(start,stop),...]
 
@@ -258,6 +255,7 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
     list_slices : list
         List of slice object to select regular time intervals.
         Output format: [slice(start,stop), slice(start,stop),...]
+
     """
     # Retrieve timestep
     timesteps = _get_timesteps(xr_obj)
@@ -289,8 +287,7 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
 
 
 def get_slices_non_regular_time(xr_obj, tolerance=None):
-    """
-    Return a list of slices where there are supposedly missing timesteps.
+    """Return a list of slices where there are supposedly missing timesteps.
 
     The output slices have size 2.
     An input with less than 2 scans (along-track) returns an empty list.
@@ -311,6 +308,7 @@ def get_slices_non_regular_time(xr_obj, tolerance=None):
     list_slices : list
         List of slice object to select intervals with non-regular timesteps.
         Output format: [slice(start,stop), slice(start,stop),...]
+
     """
     # Retrieve timestep
     timesteps = _get_timesteps(xr_obj)
@@ -334,8 +332,7 @@ def get_slices_non_regular_time(xr_obj, tolerance=None):
 
 
 def check_regular_time(xr_obj, tolerance=None, verbose=True):
-    """
-    Check no missing timesteps for longer than 'tolerance' seconds.
+    """Check no missing timesteps for longer than 'tolerance' seconds.
 
     Note:
     - This sometimes occurs between orbit/grid granules
@@ -460,8 +457,7 @@ def _is_contiguous_scans(xr_obj):
 @check_is_orbit
 @check_has_along_track_dimension
 def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
-    """
-    Return a list of slices ensuring contiguous scans (and granules).
+    """Return a list of slices ensuring contiguous scans (and granules).
 
     It checks for contiguous scans only in the middle of the cross-track !
     If a scan geolocation is NaN, it will be considered non-contiguous.
@@ -483,6 +479,7 @@ def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
     list_slices : list
         List of slice object to select contiguous scans.
         Output format: [slice(start,stop), slice(start,stop),...]
+
     """
     # Get number of scans
     n_scans = xr_obj["along_track"].shape[0]
@@ -520,8 +517,7 @@ def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
 @check_is_orbit
 @check_has_along_track_dimension
 def get_slices_non_contiguous_scans(xr_obj):
-    """
-    Return a list of slices where the scans discontinuity occurs.
+    """Return a list of slices where the scans discontinuity occurs.
 
     An input with less than 2 scans (along-track) returns an empty list.
 
@@ -535,6 +531,7 @@ def get_slices_non_contiguous_scans(xr_obj):
     list_slices : list
         List of slice object to select discontiguous scans.
         Output format: [slice(start,stop), slice(start,stop),...]
+
     """
     # Get number of scans
     n_scans = xr_obj["along_track"].shape[0]
@@ -564,8 +561,7 @@ def get_slices_non_contiguous_scans(xr_obj):
 
 @check_has_cross_track_dimension
 def check_contiguous_scans(xr_obj, verbose=True):
-    """
-    Check no missing scans across the along_track direction.
+    """Check no missing scans across the along_track direction.
 
     Note:
     - This sometimes occurs between orbit granules
@@ -580,8 +576,8 @@ def check_contiguous_scans(xr_obj, verbose=True):
 
     Returns
     -------
-
     None.
+
     """
     list_discontinuous_slices = get_slices_non_contiguous_scans(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
@@ -657,6 +653,7 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
     list_slices : list
         List of slice object with valid geolocation.
         Output format: [slice(start,stop), slice(start,stop),...]
+
     """
     # - Get invalid coordinates
     invalid_lon_coords = _is_non_valid_geolocation(xr_obj, x="lon")
@@ -704,6 +701,7 @@ def get_slices_non_valid_geolocation(xr_obj):
     list_slices : list
         List of slice object with non-valid geolocation.
         Output format: [slice(start,stop), slice(start,stop),...]
+
     """
     list_slices_valid = get_slices_valid_geolocation(xr_obj, min_size=1)
     list_slices_full = [slice(0, len(xr_obj["along_track"]))]
@@ -711,8 +709,7 @@ def get_slices_non_valid_geolocation(xr_obj):
 
 
 def check_valid_geolocation(xr_obj, verbose=True):
-    """
-    Check no geolocation errors in the GPM Dataset.
+    """Check no geolocation errors in the GPM Dataset.
 
     Parameters
     ----------
@@ -751,7 +748,8 @@ def has_valid_geolocation(xr_obj):
 
 def apply_on_valid_geolocation(function):
     """A decorator that apply the get_slices_<function> only on portions of GPM ORBIT objects
-    with valid geolocation."""
+    with valid geolocation.
+    """
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -887,8 +885,7 @@ def is_regular(xr_obj):
 
 @check_is_gpm_object
 def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
-    """
-    Return a list of slices to select regular GPM objects.
+    """Return a list of slices to select regular GPM objects.
 
     For GPM ORBITS, it returns slices to select contiguous scans with valid geolocation.
     For GPM GRID, it returns slices to select periods with regular timesteps.
@@ -914,6 +911,7 @@ def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
     list_slices : list
         List of slice object to select regular portions.
         Output format: [slice(start,stop), slice(start,stop),...]
+
     """
     from gpm.checks import is_grid, is_orbit
 

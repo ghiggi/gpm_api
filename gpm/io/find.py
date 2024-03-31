@@ -145,8 +145,7 @@ def find_daily_filepaths(
     end_time=None,
     verbose=False,
 ):
-    """
-    Retrieve GPM data filepaths for a specific day and product.
+    """Retrieve GPM data filepaths for a specific day and product.
 
     Parameters
     ----------
@@ -229,8 +228,7 @@ def find_filepaths(
     verbose=True,
     parallel=True,
 ):
-    """
-    Retrieve GPM data filepaths on local disk for a specific time period and product.
+    """Retrieve GPM data filepaths on local disk for a specific time period and product.
 
     Parameters
     ----------

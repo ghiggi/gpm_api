@@ -162,7 +162,6 @@ def add_3d_isosurfaces(
 class IsosurfaceSlider:
     def __init__(self, vol, method="contour", isovalue=None):
         """Define pyvista slider for 3D isosurfaces."""
-
         self.vol = vol
         vmin, vmax = vol.get_data_range()
         self.vmin = vmin
@@ -201,7 +200,6 @@ def add_3d_isosurface_slider(vol, pl, method="contour", isovalue=None, **mesh_kw
 class OrthogonalSlicesSlider:
     def __init__(self, vol, x=1, y=1, z=1):
         """Define pyvista sliders for 3D orthogonal slices."""
-
         self.vol = vol
         self.slices = vol.slice_orthogonal(x=x, y=y, z=z)
         # Set default parameters

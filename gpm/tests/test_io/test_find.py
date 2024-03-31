@@ -57,7 +57,6 @@ class TestGetDailyFilepaths:
         self,
     ) -> None:
         """Test _get_all_daily_filepaths for "LOCAL" storage with non-existent files"""
-
         storage = "LOCAL"
 
         returned_filepaths = _get_all_daily_filepaths(
@@ -77,7 +76,6 @@ class TestGetDailyFilepaths:
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "LOCAL" storage with existing (mocked) files"""
-
         base_dir = "dummy/path/to/base_dir"
         storage = "LOCAL"
 
@@ -152,7 +150,6 @@ class TestGetDailyFilepaths:
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with RS version 7 products"""
-
         storage = "PPS"
         product_type = "RS"
         version = 7
@@ -181,7 +178,6 @@ class TestGetDailyFilepaths:
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with RS lower version products"""
-
         storage = "PPS"
         product_type = "RS"
 
@@ -213,7 +209,6 @@ class TestGetDailyFilepaths:
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with NRT products (except IMERG)"""
-
         storage = "PPS"
         product_type = "NRT"
 
@@ -245,7 +240,6 @@ class TestGetDailyFilepaths:
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with NRT IMERG products"""
-
         storage = "PPS"
         product_type = "NRT"
         product_category = "IMERG"
@@ -319,7 +313,6 @@ class TestGetDailyFilepaths:
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "GES_DISC" storage"""
-
         storage = "GES_DISC"
         version = 7
 
@@ -347,7 +340,6 @@ class TestGetDailyFilepaths:
 
     def test_invalid_storage(self) -> None:
         """Test _get_all_daily_filepaths for invalid "storage" argument"""
-
         storage = "invalid"
         product = "1C-GMI"
         product_type = "RS"
@@ -367,7 +359,6 @@ class TestGetDailyFilepaths:
 @pytest.mark.filterwarnings("error")
 def test_check_correct_version() -> None:
     """Test _check_correct_version"""
-
     product = "2A-DPR"
     version = 7
     filepath_template = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V0{}A.HDF5"
@@ -409,7 +400,6 @@ def test_find_daily_filepaths(
     mocker: MockerFixture,
 ) -> None:
     """Test find_daily_filepaths"""
-
     storage = "storage"
     date = datetime.datetime(2020, 12, 31)
     product = "product"

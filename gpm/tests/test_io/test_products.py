@@ -65,7 +65,6 @@ def test_get_product_category(
 
 def test_get_product_info():
     """Test get_product_info."""
-
     # Test with non string input
     with pytest.raises(TypeError):
         get_product_info(123)
@@ -81,7 +80,6 @@ def test_get_product_info():
 @pytest.mark.parametrize("full", [True, False])
 def test_get_product_level(full):
     """Get the product_level of a GPM product."""
-
     results_dict = {
         "1B-Ka": {"full": "1B", "short": "1B"},
         "1C-GMI-R": {"full": "1C-R", "short": "1C"},

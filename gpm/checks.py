@@ -164,19 +164,19 @@ def is_grid(xr_obj):
 
 
 def check_is_orbit(xr_obj):
-    "Check is a GPM ORBIT object."
+    """Check is a GPM ORBIT object."""
     if not is_orbit(xr_obj):
         raise ValueError("Expecting a GPM ORBIT object.")
 
 
 def check_is_grid(xr_obj):
-    "Check is a GPM GRID object."
+    """Check is a GPM GRID object."""
     if not is_grid(xr_obj):
         raise ValueError("Expecting a GPM GRID object.")
 
 
 def check_is_gpm_object(xr_obj):
-    "Check is a GPM object (GRID or ORBIT)."
+    """Check is a GPM object (GRID or ORBIT)."""
     if not is_orbit(xr_obj) and not is_grid(xr_obj):
         raise ValueError("Unrecognized GPM xarray object.")
 

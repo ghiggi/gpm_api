@@ -35,7 +35,6 @@ from gpm.dataset import dimensions
 
 def test_has_a_phony_dim():
     """Test _has_a_phony_dim"""
-
     array = np.zeros(shape=(3,))
 
     dataarray = xr.DataArray(data=array, dims=["not_phony"])
@@ -47,7 +46,6 @@ def test_has_a_phony_dim():
 
 def test_get_dataarray_dim_dict():
     """Test _get_dataarray_dim_dict"""
-
     array = np.zeros(shape=(3, 3))
 
     dataarray = xr.DataArray(data=array, dims=["phony_dim_1", "phony_dim_2"])
@@ -63,7 +61,6 @@ def test_get_dataarray_dim_dict():
 
 def test_get_dataset_dim_dict():
     """Test _get_dataset_dim_dict"""
-
     array_1 = np.zeros(shape=(3,))
     array_2 = np.zeros(shape=(3,))
     dataarray_1 = xr.DataArray(data=array_1, dims=["phony_dim_1"])
@@ -82,7 +79,6 @@ def test_get_dataset_dim_dict():
 
 def test_get_datatree_dim_dict():
     """Test _get_datatree_dim_dict"""
-
     array_1 = np.zeros(shape=(3,))
     array_2 = np.zeros(shape=(3,))
     dataarray_1 = xr.DataArray(data=array_1, dims=["phony_dim_1"])
@@ -103,7 +99,6 @@ def test_get_datatree_dim_dict():
 
 def test_get_gpm_dims_dict(monkeypatch):
     """Test _get_gpm_dims_dict"""
-
     # Mock the replaced dimension names
     monkeypatch.setattr(
         "gpm.dataset.dimensions.DIM_DICT",
@@ -129,7 +124,6 @@ def test_get_gpm_dims_dict(monkeypatch):
 
 def test_rename_datarray_dimensions():
     """Test _rename_datarray_dimensions"""
-
     array = np.zeros(shape=(3, 3))
     dataarray = xr.DataArray(data=array, dims=["phony_dim_1", "not_replaced"])
     dataarray.attrs["DimensionNames"] = "replaced_dim_1"
@@ -141,7 +135,6 @@ def test_rename_datarray_dimensions():
 
 def test_rename_dataset_dimensions(monkeypatch):
     """Test _rename_dataset_dimensions"""
-
     # Mock the replaced dimension names
     monkeypatch.setattr(
         "gpm.dataset.dimensions.DIM_DICT",
@@ -171,7 +164,6 @@ def test_rename_dataset_dimensions(monkeypatch):
 
 def test_rename_datatree_dimensions(monkeypatch):
     """Test _rename_datatree_dimensions"""
-
     # Mock the replaced dimension names
     monkeypatch.setattr(
         "gpm.dataset.dimensions.DIM_DICT",

@@ -37,7 +37,6 @@ def test_get_start_time_from_filepaths(
     remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test that the start time is correctly extracted from filepaths"""
-
     # Although can be done as a test. To ensure the list order is identical
     # do individually.
     for remote_filepath, info_dict in remote_filepaths.items():
@@ -54,7 +53,6 @@ def test_get_end_time_from_filepaths(
     remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test that the end time is correctly extracted from filepaths"""
-
     # Although can be done as a test. To ensure the list order is identical
     # do individually.
     for remote_filepath, info_dict in remote_filepaths.items():
@@ -66,7 +64,6 @@ def test_get_version_from_filepaths(
     remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test that the version is correctly extracted from filepaths"""
-
     # Although can be done as a test. To ensure the list order is identical
     # do individually.
     for remote_filepath, info_dict in remote_filepaths.items():
@@ -79,7 +76,6 @@ def test_get_granule_from_filepaths(
     remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test get_granule_from_filepaths"""
-
     for remote_filepath, info_dict in remote_filepaths.items():
         if info_dict["product_type"] == "NRT":
             continue
@@ -92,7 +88,6 @@ def test_get_start_end_time_from_filepaths(
     remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test get_start_end_time_from_filepaths"""
-
     for remote_filepath, info_dict in remote_filepaths.items():
         generated_start_time, generated_end_time = info.get_start_end_time_from_filepaths(
             remote_filepath,
@@ -105,7 +100,6 @@ def test_get_product_from_filepaths(
     remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test get_product_from_filepaths"""
-
     for remote_filepath, info_dict in remote_filepaths.items():
         product = info.get_product_from_filepaths(remote_filepath)
         assert [info_dict["product"]] == product

@@ -80,8 +80,7 @@ DYNAMIC_GLOBAL_ATTRS = (
 
 
 def _is_str_list(s):
-    """
-    Return a boolean indicating if the string start and end with brackets and can
+    """Return a boolean indicating if the string start and end with brackets and can
     be converted to a list.
     """
     if s.startswith("[") and s.endswith("]"):

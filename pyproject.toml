@@ -98,6 +98,7 @@ target-version = [
 [tool.ruff]
 line-length = 120
 indent-width = 4
+
 # Addional file to be formatted by ruff (in addition to *py)
 extend-include = ["*.ipynb"]
 # Exclude a variety of commonly ignored directories.
@@ -124,8 +125,15 @@ exclude = [
     "node_modules",
     "venv",
 ]
+
+[tool.ruff.format]
+# Enable reformatting of code snippets in docstrings.
+docstring-code-format = true
+
 [tool.ruff.lint]
 select = [
+    # pydocstyle
+    "D",
     # Pyflakes
     "F",
     # pycodestyle
@@ -161,7 +169,7 @@ select = [
     "SLOT",
     # flake8-comprehensions
     "C4",
-    # Add ruff custom rules
+    # Ruff custom rules
     "RUF"
     #---------------------
     #### Future rules ####
@@ -197,6 +205,8 @@ ignore = [
 fixable = ["ALL"]
 unfixable = []
 
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore `E402` (import violations) in all Jupyter Notebooks.

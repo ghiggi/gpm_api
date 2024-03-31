@@ -44,7 +44,6 @@ MAX_TIMESTAMP = 2**31 - 1
 
 def get_random_datetime_array_and_dataset(n_values):
     """Return random datetimes as numpy array and xarrray dataset."""
-
     timestamps = np.random.randint(0, MAX_TIMESTAMP, size=n_values)
     datetimes = pd.to_datetime(timestamps, unit="s")
     ds = xr.Dataset(
@@ -65,7 +64,6 @@ def get_random_datetime_array_and_dataset(n_values):
 
 def test_get_orbit_coords():
     """Test get_orbit_coords"""
-
     scan_mode = "S1"
     granule_id = np.random.randint(0, 100000)
     shape = (10, 3)
@@ -99,7 +97,6 @@ def test_get_orbit_coords():
 
 def test_get_grid_coords():
     """Test get_grid_coords"""
-
     scan_mode = "Grid"
     n_values = 10
 
@@ -135,7 +132,6 @@ def test_get_grid_coords():
 
 def test_get_coords(monkeypatch):
     """Test get_coords"""
-
     # Mock get_orbit_coords and get_grid_coords
     monkeypatch.setattr(coords, "get_orbit_coords", lambda *args: "return from get_orbit_coords")
     monkeypatch.setattr(coords, "get_grid_coords", lambda *args: "return from get_grid_coords")
@@ -154,7 +150,6 @@ def test_get_coords(monkeypatch):
 
 def test_get_coords_attrs_dict() -> None:
     """Test get_coords_attrs_dict"""
-
     # Test dataset with no matching attributes
     ds = xr.Dataset()
     returned_dict = coords.get_coords_attrs_dict(ds)
@@ -203,7 +198,6 @@ def test_get_coords_attrs_dict() -> None:
 
 def test_set_coords_attrs() -> None:
     """Test set_coords_attrs"""
-
     # Test dataset with one relevant attribute and one unrelevant attribute
     ds = xr.Dataset()
     ds["lat"] = xr.DataArray([])

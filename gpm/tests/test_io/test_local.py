@@ -115,7 +115,6 @@ def test__get_local_dir_pattern(
     versions: list[int],
 ) -> None:
     """Test that the disk directory pattern is correct."""
-
     # Go through all available options and check that the pattern is correct
     for product in products:
         for product_type in product_types:
@@ -156,7 +155,6 @@ def test_get_local_product_base_directory(
     tmpdir,
 ) -> None:
     """Test that the disk directory is correct."""
-
     date = datetime.datetime.strptime("2021-01-01", "%Y-%m-%d").date()
 
     base_dir = os.path.join(tmpdir, "gpm_data")

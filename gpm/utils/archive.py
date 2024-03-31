@@ -127,8 +127,7 @@ def check_time_period_coverage(filepaths, start_time, end_time, raise_error=Fals
 
 
 def get_time_period_with_missing_files(filepaths):
-    """
-    It returns the time period where the are missing granules.
+    """It returns the time period where the are missing granules.
 
     It assumes the input filepaths are for a single GPM product.
 
@@ -193,8 +192,7 @@ def check_archive_completeness(
     n_threads=4,
     verbose=True,
 ):
-    """
-    Check that the GPM product archive is not missing granules over a given period.
+    """Check that the GPM product archive is not missing granules over a given period.
 
     This function does not require connection to the PPS to search for the missing files.
     However, the start and end period are based on the first and last file found on disk !
@@ -223,6 +221,7 @@ def check_archive_completeness(
         Whether to use ``curl`` or ``wget`` for data download. The default is  ``curl``.
     verbose : bool, optional
         Whether to print processing details. The default is ``False``.
+
     """
     ##--------------------------------------------------------------------.
     from gpm.io.download import download_archive

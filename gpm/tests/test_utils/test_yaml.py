@@ -46,7 +46,6 @@ sample_data = dictionary = {
 
 def test_read_yaml(tmp_path):
     """Test read_yaml."""
-
     # Create a temporary file path
     tmp_filepath = tmp_path / "test.yaml"
 
