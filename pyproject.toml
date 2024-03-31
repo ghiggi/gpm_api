@@ -145,7 +145,8 @@ select = [
     # "SIM",
     # flake8-unused-arguments
     "ARG",
-
+    # flake8-raise
+    "RSE",
 
     #---------------------
     #### Future rules ####
