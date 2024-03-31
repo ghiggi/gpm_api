@@ -105,8 +105,7 @@ def _is_grid_expected_spatial_dims(spatial_dims):
     is_xy = set(spatial_dims) == set(["y", "x"])
     if is_grid or is_lonlat or is_xy:
         return True
-    else:
-        return False
+    return False
 
 
 def _is_swath_expected_spatial_dims(spatial_dims):
@@ -116,8 +115,7 @@ def _is_swath_expected_spatial_dims(spatial_dims):
     is_xy = set(spatial_dims) == set(["y", "x"])
     if is_orbit or is_xy:
         return True
-    else:
-        return False
+    return False
 
 
 def _is_expected_spatial_dims(spatial_dims):
@@ -126,8 +124,7 @@ def _is_expected_spatial_dims(spatial_dims):
     is_grid = _is_grid_expected_spatial_dims(spatial_dims)
     if is_orbit or is_grid:
         return True
-    else:
-        return False
+    return False
 
 
 def is_orbit(xr_obj):
@@ -144,8 +141,7 @@ def is_orbit(xr_obj):
     x_coord, y_coord = _get_proj_dim_coords(xr_obj)
     if x_coord is None and y_coord is None:
         return True
-    else:
-        return False
+    return False
 
 
 def is_grid(xr_obj):
@@ -164,8 +160,7 @@ def is_grid(xr_obj):
     x_coord, y_coord = _get_proj_dim_coords(xr_obj)
     if x_coord is not None and y_coord is not None:
         return True
-    else:
-        return False
+    return False
 
 
 def check_is_orbit(xr_obj):
@@ -251,8 +246,7 @@ def _is_spatial_2d_dataset(ds, strict):
     ).item()
     if all_2d_spatial:
         return True
-    else:
-        return False
+    return False
 
 
 def _is_spatial_3d_dataset(ds, strict):
@@ -262,8 +256,7 @@ def _is_spatial_3d_dataset(ds, strict):
     ).item()
     if all_3d_spatial:
         return True
-    else:
-        return False
+    return False
 
 
 def _is_transect_dataset(ds, strict):
@@ -273,8 +266,7 @@ def _is_transect_dataset(ds, strict):
     ).item()
     if all_profile_spatial:
         return True
-    else:
-        return False
+    return False
 
 
 def is_spatial_2d(xr_obj, strict=True, squeeze=True):
@@ -289,8 +281,7 @@ def is_spatial_2d(xr_obj, strict=True, squeeze=True):
         xr_obj = xr_obj.squeeze()  # remove dimensions of size 1
     if isinstance(xr_obj, xr.Dataset):
         return _is_spatial_2d_dataset(xr_obj, strict=strict)
-    else:
-        return _is_spatial_2d_datarray(xr_obj, strict=strict)
+    return _is_spatial_2d_datarray(xr_obj, strict=strict)
 
 
 def is_spatial_3d(xr_obj, strict=True, squeeze=True):
@@ -300,8 +291,7 @@ def is_spatial_3d(xr_obj, strict=True, squeeze=True):
         xr_obj = xr_obj.squeeze()  # remove dimensions of size 1
     if isinstance(xr_obj, xr.Dataset):
         return _is_spatial_3d_dataset(xr_obj, strict=strict)
-    else:
-        return _is_spatial_3d_datarray(xr_obj, strict=strict)
+    return _is_spatial_3d_datarray(xr_obj, strict=strict)
 
 
 def is_transect(xr_obj, strict=True, squeeze=True):
@@ -311,8 +301,7 @@ def is_transect(xr_obj, strict=True, squeeze=True):
         xr_obj = xr_obj.squeeze()  # remove dimensions of size 1
     if isinstance(xr_obj, xr.Dataset):
         return _is_transect_dataset(xr_obj, strict=strict)
-    else:
-        return _is_transect_datarray(xr_obj, strict=strict)
+    return _is_transect_datarray(xr_obj, strict=strict)
 
 
 def check_is_spatial_2d(da, strict=True, squeeze=True):

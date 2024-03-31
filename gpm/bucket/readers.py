@@ -30,7 +30,7 @@ import pandas as pd
 
 
 def _get_arrow_to_pandas_defaults():
-    arrow_to_pandas = {
+    return {
         "zero_copy_only": False,  # Default is False. If True, raise error if doing copies
         "strings_to_categorical": False,
         "date_as_object": False,  # Default is True. If False convert to datetime64[ns]
@@ -41,12 +41,11 @@ def _get_arrow_to_pandas_defaults():
         "ignore_metadata": False,  # Default False. If False, use the ‘pandas’ metadata to get the Index
         "types_mapper": pd.ArrowDtype,  # Ensure pandas is created with Arrow dtype
     }
-    return arrow_to_pandas
 
 
 def read_partitioned_dataset(filepath, columns=None):
     arrow_to_pandas = _get_arrow_to_pandas_defaults()
-    df = dd.read_parquet(
+    return dd.read_parquet(
         filepath,
         engine="pyarrow",
         dtype_backend="pyarrow",
@@ -62,4 +61,3 @@ def read_partitioned_dataset(filepath, columns=None):
         # Arrow options
         arrow_to_pandas=arrow_to_pandas,
     )
-    return df

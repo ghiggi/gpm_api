@@ -188,8 +188,7 @@ def get_products_pattern_dict():
     """Return the filename pattern* associated to all GPM products."""
     info_dict = get_info_dict()
     products = available_products()
-    pattern_dict = {product: info_dict[product]["pattern"] for product in products}
-    return pattern_dict
+    return {product: info_dict[product]["pattern"] for product in products}
 
 
 ####----------------------------------------------------------------------------------
@@ -205,14 +204,12 @@ def get_product_info(product):
     valid_products = list(get_info_dict())
     if product not in valid_products:
         raise ValueError("Please provide a valid GPM product --> gpm.available_products().")
-    product_info = info_dict[product]
-    return product_info
+    return info_dict[product]
 
 
 def get_product_start_time(product):
     """Provide the product ``start_time``."""
-    start_time = get_product_info(product)["start_time"]
-    return start_time
+    return get_product_info(product)["start_time"]
 
 
 def get_product_end_time(product):
@@ -226,8 +223,7 @@ def get_product_end_time(product):
 def get_product_pattern(product):
     """Return the filename pattern associated to GPM product."""
     info_dict = get_info_dict()
-    pattern = info_dict[product]["pattern"]
-    return pattern
+    return info_dict[product]["pattern"]
 
 
 def get_product_category(product):
@@ -252,14 +248,12 @@ def get_product_level(product, full=False):
     # - product_level --> product_level[0:2]
     if full:
         return get_product_info(product).get("full_product_level", None)
-    else:
-        return get_product_info(product).get("product_level", None)
+    return get_product_info(product).get("product_level", None)
 
 
 def available_product_versions(product):
     """Provides a list with the available product versions."""
-    versions = get_product_info(product)["available_versions"]
-    return versions
+    return get_product_info(product)["available_versions"]
 
 
 def available_scan_modes(product, version):
@@ -267,14 +261,12 @@ def available_scan_modes(product, version):
     product_info = get_product_info(product)
     version = check_product_version(version, product)
     product = check_product_validity(product)
-    scan_modes = product_info["scan_modes"]["V" + str(version)]
-    return scan_modes
+    return product_info["scan_modes"]["V" + str(version)]
 
 
 def get_last_product_version(product):
     """Provide the most recent product version."""
-    version = available_product_versions(product)[-1]
-    return version
+    return available_product_versions(product)[-1]
 
 
 def is_trmm_product(product):
@@ -283,21 +275,14 @@ def is_trmm_product(product):
     # 2B-TRMM-CSAT not available on GES DISC
 
     trmm_products = available_products(satellites="TRMM")
-    if product in trmm_products:
-        return True
-    else:
-        return False
+    return product in trmm_products
 
 
 def is_gpm_api_product(product):
     """Check if the product arises from the GPM satellite."""
     #  '2B-GPM-CSAT', not available on GES DISC
     gpm_api_products = available_products(satellites="GPM")
-    if product in gpm_api_products:
-        return True
-
-    else:
-        return False
+    return product in gpm_api_products
 
 
 ####----------------------------------------------------------------------------------
@@ -310,12 +295,11 @@ def _subset_info_dict_by_key(key, values, info_dict=None):
         info_dict = get_info_dict()
     if not isinstance(values, list):
         values = [values]
-    subset_dict = {
+    return {
         product: product_info
         for product, product_info in info_dict.items()
         if np.any(np.isin(values, product_info.get(key, None)))
     }
-    return subset_dict
 
 
 def _get_unique_key_values(info_dict, key):

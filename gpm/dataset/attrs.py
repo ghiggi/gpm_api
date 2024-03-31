@@ -107,8 +107,7 @@ def _isinteger(s):
     """Return a boolean indicating if the string can be converted to float."""
     if _isfloat(s):
         return float(s).is_integer()
-    else:
-        return False
+    return False
 
 
 def _remove_multiple_spaces(string):
@@ -192,8 +191,7 @@ def get_granule_attrs(dt):
         attrs = nested_attrs
     # Subset only required attributes
     valid_keys = GRANULE_ONLY_GLOBAL_ATTRS + DYNAMIC_GLOBAL_ATTRS + STATIC_GLOBAL_ATTRS
-    attrs = {key: attrs[key] for key in valid_keys if key in attrs}
-    return attrs
+    return {key: attrs[key] for key in valid_keys if key in attrs}
 
 
 def add_history(ds):

@@ -42,8 +42,7 @@ def get_list_slices_from_indices(indices):
         indices = [indices]
     # Checks
     if len(indices) == 0:
-        list_slices = []
-        return list_slices
+        return []
     indices = np.asarray(indices).astype(int)
     indices = sorted(np.unique(indices))
     if np.any(np.sign(indices) < 0):
@@ -180,8 +179,7 @@ def list_slices_sort(*args):
     It output a single list of slices!
     """
     list_slices = list_slices_combine(*args)
-    list_slices = _list_slices_sort(list_slices)
-    return list_slices
+    return _list_slices_sort(list_slices)
 
 
 def list_slices_filter(list_slices, min_size=None, max_size=None):
@@ -195,8 +193,7 @@ def list_slices_filter(list_slices, min_size=None, max_size=None):
     sizes = [get_slice_size(slc) if isinstance(slc, slice) else 0 for slc in list_slices]
     # Retrieve valid slices
     valid_bool = np.logical_and(np.array(sizes) >= min_size, np.array(sizes) <= max_size)
-    list_slices = np.array(list_slices)[valid_bool].tolist()
-    return list_slices
+    return np.array(list_slices)[valid_bool].tolist()
 
 
 def list_slices_flatten(list_slices):
@@ -298,16 +295,15 @@ def get_list_slices_from_bool_arr(bool_arr, include_false=True, skip_consecutive
 def ensure_is_slice(slc):
     if isinstance(slc, slice):
         return slc
+    if isinstance(slc, int):
+        slc = slice(slc, slc + 1)
+    elif isinstance(slc, (list, tuple)) and len(slc) == 1:
+        slc = slice(slc[0], slc[0] + 1)
+    elif isinstance(slc, np.ndarray) and slc.size == 1:
+        slc = slice(slc.item(), slc.item() + 1)
     else:
-        if isinstance(slc, int):
-            slc = slice(slc, slc + 1)
-        elif isinstance(slc, (list, tuple)) and len(slc) == 1:
-            slc = slice(slc[0], slc[0] + 1)
-        elif isinstance(slc, np.ndarray) and slc.size == 1:
-            slc = slice(slc.item(), slc.item() + 1)
-        else:
-            # TODO: check if continuous
-            raise ValueError("Impossibile to convert to a slice object.")
+        # TODO: check if continuous
+        raise ValueError("Impossibile to convert to a slice object.")
     return slc
 
 
@@ -319,8 +315,7 @@ def get_slice_size(slc):
     """
     if not isinstance(slc, slice):
         raise TypeError("Expecting slice object")
-    size = slc.stop - slc.start
-    return size
+    return slc.stop - slc.start
 
 
 def get_slice_from_idx_bounds(idx_start, idx_end):
@@ -352,8 +347,7 @@ def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
         The list of slices after applying padding.
     """
 
-    new_slice = slice(max(slc.start - padding, min_start), min(slc.stop + padding, max_stop))
-    return new_slice
+    return slice(max(slc.start - padding, min_start), min(slc.stop + padding, max_stop))
 
 
 def pad_slices(list_slices, padding, valid_shape):
@@ -388,11 +382,10 @@ def pad_slices(list_slices, padding, valid_shape):
             "Invalid valid_shape. The length of valid_shape should be the same as the length of list_slices."
         )
     # Apply padding
-    list_slices = [
+    return [
         pad_slice(s, padding=p, min_start=0, max_stop=valid_shape[i])
         for i, (s, p) in enumerate(zip(list_slices, padding))
     ]
-    return list_slices
 
 
 # min_size = 10
@@ -508,8 +501,7 @@ def enlarge_slices(list_slices, min_size, valid_shape):
             "Invalid valid_shape. The length of valid_shape should be the same as the length of list_slices."
         )
     # Enlarge the slice
-    list_slices = [
+    return [
         enlarge_slice(slc, min_size=s, min_start=0, max_stop=valid_shape[i])
         for i, (slc, s) in enumerate(zip(list_slices, min_size))
     ]
-    return list_slices

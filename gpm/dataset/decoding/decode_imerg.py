@@ -180,5 +180,4 @@ def decode_product(ds):
             with xr.set_options(keep_attrs=True):
                 ds[variable] = _get_decoding_function(variable)(ds[variable])
     # Added gpm_api_decoded flag
-    ds = add_decoded_flag(ds, variables=variables)
-    return ds
+    return add_decoded_flag(ds, variables=variables)

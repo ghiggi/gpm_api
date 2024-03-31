@@ -41,8 +41,7 @@ def _infer_product(ds):
         raise ValueError(
             "The xr.Dataset does not have the global attribute 'gpm_api_product' key !"
         )
-    product = ds.attrs["gpm_api_product"]
-    return product
+    return ds.attrs["gpm_api_product"]
 
 
 def _get_module_function_names(module_name):
@@ -51,8 +50,7 @@ def _get_module_function_names(module_name):
     # Use dir() to get all names defined in the module
     all_names = dir(module)
     # Filter out function names from all_names
-    function_names = [name for name in all_names if callable(getattr(module, name))]
-    return function_names
+    return [name for name in all_names if callable(getattr(module, name))]
 
 
 def _get_encoding_function(module_name):
@@ -71,8 +69,7 @@ def get_product_encoding_dict(product):
     if product in available_products(product_categories="RADAR", product_levels="2A"):
         module_name = "gpm.dataset.encoding.encode_2a_radar"
         return _get_encoding_function(module_name)()
-    else:
-        return None
+    return None
 
 
 def _get_dataset_keys(ds):

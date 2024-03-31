@@ -47,8 +47,7 @@ def get_time_tree(date):
     year = date.strftime("%Y")
     month = date.strftime("%m")
     day = date.strftime("%d")
-    time_tree = os.path.join(year, month, day)
-    return time_tree
+    return os.path.join(year, month, day)
 
 
 def _get_local_dir_pattern(product, product_type, version):
@@ -109,8 +108,7 @@ def _get_local_product_base_directory(base_dir, product, product_type, version):
     """
     base_dir = check_base_dir(base_dir)
     product_dir_pattern = _get_local_dir_pattern(product, product_type, version)
-    product_dir = os.path.join(base_dir, product_dir_pattern)
-    return product_dir
+    return os.path.join(base_dir, product_dir_pattern)
 
 
 def _get_local_directory_tree(product, product_type, date, version):
@@ -142,8 +140,7 @@ def _get_local_directory_tree(product, product_type, date, version):
     # Define time tree
     time_tree = get_time_tree(date)
     # Define product directory tree for a specific date
-    directory_tree = os.path.join(product_dir_tree, time_tree)
-    return directory_tree
+    return os.path.join(product_dir_tree, time_tree)
 
 
 def get_local_product_directory(base_dir, product, product_type, version, date):
@@ -178,8 +175,7 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
     dir_structure = _get_local_directory_tree(
         product=product, product_type=product_type, version=version, date=date
     )
-    product_dir_path = os.path.join(base_dir, dir_structure)
-    return product_dir_path
+    return os.path.join(base_dir, dir_structure)
 
 
 ####--------------------------------------------------------------------------.
@@ -226,9 +222,7 @@ def get_local_daily_filepaths(product, product_type, date, version, verbose=True
     filenames = sorted(os.listdir(dir_path))  # returns [] if empty
 
     # Retrieve the filepaths
-    filepaths = [os.path.join(dir_path, filename) for filename in filenames]
-
-    return filepaths
+    return [os.path.join(dir_path, filename) for filename in filenames]
 
 
 def define_local_filepath(product, product_type, date, version, filename, base_dir=None):
@@ -249,8 +243,7 @@ def define_local_filepath(product, product_type, date, version, filename, base_d
         version=version,
     )
     # Define disk file path
-    filepath = os.path.join(dir_tree, filename)
-    return filepath
+    return os.path.join(dir_tree, filename)
 
 
 def get_local_dir_tree_from_filename(filepath, product_type="RS", base_dir=None):
@@ -265,14 +258,13 @@ def get_local_dir_tree_from_filename(filepath, product_type="RS", base_dir=None)
     version = int(re.findall("\\d+", info["version"])[0])
     date = info["start_time"].date()
     # Retrieve directory tree
-    dir_tree = get_local_product_directory(
+    return get_local_product_directory(
         base_dir=base_dir,
         product=product,
         product_type=product_type,
         date=date,
         version=version,
     )
-    return dir_tree
 
 
 def get_local_filepath_from_filename(filepath, product_type="RS", base_dir=None):
@@ -281,8 +273,7 @@ def get_local_filepath_from_filename(filepath, product_type="RS", base_dir=None)
     dir_tree = get_local_dir_tree_from_filename(
         filepath, product_type=product_type, base_dir=base_dir
     )
-    filepath = os.path.join(dir_tree, filename)
-    return filepath
+    return os.path.join(dir_tree, filename)
 
 
 ####--------------------------------------------------------------------------.
@@ -304,31 +295,26 @@ def list_paths(dir_path, glob_pattern, recursive=False):
     """Return a list of filepaths and directory paths."""
     if not recursive:
         return glob.glob(os.path.join(dir_path, glob_pattern))
-    else:
-        return _recursive_glob(dir_path, glob_pattern)
+    return _recursive_glob(dir_path, glob_pattern)
 
 
 def list_files(dir_path, glob_pattern, recursive=False):
     """Return a list of filepaths (exclude directory paths)."""
     paths = list_paths(dir_path, glob_pattern, recursive=recursive)
-    filepaths = [f for f in paths if os.path.isfile(f)]
-    return filepaths
+    return [f for f in paths if os.path.isfile(f)]
 
 
 def _extract_path_year(path):
-    year = get_key_from_filepath(path, key="start_time").year
-    return year
+    return get_key_from_filepath(path, key="start_time").year
 
 
 def _extract_path_month(path):
-    month = get_key_from_filepath(path, key="start_time").month
-    return month
+    return get_key_from_filepath(path, key="start_time").month
 
 
 def _extract_path_doy(path):
     start_time = get_key_from_filepath(path, key="start_time")
-    doy = start_time.timetuple().tm_yday
-    return doy
+    return start_time.timetuple().tm_yday
 
 
 def _extract_version(path):

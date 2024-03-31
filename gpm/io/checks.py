@@ -183,10 +183,9 @@ def check_product_validity(product, product_type=None):
             raise ValueError(
                 f"The '{product}' product is not available. See gpm.available_products()."
             )
-        else:
-            raise ValueError(
-                f"The '{product}' product is not available as '{product_type}' product_type."
-            )
+        raise ValueError(
+            f"The '{product}' product is not available as '{product_type}' product_type."
+        )
     return product
 
 
@@ -239,10 +238,8 @@ def check_time(time):
     if time.tzinfo is not None:
         if str(time.tzinfo) != "UTC":
             raise ValueError("The datetime object must be in UTC timezone if timezone is given.")
-        else:
-            # If UTC, strip timezone information
-            time = time.replace(tzinfo=None)
-
+        # If UTC, strip timezone information
+        time = time.replace(tzinfo=None)
     return time
 
 

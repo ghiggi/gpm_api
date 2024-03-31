@@ -157,7 +157,6 @@ def check_archive_integrity(
         raise ValueError("No files found on disk. Please download them before.")
 
     # Check the file integrity
-    l_corrupted = check_filepaths_integrity(
+    return check_filepaths_integrity(
         filepaths=filepaths, remove_corrupted=remove_corrupted, verbose=verbose
     )
-    return l_corrupted

@@ -36,15 +36,13 @@ def _get_module_function_names(module_name):
     # Use dir() to get all names defined in the module
     all_names = dir(module)
     # Filter out function names from all_names
-    function_names = [name for name in all_names if callable(getattr(module, name))]
-    return function_names
+    return [name for name in all_names if callable(getattr(module, name))]
 
 
 def _get_available_retrievals(module_name):
     """Get available retrievals inside a specific module."""
     function_names = _get_module_function_names(module_name)
-    retrievals = [s[len("retrieve_") :] for s in function_names if s.startswith("retrieve_")]
-    return retrievals
+    return [s[len("retrieve_") :] for s in function_names if s.startswith("retrieve_")]
 
 
 def _get_retrieval_function(module_name, retrieval):
@@ -62,8 +60,7 @@ def _infer_product(ds):
         raise ValueError(
             "The xr.Dataset does not have the global attribute 'gpm_api_product' key !"
         )
-    product = ds.attrs["gpm_api_product"]
-    return product
+    return ds.attrs["gpm_api_product"]
 
 
 def available_retrievals(ds):
@@ -77,6 +74,7 @@ def available_retrievals(ds):
     if product in available_products(product_categories="PMW", product_levels="2A"):
         module_name = "gpm.retrievals.retrieval_2a_pmw"
         return _get_available_retrievals(module_name)
+    return None
 
 
 def check_retrieval_validity(ds, retrieval):
@@ -107,3 +105,4 @@ def get_retrieval_variable(ds, name, *args, **kwargs):
         module_name = "gpm.retrievals.retrieval_2a_pmw"
         check_retrieval_validity(ds, name)
         return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
+    return None

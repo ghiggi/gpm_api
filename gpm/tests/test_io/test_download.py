@@ -313,7 +313,7 @@ def test_private_download_files(
     download function
     """
     if platform.system() == "Windows" and transfer_tool == "WGET":
-        return None
+        return
 
     # Don't actually download anything, so mock the run function
     mocker.patch.object(dl, "run", autospec=True, return_value=None)

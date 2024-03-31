@@ -195,18 +195,17 @@ def get_transect_slices(
         raise NotImplementedError()
 
     # Else derive center locating the maximum intensity
+    if isinstance(xr_obj, xr.Dataset):
+        if variable is None:
+            raise ValueError("If providing a xr.Dataset, 'variable' must be specified.")
+        da_variable = xr_obj[variable].compute()
+        xr_obj[variable] = da_variable
     else:
-        if isinstance(xr_obj, xr.Dataset):
-            if variable is None:
-                raise ValueError("If providing a xr.Dataset, 'variable' must be specified.")
-            da_variable = xr_obj[variable].compute()
-            xr_obj[variable] = da_variable
-        else:
-            da_variable = xr_obj.compute()
+        da_variable = xr_obj.compute()
 
-        dict_argmax = da_variable.argmax(da_variable.dims)
-        idx_along_track = dict_argmax["along_track"]
-        idx_cross_track = dict_argmax["cross_track"]
+    dict_argmax = da_variable.argmax(da_variable.dims)
+    idx_along_track = dict_argmax["along_track"]
+    idx_cross_track = dict_argmax["cross_track"]
 
     # -------------------------------------------------------------------------.
     # Get transect slices based on direction
@@ -251,8 +250,7 @@ def select_transect(
     # Extract the transect dataset
     if isinstance(xr_obj, xr.Dataset) and keep_only_valid_variables:
         xr_obj = xr_obj.gpm.select_spatial_3d_variables()
-    xr_obj_transect = xr_obj.isel(transect_slices)
-    return xr_obj_transect
+    return xr_obj.isel(transect_slices)
 
 
 def plot_transect_line(

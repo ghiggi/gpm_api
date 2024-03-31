@@ -282,8 +282,7 @@ class CustomFacetGrid(FacetGrid, ABC):
                 for j in range(0, n_cols):
                     if has_missing_bottom_plots and i == n_rows - 2 and j in idx_bottom_plots:
                         continue
-                    else:
-                        self._remove_bottom_ticks_and_labels(ax=self.axs[i, j])
+                    self._remove_bottom_ticks_and_labels(ax=self.axs[i, j])
 
         # Remove left axis labels from all subplots except the left ones
         if n_cols > 1:
@@ -459,7 +458,7 @@ class CartopyFacetGrid(CustomFacetGrid):
         from cartopy.mpl.geoaxes import GeoAxes
 
         if extent is None:
-            return None
+            return
         # Modify extent
         for ax in self.axs.flat:
             if isinstance(ax, GeoAxes):

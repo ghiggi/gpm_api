@@ -53,12 +53,10 @@ def remap_numeric_array(arr, remapping_dict):
 
     # Use np.searchsorted to remap the array
     # TODO: works only if not np.nan and reamp to 0-n ?
-    remapped_arr = np.searchsorted(original_values, arr, sorter=np.argsort(original_values))
+    return np.searchsorted(original_values, arr, sorter=np.argsort(original_values))
 
     # Correct Alternative (but less performant) :
     # np.vectorize(remapping_dict.__getitem__)(arr)
-
-    return remapped_arr
 
 
 def ceil_datarray(da):

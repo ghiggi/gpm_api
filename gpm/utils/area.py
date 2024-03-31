@@ -48,8 +48,7 @@ def _infer_interval_breaks(coord, axis=0):
     trim_last = tuple(slice(None, -1) if n == axis else slice(None) for n in range(coord.ndim))
     offsets = coord[trim_last] + deltas
     # Compute the breaks
-    breaks = np.concatenate([first, offsets, last], axis=axis)
-    return breaks
+    return np.concatenate([first, offsets, last], axis=axis)
 
 
 def _get_corners_from_centroids(centroids):
@@ -60,8 +59,7 @@ def _get_corners_from_centroids(centroids):
     # Identify breaks along columns
     breaks = _infer_interval_breaks(centroids, axis=1)
     # Identify breaks along rows
-    corners = _infer_interval_breaks(breaks, axis=0)
-    return corners
+    return _infer_interval_breaks(breaks, axis=0)
 
 
 def _do_transform(src_proj, dst_proj, lons, lats, alt):
@@ -197,5 +195,4 @@ def get_quadmesh_vertices(x, y, order="counterclockwise"):
     y_bounds = _from_corners_to_bounds(y_corners, order="counterclockwise")
 
     # - Retrieve QuadMesh vertices (m*n, 4, 2)
-    vertices = np.stack((x_bounds, y_bounds), axis=2)
-    return vertices
+    return np.stack((x_bounds, y_bounds), axis=2)

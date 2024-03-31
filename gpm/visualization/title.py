@@ -43,9 +43,8 @@ def get_time_str(timesteps, time_idx=None, resolution="m", timezone="UTC"):
             timestep = timesteps[time_idx]
     # Get time string with custom unit and timezone
     time_str = np.datetime_as_string(timestep, unit=resolution, timezone=timezone)
-    time_str = time_str.replace("T", " ").replace("Z", "")
+    return time_str.replace("T", " ").replace("Z", "")
     # Return time string
-    return time_str
 
 
 def get_dataset_title(

@@ -66,8 +66,7 @@ def get_missing_granule_numbers(xr_obj):
     min_id = min(granule_ids)
     max_id = max(granule_ids)
     possible_ids = np.arange(min_id, max_id + 1)
-    missing_ids = possible_ids[~np.isin(possible_ids, granule_ids)]
-    return missing_ids
+    return possible_ids[~np.isin(possible_ids, granule_ids)]
 
 
 def _is_contiguous_granule(granule_ids):
@@ -76,8 +75,7 @@ def _is_contiguous_granule(granule_ids):
     bool_arr = np.diff(granule_ids) <= 1
 
     # Add True to last position
-    bool_arr = np.append(bool_arr, True)
-    return bool_arr
+    return np.append(bool_arr, True)
 
 
 @check_is_gpm_object
@@ -113,8 +111,7 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
         # - If n_scans 1, slice(0, 1) could return the single scan
         # --> Here we decide to return an empty list !
         if n_scans < min_size:
-            list_slices = []
-            return list_slices
+            return []
 
         # Get boolean array indicating if the next scan/timesteps is same or next granule
         bool_arr = _is_contiguous_granule(xr_obj["gpm_granule_id"].data)
@@ -125,10 +122,10 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
         )
 
         # Select only slices with at least 2 scans
-        list_slices = list_slices_filter(list_slices, min_size=min_size)
+        return list_slices_filter(list_slices, min_size=min_size)
+    return None
 
-        # Return list of contiguous scan slices
-        return list_slices
+    # Return list of contiguous scan slices
 
 
 def check_missing_granules(xr_obj):
@@ -202,8 +199,7 @@ def has_missing_granules(xr_obj):
 def _get_timesteps(xr_obj):
     """Get timesteps with second precision from xarray object."""
     timesteps = xr_obj["time"].values
-    timesteps = timesteps.astype("M8[s]")
-    return timesteps
+    return timesteps.astype("M8[s]")
 
 
 @check_is_gpm_object
@@ -230,8 +226,7 @@ def _is_regular_time(xr_obj, tolerance=None):
     # Identify if the next regular timestep is present
     bool_arr = np.diff(timesteps) <= tolerance
     # Add True to last position
-    bool_arr = np.append(bool_arr, True)
-    return bool_arr
+    return np.append(bool_arr, True)
 
 
 def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
@@ -284,10 +279,9 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
         )
 
     # Select only slices with at least min_size timesteps
-    list_slices = list_slices_filter(list_slices, min_size=min_size)
+    return list_slices_filter(list_slices, min_size=min_size)
 
     # Return list of slices with regular timesteps
-    return list_slices
 
 
 def get_slices_non_regular_time(xr_obj, tolerance=None):
@@ -321,8 +315,7 @@ def get_slices_non_regular_time(xr_obj, tolerance=None):
     # Define behaviour if less than 2 timesteps
     # --> Here we decide to return an empty list !
     if n_timesteps < 2:
-        list_slices = []
-        return list_slices
+        return []
 
     # Get boolean array indicating if the next regular timestep is present
     is_regular = _is_regular_time(xr_obj, tolerance=tolerance)
@@ -383,8 +376,7 @@ def has_regular_time(xr_obj):
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         return False
-    else:
-        return True
+    return True
 
 
 ####--------------------------------------------------------------------------.
@@ -458,8 +450,7 @@ def _is_contiguous_scans(xr_obj):
     # bool_arr = dist_km < (most_common_dist + most_common_dist/2)
 
     # Add True to last position
-    bool_arr = np.append(bool_arr, True)
-    return bool_arr
+    return np.append(bool_arr, True)
 
 
 @check_is_orbit
@@ -497,8 +488,7 @@ def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
     # --> But for visualization purpose, if only 2 scans available, we want to plot it (and consider it contiguous)
     # --> Here we decide to return an empty list !
     if n_scans < min_n_scans:
-        list_slices = []
-        return list_slices
+        return []
 
     # Get boolean array indicating if the next scan is contiguous
     is_contiguous = _is_contiguous_scans(xr_obj)
@@ -516,10 +506,9 @@ def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
     list_slices1 = get_slices_contiguous_granules(xr_obj)
 
     # Perform list_slices intersection
-    list_slices = list_slices_intersection(list_slices, list_slices1)
+    return list_slices_intersection(list_slices, list_slices1)
 
     # Return list of contiguous scan slices
-    return list_slices
 
 
 @check_is_orbit
@@ -548,8 +537,7 @@ def get_slices_non_contiguous_scans(xr_obj):
     # --> Contiguity can't be verified without at least 3 slices !
     # --> Here we decide to return an empty list !
     if n_scans < 3:
-        list_slices = []
-        return list_slices
+        return []
 
     ### CODE to output slices with size 2.
     # # Get boolean array indicating if the next scan is contiguous
@@ -565,8 +553,7 @@ def get_slices_non_contiguous_scans(xr_obj):
 
     list_slices_valid = get_slices_contiguous_scans(xr_obj, min_size=2)
     list_slices_full = [slice(0, len(xr_obj["along_track"]))]
-    list_slices = list_slices_difference(list_slices_full, list_slices_valid)
-    return list_slices
+    return list_slices_difference(list_slices_full, list_slices_valid)
 
 
 @check_has_cross_track_dimension
@@ -617,8 +604,7 @@ def has_contiguous_scans(xr_obj):
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         return False
-    else:
-        return True
+    return True
 
 
 ####--------------------------------------------------------------------------.
@@ -632,8 +618,7 @@ def _is_non_valid_geolocation(xr_obj, x="lon"):
 
     True = Invalid, False = Valid
     """
-    bool_arr = np.isnan(xr_obj[x])
-    return bool_arr
+    return np.isnan(xr_obj[x])
 
 
 def _is_valid_geolocation(xr_obj, x="lon"):
@@ -641,8 +626,7 @@ def _is_valid_geolocation(xr_obj, x="lon"):
 
     True = Valid, False = Invalid
     """
-    bool_arr = ~np.isnan(xr_obj[x])
-    return bool_arr
+    return ~np.isnan(xr_obj[x])
 
 
 @check_is_orbit
@@ -688,8 +672,7 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
         valid_scans, include_false=False, skip_consecutive_false=True
     )
     # Select only slices with at least 2 scans
-    list_slices = list_slices_filter(list_slices, min_size=min_size)
-    return list_slices
+    return list_slices_filter(list_slices, min_size=min_size)
 
 
 def get_slices_non_valid_geolocation(xr_obj):
@@ -716,8 +699,7 @@ def get_slices_non_valid_geolocation(xr_obj):
     """
     list_slices_valid = get_slices_valid_geolocation(xr_obj, min_size=1)
     list_slices_full = [slice(0, len(xr_obj["along_track"]))]
-    list_slices = list_slices_difference(list_slices_full, list_slices_valid)
-    return list_slices
+    return list_slices_difference(list_slices_full, list_slices_valid)
 
 
 def check_valid_geolocation(xr_obj, verbose=True):
@@ -757,6 +739,7 @@ def has_valid_geolocation(xr_obj):
         return n_invalid_scan_slices == 0
     if is_grid(xr_obj):
         return True
+    return None
 
 
 def apply_on_valid_geolocation(function):
@@ -788,9 +771,8 @@ def apply_on_valid_geolocation(function):
                 ]
                 list_slices.append(subset_slices)
         # Flatten the list
-        list_slices = list_slices_flatten(list_slices)
+        return list_slices_flatten(list_slices)
         # Return list of slices
-        return list_slices
 
     return wrapper
 
@@ -817,8 +799,7 @@ def _replace_0_values(x):
     # Infill from left values, and then from right (if x start with 0)
     x = pd.Series(x).ffill().bfill().to_numpy()
     # Reset original dtype
-    x = x.astype(dtype)
-    return x
+    return x.astype(dtype)
 
 
 def _get_non_wobbling_lats(lats, threshold=100):
@@ -836,8 +817,7 @@ def _get_non_wobbling_lats(lats, threshold=100):
     indices = np.unique(np.concatenate(([0], idxs_change, [len(lats) - 1])))
     orbit_slices = [slice(indices[i], indices[i + 1] + 1) for i in range(len(indices) - 1)]
     list_slices = list_slices_filter(orbit_slices, min_size=threshold)
-    list_slices = list_slices_simplify(list_slices)
-    return list_slices
+    return list_slices_simplify(list_slices)
 
 
 @apply_on_valid_geolocation
@@ -858,8 +838,7 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
     # Get valid slices
     list_slices1 = _get_non_wobbling_lats(lats_side0, threshold=threshold)
     list_slices2 = _get_non_wobbling_lats(lats_side2, threshold=threshold)
-    list_slices = list_slices_intersection(list_slices1, list_slices2)
-    return list_slices
+    return list_slices_intersection(list_slices1, list_slices2)
 
 
 @apply_on_valid_geolocation
@@ -874,8 +853,7 @@ def get_slices_wobbling_swath(xr_obj, threshold=100):
     # TODO: this has not been well checked...likely need +1 somewhere ...
     list_slices1 = get_slices_non_wobbling_swath(xr_obj, threshold=threshold)
     list_slices_full = [slice(0, len(xr_obj["along_track"]))]
-    list_slices = list_slices_difference(list_slices_full, list_slices1)
-    return list_slices
+    return list_slices_difference(list_slices_full, list_slices1)
 
 
 ####---------------------------------------------------------------------------
@@ -895,8 +873,9 @@ def is_regular(xr_obj):
 
     if is_orbit(xr_obj):
         return has_contiguous_scans(xr_obj)
-    elif is_grid(xr_obj):
+    if is_grid(xr_obj):
         return has_regular_time(xr_obj)
+    return None
 
 
 @check_is_gpm_object
@@ -940,12 +919,12 @@ def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
         # Get swath portions where there are valid geolocation
         list_slices_geolocation = get_slices_valid_geolocation(xr_obj, min_size=min_size)
         # Find swath portions meeting all the requirements
-        list_slices = list_slices_intersection(list_slices_geolocation, list_slices_contiguous)
+        return list_slices_intersection(list_slices_geolocation, list_slices_contiguous)
 
-        return list_slices
-    elif is_grid(xr_obj):
+    if is_grid(xr_obj):
         min_size = 1 if min_size is None else min_size
         return get_slices_regular_time(xr_obj, min_size=min_size)
+    return None
 
 
 ####--------------------------------------------------------------------------.
@@ -976,10 +955,7 @@ def _get_slices_variable_equal_value(da, value, dim=None, criteria="all"):
         else da_bool.any(dim=dims_apply_over).data
     )
     # Get list of slices with contiguous value
-    list_slices = get_list_slices_from_bool_arr(
-        bool_arr, include_false=False, skip_consecutive_false=True
-    )
-    return list_slices
+    return get_list_slices_from_bool_arr(bool_arr, include_false=False, skip_consecutive_false=True)
 
 
 def get_slices_var_equals(da, dim, values, union=True, criteria="all"):
@@ -1007,17 +983,15 @@ def get_slices_var_equals(da, dim, values, union=True, criteria="all"):
     # Retrieve the slices where the value(s) occur
     if isinstance(values, (float, int)):
         return _get_slices_variable_equal_value(da=da, value=values, dim=dim, criteria=criteria)
-    else:
-        list_of_list_slices = [
-            _get_slices_variable_equal_value(da=da, value=value, dim=dim, criteria=criteria)
-            for value in values
-        ]
-        list_slices = (
-            list_slices_union(*list_of_list_slices)
-            if union
-            else list_slices_sort(*list_of_list_slices)
-        )
-    return list_slices
+    # If multiple values, apply recursively
+    list_of_list_slices = [
+        _get_slices_variable_equal_value(da=da, value=value, dim=dim, criteria=criteria)
+        for value in values
+    ]
+    # Return list_slices
+    return (
+        list_slices_union(*list_of_list_slices) if union else list_slices_sort(*list_of_list_slices)
+    )
 
 
 def get_slices_var_between(da, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
@@ -1048,7 +1022,4 @@ def get_slices_var_between(da, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
         else da_bool.any(dim=dims_apply_over).data
     )
     # Get list of slices with contiguous value
-    list_slices = get_list_slices_from_bool_arr(
-        bool_arr, include_false=False, skip_consecutive_false=True
-    )
-    return list_slices
+    return get_list_slices_from_bool_arr(bool_arr, include_false=False, skip_consecutive_false=True)

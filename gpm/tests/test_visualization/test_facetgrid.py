@@ -80,8 +80,7 @@ def orbit_dataarray_2x2_frames(
     """Return a dataarray with two extra dimensions of shape 2"""
 
     orbit_dataarray = expand_dims(orbit_dataarray, 2, dim=EXTRA_DIM)
-    orbit_dataarray = expand_dims(orbit_dataarray, 2, dim=EXTRA_DIM_2)
-    return orbit_dataarray
+    return expand_dims(orbit_dataarray, 2, dim=EXTRA_DIM_2)
 
 
 @pytest.fixture

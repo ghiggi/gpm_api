@@ -72,8 +72,7 @@ def _add_cmb_coordinates(ds, product, scan_mode):
         if "radar_frequency" in list(ds.dims):
             ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
 
-    ds = _add_cmb_range_coordinate(ds, product, scan_mode)
-    return ds
+    return _add_cmb_range_coordinate(ds, product, scan_mode)
 
 
 def _add_radar_range_coordinate(ds, product, scan_mode):
@@ -109,8 +108,7 @@ def _add_radar_coordinates(ds, product, scan_mode):
         if "paramDSD" in list(ds):
             ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
     # Add radar range
-    ds = _add_radar_range_coordinate(ds, product, scan_mode)
-    return ds
+    return _add_radar_range_coordinate(ds, product, scan_mode)
 
 
 @functools.cache
@@ -126,8 +124,7 @@ def get_pmw_frequency_dict():
 def get_pmw_frequency(sensor, scan_mode):
     """Get product info dictionary."""
     pmw_dict = get_pmw_frequency_dict()
-    pmw_frequency = pmw_dict[sensor][scan_mode]
-    return pmw_frequency
+    return pmw_dict[sensor][scan_mode]
 
 
 def get_pmw_frequency_corra(product):

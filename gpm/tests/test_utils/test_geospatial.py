@@ -358,7 +358,7 @@ class TestCropSlicesByExtent:
 
     def test_invalid(self) -> None:
         da = xr.DataArray()
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(ValueError):
             geospatial.get_crop_slices_by_extent(da, self.extent)
 
 

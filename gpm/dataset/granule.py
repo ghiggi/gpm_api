@@ -45,8 +45,7 @@ from gpm.io.info import get_product_from_filepath, get_version_from_filepath
 def _prefix_dataset_group_variables(ds, group):
     """Prefix group dataset variables."""
     var_dict = {var: group + "/" + var for var in ds.data_vars}
-    ds = ds.rename_vars(var_dict)
-    return ds
+    return ds.rename_vars(var_dict)
 
 
 def _remove_dummy_variables(ds):
@@ -58,8 +57,7 @@ def _remove_dummy_variables(ds):
     ]
     dummy_variables = np.array(dummy_variables)
     variables_to_drop = dummy_variables[np.isin(dummy_variables, list(ds.data_vars))]
-    ds = ds.drop_vars(variables_to_drop)
-    return ds
+    return ds.drop_vars(variables_to_drop)
 
 
 def _subset_dataset_variables(ds, variables):
@@ -110,8 +108,7 @@ def _get_flattened_scan_mode_dataset(dt, scan_mode, groups, variables=None, pref
             ds = dt[scan_mode][group].to_dataset()
         ds = _process_group_dataset(ds, group, variables, prefix_group=prefix_group)
         list_ds.append(ds)
-    ds = xr.merge(list_ds)
-    return ds
+    return xr.merge(list_ds)
 
 
 def _get_scan_mode_dataset(
@@ -151,8 +148,7 @@ def _get_scan_mode_dataset(
 
 def get_variables(ds):
     """Retrieve the dataset variables."""
-    variables = list(ds.data_vars)
-    return variables
+    return list(ds.data_vars)
 
 
 def get_variables_dims(ds):
@@ -160,8 +156,7 @@ def get_variables_dims(ds):
     variables = get_variables(ds)
     if len(variables) == 0:
         return []
-    dims = np.unique(np.concatenate([list(ds[var].dims) for var in variables])).tolist()
-    return dims
+    return np.unique(np.concatenate([list(ds[var].dims) for var in variables])).tolist()
 
 
 def unused_var_dims(ds):
@@ -218,11 +213,10 @@ def _open_granule(
     ###-----------------------------------------------------------------------.
     # If there are dataset variables, remove coords and dimensions not exploited by data variables
     # - Except for nv, lonv, latv bounds dimensions
-    ds = remove_unused_var_dims(ds)
+    return remove_unused_var_dims(ds)
 
     ###-----------------------------------------------------------------------.
     # Return xr.Dataset
-    return ds
 
 
 def open_granule(
@@ -306,7 +300,7 @@ def open_granule(
     )
 
     # Finalize granule
-    ds = finalize_dataset(
+    return finalize_dataset(
         ds=ds,
         product=product,
         scan_mode=scan_mode,
@@ -314,4 +308,3 @@ def open_granule(
         start_time=None,
         end_time=None,
     )
-    return ds

@@ -178,8 +178,8 @@ def _get_pps_directory_tree(product, product_type, date, version):
     product_type = check_product_type(product_type)
     if product_type == "NRT":
         return _get_pps_nrt_product_dir(product, date)
-    else:  # product_type == "RS"
-        return _get_pps_rs_product_dir(product, date, version)
+    # product_type == "RS"
+    return _get_pps_rs_product_dir(product, date, version)
 
 
 def get_pps_product_directory(product, product_type, date, version, server_type):
@@ -217,8 +217,7 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
         product=product, product_type=product_type, date=date, version=version
     )
     # Define product directory where data are listed
-    url_product_dir = f"{url_server}/{dir_structure}"
-    return url_product_dir
+    return f"{url_server}/{dir_structure}"
 
 
 ####--------------------------------------------------------------------------.
@@ -247,11 +246,8 @@ def _try_get_pps_file_list(url_product_dir):
     # Check if there are data are available
     if stdout[0] == "<":
         raise ValueError("No data found on PPS.")
-    else:
-        # Retrieve filepaths
-        filepaths = stdout.split()
-    # Return file paths
-    return filepaths
+    # Retrieve filepaths
+    return stdout.split()
 
 
 def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
@@ -280,7 +276,7 @@ def _get_pps_file_list(url_product_dir, product, date, version, verbose=True):
         # If url not exist, raise an error
         if "The PPS server is currently unavailable." in str(e):
             raise e
-        elif "No data found on PPS." in str(e):
+        if "No data found on PPS." in str(e):
             # If no filepath (empty directory), print message if verbose=True
             if verbose:
                 version_str = str(int(version))
@@ -331,8 +327,7 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
     # Define the complete url of pps filepaths
     # Filepaths start with a "/"
     url_data_server = _get_pps_data_server(product_type)
-    filepaths = [f"{url_data_server}{filepath}" for filepath in filepaths]
-    return filepaths
+    return [f"{url_data_server}{filepath}" for filepath in filepaths]
 
 
 def define_pps_filepath(product, product_type, date, version, filename):
@@ -349,8 +344,7 @@ def define_pps_filepath(product, product_type, date, version, filename):
         server_type="data",
     )
     # Define PPS filepath
-    filepath = f"{url_product_dir}/{filename}"
-    return filepath
+    return f"{url_product_dir}/{filename}"
 
 
 ####--------------------------------------------------------------------------.

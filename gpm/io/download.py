@@ -113,8 +113,7 @@ def get_curl_version():
     version_match = re.search(r"curl (\d+\.\d+\.\d+)", result.stdout)
     if version_match:
         return version_match.group(1)
-    else:
-        raise RuntimeError("Could not determine curl version")
+    raise RuntimeError("Could not determine curl version")
 
 
 CURL_VERSION = get_curl_version()
@@ -140,8 +139,7 @@ def check_valid_pps_credentials(verbose=True):
         str_error = str(e)
         if "Login incorrect" in str_error:
             raise ValueError("Invalid PPS username or password.")
-        else:
-            raise ValueError(f"The PPS server {ftp_host} is not available.")
+        raise ValueError(f"The PPS server {ftp_host} is not available.")
 
 
 def check_pps_available(verbose=True):
@@ -183,12 +181,11 @@ def check_pps_ports_are_open():
                 + "with the PPS data server."
             )
             raise ValueError(msg)
-        else:
-            msg = (
-                "An undetermined connection error occurred while attempting to access the PPS. "
-                + "The error is: {result.stderr}"
-            )
-            raise ValueError(msg)
+        msg = (
+            "An undetermined connection error occurred while attempting to access the PPS. "
+            + "The error is: {result.stderr}"
+        )
+        raise ValueError(msg)
     print("The ports in the range of 64000-65000 are open. You are ready to use GPM-API !")
 
 
@@ -201,7 +198,7 @@ def check_pps_ports_are_open():
 def _get_commands_futures(executor, commands):
     """Submit commands and return futures dictionary."""
     # We use shlex to correctly deal with \\ on windows.  Arguments must be entoured by '<argument>'
-    dict_futures = {
+    return {
         executor.submit(
             subprocess.check_call,
             shlex.split(cmd),
@@ -211,7 +208,6 @@ def _get_commands_futures(executor, commands):
         ): (i, cmd)
         for i, cmd in enumerate(commands)
     }
-    return dict_futures
 
 
 def _get_list_failing_commands(dict_futures, pbar=None):
@@ -317,8 +313,7 @@ def curl_pps_cmd(remote_filepath, local_filepath, username, password):
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"  # --verbose
     # - Define command
-    cmd = f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
-    return cmd
+    return f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
 
 
 def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=None):
@@ -330,8 +325,7 @@ def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=N
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"
     # - Define command
-    cmd = f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
-    return cmd
+    return f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
 
 
 def wget_pps_cmd(remote_filepath, local_filepath, username, password):
@@ -348,8 +342,7 @@ def wget_pps_cmd(remote_filepath, local_filepath, username, password):
     # - Define options
     options = "-np -R .html,.tmp -nH -c --read-timeout=10 --tries=5"
     # - Define command
-    cmd = f"wget {auth} {options} -O '{local_filepath}' {remote_filepath}"
-    return cmd
+    return f"wget {auth} {options} -O '{local_filepath}' {remote_filepath}"
 
 
 def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
@@ -385,8 +378,7 @@ def _get_single_file_cmd_function(transfer_tool, storage):
         "PPS": {"WGET": wget_pps_cmd, "CURL": curl_pps_cmd},
         "GES_DISC": {"WGET": wget_ges_disc_cmd, "CURL": curl_ges_disc_cmd},
     }
-    func = dict_fun[storage][transfer_tool]
-    return func
+    return dict_fun[storage][transfer_tool]
 
 
 def _get_storage_username_password(storage):
@@ -432,8 +424,7 @@ def _download_files(
     ]
 
     ## Download the data (in parallel)
-    status = run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
-    return status
+    return run(list_cmd, n_threads=n_threads, progress_bar=progress_bar, verbose=verbose)
 
 
 ####--------------------------------------------------------------------------.
@@ -488,8 +479,7 @@ def _get_func_filepath_definition(storage):
         "PPS": define_pps_filepath,
         "GES_DISC": define_ges_disc_filepath,
     }
-    func = dict_fun[storage]
-    return func
+    return dict_fun[storage]
 
 
 def _define_filepath(
@@ -501,14 +491,13 @@ def _define_filepath(
     storage,
 ):
     """Retrieve the filepath based on the filename."""
-    filepath = _get_func_filepath_definition(storage)(
+    return _get_func_filepath_definition(storage)(
         product=product,
         product_type=product_type,
         date=date,
         version=version,
         filename=filename,
     )
-    return filepath
 
 
 def get_filepath_from_filename(filename, storage, product_type):
@@ -519,7 +508,7 @@ def get_filepath_from_filename(filename, storage, product_type):
     version = int(re.findall("\\d+", info["version"])[0])
     date = info["start_time"].date()
     # Retrieve filepath
-    filepath = _define_filepath(
+    return _define_filepath(
         product=product,
         product_type=product_type,
         date=date,
@@ -527,7 +516,6 @@ def get_filepath_from_filename(filename, storage, product_type):
         filename=filename,
         storage=storage,
     )
-    return filepath
 
 
 def get_filepaths_from_filenames(filepaths, storage, product_type):
@@ -545,11 +533,10 @@ def get_filepaths_from_filenames(filepaths, storage, product_type):
         List of file paths on <storage> storage.
 
     """
-    filepaths = [
+    return [
         get_filepath_from_filename(filepath, storage=storage, product_type=product_type)
         for filepath in filepaths
     ]
-    return filepaths
 
 
 ####--------------------------------------------------------------------------.
@@ -1090,7 +1077,7 @@ def download_daily_data(
     start_time = datetime.date(year, month, day)
     end_time = start_time + relativedelta(days=1)
 
-    l_corrupted = download_archive(
+    return download_archive(
         product=product,
         start_time=start_time,
         end_time=end_time,
@@ -1106,7 +1093,6 @@ def download_daily_data(
         verbose=verbose,
         retry=retry,
     )
-    return l_corrupted
 
 
 @print_elapsed_time
@@ -1131,7 +1117,7 @@ def download_monthly_data(
     start_time = datetime.date(year, month, 1)
     end_time = start_time + relativedelta(months=1)
 
-    l_corrupted = download_archive(
+    return download_archive(
         product=product,
         start_time=start_time,
         end_time=end_time,
@@ -1147,7 +1133,6 @@ def download_monthly_data(
         verbose=verbose,
         retry=retry,
     )
-    return l_corrupted
 
 
 ####--------------------------------------------------------------------------.

@@ -139,9 +139,16 @@ select = [
     "Q",
     # flake8-bugbear
     "B",
+    # flake8-return
+    "RET",
+    # flake8-simplify
     # "SIM",
+
+
+    #----------------------
+    # # Future rules
+    # # flake8-use-pathlib
     # "PTH",
-    #"RET",
 ]
 ignore = [
     "E722",

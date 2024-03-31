@@ -88,16 +88,13 @@ def get_imported_gpm_method_path(function: Callable) -> tuple[str, str]:
         module = match.group(1)
         method_name = match.group(2)
         return module, method_name
-
-    else:
-        raise ValueError(f"No import statement found in {get_function_location(function)}")
+    raise ValueError(f"No import statement found in {get_function_location(function)}")
 
 
 def get_imported_gpm_method(accessor_method: Callable) -> Callable:
     imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
     module = importlib.import_module(imported_module)
-    gpm_method = getattr(module, imported_method_name)
-    return gpm_method
+    return getattr(module, imported_method_name)
 
 
 def get_default_arguments_dict(function: Callable) -> dict[str, object]:
