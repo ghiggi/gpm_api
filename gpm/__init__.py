@@ -24,6 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
+import contextlib
 import os
 from importlib.metadata import PackageNotFoundError, version
 
@@ -80,9 +81,7 @@ if not _colorbar_registered:
 colormaps = pycolorbar.colormaps
 colorbars = pycolorbar.colorbars
 
+
 # Get version
-try:
+with contextlib.suppress(PackageNotFoundError):
     __version__ = version("gpm_api")
-except PackageNotFoundError:
-    # package is not installed
-    pass

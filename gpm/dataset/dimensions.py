@@ -147,7 +147,7 @@ def _get_gpm_api_dims_dict(ds):
     """Get dictionary to rename dimensions following gpm-api defaults."""
     rename_dim_dict = {}
     for dim in list(ds.dims):
-        new_dim = DIM_DICT.get(dim, None)
+        new_dim = DIM_DICT.get(dim)
         if new_dim is not None:
             rename_dim_dict[dim] = new_dim
     return rename_dim_dict

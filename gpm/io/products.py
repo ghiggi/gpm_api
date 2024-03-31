@@ -349,10 +349,7 @@ def get_available_product_types():
 @functools.cache
 def get_available_product_levels(full=False):
     """Get the list of all available product levels."""
-    if not full:
-        key = "product_level"
-    else:
-        key = "full_product_level"
+    key = "product_level" if not full else "full_product_level"
     info_dict = get_info_dict()
     return _get_unique_key_values(info_dict, key=key)
 
@@ -556,10 +553,7 @@ def available_product_levels(
 
     """
     # Define product level key
-    if not full:
-        key = "product_level"
-    else:
-        key = "full_product_level"
+    key = "product_level" if not full else "full_product_level"
     # Retrieve info dictionary
     info_dict = get_info_dict_subset(
         sensors=sensors,

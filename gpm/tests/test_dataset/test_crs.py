@@ -37,7 +37,7 @@ def test_get_pyproj_crs_cf_fict_private() -> None:
     res = crs._get_pyproj_crs_cf_dict(CRS(4326))  # WGS84
 
     assert isinstance(res, dict), "Dictionary not returned"
-    assert "spatial_ref" in res.keys(), "spatial_ref key not in dictionary"
+    assert "spatial_ref" in res, "spatial_ref key not in dictionary"
 
 
 def test_get_proj_coord_unit_private() -> None:

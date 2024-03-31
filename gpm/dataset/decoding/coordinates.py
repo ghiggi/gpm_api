@@ -54,11 +54,10 @@ def ensure_valid_coords(ds, raise_error=False):
 
 def _add_cmb_range_coordinate(ds, scan_mode):
     """Add range coordinate to 2B-<CMB> products."""
-    if "range" in list(ds.dims):
-        if scan_mode in ["NS", "KuKaGMI", "KuGMI", "KuTMI"]:
-            range_values = np.arange(0, 88 * 250, step=250)
-            ds = ds.assign_coords({"range": range_values})
-            ds["range"].attrs["units"] = "m"
+    if "range" in list(ds.dims) and scan_mode in ["NS", "KuKaGMI", "KuGMI", "KuTMI"]:
+        range_values = np.arange(0, 88 * 250, step=250)
+        ds = ds.assign_coords({"range": range_values})
+        ds["range"].attrs["units"] = "m"
     return ds
 
 
@@ -68,9 +67,8 @@ def _add_cmb_coordinates(ds, product, scan_mode):
         pmw_frequency = get_pmw_frequency_corra(product)
         ds = ds.assign_coords({"pmw_frequency": pmw_frequency})
 
-    if scan_mode == "KuKaGMI" or scan_mode == "NS":
-        if "radar_frequency" in list(ds.dims):
-            ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
+    if (scan_mode == "KuKaGMI" or scan_mode == "NS") and "radar_frequency" in list(ds.dims):
+        ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
 
     return _add_cmb_range_coordinate(ds, scan_mode)
 
@@ -101,12 +99,10 @@ def _add_wished_coordinates(ds):
 
 def _add_radar_coordinates(ds, product, scan_mode):
     """Add range, height, radar_frequency, paramDSD coordinates to <RADAR> products."""
-    if product == "2A-DPR":
-        if "radar_frequency" in list(ds.dims):
-            ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
-    if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR"]:
-        if "paramDSD" in list(ds):
-            ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
+    if product == "2A-DPR" and "radar_frequency" in list(ds.dims):
+        ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
+    if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR"] and "paramDSD" in list(ds):
+        ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
     # Add radar range
     return _add_radar_range_coordinate(ds, scan_mode)
 

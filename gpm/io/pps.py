@@ -208,10 +208,11 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
         url of the NASA PPS server where the data are listed.
     """
     # Retrieve server URL
-    if server_type == "text":
-        url_server = _get_pps_text_server(product_type)
-    else:
-        url_server = _get_pps_data_server(product_type)
+    url_server = (
+        _get_pps_text_server(product_type)
+        if server_type == "text"
+        else _get_pps_data_server(product_type)
+    )
     # Retrieve directory tree structure
     dir_structure = _get_pps_directory_tree(
         product=product, product_type=product_type, date=date, version=version

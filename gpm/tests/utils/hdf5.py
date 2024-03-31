@@ -148,10 +148,9 @@ def _attach_scales(dst_file, src_group):
         if isinstance(h5_obj, h5py.Group):
             # Update downstream in the tree recursively
             _attach_scales(dst_file, src_group=h5_obj)
-        elif isinstance(h5_obj, h5py.Dataset):
+        if isinstance(h5_obj, h5py.Dataset) and not h5_obj.is_scale:
             # Update DIMENSION_LIST
-            if not h5_obj.is_scale:
-                _attach_dataset_scale(dst_file, src_dataset=h5_obj)
+            _attach_dataset_scale(dst_file, src_dataset=h5_obj)
 
 
 def create_test_hdf5(src_filepath, dst_filepath):

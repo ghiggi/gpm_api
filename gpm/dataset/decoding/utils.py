@@ -62,9 +62,6 @@ def remap_numeric_array(arr, remapping_dict):
 def ceil_datarray(da):
     """Ceil a xr.DataArray."""
     data = da.data
-    if hasattr(data, "chunks"):
-        data = np.ceil(data)
-    else:
-        data = dask.array.ceil(data)
+    data = np.ceil(data) if hasattr(data, "chunks") else dask.array.ceil(data)
     da.data = data
     return da

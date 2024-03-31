@@ -71,11 +71,11 @@ def _get_available_groups(dt, scan_mode, name=False):
 
 def _get_variables_scan_mode(dt, scan_mode, group):
     """Return variables associated to a scan_mode group."""
-    if scan_mode == group:
-        variables = _get_variables(dt[scan_mode])
-    else:
-        variables = _get_variables(dt[scan_mode][group])
-    return variables
+    return (
+        _get_variables(dt[scan_mode])
+        if scan_mode == group
+        else _get_variables(dt[scan_mode][group])
+    )
 
 
 def _get_variables_path_dict(dt, scan_mode):

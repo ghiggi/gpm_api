@@ -106,12 +106,11 @@ def _check_correct_version(filepaths, product, version):
             f"Multiple file versions found: {files_versions}. Please report their occurrence !"
         )
     files_version = files_versions[0]
-    if files_version != version:
-        if VERSION_WARNING:
-            VERSION_WARNING = False
-            msg = f"The last available version for {product} product is version {files_version}! "
-            msg += f"Starting the download of version {files_version}."
-            warnings.warn(msg, GPMDownloadWarning, stacklevel=2)
+    if files_version != version and VERSION_WARNING:
+        VERSION_WARNING = False
+        msg = f"The last available version for {product} product is version {files_version}! "
+        msg += f"Starting the download of version {files_version}."
+        warnings.warn(msg, GPMDownloadWarning, stacklevel=2)
     return filepaths, files_version
 
 

@@ -815,8 +815,8 @@ class TestGetSlicesRegular:
 
 def test_check_criteria() -> None:
     """Test _check_criteria"""
-    assert "all" == checks._check_criteria(criteria="all")
-    assert "any" == checks._check_criteria(criteria="any")
+    assert checks._check_criteria(criteria="all") == "all"
+    assert checks._check_criteria(criteria="any") == "any"
 
     with pytest.raises(ValueError):
         checks._check_criteria(None)

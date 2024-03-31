@@ -197,9 +197,13 @@ def _get_proj_dim_coords(xr_obj):
     for dims in list_options:
         dim_x = dims[0]
         dim_y = dims[1]
-        if dim_x in xr_obj.coords and dim_y in xr_obj.coords:
-            if xr_obj[dim_x].dims == (dim_x,) and xr_obj[dim_y].dims == (dim_y,):
-                return dims
+        if (
+            dim_x in xr_obj.coords
+            and dim_y in xr_obj.coords
+            and xr_obj[dim_x].dims == (dim_x,)
+            and xr_obj[dim_y].dims == (dim_y,)
+        ):
+            return dims
     # Otherwise look at available coordinates, and search for CF attributes
     else:
         x_dim = None
@@ -399,10 +403,11 @@ def _add_coords_crs_attrs(ds, crs):
         ds = _add_proj_coords_attrs(ds, crs)
     # Geographic CRS
     else:
-        if has_swath_coords(ds):
-            ds = _add_swath_coords_attrs(ds, crs)
-        else:
-            ds = _add_proj_coords_attrs(ds, crs)
+        ds = (
+            _add_swath_coords_attrs(ds, crs)
+            if has_swath_coords(ds)
+            else _add_proj_coords_attrs(ds, crs)
+        )
     return ds
 
 

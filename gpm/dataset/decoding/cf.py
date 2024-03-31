@@ -42,7 +42,7 @@ def apply_cf_decoding(ds):
         ds = xr.decode_cf(ds, decode_timedelta=False)
 
     # Clean the DataArray attributes and encodings
-    for var in ds.keys():
+    for var in ds:
         # When decoding with xr.decode_cf, _FillValue and the source dtype are automatically
         # added to the encoding attribute
         ds[var].attrs.pop("source_dtype", None)
