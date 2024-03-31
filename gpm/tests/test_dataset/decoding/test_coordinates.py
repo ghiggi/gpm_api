@@ -14,13 +14,14 @@ def test_get_pmw_frequency_dict() -> None:
 def test_get_pmw_frequency_corra(
     products: list[str],
 ) -> None:
-    # Try products hardcoded in function
+    # Try GPM CORRA Product
     res = co.get_pmw_frequency_corra("2B-GPM-CORRA")
     assert len(res) > 0
     assert res == (
         co.get_pmw_frequency("GMI", scan_mode="S1") + co.get_pmw_frequency("GMI", scan_mode="S2")
     )
 
+    # Try TRMM CORRA Product
     res = co.get_pmw_frequency_corra("2B-TRMM-CORRA")
     assert len(res) > 0
     assert res == (
@@ -32,6 +33,5 @@ def test_get_pmw_frequency_corra(
     # Test other non-corra products fail
     for product in products:
         if "corra" not in product.lower():
-            with pytest.raises(UnboundLocalError):
-                res = co.get_pmw_frequency_corra(product)
-                assert len(res) == 0
+            with pytest.raises(ValueError):
+                co.get_pmw_frequency_corra(product)

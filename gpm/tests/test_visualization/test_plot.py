@@ -577,7 +577,7 @@ class TestPlotLabels:
 
     label_name = "label"
 
-    @pytest.fixture
+    @pytest.fixture()
     def orbit_labels_dataarray(
         self,
         orbit_dataarray: xr.DataArray,
@@ -589,7 +589,7 @@ class TestPlotLabels:
             {self.label_name: (("cross_track", "along_track"), labels)}
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def grid_labels_dataarray(
         self,
         grid_dataarray: xr.DataArray,
@@ -645,10 +645,10 @@ class TestPlotLabels:
         p = plot.plot_labels(grid_labels_dataarray, label_name=self.label_name)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
+    @pytest.mark.usefixtures("_prevent_pyplot_show")
     def test_generator(
         self,
         orbit_labels_dataarray: xr.DataArray,
-        prevent_pyplot_show: None,
     ) -> None:
         """Test plotting orbit data form a generator"""
 
@@ -665,10 +665,10 @@ class TestPlotLabels:
 class TestPlotPatches:
     """Test the plot_patches function"""
 
+    @pytest.mark.usefixtures("_prevent_pyplot_show")
     def test_orbit(
         self,
         orbit_dataarray: xr.DataArray,
-        prevent_pyplot_show: None,
     ) -> None:
         """Test plotting orbit data"""
 
@@ -680,10 +680,10 @@ class TestPlotPatches:
         plot.plot_patches(generator)  # does not return plotter
         save_and_check_figure(name=get_test_name())
 
+    @pytest.mark.usefixtures("_prevent_pyplot_show")
     def test_orbit_dataset(
         self,
         orbit_dataarray: xr.DataArray,
-        prevent_pyplot_show: None,
     ) -> None:
         """Test plotting orbit data from a dataset"""
 
@@ -702,10 +702,10 @@ class TestPlotPatches:
         plot.plot_patches(generator, variable=variable_name)  # does not return plotter
         save_and_check_figure(name=get_test_name())
 
+    @pytest.mark.usefixtures("_prevent_pyplot_show")
     def test_grid(
         self,
         grid_dataarray: xr.DataArray,
-        prevent_pyplot_show: None,
     ) -> None:
         """Test plotting grid data"""
 

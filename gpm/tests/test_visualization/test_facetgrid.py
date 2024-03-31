@@ -55,7 +55,7 @@ EXTRA_DIM_2 = "auxiliary_dim_2"
 # Fixtures ####################################################################
 
 
-@pytest.fixture
+@pytest.fixture()
 def orbit_dataarray_4_frames(
     orbit_dataarray: xr.DataArray,
 ) -> xr.DataArray:
@@ -64,7 +64,7 @@ def orbit_dataarray_4_frames(
     return expand_dims(orbit_dataarray, 4, dim=EXTRA_DIM)
 
 
-@pytest.fixture
+@pytest.fixture()
 def orbit_dataarray_6_frames(
     orbit_dataarray: xr.DataArray,
 ) -> xr.DataArray:
@@ -73,7 +73,7 @@ def orbit_dataarray_6_frames(
     return expand_dims(orbit_dataarray, 6, dim=EXTRA_DIM)
 
 
-@pytest.fixture
+@pytest.fixture()
 def orbit_dataarray_2x2_frames(
     orbit_dataarray: xr.DataArray,
 ) -> xr.DataArray:
@@ -83,7 +83,7 @@ def orbit_dataarray_2x2_frames(
     return expand_dims(orbit_dataarray, 2, dim=EXTRA_DIM_2)
 
 
-@pytest.fixture
+@pytest.fixture()
 def grid_dataarray_4_frames(
     grid_dataarray: xr.DataArray,
 ) -> xr.DataArray:

@@ -147,7 +147,8 @@ select = [
     "ARG",
     # flake8-raise
     "RSE",
-
+    # flake8-pytest-style
+    "PT"
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
@@ -159,6 +160,7 @@ ignore = [
     "E722",
     "B904",
     "B006", # {} defaults in function arguments
+    "PT011", # pytest raised error must be checked if match the expected error msg
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.

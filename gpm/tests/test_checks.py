@@ -53,63 +53,63 @@ def make_dataset(dataarrays: list[xr.DataArray]) -> xr.Dataset:
 # Fixtures #####################################################################
 
 
-@pytest.fixture
+@pytest.fixture()
 def orbit_dataset(orbit_dataarray: xr.DataArray) -> xr.Dataset:
     """Return an orbit dataset"""
 
     return make_dataset([orbit_dataarray, orbit_dataarray])
 
 
-@pytest.fixture
+@pytest.fixture()
 def grid_dataset(grid_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a grid dataset"""
 
     return make_dataset([grid_dataarray, grid_dataarray])
 
 
-@pytest.fixture
+@pytest.fixture()
 def invalid_dataset(orbit_dataarray: xr.DataArray) -> xr.Dataset:
     """Return an invalid dataset"""
 
     return make_dataset([orbit_dataarray, xr.DataArray()])
 
 
-@pytest.fixture
+@pytest.fixture()
 def orbit_spatial_3d_dataset(orbit_spatial_3d_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a 3D orbit dataset"""
 
     return make_dataset([orbit_spatial_3d_dataarray, orbit_spatial_3d_dataarray])
 
 
-@pytest.fixture
+@pytest.fixture()
 def grid_spatial_3d_dataset(grid_spatial_3d_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a 3D grid dataset"""
 
     return make_dataset([grid_spatial_3d_dataarray, grid_spatial_3d_dataarray])
 
 
-@pytest.fixture
+@pytest.fixture()
 def invalid_spatial_3d_dataset(orbit_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a 3D invalid dataset"""
 
     return make_dataset([orbit_dataarray, xr.DataArray()])
 
 
-@pytest.fixture
+@pytest.fixture()
 def orbit_transect_dataset(orbit_transect_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a transect orbit dataset"""
 
     return make_dataset([orbit_transect_dataarray, orbit_transect_dataarray])
 
 
-@pytest.fixture
+@pytest.fixture()
 def grid_transect_dataset(grid_transect_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a transect grid dataset"""
 
     return make_dataset([grid_transect_dataarray, grid_transect_dataarray])
 
 
-@pytest.fixture
+@pytest.fixture()
 def invalid_transect_dataset(orbit_dataarray: xr.DataArray) -> xr.Dataset:
     """Return a transect invalid dataset"""
 

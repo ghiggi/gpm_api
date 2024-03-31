@@ -373,9 +373,13 @@ def test_download_files(
     assert dl.download_files(filepaths=[]) is None
 
     # Test that filetypes other than a list are not accepted
-    with pytest.raises(TypeError):
-        for obj in [(), {}, 1, 1.0, "str", True]:
+    for obj in [(), {}, 1, 1.0, True]:
+        with pytest.raises(TypeError):
             dl.download_files(filepaths=obj)
+
+    # Test Error "Impossible to infer file information from 'str'"
+    with pytest.raises(ValueError):
+        dl.download_files(filepaths="invalid_str")
 
     # Test data already on disk (force_download=False)
     mocker.patch.object(dl, "filter_download_list", autospec=True, return_value=([], []))
@@ -428,7 +432,7 @@ def test__download_daily_data(
 
 class TestDownloadArchive:
     @pytest.fixture(autouse=True)
-    def mock_download(
+    def _mock_download(
         self,
         mocker: MockerFixture,
         remote_filepaths: dict[str, dict[str, Any]],

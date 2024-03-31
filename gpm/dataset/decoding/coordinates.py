@@ -129,13 +129,14 @@ def get_pmw_frequency(sensor, scan_mode):
 
 def get_pmw_frequency_corra(product):
     if product == "2B-GPM-CORRA":
-        pmw_frequency = get_pmw_frequency("GMI", scan_mode="S1")
-        pmw_frequency = pmw_frequency + get_pmw_frequency("GMI", scan_mode="S2")
-    elif product == "2B-TRMM-CORRA":
-        pmw_frequency = get_pmw_frequency("TMI", scan_mode="S1")
-        pmw_frequency = pmw_frequency + get_pmw_frequency("TMI", scan_mode="S2")
-        pmw_frequency = pmw_frequency + get_pmw_frequency("TMI", scan_mode="S3")
-    return pmw_frequency
+        return get_pmw_frequency("GMI", scan_mode="S1") + get_pmw_frequency("GMI", scan_mode="S2")
+    if product == "2B-TRMM-CORRA":
+        return (
+            get_pmw_frequency("TMI", scan_mode="S1")
+            + get_pmw_frequency("TMI", scan_mode="S2")
+            + get_pmw_frequency("TMI", scan_mode="S3")
+        )
+    raise ValueError("Invalid (CORRA) product {product}.")
 
 
 def _parse_sun_local_time(ds):

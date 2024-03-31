@@ -29,6 +29,7 @@ import inspect
 
 import cartopy
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -1105,7 +1106,7 @@ def plot_patches(
                 **plot_kwargs,
             )
             plt.show()
-        except:
+        except Exception:
             pass
     return
 
@@ -1229,8 +1230,6 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
     This example creates a main plot with a specified extent and adds an upper-left inset map
     showing the global context of the main plot's extent.
     """
-    import cartopy.crs as ccrs
-    import cartopy.feature as cfeature
     from shapely import Polygon
 
     from gpm.utils.geospatial import extend_geographic_extent

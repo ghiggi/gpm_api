@@ -42,7 +42,7 @@ from gpm.utils import manipulations
 THICKNESS = 8
 
 
-@pytest.fixture
+@pytest.fixture()
 def a_3d_dataarray() -> xr.DataArray:
     n_x = 5
     n_y = 6
@@ -57,7 +57,7 @@ def a_3d_dataarray() -> xr.DataArray:
     return da.transpose("x", "y", "height")
 
 
-@pytest.fixture
+@pytest.fixture()
 def binnable_orbit_dataarray(
     orbit_dataarray: xr.DataArray,
 ) -> xr.DataArray:
@@ -373,7 +373,7 @@ class TestGetPhaseMask:
     height_zero_deg = np.random.randint(3, 6, size=(5, 6)) * 8
     da_height_zero_deg = xr.DataArray(height_zero_deg, dims=["x", "y"])
 
-    @pytest.fixture
+    @pytest.fixture()
     def phase_dataarray(
         self,
         a_3d_dataarray: xr.DataArray,
