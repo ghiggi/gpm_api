@@ -218,13 +218,13 @@ def _interpolate_data(arr, method="linear"):
     non_nan_indices = np.where(~is_invalid)
 
     # Create a meshgrid of indices
-    X, Y = np.meshgrid(range(arr.shape[1]), range(arr.shape[0]))
+    x, y = np.meshgrid(range(arr.shape[1]), range(arr.shape[0]))
 
     # Points (X, Y) where we have valid data
-    points = np.array([Y[non_nan_indices], X[non_nan_indices]]).T
+    points = np.array([y[non_nan_indices], x[non_nan_indices]]).T
 
     # Points where data is NaN
-    points_nan = np.array([Y[nan_indices], X[nan_indices]]).T
+    points_nan = np.array([y[nan_indices], x[nan_indices]]).T
 
     # Values at the non-NaN points
     values = arr[non_nan_indices]
