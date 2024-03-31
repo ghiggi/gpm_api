@@ -129,8 +129,8 @@ class TestGetDailyFilepaths:
                     with check:
                         assert returned_filepaths == expected_filepaths
 
-    @pytest.fixture
-    def mock_get_pps_file_list(
+    @pytest.fixture()
+    def _mock_get_pps_file_list(
         self,
         mocker: MockerFixture,
     ) -> None:
@@ -145,10 +145,10 @@ class TestGetDailyFilepaths:
 
         mocker.patch("gpm.io.pps._try_get_pps_file_list", side_effect=mocked_get_pps_file_list)
 
+    @pytest.mark.usefixtures("_mock_get_pps_file_list")
     def test_pps_rs_version_7(
         self,
         check,  # For non-failing asserts
-        mock_get_pps_file_list: None,
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with RS version 7 products"""
@@ -174,10 +174,10 @@ class TestGetDailyFilepaths:
             with check:
                 assert returned_filepaths == expected_filepaths
 
+    @pytest.mark.usefixtures("_mock_get_pps_file_list")
     def test_pps_rs_lower_version(
         self,
         check,  # For non-failing asserts
-        mock_get_pps_file_list: None,
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with RS lower version products"""
@@ -206,10 +206,10 @@ class TestGetDailyFilepaths:
                 with check:
                     assert returned_filepaths == expected_filepaths
 
+    @pytest.mark.usefixtures("_mock_get_pps_file_list")
     def test_pps_nrt(
         self,
         check,  # For non-failing asserts
-        mock_get_pps_file_list: None,
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with NRT products (except IMERG)"""
@@ -238,10 +238,10 @@ class TestGetDailyFilepaths:
             with check:
                 assert returned_filepaths == expected_filepaths
 
+    @pytest.mark.usefixtures("_mock_get_pps_file_list")
     def test_pps_nrt_imerg(
         self,
         check,  # For non-failing asserts
-        mock_get_pps_file_list: None,
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with NRT IMERG products"""
@@ -296,8 +296,8 @@ class TestGetDailyFilepaths:
                     verbose=True,
                 )
 
-    @pytest.fixture
-    def mock_get_ges_disc_list_path(
+    @pytest.fixture()
+    def _mock_get_ges_disc_list_path(
         self,
         mocker: MockerFixture,
     ) -> None:
@@ -310,10 +310,10 @@ class TestGetDailyFilepaths:
             "gpm.io.ges_disc._get_ges_disc_list_path", side_effect=mocked_get_ges_disc_list_path
         )
 
+    @pytest.mark.usefixtures("_mock_get_ges_disc_list_path")
     def test_ges_disc(
         self,
         check,  # For non-failing asserts
-        mock_get_ges_disc_list_path: None,
         product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "GES_DISC" storage"""

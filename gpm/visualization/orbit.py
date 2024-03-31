@@ -320,7 +320,7 @@ def _plot_orbit_image(
     if ax is None:
         if "rgb" not in plot_kwargs:
             check_is_spatial_2d(da)
-        fig, ax = plt.subplots(**fig_kwargs)
+        _, ax = plt.subplots(**fig_kwargs)
 
     # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)

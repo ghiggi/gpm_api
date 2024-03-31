@@ -37,6 +37,7 @@ def dask_client():
     cluster = LocalCluster()
     client = Client(cluster)
     yield client
+
     # Teardown: close the client and cluster after tests are done
     client.close()
     cluster.close()

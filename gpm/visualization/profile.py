@@ -301,7 +301,7 @@ def plot_transect(
 
     # - Initialize figure
     if ax is None:
-        fig, ax = plt.subplots(**fig_kwargs)
+        _, ax = plt.subplots(**fig_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(

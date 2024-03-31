@@ -87,6 +87,7 @@ Please install the package in the virtual environment you created before !
 To unlock the full functionalities offered by GPM-API, we recommend to already install the following packages:
 
 .. code-block:: bash
+
    conda install -c conda-forge ximage polars pyarrow pyresample jupyter spyder pyvista trame trame-vuetify trame-vtk
 
 .. note::

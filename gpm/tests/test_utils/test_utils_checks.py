@@ -40,8 +40,8 @@ from gpm.tests.test_utils.utils import (
 from gpm.utils import checks
 
 # Fixtures imported from gpm.tests.conftest:
-# - set_is_grid_to_true
-# - set_is_orbit_to_true
+# - _set_is_grid_to_true
+# - _set_is_orbit_to_true
 
 
 def test_get_missing_granule_numbers() -> None:
@@ -74,9 +74,9 @@ def test_is_contiguous_granule() -> None:
 class TestHasContiguousGranules:
     """Test has_contiguous_granules"""
 
+    @pytest.mark.usefixtures("_set_is_grid_to_true")
     def test_grid(
         self,
-        set_is_grid_to_true: None,
     ) -> None:
         # Test True case
         time = create_fake_datetime_array_from_hours_list([0, 1, 2])
@@ -88,9 +88,9 @@ class TestHasContiguousGranules:
         ds = create_dataset_with_coordinate("time", time)
         assert not checks.has_contiguous_granules(ds)
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_orbit(
         self,
-        set_is_orbit_to_true: None,
     ) -> None:
         # Test True case
         granule_ids = np.array([0, 1, 2])
@@ -111,9 +111,9 @@ class TestHasContiguousGranules:
 class TestGetSlicesContiguousGranules:
     """Test get_slices_contiguous_granules"""
 
+    @pytest.mark.usefixtures("_set_is_grid_to_true")
     def test_grid(
         self,
-        set_is_grid_to_true: None,
     ) -> None:
         time = create_fake_datetime_array_from_hours_list([0, 1, 2, 7, 8, 9])
         ds = create_dataset_with_coordinate("time", time)
@@ -121,9 +121,9 @@ class TestGetSlicesContiguousGranules:
         returned_slices = checks.get_slices_contiguous_granules(ds)
         assert returned_slices == expected_slices
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_orbit(
         self,
-        set_is_orbit_to_true: None,
     ) -> None:
         granule_ids = np.array([0, 1, 2, 7, 8, 9])
         ds = create_dataset_with_coordinate("gpm_granule_id", granule_ids)
@@ -178,9 +178,9 @@ def test_check_missing_granules() -> None:
 class TestHasMissingGranules:
     """Test has_missing_granules"""
 
+    @pytest.mark.usefixtures("_set_is_grid_to_true")
     def test_grid(
         self,
-        set_is_grid_to_true: None,
     ) -> None:
         # Test without missing granules
         time = np.arange(10)
@@ -192,9 +192,9 @@ class TestHasMissingGranules:
         ds = create_dataset_with_coordinate("time", time)
         assert checks.has_missing_granules(ds)
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_orbit(
         self,
-        set_is_orbit_to_true: None,
     ) -> None:
         # Test without missing granules
         granule_ids = np.arange(10)
@@ -260,9 +260,9 @@ class TestGetSlicesRegularTime:
         returned_slices = checks.get_slices_regular_time(ds, tolerance=tolerance, min_size=3)
         assert returned_slices == expected_slices
 
+    @pytest.mark.usefixtures("_set_is_grid_to_true")
     def test_grid(
         self,
-        set_is_grid_to_true: None,
     ) -> None:
         # Tolerance not provided: inferred from first two values
         time = create_fake_datetime_array_from_hours_list([1, 2, 3, 7, 8, 9])
@@ -271,9 +271,9 @@ class TestGetSlicesRegularTime:
         returned_slices = checks.get_slices_regular_time(ds, tolerance=None)
         assert returned_slices == expected_slices
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_orbit(
         self,
-        set_is_orbit_to_true: None,
     ) -> None:
         # Tolerance not provided: equal to gpm.utils.checks.ORBIT_TIME_TOLERANCE
         time = create_orbit_time_array([0, 1, 2, 7, 8, 9])
@@ -315,9 +315,9 @@ class TestGetSlicesNonRegularTime:
         returned_slices = checks.get_slices_non_regular_time(ds, tolerance=tolerance)
         assert returned_slices == expected_slices
 
+    @pytest.mark.usefixtures("_set_is_grid_to_true")
     def test_grid(
         self,
-        set_is_grid_to_true: None,
     ) -> None:
         # Tolernace not provided: inferred from first two values
         #                                             0  1  2  3  4  5  6   7   8
@@ -327,9 +327,9 @@ class TestGetSlicesNonRegularTime:
         returned_slices = checks.get_slices_non_regular_time(ds, tolerance=None)
         assert returned_slices == expected_slices
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_orbit(
         self,
-        set_is_orbit_to_true: None,
     ) -> None:
         # Tolerance not provided: equal to gpm.utils.checks.ORBIT_TIME_TOLERANCE
         #                               0  1  2  3  4  5  6   7   8
@@ -343,9 +343,9 @@ class TestGetSlicesNonRegularTime:
 class TestCheckRegularTime:
     """Test check_regular_time"""
 
+    @pytest.mark.usefixtures("_set_is_grid_to_true")
     def test_grid(
         self,
-        set_is_grid_to_true: None,
     ) -> None:
         # Test regular time
         time = create_fake_datetime_array_from_hours_list(np.arange(0, 10))
@@ -358,9 +358,9 @@ class TestCheckRegularTime:
         with pytest.raises(ValueError):
             checks.check_regular_time(ds)
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_orbit(
         self,
-        set_is_orbit_to_true: None,
     ) -> None:
         # Test regular time
         time = create_orbit_time_array(np.arange(0, 10))
@@ -403,7 +403,7 @@ class TestContinuousScans:
     n_along_track = 10
     cut_idx = 5
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_contiguous(self) -> xr.Dataset:
         # Values along track
         lat = np.array([60] * self.n_along_track)
@@ -425,7 +425,7 @@ class TestContinuousScans:
 
         return ds
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_contiguous_two_scans(
         self,
         ds_contiguous: xr.Dataset,
@@ -433,7 +433,7 @@ class TestContinuousScans:
         ds = ds_contiguous.copy(deep=True)
         return ds.isel({"along_track": slice(0, 2)})
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_contiguous_three_scans(
         self,
         ds_contiguous: xr.Dataset,
@@ -441,7 +441,7 @@ class TestContinuousScans:
         ds = ds_contiguous.copy(deep=True)
         return ds.isel({"along_track": slice(0, 3)})
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_non_contiguous_lon(
         self,
         ds_contiguous: xr.Dataset,
@@ -453,7 +453,7 @@ class TestContinuousScans:
 
         return ds
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_non_contiguous_granule_id(
         self,
         ds_contiguous: xr.Dataset,
@@ -467,7 +467,7 @@ class TestContinuousScans:
 
         return ds
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_non_contiguous_both(
         self,
         ds_non_contiguous_granule_id: xr.Dataset,
@@ -506,9 +506,9 @@ class TestContinuousScans:
         assert np.sum(contiguous) == self.n_along_track - 1
         assert not contiguous[self.cut_idx - 1]
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_check_contiguous_scans(
         self,
-        set_is_orbit_to_true: None,
         ds_contiguous: xr.Dataset,
         ds_non_contiguous_lon: xr.Dataset,
         ds_non_contiguous_granule_id: xr.Dataset,
@@ -530,9 +530,9 @@ class TestContinuousScans:
         with pytest.raises(ValueError):
             checks.check_contiguous_scans(ds_non_contiguous_both)
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_has_contiguous_scans(
         self,
-        set_is_orbit_to_true: None,
         ds_contiguous: xr.Dataset,
         ds_non_contiguous_lon: xr.Dataset,
         ds_non_contiguous_granule_id: xr.Dataset,
@@ -591,7 +591,7 @@ class TestValidGeolocation:
     n_along_track = 10
     invalid_idx = 5
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_orbit_valid(self) -> xr.Dataset:
         # Values along track
         lon = np.arange(self.n_along_track, dtype=float)
@@ -607,13 +607,13 @@ class TestValidGeolocation:
         ds["time"] = (("along_track"), time)
         return ds
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_orbit_valid_with_one_cross_track_nan(self, ds_orbit_valid) -> xr.Dataset:
         ds = ds_orbit_valid.copy(deep=True)
         ds["lon"].data[0] = np.nan
         return ds
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_orbit_invalid(
         self,
         ds_orbit_valid: xr.Dataset,
@@ -622,7 +622,7 @@ class TestValidGeolocation:
         ds["lon"][0, self.invalid_idx] = np.nan
         return ds
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_orbit_all_invalid(
         self,
         ds_orbit_valid: xr.Dataset,
@@ -631,9 +631,9 @@ class TestValidGeolocation:
         ds["lon"].data[:, :] = np.nan
         return ds
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_is_valid_geolocation(
         self,
-        set_is_orbit_to_true: None,
         ds_orbit_valid: xr.Dataset,
         ds_orbit_invalid: xr.Dataset,
     ) -> None:
@@ -647,9 +647,9 @@ class TestValidGeolocation:
         valid = checks._is_valid_geolocation(ds_orbit_invalid)
         assert np.sum(valid.all(dim="cross_track")) == self.n_along_track - 1
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_check_valid_geolocation(
         self,
-        set_is_orbit_to_true: None,
         ds_orbit_valid: xr.Dataset,
         ds_orbit_invalid: xr.Dataset,
     ) -> None:
@@ -663,9 +663,9 @@ class TestValidGeolocation:
         with pytest.raises(ValueError):
             checks.check_valid_geolocation(ds_orbit_invalid)
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_has_valid_geolocation(
         self,
-        set_is_orbit_to_true: None,
         ds_orbit_valid: xr.Dataset,
         ds_orbit_invalid: xr.Dataset,
     ) -> None:
@@ -743,10 +743,10 @@ class TestWobblingSwath:
 class TestIsRegular:
     """Test is_regular"""
 
+    @pytest.mark.usefixtures("_set_is_orbit_to_true")
     def test_orbit(
         self,
         mocker: MockerFixture,
-        set_is_orbit_to_true: None,
     ) -> None:
         # Mock has_contiguous_scans to return True
         mock_has_contiguous_scans = mocker.patch(
@@ -759,10 +759,10 @@ class TestIsRegular:
         mock_has_contiguous_scans.return_value = False
         assert not checks.is_regular(ds)
 
+    @pytest.mark.usefixtures("_set_is_grid_to_true")
     def test_grid(
         self,
         mocker: MockerFixture,
-        set_is_grid_to_true: None,
     ) -> None:
         # Mock has_regular_time to return True
         mock_has_regular_time = mocker.patch("gpm.utils.checks.has_regular_time", return_value=True)
@@ -775,7 +775,7 @@ class TestIsRegular:
 
 
 class TestGetSlicesRegular:
-    @pytest.fixture
+    @pytest.fixture()
     def ds_orbit(self) -> xr.Dataset:
         # Values along track
         n_along_track = 10
@@ -789,7 +789,7 @@ class TestGetSlicesRegular:
         granule_ids = np.array([0, 0, 0, 1, 1, 1, 2, 2, 7, 8])
         return ds.assign_coords({"gpm_granule_id": ("along_track", granule_ids)})
 
-    @pytest.fixture
+    @pytest.fixture()
     def ds_grid(self) -> xr.Dataset:
         lon = np.arange(10, dtype=float)
         lat = np.arange(10, dtype=float)

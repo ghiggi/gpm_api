@@ -517,14 +517,10 @@ def test_check_time() -> None:
     # Test a datetime object inside a numpy array
     with pytest.raises(ValueError):
         res = checks.check_time(np.array([datetime.datetime(2014, 12, 31, 12, 30, 30)]))
-        assert isinstance(res, datetime.datetime)
-        assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
 
     # Test a pandas Timestamp object inside a numpy array
     with pytest.raises(ValueError):
         res = checks.check_time(np.array([pd.Timestamp("2014-12-31 12:30:30")]))
-        assert isinstance(res, datetime.datetime)
-        assert res == datetime.datetime(2014, 12, 31, 12, 30, 30)
 
     # Test a pandas Timestamp object
     res = checks.check_time(pd.Timestamp("2014-12-31 12:30:30"))
@@ -640,16 +636,17 @@ def test_check_start_end_time() -> None:
             datetime.datetime(2126, 1, 1, 12, 30, 30, 300),
         )
 
-    # Check a time that is generated in another timezone but does not directly
-    # carry timezone information. This should fail if the check is done on utcnow()
-    with pytest.raises(ValueError):
-        for timezone in ["Europe/Zurich", "Australia/Melbourne"]:
-            # Remove timezone information
+    # Check that a timestep generated now in another timezone with no tzinfo, throw error
+    for timezone in ["Europe/Zurich", "Australia/Melbourne"]:
+        with pytest.raises(ValueError):
             checks.check_start_end_time(
                 datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
                 datetime.datetime.now(tz=pytz.timezone(timezone)).replace(tzinfo=None),
             )
-            # Keep timezone information, should throw exception
+
+    # Specifying timezone different than UTC should throw exception
+    for timezone in ["Europe/Zurich", "Australia/Melbourne"]:
+        with pytest.raises(ValueError):
             checks.check_start_end_time(
                 datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
                 datetime.datetime.now(tz=pytz.timezone(timezone)),
