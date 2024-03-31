@@ -40,7 +40,7 @@ def dummy_function(x):
 
 
 @pytest.fixture(scope="module")
-def dask_client():
+def _dask_client():
     """Fixture for creating and closing a Dask client."""
     with dask.config.set(
         {"scheduler": "threads"}
@@ -48,7 +48,8 @@ def dask_client():
         yield  # No setup or teardown needed for this simple test
 
 
-def test_compute_list_delayed(dask_client):
+@pytest.mark.usefixtures("_dask_client")
+def test_compute_list_delayed():
     """Check that compute_list_delayed works correctly."""
     values = list(range(10))
     expected_results = [dummy_function(i) for i in values]
