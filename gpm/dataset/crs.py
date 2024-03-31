@@ -520,10 +520,9 @@ def _get_variables_with_spatial_dims(ds):
     if len(spatial_dims) == 0:
         raise ValueError("No spatial dimension identified in the dataset.")
     variables = list(ds.coords) + list(ds.data_vars)
-    list_spatial_variables = []
-    for var in variables:
-        if set(ds[var].dims).issuperset(spatial_dims):
-            list_spatial_variables.append(var)
+    list_spatial_variables = [
+        var for var in variables if set(ds[var].dims).issuperset(spatial_dims)
+    ]
     # Remove spatial coordinates from the list
     coords = _get_spatial_coordinates(ds)
     return set(list_spatial_variables).difference(coords)
@@ -560,11 +559,11 @@ def _add_variables_crs_attrs(ds, crs, grid_mapping_name):
 
 def _get_name_existing_crs_coords(xr_obj):
     """Return a list with the name of CRS coordinates."""
-    list_crs_coords = []
-    for coord in list(xr_obj.coords):
-        if "crs_wkt" in xr_obj[coord].attrs or "grid_mapping_name" in xr_obj[coord].attrs:
-            list_crs_coords.append(coord)
-    return list_crs_coords
+    return [
+        coord
+        for coord in xr_obj.coords
+        if "crs_wkt" in xr_obj[coord].attrs or "grid_mapping_name" in xr_obj[coord].attrs
+    ]
 
 
 def remove_existing_crs_info(ds):
@@ -679,12 +678,12 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 
 def _get_crs_coordinates(xr_obj):
     """Return a list with the name(s) of the CRS coordinate(s)."""
-    list_crs_names = []
     crs_attributes = ["grid_mapping_name", "crs_wkt", "spatial_ref"]
-    for coord in list(xr_obj.coords):
-        if np.any(np.isin(crs_attributes, list(xr_obj[coord].attrs))):
-            list_crs_names.append(coord)
-    return list_crs_names
+    return [
+        coord
+        for coord in xr_obj.coords
+        if np.any(np.isin(crs_attributes, list(xr_obj[coord].attrs)))
+    ]
 
 
 def _get_list_pyproj_crs(xr_obj):

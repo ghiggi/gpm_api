@@ -149,6 +149,10 @@ select = [
     "PT",
     # flake8-simplify
     "SIM",
+    # Perflint
+    "PERF",
+    # refurb
+    "FURB", # require preview
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
@@ -161,6 +165,8 @@ ignore = [
     "B904",
     "B006", # {} defaults in function arguments
     "PT011", # pytest raised error must be checked if match the expected error msg
+    "PERF203",
+
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
