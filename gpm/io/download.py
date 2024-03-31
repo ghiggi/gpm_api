@@ -613,10 +613,14 @@ def download_files(
 
     # Retrieve the remote and local file paths
     remote_filepaths = get_filepaths_from_filenames(
-        filepaths, storage=storage, product_type=product_type
+        filepaths,
+        storage=storage,
+        product_type=product_type,
     )
     local_filepaths = get_filepaths_from_filenames(
-        filepaths, storage="LOCAL", product_type=product_type
+        filepaths,
+        storage="LOCAL",
+        product_type=product_type,
     )
 
     # If force_download is False, select only data not present on disk
@@ -643,7 +647,9 @@ def download_files(
 
     # Get corrupted (and optionally removed) filepaths
     l_corrupted = check_filepaths_integrity(
-        filepaths=new_local_filepaths, remove_corrupted=remove_corrupted, verbose=verbose
+        filepaths=new_local_filepaths,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
     )
 
     # Retry download if retry > 1 as input argument
@@ -682,7 +688,9 @@ def _ensure_files_completness(
 ):
     """Check file validity and attempt download if corrupted."""
     l_corrupted = check_filepaths_integrity(
-        filepaths=filepaths, remove_corrupted=remove_corrupted, verbose=verbose
+        filepaths=filepaths,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
     )
     if verbose:
         print("Integrity checking of GPM files has completed.")
@@ -837,7 +845,9 @@ def _download_daily_data(
     # -------------------------------------------------------------------------.
     # Define disk filepaths
     local_filepaths = get_filepaths_from_filenames(
-        remote_filepaths, storage="LOCAL", product_type=product_type
+        remote_filepaths,
+        storage="LOCAL",
+        product_type=product_type,
     )
     # -------------------------------------------------------------------------.
     ## If force_download is False, select only data not present on disk
@@ -902,7 +912,7 @@ def _check_download_status(status, product, verbose):
             print(f"All the available GPM {product} product files are now on disk.")
         else:
             print(
-                f"Not all the available GPM {product} product files are on disk. Retry the download !"
+                f"Not all the available GPM {product} product files are on disk. Retry the download !",
             )
     return True
 

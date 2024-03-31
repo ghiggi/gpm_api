@@ -44,10 +44,10 @@ def test_get_available_groups():
                 {
                     "group_1": DataTree(),
                     "group_2": DataTree(),
-                }
+                },
             ),
             other_scan_mode: DataTree(),
-        }
+        },
     )
 
     # Test with full group path
@@ -72,10 +72,10 @@ def test_get_available_variables():
             scan_mode: DataTree.from_dict(
                 {
                     "group_1": DataTree(),
-                }
+                },
             ),
             other_scan_mode: DataTree(),
-        }
+        },
     )
     dt[scan_mode]["var_1"] = da
     dt[scan_mode]["group_1"]["var_1"] = da  # var_1 repeated on purpose
@@ -101,9 +101,9 @@ def test_get_relevant_groups_variables(monkeypatch):
                 {
                     "group_1": DataTree(),
                     "group_2": DataTree(),
-                }
+                },
             ),
-        }
+        },
     )
     dt[scan_mode]["group_1"]["mandatory_var"] = da
     dt[scan_mode]["group_1"]["var_1"] = da
@@ -115,7 +115,8 @@ def test_get_relevant_groups_variables(monkeypatch):
     expected_groups = ["", "group_1", "group_2"]
     expected_variables = None
     returned_groups, returned_variables = groups_variables._get_relevant_groups_variables(
-        dt, scan_mode
+        dt,
+        scan_mode,
     )
     assert expected_groups == returned_groups
     assert expected_variables == returned_variables
@@ -125,7 +126,9 @@ def test_get_relevant_groups_variables(monkeypatch):
     expected_groups = ["group_2"]
     expected_variables = None
     returned_groups, returned_variables = groups_variables._get_relevant_groups_variables(
-        dt, scan_mode, groups=input_groups
+        dt,
+        scan_mode,
+        groups=input_groups,
     )
     assert expected_groups == returned_groups
     assert expected_variables == returned_variables
@@ -140,7 +143,9 @@ def test_get_relevant_groups_variables(monkeypatch):
     expected_groups = ["group_1", "group_2"]
     expected_variables = ["mandatory_var", "var_3"]
     returned_groups, returned_variables = groups_variables._get_relevant_groups_variables(
-        dt, scan_mode, variables=input_variables
+        dt,
+        scan_mode,
+        variables=input_variables,
     )
     assert expected_groups == returned_groups
     assert expected_variables == returned_variables
@@ -156,7 +161,10 @@ def test_get_relevant_groups_variables(monkeypatch):
     expected_groups = ["group_1", "group_2"]
     expected_variables = ["mandatory_var", "var_1", "var_3", "var_4"]
     returned_groups, returned_variables = groups_variables._get_relevant_groups_variables(
-        dt, scan_mode, groups=input_groups, variables=input_variables
+        dt,
+        scan_mode,
+        groups=input_groups,
+        variables=input_variables,
     )
     assert expected_groups == returned_groups
     assert expected_variables == returned_variables

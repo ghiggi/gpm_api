@@ -43,7 +43,8 @@ from gpm.visualization import plot
 
 
 pytestmark = pytest.mark.skipif(
-    platform.system() == "Windows", reason="Minor figure differences on Windows"
+    platform.system() == "Windows",
+    reason="Minor figure differences on Windows",
 )
 skip_tests_if_no_data()
 
@@ -154,7 +155,10 @@ class TestPlotMap:
 
         extent = [0, 20, 0, 20]
         p = plot.plot_map(
-            orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, optimize_layout=False
+            orbit_dataarray_4_frames,
+            col=EXTRA_DIM,
+            col_wrap=2,
+            optimize_layout=False,
         )
         p.remove_title_dimension_prefix()
         p.set_extent(extent)
@@ -187,7 +191,10 @@ class TestPlotMap:
 
         cbar_kwargs = {"orientation": "horizontal"}
         p = plot.plot_map(
-            orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, cbar_kwargs=cbar_kwargs
+            orbit_dataarray_4_frames,
+            col=EXTRA_DIM,
+            col_wrap=2,
+            cbar_kwargs=cbar_kwargs,
         )
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
@@ -199,7 +206,10 @@ class TestPlotMap:
 
         cbar_kwargs = {"ticks": [0.1, 0.2, 0.4, 0.6, 0.8], "ticklabels": [42.5, 43, 44, 45, 46]}
         p = plot.plot_map(
-            orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, cbar_kwargs=cbar_kwargs
+            orbit_dataarray_4_frames,
+            col=EXTRA_DIM,
+            col_wrap=2,
+            cbar_kwargs=cbar_kwargs,
         )
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
@@ -211,7 +221,10 @@ class TestPlotMap:
 
         cbar_kwargs = {"extend": "both", "extendfrac": 0.03}
         p = plot.plot_map(
-            orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2, cbar_kwargs=cbar_kwargs
+            orbit_dataarray_4_frames,
+            col=EXTRA_DIM,
+            col_wrap=2,
+            cbar_kwargs=cbar_kwargs,
         )
         save_and_check_figure(figure=p.fig, name=get_test_name())
 

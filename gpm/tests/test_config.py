@@ -89,7 +89,9 @@ def test_update_gpm_configs(tmp_path, mocker):
 
     # Update
     gpm.configs.define_configs(
-        base_dir="new_test_base_dir", username_pps="new_username", password_pps="new_password"
+        base_dir="new_test_base_dir",
+        username_pps="new_username",
+        password_pps="new_password",
     )
     assert os.path.exists(config_filepath)
     config_dict = read_yaml(config_filepath)

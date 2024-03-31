@@ -242,7 +242,7 @@ def _is_transect_datarray(da, strict):
 def _is_spatial_2d_dataset(ds, strict):
     """Check if all DataArrays of a xr.Dataset are spatial 2D array."""
     all_2d_spatial = np.all(
-        [_is_spatial_2d_datarray(ds[var], strict=strict) for var in get_dataset_variables(ds)]
+        [_is_spatial_2d_datarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
     if all_2d_spatial:
         return True
@@ -252,7 +252,7 @@ def _is_spatial_2d_dataset(ds, strict):
 def _is_spatial_3d_dataset(ds, strict):
     """Check if all DataArrays of a xr.Dataset are spatial 3D array."""
     all_3d_spatial = np.all(
-        [_is_spatial_3d_datarray(ds[var], strict=strict) for var in get_dataset_variables(ds)]
+        [_is_spatial_3d_datarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
     if all_3d_spatial:
         return True
@@ -262,7 +262,7 @@ def _is_spatial_3d_dataset(ds, strict):
 def _is_transect_dataset(ds, strict):
     """Check if all DataArrays of a xr.Dataset are spatial profile array."""
     all_profile_spatial = np.all(
-        [_is_transect_datarray(ds[var], strict=strict) for var in get_dataset_variables(ds)]
+        [_is_transect_datarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
     if all_profile_spatial:
         return True

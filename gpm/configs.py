@@ -172,7 +172,7 @@ def read_configs() -> dict[str, str]:
     # Check it exists
     if not os.path.exists(filepath):
         raise ValueError(
-            "The GPM-API config file has not been specified. Use gpm.define_configs to specify it !"
+            "The GPM-API config file has not been specified. Use gpm.define_configs to specify it !",
         )
     # Read the GPM-API config file
     return read_yaml(filepath)

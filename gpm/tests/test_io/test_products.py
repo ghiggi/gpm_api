@@ -181,10 +181,14 @@ def test_get_sensor_satellite_names():
     assert ["SSMIS"] == _get_sensor_satellite_names(info_dict, key="sensor", combine_with=None)
     assert ["F18"] == _get_sensor_satellite_names(info_dict, key="satellite", combine_with=None)
     assert ["SSMIS-F18"] == _get_sensor_satellite_names(
-        info_dict, key="satellite", combine_with="sensor"
+        info_dict,
+        key="satellite",
+        combine_with="sensor",
     )
     assert ["SSMIS-F18"] == _get_sensor_satellite_names(
-        info_dict, key="sensor", combine_with="satellite"
+        info_dict,
+        key="sensor",
+        combine_with="satellite",
     )
 
 

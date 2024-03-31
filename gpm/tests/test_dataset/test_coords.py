@@ -55,7 +55,7 @@ def get_random_datetime_array_and_dataset(n_values):
             "Hour": ("along_track", datetimes.hour),
             "Minute": ("along_track", datetimes.minute),
             "Second": ("along_track", datetimes.second),
-        }
+        },
     )
     return datetimes.to_numpy(), ds
 

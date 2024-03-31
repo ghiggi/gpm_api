@@ -120,14 +120,14 @@ def compare_default_arguments(
     reference_default_arguments = get_default_arguments_dict(reference_method)
 
     missing_arguments = set(reference_default_arguments.keys()) - set(
-        accessor_default_arguments.keys()
+        accessor_default_arguments.keys(),
     )
     assert (
         not missing_arguments
     ), f"Missing arguments in {get_function_location(accessor_method)}: {missing_arguments}"
 
     extra_arguments = set(accessor_default_arguments.keys()) - set(
-        reference_default_arguments.keys()
+        reference_default_arguments.keys(),
     )
     assert (
         not extra_arguments

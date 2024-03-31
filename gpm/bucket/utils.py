@@ -56,7 +56,8 @@ def create_spatial_bin_empty_df(
 
     # Create the MultiIndex from the combination of x and y bins
     multi_index = pd.MultiIndex.from_product(
-        [x_midpoints, y_midpoints], names=[xbin_name, ybin_name]
+        [x_midpoints, y_midpoints],
+        names=[xbin_name, ybin_name],
     )
 
     # Create an empty DataFrame with the MultiIndex

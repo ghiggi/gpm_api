@@ -170,7 +170,9 @@ def get_time_period_with_missing_files(filepaths):
         # --> is_not_missing=np.array([False, False, True, True, False, False])
         # --> list_slices = [slice(0, 1, None), slice(1, 2, None), slice(2, 5, None), slice(5, 6, None)]
         list_slices = get_list_slices_from_bool_arr(
-            is_not_missing, include_false=True, skip_consecutive_false=False
+            is_not_missing,
+            include_false=True,
+            skip_consecutive_false=False,
         )
         # Retrieve start and end_time where there are missing files
         for slc in list_slices[0:-1]:
@@ -276,7 +278,7 @@ def check_archive_completeness(
             for s_time, e_time in list_missing_periods:
                 print(f"- Missing data between {s_time} and {e_time}")
             raise ValueError(
-                "The GPM {product} archive is not complete between {start_time} and {end_time}."
+                "The GPM {product} archive is not complete between {start_time} and {end_time}.",
             )
 
 

@@ -102,11 +102,15 @@ def test_open_granule(monkeypatch):
 
     # Mock units tested elsewhere
     monkeypatch.setattr(
-        granule, "get_granule_attrs", lambda *args, **kwargs: {"attribute": "attribute_value"}
+        granule,
+        "get_granule_attrs",
+        lambda *args, **kwargs: {"attribute": "attribute_value"},
     )
     monkeypatch.setattr(granule, "get_coords", lambda *args, **kwargs: {"coord": "coord_value"})
     monkeypatch.setattr(
-        granule, "_get_relevant_groups_variables", lambda *args, **kwargs: ([""], [])
+        granule,
+        "_get_relevant_groups_variables",
+        lambda *args, **kwargs: ([""], []),
     )
 
     def patch_finalize_dataset(ds, *args, **kwargs):
@@ -156,7 +160,7 @@ def test_remove_dummy_variables():
             "lon_bnds": da,
             # Real variables
             "real_var_1": da,
-        }
+        },
     )
 
     expected_data_vars = ["lat_bnds", "lon_bnds", "real_var_1"]
@@ -205,7 +209,7 @@ def test_process_group_dataset():
             "var_1": da,
             # Removed variable
             "var_2": da,
-        }
+        },
     )
     variables = ["Latitude", "var_1"]
     group = "group_1"
@@ -234,9 +238,9 @@ def test_get_flattened_scan_mode_dataset():
                 {
                     "group_1": DataTree(),
                     "group_2": DataTree(),
-                }
+                },
             ),
-        }
+        },
     )
     dt[scan_mode]["group_1"]["var_1"] = da
     dt[scan_mode]["group_2"]["var_2"] = da
@@ -266,7 +270,11 @@ def test_get_flattened_scan_mode_dataset():
     variables = ["var_1"]
     expected_data_vars = ["group_1/var_1"]
     returned_dataset = granule._get_flattened_scan_mode_dataset(
-        dt, scan_mode, group, variables=variables, prefix_group=True
+        dt,
+        scan_mode,
+        group,
+        variables=variables,
+        prefix_group=True,
     )
     assert list(returned_dataset.data_vars) == expected_data_vars
 

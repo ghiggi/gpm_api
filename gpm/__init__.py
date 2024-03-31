@@ -74,7 +74,8 @@ _colorbar_registered = False
 if not _colorbar_registered:
     pycolorbar.register_colormaps(os.path.join(pycolorbar.etc_directory, "colormaps"))
     pycolorbar.register_colormaps(
-        os.path.join(_root_path, "gpm", "etc", "colormaps"), verbose=False
+        os.path.join(_root_path, "gpm", "etc", "colormaps"),
+        verbose=False,
     )
     pycolorbar.register_colorbars(os.path.join(_root_path, "gpm", "etc", "colorbars"))
 

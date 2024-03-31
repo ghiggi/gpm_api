@@ -59,7 +59,7 @@ def test_construct_curl_pps_cmd(
         "output_file.hdf5",
     )
     assert not os.path.exists(
-        os.path.dirname(local_filepath)
+        os.path.dirname(local_filepath),
     ), f"Folder {os.path.dirname(local_filepath)} already exists"
 
     curl_truth = (
@@ -95,7 +95,7 @@ def test_construct_curl_pps_cmd(
 
         # Check that the folder is created
         assert os.path.exists(
-            os.path.dirname(local_filepath)
+            os.path.dirname(local_filepath),
         ), f"Folder {os.path.dirname(local_filepath)} was not created"
 
 
@@ -116,7 +116,7 @@ def test_construct_wget_pps_cmd(
         "output_file.hdf5",
     )
     assert not os.path.exists(
-        os.path.dirname(local_filepath)
+        os.path.dirname(local_filepath),
     ), f"Folder {os.path.dirname(local_filepath)} already exists"
 
     wget_truth = (
@@ -145,7 +145,7 @@ def test_construct_wget_pps_cmd(
 
         # Check that the folder is created
         assert os.path.exists(
-            os.path.dirname(local_filepath)
+            os.path.dirname(local_filepath),
         ), f"Folder {os.path.dirname(local_filepath)} was not created"
 
 
@@ -160,7 +160,7 @@ class TestDownloadUtility:
         ):
             futures = dl._get_commands_futures(executor, commands)
             assert len(futures) == len(
-                commands
+                commands,
             ), "Number of futures should match number of commands"
             # Ensure each future is for a subprocess.check_call call
             for future in futures:
@@ -191,7 +191,7 @@ class TestDownloadUtility:
             futures = dl._get_commands_futures(executor, commands)
             status_list = dl._get_list_status_commands(futures)
             assert len(status_list) == len(
-                commands
+                commands,
             ), "Status list length should match number of commands"
             # Assuming the first command does not fails, its status should be 1
             assert status_list[0] == 1, "Status for valid command should be 1"
@@ -201,7 +201,8 @@ class TestDownloadUtility:
     @pytest.mark.parametrize("verbose", [True, False])
     @pytest.mark.parametrize("progress_bar", [True, False])
     @pytest.mark.parametrize(
-        "n_threads", [0, 1, 2, 20]
+        "n_threads",
+        [0, 1, 2, 20],
     )  # [Error, Single, Multiple Threads, n_threads > n_commands]
     def test_run(self, mocker: MockerFixture, verbose, progress_bar, n_threads) -> None:
         """Test run function."""
@@ -250,7 +251,7 @@ class TestGetFilepathsFromFilenames:
                     "07",
                     "05",
                     self.filename,
-                )
+                ),
             ]
 
     def test_pps(self) -> None:
@@ -266,7 +267,7 @@ class TestGetFilepathsFromFilenames:
             storage="GES_DISC",
             product_type="RS",
         ) == [
-            f"https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L2/GPM_2ADPR.07/2020/187/{self.filename}"
+            f"https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L2/GPM_2ADPR.07/2020/187/{self.filename}",
         ]
 
     def test_invalid_filename(self) -> None:
@@ -545,7 +546,11 @@ def test_download_monthly_data(mocker: MockerFixture):
 @pytest.mark.parametrize("retry", [0, 1])
 @pytest.mark.parametrize("filepaths", [["some_corrupted_filepaths"], []])
 def test_ensure_files_completness(
-    mocker: MockerFixture, verbose, remove_corrupted, retry, filepaths
+    mocker: MockerFixture,
+    verbose,
+    remove_corrupted,
+    retry,
+    filepaths,
 ):
     """Test _ensure_files_completness."""
     # Patch download functions as to not actually download anything
@@ -572,7 +577,11 @@ def test_ensure_files_completness(
 @pytest.mark.parametrize("retry", [0, 1])
 @pytest.mark.parametrize("filepaths", [["some_corrupted_filepaths"], []])
 def test_ensure_archive_completness(
-    mocker: MockerFixture, verbose, remove_corrupted, retry, filepaths
+    mocker: MockerFixture,
+    verbose,
+    remove_corrupted,
+    retry,
+    filepaths,
 ):
     """Test _ensure_archive_completness."""
     # Patch download functions as to not actually download anything

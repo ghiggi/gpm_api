@@ -74,7 +74,11 @@ def collocate_product(
     """Collocate a product on the provided dataset."""
     # Get default collocation arguments
     scan_modes, variables, groups = _get_collocation_defaults_args(
-        product=product, variables=variables, groups=groups, version=version, scan_modes=scan_modes
+        product=product,
+        variables=variables,
+        groups=groups,
+        version=version,
+        scan_modes=scan_modes,
     )
 
     # Define start_time, end_time around input dataset

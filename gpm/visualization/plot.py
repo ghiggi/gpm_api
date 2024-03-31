@@ -267,7 +267,9 @@ def initialize_cartopy_plot(
     # - Initialize figure
     if ax is None:
         fig_kwargs = preprocess_figure_args(
-            ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs
+            ax=ax,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
         )
         subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
         _, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
@@ -438,7 +440,8 @@ def _mask_antimeridian_crossing_arr(arr, antimeridian_mask, rgb):
     else:
         if rgb:
             antimeridian_mask = np.broadcast_to(
-                np.expand_dims(antimeridian_mask, axis=-1), arr.shape
+                np.expand_dims(antimeridian_mask, axis=-1),
+                arr.shape,
             )
         arr = np.ma.masked_where(antimeridian_mask, arr)
     return arr
@@ -898,7 +901,9 @@ def create_grid_mesh_data_array(xr_obj, x, y):
 
     # Create a new DataArray with 2D coordinates and NaN values
     return xr.DataArray(
-        dummy_values, coords={x: (("y", "x"), X), y: (("y", "x"), Y)}, dims=("y", "x")
+        dummy_values,
+        coords={x: (("y", "x"), X), y: (("y", "x"), Y)},
+        dims=("y", "x"),
     )
 
 
@@ -1240,7 +1245,8 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
     if projection is None:
         lon_min, lon_max, lat_min, lat_max = extent
         projection = ccrs.Orthographic(
-            central_latitude=(lat_min + lat_max) / 2, central_longitude=(lon_min + lon_max) / 2
+            central_latitude=(lat_min + lat_max) / 2,
+            central_longitude=(lon_min + lon_max) / 2,
         )
 
     # Define aspect ratio of the map inset
@@ -1269,6 +1275,10 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
     ax2.add_feature(cfeature.OCEAN)
     # Add extent polygon
     _ = ax2.add_geometries(
-        [polygon], ccrs.PlateCarree(), facecolor="none", edgecolor="red", linewidth=0.3
+        [polygon],
+        ccrs.PlateCarree(),
+        facecolor="none",
+        edgecolor="red",
+        linewidth=0.3,
     )
     return ax2

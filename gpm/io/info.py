@@ -71,10 +71,14 @@ def _parse_gpm_filename(filename):
     start_time = info_dict["start_time"]
     end_time = info_dict["end_time"]
     start_datetime = start_date.replace(
-        hour=start_time.hour, minute=start_time.minute, second=start_time.second
+        hour=start_time.hour,
+        minute=start_time.minute,
+        second=start_time.second,
     )
     end_datetime = start_date.replace(
-        hour=end_time.hour, minute=end_time.minute, second=end_time.second
+        hour=end_time.hour,
+        minute=end_time.minute,
+        second=end_time.second,
     )
     if end_time < start_time:
         end_datetime = end_datetime + datetime.timedelta(days=1)
@@ -97,7 +101,9 @@ def _parse_jaxa_filename(filename):
     start_datetime = info_dict["start_date_time"]
     end_time = info_dict["end_time"]
     end_datetime = start_datetime.replace(
-        hour=end_time.hour, minute=end_time.minute, second=end_time.second
+        hour=end_time.hour,
+        minute=end_time.minute,
+        second=end_time.second,
     )
     if end_datetime < start_datetime:
         end_datetime = end_datetime + datetime.timedelta(days=1)

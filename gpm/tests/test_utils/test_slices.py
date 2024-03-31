@@ -280,14 +280,18 @@ def test_get_list_slices_from_bool_arr() -> None:
 
     # Test default behavior
     returned_list = gpm_slices.get_list_slices_from_bool_arr(
-        bool_array, include_false=True, skip_consecutive_false=True
+        bool_array,
+        include_false=True,
+        skip_consecutive_false=True,
     )
     expected_list = [slice(1, 4), slice(5, 7)]
     assert returned_list == expected_list
 
     # Test without skipping consecutive False, creating one empty slice per False value
     returned_list = gpm_slices.get_list_slices_from_bool_arr(
-        bool_array, include_false=True, skip_consecutive_false=False
+        bool_array,
+        include_false=True,
+        skip_consecutive_false=False,
     )
     expected_list = [slice(0, 1), slice(1, 4), slice(4, 5), slice(5, 7)]
     assert returned_list == expected_list
@@ -301,7 +305,9 @@ def test_get_list_slices_from_bool_arr() -> None:
     #             0      1     2     3      4      5
     bool_array = [False, True, True, False, False, True]
     returned_list = gpm_slices.get_list_slices_from_bool_arr(
-        bool_array, include_false=True, skip_consecutive_false=True
+        bool_array,
+        include_false=True,
+        skip_consecutive_false=True,
     )
     expected_list = [slice(1, 4), slice(5, 6)]
     assert returned_list == expected_list
@@ -315,13 +321,15 @@ def test_get_list_slices_from_bool_arr() -> None:
     # Test all False values
     bool_array = [False, False, False]
     returned_list = gpm_slices.get_list_slices_from_bool_arr(
-        bool_array, skip_consecutive_false=True
+        bool_array,
+        skip_consecutive_false=True,
     )
     expected_list = []
     assert returned_list == expected_list
 
     returned_list = gpm_slices.get_list_slices_from_bool_arr(
-        bool_array, skip_consecutive_false=False
+        bool_array,
+        skip_consecutive_false=False,
     )
     expected_list = [slice(0, 1), slice(1, 2), slice(2, 3)]
     assert returned_list == expected_list

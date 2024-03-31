@@ -177,7 +177,13 @@ def get_bin_partition(values, bin_size):
 
 
 def assign_spatial_partitions(
-    df, xbin_name, ybin_name, xbin_size, ybin_size, x_column="lat", y_column="lon"
+    df,
+    xbin_name,
+    ybin_name,
+    xbin_size,
+    ybin_size,
+    x_column="lat",
+    y_column="lon",
 ):
     """Add partitioning bin columns to dataframe.
 

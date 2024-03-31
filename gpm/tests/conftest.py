@@ -70,7 +70,7 @@ def full_product_levels() -> list[str]:
     from gpm.io.products import get_available_product_levels
 
     return get_available_product_levels(
-        full=True
+        full=True,
     )  # ["1A", "1B", "1C", "2A", "2A-CLIM", "2A-ENV", "2B", "3B-HHR""]
 
 
@@ -668,5 +668,5 @@ def dataset_collection(
             "variable_5": grid_transect_dataarray,
             "variable_6": da_frequency,
             "variable_7": xr.DataArray(),
-        }
+        },
     )

@@ -80,7 +80,9 @@ def _plot_grid_map_cartopy(
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
+        name=variable,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
     )
 
     # - Specify colorbar label
@@ -131,7 +133,9 @@ def _plot_grid_map_facetgrid(
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
+        name=variable,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
     )
 
     projection = subplot_kwargs.get("projection", None)
@@ -256,7 +260,9 @@ def _plot_grid_image(
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=da.name, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
+        name=da.name,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
     )
 
     # - Plot with xarray
@@ -396,7 +402,9 @@ def _plot_grid_image_facetgrid(
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=variable, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
+        name=variable,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
     )
 
     # Create FacetGrid

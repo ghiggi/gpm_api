@@ -122,7 +122,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         rep_row = row is not None and not data[row].to_index().is_unique
         if rep_col or rep_row:
             raise ValueError(
-                "Coordinates used for faceting cannot " "contain repeated (nonunique) values."
+                "Coordinates used for faceting cannot " "contain repeated (nonunique) values.",
             )
 
         # single_group is the grouping variable, if there is exactly one
@@ -304,7 +304,9 @@ class CustomFacetGrid(FacetGrid, ABC):
         ticklabels = cbar_kwargs.pop("ticklabels", None)
         # Draw the colorbar
         self.cbar = self.image_grid.cbar_axes[0].colorbar(
-            self._mappables[-1], ax=list(self.axs.flat), **cbar_kwargs
+            self._mappables[-1],
+            ax=list(self.axs.flat),
+            **cbar_kwargs,
         )
         # Add ticklabel
         if ticklabels is not None:

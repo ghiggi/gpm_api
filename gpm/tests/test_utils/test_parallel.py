@@ -43,7 +43,7 @@ def dummy_function(x):
 def _dask_client():
     """Fixture for creating and closing a Dask client."""
     with dask.config.set(
-        {"scheduler": "threads"}
+        {"scheduler": "threads"},
     ):  # Use threaded scheduler for simplicity in tests
         yield  # No setup or teardown needed for this simple test
 

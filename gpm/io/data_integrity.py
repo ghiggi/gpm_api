@@ -158,5 +158,7 @@ def check_archive_integrity(
 
     # Check the file integrity
     return check_filepaths_integrity(
-        filepaths=filepaths, remove_corrupted=remove_corrupted, verbose=verbose
+        filepaths=filepaths,
+        remove_corrupted=remove_corrupted,
+        verbose=verbose,
     )

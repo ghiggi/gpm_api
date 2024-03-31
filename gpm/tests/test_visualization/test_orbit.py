@@ -41,7 +41,8 @@ from gpm.visualization import orbit
 
 
 pytestmark = pytest.mark.skipif(
-    platform.system() == "Windows", reason="Minor figure differences on Windows"
+    platform.system() == "Windows",
+    reason="Minor figure differences on Windows",
 )
 skip_tests_if_no_data()
 

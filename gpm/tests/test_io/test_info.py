@@ -95,7 +95,7 @@ def test_get_start_end_time_from_filepaths(
 
     for remote_filepath, info_dict in remote_filepaths.items():
         generated_start_time, generated_end_time = info.get_start_end_time_from_filepaths(
-            remote_filepath
+            remote_filepath,
         )
         assert [info_dict["start_time"]] == generated_start_time
         assert [info_dict["end_time"]] == generated_end_time
@@ -118,13 +118,13 @@ def test_invalid_filepaths():
     # Invalid JAXA product type
     with pytest.raises(ValueError):
         info.get_info_from_filepath(
-            "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KAR_2007050002_0135_036081_1B😵_DAB_07A.h5"
+            "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KAR_2007050002_0135_036081_1B😵_DAB_07A.h5",
         )
 
     # Unknown product (not in products.yaml)
     with pytest.raises(ValueError):
         info.get_info_from_filepath(
-            "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/😥.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
+            "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/😥.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5",
         )
 
     # Filepath not a string

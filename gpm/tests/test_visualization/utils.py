@@ -80,7 +80,7 @@ def save_and_check_figure(
         figure.savefig(reference_path)
         pytest.skip(
             "Reference figure did not exist. Created it. To clone existing test data,"
-            "run `git submodule update --init`."
+            "run `git submodule update --init`.",
         )
 
     # Save current figure to temporary file

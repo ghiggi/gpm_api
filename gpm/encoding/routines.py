@@ -39,7 +39,7 @@ from gpm.io.products import available_products
 def _infer_product(ds):
     if "gpm_api_product" not in ds.attrs:
         raise ValueError(
-            "The xr.Dataset does not have the global attribute 'gpm_api_product' key !"
+            "The xr.Dataset does not have the global attribute 'gpm_api_product' key !",
         )
     return ds.attrs["gpm_api_product"]
 

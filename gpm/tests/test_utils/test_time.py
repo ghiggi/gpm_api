@@ -112,7 +112,7 @@ class TestSubsetByTime:
         ds = xr.Dataset(
             {
                 "time": xr.DataArray(self.time, coords={"along_track": np.arange(len(self.time))}),
-            }
+            },
         )
         start_time = type_wrapper(datetime.datetime(2020, 12, 31, 6, 0, 0))
         end_time = type_wrapper(datetime.datetime(2020, 12, 31, 18, 0, 0))
@@ -218,7 +218,7 @@ def test_interpolate_nat():
     # Test with gap too large: not all values are filled
     time = create_fake_datetime_array_from_hours_list([N, 1, 2, N, N, N, N, N, N, N, 10, 11, N])
     expected_time = create_fake_datetime_array_from_hours_list(
-        [N, 1, 2, 3, 4, 5, 6, 7, N, N, 10, 11, N]
+        [N, 1, 2, 3, 4, 5, 6, 7, N, N, 10, 11, N],
     )
     returned_time = interpolate_nat(time, **kwargs)
     np.testing.assert_equal(expected_time, returned_time)
