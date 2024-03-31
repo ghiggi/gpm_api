@@ -46,7 +46,7 @@ def test_construct_curl_pps_cmd(
     remote_filepaths: dict[str, dict[str, Any]],
     tmpdir: str,
 ) -> None:
-    """Test that the curl command constructor works as expected
+    """Test that the curl command constructor works as expected.
 
     `local_filepath` relates to a file on the disk
     """
@@ -102,7 +102,7 @@ def test_construct_wget_pps_cmd(
     remote_filepaths: dict[str, dict[str, Any]],
     tmpdir: str,
 ) -> None:
-    """Test that the wget command constructor works as expected
+    """Test that the wget command constructor works as expected.
 
     `local_filepath` relates to a file on the disk
     """
@@ -225,7 +225,7 @@ class TestDownloadUtility:
 
 
 class TestGetFilepathsFromFilenames:
-    """Test get_filepaths_from_filenames function"""
+    """Test get_filepaths_from_filenames function."""
 
     filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
 
@@ -279,7 +279,7 @@ class TestGetFilepathsFromFilenames:
 def test_check_download_status(
     products: list[str],
 ) -> None:
-    """Test check_download_status function"""
+    """Test check_download_status function."""
     for product in products:
         assert dl._check_download_status([-1, -1, -1], product, True) is True  # All already on disk
         assert dl._check_download_status([0, 0, 0], product, True) is None  # All failed download
@@ -297,7 +297,7 @@ def test_private_download_files(
     transfer_tool: str,
     storage: str,
 ) -> None:
-    """Build curl/wget calls for download, but don't actually download anything
+    """Build curl/wget calls for download, but don't actually download anything.
 
     Uses tmpdir to create a unique path for each test and mocker to mock the
     download function
@@ -346,7 +346,7 @@ def test_download_files(
     mocker: MockerFixture,
     tmp_path,
 ) -> None:
-    """Test download_files function"""
+    """Test download_files function."""
     # Mock called functions as to not download any data
     mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
     mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
@@ -389,7 +389,7 @@ def test__download_daily_data(
     mocker: MockerFixture,
     storage: str,
 ) -> None:
-    """Test download_daily_data function
+    """Test download_daily_data function.
 
     Tests only the ability for the function to run without errors. Does not
     test the actual download process as communication with the server is
@@ -469,7 +469,7 @@ class TestDownloadArchive:
         check_integrity,
         remove_corrupted,
     ):
-        """Test download_data function
+        """Test download_data function.
 
         This test is somewhat redundant considering it is testing methods
         bundled in another functions which need to be turned off in order to

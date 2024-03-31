@@ -76,7 +76,9 @@ class CustomFacetGrid(FacetGrid, ABC):
         fig_kwargs: Optional[dict] = None,
         axes_class=None,
     ) -> None:
-        """Parameters
+        """Class for xarray-based FacetGrid plots.
+
+        Parameters
         ----------
         data : DataArray or Dataset
             DataArray or Dataset to be plotted.
@@ -354,7 +356,9 @@ class CartopyFacetGrid(CustomFacetGrid):
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
-        """Parameters
+        """Cartopy FacetGrid class.
+
+        Parameters
         ----------
         data : DataArray or Dataset
             DataArray or Dataset to be plotted.
@@ -480,7 +484,9 @@ class ImageFacetGrid(CustomFacetGrid):
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
-        """Parameters
+        """Image FacetGrid class.
+
+        Parameters
         ----------
         data : DataArray or Dataset
             DataArray or Dataset to be plotted.

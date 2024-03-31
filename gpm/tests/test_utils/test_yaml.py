@@ -63,7 +63,7 @@ def test_read_yaml(tmp_path):
 
 
 def test_write_yaml(tmp_path):
-    "Test write_yaml." ""
+    """Test write_yaml."""
     # Create a temporary file path
     tmp_filepath = tmp_path / "test.yaml"
 

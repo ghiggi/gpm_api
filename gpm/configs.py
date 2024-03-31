@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module define and retrieve the GPM-API configurations."""
+"""GPM-API configurations settings."""
 import os
 import platform
 from subprocess import Popen

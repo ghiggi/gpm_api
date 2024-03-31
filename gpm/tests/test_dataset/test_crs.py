@@ -33,7 +33,7 @@ from gpm.dataset import crs
 
 
 def test_get_pyproj_crs_cf_fict_private() -> None:
-    """Test that a dictionary is returned with the spatial_ref key"""
+    """Test that a dictionary is returned with the spatial_ref key."""
     res = crs._get_pyproj_crs_cf_dict(CRS(4326))  # WGS84
 
     assert isinstance(res, dict), "Dictionary not returned"
@@ -41,7 +41,7 @@ def test_get_pyproj_crs_cf_fict_private() -> None:
 
 
 def test_get_proj_coord_unit_private() -> None:
-    """Test that the coordinate unit is returned when given projected CRS"""
+    """Test that the coordinate unit is returned when given projected CRS."""
     # Projected CRS
     projected_crs = CRS(32661)  # WGS84 / UTM zone 61N, metre
 

@@ -39,7 +39,7 @@ def test_get_corrupted_filepaths(
     local_filepaths_unix: list[str],
     local_filepaths_windows: list[str],
 ) -> None:
-    """Test get_corrupted_filepaths function"""
+    """Test get_corrupted_filepaths function."""
     # Test that all paths are "corrupted" (in this case there is no data)
     for abs_paths in [local_filepaths_unix, local_filepaths_windows]:
         res = di.get_corrupted_filepaths(abs_paths)
@@ -84,7 +84,7 @@ def test_remove_corrupted_filepaths(
     local_filepaths: list[tuple[str, ...]],
     tmpdir: str,
 ) -> None:
-    """Test remove_corrupted_filepaths function
+    """Test remove_corrupted_filepaths function.
 
     Create a fake file, delete it then validate
     """
@@ -105,7 +105,7 @@ def test_check_filepaths_integrity(
     local_filepaths: list[tuple[str, ...]],
     tmpdir: str,
 ) -> None:
-    """Test remove_corrupted_filepaths function
+    """Test remove_corrupted_filepaths function.
 
     Create a fake file, delete it then validate
     """

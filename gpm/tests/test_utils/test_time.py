@@ -53,7 +53,7 @@ N = float("nan")
 
 
 class TestSubsetByTime:
-    """Test subset_by_time"""
+    """Test subset_by_time."""
 
     time = get_time_range(0, 24)
     datetime_type_wrappers = [lambda x: x, str, np.datetime64]
@@ -108,7 +108,7 @@ class TestSubsetByTime:
         self,
         type_wrapper,
     ) -> None:
-        """Test dataset with "time" as variable"""
+        """Test dataset with "time" as variable."""
         ds = xr.Dataset(
             {
                 "time": xr.DataArray(self.time, coords={"along_track": np.arange(len(self.time))}),
@@ -154,7 +154,7 @@ class TestSubsetByTime:
 
 
 def test_subset_by_time_slice():
-    """Test subset_by_time_slice"""
+    """Test subset_by_time_slice."""
     time = get_time_range(0, 23)
     da = xr.DataArray(np.random.rand(len(time)), coords={"time": time})
     start_time = datetime.datetime(2020, 12, 31, 6, 0, 0)
@@ -168,13 +168,13 @@ def test_subset_by_time_slice():
 
 
 def test_is_nat():
-    """Test is_nat"""
+    """Test is_nat."""
     assert is_nat(np.datetime64("NaT"))
     assert not is_nat(np.datetime64("2020-01-01"))
 
 
 def test_has_nat():
-    """Test has_nat"""
+    """Test has_nat."""
     time = datetime.datetime(2020, 12, 31, 12, 0, 0)
     nat = np.datetime64("NaT")
 
@@ -221,7 +221,7 @@ def test_interpolate_nat():
 
 
 def test_infill_timesteps():
-    """Test infill_timesteps"""
+    """Test infill_timesteps."""
     # Test with no NaNs
     time = create_fake_datetime_array_from_hours_list(np.arange(0, 10))
     returned_time = infill_timesteps(time, limit=5)
@@ -261,7 +261,7 @@ def test_infill_timesteps():
 
 
 class TestEnsureTimeValidity:
-    """Test ensure_time_validity"""
+    """Test ensure_time_validity."""
 
     time = create_fake_datetime_array_from_hours_list([1, 2, N, N, N, 6, 7])
     expected_time = create_fake_datetime_array_from_hours_list([1, 2, 3, 4, 5, 6, 7])

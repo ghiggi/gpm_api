@@ -40,7 +40,7 @@ from gpm.accessor.methods import GPM_Base_Accessor, GPM_DataArray_Accessor, GPM_
 
 
 def get_class_methods(accessor_class) -> dict[str, Callable]:
-    """Get methods from class"""
+    """Get methods from class."""
     method_tuples_list = inspect.getmembers(accessor_class, inspect.isfunction)
     return {name: function for name, function in method_tuples_list if not name.startswith("_")}
 
@@ -59,7 +59,7 @@ accessor_methods = base_accessor_methods + dataset_accessor_methods + dataarray_
 
 
 def get_arguments_list(function: Callable, remove_self: bool = True) -> list:
-    """Get list of arguments of a function"""
+    """Get list of arguments of a function."""
     signature = inspect.signature(function)
     arguments = list(signature.parameters.keys())
 
@@ -70,12 +70,12 @@ def get_arguments_list(function: Callable, remove_self: bool = True) -> list:
 
 
 def get_function_location(function: Callable) -> str:
-    """Get useful debug information about a function"""
+    """Get useful debug information about a function."""
     return f"{function.__module__}.{function.__qualname__}"
 
 
 def get_imported_gpm_method_path(function: Callable) -> tuple[str, str]:
-    """Get path of imported gpm method in accessor method source code (format is "module.method"))"""
+    """Get path of imported gpm method in accessor method source code (format is "module.method"))."""
     source = inspect.getsource(function)
     import_pattern = re.compile(r"from (\S+) import (\S+)")
     match = import_pattern.search(source)
@@ -94,7 +94,7 @@ def get_imported_gpm_method(accessor_method: Callable) -> Callable:
 
 
 def get_default_arguments_dict(function: Callable) -> dict[str, object]:
-    """Get default arguments of a function as a dictionary"""
+    """Get default arguments of a function as a dictionary."""
     signature = inspect.signature(function)
     default_arguments = {}
 
@@ -109,7 +109,7 @@ def compare_default_arguments(
     accessor_method: Callable,
     reference_method: Callable,
 ):
-    """Check that default arguments of accessor_method and reference_method are the same"""
+    """Check that default arguments of accessor_method and reference_method are the same."""
     accessor_default_arguments = get_default_arguments_dict(accessor_method)
     reference_default_arguments = get_default_arguments_dict(reference_method)
 
@@ -154,7 +154,7 @@ def mock_associated_gpm_method(
 
 
 class TestRegisterAccessor:
-    """Test that accessor are registered by xarray"""
+    """Test that accessor are registered by xarray."""
 
     def test_dataset(self) -> None:
         ds = xr.Dataset()
@@ -171,7 +171,7 @@ class TestRegisterAccessor:
 def test_default_arguments(
     accessor_method: Callable,
 ) -> None:
-    """Test that default arguments are the same between accessor methods and gpm methods"""
+    """Test that default arguments are the same between accessor methods and gpm methods."""
     gpm_method = get_imported_gpm_method(accessor_method)
     compare_default_arguments(accessor_method, gpm_method)
 
@@ -181,7 +181,7 @@ def test_passed_arguments_dataset(
     mocker: MockFixture,
     accessor_method: Callable,
 ) -> None:
-    """Test that arguments are passed correctly to gpm methods for datasets"""
+    """Test that arguments are passed correctly to gpm methods for datasets."""
     gpm_method_arguments = get_arguments_list(get_imported_gpm_method(accessor_method))
     mock_associated_gpm_method(accessor_method, mocker)
 
@@ -213,7 +213,7 @@ def test_passed_arguments_dataarray(
     mocker: MockFixture,
     accessor_method: Callable,
 ) -> None:
-    """Test that arguments are passed correctly to gpm methods for dataarrays"""
+    """Test that arguments are passed correctly to gpm methods for dataarrays."""
     mock_associated_gpm_method(accessor_method, mocker)
 
     # Create dictionary of accessor arguments

@@ -234,8 +234,7 @@ def open_granule(
     chunks={},
     prefix_group=False,
 ):
-    """Create a lazy ``xarray.Dataset`` with relevant GPM data and attributes
-    for a specific granule.
+    """Create a lazy ``xarray.Dataset`` with relevant GPM data and attributes for a specific granule.
 
     Parameters
     ----------

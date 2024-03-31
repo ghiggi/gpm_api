@@ -192,6 +192,10 @@ ignore = [
     "PLW0603",
     "RUF012",
     "RUF015",
+    # Docstyle Rules
+    "D404", # Docstring can't start with "This"
+    "D401", # First sentence must be in imperative mood
+    "D100", "D101","D102", "D103", "D104", "D105",  # Missing docstrings
     # Complexity rules
     "PLR0913", # restrict max number of function argument
     "PLR2004",

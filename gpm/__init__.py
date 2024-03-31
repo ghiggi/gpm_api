@@ -24,6 +24,8 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
+"""GPM-API Package."""
+
 import contextlib
 import os
 from importlib.metadata import PackageNotFoundError, version

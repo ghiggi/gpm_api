@@ -36,7 +36,7 @@ from gpm.io.products import available_products
 
 
 def test_get_pps_nrt_product_dir(products: list[str]) -> None:
-    """Test NRT product type folder name
+    """Test NRT product type folder name.
 
     Depends on gpm.io.pps._get_pps_nrt_product_folder_name()
     """

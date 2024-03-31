@@ -35,7 +35,7 @@ from gpm.dataset import attrs
 
 
 def test_decode_string() -> None:
-    """Test decode_string"""
+    """Test decode_string."""
     # Try string including keys (separated by '='). Dataset: 1A GMI
     string = """
 InputFileNames=GPM.GMIS.20150801.131141073_20150801.131639202.001.SCANRAW\n
@@ -84,7 +84,7 @@ InputAlgorithmVersions=n/a;\nInputGenerationDateTimes=n/a;\n
 
 
 def test_decode_attrs():
-    """Test decode_attrs"""
+    """Test decode_attrs."""
     nested_dict_string = "\tsubkey_1=value_1;\n\tsubkey_2=value_2;\n"
     initial_dict = {
         "key_1": nested_dict_string,
@@ -102,7 +102,7 @@ def test_decode_attrs():
 
 
 def test_get_granule_attrs(monkeypatch):
-    """Test get_granule_attrs"""
+    """Test get_granule_attrs."""
     # Mock valid keys
     monkeypatch.setattr(
         "gpm.dataset.attrs.STATIC_GLOBAL_ATTRS",
@@ -144,7 +144,7 @@ def test_get_granule_attrs(monkeypatch):
 
 
 def test_add_history():
-    """Test add_history"""
+    """Test add_history."""
     ds = xr.Dataset()
     attrs.add_history(ds)
     assert "history" in ds.attrs
@@ -154,7 +154,7 @@ def test_add_history():
 
 
 def test_has_nested_dictionary():
-    """Test _has_nested_dictionary"""
+    """Test _has_nested_dictionary."""
     non_nested_dict = {
         "key_1": "value_1",
         "key_2": "value_2",

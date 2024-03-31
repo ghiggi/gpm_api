@@ -39,7 +39,7 @@ from gpm.io.filter import (
 
 
 def test_granule_within_time() -> None:
-    """Test is_granule_within_time()"""
+    """Test is_granule_within_time()."""
     # Set a file time 01.01.14 01:00 to 04:00 (start, end)
     file_time = ("2014-01-01T01:00:00Z", "2014-01-01T04:00:00Z")
 
@@ -83,7 +83,7 @@ def test_granule_within_time() -> None:
 
 
 class TestFilterFilepaths:
-    """Test filter filepaths"""
+    """Test filter filepaths."""
 
     product = "2A-DPR"
 
@@ -150,9 +150,10 @@ class TestFilterFilepaths:
         assert len(res) == count_until_2019
 
     def test_empty_end_time(self, remote_filepaths: dict[str, dict[str, Any]]) -> None:
-        """Test empty end time (Error as time given (datetime.datetime.now())
-        requires date to be less than now() in supportive
-        function checks.check_start_end_time)
+        """Test empty end_time.
+
+        Error as time given (datetime.datetime.now()) requires date to be less than now() in supportive
+        function checks.check_start_end_time).
         """
         count_from_2019 = 0
         for info_dict in remote_filepaths.values():
@@ -203,7 +204,7 @@ class TestFilterFilepaths:
 
 
 def test_filter_by_time(remote_filepaths: dict[str, dict[str, Any]]) -> None:
-    """Test filter filepaths"""
+    """Test filter filepaths."""
     # Test year filtering
     # Count and assert 2019 paths
     count_2019 = 0
@@ -281,7 +282,7 @@ def test_filter_by_time(remote_filepaths: dict[str, dict[str, Any]]) -> None:
 def test_filter_by_product(
     remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
-    """Test filter by product
+    """Test filter by product.
 
     Use predefined remote_filepaths list to validate filter
     """
@@ -311,7 +312,7 @@ def test_filter_by_version(
     remote_filepaths: dict[str, dict[str, Any]],
     versions: list[int],
 ) -> None:
-    """Test filtering by version"""
+    """Test filtering by version."""
     # Test each version
     for version in versions:
         paths_with_matching_version = 0

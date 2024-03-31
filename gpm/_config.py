@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module create a donfig utility
+"""Donfig configuration utility.
 
 See https://donfig.readthedocs.io/en/latest/configuration.html for more info.
 """
