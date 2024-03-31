@@ -112,7 +112,7 @@ def _check_correct_version(filepaths, product, version):
             VERSION_WARNING = False
             msg = f"The last available version for {product} product is version {files_version}! "
             msg += f"Starting the download of version {files_version}."
-            warnings.warn(msg, GPMDownloadWarning)
+            warnings.warn(msg, GPMDownloadWarning, stacklevel=2)
     return filepaths, files_version
 
 

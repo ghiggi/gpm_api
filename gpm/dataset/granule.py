@@ -213,7 +213,7 @@ def _open_granule(
     # --> datatree._close as iterator ?
     # --> https://github.com/xarray-contrib/datatree/issues/93
     # --> https://github.com/xarray-contrib/datatree/pull/114/files
-    ds.set_close(getattr(dt, "_close"))
+    ds.set_close(dt._close)
 
     ###-----------------------------------------------------------------------.
     # If there are dataset variables, remove coords and dimensions not exploited by data variables

@@ -145,7 +145,7 @@ def _attach_dataset_scale(dst_file, src_dataset):
 
 def _attach_scales(dst_file, src_group):
     """Update DIMENSION_LIST if present in source HDF5 file."""
-    for name, h5_obj in src_group.items():
+    for _, h5_obj in src_group.items():
         if isinstance(h5_obj, h5py.Group):
             # Update downstream in the tree recursively
             _attach_scales(dst_file, src_group=h5_obj)

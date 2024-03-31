@@ -846,7 +846,7 @@ def _download_daily_data(
     if len(remote_filepaths) == 0:
         if warn_missing_files:
             msg = f"No data found on PPS on date {date} for product {product}"
-            warnings.warn(msg, GPMDownloadWarning)
+            warnings.warn(msg, GPMDownloadWarning, stacklevel=2)
         return [], available_version
 
     # -------------------------------------------------------------------------.
@@ -1041,7 +1041,7 @@ def download_archive(
     versions = np.unique(list_versions).tolist()
     if len(versions) > 1:
         msg = f"Multiple GPM {product} product file versions ({versions}) have been download."
-        warnings.warn(msg, GPMDownloadWarning)
+        warnings.warn(msg, GPMDownloadWarning, stacklevel=1)
 
     # -------------------------------------------------------------------------.
     if check_integrity:

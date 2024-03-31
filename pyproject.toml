@@ -130,16 +130,24 @@ select = [
     "F",
     # pycodestyle
     "E",
+    "W",
     # isort
     "I",
-    "W",
+    # pyupgrade
     "UP",
+    # flake8-quotes
     "Q",
+    # flake8-bugbear
+    "B",
     # "SIM",
     # "PTH",
     #"RET",
 ]
-ignore = ["E722"]
+ignore = [
+    "E722",
+    "B904",
+    "B006", # {} defaults in function arguments
+]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
