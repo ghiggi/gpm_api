@@ -25,14 +25,15 @@
 
 # -----------------------------------------------------------------------------.
 """This module test that GPM-API Dataset structure, attributes and values does not mute across software versions."""
-import os
-import xarray as xr
-import pytest
-from gpm.dataset.granule import open_granule
-from gpm import _root_path
 import glob
-import gpm
+import os
 
+import pytest
+import xarray as xr
+
+import gpm
+from gpm import _root_path
+from gpm.dataset.granule import open_granule
 
 PRODUCT_TYPES = ["RS"]
 
@@ -104,7 +105,8 @@ def test_open_granule_on_real_files():
 
     if not os.path.exists(granules_dir_path):
         pytest.skip(
-            "Test granules not found. Please run `git submodule update --init` to clone existing test data, or `python generate_test_granule_data.py` to generate new test data."
+            "Test granules not found. Please run `git submodule update --init` to clone "
+            "existing test data, or `python generate_test_granule_data.py` to generate new test data."
         )
 
     cut_dir_path = os.path.join(granules_dir_path, "cut")

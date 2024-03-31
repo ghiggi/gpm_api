@@ -27,13 +27,14 @@
 """This module test the GPM-API Dataset coordinates."""
 
 from datetime import datetime, timedelta
-from datatree import DataTree
+
 import numpy as np
 import pandas as pd
-import pytest
 import xarray as xr
-from gpm.dataset import coords
+from datatree import DataTree
 from deepdiff import DeepDiff
+
+from gpm.dataset import coords
 
 MAX_TIMESTAMP = 2**31 - 1
 

@@ -26,21 +26,23 @@
 # -----------------------------------------------------------------------------.
 """This module test the product info routines."""
 
-import pytest
 from typing import List
+
+import pytest
+
 from gpm.io.products import (
+    _get_sensor_satellite_names,
+    available_product_categories,
+    available_product_levels,
+    available_products,
+    available_satellites,
+    available_sensors,
+    available_versions,
     get_info_dict,
     get_info_dict_subset,
     get_product_category,
     get_product_info,
     get_product_level,
-    _get_sensor_satellite_names,
-    available_satellites,
-    available_product_levels,
-    available_sensors,
-    available_versions,
-    available_product_categories,
-    available_products,
     is_gpm_api_product,
     is_trmm_product,
 )

@@ -26,8 +26,9 @@
 # -----------------------------------------------------------------------------.
 """This module provide utility functions used in the unit tests."""
 
-import numpy as np
 from typing import Union
+
+import numpy as np
 import xarray as xr
 
 from gpm.utils import checks as gpm_checks

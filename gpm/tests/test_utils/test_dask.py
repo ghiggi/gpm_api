@@ -27,7 +27,8 @@
 """This module test the dask utilities."""
 import pytest
 from dask.distributed import Client, LocalCluster
-from gpm.utils.dask import trim_memory, clean_memory, get_client
+
+from gpm.utils.dask import clean_memory, get_client, trim_memory
 
 
 @pytest.fixture(scope="module")

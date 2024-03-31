@@ -27,20 +27,24 @@
 """This module provide utility functions used in the unit tests for visualization."""
 
 import inspect
-from matplotlib import (
-    image as mpl_image,
-    figure as mpl_figure,
-    pyplot as plt,
-)
-import numpy as np
 import os
-import pytest
 import tempfile
 from typing import Optional
+
+import numpy as np
+import pytest
 import xarray as xr
+from matplotlib import (
+    figure as mpl_figure,
+)
+from matplotlib import (
+    image as mpl_image,
+)
+from matplotlib import (
+    pyplot as plt,
+)
 
 from gpm import _root_path
-
 
 plots_dir_path = os.path.join(_root_path, "gpm", "tests", "data", "plots")
 image_extension = ".png"
@@ -75,7 +79,8 @@ def save_and_check_figure(
     if not os.path.exists(reference_path):
         figure.savefig(reference_path)
         pytest.skip(
-            "Reference figure did not exist. Created it. To clone existing test data instead, run `git submodule update --init`."
+            "Reference figure did not exist. Created it. To clone existing test data,"
+            "run `git submodule update --init`."
         )
 
     # Save current figure to temporary file

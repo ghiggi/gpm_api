@@ -28,8 +28,9 @@
 
 
 import dask
-from dask import delayed
 import pytest
+from dask import delayed
+
 from gpm.utils.parallel import compute_list_delayed
 
 

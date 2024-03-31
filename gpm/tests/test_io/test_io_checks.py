@@ -26,20 +26,22 @@
 # -----------------------------------------------------------------------------.
 """This module test the check functions."""
 
-import pytest
 import datetime
-import numpy as np
+import ntpath as ntp
 import os
 import platform
-import ntpath as ntp
 import posixpath as ptp
-import pytz
-import pandas as pd
-from typing import List, Dict, Any
-from gpm.io import checks
-from gpm.io.products import available_products, available_scan_modes, available_product_versions
-from pytest_mock.plugin import MockerFixture
 from subprocess import CalledProcessError
+from typing import Any, Dict, List
+
+import numpy as np
+import pandas as pd
+import pytest
+import pytz
+from pytest_mock.plugin import MockerFixture
+
+from gpm.io import checks
+from gpm.io.products import available_product_versions, available_products, available_scan_modes
 
 
 def test_check_base_dir() -> None:
@@ -230,7 +232,7 @@ def test_check_transfer_tool(mocker: MockerFixture):
     checks.WGET_IS_AVAILABLE = False
     with pytest.raises(ValueError) as exc_info:
         checks.check_transfer_tool("WGET")
-    assert f"WGET is not installed on your machine !" in str(exc_info.value)
+    assert "WGET is not installed on your machine !" in str(exc_info.value)
     checks.WGET_IS_AVAILABLE = original_flag
 
 

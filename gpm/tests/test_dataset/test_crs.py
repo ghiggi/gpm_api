@@ -26,11 +26,10 @@
 # -----------------------------------------------------------------------------.
 """This module test the GPM-API Dataset CRS."""
 
-from gpm.dataset import crs
-from pyproj import CRS
 import pytest
-from pytest_mock import MockerFixture
-import xarray as xr
+from pyproj import CRS
+
+from gpm.dataset import crs
 
 
 def test_get_pyproj_crs_cf_fict_private() -> None:

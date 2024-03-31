@@ -25,9 +25,11 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the GES DISC file search routines."""
-import pytest
 import datetime
+
+import pytest
 from pytest_mock.plugin import MockerFixture
+
 from gpm.io import ges_disc
 
 

@@ -28,18 +28,20 @@
 import datetime
 import os
 from typing import Any, Dict, List, Tuple
+
 import pytest
 from pytest_mock.plugin import MockerFixture
+
 import gpm
 from gpm.io import find
-from gpm.io.products import available_products
-from gpm.utils.warnings import GPMDownloadWarning
 from gpm.io.find import (
-    _get_all_daily_filepaths,
     _check_correct_version,
+    _get_all_daily_filepaths,
     find_daily_filepaths,
     find_filepaths,
 )
+from gpm.io.products import available_products
+from gpm.utils.warnings import GPMDownloadWarning
 
 
 class TestGetDailyFilepaths:

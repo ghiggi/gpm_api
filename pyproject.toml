@@ -96,27 +96,13 @@ target-version = [
 ]
 
 [tool.ruff]
-select = [
-    "F",
-    "E",
-    "I",
-    "W",
-    "UP",
-    "Q",
-    # "SIM",
-    # "PTH",
-    #"RET",
-]
-ignore = ["E722"]
 line-length = 120
+indent-width = 4
+# Addional file to be formatted by ruff (in addition to *py)
 extend-include = ["*.ipynb"]
-# Allow autofix for all enabled rules (when `--fix`) is provided.
-fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
-unfixable = []
 # Exclude a variety of commonly ignored directories.
 exclude = [
-    "dev*",
-    "gpm/test*",
+    # "gpm/test*",
     ".bzr",
     ".direnv",
     ".eggs",
@@ -138,6 +124,25 @@ exclude = [
     "node_modules",
     "venv",
 ]
+[tool.ruff.lint]
+select = [
+    "F",
+    "E",
+    "I",
+    "W",
+    "UP",
+    "Q",
+    # "SIM",
+    # "PTH",
+    #"RET",
+]
+ignore = ["E722"]
+
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
 
 [tool.codespell]
     ignore-words-list = "ges,nd"

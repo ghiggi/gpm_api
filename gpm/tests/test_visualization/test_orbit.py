@@ -25,16 +25,16 @@
 
 # -----------------------------------------------------------------------------.
 import platform
+
 import pytest
 import xarray as xr
 
-
-from gpm.visualization import orbit
 from gpm.tests.test_visualization.utils import (
     get_test_name,
     save_and_check_figure,
     skip_tests_if_no_data,
 )
+from gpm.visualization import orbit
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray

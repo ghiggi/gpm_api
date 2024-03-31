@@ -26,15 +26,15 @@
 # -----------------------------------------------------------------------------.
 """This module test the file filtering routines."""
 
-from gpm.io import filter
-from typing import Dict, Any, List
 import datetime
+from typing import Any, Dict, List
+
 from gpm.io.filter import (
     filter_by_product,
     filter_by_time,
     filter_by_version,
-    is_granule_within_time,
     filter_filepaths,
+    is_granule_within_time,
 )
 
 

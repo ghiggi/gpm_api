@@ -26,17 +26,17 @@
 # -----------------------------------------------------------------------------.
 """This module test the creation of a GPM-API Dataset."""
 
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
-import xarray as xr
 import pytest
+import xarray as xr
 from datatree import DataTree
-from datetime import datetime
 
 from gpm.dataset import conventions, datatree, granule
 from gpm.dataset.conventions import finalize_dataset
 from gpm.utils.time import ensure_time_validity
-
 
 # Tests for public functions ###################################################
 

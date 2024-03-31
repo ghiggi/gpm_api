@@ -26,17 +26,17 @@
 # -----------------------------------------------------------------------------.
 """This module defines test units for GPM-API accessor."""
 
-import inspect
 import importlib
-import numpy as np
-import pytest
-from pytest_mock import MockFixture
+import inspect
 import re
 from typing import Callable, Dict, Tuple
-import xarray as xr
 
-import gpm  # Needed to register accessors
-from gpm.accessor.methods import GPM_Base_Accessor, GPM_Dataset_Accessor, GPM_DataArray_Accessor
+import numpy as np
+import pytest
+import xarray as xr
+from pytest_mock import MockFixture
+
+from gpm.accessor.methods import GPM_Base_Accessor, GPM_DataArray_Accessor, GPM_Dataset_Accessor
 
 
 def get_class_methods(accessor_class) -> Dict[str, Callable]:

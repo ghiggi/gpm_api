@@ -24,22 +24,22 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-import cartopy.crs as ccrs
 import platform
-import pytest
-from matplotlib import pyplot as plt
-import numpy as np
-import xarray as xr
 
+import cartopy.crs as ccrs
+import numpy as np
+import pytest
+import xarray as xr
+from matplotlib import pyplot as plt
 
 import gpm.configs
-from gpm.visualization import plot
 from gpm.tests.test_visualization.utils import (
     expand_dims,
     get_test_name,
     save_and_check_figure,
     skip_tests_if_no_data,
 )
+from gpm.visualization import plot
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray
@@ -66,7 +66,7 @@ def test_is_generator() -> None:
         yield 1
 
     assert plot.is_generator(generator())
-    assert plot.is_generator((i for i in range(10)))
+    assert plot.is_generator(i for i in range(10))
     assert not plot.is_generator([1, 2, 3])
 
 

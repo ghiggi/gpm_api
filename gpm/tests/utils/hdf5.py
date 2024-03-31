@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Fri Oct 20 12:44:10 2023
 
 @author: ghiggi
 """
 import os
+
 import h5py
 from h5py.h5ds import get_scale_name
 

@@ -24,12 +24,12 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-import pytest
 import numpy as np
+import pytest
 import xarray as xr
 
-from gpm.utils import manipulations
 from gpm.dataset.dimensions import VERTICAL_DIMS
+from gpm.utils import manipulations
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray

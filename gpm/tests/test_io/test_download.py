@@ -25,17 +25,19 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the download routines."""
-import pytest
-import os
 import datetime
+import os
 import platform
-import gpm.configs
-from typing import Any, List, Dict
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Dict, List
 from unittest.mock import patch
+
+import pytest
 from pytest_mock.plugin import MockerFixture
-from gpm.io import find
+
+import gpm.configs
 from gpm.io import download as dl
+from gpm.io import find
 from gpm.io.products import available_products, get_product_start_time
 from gpm.utils.warnings import GPMDownloadWarning
 
@@ -384,7 +386,7 @@ def test_download_files(
 
     # Test data already on disk (force_download=False)
     mocker.patch.object(dl, "filter_download_list", autospec=True, return_value=([], []))
-    assert dl.download_files(filepaths=list(remote_filepaths.keys())) == None
+    assert dl.download_files(filepaths=list(remote_filepaths.keys())) is None
 
 
 @pytest.mark.parametrize("storage", ["PPS", "GES_DISC"])
