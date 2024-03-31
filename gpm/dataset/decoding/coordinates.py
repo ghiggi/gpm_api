@@ -52,7 +52,7 @@ def ensure_valid_coords(ds, raise_error=False):
     return ds
 
 
-def _add_cmb_range_coordinate(ds, product, scan_mode):
+def _add_cmb_range_coordinate(ds, scan_mode):
     """Add range coordinate to 2B-<CMB> products."""
     if "range" in list(ds.dims):
         if scan_mode in ["NS", "KuKaGMI", "KuGMI", "KuTMI"]:
@@ -72,10 +72,10 @@ def _add_cmb_coordinates(ds, product, scan_mode):
         if "radar_frequency" in list(ds.dims):
             ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
 
-    return _add_cmb_range_coordinate(ds, product, scan_mode)
+    return _add_cmb_range_coordinate(ds, scan_mode)
 
 
-def _add_radar_range_coordinate(ds, product, scan_mode):
+def _add_radar_range_coordinate(ds, scan_mode):
     """Add range coordinate to 2A-<RADAR> products."""
     # - V6 and V7: 1BKu 260 bins NS and MS, 130 at HS
     if "range" in list(ds.dims):
@@ -108,7 +108,7 @@ def _add_radar_coordinates(ds, product, scan_mode):
         if "paramDSD" in list(ds):
             ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
     # Add radar range
-    return _add_radar_range_coordinate(ds, product, scan_mode)
+    return _add_radar_range_coordinate(ds, scan_mode)
 
 
 @functools.cache

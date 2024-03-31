@@ -191,8 +191,8 @@ def get_quadmesh_vertices(x, y, order="counterclockwise"):
     x_corners, y_corners = _get_lonlat_corners(x, y)
 
     # - Retrieve QuadMesh bounds (m*n x 4)
-    x_bounds = _from_corners_to_bounds(x_corners, order="counterclockwise")
-    y_bounds = _from_corners_to_bounds(y_corners, order="counterclockwise")
+    x_bounds = _from_corners_to_bounds(x_corners, order=order)
+    y_bounds = _from_corners_to_bounds(y_corners, order=order)
 
     # - Retrieve QuadMesh vertices (m*n, 4, 2)
     return np.stack((x_bounds, y_bounds), axis=2)

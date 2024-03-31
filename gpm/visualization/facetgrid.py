@@ -534,7 +534,7 @@ class ImageFacetGrid(CustomFacetGrid):
             facet_aspect=facet_aspect,
         )
 
-    def _finalize_grid(self, *axlabels) -> None:
+    def _finalize_grid(self, *axlabels) -> None:  # noqa
         """Finalize the annotations and layout of FacetGrid."""
         if not self._finalized:
             # Add subplots titles

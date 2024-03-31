@@ -184,7 +184,7 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
 ############################
 
 
-def get_local_daily_filepaths(product, product_type, date, version, verbose=True, base_dir=None):
+def get_local_daily_filepaths(product, product_type, date, version, base_dir=None):
     """
     Retrieve GPM data filepaths on the local disk directory of a specific day and product.
 
@@ -198,8 +198,6 @@ def get_local_daily_filepaths(product, product_type, date, version, verbose=True
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
-    verbose : bool, optional
-        Whether to print processing details. The default is ``True``.
     """
     # Retrieve the local GPM base directory
     base_dir = get_base_dir(base_dir=base_dir)

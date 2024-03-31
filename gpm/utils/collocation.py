@@ -69,6 +69,7 @@ def collocate_product(
     variables=None,
     groups=None,
     verbose=True,
+    decode_cf=True,
     chunks={},
 ):
     """Collocate a product on the provided dataset."""
@@ -104,8 +105,8 @@ def collocate_product(
             groups=groups,
             product_type=product_type,
             scan_mode=scan_mode,
-            chunks={},
-            decode_cf=True,
+            chunks=chunks,
+            decode_cf=decode_cf,
             prefix_group=False,
         )
         for scan_mode in scan_modes

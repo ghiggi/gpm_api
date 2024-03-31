@@ -80,7 +80,7 @@ def write_dataset_bucket(
         base_dir=bucket_filepath,
         partitioning=partitioning,
         row_group_size=row_group_size,
-        **writer_kwargs,
+        filename_prefix=filename_prefix**writer_kwargs,
     )
 
     return
