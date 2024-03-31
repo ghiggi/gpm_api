@@ -72,8 +72,8 @@ class CustomFacetGrid(FacetGrid, ABC):
         add_colorbar: bool = True,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
-        cbar_kwargs: dict = None,
-        fig_kwargs: dict = None,
+        cbar_kwargs: Optional[dict] = None,
+        fig_kwargs: Optional[dict] = None,
         axes_class=None,
     ) -> None:
         """
@@ -350,8 +350,8 @@ class CartopyFacetGrid(CustomFacetGrid):
         col_wrap: Optional[int] = None,
         axes_pad: Optional[tuple[float, float]] = None,
         add_colorbar: bool = True,
-        cbar_kwargs: dict = None,
-        fig_kwargs: dict = None,
+        cbar_kwargs: Optional[dict] = None,
+        fig_kwargs: Optional[dict] = None,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
@@ -476,8 +476,8 @@ class ImageFacetGrid(CustomFacetGrid):
         axes_pad: Optional[tuple[float, float]] = None,
         aspect: bool = False,
         add_colorbar: bool = True,
-        cbar_kwargs: dict = None,
-        fig_kwargs: dict = None,
+        cbar_kwargs: Optional[dict] = None,
+        fig_kwargs: Optional[dict] = None,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:

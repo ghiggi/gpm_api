@@ -161,7 +161,8 @@ select = [
     "SLOT",
     # flake8-comprehensions
     "C4",
-
+    # Add ruff custom rules
+    "RUF"
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
@@ -181,6 +182,8 @@ ignore = [
     "PD901",
     "PLW2901",
     "PLW0603",
+    "RUF012",
+    "RUF015",
     # Complexity rules
     "PLR0913", # restrict max number of function argument
     "PLR2004",

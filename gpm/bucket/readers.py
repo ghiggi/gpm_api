@@ -38,7 +38,7 @@ def _get_arrow_to_pandas_defaults():
         "use_threads": True,  #  parallelize the conversion using multiple threads.
         "safe": True,
         "split_blocks": False,
-        "ignore_metadata": False,  # Default False. If False, use the ‘pandas’ metadata to get the Index
+        "ignore_metadata": False,  # Default False. If False, use the pandas metadata to get the Index
         "types_mapper": pd.ArrowDtype,  # Ensure pandas is created with Arrow dtype
     }
 

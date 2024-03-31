@@ -28,6 +28,7 @@
 import os
 import platform
 from subprocess import Popen
+from typing import Optional
 
 from gpm.utils.yaml import read_yaml, write_yaml
 
@@ -84,11 +85,11 @@ def _define_config_filepath():
 
 
 def define_configs(
-    base_dir: str = None,
-    username_pps: str = None,
-    password_pps: str = None,
-    username_earthdata: str = None,
-    password_earthdata: str = None,
+    base_dir: Optional[str] = None,
+    username_pps: Optional[str] = None,
+    password_pps: Optional[str] = None,
+    username_earthdata: Optional[str] = None,
+    password_earthdata: Optional[str] = None,
 ):
     """
     Defines the GPM-API configuration file with the given credentials and base directory.

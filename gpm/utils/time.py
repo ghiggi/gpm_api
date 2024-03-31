@@ -25,6 +25,8 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains utilities for time processing."""
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -274,7 +276,7 @@ def regularize_dataset(
     ds: xr.Dataset,
     freq: str,
     time_dim: str = "time",
-    method: str = None,
+    method: Optional[str] = None,
     fill_value=dtypes.NA,
 ):
     """

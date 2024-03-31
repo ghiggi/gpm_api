@@ -28,7 +28,7 @@ import contextlib
 import os
 from importlib.metadata import PackageNotFoundError, version
 
-# os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"  # noqa
+# os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 import pycolorbar
 from pycolorbar import get_plot_kwargs  # noqa
 
@@ -67,7 +67,7 @@ from gpm.utils.checks import (  # noqa
 )
 from gpm.visualization.plot import plot_labels, plot_patches  # noqa
 
-_root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # noqa
+_root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 # Register colormaps and colorbars
 _colorbar_registered = False
