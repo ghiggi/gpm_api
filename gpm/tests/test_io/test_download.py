@@ -50,7 +50,6 @@ def test_construct_curl_pps_cmd(
 
     `local_filepath` relates to a file on the disk
     """
-
     # Use datetime as path as to be unique to every test
     local_filepath = os.path.join(
         tmpdir,
@@ -107,7 +106,6 @@ def test_construct_wget_pps_cmd(
 
     `local_filepath` relates to a file on the disk
     """
-
     # Use datetime as path as to be unique to every test
     local_filepath = os.path.join(
         tmpdir,
@@ -206,7 +204,6 @@ class TestDownloadUtility:
     )  # [Error, Single, Multiple Threads, n_threads > n_commands]
     def test_run(self, mocker: MockerFixture, verbose, progress_bar, n_threads) -> None:
         """Test run function."""
-
         commands = [
             "echo 'Hello, World!'",  # returncode: 2 (not 1)
             "ls /nonexistent_directory",  # returncode: 2 (not 0)
@@ -283,7 +280,6 @@ def test_check_download_status(
     products: list[str],
 ) -> None:
     """Test check_download_status function"""
-
     for product in products:
         assert dl._check_download_status([-1, -1, -1], product, True) is True  # All already on disk
         assert dl._check_download_status([0, 0, 0], product, True) is None  # All failed download
@@ -351,7 +347,6 @@ def test_download_files(
     tmp_path,
 ) -> None:
     """Test download_files function"""
-
     # Mock called functions as to not download any data
     mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
     mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))

@@ -68,8 +68,7 @@ def remove_corrupted_filepaths(filepaths, verbose=True):
 
 
 def check_filepaths_integrity(filepaths, remove_corrupted=True, verbose=True):
-    """
-    Check the integrity of GPM files.
+    """Check the integrity of GPM files.
 
     Parameters
     ----------
@@ -85,6 +84,7 @@ def check_filepaths_integrity(filepaths, remove_corrupted=True, verbose=True):
     -------
     l_corrupted : list
         List of corrupted file paths.
+
     """
     # Loop over files and list file that can't be opened
     l_corrupted = get_corrupted_filepaths(filepaths)
@@ -108,8 +108,7 @@ def check_archive_integrity(
     remove_corrupted=True,
     verbose=True,
 ):
-    """
-    Check GPM granule file integrity over a given period.
+    """Check GPM granule file integrity over a given period.
 
     If remove_corrupted=True, it removes the corrupted files.
 

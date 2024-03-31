@@ -152,8 +152,7 @@ def ds_to_dask_df_function(ds):
 
 
 def get_bin_partition(values, bin_size):
-    """
-    Compute the bins partitioning values.
+    """Compute the bins partitioning values.
 
     Parameters
     ----------
@@ -319,8 +318,7 @@ def merge_granule_buckets(
     batch_readahead=16,
     fragment_readahead=4,
 ):
-    """
-    Merge the per-granule bucket archive in a single optimized archive !
+    """Merge the per-granule bucket archive in a single optimized archive !
 
     Parameters
     ----------

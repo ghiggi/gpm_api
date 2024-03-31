@@ -406,8 +406,7 @@ def retrieve_SHI(
     lower_z_threshold=40,
     upper_z_threshold=50,
 ):
-    """
-    Retrieve the Severe Hail Index (SHI).
+    """Retrieve the Severe Hail Index (SHI).
 
     SHI is used to compute the Probability of Severe Hail (POSH) and Maximum Estimated Size of Hail (MESH).
     SHI applies a thermally weighted vertical integration of reflectivity from the melting level
@@ -433,6 +432,7 @@ def retrieve_SHI(
     -------
     da_shi : xr.DataArray
         Severe Hail Index (SHI)
+
     """
     # Retrieve required DataArrays
     da_z = ds[variable].sel({"radar_frequency": radar_frequency})

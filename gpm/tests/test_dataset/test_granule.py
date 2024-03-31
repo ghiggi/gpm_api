@@ -43,7 +43,6 @@ from gpm.utils.time import ensure_time_validity
 
 def test_get_variables():
     """Test get_variables"""
-
     da = xr.DataArray()
     dataset = xr.Dataset(data_vars={"var_1": da, "var_2": da})
     expected_variables = ["var_1", "var_2"]
@@ -53,7 +52,6 @@ def test_get_variables():
 
 def test_get_variables_dims():
     """Test get_variables_dims"""
-
     array_1 = np.zeros(shape=(3, 3))
     array_2 = np.zeros(shape=(3, 3))
     dataarray_1 = xr.DataArray(array_1, dims=["dim_1", "dim_2"])
@@ -73,7 +71,6 @@ def test_get_variables_dims():
 
 def test_unused_var_dims_and_remove():
     """Test unused_var_dims and remove_unused_var_dims"""
-
     array = np.zeros(shape=(3,))
     dataarray = xr.DataArray(array, dims=["used_dim"])
     dataset = xr.Dataset(data_vars={"var": dataarray})
@@ -93,7 +90,6 @@ def test_unused_var_dims_and_remove():
 
 def test_open_granule(monkeypatch):
     """Test open_granule"""
-
     filepath = "RS/V07/RADAR/2A-DPR/2022/07/06/2A.GPM.DPR.V9-20211125.20220706-S043937-E061210.047456.V07A.HDF5"
     scan_mode = "FS"
 
@@ -135,7 +131,6 @@ def test_open_granule(monkeypatch):
 
 def test_prefix_dataset_group_variables():
     """Test _prefix_dataset_group_variables"""
-
     da = xr.DataArray()
     dataset = xr.Dataset(data_vars={"var_1": da, "var_2": da})
     group = "group_1"
@@ -148,7 +143,6 @@ def test_prefix_dataset_group_variables():
 
 def test_remove_dummy_variables():
     """Test _remove_dummy_variables"""
-
     da = xr.DataArray()
     dataset = xr.Dataset(
         data_vars={
@@ -170,7 +164,6 @@ def test_remove_dummy_variables():
 
 def test_subset_dataset_variables():
     """Test _subset_dataset_variables"""
-
     da = xr.DataArray()
     dataset = xr.Dataset(data_vars={"var_1": da, "var_2": da})
 
@@ -199,7 +192,6 @@ def test_subset_dataset_variables():
 
 def test_process_group_dataset():
     """Test _process_group_dataset"""
-
     da = xr.DataArray()
     dataset = xr.Dataset(
         data_vars={
@@ -227,7 +219,6 @@ def test_process_group_dataset():
 
 def test_get_flattened_scan_mode_dataset():
     """Test _get_flattened_scan_mode_dataset"""
-
     da = xr.DataArray()
 
     # Build source datatree
@@ -347,7 +338,6 @@ def get_sample_grid_dataset():
 
 def test_finalize_dataset_crs(monkeypatch):
     """Test finalize_dataset"""
-
     product = "product"
     scan_mode = "scan_mode"
     ds = get_sample_orbit_dataset()
@@ -389,7 +379,6 @@ def test_finalize_dataset_crs(monkeypatch):
 
 def test_finalize_dataset_reshaping(monkeypatch):
     """Test reshaping in finalize_dataset"""
-
     product = "product"
     scan_mode = "scan_mode"
 
@@ -415,7 +404,6 @@ def test_finalize_dataset_reshaping(monkeypatch):
 
 def test_finalize_dataset_time_subsetting(monkeypatch):
     """Test time subsetting in finalize_dataset"""
-
     product = "product"
     scan_mode = "scan_mode"
     ds = get_sample_orbit_dataset()
@@ -443,7 +431,6 @@ def test_finalize_dataset_time_subsetting(monkeypatch):
 
 def test_finalize_dataset_time_encoding():
     """Test time encoding int finalize_dataset"""
-
     product = "product"
     scan_mode = "scan_mode"
     ds = get_sample_orbit_dataset()
@@ -457,7 +444,6 @@ def test_finalize_dataset_time_encoding():
 
 def test_finalize_dataset_attrs(monkeypatch):
     """Test addition of attributes in finalize_dataset"""
-
     product = "product"
     scan_mode = "scan_mode"
     ds = get_sample_orbit_dataset()

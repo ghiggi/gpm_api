@@ -114,7 +114,7 @@ def _get_pyproj_crs_cf_dict(crs):
 
 
 def _get_proj_coord_unit(crs, dim):
-    "Return the coordinate unit of a projected CRS."
+    """Return the coordinate unit of a projected CRS."""
     axis_info = crs.axis_info[dim]
     if hasattr(axis_info, "unit_conversion_factor"):
         unit_factor = axis_info.unit_conversion_factor
@@ -191,6 +191,7 @@ def _get_proj_dim_coords(xr_obj):
     -------
     (x_dim, y_dim) tuple
         Tuple with the name of the spatial dimensions.
+
     """
     # Check for classical options
     list_options = [("x", "y"), ("lon", "lat"), ("longitude", "latitude")]
@@ -240,6 +241,7 @@ def _get_swath_dim_coords(xr_obj):
     -------
     (x_dim, y_dim) tuple
         Tuple with the name of the swath coordinates.
+
     """
     # Check for classical options
     list_options = [("lon", "lat"), ("longitude", "latitude")]
@@ -285,8 +287,7 @@ def has_proj_coords(xr_obj):
 
 
 def _add_swath_coords_attrs(ds, crs) -> xr.Dataset:
-    """
-    Add CF-compliant CRS attributes to the coordinates of a swath.
+    """Add CF-compliant CRS attributes to the coordinates of a swath.
 
     Parameters
     ----------
@@ -298,6 +299,7 @@ def _add_swath_coords_attrs(ds, crs) -> xr.Dataset:
     -------
     :obj:`xarray.Dataset` | :obj:`xarray.DataArray`:
         Dataset with CF-compliant dimension coordinate attributes
+
     """
     if not crs.is_geographic:
         raise ValueError("A swath require a geographic CRS.")
@@ -321,8 +323,7 @@ def _add_swath_coords_attrs(ds, crs) -> xr.Dataset:
 
 
 def _add_proj_coords_attrs(ds, crs) -> xr.Dataset:
-    """
-    Add CF-compliant attributes to the dimension coordinates of a projected CRS.
+    """Add CF-compliant attributes to the dimension coordinates of a projected CRS.
 
     Note: The WGS84 grid is considered a projected CRS here !
 
@@ -336,6 +337,7 @@ def _add_proj_coords_attrs(ds, crs) -> xr.Dataset:
     -------
     :obj:`xarray.Dataset` | :obj:`xarray.DataArray`:
         Dataset with CF-compliant dimension coordinate attributes
+
     """
     # Retrieve CRS information
     is_projected = crs.is_projected
@@ -382,8 +384,7 @@ def _add_proj_coords_attrs(ds, crs) -> xr.Dataset:
 
 
 def _add_coords_crs_attrs(ds, crs):
-    """
-    Add CF-compliant attributes to the CRS dimension coordinates.
+    """Add CF-compliant attributes to the CRS dimension coordinates.
 
     Parameters
     ----------
@@ -395,6 +396,7 @@ def _add_coords_crs_attrs(ds, crs):
     -------
     :obj:`xarray.Dataset` | :obj:`xarray.DataArray`:
         Dataset with CF-compliant dimension coordinate attributes
+
     """
     # Projected CRS
     if crs.is_projected:
@@ -426,6 +428,7 @@ def _add_crs_coord(ds, crs, grid_mapping_name="spatial_ref"):
     -------
     ds : xarray.Dataset
         Dataset including the CRS ``name`` coordinate.
+
     """
     spatial_ref = Variable((), 0)
     # Retrieve CF-compliant CRS dictionary information
@@ -591,6 +594,7 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
     -------
     ds : xarray.Dataset
         Dataset with CF-compliant CRS information.
+
     """
     # Get dataset copy if inplace=False
     ds = _get_obj(ds=ds, inplace=inplace)
@@ -630,6 +634,7 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
     -------
     ds : xarray.Dataset
         Dataset with CF-compliant CRS information.
+
     """
     import pyproj
 
@@ -718,6 +723,7 @@ def get_pyproj_crs(xr_obj):
     Returns
     -------
     proj_crs : :py:class:`~pyproj.crs.CoordinateSystem`
+
     """
     list_crs = _get_list_pyproj_crs(xr_obj)
     # If two crs are provided, select the projected !
@@ -758,8 +764,7 @@ def get_pyresample_swath(xr_obj):
 
 
 def _compute_extent(x_coords, y_coords):
-    """
-    Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+    """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
     This function assumes that the spacing between each pixel is uniform.
     """
     # Calculate the pixel size assuming uniform spacing between pixels
@@ -813,7 +818,6 @@ def get_pyresample_area(xr_obj):
 
     To be used by the pyresample accessor: ds.pyresample.area
     """
-
     if has_proj_coords(xr_obj):
         return get_pyresample_projection(xr_obj)
     if has_swath_coords(xr_obj):

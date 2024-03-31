@@ -49,7 +49,6 @@ def create_spatial_bin_empty_df(
     ybin_name="ybin",
 ):
     """Create empty spatial bin DataFrame."""
-
     # Get midpoints
     x_midpoints = _get_bin_midpoints(vmin=xlim[0], vmax=xlim[1], size=xbin_size)
     y_midpoints = _get_bin_midpoints(vmin=ylim[0], vmax=ylim[1], size=ybin_size)

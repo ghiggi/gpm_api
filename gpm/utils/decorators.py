@@ -79,7 +79,8 @@ def check_is_gpm_object(function):
 def check_has_cross_track_dimension(function):
     """Check that the cross-track dimension is available.
 
-    If not available, raise an error."""
+    If not available, raise an error.
+    """
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -93,7 +94,8 @@ def check_has_cross_track_dimension(function):
 def check_has_along_track_dimension(function):
     """Check that the along-track dimension is available.
 
-    If not available, raise an error."""
+    If not available, raise an error.
+    """
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):

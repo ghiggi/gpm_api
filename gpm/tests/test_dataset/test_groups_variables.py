@@ -35,7 +35,6 @@ from gpm.dataset import groups_variables
 
 def test_get_available_groups():
     """Test _get_available_groups"""
-
     scan_mode = "S1"
     other_scan_mode = "S2"
     dt = DataTree.from_dict(
@@ -63,7 +62,6 @@ def test_get_available_groups():
 
 def test_get_available_variables():
     """Test _get_available_variables"""
-
     da = xr.DataArray()
     scan_mode = "S1"
     other_scan_mode = "S2"
@@ -89,7 +87,6 @@ def test_get_available_variables():
 
 def test_get_relevant_groups_variables(monkeypatch):
     """Test _get_relevant_groups_variables"""
-
     # Mock mandatory variables
     monkeypatch.setattr(groups_variables, "WISHED_COORDS", ["mandatory_var", "mandatory_var_2"])
 

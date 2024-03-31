@@ -5,7 +5,6 @@ from gpm.dataset.decoding import coordinates as co
 
 def test_get_pmw_frequency_dict() -> None:
     """Test that a dictionary is returned"""
-
     res = co.get_pmw_frequency_dict()
 
     assert isinstance(res, dict), "Dictionary not returned"

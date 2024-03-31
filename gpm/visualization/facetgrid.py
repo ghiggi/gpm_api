@@ -76,8 +76,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         fig_kwargs: Optional[dict] = None,
         axes_class=None,
     ) -> None:
-        """
-        Parameters
+        """Parameters
         ----------
         data : DataArray or Dataset
             DataArray or Dataset to be plotted.
@@ -116,6 +115,7 @@ class CustomFacetGrid(FacetGrid, ABC):
              ``figsize`` is a tuple (width, height) of the figure in inches.
              If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
              (see :meth:`matplotlib:matplotlib.figure.Figure`).
+
         """
         # Handle corner case of nonunique coordinates
         rep_col = col is not None and not data[col].to_index().is_unique
@@ -326,8 +326,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         self.fig.suptitle(title, horizontalalignment=horizontalalignment, **kwargs)
 
     def adapt_fig_size(self):
-        """
-        Adjusts the figure height of the plot based on the aspect ratio of cartopy subplots.
+        """Adjusts the figure height of the plot based on the aspect ratio of cartopy subplots.
 
         This function is intended to be called after all plotting has been completed.
         It operates under the assumption that all subplots within the figure share the same aspect ratio.
@@ -355,8 +354,7 @@ class CartopyFacetGrid(CustomFacetGrid):
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
-        """
-        Parameters
+        """Parameters
         ----------
         data : DataArray or Dataset
             DataArray or Dataset to be plotted.
@@ -393,6 +391,7 @@ class CartopyFacetGrid(CustomFacetGrid):
              ``figsize`` is a tuple (width, height) of the figure in inches.
              If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
              (see :meth:`matplotlib:matplotlib.figure.Figure`).
+
         """
         # Define Cartopy axes
         if projection is None:
@@ -481,8 +480,7 @@ class ImageFacetGrid(CustomFacetGrid):
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
-        """
-        Parameters
+        """Parameters
         ----------
         data : DataArray or Dataset
             DataArray or Dataset to be plotted.
@@ -518,6 +516,7 @@ class ImageFacetGrid(CustomFacetGrid):
              ``figsize`` is a tuple (width, height) of the figure in inches.
              If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
              (see :meth:`matplotlib:matplotlib.figure.Figure`).
+
         """
         super().__init__(
             data=data,

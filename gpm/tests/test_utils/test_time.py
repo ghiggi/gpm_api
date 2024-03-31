@@ -155,7 +155,6 @@ class TestSubsetByTime:
 
 def test_subset_by_time_slice():
     """Test subset_by_time_slice"""
-
     time = get_time_range(0, 23)
     da = xr.DataArray(np.random.rand(len(time)), coords={"time": time})
     start_time = datetime.datetime(2020, 12, 31, 6, 0, 0)
@@ -170,14 +169,12 @@ def test_subset_by_time_slice():
 
 def test_is_nat():
     """Test is_nat"""
-
     assert is_nat(np.datetime64("NaT"))
     assert not is_nat(np.datetime64("2020-01-01"))
 
 
 def test_has_nat():
     """Test has_nat"""
-
     time = datetime.datetime(2020, 12, 31, 12, 0, 0)
     nat = np.datetime64("NaT")
 
@@ -190,7 +187,6 @@ def test_interpolate_nat():
 
     Only method="linear", limit_direction=None, limit_area="inside" are used in gpm and tested here.
     """
-
     kwargs = {"method": "linear", "limit": 5, "limit_direction": None, "limit_area": "inside"}
 
     # Test with no NaNs
@@ -226,7 +222,6 @@ def test_interpolate_nat():
 
 def test_infill_timesteps():
     """Test infill_timesteps"""
-
     # Test with no NaNs
     time = create_fake_datetime_array_from_hours_list(np.arange(0, 10))
     returned_time = infill_timesteps(time, limit=5)

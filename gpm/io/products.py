@@ -168,6 +168,7 @@ def filter_info_dict_by_time(info_dict, start_time, end_time):
         Start time.
         Accepted types:  ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
+
     """
     from gpm.io.filter import is_granule_within_time
 
@@ -403,8 +404,7 @@ def available_versions(
     product_levels=None,
     full_product_levels=None,
 ):
-    """
-    Provide a list of available GPM versions.
+    """Provide a list of available GPM versions.
 
     Parameters
     ----------
@@ -460,8 +460,7 @@ def available_products(
     start_time=None,
     end_time=None,
 ):
-    """
-    Provide a list of available GPM products for download.
+    """Provide a list of available GPM products for download.
 
     Parameters
     ----------
@@ -776,8 +775,8 @@ def available_sensors(
     -------
     List
         List of available GPM sensors.
-    """
 
+    """
     info_dict = get_info_dict_subset(
         sensors=None,
         satellites=satellites,

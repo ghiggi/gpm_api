@@ -263,8 +263,8 @@ def write_granules_bucket(
     - Partition by 5° degree pixels: 2592 directories (72*36)
     - Partition by 10° degree pixels: 648 directories (36*18)
     - Partition by 15° degree pixels: 288 directories (24*12)
-    """
 
+    """
     # Split long list of files in blocks
     list_blocks = split_list_in_blocks(filepaths, block_size=max_dask_total_tasks)
 

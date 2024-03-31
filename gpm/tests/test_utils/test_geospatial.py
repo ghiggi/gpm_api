@@ -56,7 +56,6 @@ def orbit_dataarray() -> xr.DataArray:
 @pytest.fixture()
 def orbit_dataarray_multiple_prime_meridian_crossings() -> xr.DataArray:
     """Orbit dataset that crosses the prime meridian multiple times"""
-
     da = get_orbit_dataarray(
         start_lon=-50,
         start_lat=-1,
@@ -104,7 +103,6 @@ def test_get_country_extent(
     country_extent_dictionary: ExtentDictionary,
 ) -> None:
     """Test get_country_extent"""
-
     # Test valid country
     country = "Afghanistan"
     e = country_extent_dictionary[country]
@@ -134,7 +132,6 @@ def test_get_continent_extent(
     continent_extent_dictionary: ExtentDictionary,
 ) -> None:
     """Test get_continent_extent"""
-
     # Test valid continent
     continent = "Africa"
     e = continent_extent_dictionary[continent]
@@ -162,7 +159,6 @@ def test_get_continent_extent(
 
 def test_get_extent() -> None:
     """Test get_extent"""
-
     ds = xr.Dataset(
         {
             "lon": [-10, 0, 20],
@@ -235,7 +231,6 @@ class TestCrop:
         orbit_dataarray_multiple_prime_meridian_crossings: xr.DataArray,
     ) -> None:
         """Test with multiple crosses of extent"""
-
         with pytest.raises(ValueError):
             geospatial.crop(orbit_dataarray_multiple_prime_meridian_crossings, self.extent)
 
@@ -260,7 +255,6 @@ def test_crop_by_country(
     grid_dataarray: xr.DataArray,
 ) -> None:
     """Test crop_by_country"""
-
     country = "Wakanda"
     extent = (-10, 20, -30, 40)
 
@@ -283,7 +277,6 @@ def test_crop_by_continent(
     grid_dataarray: xr.DataArray,
 ) -> None:
     """Test crop_by_continent"""
-
     continent = "Middle Earth"
     extent = (-10, 20, -30, 40)
 
@@ -368,7 +361,6 @@ def test_get_crop_slices_by_country(
     grid_dataarray: xr.DataArray,
 ) -> None:
     """Test get_crop_slices_by_country"""
-
     country = "Froopyland"
     extent = (-10, 20, -30, 40)
 
@@ -389,7 +381,6 @@ def test_get_crop_slices_by_continent(
     grid_dataarray: xr.DataArray,
 ) -> None:
     """Test get_crop_slices_by_continent"""
-
     continent = "Atlantis"
     extent = (-10, 20, -30, 40)
 

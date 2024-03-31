@@ -44,8 +44,7 @@ def trim_memory() -> int:
 
 
 def clean_memory(client):
-    """
-    Call the garbage collector on each process.
+    """Call the garbage collector on each process.
 
     See https://distributed.dask.org/en/latest/worker-memory.html#manually-trim-memory
     """

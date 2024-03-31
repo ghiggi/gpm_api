@@ -37,14 +37,17 @@ def check_base_dir(base_dir):
 
     If base_dir ends with "GPM" directory, it removes it from the base_dir path.
     If base_dir does not end with "GPM", the GPM directory will be created.
+
     Parameters
     ----------
     base_dir : str
         Base directory where the GPM directory is located.
+
     Returns
     -------
     base_dir: str
         Base directory where the GPM directory is located.
+
     """
     base_dir = str(base_dir)  # deal with PathLib path
     # Check base_dir does not end with /

@@ -42,7 +42,6 @@ def test_get_pyproj_crs_cf_fict_private() -> None:
 
 def test_get_proj_coord_unit_private() -> None:
     """Test that the coordinate unit is returned when given projected CRS"""
-
     # Projected CRS
     projected_crs = CRS(32661)  # WGS84 / UTM zone 61N, metre
 

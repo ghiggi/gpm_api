@@ -51,8 +51,7 @@ def get_time_tree(date):
 
 
 def _get_local_dir_pattern(product, product_type, version):
-    """
-    Defines the local (disk) repository base pattern where data are stored and searched.
+    """Defines the local (disk) repository base pattern where data are stored and searched.
 
     Parameters
     ----------
@@ -65,7 +64,6 @@ def _get_local_dir_pattern(product, product_type, version):
 
     Returns
     -------
-
     pattern : str
         Directory base pattern:
 
@@ -86,8 +84,7 @@ def _get_local_dir_pattern(product, product_type, version):
 
 
 def _get_local_product_base_directory(base_dir, product, product_type, version):
-    """
-    Provide the local product base directory path where the requested GPM data are stored.
+    """Provide the local product base directory path where the requested GPM data are stored.
 
     Parameters
     ----------
@@ -102,9 +99,9 @@ def _get_local_product_base_directory(base_dir, product, product_type, version):
 
     Returns
     -------
-
     product_dir : str
         Product base directory path where data are located.
+
     """
     base_dir = check_base_dir(base_dir)
     product_dir_pattern = _get_local_dir_pattern(product, product_type, version)
@@ -134,6 +131,7 @@ def _get_local_directory_tree(product, product_type, date, version):
     -------
     directory_tree : str
         DIrectory tree on the NASA GESC DISC server where the data are stored.
+
     """
     # Define product directory: GPM/RS/V<version>/<product_category>/<product>
     product_dir_tree = _get_local_dir_pattern(product, product_type, version)
@@ -144,8 +142,7 @@ def _get_local_directory_tree(product, product_type, date, version):
 
 
 def get_local_product_directory(base_dir, product, product_type, version, date):
-    """
-    Provide the local repository path where the requested daily GPM data are stored/need to be saved.
+    """Provide the local repository path where the requested daily GPM data are stored/need to be saved.
 
     Parameters
     ----------
@@ -162,7 +159,6 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
 
     Returns
     -------
-
     product_dir_path : str
         Directory path where daily GPM data are located.
 
@@ -188,8 +184,7 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
 
 
 def get_local_daily_filepaths(product, product_type, date, version, base_dir=None):
-    """
-    Retrieve GPM data filepaths on the local disk directory of a specific day and product.
+    """Retrieve GPM data filepaths on the local disk directory of a specific day and product.
 
     Parameters
     ----------
@@ -201,6 +196,7 @@ def get_local_daily_filepaths(product, product_type, date, version, base_dir=Non
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
+
     """
     # Retrieve the local GPM base directory
     base_dir = get_base_dir(base_dir=base_dir)
@@ -338,8 +334,7 @@ def group_filepaths_by_time_group(filepaths, group):
 
 
 def get_local_filepaths(product, version=7, product_type="RS", base_dir=None, group=None):
-    """
-    Retrieve all GPM filepaths on the local disk directory for a specific product.
+    """Retrieve all GPM filepaths on the local disk directory for a specific product.
 
     Parameters
     ----------
@@ -353,6 +348,7 @@ def get_local_filepaths(product, version=7, product_type="RS", base_dir=None, gr
     group: str, optional
         Whether to group the filepaths in a dictionary by ``year``, ``month``, ``doy`` or ``version``.
         The default is ``None``.
+
     """
     # Retrieve the local GPM base directory
     base_dir = get_base_dir(base_dir=base_dir)

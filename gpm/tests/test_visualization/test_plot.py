@@ -73,7 +73,6 @@ def test_is_generator() -> None:
 
 def test_preprocess_figure_args() -> None:
     """Test the preprocess_figure_args function"""
-
     nothing = {}
     something = {"": 0}
 
@@ -101,7 +100,6 @@ class TestGetDataArrayExtent:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test getting the extent of orbit data"""
-
         returned_extent = plot.get_dataarray_extent(orbit_dataarray)
         expected_extent = (-2.77663454, 22.65579744, -3.53830585, 18.64709521)
         np.testing.assert_allclose(returned_extent, expected_extent, rtol=1e-9)
@@ -111,7 +109,6 @@ class TestGetDataArrayExtent:
         grid_dataarray: xr.DataArray,
     ) -> None:
         """Test getting the extent of grid data"""
-
         returned_extent = plot.get_dataarray_extent(grid_dataarray)
         expected_extent = (-5, 20, -5, 15)
         assert returned_extent == expected_extent
@@ -121,7 +118,6 @@ def test_get_antimeridian_mask(
     orbit_antimeridian_dataarray: xr.DataArray,
 ) -> None:
     """Test the get_antimeridian_mask function"""
-
     lon = orbit_antimeridian_dataarray["lon"].data
     returned_mask = plot.get_antimeridian_mask(lon)
     # fmt: off
@@ -142,7 +138,6 @@ class TestPlotMap:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
-
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -151,7 +146,6 @@ class TestPlotMap:
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian"""
-
         p = plot.plot_map(orbit_antimeridian_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -160,7 +154,6 @@ class TestPlotMap:
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian with recentering"""
-
         crs_proj = ccrs.PlateCarree(central_longitude=180)
         p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -170,7 +163,6 @@ class TestPlotMap:
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian on orthographic projection"""
-
         crs_proj = ccrs.Orthographic(180, 0)
         p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -180,7 +172,6 @@ class TestPlotMap:
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian without masking (recentered)"""
-
         crs_proj = ccrs.PlateCarree(central_longitude=180)
         with gpm.config.set({"viz_hide_antimeridian_data": False}):
             p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
@@ -191,7 +182,6 @@ class TestPlotMap:
         orbit_pole_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the south pole"""
-
         p = plot.plot_map(orbit_pole_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -200,7 +190,6 @@ class TestPlotMap:
         orbit_pole_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the south pole on orthographic projection"""
-
         crs_proj = ccrs.Orthographic(0, -90)
         p = plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -212,7 +201,6 @@ class TestPlotMap:
         orbit_data_nan_cross_track_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit with NaN values in the data at cross-track edges"""
-
         p = plot.plot_map(orbit_data_nan_cross_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -221,7 +209,6 @@ class TestPlotMap:
         orbit_data_nan_along_track_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit with NaN values in the data at along-track edges"""
-
         p = plot.plot_map(orbit_data_nan_along_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -230,7 +217,6 @@ class TestPlotMap:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit with NaN values in the data at one cell"""
-
         orbit_dataarray.data[2, 2] = np.nan
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -276,7 +262,6 @@ class TestPlotMap:
         orbit_nan_outer_cross_track_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with some NaN coordinates on the outer cross-track cells"""
-
         p = plot.plot_map(orbit_nan_outer_cross_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -285,7 +270,6 @@ class TestPlotMap:
         orbit_nan_inner_cross_track_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with all NaN coordinates on the outer cross-track cells"""
-
         p = plot.plot_map(orbit_nan_inner_cross_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -294,7 +278,6 @@ class TestPlotMap:
         orbit_nan_slice_along_track_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with some NaN latitudes along-track"""
-
         p = plot.plot_map(orbit_nan_slice_along_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -315,7 +298,6 @@ class TestPlotMap:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with a horizontal colorbar"""
-
         cbar_kwargs = {"orientation": "horizontal"}
         p = plot.plot_map(orbit_dataarray, cbar_kwargs=cbar_kwargs)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -325,7 +307,6 @@ class TestPlotMap:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit RGB data"""
-
         orbit_dataarray = expand_dims(orbit_dataarray, 3, dim="rgb", axis=2)
         p = plot.plot_map(orbit_dataarray, rgb=True)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -335,7 +316,6 @@ class TestPlotMap:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit RGBA data"""
-
         orbit_dataarray = expand_dims(orbit_dataarray, 4, dim="rgb", axis=2)
         p = plot.plot_map(orbit_dataarray, rgb=True)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -345,7 +325,6 @@ class TestPlotMap:
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit RGB data going over the antimeridian without masking (recentered)"""
-
         orbit_dataarray = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
         crs_proj = ccrs.PlateCarree(central_longitude=180)
         p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb=True)
@@ -356,7 +335,6 @@ class TestPlotMap:
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit RGB data going over the antimeridian without masking (recentered)"""
-
         orbit_dataarray = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
         crs_proj = ccrs.PlateCarree(central_longitude=180)
         with gpm.config.set({"viz_hide_antimeridian_data": False}):
@@ -368,7 +346,6 @@ class TestPlotMap:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with RGB flag on non RGB data"""
-
         with pytest.raises(ValueError):
             plot.plot_map(orbit_dataarray, rgb=True)
 
@@ -377,7 +354,6 @@ class TestPlotMap:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with some invalid values"""
-
         orbit_dataarray.data[1:4, 1:4] = np.nan
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -387,7 +363,6 @@ class TestPlotMap:
         grid_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data"""
-
         p = plot.plot_map(grid_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -396,7 +371,6 @@ class TestPlotMap:
         grid_nan_lon_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data with NaN longitudes"""
-
         p = plot.plot_map(grid_nan_lon_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -405,7 +379,6 @@ class TestPlotMap:
         grid_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data with time dimension"""
-
         grid_dataarray = expand_dims(grid_dataarray, 4, "time")
         with pytest.raises(ValueError):  # Expecting a 2D GPM field
             plot.plot_map(grid_dataarray)
@@ -414,7 +387,6 @@ class TestPlotMap:
         self,
     ) -> None:
         """Test invalid data"""
-
         da = xr.DataArray()
         with pytest.raises(ValueError):
             plot.plot_map(da)
@@ -428,7 +400,6 @@ class TestPlotImage:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
-
         p = plot.plot_image(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -447,7 +418,6 @@ class TestPlotImage:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with a horizontal colorbar"""
-
         cbar_kwargs = {"orientation": "horizontal"}
         p = plot.plot_image(orbit_dataarray, cbar_kwargs=cbar_kwargs)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -457,7 +427,6 @@ class TestPlotImage:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data without colorbar"""
-
         p = plot.plot_image(orbit_dataarray, add_colorbar=False)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -466,7 +435,6 @@ class TestPlotImage:
         grid_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data"""
-
         p = plot.plot_image(grid_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -474,7 +442,6 @@ class TestPlotImage:
         self,
     ) -> None:
         """Test invalid data"""
-
         da = xr.DataArray()
         with pytest.raises(ValueError):
             plot.plot_image(da)
@@ -488,7 +455,6 @@ class TestPlotMapMesh:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
-
         p = plot.plot_map_mesh(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -506,7 +472,6 @@ class TestPlotMapMesh:
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian on orthographic projection"""
-
         crs_proj = ccrs.Orthographic(180, 0)
         p = plot.plot_map_mesh(
             orbit_antimeridian_dataarray,
@@ -519,7 +484,6 @@ class TestPlotMapMesh:
         orbit_pole_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the south pole"""
-
         p = plot.plot_map_mesh(orbit_pole_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -528,7 +492,6 @@ class TestPlotMapMesh:
         orbit_pole_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the south pole on orthographic projection"""
-
         crs_proj = ccrs.Orthographic(0, -90)
         p = plot.plot_map_mesh(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -538,7 +501,6 @@ class TestPlotMapMesh:
         grid_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data"""
-
         p = plot.plot_map_mesh(grid_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -547,7 +509,6 @@ class TestPlotMapMesh:
         grid_nan_lon_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data with NaN longitudes"""
-
         p = plot.plot_map_mesh(grid_nan_lon_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -560,7 +521,6 @@ class TestPlotMapMeshCentroids:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
-
         p = plot.plot_map_mesh_centroids(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -569,7 +529,6 @@ class TestPlotMapMeshCentroids:
         grid_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data"""
-
         p = plot.plot_map_mesh_centroids(grid_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -585,7 +544,6 @@ class TestPlotLabels:
         orbit_dataarray: xr.DataArray,
     ) -> xr.DataArray:
         """Create an orbit data array with label coordinates"""
-
         labels = np.random.randint(0, 10, orbit_dataarray.shape)
         return orbit_dataarray.assign_coords(
             {self.label_name: (("cross_track", "along_track"), labels)},
@@ -597,7 +555,6 @@ class TestPlotLabels:
         grid_dataarray: xr.DataArray,
     ) -> xr.DataArray:
         """Create a grid data array with label coordinates"""
-
         labels = np.random.randint(0, 10, grid_dataarray.shape)
         return grid_dataarray.assign_coords({self.label_name: (("lat", "lon"), labels)})
 
@@ -606,7 +563,6 @@ class TestPlotLabels:
         orbit_labels_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
-
         p = plot.plot_labels(orbit_labels_dataarray, label_name=self.label_name)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -615,7 +571,6 @@ class TestPlotLabels:
         orbit_labels_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data from a dataset"""
-
         ds = xr.Dataset({self.label_name: orbit_labels_dataarray[self.label_name]})
         p = plot.plot_labels(ds, label_name=self.label_name)
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -625,7 +580,6 @@ class TestPlotLabels:
         orbit_labels_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data from labels data array directly"""
-
         p = plot.plot_labels(orbit_labels_dataarray[self.label_name])
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -634,7 +588,6 @@ class TestPlotLabels:
         orbit_labels_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data with too many labels for colorbar"""
-
         p = plot.plot_labels(orbit_labels_dataarray, label_name=self.label_name, max_n_labels=5)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -643,7 +596,6 @@ class TestPlotLabels:
         grid_labels_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data"""
-
         p = plot.plot_labels(grid_labels_dataarray, label_name=self.label_name)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -653,7 +605,6 @@ class TestPlotLabels:
         orbit_labels_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data form a generator"""
-
         da_list = [
             (0, orbit_labels_dataarray),
             (1, orbit_labels_dataarray),
@@ -673,7 +624,6 @@ class TestPlotPatches:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data"""
-
         da_list = [
             (0, orbit_dataarray),
             (1, orbit_dataarray),
@@ -688,7 +638,6 @@ class TestPlotPatches:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data from a dataset"""
-
         variable_name = "variable"
         ds = xr.Dataset({variable_name: orbit_dataarray})
         ds_list = [
@@ -710,7 +659,6 @@ class TestPlotPatches:
         grid_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting grid data"""
-
         da_list = [
             (0, grid_dataarray),
             (1, grid_dataarray),
@@ -723,7 +671,6 @@ class TestPlotPatches:
         self,
     ) -> None:
         """Test invalid data"""
-
         invalid_list = [
             (0, xr.DataArray()),
             (1, xr.DataArray()),

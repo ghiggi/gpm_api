@@ -247,8 +247,8 @@ def _get_list_status_commands(dict_futures, pbar=None):
 
 
 def run(commands, n_threads=10, progress_bar=True, verbose=True):
-    """
-    Run bash commands in parallel using multithreading.
+    """Run bash commands in parallel using multithreading.
+
     Parameters
     ----------
     commands : list
@@ -260,6 +260,7 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
     -------
     status : list
         Download status of each file. 0=Failed. 1=Success.
+
     """
     from tqdm import tqdm
 
@@ -433,8 +434,7 @@ def _download_files(
 
 
 def filter_download_list(remote_filepaths, local_filepaths, force_download=False):
-    """
-    Removes filepaths of GPM file already existing on disk.
+    """Removes filepaths of GPM file already existing on disk.
 
     Parameters
     ----------
@@ -518,8 +518,7 @@ def get_filepath_from_filename(filename, storage, product_type):
 
 
 def get_filepaths_from_filenames(filepaths, storage, product_type):
-    """
-    Convert GPM file names or file paths to <storage> file paths.
+    """Convert GPM file names or file paths to <storage> file paths.
 
     Parameters
     ----------
@@ -556,8 +555,7 @@ def download_files(
     verbose=True,
     retry=1,
 ):
-    """
-    Download specific GPM files from NASA servers.
+    """Download specific GPM files from NASA servers.
 
     Parameters
     ----------
@@ -590,6 +588,7 @@ def download_files(
     l_corrupted : list
         List of corrupted file paths.
         If no corrupted files, returns an empty list.
+
     """
     # TODO list
     # - providing inexisting file names currently behave as if the downloaded file was corrupted
@@ -778,8 +777,7 @@ def _download_daily_data(
     verbose,
     warn_missing_files,
 ):
-    """
-    Download GPM data from NASA servers using curl or wget.
+    """Download GPM data from NASA servers using curl or wget.
 
     Parameters
     ----------
@@ -933,8 +931,7 @@ def download_archive(
     retry=1,
     verbose=True,
 ):
-    """
-    Download GPM data from NASA servers (day by day).
+    """Download GPM data from NASA servers (day by day).
 
     Parameters
     ----------
@@ -974,6 +971,7 @@ def download_archive(
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
         Only applies if ``check_integrity=True``!
+
     """
     # -------------------------------------------------------------------------.
     ## Checks input arguments

@@ -91,8 +91,7 @@ def define_configs(
     username_earthdata: Optional[str] = None,
     password_earthdata: Optional[str] = None,
 ):
-    """
-    Defines the GPM-API configuration file with the given credentials and base directory.
+    """Defines the GPM-API configuration file with the given credentials and base directory.
 
     Parameters
     ----------
@@ -148,8 +147,7 @@ def define_configs(
 
 
 def read_configs() -> dict[str, str]:
-    """
-    Reads the GPM-API configuration file and returns a dictionary with the configuration settings.
+    """Reads the GPM-API configuration file and returns a dictionary with the configuration settings.
 
     Returns
     -------
@@ -167,6 +165,7 @@ def read_configs() -> dict[str, str]:
     -----
     This function reads the YAML configuration file located at ~/.config_gpm.yaml, which
     should contain the GPM-API credentials and base directory specified by `gpm.define_configs()`.
+
     """
     # Define path to .config_gpm.yaml file
     filepath = _define_config_filepath()

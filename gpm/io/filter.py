@@ -78,8 +78,7 @@ def _string_match(pattern, string):
 
 
 def _filter_filepath(filepath, product=None, version=None, start_time=None, end_time=None):
-    """
-    Check if a single filepath pass the filtering parameters.
+    """Check if a single filepath pass the filtering parameters.
 
     If do not match the filtering criteria, it returns None.
 
@@ -102,7 +101,6 @@ def _filter_filepath(filepath, product=None, version=None, start_time=None, end_
 
     Returns
     -------
-
     filepaths : list
         Returns the filepaths subset.
         If no valid filepaths, return an empty list.
@@ -144,8 +142,7 @@ def filter_filepaths(
     start_time=None,
     end_time=None,
 ):
-    """
-    Filter the GPM filepaths based on specific parameters.
+    """Filter the GPM filepaths based on specific parameters.
 
     Parameters
     ----------
@@ -168,7 +165,6 @@ def filter_filepaths(
 
     Returns
     -------
-
     filepaths : list
         Returns the filepaths subset.
         If no valid filepaths, return an empty list.
@@ -204,8 +200,7 @@ def filter_filepaths(
 
 
 def filter_by_product(filepaths, product, product_type="RS"):
-    """
-    Filter filepaths by product.
+    """Filter filepaths by product.
 
     Parameters
     ----------
@@ -217,7 +212,7 @@ def filter_by_product(filepaths, product, product_type="RS"):
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
 
     Returns
-    ----------
+    -------
     filepaths : list
         List of valid filepaths.
         If no valid filepaths, returns an empty list !
@@ -252,8 +247,7 @@ def filter_by_product(filepaths, product, product_type="RS"):
 
 
 def filter_by_time(filepaths, start_time=None, end_time=None):
-    """
-    Filter filepaths by start_time and end_time.
+    """Filter filepaths by start_time and end_time.
 
     Parameters
     ----------
@@ -267,10 +261,11 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
         If ``None`` will be set to current time using ``datetime.datetime.utcnow()``.
 
     Returns
-    ----------
+    -------
     filepaths : list
         List of valid filepaths.
         If no valid filepaths, returns an empty list !
+
     """
     # -------------------------------------------------------------------------.
     # Check filepaths
@@ -317,8 +312,7 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
 
 
 def filter_by_version(filepaths, version):
-    """
-    Filter filepaths by GPM product version.
+    """Filter filepaths by GPM product version.
 
     Parameters
     ----------
@@ -328,10 +322,11 @@ def filter_by_version(filepaths, version):
         GPM product version.
 
     Returns
-    ----------
+    -------
     filepaths : list
         List of valid filepaths.
         If no valid filepaths, returns an empty list !
+
     """
     # -------------------------------------------------------------------------.
     # Check filepaths

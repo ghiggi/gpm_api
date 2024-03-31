@@ -46,7 +46,6 @@ from gpm.io.products import available_product_versions, available_products, avai
 
 def test_check_base_dir() -> None:
     """Check path constructor for base_dir"""
-
     # Check text entry for Unix/Windows
     if platform.system() == "Windows":
         res = checks.check_base_dir("C:\\Users\\user\\gpm")
@@ -72,7 +71,6 @@ def test_check_base_dir() -> None:
 
 def test_check_filepaths() -> None:
     """Check path constructor for filepaths"""
-
     # Create list of unique filepaths (may not reflect real files)
     filepaths = [
         os.path.join(
@@ -103,7 +101,6 @@ def test_check_filepaths() -> None:
 
 def test_check_variables() -> None:
     """Check variables"""
-
     var_list = ["precipitationCal", "precipitationUncal", "HQprecipitation"]
 
     # Check if None, None is returned
@@ -137,7 +134,6 @@ def test_check_groups() -> None:
 
     Similar logic to check_variables
     """
-
     group_list = ["NS", "HS", "MS"]
 
     # Check if None, None is returned
@@ -168,7 +164,6 @@ def test_check_groups() -> None:
 
 def test_check_storage() -> None:
     """Test check_storage()"""
-
     # Check valid storage
     valid_storage = ["ges_disc", "pps", "local", "GES_DISC", "PPS", "LOCAL"]
     expected_return = ["GES_DISC", "PPS", "LOCAL", "GES_DISC", "PPS", "LOCAL"]
@@ -189,7 +184,6 @@ def test_check_storage() -> None:
 
 def test_check_remote_storage() -> None:
     """Test check_remote_storage()"""
-
     # Check valid storage
     valid_storage = ["ges_disc", "pps", "GES_DISC", "PPS"]
     expected_return = ["GES_DISC", "PPS", "GES_DISC", "PPS"]
@@ -210,7 +204,6 @@ def test_check_remote_storage() -> None:
 
 def test_check_transfer_tool_availability(mocker: MockerFixture):
     """Test check_transfer_tool_availability()"""
-
     # Check that if CURL is available, return True
     assert checks.check_transfer_tool_availability("curl")
 
@@ -247,7 +240,6 @@ def test_check_version(
 
     Possible versions are integers of 4-7
     """
-
     # Check if None, None is returned
     with pytest.raises(ValueError):
         checks.check_version(None)
@@ -277,7 +269,6 @@ def test_check_product_version(
     versions: list[int],
 ) -> None:
     """Test check_product_version()"""
-
     for product, info in product_info.items():
         # Check valid versions
         valid_versions = info.get("available_versions", [])
@@ -307,7 +298,6 @@ def test_check_product(
     Depends on available_products(), test ambiguous product names similar to
     those that exist
     """
-
     # Test a product that does exist
     for product_type in product_types:
         for product in available_products(product_types=product_type):
@@ -325,7 +315,6 @@ def test_check_product_type(
     product_types: list[str],
 ) -> None:
     """Test check_product_type()"""
-
     # Test a product_type that does exist
     for product_type in product_types:
         assert product_type == checks.check_product_type(product_type)
@@ -341,7 +330,6 @@ def test_check_product_category(
     product_categories: list[str],
 ) -> None:
     """Test check_product_category()"""
-
     # Test types that aren't strings
     for product_category in [123, None]:
         with pytest.raises(ValueError):
@@ -362,7 +350,6 @@ def test_check_product_level(
     product_levels: list[str],
 ) -> None:
     """Test check_product_level()"""
-
     # Test types that aren't strings
     for product_level in [123, None]:
         with pytest.raises(ValueError):
@@ -382,7 +369,6 @@ def test_check_full_product_level(
     full_product_levels: list[str],
 ) -> None:
     """Test check_full_product_level()"""
-
     # Test types that aren't strings
     for product_level in [123, None]:
         with pytest.raises(ValueError):
@@ -402,7 +388,6 @@ def test_check_sensor(
     sensors: list[str],
 ) -> None:
     """Test check_sensor()"""
-
     # Test types that aren't strings
     for sensor in [123, None]:
         with pytest.raises(ValueError):
@@ -430,7 +415,6 @@ def test_check_satellite(
     satellites: list[str],
 ) -> None:
     """Test check_satellite()"""
-
     # Test types that aren't strings
     for satellite in [123, None]:
         with pytest.raises(ValueError):
@@ -458,7 +442,6 @@ def test_check_product_validity(
     product_types: list[str],
 ) -> None:
     """Test check_product_validity()"""
-
     # Test a product that does exist
     for product_type in product_types:
         for product in available_products(product_types=product_type):
@@ -477,7 +460,6 @@ def test_check_product_validity(
 
 def test_check_time() -> None:
     """Test that time is returned a datetime object from varying inputs"""
-
     # Test a string
     res = checks.check_time("2014-12-31")
     assert isinstance(res, datetime.datetime)
@@ -565,7 +547,6 @@ def test_check_time() -> None:
 
 def test_check_date() -> None:
     """Check date/datetime object is returned from varying inputs"""
-
     # Test a datetime object
     res = checks.check_date(datetime.datetime(2014, 12, 31))
     assert isinstance(res, datetime.date)
@@ -591,7 +572,6 @@ def test_check_date() -> None:
 
 def test_check_start_end_time() -> None:
     """Check start and end time are valid"""
-
     # Test a string
     res = checks.check_start_end_time(
         "2014-12-31",
@@ -682,7 +662,6 @@ def test_check_valid_time_request(
     product_info: dict[str, Any],
 ) -> None:
     """Test check_valid_time_request()"""
-
     for product, info in product_info.items():
         valid_start_time = info["start_time"]
         valid_end_time = info["end_time"]
@@ -715,7 +694,6 @@ def test_check_scan_mode(
     products: list[str],
 ) -> None:
     """Check scan mode is valid"""
-
     for product in products:
         for version in available_product_versions(product):
             # Get available scan modes

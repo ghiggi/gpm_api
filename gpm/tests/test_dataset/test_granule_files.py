@@ -100,7 +100,6 @@ def test_open_granule_on_real_files():
         │    └── S5.nc
         └── ...
     """
-
     granules_dir_path = os.path.join(_root_path, "gpm", "tests", "data", "granules")
 
     if not os.path.exists(granules_dir_path):

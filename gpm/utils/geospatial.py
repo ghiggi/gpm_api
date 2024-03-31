@@ -52,8 +52,7 @@ Extent = namedtuple("Extent", "xmin xmax ymin ymax")
 
 
 def _check_padding(padding: Union[int, float, tuple, list] = 0):
-    """
-    Check and normalize the padding input.
+    """Check and normalize the padding input.
 
     This function accepts padding defined as an integer, float, tuple, or list.
     It normalizes the input into a tuple of four elements, each representing the
@@ -83,6 +82,7 @@ def _check_padding(padding: Union[int, float, tuple, list] = 0):
         If a tuple or list is provided with a length other than 2 or 4.
     TypeError
         If the input is not an int, float, tuple, or list.
+
     """
     if isinstance(padding, (int, float, np.floating, np.integer)):
         padding = tuple([padding] * 4)
@@ -97,8 +97,7 @@ def _check_padding(padding: Union[int, float, tuple, list] = 0):
 
 
 def extend_geographic_extent(extent, padding: Union[int, float, tuple, list] = 0):
-    """
-    Extend the lat/lon extent by x degrees in every direction.
+    """Extend the lat/lon extent by x degrees in every direction.
 
     Parameters
     ----------
@@ -116,6 +115,7 @@ def extend_geographic_extent(extent, padding: Union[int, float, tuple, list] = 0
     -------
     new_extent, tuple
         The extended extent.
+
     """
     padding = _check_padding(padding)
     xmin, xmax, ymin, ymax = extent
@@ -127,11 +127,12 @@ def extend_geographic_extent(extent, padding: Union[int, float, tuple, list] = 0
 
 
 def read_countries_extent_dictionary():
-    """
-    Reads a YAML file containing countries extent information and returns it as a dictionary.
+    """Reads a YAML file containing countries extent information and returns it as a dictionary.
 
-    Returns:
+    Returns
+    -------
         dict: A dictionary containing countries extent information.
+
     """
     countries_extent_filepath = os.path.join(
         _root_path,
@@ -144,8 +145,7 @@ def read_countries_extent_dictionary():
 
 
 def get_country_extent(name, padding=0.2):
-    """
-    Retrieves the extent of a country.
+    """Retrieves the extent of a country.
 
     Parameters
     ----------
@@ -201,11 +201,12 @@ def get_country_extent(name, padding=0.2):
 
 
 def read_continents_extent_dictionary():
-    """
-    Read and return a dictionary containing the extents of continents.
+    """Read and return a dictionary containing the extents of continents.
 
-    Returns:
+    Returns
+    -------
         dict: A dictionary containing the extents of continents.
+
     """
     continents_extent_filepath = os.path.join(
         _root_path,
@@ -218,11 +219,10 @@ def read_continents_extent_dictionary():
 
 
 def get_continent_extent(name: str, padding: Union[int, float, tuple, list] = 0):
-    """
-    Retrieves the extent of a continent.
+    """Retrieves the extent of a continent.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     name : str
         The name of the continent.
     padding : int, float, tuple, list
@@ -233,18 +233,19 @@ def get_continent_extent(name: str, padding: Union[int, float, tuple, list] = 0)
         If four values are provided, they directly correspond to padding for each side (left, right, top, bottom).
         Default is 0.
 
-    Returns:
-    --------
+    Returns
+    -------
     extent : tuple
         A tuple containing the longitude and latitude extent of the continent.
 
-    Raises:
-    -------
+    Raises
+    ------
     TypeError:
         If the continent name is not provided as a string.
     ValueError:
         If the provided continent name is not valid or does not match any continent.
         If a similar continent name is found and suggested as a possible match.
+
     """
     # Check country format
     if not isinstance(name, str):
@@ -317,8 +318,7 @@ def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
 
 
 def crop_by_country(xr_obj, name: str):
-    """
-    Crop an xarray object based on the specified country name.
+    """Crop an xarray object based on the specified country name.
 
     Parameters
     ----------
@@ -338,8 +338,7 @@ def crop_by_country(xr_obj, name: str):
 
 
 def crop_by_continent(xr_obj, name: str):
-    """
-    Crop an xarray object based on the specified continent name.
+    """Crop an xarray object based on the specified continent name.
 
     Parameters
     ----------
@@ -362,7 +361,6 @@ def crop_by_continent(xr_obj, name: str):
 def get_crop_slices_by_extent(xr_obj, extent):
     """Compute the xarray object slices which are within the specified extent.
 
-
     If the input is a GPM Orbit, it returns a list of along-track slices
     If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
 
@@ -374,6 +372,7 @@ def get_crop_slices_by_extent(xr_obj, extent):
         The extent over which to crop the xarray object.
         `extent` must follow the matplotlib and cartopy conventions:
         extent = [x_min, x_max, y_min, y_max]
+
     """
     if is_orbit(xr_obj):
         xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
@@ -413,6 +412,7 @@ def get_crop_slices_by_continent(xr_obj, name):
         xarray object.
     name : str
         Continent name.
+
     """
     extent = get_continent_extent(name)
     return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
@@ -430,14 +430,14 @@ def get_crop_slices_by_country(xr_obj, name):
         xarray object.
     name : str
         Country name.
+
     """
     extent = get_country_extent(name)
     return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
 
 
 def crop(xr_obj, extent):
-    """
-    Crop a xarray object based on the provided bounding box.
+    """Crop a xarray object based on the provided bounding box.
 
     Parameters
     ----------
