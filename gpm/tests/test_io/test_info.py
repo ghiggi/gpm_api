@@ -26,9 +26,11 @@
 # -----------------------------------------------------------------------------.
 """This module test the info extraction from GPM filename."""
 
-import pytest
-from gpm.io import info
 from typing import Any, Dict
+
+import pytest
+
+from gpm.io import info
 
 
 def test_get_start_time_from_filepaths(

@@ -26,9 +26,11 @@
 # -----------------------------------------------------------------------------.
 """This module test the NASA PPS file search routines."""
 import datetime
+from typing import List
+
 import pytest
 from pytest_mock.plugin import MockerFixture
-from typing import List
+
 import gpm
 from gpm.io import pps
 from gpm.io.products import available_products

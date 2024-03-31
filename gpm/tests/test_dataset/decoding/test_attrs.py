@@ -1,9 +1,10 @@
+import numpy as np
+import pytest
+
 from gpm.dataset.decoding.dataarray_attrs import (
     convert_string_to_number,
     ensure_dtype_name,
 )
-import pytest
-import numpy as np
 
 
 def test_convert_string_to_number() -> None:

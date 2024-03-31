@@ -1,5 +1,7 @@
-import pytest
 from typing import List
+
+import pytest
+
 from gpm.dataset.decoding import coordinates as co
 
 

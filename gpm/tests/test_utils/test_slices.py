@@ -27,8 +27,8 @@
 """This module test the list slices utilities."""
 
 
-import pytest
 import numpy as np
+import pytest
 
 from gpm.utils import slices as gpm_slices
 

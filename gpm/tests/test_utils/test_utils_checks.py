@@ -28,17 +28,16 @@
 
 
 import numpy as np
-import xarray as xr
-
 import pytest
+import xarray as xr
 from pytest_mock import MockerFixture
 
-from gpm.utils import checks
 from gpm.tests.test_utils.utils import (
     create_dataset_with_coordinate,
     create_fake_datetime_array_from_hours_list,
     create_orbit_time_array,
 )
+from gpm.utils import checks
 
 # Fixtures imported from gpm.tests.conftest:
 # - set_is_grid_to_true
@@ -503,11 +502,11 @@ class TestContinuousScans:
         # Test non contiguous
         contiguous = checks._is_contiguous_scans(ds_non_contiguous_lon)
         assert np.sum(contiguous) == self.n_along_track - 1
-        assert contiguous[self.cut_idx - 1] == False
+        assert not contiguous[self.cut_idx - 1]
 
         contiguous = checks._is_contiguous_scans(ds_non_contiguous_both)
         assert np.sum(contiguous) == self.n_along_track - 1
-        assert contiguous[self.cut_idx - 1] == False
+        assert not contiguous[self.cut_idx - 1]
 
     def test_check_contiguous_scans(
         self,

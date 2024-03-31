@@ -26,13 +26,13 @@
 # -----------------------------------------------------------------------------.
 """This module test the local file search routines."""
 
-import os
 import datetime
+import os
 from typing import List
-import gpm
-from gpm.io.products import available_products, get_product_category
 
+import gpm
 from gpm.io import local
+from gpm.io.products import available_products, get_product_category
 
 
 def create_fake_file(

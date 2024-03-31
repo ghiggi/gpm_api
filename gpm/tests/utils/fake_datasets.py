@@ -1,6 +1,7 @@
+from typing import Tuple
+
 import numpy as np
 import pyproj
-from typing import Tuple
 import xarray as xr
 
 

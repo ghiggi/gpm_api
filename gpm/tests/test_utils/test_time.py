@@ -26,27 +26,28 @@
 # -----------------------------------------------------------------------------.
 """This module test the time utilities."""
 
-import pytest
 import datetime
+
 import numpy as np
 import pandas as pd
+import pytest
 import xarray as xr
-from gpm.utils.time import (
-    get_dataset_start_end_time,
-    regularize_dataset,
-    subset_by_time,
-    subset_by_time_slice,
-    is_nat,
-    has_nat,
-    interpolate_nat,
-    infill_timesteps,
-    ensure_time_validity,
-)
+
 from gpm.tests.test_utils.utils import (
     create_fake_datetime_array_from_hours_list,
     get_time_range,
 )
-
+from gpm.utils.time import (
+    ensure_time_validity,
+    get_dataset_start_end_time,
+    has_nat,
+    infill_timesteps,
+    interpolate_nat,
+    is_nat,
+    regularize_dataset,
+    subset_by_time,
+    subset_by_time_slice,
+)
 
 N = float("nan")
 

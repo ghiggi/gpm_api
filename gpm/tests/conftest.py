@@ -25,17 +25,19 @@
 
 # -----------------------------------------------------------------------------.
 """This module defines pytest fixtures available across all test modules."""
-import pytest
 import datetime
-from typing import Any, List, Dict, Tuple
-from gpm.io.products import get_info_dict
-from gpm.utils import geospatial
-import posixpath as pxp
 import ntpath as ntp
+import posixpath as pxp
+from typing import Any, Dict, List, Tuple
+
 import numpy as np
-from pytest_mock import MockerFixture
+import pytest
 import xarray as xr
-from gpm.tests.utils.fake_datasets import get_orbit_dataarray, get_grid_dataarray
+from pytest_mock import MockerFixture
+
+from gpm.io.products import get_info_dict
+from gpm.tests.utils.fake_datasets import get_grid_dataarray, get_orbit_dataarray
+from gpm.utils import geospatial
 
 
 @pytest.fixture
@@ -117,7 +119,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
 
     # Not validated to be real paths but follow the structure
     return {
-        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5": {
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -129,7 +131,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "version": 7,
             "granule_id": 36092,
         },
-        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S183318-E200550.036093.V07A.HDF5": {
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S183318-E200550.036093.V07A.HDF5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -141,7 +143,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "version": 7,
             "granule_id": 36093,
         },
-        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S200551-E213823.036094.V07A.HDF5": {
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S200551-E213823.036094.V07A.HDF5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -154,7 +156,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "granule_id": 36094,
         },
         # Over two days
-        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S231057-E004329.036096.V07A.HDF5": {
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S231057-E004329.036096.V07A.HDF5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -167,7 +169,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "granule_id": 36096,
         },
         # NRT
-        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.V07A.HDF5": {
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.V07A.HDF5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -179,7 +181,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "version": 7,
         },
         # JAXA
-        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KAR_2007050002_0135_036081_1BS_DAB_07A.h5": {
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KAR_2007050002_0135_036081_1BS_DAB_07A.h5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -192,7 +194,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "granule_id": 36081,
         },
         # JAXA over two days
-        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KUR_2007052310_0043_036096_1BS_DUB_07A.h5": {
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KUR_2007052310_0043_036096_1BS_DUB_07A.h5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -205,7 +207,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "granule_id": 36096,
         },
         # JAXA NRT
-        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KAR_2007050002_0135_036081_1BR_DAB_07A.h5": {
+        "ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/1B/GPMCOR_KAR_2007050002_0135_036081_1BR_DAB_07A.h5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -217,7 +219,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "version": 7,
         },
         # Include non-ftps folders
-        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S213824-E231056.036095.V07A.HDF5": {
+        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S213824-E231056.036095.V07A.HDF5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -229,7 +231,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "version": 7,
             "granule_id": 36095,
         },
-        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S231057-E004329.036096.V07A.HDF5": {
+        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S231057-E004329.036096.V07A.HDF5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -241,7 +243,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "version": 7,
             "granule_id": 36096,
         },
-        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S004330-E021602.036097.V07A.HDF5": {
+        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/2A.GPM.DPR.V9-20211125.20200705-S004330-E021602.036097.V07A.HDF5": {  # noqa
             "year": 2020,
             "month": 7,
             "day": 5,
@@ -253,7 +255,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
             "version": 7,
             "granule_id": 36097,
         },
-        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2019/07/05/radar/2A.GPM.DPR.V9-20211125.20190705-S004330-E021602.036097.V07A.HDF5": {
+        "ftp://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2019/07/05/radar/2A.GPM.DPR.V9-20211125.20190705-S004330-E021602.036097.V07A.HDF5": {  # noqa
             "year": 2019,
             "month": 7,
             "day": 5,
@@ -551,7 +553,7 @@ def orbit_data_nan_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
 
 @pytest.fixture(scope="function")
 def orbit_nan_slice_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
-    """Create orbit data array near 0 longitude and latitude with missing coordinates over some along-track indices"""
+    """Create orbit data array with missing coordinates over some along-track indices"""
 
     along_track_index = 5
     missing_size = 2
@@ -564,7 +566,7 @@ def orbit_nan_slice_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
 
 @pytest.fixture(scope="function")
 def orbit_nan_outer_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
-    """Create orbit data array near 0 longitude and latitude with all NaN coordinates in outer cross-track indices"""
+    """Create orbit data array with all NaN coordinates in outer cross-track indices"""
 
     padding_size = 1
 
@@ -581,7 +583,7 @@ def orbit_nan_outer_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
 
 @pytest.fixture(scope="function")
 def orbit_nan_inner_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
-    """Create orbit data array near 0 longitude and latitude with all NaN coordinates in some inner cross-track indices"""
+    """Create orbit data array with all NaN coordinates in some inner cross-track indices"""
     lon = orbit_dataarray["lon"]
     lon[1, :] = float("nan")
     lon[-2, :] = float("nan")

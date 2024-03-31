@@ -25,10 +25,12 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the function decorators."""
-import pytest
-import numpy as np
-import xarray as xr
 from typing import Union
+
+import numpy as np
+import pytest
+import xarray as xr
+
 from gpm.utils import decorators
 
 

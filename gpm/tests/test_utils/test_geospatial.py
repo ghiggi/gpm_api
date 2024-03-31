@@ -25,14 +25,15 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the geospatial utilities."""
+from typing import Dict, Tuple
+
 import numpy as np
 import pytest
-from pytest_mock import MockFixture
-from typing import Dict, Tuple
 import xarray as xr
+from pytest_mock import MockFixture
 
-from gpm.utils import geospatial
 from gpm.tests.utils.fake_datasets import get_grid_dataarray, get_orbit_dataarray
+from gpm.utils import geospatial
 
 ExtentDictionary = Dict[str, Tuple[float, float, float, float]]
 

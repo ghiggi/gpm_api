@@ -25,13 +25,15 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the data integrity checks."""
-from gpm.io import data_integrity as di
-from typing import List, Tuple
-import os
-import pytest
-from pytest_mock.plugin import MockerFixture
 import datetime
+import os
+from typing import List, Tuple
+
+import pytest
 import xarray as xr
+from pytest_mock.plugin import MockerFixture
+
+from gpm.io import data_integrity as di
 
 
 def test_get_corrupted_filepaths(
