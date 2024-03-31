@@ -27,7 +27,6 @@
 """This module test the data integrity checks."""
 import datetime
 import os
-from typing import List, Tuple
 
 import pytest
 import xarray as xr
@@ -37,8 +36,8 @@ from gpm.io import data_integrity as di
 
 
 def test_get_corrupted_filepaths(
-    local_filepaths_unix: List[str],
-    local_filepaths_windows: List[str],
+    local_filepaths_unix: list[str],
+    local_filepaths_windows: list[str],
 ) -> None:
     """Test get_corrupted_filepaths function"""
 
@@ -83,7 +82,7 @@ def _write_dummy_file(filepath):
 
 
 def test_remove_corrupted_filepaths(
-    local_filepaths: List[Tuple[str, ...]],
+    local_filepaths: list[tuple[str, ...]],
     tmpdir: str,
 ) -> None:
     """Test remove_corrupted_filepaths function
@@ -105,7 +104,7 @@ def test_remove_corrupted_filepaths(
 
 
 def test_check_filepaths_integrity(
-    local_filepaths: List[Tuple[str, ...]],
+    local_filepaths: list[tuple[str, ...]],
     tmpdir: str,
 ) -> None:
     """Test remove_corrupted_filepaths function

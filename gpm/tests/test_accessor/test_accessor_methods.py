@@ -29,7 +29,7 @@
 import importlib
 import inspect
 import re
-from typing import Callable, Dict, Tuple
+from typing import Callable
 
 import numpy as np
 import pytest
@@ -39,7 +39,7 @@ from pytest_mock import MockFixture
 from gpm.accessor.methods import GPM_Base_Accessor, GPM_DataArray_Accessor, GPM_Dataset_Accessor
 
 
-def get_class_methods(accessor_class) -> Dict[str, Callable]:
+def get_class_methods(accessor_class) -> dict[str, Callable]:
     """Get methods from class"""
 
     method_tuples_list = inspect.getmembers(accessor_class, inspect.isfunction)
@@ -77,7 +77,7 @@ def get_function_location(function: Callable) -> str:
     return f"{function.__module__}.{function.__qualname__}"
 
 
-def get_imported_gpm_method_path(function: Callable) -> Tuple[str, str]:
+def get_imported_gpm_method_path(function: Callable) -> tuple[str, str]:
     """Get path of imported gpm method in accessor method source code (format is "module.method"))"""
 
     source = inspect.getsource(function)
@@ -100,7 +100,7 @@ def get_imported_gpm_method(accessor_method: Callable) -> Callable:
     return gpm_method
 
 
-def get_default_arguments_dict(function: Callable) -> Dict[str, object]:
+def get_default_arguments_dict(function: Callable) -> dict[str, object]:
     """Get default arguments of a function as a dictionary"""
 
     signature = inspect.signature(function)

@@ -27,7 +27,7 @@
 """This module test the file search routines."""
 import datetime
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -74,7 +74,7 @@ class TestGetDailyFilepaths:
         self,
         check,  # For non-failing asserts
         mocker: MockerFixture,
-        product_info: Dict[str, dict],
+        product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "LOCAL" storage with existing (mocked) files"""
 
@@ -136,7 +136,7 @@ class TestGetDailyFilepaths:
     ) -> None:
         """Mock gpm.io.pps._try_get_pps_file_list, which uses curl to get a list of files"""
 
-        def mocked_get_pps_file_list(url_product_dir: str) -> List[str]:
+        def mocked_get_pps_file_list(url_product_dir: str) -> list[str]:
             # Remove the base URL, assuming they have the following format:
             # RS: https://arthurhouhttps.pps.eosdis.nasa.gov/text/...
             # NRT: https://jsimpsonhttps.pps.eosdis.nasa.gov/text/...
@@ -149,7 +149,7 @@ class TestGetDailyFilepaths:
         self,
         check,  # For non-failing asserts
         mock_get_pps_file_list: None,
-        product_info: Dict[str, dict],
+        product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with RS version 7 products"""
 
@@ -178,7 +178,7 @@ class TestGetDailyFilepaths:
         self,
         check,  # For non-failing asserts
         mock_get_pps_file_list: None,
-        product_info: Dict[str, dict],
+        product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with RS lower version products"""
 
@@ -210,7 +210,7 @@ class TestGetDailyFilepaths:
         self,
         check,  # For non-failing asserts
         mock_get_pps_file_list: None,
-        product_info: Dict[str, dict],
+        product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with NRT products (except IMERG)"""
 
@@ -242,7 +242,7 @@ class TestGetDailyFilepaths:
         self,
         check,  # For non-failing asserts
         mock_get_pps_file_list: None,
-        product_info: Dict[str, dict],
+        product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "PPS" storage with NRT IMERG products"""
 
@@ -272,7 +272,7 @@ class TestGetDailyFilepaths:
 
     def test_pps_missing_pps_product_dir(
         self,
-        product_info: Dict[str, dict],
+        product_info: dict[str, dict],
         mocker: MockerFixture,
     ) -> None:
         storage = "PPS"
@@ -303,7 +303,7 @@ class TestGetDailyFilepaths:
     ) -> None:
         """Mock gpm.io.ges_disc._get_gesc_disc_list_path, which uses wget to get a list of files"""
 
-        def mocked_get_ges_disc_list_path(url: str) -> List[str]:
+        def mocked_get_ges_disc_list_path(url: str) -> list[str]:
             return [f"{url}/{filename}" for filename in self.mock_filenames]
 
         mocker.patch(
@@ -314,7 +314,7 @@ class TestGetDailyFilepaths:
         self,
         check,  # For non-failing asserts
         mock_get_ges_disc_list_path: None,
-        product_info: Dict[str, dict],
+        product_info: dict[str, dict],
     ) -> None:
         """Test _get_all_daily_filepaths for "GES_DISC" storage"""
 
@@ -367,7 +367,7 @@ class TestGetDailyFilepaths:
 
 @pytest.mark.filterwarnings("error")
 def test_check_correct_version(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test _check_correct_version"""
 
@@ -421,7 +421,7 @@ def test_find_daily_filepaths(
     mocker.patch.object(find, "check_date", autospec=True, return_value=date_checked)
 
     # Mock _get_all_daily_filepaths, already tested above
-    def mock_get_all_daily_filepaths(**kwargs: Any) -> List[str]:
+    def mock_get_all_daily_filepaths(**kwargs: Any) -> list[str]:
         base_filepath = "_".join([f"{key}:{value}" for key, value in kwargs.items()])
         return [f"{base_filepath}_{i}" for i in range(3)]
 
@@ -430,7 +430,7 @@ def test_find_daily_filepaths(
     )
 
     # Mock filter_filepaths, already tested in test_filter.py
-    def mock_filter_filepaths(filepaths, **kwargs: Any) -> List[str]:
+    def mock_filter_filepaths(filepaths, **kwargs: Any) -> list[str]:
         suffix = "_".join([f"{key}-filtered:{value}" for key, value in kwargs.items()])
         return [f"{filepath}_{suffix}" for filepath in filepaths]
 
@@ -439,7 +439,7 @@ def test_find_daily_filepaths(
     )
 
     # Mock _check_correct_version, already tested above
-    def mock_check_correct_version(filepaths, **kwargs: Any) -> Tuple[List[str], int]:
+    def mock_check_correct_version(filepaths, **kwargs: Any) -> tuple[list[str], int]:
         suffix = "_".join([f"{key}-version-checked:{value}" for key, value in kwargs.items()])
         return [f"{filepath}_{suffix}" for filepath in filepaths], version
 
@@ -520,7 +520,7 @@ def test_find_filepaths(
     n_filepath_per_day = 3
 
     # Mock find_daily_filepaths
-    def mock_find_daily_filepaths(**kwargs: Any) -> Tuple[List[str], List[int]]:
+    def mock_find_daily_filepaths(**kwargs: Any) -> tuple[list[str], list[int]]:
         base_filepath = "_".join([f"{key}:{value}" for key, value in kwargs.items()])
         return [f"{base_filepath}_{i}" for i in range(n_filepath_per_day)], [
             version

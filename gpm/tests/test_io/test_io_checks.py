@@ -32,7 +32,7 @@ import os
 import platform
 import posixpath as ptp
 from subprocess import CalledProcessError
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -237,7 +237,7 @@ def test_check_transfer_tool(mocker: MockerFixture):
 
 
 def test_check_version(
-    versions: List[int],
+    versions: list[int],
 ) -> None:
     """Test check_version()
 
@@ -269,8 +269,8 @@ def test_check_version(
 
 def test_check_product_version(
     check,  # For non-failing asserts
-    product_info: Dict[str, Any],
-    versions: List[int],
+    product_info: dict[str, Any],
+    versions: list[int],
 ) -> None:
     """Test check_product_version()"""
 
@@ -296,7 +296,7 @@ def test_check_product_version(
 
 
 def test_check_product(
-    product_types: List[str],
+    product_types: list[str],
 ) -> None:
     """Test check_product()
 
@@ -318,7 +318,7 @@ def test_check_product(
 
 
 def test_check_product_type(
-    product_types: List[str],
+    product_types: list[str],
 ) -> None:
     """Test check_product_type()"""
 
@@ -334,7 +334,7 @@ def test_check_product_type(
 
 
 def test_check_product_category(
-    product_categories: List[str],
+    product_categories: list[str],
 ) -> None:
     """Test check_product_category()"""
 
@@ -355,7 +355,7 @@ def test_check_product_category(
 
 
 def test_check_product_level(
-    product_levels: List[str],
+    product_levels: list[str],
 ) -> None:
     """Test check_product_level()"""
 
@@ -375,7 +375,7 @@ def test_check_product_level(
 
 
 def test_check_full_product_level(
-    full_product_levels: List[str],
+    full_product_levels: list[str],
 ) -> None:
     """Test check_full_product_level()"""
 
@@ -395,7 +395,7 @@ def test_check_full_product_level(
 
 
 def test_check_sensor(
-    sensors: List[str],
+    sensors: list[str],
 ) -> None:
     """Test check_sensor()"""
 
@@ -415,7 +415,7 @@ def test_check_sensor(
 
 
 def test_check_sensors(
-    sensors: List[str],
+    sensors: list[str],
 ) -> None:
     """Test check_sensors()"""
     assert sensors == checks.check_sensors(sensors)
@@ -423,7 +423,7 @@ def test_check_sensors(
 
 
 def test_check_satellite(
-    satellites: List[str],
+    satellites: list[str],
 ) -> None:
     """Test check_satellite()"""
 
@@ -443,7 +443,7 @@ def test_check_satellite(
 
 
 def test_check_satellites(
-    satellites: List[str],
+    satellites: list[str],
 ) -> None:
     """Test check_satellites()"""
     assert satellites == checks.check_satellites(satellites)
@@ -451,7 +451,7 @@ def test_check_satellites(
 
 
 def test_check_product_validity(
-    product_types: List[str],
+    product_types: list[str],
 ) -> None:
     """Test check_product_validity()"""
 
@@ -678,7 +678,7 @@ def test_check_start_end_time() -> None:
 
 def test_check_valid_time_request(
     check,  # For non-failing asserts
-    product_info: Dict[str, Any],
+    product_info: dict[str, Any],
 ) -> None:
     """Test check_valid_time_request()"""
 
@@ -709,7 +709,7 @@ def test_check_valid_time_request(
 
 
 def test_check_scan_mode(
-    products: List[str],
+    products: list[str],
 ) -> None:
     """Check scan mode is valid"""
 

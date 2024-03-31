@@ -26,7 +26,6 @@
 # -----------------------------------------------------------------------------.
 """This module test the product info routines."""
 
-from typing import List
 
 import pytest
 
@@ -49,8 +48,8 @@ from gpm.io.products import (
 
 
 def test_get_product_category(
-    products: List[str],
-    product_categories: List[str],
+    products: list[str],
+    product_categories: list[str],
 ) -> None:
     """Test that the product category is in the list of product categories."""
     for product in products:

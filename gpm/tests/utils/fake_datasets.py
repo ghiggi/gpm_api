@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 import pyproj
 import xarray as xr
@@ -12,7 +10,7 @@ def get_geodesic_path(
     end_lat: float,
     n_points: int,
     offset_distance: float = 0,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute geodesic path between starting and ending coordinates"""
 
     geod = pyproj.Geod(ellps="sphere")
@@ -48,7 +46,7 @@ def get_geodesic_band(
     width: float,
     n_along_track: int,
     n_cross_track: int,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute coordinates of geodesic band"""
 
     lon_lines = []

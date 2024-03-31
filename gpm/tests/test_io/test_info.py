@@ -26,7 +26,7 @@
 # -----------------------------------------------------------------------------.
 """This module test the info extraction from GPM filename."""
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -34,7 +34,7 @@ from gpm.io import info
 
 
 def test_get_start_time_from_filepaths(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test that the start time is correctly extracted from filepaths"""
 
@@ -51,7 +51,7 @@ def test_get_start_time_from_filepaths(
 
 
 def test_get_end_time_from_filepaths(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test that the end time is correctly extracted from filepaths"""
 
@@ -63,7 +63,7 @@ def test_get_end_time_from_filepaths(
 
 
 def test_get_version_from_filepaths(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test that the version is correctly extracted from filepaths"""
 
@@ -76,7 +76,7 @@ def test_get_version_from_filepaths(
 
 
 def test_get_granule_from_filepaths(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test get_granule_from_filepaths"""
 
@@ -89,7 +89,7 @@ def test_get_granule_from_filepaths(
 
 
 def test_get_start_end_time_from_filepaths(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test get_start_end_time_from_filepaths"""
 
@@ -102,7 +102,7 @@ def test_get_start_end_time_from_filepaths(
 
 
 def test_get_product_from_filepaths(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
 ) -> None:
     """Test get_product_from_filepaths"""
 

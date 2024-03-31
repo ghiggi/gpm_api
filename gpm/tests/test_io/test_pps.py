@@ -26,7 +26,6 @@
 # -----------------------------------------------------------------------------.
 """This module test the NASA PPS file search routines."""
 import datetime
-from typing import List
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -36,7 +35,7 @@ from gpm.io import pps
 from gpm.io.products import available_products
 
 
-def test_get_pps_nrt_product_dir(products: List[str]) -> None:
+def test_get_pps_nrt_product_dir(products: list[str]) -> None:
     """Test NRT product type folder name
 
     Depends on gpm.io.pps._get_pps_nrt_product_folder_name()
