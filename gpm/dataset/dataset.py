@@ -135,7 +135,6 @@ def _open_valid_granules(
     scan_mode,
     variables,
     groups,
-    decode_cf,
     prefix_group,
     chunks,
     parallel=False,
@@ -144,6 +143,8 @@ def _open_valid_granules(
     Open a list of HDF granules.
 
     Corrupted granules are not returned !
+
+    Does not apply yet CF decoding !
 
     Returns
     -------
@@ -313,7 +314,6 @@ def open_dataset(
         scan_mode=scan_mode,
         variables=variables,
         groups=groups,
-        decode_cf=False,
         prefix_group=prefix_group,
         parallel=parallel,
         chunks=chunks,

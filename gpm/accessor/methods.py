@@ -100,6 +100,7 @@ class GPM_Base_Accessor:
         variables=None,
         groups=None,
         verbose=True,
+        decode_cf=True,
         chunks={},
     ):
         """Collocate another product on the dataset.
@@ -118,6 +119,7 @@ class GPM_Base_Accessor:
             groups=groups,
             verbose=verbose,
             chunks=chunks,
+            decode_cf=decode_cf,
         )
 
     #### Transect utility

@@ -112,10 +112,7 @@ class TestFilterFilepaths:
 
         assert len(res) == count_2019
 
-    def test_none_filepath(
-        self,
-        remote_filepaths: dict[str, dict[str, Any]],
-    ) -> None:
+    def test_none_filepath(self) -> None:
         res = filter_filepaths(
             filepaths=None,
             product=self.product,
@@ -125,10 +122,7 @@ class TestFilterFilepaths:
         )
         assert res == []
 
-    def test_empty_filepath_list(
-        self,
-        remote_filepaths: dict[str, dict[str, Any]],
-    ) -> None:
+    def test_empty_filepath_list(self) -> None:
         res = filter_filepaths(
             filepaths=[],
             product=self.product,

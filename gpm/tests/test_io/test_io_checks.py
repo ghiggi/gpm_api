@@ -215,7 +215,7 @@ def test_check_transfer_tool_availability(mocker: MockerFixture):
     assert not checks.check_transfer_tool_availability("wget")
 
 
-def test_check_transfer_tool(mocker: MockerFixture):
+def test_check_transfer_tool():
     """Test check_transfer_tool()"""
     # Assert "CURL" is available and return "CURL"
     transfer_tool = "CURL"  # "WGET" is not mandatory

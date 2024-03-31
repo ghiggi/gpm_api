@@ -143,12 +143,16 @@ select = [
     "RET",
     # flake8-simplify
     # "SIM",
+    # flake8-unused-arguments
+    "ARG",
 
 
-    #----------------------
-    # # Future rules
-    # # flake8-use-pathlib
+    #---------------------
+    #### Future rules ####
+    # flake8-use-pathlib
     # "PTH",
+    # NumPy-specific rules  (for 2.0)
+    # "NPY",
 ]
 ignore = [
     "E722",
@@ -164,7 +168,7 @@ unfixable = []
 [tool.ruff.lint.per-file-ignores]
 # Ignore `E402` (import violations) in all Jupyter Notebooks.
 "*.ipynb" = ["E402"]
-
+"test_*.py" = ["ARG"] # avoid problems with fixtures
 
 [tool.codespell]
     ignore-words-list = "ges,nd"

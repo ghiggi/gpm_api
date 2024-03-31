@@ -366,9 +366,7 @@ class TestGetDailyFilepaths:
 
 
 @pytest.mark.filterwarnings("error")
-def test_check_correct_version(
-    remote_filepaths: dict[str, dict[str, Any]],
-) -> None:
+def test_check_correct_version() -> None:
     """Test _check_correct_version"""
 
     product = "2A-DPR"

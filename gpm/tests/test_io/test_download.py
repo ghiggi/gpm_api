@@ -200,33 +200,26 @@ class TestDownloadUtility:
 
     @pytest.mark.parametrize("verbose", [True, False])
     @pytest.mark.parametrize("progress_bar", [True, False])
-    @pytest.mark.parametrize("n_threads", [0, 1, 20])  # Test for n_threads > n_commands
+    @pytest.mark.parametrize(
+        "n_threads", [0, 1, 2, 20]
+    )  # [Error, Single, Multiple Threads, n_threads > n_commands]
     def test_run(self, mocker: MockerFixture, verbose, progress_bar, n_threads) -> None:
         """Test run function."""
 
         commands = [
-            "echo 'Hello, World!'",
-            "exit 1",
-        ]  # subprocess.run("exit 1", shell=True).returncode --> 1
-        expected_status = [0, 1]
+            "echo 'Hello, World!'",  # returncode: 2 (not 1)
+            "ls /nonexistent_directory",  # returncode: 2 (not 0)
+        ]
+        # subprocess.run(shlex.split("echo 'Hello, World!'"), shell=False)
+        # subprocess.run(shlex.split("ls /nonexistent_directory"), shell=False)
 
-        mock_get_cmds = mocker.patch.object(
-            dl, "_get_commands_futures", autospec=True, return_value=[]
-        )
-        mock_status_cmds = mocker.patch.object(
-            dl, "_get_list_status_commands", autospec=True, return_value=expected_status
-        )
+        expected_status = [1, 0]  # [Terminated, Failed]
 
         if progress_bar:
             mock_tqdm = mocker.patch("tqdm.tqdm")
 
-        status = dl.run(commands, progress_bar=progress_bar)
+        status = dl.run(commands, progress_bar=progress_bar, verbose=verbose, n_threads=n_threads)
         assert status == expected_status
-
-        # Assert called
-        if n_threads >= 1 and progress_bar:
-            mock_get_cmds.assert_called()
-            mock_status_cmds.assert_called()
 
         # Assert tqdm is called
         if progress_bar:
@@ -391,9 +384,7 @@ def test_download_files(
 
 @pytest.mark.parametrize("storage", ["PPS", "GES_DISC"])
 def test__download_daily_data(
-    tmpdir: str,
     versions: list[str],
-    products: list[str],
     product_types: list[str],
     mocker: MockerFixture,
     storage: str,
@@ -474,7 +465,6 @@ class TestDownloadArchive:
     def test_download_data_with_no_data_available(
         self,
         check,  # For non-failing asserts
-        products: list[str],
         product_types: list[str],
         check_integrity,
         remove_corrupted,

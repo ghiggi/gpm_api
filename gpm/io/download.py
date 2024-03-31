@@ -316,7 +316,7 @@ def curl_pps_cmd(remote_filepath, local_filepath, username, password):
     return f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
 
 
-def curl_ges_disc_cmd(remote_filepath, local_filepath, username=None, password=None):
+def curl_ges_disc_cmd(remote_filepath, local_filepath, username="dummy", password="dummy"):  # noqa
     """CURL command to download data from GES DISC."""
     urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
 
@@ -345,7 +345,7 @@ def wget_pps_cmd(remote_filepath, local_filepath, username, password):
     return f"wget {auth} {options} -O '{local_filepath}' {remote_filepath}"
 
 
-def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password=None):
+def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password="dummy"):  # noqa
     """WGET command to download data from GES DISC."""
     # Define path to EarthData urs_cookies
     urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")

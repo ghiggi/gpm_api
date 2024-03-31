@@ -66,7 +66,6 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
             product_type=product_type,
             date=date,
             version=version,
-            verbose=verbose,
         )
     elif storage == "PPS":
         filepaths = get_pps_daily_filepaths(

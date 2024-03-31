@@ -389,9 +389,41 @@ def available_versions(
     product_categories=None,
     product_levels=None,
     full_product_levels=None,
-    suffix_with_satellite=False,
 ):
-    """Return the available versions."""
+    """
+    Provide a list of available GPM versions.
+
+    Parameters
+    ----------
+    product_types : (str or list), optional
+        If ``None`` (default), provide all products (``RS`` and ``NRT``).
+        If ``RS``, provide a list of all GPM RS products available for download.
+        If ``NRT``, provide a list of all GPM NRT products available for download.
+    product_categories: (str or list), optional
+        If ``None`` (default), provide products from all product categories.
+        If ``str``, must be a valid product category.
+        Valid product categories are: ``PMW``, ``RADAR``, ``IMERG``, ``CMB``.
+        The list of available sensors can also be retrieved using ``available_product_categories()``.
+    product_levels: (str or list), optional
+        If ``None`` (default), provide products from all product levels.
+        If ``str``, must be a valid product level.
+        Valid product levels are: ``1A``, ``1B``, ``1C``, ``2A``, ``2B``, ``3B``.
+        The list of available sensors  also be retrieved using ``available_product_levels()``.
+    satellites: (str or list), optional
+        If ``None`` (default), provide products from all satellites.
+        If ``str``, must be a valid satellites.
+        The list of available satellites can be retrieved using ``available_satellites()``.
+    sensors: (str or list), optional
+        If ``None`` (default), provide products from all sensors.
+        If ``str``, must be a valid sensor.
+        The list of available sensors can be retrieved using ``available_sensors()``.
+
+    Returns
+    -------
+    List
+        List of available GPM versions.
+
+    """
     info_dict = get_info_dict_subset(
         sensors=sensors,
         satellites=satellites,
@@ -549,7 +581,6 @@ def available_product_categories(
     versions=None,
     product_levels=None,
     full_product_levels=None,
-    suffix_with_satellite=False,
 ):
     """Provide a list of available GPM product categories.
 

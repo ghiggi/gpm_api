@@ -117,8 +117,6 @@ def _get_scan_mode_dataset(
     variables=None,
     groups=None,
     prefix_group=False,
-    chunks={},
-    decode_cf=False,
 ):
     """Retrieve scan mode xr.Dataset."""
     # Retrieve granule info
@@ -198,8 +196,6 @@ def _open_granule(
         groups=groups,
         variables=variables,
         prefix_group=prefix_group,
-        chunks=chunks,
-        decode_cf=False,
     )
 
     ###-----------------------------------------------------------------------.
@@ -227,7 +223,6 @@ def open_granule(
     decode_cf=True,
     chunks={},
     prefix_group=False,
-    use_gpm_api_defaults=True,
 ):
     """
     Create a lazy ``xarray.Dataset`` with relevant GPM data and attributes

@@ -121,7 +121,7 @@ def adapt_fig_size(ax, nrow=1, ncol=1):
 ####--------------------------------------------------------------------------.
 
 
-def get_antimeridian_mask(lons, buffer=True):
+def get_antimeridian_mask(lons):
     """Get mask of longitude coordinates neighbors crossing the antimeridian."""
     from scipy.ndimage import binary_dilation
 
@@ -489,7 +489,7 @@ def _plot_cartopy_pcolormesh(
     # --> Cartopy still bugs with several projections when data cross the antimeridian
     # --> This flag can be unset with gpm.config.set({"viz_hide_antimeridian_data": False})
     if gpm.config.get("viz_hide_antimeridian_data"):
-        antimeridian_mask = get_antimeridian_mask(lon, buffer=True)
+        antimeridian_mask = get_antimeridian_mask(lon)
         is_crossing_antimeridian = np.any(antimeridian_mask)
         if is_crossing_antimeridian:
             arr = _mask_antimeridian_crossing_arr(arr, antimeridian_mask=antimeridian_mask, rgb=rgb)
@@ -592,7 +592,6 @@ def _plot_xr_imshow(
     add_colorbar=True,
     plot_kwargs={},
     cbar_kwargs=None,
-    xarray_colorbar=True,  # remove
     visible_colorbar=True,
 ):
     """Plot imshow with xarray.
@@ -1028,7 +1027,8 @@ def _plot_labels(
     # Replace 0 with nan
     dataarray = dataarray.where(dataarray > 0)
     # Define appropriate colormap
-    plot_kwargs, cbar_kwargs = get_label_colorbar_settings(label_indices, cmap="Paired")
+    default_plot_kwargs, cbar_kwargs = get_label_colorbar_settings(label_indices, cmap=cmap)
+    default_plot_kwargs.update(plot_kwargs)
     # Plot image
     return plot_image(
         dataarray,
@@ -1036,7 +1036,7 @@ def _plot_labels(
         add_colorbar=add_colorbar,
         cbar_kwargs=cbar_kwargs,
         fig_kwargs=fig_kwargs,
-        **plot_kwargs,
+        **default_plot_kwargs,
     )
 
 
@@ -1114,7 +1114,11 @@ def plot_patches(
 
 
 def get_inset_bounds(
-    ax, loc="upper right", inset_height=0.2, inside_figure=True, aspect_ratio=1, y_spacing=0.06
+    ax,
+    loc="upper right",
+    inset_height=0.2,
+    inside_figure=True,
+    aspect_ratio=1,
 ):
     """
     Calculate the bounds for an inset axes in a matplotlib figure.
