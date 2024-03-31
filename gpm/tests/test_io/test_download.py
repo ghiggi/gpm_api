@@ -29,7 +29,7 @@ import datetime
 import os
 import platform
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Dict, List
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -43,7 +43,7 @@ from gpm.utils.warnings import GPMDownloadWarning
 
 
 def test_construct_curl_pps_cmd(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
     tmpdir: str,
 ) -> None:
     """Test that the curl command constructor works as expected
@@ -100,7 +100,7 @@ def test_construct_curl_pps_cmd(
 
 
 def test_construct_wget_pps_cmd(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
     tmpdir: str,
 ) -> None:
     """Test that the wget command constructor works as expected
@@ -286,7 +286,7 @@ class TestGetFilepathsFromFilenames:
 
 
 def test_check_download_status(
-    products: List[str],
+    products: list[str],
 ) -> None:
     """Test check_download_status function"""
 
@@ -301,7 +301,7 @@ def test_check_download_status(
 @pytest.mark.parametrize("transfer_tool", ["WGET", "CURL"])
 @pytest.mark.parametrize("storage", ["PPS", "GES_DISC"])
 def test_private_download_files(
-    remote_filepaths: Dict[str, Dict[str, Any]],
+    remote_filepaths: dict[str, dict[str, Any]],
     tmpdir: str,
     mocker: MockerFixture,
     transfer_tool: str,
@@ -351,8 +351,8 @@ def test_private_download_files(
 
 
 def test_download_files(
-    remote_filepaths: Dict[str, Dict[str, Any]],
-    versions: List[str],
+    remote_filepaths: dict[str, dict[str, Any]],
+    versions: list[str],
     mocker: MockerFixture,
     tmp_path,
 ) -> None:
@@ -392,9 +392,9 @@ def test_download_files(
 @pytest.mark.parametrize("storage", ["PPS", "GES_DISC"])
 def test__download_daily_data(
     tmpdir: str,
-    versions: List[str],
-    products: List[str],
-    product_types: List[str],
+    versions: list[str],
+    products: list[str],
+    product_types: list[str],
     mocker: MockerFixture,
     storage: str,
 ) -> None:
@@ -440,8 +440,8 @@ class TestDownloadArchive:
     def mock_download(
         self,
         mocker: MockerFixture,
-        remote_filepaths: Dict[str, Dict[str, Any]],
-        versions: List[str],
+        remote_filepaths: dict[str, dict[str, Any]],
+        versions: list[str],
     ) -> None:
         from gpm.io import info
 
@@ -474,8 +474,8 @@ class TestDownloadArchive:
     def test_download_data_with_no_data_available(
         self,
         check,  # For non-failing asserts
-        products: List[str],
-        product_types: List[str],
+        products: list[str],
+        product_types: list[str],
         check_integrity,
         remove_corrupted,
     ):

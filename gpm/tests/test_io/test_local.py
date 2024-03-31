@@ -28,7 +28,6 @@
 
 import datetime
 import os
-from typing import List
 
 import gpm
 from gpm.io import local
@@ -107,9 +106,9 @@ def test_get_local_filepaths(tmp_path):
 
 
 def test__get_local_dir_pattern(
-    products: List[str],
-    product_types: List[str],
-    versions: List[int],
+    products: list[str],
+    product_types: list[str],
+    versions: list[int],
 ) -> None:
     """Test that the disk directory pattern is correct."""
 
@@ -140,9 +139,9 @@ def test__get_local_dir_pattern(
 
 
 def test_get_local_product_base_directory(
-    products: List[str],
-    product_types: List[str],
-    versions: List[int],
+    products: list[str],
+    product_types: list[str],
+    versions: list[int],
     tmpdir,
 ) -> None:
     """Test that the disk directory is correct."""

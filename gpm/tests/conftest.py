@@ -28,7 +28,7 @@
 import datetime
 import ntpath as ntp
 import posixpath as pxp
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 import pytest
@@ -41,7 +41,7 @@ from gpm.utils import geospatial
 
 
 @pytest.fixture
-def product_types() -> List[str]:
+def product_types() -> list[str]:
     """Return a list of all product types from the info dict"""
     from gpm.io.products import get_available_product_types
 
@@ -49,7 +49,7 @@ def product_types() -> List[str]:
 
 
 @pytest.fixture
-def product_categories() -> List[str]:
+def product_categories() -> list[str]:
     """Return a list of product categories from the info dict"""
     from gpm.io.products import get_available_product_categories
 
@@ -57,7 +57,7 @@ def product_categories() -> List[str]:
 
 
 @pytest.fixture
-def product_levels() -> List[str]:
+def product_levels() -> list[str]:
     """Return a list of product levels from the info dict"""
     from gpm.io.products import get_available_product_levels
 
@@ -65,7 +65,7 @@ def product_levels() -> List[str]:
 
 
 @pytest.fixture
-def full_product_levels() -> List[str]:
+def full_product_levels() -> list[str]:
     """Return a list of full product levels from the info dict"""
     from gpm.io.products import get_available_product_levels
 
@@ -75,7 +75,7 @@ def full_product_levels() -> List[str]:
 
 
 @pytest.fixture
-def sensors() -> List[str]:
+def sensors() -> list[str]:
     """Return a list of sensors from the info dict"""
     from gpm.io.products import get_available_sensors
 
@@ -83,7 +83,7 @@ def sensors() -> List[str]:
 
 
 @pytest.fixture
-def satellites() -> List[str]:
+def satellites() -> list[str]:
     """Return a list of satellites from the info dict"""
     from gpm.io.products import get_available_satellites
 
@@ -91,7 +91,7 @@ def satellites() -> List[str]:
 
 
 @pytest.fixture
-def versions() -> List[int]:
+def versions() -> list[int]:
     """Return a list of versions"""
     from gpm.io.products import get_available_versions
 
@@ -99,7 +99,7 @@ def versions() -> List[int]:
 
 
 @pytest.fixture
-def products() -> List[str]:
+def products() -> list[str]:
     """Return a list of all products regardless of type"""
     from gpm.io.products import get_available_products
 
@@ -107,14 +107,14 @@ def products() -> List[str]:
 
 
 @pytest.fixture
-def product_info() -> Dict[str, dict]:
+def product_info() -> dict[str, dict]:
     """Return a dictionary of product info"""
 
     return get_info_dict()
 
 
 @pytest.fixture
-def remote_filepaths() -> Dict[str, Dict[str, Any]]:
+def remote_filepaths() -> dict[str, dict[str, Any]]:
     """Return a list of probable GPM server paths"""
 
     # Not validated to be real paths but follow the structure
@@ -272,7 +272,7 @@ def remote_filepaths() -> Dict[str, Dict[str, Any]]:
 
 
 @pytest.fixture
-def local_filepaths() -> List[Tuple[str, ...]]:
+def local_filepaths() -> list[tuple[str, ...]]:
     """Returns a list of probable local filepath structures as a list"""
 
     return [
@@ -400,14 +400,14 @@ def local_filepaths() -> List[Tuple[str, ...]]:
 
 
 @pytest.fixture
-def local_filepaths_unix(local_filepaths) -> List[str]:
+def local_filepaths_unix(local_filepaths) -> list[str]:
     """Return the local filepath list as unix paths"""
 
     return [pxp.join(*path) for path in local_filepaths]
 
 
 @pytest.fixture
-def local_filepaths_windows(local_filepaths) -> List[str]:
+def local_filepaths_windows(local_filepaths) -> list[str]:
     """Return the local filepath list as windows paths"""
 
     return [ntp.join(*path) for path in local_filepaths]
@@ -433,7 +433,7 @@ def set_is_grid_to_true(
     mocker.patch("gpm.utils.checks.is_orbit", return_value=False)
 
 
-ExtentDictionary = Dict[str, Tuple[float, float, float, float]]
+ExtentDictionary = dict[str, tuple[float, float, float, float]]
 
 
 @pytest.fixture

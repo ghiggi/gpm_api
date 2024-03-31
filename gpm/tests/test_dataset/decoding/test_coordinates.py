@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 
 from gpm.dataset.decoding import coordinates as co
@@ -14,7 +12,7 @@ def test_get_pmw_frequency_dict() -> None:
 
 
 def test_get_pmw_frequency_corra(
-    products: List[str],
+    products: list[str],
 ) -> None:
     # Try products hardcoded in function
     res = co.get_pmw_frequency_corra("2B-GPM-CORRA")
