@@ -151,14 +151,15 @@ select = [
     "SIM",
     # Perflint
     "PERF",
-    # refurb
-    "FURB", # require preview
+
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
     # "PTH",
     # NumPy-specific rules  (for 2.0)
     # "NPY",
+    # refurb
+    # "FURB", # require preview
 ]
 ignore = [
     "E722",
