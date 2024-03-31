@@ -87,7 +87,12 @@ def _write_pd_partitioned_dataset(df, base_dir, filename_prefix, partitioning, *
 
 
 def _write_dask_partition(
-    part, part_index, base_dir, filename_prefix, partitioning, **writer_kwargs
+    part,
+    part_index,
+    base_dir,
+    filename_prefix,
+    partitioning,
+    **writer_kwargs,
 ):
     # Convert to pandas
     part = part.compute()

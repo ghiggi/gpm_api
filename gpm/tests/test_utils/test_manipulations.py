@@ -382,7 +382,7 @@ class TestGetPhaseMask:
             {
                 "variable": a_3d_dataarray,
                 "heightZeroDeg": self.da_height_zero_deg,
-            }
+            },
         )
 
     def test_get_liquid_phase_mask(

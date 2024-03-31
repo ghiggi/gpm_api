@@ -92,7 +92,10 @@ def _get_scan_mode_info(dt, scan_mode, variables, groups):
 
     # Get groups to process (filtering out groups without any `variables`)
     groups, variables = _get_relevant_groups_variables(
-        dt, scan_mode=scan_mode, variables=variables, groups=groups
+        dt,
+        scan_mode=scan_mode,
+        variables=variables,
+        groups=groups,
     )
     return (coords, attrs, groups, variables)
 
@@ -121,12 +124,19 @@ def _get_scan_mode_dataset(
     """Retrieve scan mode xr.Dataset."""
     # Retrieve granule info
     coords, attrs, groups, variables = _get_scan_mode_info(
-        dt=dt, scan_mode=scan_mode, variables=variables, groups=groups
+        dt=dt,
+        scan_mode=scan_mode,
+        variables=variables,
+        groups=groups,
     )
 
     # Create flattened dataset for a specific scan_mode
     ds = _get_flattened_scan_mode_dataset(
-        dt, scan_mode=scan_mode, groups=groups, variables=variables, prefix_group=prefix_group
+        dt,
+        scan_mode=scan_mode,
+        groups=groups,
+        variables=variables,
+        prefix_group=prefix_group,
     )
 
     # Assign coords

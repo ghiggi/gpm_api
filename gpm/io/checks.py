@@ -108,7 +108,7 @@ def check_remote_storage(storage):
     valid_storages = ["GES_DISC", "PPS"]
     if storage.upper() not in valid_storages:
         raise ValueError(
-            f"'{storage}' is an invalid remote 'storage'. Valid values are {valid_storages}."
+            f"'{storage}' is an invalid remote 'storage'. Valid values are {valid_storages}.",
         )
     return storage.upper()
 
@@ -137,7 +137,7 @@ def check_transfer_tool(transfer_tool):
 
     if transfer_tool.upper() not in valid_transfer_tools:
         raise ValueError(
-            f"'{transfer_tool}' is an invalid 'transfer_tool'. Valid values are {valid_transfer_tools}."
+            f"'{transfer_tool}' is an invalid 'transfer_tool'. Valid values are {valid_transfer_tools}.",
         )
 
     # Check WGET or CURL is installed
@@ -181,10 +181,10 @@ def check_product_validity(product, product_type=None):
     if product not in available_products(product_types=product_type):
         if product_type is None:
             raise ValueError(
-                f"The '{product}' product is not available. See gpm.available_products()."
+                f"The '{product}' product is not available. See gpm.available_products().",
             )
         raise ValueError(
-            f"The '{product}' product is not available as '{product_type}' product_type."
+            f"The '{product}' product is not available as '{product_type}' product_type.",
         )
     return product
 
@@ -209,7 +209,7 @@ def check_time(time):
     if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, np.ndarray, str)):
         raise TypeError(
             "Specify time with datetime.datetime objects or a "
-            "string of format 'YYYY-MM-DD hh:mm:ss'."
+            "string of format 'YYYY-MM-DD hh:mm:ss'.",
         )
 
     # If numpy array with datetime64 (and size=1)
@@ -324,7 +324,7 @@ def check_product_category(product_category):
     valid_values = get_available_product_categories()  #  ['CMB', 'IMERG', 'PMW', 'RADAR']
     if product_category not in valid_values:
         raise ValueError(
-            f"'{product_category}' is an invalid 'product_category'. Valid values are {valid_values}."
+            f"'{product_category}' is an invalid 'product_category'. Valid values are {valid_values}.",
         )
     return product_category
 
@@ -338,7 +338,7 @@ def check_product_level(product_level):
     valid_values = get_available_product_levels(full=False)
     if product_level not in valid_values:
         raise ValueError(
-            f"'{product_level}' is an invalid 'product_level'. Currently accepted values are {valid_values}."
+            f"'{product_level}' is an invalid 'product_level'. Currently accepted values are {valid_values}.",
         )
     return product_level
 
@@ -364,7 +364,7 @@ def check_full_product_level(full_product_level):
     valid_values = get_available_product_levels(full=True)
     if full_product_level not in valid_values:
         raise ValueError(
-            f"'{full_product_level}' is an invalid 'full_product_level'. Currently accepted values are {valid_values}."
+            f"'{full_product_level}' is an invalid 'full_product_level'. Currently accepted values are {valid_values}.",
         )
     return full_product_level
 
@@ -379,7 +379,7 @@ def check_sensor(sensor):
     valid_sensors = get_available_sensors()
     if sensor not in valid_sensors:
         raise ValueError(
-            f"'{sensor}' is not an available 'sensor'. Available sensors are {valid_sensors}."
+            f"'{sensor}' is not an available 'sensor'. Available sensors are {valid_sensors}.",
         )
     return sensor
 
@@ -394,7 +394,7 @@ def check_satellite(satellite):
     valid_satellites = get_available_satellites()
     if satellite not in valid_satellites:
         raise ValueError(
-            f"'{satellite}' is not an available 'satellite'. Available satellite are {valid_satellites}."
+            f"'{satellite}' is not an available 'satellite'. Available satellite are {valid_satellites}.",
         )
     return satellite
 

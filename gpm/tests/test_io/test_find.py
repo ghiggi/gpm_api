@@ -118,7 +118,7 @@ class TestGetDailyFilepaths:
                             self.date.strftime("%Y"),
                             self.date.strftime("%m"),
                             self.date.strftime("%d"),
-                        ]
+                        ],
                     )
 
                     expected_filepaths = [
@@ -251,7 +251,8 @@ class TestGetDailyFilepaths:
         product_category = "IMERG"
 
         for product in available_products(
-            product_types=product_type, product_categories=product_category
+            product_types=product_type,
+            product_categories=product_category,
         ):
             info = product_info[product]
             version = info["available_versions"][-1]
@@ -307,7 +308,8 @@ class TestGetDailyFilepaths:
             return [f"{url}/{filename}" for filename in self.mock_filenames]
 
         mocker.patch(
-            "gpm.io.ges_disc._get_ges_disc_list_path", side_effect=mocked_get_ges_disc_list_path
+            "gpm.io.ges_disc._get_ges_disc_list_path",
+            side_effect=mocked_get_ges_disc_list_path,
         )
 
     @pytest.mark.usefixtures("_mock_get_ges_disc_list_path")
@@ -374,7 +376,9 @@ def test_check_correct_version() -> None:
     files_version = [7] * 3
     filepaths = [filepath_template.format(v) for v in files_version]
     returned_filepaths, returned_version = _check_correct_version(
-        filepaths=filepaths, product=product, version=version
+        filepaths=filepaths,
+        product=product,
+        version=version,
     )
     assert returned_filepaths == filepaths
     assert returned_version == version
@@ -394,7 +398,9 @@ def test_check_correct_version() -> None:
     # Test empty list
     filepaths = []
     _, returned_version = _check_correct_version(
-        filepaths=filepaths, product=product, version=version
+        filepaths=filepaths,
+        product=product,
+        version=version,
     )
     assert returned_version == version
 
@@ -421,7 +427,10 @@ def test_find_daily_filepaths(
         return [f"{base_filepath}_{i}" for i in range(3)]
 
     patch_get_all_daily_filepaths = mocker.patch.object(
-        find, "_get_all_daily_filepaths", autospec=True, side_effect=mock_get_all_daily_filepaths
+        find,
+        "_get_all_daily_filepaths",
+        autospec=True,
+        side_effect=mock_get_all_daily_filepaths,
     )
 
     # Mock filter_filepaths, already tested in test_filter.py
@@ -430,7 +439,10 @@ def test_find_daily_filepaths(
         return [f"{filepath}_{suffix}" for filepath in filepaths]
 
     patch_filter_filepaths = mocker.patch.object(
-        find, "filter_filepaths", autospec=True, side_effect=mock_filter_filepaths
+        find,
+        "filter_filepaths",
+        autospec=True,
+        side_effect=mock_filter_filepaths,
     )
 
     # Mock _check_correct_version, already tested above
@@ -439,7 +451,10 @@ def test_find_daily_filepaths(
         return [f"{filepath}_{suffix}" for filepath in filepaths], version
 
     mocker.patch.object(
-        find, "_check_correct_version", autospec=True, side_effect=mock_check_correct_version
+        find,
+        "_check_correct_version",
+        autospec=True,
+        side_effect=mock_check_correct_version,
     )
 
     kwargs = {
@@ -518,11 +533,14 @@ def test_find_filepaths(
     def mock_find_daily_filepaths(**kwargs: Any) -> tuple[list[str], list[int]]:
         base_filepath = "_".join([f"{key}:{value}" for key, value in kwargs.items()])
         return [f"{base_filepath}_{i}" for i in range(n_filepath_per_day)], [
-            version
+            version,
         ] * n_filepath_per_day
 
     mocker.patch.object(
-        find, "find_daily_filepaths", autospec=True, side_effect=mock_find_daily_filepaths
+        find,
+        "find_daily_filepaths",
+        autospec=True,
+        side_effect=mock_find_daily_filepaths,
     )
 
     kwargs = {
@@ -552,7 +570,9 @@ def test_find_filepaths(
 
     # Check that date goes from (start_time - 1) day to end_time
     start_date = datetime.datetime(
-        start_time.year, start_time.month, start_time.day
+        start_time.year,
+        start_time.month,
+        start_time.day,
     ) - datetime.timedelta(days=1)
     end_date = datetime.datetime(end_time.year, end_time.month, end_time.day)
     n_days = (end_date - start_date).days + 1  # Include last day

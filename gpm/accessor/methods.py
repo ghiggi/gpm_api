@@ -88,7 +88,10 @@ class GPM_Base_Accessor:
         from gpm.utils.pyresample import remap
 
         return remap(
-            self._obj, dst_ds=dst_ds, radius_of_influence=radius_of_influence, fill_value=fill_value
+            self._obj,
+            dst_ds=dst_ds,
+            radius_of_influence=radius_of_influence,
+            fill_value=fill_value,
         )
 
     def collocate(
@@ -124,7 +127,12 @@ class GPM_Base_Accessor:
 
     #### Transect utility
     def define_transect_slices(
-        self, direction="cross_track", lon=None, lat=None, variable=None, transect_kwargs={}
+        self,
+        direction="cross_track",
+        lon=None,
+        lat=None,
+        variable=None,
+        transect_kwargs={},
     ):
         from gpm.visualization.profile import get_transect_slices
 
@@ -337,7 +345,12 @@ class GPM_Base_Accessor:
 
     #### Plotting utility
     def plot_transect_line(
-        self, ax, add_direction=True, text_kwargs={}, line_kwargs={}, **common_kwargs
+        self,
+        ax,
+        add_direction=True,
+        text_kwargs={},
+        line_kwargs={},
+        **common_kwargs,
     ):
         from gpm.visualization.profile import plot_transect_line
 
@@ -620,7 +633,9 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         from gpm.utils.manipulations import slice_range_at_temperature
 
         return slice_range_at_temperature(
-            self._obj, temperature=temperature, variable_temperature=variable_temperature
+            self._obj,
+            temperature=temperature,
+            variable_temperature=variable_temperature,
         )
 
     def to_pandas_dataframe(self):
@@ -645,7 +660,11 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         from gpm.utils.checks import get_slices_var_equals
 
         return get_slices_var_equals(
-            self._obj, dim=dim, values=values, union=union, criteria=criteria
+            self._obj,
+            dim=dim,
+            values=values,
+            union=union,
+            criteria=criteria,
         )
 
     def get_slices_var_between(self, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
@@ -758,5 +777,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         from gpm.utils.manipulations import integrate_profile_concentration
 
         return integrate_profile_concentration(
-            self._obj, name=name, scale_factor=scale_factor, units=units
+            self._obj,
+            name=name,
+            scale_factor=scale_factor,
+            units=units,
         )

@@ -81,7 +81,7 @@ def subset_by_time(xr_obj, start_time=None, end_time=None):
     # If dimension > 1, not clear how to collapse to 1D the boolean array
     if len(dim_coords) != 1:
         raise ValueError(
-            "Impossible to subset a non-dimensional time coordinate with dimension >=2."
+            "Impossible to subset a non-dimensional time coordinate with dimension >=2.",
         )
 
     dim_coord = dim_coords[0]
@@ -271,7 +271,11 @@ def get_dataset_start_end_time(ds: xr.Dataset, time_dim="time"):
 
 
 def regularize_dataset(
-    ds: xr.Dataset, freq: str, time_dim: str = "time", method: str = None, fill_value=dtypes.NA
+    ds: xr.Dataset,
+    freq: str,
+    time_dim: str = "time",
+    method: str = None,
+    fill_value=dtypes.NA,
 ):
     """
     Regularize a dataset across time dimension with uniform resolution.
@@ -300,7 +304,9 @@ def regularize_dataset(
     """
     start_time, end_time = get_dataset_start_end_time(ds, time_dim=time_dim)
     new_time_index = pd.date_range(
-        start=pd.to_datetime(start_time), end=pd.to_datetime(end_time), freq=freq
+        start=pd.to_datetime(start_time),
+        end=pd.to_datetime(end_time),
+        freq=freq,
     )
 
     # Regularize dataset and fill with NA values

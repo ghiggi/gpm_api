@@ -43,7 +43,7 @@ gpm.config.set(
         "warn_non_contiguous_scans": False,
         "warn_non_regular_timesteps": False,
         "warn_invalid_geolocation": False,
-    }
+    },
 )
 
 
@@ -106,7 +106,7 @@ def test_open_granule_on_real_files():
     if not os.path.exists(granules_dir_path):
         pytest.skip(
             "Test granules not found. Please run `git submodule update --init` to clone "
-            "existing test data, or `python generate_test_granule_data.py` to generate new test data."
+            "existing test data, or `python generate_test_granule_data.py` to generate new test data.",
         )
 
     cut_dir_path = os.path.join(granules_dir_path, "cut")

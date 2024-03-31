@@ -395,7 +395,9 @@ def test_get_along_track_scan_distance() -> None:
     RADIUS_EARTH = 6357e3
     expected_distance = RADIUS_EARTH * np.pi / 8
     np.testing.assert_allclose(
-        returned_distances, [expected_distance, expected_distance], rtol=0.02
+        returned_distances,
+        [expected_distance, expected_distance],
+        rtol=0.02,
     )
 
 
@@ -688,7 +690,7 @@ class TestValidGeolocation:
 
         # Test when on cross-track line (along the entire along-track) is entirely nan
         assert checks.get_slices_valid_geolocation(ds_orbit_valid_with_one_cross_track_nan) == [
-            slice(0, 10)
+            slice(0, 10),
         ]
 
         # Test when scattered nan across lons/lats array
@@ -750,7 +752,8 @@ class TestIsRegular:
     ) -> None:
         # Mock has_contiguous_scans to return True
         mock_has_contiguous_scans = mocker.patch(
-            "gpm.utils.checks.has_contiguous_scans", return_value=True
+            "gpm.utils.checks.has_contiguous_scans",
+            return_value=True,
         )
         ds = xr.Dataset()
         assert checks.is_regular(ds)
@@ -854,13 +857,21 @@ def test_get_slices_var_equals() -> None:
     array = np.array([[0, 0, 1, 1], [0, 0, 0, 0], [3, 0, 1, 2]])
     da = xr.DataArray(array, dims=["x", "y"])
     returned_slices = checks.get_slices_var_equals(
-        da, dim=dim, values=values, union=True, criteria="any"
+        da,
+        dim=dim,
+        values=values,
+        union=True,
+        criteria="any",
     )
     expected_slices = [slice(0, 3)]  # All of sub arrays work
     assert returned_slices == expected_slices
 
     returned_slices = checks.get_slices_var_equals(
-        da, dim=dim, values=values, union=True, criteria="all"
+        da,
+        dim=dim,
+        values=values,
+        union=True,
+        criteria="all",
     )
     expected_slices = [slice(1, 2)]  # Only [0, 0, 0, 0] sub array works (all values are valid)
     assert returned_slices == expected_slices
@@ -885,13 +896,21 @@ def test_get_slices_var_between() -> None:
     array = np.stack((np.arange(20), np.ones(20) * 7))
     da = xr.DataArray(array, dims=["x", "y"])
     returned_slices = checks.get_slices_var_between(
-        da, dim=dim, vmin=vmin, vmax=vmax, criteria="any"
+        da,
+        dim=dim,
+        vmin=vmin,
+        vmax=vmax,
+        criteria="any",
     )
     expected_slices = [slice(0, 2)]  # All of sub arrays work
     assert returned_slices == expected_slices
 
     returned_slices = checks.get_slices_var_between(
-        da, dim=dim, vmin=vmin, vmax=vmax, criteria="all"
+        da,
+        dim=dim,
+        vmin=vmin,
+        vmax=vmax,
+        criteria="all",
     )
     expected_slices = [slice(1, 2)]  # Only [7, 7] sub array works (all values are valid)
     assert returned_slices == expected_slices

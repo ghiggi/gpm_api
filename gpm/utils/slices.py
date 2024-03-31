@@ -148,7 +148,8 @@ def list_slices_difference(list_slices1, list_slices2):
         for slc2 in list_slices2
     ]
     return list_slices_intersection(
-        *list_slices, min_size=0
+        *list_slices,
+        min_size=0,
     )  # min_size=0 to keep holes from list_slices2
 
 
@@ -374,11 +375,11 @@ def pad_slices(list_slices, padding, valid_shape):
         valid_shape = [valid_shape] * len(list_slices)
     if isinstance(padding, (list, tuple)) and len(padding) != len(list_slices):
         raise ValueError(
-            "Invalid padding. The length of padding should be the same as the length of list_slices."
+            "Invalid padding. The length of padding should be the same as the length of list_slices.",
         )
     if isinstance(valid_shape, (list, tuple)) and len(valid_shape) != len(list_slices):
         raise ValueError(
-            "Invalid valid_shape. The length of valid_shape should be the same as the length of list_slices."
+            "Invalid valid_shape. The length of valid_shape should be the same as the length of list_slices.",
         )
     # Apply padding
     return [
@@ -426,7 +427,7 @@ def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
     # If min_size is larger than allowable size, raise error
     if min_size > (max_stop - min_start):
         raise ValueError(
-            f"'min_size' {min_size} is too large to generate a slice between {min_start} and {max_stop}."
+            f"'min_size' {min_size} is too large to generate a slice between {min_start} and {max_stop}.",
         )
 
     # If slice size larger than min_size, return the slice
@@ -493,11 +494,11 @@ def enlarge_slices(list_slices, min_size, valid_shape):
         valid_shape = [valid_shape] * len(list_slices)
     if isinstance(min_size, (list, tuple)) and len(min_size) != len(list_slices):
         raise ValueError(
-            "Invalid min_size. The length of min_size should be the same as the length of list_slices."
+            "Invalid min_size. The length of min_size should be the same as the length of list_slices.",
         )
     if isinstance(valid_shape, (list, tuple)) and len(valid_shape) != len(list_slices):
         raise ValueError(
-            "Invalid valid_shape. The length of valid_shape should be the same as the length of list_slices."
+            "Invalid valid_shape. The length of valid_shape should be the same as the length of list_slices.",
         )
     # Enlarge the slice
     return [

@@ -58,7 +58,7 @@ def _get_retrieval_function(module_name, retrieval):
 def _infer_product(ds):
     if "gpm_api_product" not in ds.attrs:
         raise ValueError(
-            "The xr.Dataset does not have the global attribute 'gpm_api_product' key !"
+            "The xr.Dataset does not have the global attribute 'gpm_api_product' key !",
         )
     return ds.attrs["gpm_api_product"]
 
@@ -83,11 +83,11 @@ def check_retrieval_validity(ds, retrieval):
     valid_retrievals = available_retrievals(ds)
     if valid_retrievals is None:
         raise NotImplementedError(
-            f"GPM-API does not yet implements retrievals for product {product}"
+            f"GPM-API does not yet implements retrievals for product {product}",
         )
     if retrieval not in valid_retrievals:
         raise ValueError(
-            f"{retrieval} is an invalid retrieval for {product}. Available retrievals are {valid_retrievals}"
+            f"{retrieval} is an invalid retrieval for {product}. Available retrievals are {valid_retrievals}",
         )
 
 

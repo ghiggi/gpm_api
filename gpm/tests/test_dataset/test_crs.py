@@ -61,5 +61,5 @@ def test_get_proj_coord_unit_private() -> None:
         assert "metre" in res  # Return should still contain metre as string
         assert len(res.split(" ")) == 2  # Should be two parts
         assert float(res.split(" ")[0]) == pytest.approx(
-            1200 / 3937
+            1200 / 3937,
         )  # Survey foot is 1200/3937 metres

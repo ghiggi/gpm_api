@@ -137,7 +137,10 @@ def add_3d_isosurfaces(
     # Add isosurfaces
     for i, (isovalue, isosurface) in enumerate(dict_isosurface.items()):
         pl_actor = pl.add_mesh(
-            isosurface, opacity=dict_opacity[isovalue], style=style, **mesh_kwargs
+            isosurface,
+            opacity=dict_opacity[isovalue],
+            style=style,
+            **mesh_kwargs,
         )
         if add_sliders:
             # Define opacity slider

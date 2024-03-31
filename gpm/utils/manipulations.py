@@ -86,7 +86,7 @@ def integrate_profile_concentration(dataarray, name, scale_factor=None, units=No
 def check_variable_availabilty(ds, variable, argname):
     if variable not in ds:
         raise ValueError(
-            f"{variable} is not a variable of the xr.Dataset. Invalid {argname} argument."
+            f"{variable} is not a variable of the xr.Dataset. Invalid {argname} argument.",
         )
 
 

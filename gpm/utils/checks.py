@@ -118,7 +118,9 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
 
         # If granules are missing present, get the slices with non-missing granules
         list_slices = get_list_slices_from_bool_arr(
-            bool_arr, include_false=True, skip_consecutive_false=True
+            bool_arr,
+            include_false=True,
+            skip_consecutive_false=True,
         )
 
         # Select only slices with at least 2 scans
@@ -275,7 +277,9 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
         # If non-regular timesteps are present, get the slices for each regular interval
         # - If consecutive non-regular timestep occurs, returns slices of size 1
         list_slices = get_list_slices_from_bool_arr(
-            is_regular, include_false=True, skip_consecutive_false=False
+            is_regular,
+            include_false=True,
+            skip_consecutive_false=False,
         )
 
     # Select only slices with at least min_size timesteps
@@ -366,7 +370,7 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
                 print(f"- Missing timesteps between {start} and {stop}")
         # Raise error and highlight first non-contiguous scan
         raise ValueError(
-            f"There are {n_discontinuous} non-regular timesteps. The first occur at {first_problematic_timestep}."
+            f"There are {n_discontinuous} non-regular timesteps. The first occur at {first_problematic_timestep}.",
         )
 
 
@@ -496,7 +500,9 @@ def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
     # If non-contiguous scans are present, get the slices with contiguous scans
     # - It discard consecutive non-contiguous scans
     list_slices = get_list_slices_from_bool_arr(
-        is_contiguous, include_false=True, skip_consecutive_false=True
+        is_contiguous,
+        include_false=True,
+        skip_consecutive_false=True,
     )
 
     # Select only slices with at least 2 scans
@@ -669,7 +675,9 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
     valid_scans = ~invalid_scans
     # - Now identify valid along-track slices
     list_slices = get_list_slices_from_bool_arr(
-        valid_scans, include_false=False, skip_consecutive_false=True
+        valid_scans,
+        include_false=False,
+        skip_consecutive_false=True,
     )
     # Select only slices with at least 2 scans
     return list_slices_filter(list_slices, min_size=min_size)
@@ -913,7 +921,9 @@ def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
         min_size = 2 if min_size is None else min_size
         # Get swath portions where there are not missing scans (and granules)
         list_slices_contiguous = get_slices_contiguous_scans(
-            xr_obj, min_size=min_size, min_n_scans=min_n_scans
+            xr_obj,
+            min_size=min_size,
+            min_n_scans=min_n_scans,
         )
         # Get swath portions where there are valid geolocation
         list_slices_geolocation = get_slices_valid_geolocation(xr_obj, min_size=min_size)

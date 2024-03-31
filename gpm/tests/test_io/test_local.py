@@ -47,7 +47,11 @@ def create_fake_file(
 
     base_dir = check_base_dir(base_dir)
     product_dir_path = get_local_product_directory(
-        base_dir=base_dir, product=product, product_type=product_type, version=version, date=date
+        base_dir=base_dir,
+        product=product,
+        product_type=product_type,
+        version=version,
+        date=date,
     )
     # Create directory
     os.makedirs(product_dir_path, exist_ok=True)
@@ -128,13 +132,20 @@ def test__get_local_dir_pattern(
                     if product_type == "NRT":
                         assert "V0" not in dir_pattern
                         assert dir_pattern == os.path.join(
-                            "GPM", product_type, product_category, product
+                            "GPM",
+                            product_type,
+                            product_category,
+                            product,
                         )
                     elif product_type == "RS":
                         assert str(version) in dir_pattern
                         # Literal
                         assert dir_pattern == os.path.join(
-                            "GPM", product_type, f"V0{version}", product_category, product
+                            "GPM",
+                            product_type,
+                            f"V0{version}",
+                            product_category,
+                            product,
                         )
 
 
@@ -179,7 +190,11 @@ def test_get_local_product_base_directory(
                             assert dir_path == os.path.join(
                                 base_dir,
                                 os.path.join(
-                                    "GPM", product_type, f"V0{version}", product_category, product
+                                    "GPM",
+                                    product_type,
+                                    f"V0{version}",
+                                    product_category,
+                                    product,
                                 ),
                                 date.strftime("%Y"),
                                 date.strftime("%m"),

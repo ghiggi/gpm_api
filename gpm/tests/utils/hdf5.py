@@ -127,7 +127,10 @@ def _copy_datasets(src_group, dst_group, subset_size):
         elif isinstance(h5_obj, h5py.Dataset):
             # If the H5 object is a HDF5 dataset, copy a subset of the dataset
             _subset_dataset(
-                src_dataset=h5_obj, name=name, dst_group=dst_group, subset_size=subset_size
+                src_dataset=h5_obj,
+                name=name,
+                dst_group=dst_group,
+                subset_size=subset_size,
             )
         else:
             pass

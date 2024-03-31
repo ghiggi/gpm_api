@@ -96,7 +96,12 @@ def get_cut_lon_breaks_labels(bin_spacing):
 
 
 def pl_add_geographic_bins(
-    df, xbin_column, ybin_column, bin_spacing, x_column="lon", y_column="lat"
+    df,
+    xbin_column,
+    ybin_column,
+    bin_spacing,
+    x_column="lon",
+    y_column="lat",
 ):
     cut_lon_breaks, cut_lon_labels = get_cut_lon_breaks_labels(bin_spacing)
     cut_lat_breaks, cut_lat_labels = get_cut_lat_breaks_labels(bin_spacing)
@@ -120,7 +125,8 @@ def pl_df_to_xarray(df, xbin_column, ybin_column, bin_spacing):
     lon_labels = get_lon_labels(bin_spacing)
     lat_labels = get_lat_labels(bin_spacing)
     multi_index = pd.MultiIndex.from_product(
-        [lon_labels, lat_labels], names=[xbin_column, ybin_column]
+        [lon_labels, lat_labels],
+        names=[xbin_column, ybin_column],
     )
 
     # Create an empty DataFrame with the MultiIndex

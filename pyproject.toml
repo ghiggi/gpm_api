@@ -155,6 +155,9 @@ select = [
     "PD",
     # pylint
     "PL",
+    # flake8-commas
+    "COM",
+
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
@@ -163,6 +166,7 @@ select = [
     # "NPY",
     # refurb
     # "FURB", # require preview
+
 ]
 ignore = [
     "E722",
@@ -179,6 +183,7 @@ ignore = [
     "PLR0912",
     "PLR0915",
 
+
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
@@ -189,7 +194,11 @@ unfixable = []
 [tool.ruff.lint.per-file-ignores]
 # Ignore `E402` (import violations) in all Jupyter Notebooks.
 "*.ipynb" = ["E402"]
-"test_*.py" = ["ARG"] # avoid problems with fixtures
+# Rules to ignore in test files
+"test_*.py" = [
+    "ARG",  # avoid problems with fixtures
+]
+
 
 [tool.codespell]
     ignore-words-list = "ges,nd"

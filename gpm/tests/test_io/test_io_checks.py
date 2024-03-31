@@ -51,7 +51,11 @@ def test_check_base_dir() -> None:
     if platform.system() == "Windows":
         res = checks.check_base_dir("C:\\Users\\user\\gpm")
         assert res == ntp.join(
-            "C:", os.path.sep, "Users", "user", "gpm"
+            "C:",
+            os.path.sep,
+            "Users",
+            "user",
+            "gpm",
         ), "Windows path is not returned"
     else:
         res = checks.check_base_dir("/home/user/gpm")
@@ -555,7 +559,7 @@ def test_check_time() -> None:
     # Check non-UTC timezone
     with pytest.raises(ValueError):
         checks.check_time(
-            datetime.datetime(2014, 12, 31, 12, 30, 30, 300, tzinfo=pytz.timezone("Europe/Zurich"))
+            datetime.datetime(2014, 12, 31, 12, 30, 30, 300, tzinfo=pytz.timezone("Europe/Zurich")),
         )
 
 
@@ -688,7 +692,9 @@ def test_check_valid_time_request(
             start_time = valid_start_time
             end_time = valid_start_time + datetime.timedelta(days=1)
             assert (start_time, end_time) == checks.check_valid_time_request(
-                start_time, end_time, product
+                start_time,
+                end_time,
+                product,
             )
 
             # Check invalid start time

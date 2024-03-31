@@ -40,7 +40,7 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
         raise ImportError(
             "The 'pyresample' package is required but not found. "
             "Please install it using the following command: "
-            "conda install -c conda-forge pyresample"
+            "conda install -c conda-forge pyresample",
         )
 
     # Retrieve source and destination area
@@ -91,7 +91,7 @@ def get_pyresample_area(xr_obj):
         raise ImportError(
             "The 'pyresample' package is required but not found. "
             "Please install it using the following command: "
-            "conda install -c conda-forge pyresample"
+            "conda install -c conda-forge pyresample",
         )
 
     # Ensure correct dimension order for Swath

@@ -87,7 +87,9 @@ def _sanitize_attributes(attrs):
     # Sanitize LongName if present
     if "LongName" in attrs:
         attrs["description"] = re.sub(
-            " +", " ", attrs["LongName"].replace("\n", " ").replace("\t", " ")
+            " +",
+            " ",
+            attrs["LongName"].replace("\n", " ").replace("\t", " "),
         ).strip()
         attrs.pop("LongName")
     return attrs

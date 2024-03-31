@@ -134,7 +134,11 @@ def read_countries_extent_dictionary():
         dict: A dictionary containing countries extent information.
     """
     countries_extent_filepath = os.path.join(
-        _root_path, "gpm", "etc", "geospatial", "country_extent.yaml"
+        _root_path,
+        "gpm",
+        "etc",
+        "geospatial",
+        "country_extent.yaml",
     )
     return read_yaml(countries_extent_filepath)
 
@@ -204,7 +208,11 @@ def read_continents_extent_dictionary():
         dict: A dictionary containing the extents of continents.
     """
     continents_extent_filepath = os.path.join(
-        _root_path, "gpm", "etc", "geospatial", "continent_extent.yaml"
+        _root_path,
+        "gpm",
+        "etc",
+        "geospatial",
+        "continent_extent.yaml",
     )
     return read_yaml(continents_extent_filepath)
 
@@ -302,7 +310,7 @@ def get_extent(xr_obj, padding: Union[int, float, tuple, list] = 0):
 
     if _is_crossing_dateline(lon):
         raise NotImplementedError(
-            "The object cross the dateline. The extent can't be currently defined."
+            "The object cross the dateline. The extent can't be currently defined.",
         )
     extent = Extent(np.nanmin(lon), np.nanmax(lon), np.nanmin(lat), np.nanmax(lat))
     return extend_geographic_extent(extent, padding=padding)
@@ -372,7 +380,7 @@ def get_crop_slices_by_extent(xr_obj, extent):
         lon = xr_obj["lon"].to_numpy()
         lat = xr_obj["lat"].to_numpy()
         idx_row, idx_col = np.where(
-            (lon >= extent[0]) & (lon <= extent[1]) & (lat >= extent[2]) & (lat <= extent[3])
+            (lon >= extent[0]) & (lon <= extent[1]) & (lat >= extent[2]) & (lat <= extent[3]),
         )
         if idx_col.size == 0:
             raise ValueError("No data inside the provided bounding box.")
@@ -451,7 +459,7 @@ def crop(xr_obj, extent):
         list_isel_dicts = get_crop_slices_by_extent(xr_obj, extent)
         if len(list_isel_dicts) > 1:
             raise ValueError(
-                "The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !."
+                "The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !.",
             )
         return xr_obj.isel(list_isel_dicts[0])
     if is_grid(xr_obj):

@@ -167,7 +167,7 @@ def test_get_extent() -> None:
         {
             "lon": [-10, 0, 20],
             "lat": [-30, 0, 40],
-        }
+        },
     )
 
     # Test without padding
@@ -211,7 +211,7 @@ def test_get_extent() -> None:
         {
             "lon": [170, 180, -160],
             "lat": [-30, 0, 40],
-        }
+        },
     )
     with pytest.raises(NotImplementedError):
         geospatial.get_extent(ds)
@@ -325,7 +325,8 @@ class TestCropSlicesByExtent:
         orbit_dataarray_multiple_prime_meridian_crossings: xr.DataArray,
     ) -> None:
         slices = geospatial.get_crop_slices_by_extent(
-            orbit_dataarray_multiple_prime_meridian_crossings, self.extent
+            orbit_dataarray_multiple_prime_meridian_crossings,
+            self.extent,
         )
         expected_slices = [{"along_track": slice(4, 8)}, {"along_track": slice(15, 19)}]
         assert slices == expected_slices

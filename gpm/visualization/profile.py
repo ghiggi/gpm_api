@@ -41,7 +41,12 @@ from gpm.visualization.plot import (
 
 
 def _optimize_transect_slices(
-    xr_obj, transect_slices, trim_threshold, variable=None, left_pad=0, right_pad=0
+    xr_obj,
+    transect_slices,
+    trim_threshold,
+    variable=None,
+    left_pad=0,
+    right_pad=0,
 ):
     # --------------------------------------------------------------------------.
     # Check variable
@@ -96,7 +101,7 @@ def _optimize_transect_slices(
     # Check there are residual data along the transect
     if len(idx_above_thr) == 0:
         raise ValueError(
-            "No {trim_variable} value above trim_threshold={trim_threshold}. Try to decrease it."
+            "No {trim_variable} value above trim_threshold={trim_threshold}. Try to decrease it.",
         )
     valid_idx = np.unique(idx_above_thr[[0, -1]])
 
@@ -116,7 +121,7 @@ def _optimize_transect_slices(
     # Retrieve xr_obj_transect slices
     if len(valid_idx) == 1:
         print(
-            "Printing a single profile! To plot a longer profile transect increase `trim_threshold`."
+            "Printing a single profile! To plot a longer profile transect increase `trim_threshold`.",
         )
         transect_slice = slice(valid_idx, valid_idx + 1)
     else:
@@ -135,7 +140,12 @@ def _optimize_transect_slices(
 
 
 def get_transect_slices(
-    xr_obj, direction="cross_track", lon=None, lat=None, variable=None, transect_kwargs={}
+    xr_obj,
+    direction="cross_track",
+    lon=None,
+    lat=None,
+    variable=None,
+    transect_kwargs={},
 ):
     """
     Define transect isel dictionary slices.
@@ -183,7 +193,7 @@ def get_transect_slices(
     # --> If input xr.Dataset and variable, lat and lon not specified, raise Error
     if isinstance(xr_obj, xr.Dataset) and lat is None and lon is None and variable is None:
         raise ValueError(
-            "Need to provide 'variable' if passing a xr.Dataset and not specifying 'lat' / 'lon'."
+            "Need to provide 'variable' if passing a xr.Dataset and not specifying 'lat' / 'lon'.",
         )
 
     # -------------------------------------------------------------------------.
@@ -222,7 +232,10 @@ def get_transect_slices(
     # Optimize transect extent
     if len(transect_kwargs) != 0:
         transect_slices = _optimize_transect_slices(
-            xr_obj, transect_slices, variable=variable, **transect_kwargs
+            xr_obj,
+            transect_slices,
+            variable=variable,
+            **transect_kwargs,
         )
     # -------------------------------------------------------------------------.
     # Return transect slices
@@ -305,7 +318,9 @@ def plot_transect(
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=da.name, user_plot_kwargs=plot_kwargs, user_cbar_kwargs=cbar_kwargs
+        name=da.name,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
     )
     # - Select only vertical regions with data
     if zoom:

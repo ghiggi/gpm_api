@@ -482,7 +482,7 @@ def simplify_grid_mapping_values(ds):
     for key in keys:
         if "grid_mapping" in ds[key].attrs:
             ds[key].attrs["grid_mapping"] = _simplify_grid_mapping_value(
-                ds[key].attrs["grid_mapping"]
+                ds[key].attrs["grid_mapping"],
             )
     return ds
 
@@ -635,13 +635,19 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 
     ds = remove_existing_crs_info(ds)
     ds = set_dataset_single_crs(
-        ds=ds, crs=crs, grid_mapping_name=grid_mapping_name, inplace=inplace
+        ds=ds,
+        crs=crs,
+        grid_mapping_name=grid_mapping_name,
+        inplace=inplace,
     )
     # If CRS is projected and 2D lon/lat are available, also add the WGS84 CRS
     if crs.is_projected and has_swath_coords(ds):
         crs_wgs84 = pyproj.CRS(proj="longlat", ellps="WGS84")
         ds = set_dataset_single_crs(
-            ds=ds, crs=crs_wgs84, grid_mapping_name="crsWGS84", inplace=inplace
+            ds=ds,
+            crs=crs_wgs84,
+            grid_mapping_name="crsWGS84",
+            inplace=inplace,
         )
     # Simplify grid_mapping if possible
     # - For compatibility with GDAL, if only 1 CRS is specified !

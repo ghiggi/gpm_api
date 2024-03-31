@@ -108,12 +108,16 @@ def get_info_dict_subset(
     if satellites is not None:
         satellites = check_satellites(satellites)
         info_dict = _subset_info_dict_by_key(
-            key="satellite", values=satellites, info_dict=info_dict
+            key="satellite",
+            values=satellites,
+            info_dict=info_dict,
         )
     if product_categories is not None:
         product_categories = check_product_categories(product_categories)
         info_dict = _subset_info_dict_by_key(
-            key="product_category", values=product_categories, info_dict=info_dict
+            key="product_category",
+            values=product_categories,
+            info_dict=info_dict,
         )
     if sensors is not None:
         sensors = check_sensors(sensors)
@@ -121,22 +125,30 @@ def get_info_dict_subset(
     if product_types is not None:
         product_types = check_product_types(product_types)
         info_dict = _subset_info_dict_by_key(
-            key="product_types", values=product_types, info_dict=info_dict
+            key="product_types",
+            values=product_types,
+            info_dict=info_dict,
         )
     if full_product_levels is not None:
         full_product_levels = check_full_product_levels(full_product_levels)
         info_dict = _subset_info_dict_by_key(
-            key="full_product_level", values=full_product_levels, info_dict=info_dict
+            key="full_product_level",
+            values=full_product_levels,
+            info_dict=info_dict,
         )
     if product_levels is not None:
         product_levels = check_product_levels(product_levels)
         info_dict = _subset_info_dict_by_key(
-            key="product_level", values=product_levels, info_dict=info_dict
+            key="product_level",
+            values=product_levels,
+            info_dict=info_dict,
         )
     if versions is not None:
         versions = check_versions(versions)
         info_dict = _subset_info_dict_by_key(
-            key="available_versions", values=versions, info_dict=info_dict
+            key="available_versions",
+            values=versions,
+            info_dict=info_dict,
         )
     return info_dict
 
@@ -234,7 +246,7 @@ def get_product_category(product):
     product_category = get_product_info(product).get("product_category", None)
     if product_category is None:
         raise ValueError(
-            f"The product_category for {product} product is not specified in the config files."
+            f"The product_category for {product} product is not specified in the config files.",
         )
     return product_category
 
@@ -322,7 +334,7 @@ def _get_sensor_satellite_names(info_dict, key="sensor", combine_with=None):
         if primary is not None and isinstance(primary, str):
             if secondary is not None and isinstance(secondary, str):
                 names.append(
-                    f"{primary}-{secondary}" if key == "sensor" else f"{secondary}-{primary}"
+                    f"{primary}-{secondary}" if key == "sensor" else f"{secondary}-{primary}",
                 )
             else:
                 names.append(primary)
@@ -366,7 +378,9 @@ def get_available_satellites(prefix_with_sensor=False):
     """Get the list of all available satellites."""
     info_dict = get_info_dict()
     return _get_sensor_satellite_names(
-        info_dict, key="satellite", combine_with="sensor" if prefix_with_sensor else None
+        info_dict,
+        key="satellite",
+        combine_with="sensor" if prefix_with_sensor else None,
     )
 
 
@@ -375,7 +389,9 @@ def get_available_sensors(suffix_with_satellite=False):
     """Get the list of all available sensors."""
     info_dict = get_info_dict()
     return _get_sensor_satellite_names(
-        info_dict, key="sensor", combine_with="satellite" if suffix_with_satellite else None
+        info_dict,
+        key="sensor",
+        combine_with="satellite" if suffix_with_satellite else None,
     )
 
 

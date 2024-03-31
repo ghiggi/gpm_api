@@ -100,7 +100,10 @@ class TestGESDISCFileList:
         expected_filepaths = ["https://example.com/file1.hdf5", "https://example.com/file2.hdf5"]
 
         mocker.patch.object(
-            ges_disc, "_get_ges_disc_list_path", autospec=True, return_value=expected_filepaths
+            ges_disc,
+            "_get_ges_disc_list_path",
+            autospec=True,
+            return_value=expected_filepaths,
         )
 
         filepaths = ges_disc._get_ges_disc_file_list(url, product, date, version, verbose=True)
@@ -121,7 +124,7 @@ class TestGESDISCFileList:
         with pytest.raises(Exception) as excinfo:
             ges_disc._get_ges_disc_file_list(url, product, date, version)
         assert "was not found on the GES DISC server" in str(
-            excinfo.value
+            excinfo.value,
         ), "Expected exception not raised for server not found"
 
     def test_no_data_verbose(self, mocker: MockerFixture, capsys):

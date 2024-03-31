@@ -173,7 +173,10 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
 
     """
     dir_structure = _get_local_directory_tree(
-        product=product, product_type=product_type, version=version, date=date
+        product=product,
+        product_type=product_type,
+        version=version,
+        date=date,
     )
     return os.path.join(base_dir, dir_structure)
 
@@ -269,7 +272,9 @@ def get_local_filepath_from_filename(filepath, product_type="RS", base_dir=None)
     """Return the local filepath of a GPM file or filepath."""
     filename = os.path.basename(filepath)
     dir_tree = get_local_dir_tree_from_filename(
-        filepath, product_type=product_type, base_dir=base_dir
+        filepath,
+        product_type=product_type,
+        base_dir=base_dir,
     )
     return os.path.join(dir_tree, filename)
 

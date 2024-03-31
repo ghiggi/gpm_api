@@ -297,7 +297,8 @@ def write_granules_bucket(
         # If delayed, execute the tasks
         if parallel:
             list_results = compute_list_delayed(
-                list_results, max_concurrent_tasks=max_concurrent_tasks
+                list_results,
+                max_concurrent_tasks=max_concurrent_tasks,
             )
 
         # Process results to detect errors

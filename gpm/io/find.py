@@ -104,7 +104,7 @@ def _check_correct_version(filepaths, product, version):
     files_versions = np.unique(get_version_from_filepaths(filepaths, integer=True)).tolist()
     if len(files_versions) > 1:
         raise ValueError(
-            f"Multiple file versions found: {files_versions}. Please report their occurrence !"
+            f"Multiple file versions found: {files_versions}. Please report their occurrence !",
         )
     files_version = files_versions[0]
     if files_version != version and VERSION_WARNING:
@@ -124,7 +124,7 @@ def _ensure_valid_start_date(start_date, product):
     elif product in available_products(product_categories="PMW"):
         min_start_date = "1987-07-09 00:00:00"
     elif product in available_products(product_categories="RADAR") or product in available_products(
-        product_categories="CMB"
+        product_categories="CMB",
     ):
         min_start_date = "1997-12-07 00:00:00"
     elif "IMERG" in product:
@@ -191,7 +191,7 @@ def find_daily_filepaths(
         if storage == "LOCAL" and verbose:
             version_str = str(int(version))
             print(
-                f"The GPM product {product} (V0{version_str}) on date {date} has not been downloaded !"
+                f"The GPM product {product} (V0{version_str}) on date {date} has not been downloaded !",
             )
         return [], []
 
@@ -212,7 +212,9 @@ def find_daily_filepaths(
     ## -----------------------------------------------------------------------.
     ## Check correct version and return the available version
     filepaths, available_version = _check_correct_version(
-        filepaths=filepaths, product=product, version=version
+        filepaths=filepaths,
+        product=product,
+        version=version,
     )
     return filepaths, [available_version]
 
@@ -360,6 +362,6 @@ def find_associated_filepath(filepath, product, storage="LOCAL", product_type="R
         raise ValueError(f"The {product} product associated to {filename} is not available.")
     if len(candidate_filepaths) >= 2:
         raise ValueError(
-            f"The are multiple {product} files associated to the {filename} file:  {candidate_filepaths}."
+            f"The are multiple {product} files associated to the {filename} file:  {candidate_filepaths}.",
         )
     return candidate_filepaths[0]

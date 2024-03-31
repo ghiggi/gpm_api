@@ -67,7 +67,7 @@ def _get_pps_nrt_product_folder_name(product):
     folder_name = get_product_info(product).get("pps_nrt_dir", None)
     if folder_name is None:
         raise ValueError(
-            f"The pps_nrt_dir key of the {product} product is not specified in the config files."
+            f"The pps_nrt_dir key of the {product} product is not specified in the config files.",
         )
     return folder_name
 
@@ -77,7 +77,7 @@ def _get_pps_rs_product_folder_name(product):
     folder_name = get_product_info(product).get("pps_rs_dir", None)
     if folder_name is None:
         raise ValueError(
-            f"The pps_rs_dir key of the {product} product is not specified in the config files."
+            f"The pps_rs_dir key of the {product} product is not specified in the config files.",
         )
     return folder_name
 
@@ -129,7 +129,7 @@ def _get_pps_rs_product_dir(product, date, version):
                 "gpmdata",
                 datetime.datetime.strftime(date, "%Y/%m/%d"),
                 folder_name,
-            ]
+            ],
         )
     # Specify the directory tree for old RS version
     else:  #  version in [4, 5, 6]:
@@ -140,7 +140,7 @@ def _get_pps_rs_product_dir(product, date, version):
                 version_str,
                 datetime.datetime.strftime(date, "%Y/%m/%d"),
                 folder_name,
-            ]
+            ],
         )
 
     # Return the directory tree
@@ -215,7 +215,10 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
     )
     # Retrieve directory tree structure
     dir_structure = _get_pps_directory_tree(
-        product=product, product_type=product_type, date=date, version=version
+        product=product,
+        product_type=product_type,
+        date=date,
+        version=version,
     )
     # Define product directory where data are listed
     return f"{url_server}/{dir_structure}"

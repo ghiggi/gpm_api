@@ -226,7 +226,11 @@ def retrieve_EchoDepth(
 
 
 def retrieve_EchoTopHeight(
-    ds, threshold, variable="zFactorFinal", radar_frequency="Ku", min_threshold=0
+    ds,
+    threshold,
+    variable="zFactorFinal",
+    radar_frequency="Ku",
+    min_threshold=0,
 ):
     """Retrieve Echo Top Height (maximum altitude) for a particular reflectivity threshold.
 
@@ -310,7 +314,11 @@ def retrieve_VIL(ds, variable="zFactorFinal", radar_frequency="Ku"):
 
 
 def retrieve_VILD(
-    ds, variable="zFactorFinal", radar_frequency="Ku", threshold=18, use_echo_top=True
+    ds,
+    variable="zFactorFinal",
+    radar_frequency="Ku",
+    threshold=18,
+    use_echo_top=True,
 ):
     """Compute Vertically Integrated Liquid Density.
 
@@ -359,7 +367,11 @@ def _get_weights(da, lower_threshold, upper_threshold):
 
 
 def retrieve_HailKineticEnergy(
-    ds, variable="zFactorFinal", radar_frequency="Ku", lower_threshold=40, upper_threshold=50
+    ds,
+    variable="zFactorFinal",
+    radar_frequency="Ku",
+    lower_threshold=40,
+    upper_threshold=50,
 ):
     """Compute Hail Kinetic Energy.
 
@@ -373,7 +385,9 @@ def retrieve_HailKineticEnergy(
     # Compute W(Z)
     # - Used to define a transition zone between rain and hail reflectivities
     da_z_weighted = _get_weights(
-        da_z, lower_threshold=lower_threshold, upper_threshold=upper_threshold
+        da_z,
+        lower_threshold=lower_threshold,
+        upper_threshold=upper_threshold,
     )
     # Compute Hail Kinetic Energy
     scale_factor = 5 * (10**-6)
@@ -386,7 +400,11 @@ def retrieve_HailKineticEnergy(
 
 
 def retrieve_SHI(
-    ds, variable="zFactorFinal", radar_frequency="Ku", lower_z_threshold=40, upper_z_threshold=50
+    ds,
+    variable="zFactorFinal",
+    radar_frequency="Ku",
+    lower_z_threshold=40,
+    upper_z_threshold=50,
 ):
     """
     Retrieve the Severe Hail Index (SHI).
@@ -427,14 +445,20 @@ def retrieve_SHI(
     # - Hail growth only occurs at temperatures < 0°C
     # - Most growth for severe hail occurs at temperatures near -20°C or colder
     da_height_zero_deg = get_height_at_temperature(
-        da_height=da_height, da_temperature=da_t, temperature=273.15
+        da_height=da_height,
+        da_temperature=da_t,
+        temperature=273.15,
     )  # 2.5 s per granule
     da_height_minus_20_deg = get_height_at_temperature(
-        da_height=da_height, da_temperature=da_t, temperature=273.15 - 20
+        da_height=da_height,
+        da_temperature=da_t,
+        temperature=273.15 - 20,
     )  # 2.5 s per granule
 
     da_t_weighted = _get_weights(
-        da_height, lower_threshold=da_height_zero_deg, upper_threshold=da_height_minus_20_deg
+        da_height,
+        lower_threshold=da_height_zero_deg,
+        upper_threshold=da_height_minus_20_deg,
     )  # 14 s per granule
     # Compute HailKineticEnergy
     da_e = retrieve_HailKineticEnergy(

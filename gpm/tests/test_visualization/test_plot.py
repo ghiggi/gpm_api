@@ -54,7 +54,8 @@ from gpm.visualization import plot
 
 
 pytestmark = pytest.mark.skipif(
-    platform.system() == "Windows", reason="Minor figure differences on Windows"
+    platform.system() == "Windows",
+    reason="Minor figure differences on Windows",
 )
 skip_tests_if_no_data()
 
@@ -125,10 +126,10 @@ def test_get_antimeridian_mask(
     returned_mask = plot.get_antimeridian_mask(lon)
     # fmt: off
     expected_mask = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0,],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
     ], dtype=bool)
     np.testing.assert_array_equal(returned_mask, expected_mask)
 
@@ -508,7 +509,8 @@ class TestPlotMapMesh:
 
         crs_proj = ccrs.Orthographic(180, 0)
         p = plot.plot_map_mesh(
-            orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj}
+            orbit_antimeridian_dataarray,
+            subplot_kwargs={"projection": crs_proj},
         )
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -586,7 +588,7 @@ class TestPlotLabels:
 
         labels = np.random.randint(0, 10, orbit_dataarray.shape)
         return orbit_dataarray.assign_coords(
-            {self.label_name: (("cross_track", "along_track"), labels)}
+            {self.label_name: (("cross_track", "along_track"), labels)},
         )
 
     @pytest.fixture()

@@ -131,7 +131,7 @@ def get_ges_disc_product_directory_tree(product, date, version):
         [
             folder_name,
             datetime.datetime.strftime(date, "%Y/%j"),
-        ]
+        ],
     )
 
 

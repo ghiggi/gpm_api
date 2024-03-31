@@ -46,7 +46,7 @@ def test_get_corrupted_filepaths(
         res = di.get_corrupted_filepaths(abs_paths)
 
         assert len(abs_paths) == len(
-            res
+            res,
         ), "Corrupted paths array should be the same length as input paths"
         assert abs_paths == res, "Corrupted paths array should be the same as input paths"
 
@@ -128,7 +128,7 @@ def test_check_filepaths_integrity(
     di.check_filepaths_integrity(abs_paths, remove_corrupted=True)
     for filepath in abs_paths:
         assert not os.path.exists(
-            filepath
+            filepath,
         ), "Temporary file was not removed when it should not have been"
 
 
@@ -136,7 +136,11 @@ def test_check_filepaths_integrity(
 @pytest.mark.parametrize("verbose", [True, False])
 @pytest.mark.parametrize("filepaths", [[], ["some_corrupted_filepaths"]])
 def test_check_archive_integrity(
-    tmpdir: str, mocker: MockerFixture, filepaths, remove_corrupted, verbose
+    tmpdir: str,
+    mocker: MockerFixture,
+    filepaths,
+    remove_corrupted,
+    verbose,
 ) -> None:
     """Test check_archive_integrity function."""
     product = "2A-DPR"
