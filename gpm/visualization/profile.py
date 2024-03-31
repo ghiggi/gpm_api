@@ -185,8 +185,8 @@ def get_transect_slices(
     if not isinstance(xr_obj, (xr.DataArray, xr.Dataset)):
         raise TypeError("Expecting xr.DataArray or xr.Dataset xr_object.")
     # - Valid dimensions # --> TODO: check for each Datarray
-    dims = set(list(xr_obj.dims))
-    required_dims = set(["along_track", "cross_track", "range"])
+    dims = set(xr_obj.dims)
+    required_dims = {"along_track", "cross_track", "range"}
     if not dims.issuperset(required_dims):
         raise ValueError(f"Requires xarray xr_object with dimensions {required_dims}")
     # - Verify valid input combination

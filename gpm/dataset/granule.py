@@ -170,7 +170,7 @@ def get_variables_dims(ds):
 def unused_var_dims(ds):
     """Retrieve the dimensions not used by the the xr.Dataset variables."""
     var_dims = set(get_variables_dims(ds))
-    ds_dims = set(list(ds.dims))
+    ds_dims = set(ds.dims)
     unused_dims = ds_dims.difference(var_dims)
     return list(unused_dims)
 

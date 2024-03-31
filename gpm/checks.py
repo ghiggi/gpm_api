@@ -101,8 +101,8 @@ def _is_grid_expected_spatial_dims(spatial_dims):
     """Check if the GRID spatial dimensions have the expected names."""
     # TODO: refactor ! GRID_SPATIAL_DIMS
     is_grid = set(spatial_dims) == set(GRID_SPATIAL_DIMS)
-    is_lonlat = set(spatial_dims) == set(["latitude", "longitude"])
-    is_xy = set(spatial_dims) == set(["y", "x"])
+    is_lonlat = set(spatial_dims) == {"latitude", "longitude"}
+    is_xy = set(spatial_dims) == {"y", "x"}
     if is_grid or is_lonlat or is_xy:
         return True
     return False
@@ -112,7 +112,7 @@ def _is_swath_expected_spatial_dims(spatial_dims):
     """Check if the ORBIT spatial dimensions have the expected names."""
     # TODO: refactor ! ORBIT_SPATIAL_DIMS
     is_orbit = set(spatial_dims) == set(ORBIT_SPATIAL_DIMS)
-    is_xy = set(spatial_dims) == set(["y", "x"])
+    is_xy = set(spatial_dims) == {"y", "x"}
     if is_orbit or is_xy:
         return True
     return False
