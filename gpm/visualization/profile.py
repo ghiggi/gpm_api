@@ -192,7 +192,7 @@ def get_transect_slices(
         # TODO: Get closest idx
         # idx_along_track
         # idx_cross_track
-        raise NotImplementedError()
+        raise NotImplementedError
 
     # Else derive center locating the maximum intensity
     if isinstance(xr_obj, xr.Dataset):
@@ -216,7 +216,7 @@ def get_transect_slices(
         transect_slices = {"along_track": int(idx_along_track.data)}
         transect_slices["cross_track"] = slice(0, len(xr_obj["cross_track"]))
     else:  # TODO: longest, or most_max
-        raise NotImplementedError()
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------.
     # Optimize transect extent
