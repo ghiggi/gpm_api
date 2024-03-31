@@ -344,10 +344,11 @@ def plot_colorbar(p, ax, cbar_kwargs=None):
     p.figure.add_axes(cax)
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
     if ticklabels is not None:
-        if orientation == "vertical":
-            _ = cbar.ax.set_yticklabels(ticklabels)
-        else:  # horizontal
-            _ = cbar.ax.set_xticklabels(ticklabels)
+        _ = (
+            cbar.ax.set_yticklabels(ticklabels)
+            if orientation == "vertical"
+            else cbar.ax.set_xticklabels(ticklabels)
+        )
     return cbar
 
 
@@ -468,9 +469,8 @@ def _plot_cartopy_pcolormesh(
     arr = da.data
 
     # If RGB, expect last dimension to have 3 channels
-    if rgb:
-        if arr.shape[-1] != 3 and arr.shape[-1] != 4:
-            raise ValueError("RGB array must have 3 or 4 channels in the last dimension.")
+    if rgb and arr.shape[-1] != 3 and arr.shape[-1] != 4:
+        raise ValueError("RGB array must have 3 or 4 channels in the last dimension.")
 
     # Infill invalid value and add mask if necessary
     lon, lat, arr = get_valid_pcolormesh_inputs(lon, lat, arr, rgb=rgb)
@@ -1010,10 +1010,7 @@ def _plot_labels(
     if isinstance(xr_obj, xr.Dataset):
         dataarray = xr_obj[label_name]
     else:
-        if label_name is not None:
-            dataarray = xr_obj[label_name]
-        else:
-            dataarray = xr_obj
+        dataarray = xr_obj[label_name] if label_name is not None else xr_obj
 
     dataarray = dataarray.compute()
     label_indices = get_label_indices(dataarray)

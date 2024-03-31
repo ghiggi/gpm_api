@@ -38,9 +38,8 @@ def _get_collocation_defaults_args(product, variables, groups, version, scan_mod
         scan_modes = gpm.available_scan_modes(product=product, version=version)
     if isinstance(scan_modes, str):
         scan_modes = [scan_modes]
-    if product not in gpm.available_products(product_categories="PMW"):
-        if len(scan_modes) > 1:
-            raise ValueError("Multiple scan modes can be specified only for PMW products!")
+    if product not in gpm.available_products(product_categories="PMW") and len(scan_modes) > 1:
+        raise ValueError("Multiple scan modes can be specified only for PMW products!")
     # PMW defaults
     if variables is None and groups is None:
         if product in gpm.available_products(product_levels="2A", product_categories="PMW"):
@@ -116,10 +115,11 @@ def collocate_product(
     list_remapped = [src_ds.gpm.remap_on(ds) for src_ds in list_ds]
 
     # Concatenate if necessary (PMW case)
-    if len(list_remapped) > 1:
-        output_ds = xr.concat(list_remapped, dim="pmw_frequency")
-    else:
-        output_ds = list_remapped[0]
+    output_ds = (
+        xr.concat(list_remapped, dim="pmw_frequency")
+        if len(list_remapped) > 1
+        else list_remapped[0]
+    )
 
     # Assign attributes
     output_ds.attrs = list_ds[0].attrs

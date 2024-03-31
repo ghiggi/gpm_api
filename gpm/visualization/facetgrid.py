@@ -164,10 +164,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         cbar_size = cbar_kwargs.get("size", "3%")
         if add_colorbar:
             cbar_mode = "single"
-            if orientation == "vertical":
-                cbar_location = "right"
-            else:
-                cbar_location = "bottom"
+            cbar_location = "right" if orientation == "vertical" else "bottom"
         else:
             cbar_mode = None
             cbar_location = "right"  # unused

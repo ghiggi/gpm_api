@@ -196,19 +196,16 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     ds["lat"] = ds["lat"].compute()
     try:
         if is_grid(ds):
-            if config.get("warn_non_contiguous_scans"):
-                if not is_regular(ds):
-                    msg = "Missing timesteps across the dataset !"
-                    warnings.warn(msg, GPM_Warning, stacklevel=2)
+            if config.get("warn_non_contiguous_scans") and not is_regular(ds):
+                msg = "Missing timesteps across the dataset !"
+                warnings.warn(msg, GPM_Warning, stacklevel=2)
         elif is_orbit(ds):
-            if config.get("warn_invalid_geolocation"):
-                if not has_valid_geolocation(ds):
-                    msg = "Presence of invalid geolocation coordinates !"
-                    warnings.warn(msg, GPM_Warning, stacklevel=2)
-            if config.get("warn_non_contiguous_scans"):
-                if not is_regular(ds):
-                    msg = "Presence of non-contiguous scans !"
-                    warnings.warn(msg, GPM_Warning, stacklevel=2)
+            if config.get("warn_invalid_geolocation") and not has_valid_geolocation(ds):
+                msg = "Presence of invalid geolocation coordinates !"
+                warnings.warn(msg, GPM_Warning, stacklevel=2)
+            if config.get("warn_non_contiguous_scans") and not is_regular(ds):
+                msg = "Presence of non-contiguous scans !"
+                warnings.warn(msg, GPM_Warning, stacklevel=2)
     except Exception:
         pass
 

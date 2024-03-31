@@ -57,10 +57,7 @@ def _get_href_value(input_string):
     """Infer href value."""
     match = re.search(r'<a\s+href="([^"]+)"', input_string)
     # Check if a match was found and extract the value
-    if match:
-        href_value = match.group(1)
-    else:
-        href_value = ""
+    href_value = match.group(1) if match else ""
     # Exclude .xml files and doc directory
     if ".xml" in href_value or "doc/" in href_value:
         href_value = ""

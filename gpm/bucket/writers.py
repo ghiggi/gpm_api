@@ -277,10 +277,7 @@ def write_granules_bucket(
         print(f"Executing tasks block {i+1}/{n_blocks}")
 
         # Loop over granules
-        if parallel:
-            func = dask.delayed(_try_write_granule_bucket)
-        else:
-            func = _try_write_granule_bucket
+        func = dask.delayed(_try_write_granule_bucket) if parallel else _try_write_granule_bucket
 
         list_results = [
             func(

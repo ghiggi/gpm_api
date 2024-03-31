@@ -48,12 +48,10 @@ def ensure_dtype_name(dtype):
 
 def _check_fillvalue_format(attrs):
     # Ensure fill values are numbers
-    if "CodeMissingValue" in attrs:
-        if isinstance(attrs["CodeMissingValue"], str):
-            attrs["CodeMissingValue"] = convert_string_to_number(attrs["CodeMissingValue"])
-    if "_FillValue" in attrs:
-        if isinstance(attrs["_FillValue"], str):
-            attrs["_FillValue"] = convert_string_to_number(attrs["_FillValue"])
+    if "CodeMissingValue" in attrs and isinstance(attrs["CodeMissingValue"], str):
+        attrs["CodeMissingValue"] = convert_string_to_number(attrs["CodeMissingValue"])
+    if "_FillValue" in attrs and isinstance(attrs["_FillValue"], str):
+        attrs["_FillValue"] = convert_string_to_number(attrs["_FillValue"])
 
     # Check _FillValue and CodeMissingValue agrees
     # - Do not since _FillValue often badly defined !

@@ -37,10 +37,7 @@ def get_time_str(timesteps, time_idx=None, resolution="m", timezone="UTC"):
     if timesteps.size == 1:
         timestep = timesteps
     else:
-        if time_idx is None:
-            timestep = timesteps[int(len(timesteps) / 2)]
-        else:
-            timestep = timesteps[time_idx]
+        timestep = timesteps[int(len(timesteps) / 2)] if time_idx is None else timesteps[time_idx]
     # Get time string with custom unit and timezone
     time_str = np.datetime_as_string(timestep, unit=resolution, timezone=timezone)
     return time_str.replace("T", " ").replace("Z", "")

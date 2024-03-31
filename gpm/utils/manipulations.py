@@ -64,9 +64,8 @@ def integrate_profile_concentration(dataarray, name, scale_factor=None, units=No
 
     height a list or array of corresponding heights for each level.
     """
-    if scale_factor is not None:
-        if units is None:
-            raise ValueError("Specify output 'units' when the scale_factor is applied.")
+    if scale_factor is not None and units is None:
+        raise ValueError("Specify output 'units' when the scale_factor is applied.")
     # Compute integrated value
     data = dataarray.data.copy()
     vertical_dim = _get_vertical_dim(dataarray)

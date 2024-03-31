@@ -96,10 +96,7 @@ def test_get_product_level(full):
         #   3B-HH3, 3B-DAY
     }
     for product, results in results_dict.items():
-        if full:
-            expected_product_level = results["full"]
-        else:
-            expected_product_level = results["short"]
+        expected_product_level = results["full"] if full else results["short"]
         product_level = get_product_level(product, full=full)
         assert product_level == expected_product_level
 

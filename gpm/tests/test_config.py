@@ -106,9 +106,8 @@ def test_get_base_dir():
     assert get_base_dir(base_dir="test/gpm") == "test/gpm"
 
     # Check that if no config YAML file specified (base_dir=None), raise error
-    with gpm.config.set({"base_dir": None}):
-        with pytest.raises(ValueError):
-            get_base_dir()
+    with gpm.config.set({"base_dir": None}), pytest.raises(ValueError):
+        get_base_dir()
 
     # Set base_dir in the donfig config and check it return it !
     gpm.config.set({"base_dir": "another_test_dir/gpm"})

@@ -336,10 +336,7 @@ class TestGetDailyFilepaths:
                 verbose=True,
             )
 
-            if "TRMM" in ges_disc_dir:
-                subdomain = "disc2"
-            else:
-                subdomain = "gpm2"
+            subdomain = "disc2" if "TRMM" in ges_disc_dir else "gpm2"
 
             base_url = f"https://{subdomain}.gesdisc.eosdis.nasa.gov/data/{ges_disc_dir}.0{version}/{self.date.strftime('%Y/%j')}"
             expected_filepaths = [f"{base_url}/{filename}" for filename in self.mock_filenames]

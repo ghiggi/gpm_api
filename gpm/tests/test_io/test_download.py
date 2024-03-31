@@ -154,18 +154,18 @@ class TestDownloadUtility:
         """Test _get_commands_futures."""
         commands = ["echo 'Hello, World!'", "exit 1"]
 
-        with ThreadPoolExecutor() as executor:
-            with patch("subprocess.check_call", return_value=0) as mock_check_call:
-                futures = dl._get_commands_futures(executor, commands)
-                assert len(futures) == len(
-                    commands
-                ), "Number of futures should match number of commands"
-                # Ensure each future is for a subprocess.check_call call
-                for future in futures:
-                    assert (
-                        futures[future][1] in commands
-                    ), "Future command should be in commands list"
-                mock_check_call.assert_called()
+        with (
+            ThreadPoolExecutor() as executor,
+            patch("subprocess.check_call", return_value=0) as mock_check_call,
+        ):
+            futures = dl._get_commands_futures(executor, commands)
+            assert len(futures) == len(
+                commands
+            ), "Number of futures should match number of commands"
+            # Ensure each future is for a subprocess.check_call call
+            for future in futures:
+                assert futures[future][1] in commands, "Future command should be in commands list"
+            mock_check_call.assert_called()
 
     def test_get_list_failing_commands(self):
         """Test _get_list_failing_commands."""
