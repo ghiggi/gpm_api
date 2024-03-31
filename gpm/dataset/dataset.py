@@ -56,7 +56,7 @@ def _get_scheduler(get=None, collection=None):
     """
     try:
         import dask
-        from dask.base import get_scheduler  # noqa: F401
+        from dask.base import get_scheduler
 
         actual_get = get_scheduler(get, collection)
     except ImportError:
@@ -258,7 +258,7 @@ def open_dataset(
         If you want to load data in memory directly, specify ``chunks=None``.
         The default is ``{}``.
 
-        Hint: xarray’s lazy loading of remote or on-disk datasets is often but not always desirable.
+        Hint: xarray's lazy loading of remote or on-disk datasets is often but not always desirable.
         Before performing computationally intense operations, load the dataset
         entirely into memory by invoking ``ds.compute()``.
     decode_cf: bool, optional

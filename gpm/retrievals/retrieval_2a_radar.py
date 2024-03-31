@@ -269,7 +269,7 @@ def retrieve_VIL(ds, variable="zFactorFinal", radar_frequency="Ku"):
 
     Reference:
         Greene, D.R., and R.A. Clark, 1972:
-        Vertically integrated liquid water–A new analysis tool.
+        Vertically integrated liquid water - A new analysis tool.
         Mon. Wea. Rev., 100, 548-552.
         Amburn and Wolf (1997)
     """

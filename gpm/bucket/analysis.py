@@ -77,7 +77,7 @@ def get_cut_lat_breaks_labels(bin_spacing):
     lat_buckets = get_lat_bins(bin_spacing)
     # Define cut labels
     cut_lat_labels = lat_labels.astype(str).tolist()
-    cut_lat_labels = ["outside_left"] + cut_lat_labels + ["outside_right"]
+    cut_lat_labels = ["outside_left", *cut_lat_labels, "outside_right"]
     # Deal with left inclusion
     cut_lat_breaks = lat_buckets
     cut_lat_breaks[0] = cut_lat_breaks[0] - 1e-6
@@ -88,7 +88,7 @@ def get_cut_lon_breaks_labels(bin_spacing):
     lon_labels = get_lon_labels(bin_spacing)
     lon_buckets = get_lon_bins(bin_spacing)
     cut_lon_labels = lon_labels.astype(str).tolist()
-    cut_lon_labels = ["outside_left"] + cut_lon_labels + ["outside_right"]
+    cut_lon_labels = ["outside_left", *cut_lon_labels, "outside_right"]
     # - Deal with left inclusion
     cut_lon_breaks = lon_buckets
     cut_lon_breaks[0] = cut_lon_breaks[0] - 1e-6

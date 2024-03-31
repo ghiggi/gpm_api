@@ -335,7 +335,7 @@ def wget_pps_cmd(remote_filepath, local_filepath, username, password):
         os.makedirs(local_dir)
 
     ## Define WGET command
-    # - Base cmd: wget -4 --ftp-user=[user name] –-ftp-password=[password] -O
+    # - Base cmd: wget -4 --ftp-user=[user name] --ftp-password=[password] -O
     # - Define authentication settings
     auth = f"-4 --ftp-user='{username}' --ftp-password='{password}' -e robots=off"
     # - Define options

@@ -37,7 +37,7 @@ from xarray import Variable
 # This is both to enhance conformance to COARDS and to facilitate the
 # use of generic applications that recognize the NUG convention for coordinate variables.
 # An application that is trying to find the latitude coordinate of a variable
-# should always look first to see if any of the variable’s dimensions correspond to a latitude coordinate variable.
+# should always look first to see if any of the variable's dimensions correspond to a latitude coordinate variable.
 # If the latitude coordinate is not found this way, then the auxiliary coordinate variables
 # listed by the coordinates attribute should be checked.
 # Note that it is permissible, but optional, to list coordinate variables

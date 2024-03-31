@@ -268,7 +268,7 @@ def open_granule(
         If you want to load data in memory directly, specify ``chunks=None``.
         The default is ``{}``.
 
-        Hint: xarray’s lazy loading of remote or on-disk datasets is often but not always desirable.
+        Hint: xarray's lazy loading of remote or on-disk datasets is often but not always desirable.
         Before performing computationally intense operations, load the dataset
         entirely into memory by invoking ``ds.compute()``.
     decode_cf: bool, optional
