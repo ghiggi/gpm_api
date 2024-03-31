@@ -235,11 +235,10 @@ def _convert_size_to_bytes(size_str):
         size_str = size_str.lower().strip().strip("s")
         if size_str.lower().endswith(suffix):
             return int(float(size_str[0 : -len(suffix)]) * multipliers[suffix])
-    else:
-        if size_str.endswith("b"):
-            size_str = size_str[0:-1]
-        elif size_str.endswith("byte"):
-            size_str = size_str[0:-4]
+    if size_str.endswith("b"):
+        size_str = size_str[0:-1]
+    elif size_str.endswith("byte"):
+        size_str = size_str[0:-4]
     return int(size_str)
 
 

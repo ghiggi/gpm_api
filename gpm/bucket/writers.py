@@ -83,8 +83,6 @@ def write_dataset_bucket(
         filename_prefix=filename_prefix**writer_kwargs,
     )
 
-    return
-
 
 ####--------------------------------------------------------------------------.
 #### Single GPM Granule Routines
@@ -312,8 +310,6 @@ def write_granules_bucket(
             client = get_client()
             clean_memory(client)
             client.restart()
-
-    return
 
 
 ####--------------------------------------------------------------------------.

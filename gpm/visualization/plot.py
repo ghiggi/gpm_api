@@ -1105,7 +1105,6 @@ def plot_patches(
             plt.show()
         except Exception:
             pass
-    return
 
 
 ####--------------------------------------------------------------------------.

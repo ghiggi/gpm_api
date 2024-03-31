@@ -86,5 +86,3 @@ def download_gpm_monthly_data(
         verbose=verbose,
         retry=retry,
     )
-
-    return

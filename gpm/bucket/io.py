@@ -84,7 +84,6 @@ def _get_filepaths_by_bin_parallel(list_bin_dir_path):
 def get_filepaths_by_bin(base_dir, parallel=True):
     """Retrieve a dictionary with the list of filepaths for each bucket bin."""
     list_bin_dir_path = _retrieve_list_bin_dir_path(base_dir)
-    list_bin_dir_path = list_bin_dir_path
     if parallel:
         results = _get_filepaths_by_bin_parallel(list_bin_dir_path)
     else:

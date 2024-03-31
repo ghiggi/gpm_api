@@ -67,7 +67,7 @@ def _add_cmb_coordinates(ds, product, scan_mode):
         pmw_frequency = get_pmw_frequency_corra(product)
         ds = ds.assign_coords({"pmw_frequency": pmw_frequency})
 
-    if (scan_mode == "KuKaGMI" or scan_mode == "NS") and "radar_frequency" in list(ds.dims):
+    if (scan_mode in ("KuKaGMI", "NS")) and "radar_frequency" in list(ds.dims):
         ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
 
     return _add_cmb_range_coordinate(ds, scan_mode)

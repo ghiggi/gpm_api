@@ -55,4 +55,3 @@ def write_yaml(dictionary, filepath, sort_keys=False):
     """
     with open(filepath, "w") as f:
         yaml.dump(dictionary, f, sort_keys=sort_keys)
-    return

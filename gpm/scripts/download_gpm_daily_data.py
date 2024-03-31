@@ -89,5 +89,3 @@ def download_gpm_daily_data(
         verbose=verbose,
         retry=retry,
     )
-
-    return

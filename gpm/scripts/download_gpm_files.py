@@ -75,5 +75,3 @@ def download_gpm_files(
         verbose=verbose,
         retry=retry,
     )
-
-    return

@@ -136,8 +136,6 @@ def _parse_attr_string(s):
         s = int(float(s))  # prior float because '0.0000' otherwise crash
     elif isinstance(s, str) and _isfloat(s):
         s = float(s)
-    else:
-        s = s
     return s
 
 

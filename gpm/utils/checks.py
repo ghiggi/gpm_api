@@ -727,7 +727,6 @@ def check_valid_geolocation(xr_obj, verbose=True):
         msg = f"There are {n_invalid_scan_slices} swath portions with non-valid geolocation."
         msg += f"The first occur at {first_problematic_timestep}."
         raise ValueError(msg)
-    return
 
 
 @check_is_gpm_object
