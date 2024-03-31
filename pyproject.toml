@@ -157,6 +157,10 @@ select = [
     "PL",
     # flake8-commas
     "COM",
+    # flake8-slots
+    "SLOT",
+    # flake8-comprehensions
+    "C4",
 
     #---------------------
     #### Future rules ####

@@ -397,7 +397,7 @@ class CartopyFacetGrid(CustomFacetGrid):
         # Define Cartopy axes
         if projection is None:
             raise ValueError("Please specify a Cartopy projection.")
-        axes_class = (GeoAxes, dict(projection=projection))
+        axes_class = (GeoAxes, {"projection": projection})
 
         super().__init__(
             data=data,
