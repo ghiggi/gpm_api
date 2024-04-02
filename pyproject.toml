@@ -86,7 +86,7 @@ download_gpm_files="gpm.scripts.download_gpm_files:download_gpm_files"
 addopts = "--ignore=gpm/tests/0_tmp/ --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
 
 [tool.black]
-line-length = 100
+line-length = 120
 # skip-string-normalization = true
 target-version = [
     "py39",

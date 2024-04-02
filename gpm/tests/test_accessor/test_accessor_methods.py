@@ -49,12 +49,8 @@ base_accessor_methods_dict = get_class_methods(GPM_Base_Accessor)
 dataset_accessor_methods_dict = get_class_methods(GPM_Dataset_Accessor)
 dataarray_accessor_methods_dict = get_class_methods(GPM_DataArray_Accessor)
 base_accessor_methods = list(base_accessor_methods_dict.values())
-dataset_accessor_methods = [
-    v for v in dataset_accessor_methods_dict.values() if v not in base_accessor_methods
-]
-dataarray_accessor_methods = [
-    v for v in dataarray_accessor_methods_dict.values() if v not in base_accessor_methods
-]
+dataset_accessor_methods = [v for v in dataset_accessor_methods_dict.values() if v not in base_accessor_methods]
+dataarray_accessor_methods = [v for v in dataarray_accessor_methods_dict.values() if v not in base_accessor_methods]
 accessor_methods = base_accessor_methods + dataset_accessor_methods + dataarray_accessor_methods
 
 
@@ -116,28 +112,20 @@ def compare_default_arguments(
     missing_arguments = set(reference_default_arguments.keys()) - set(
         accessor_default_arguments.keys(),
     )
-    assert (
-        not missing_arguments
-    ), f"Missing arguments in {get_function_location(accessor_method)}: {missing_arguments}"
+    assert not missing_arguments, f"Missing arguments in {get_function_location(accessor_method)}: {missing_arguments}"
 
     extra_arguments = set(accessor_default_arguments.keys()) - set(
         reference_default_arguments.keys(),
     )
-    assert (
-        not extra_arguments
-    ), f"Extra arguments in {get_function_location(accessor_method)}: {extra_arguments}"
+    assert not extra_arguments, f"Extra arguments in {get_function_location(accessor_method)}: {extra_arguments}"
 
     different_values = {
         key: (accessor_default_arguments[key], reference_default_arguments[key])
         for key in reference_default_arguments
         if accessor_default_arguments[key] != reference_default_arguments[key]
-        and not (
-            np.isnan(accessor_default_arguments[key]) and np.isnan(reference_default_arguments[key])
-        )
+        and not (np.isnan(accessor_default_arguments[key]) and np.isnan(reference_default_arguments[key]))
     }
-    assert (
-        not different_values
-    ), f"Different values in {get_function_location(accessor_method)}: {different_values}"
+    assert not different_values, f"Different values in {get_function_location(accessor_method)}: {different_values}"
 
 
 def mock_associated_gpm_method(
@@ -203,9 +191,7 @@ def test_passed_arguments_dataset(
     ds_accessor_method = getattr(ds.gpm, accessor_method.__name__)
     returned = ds_accessor_method(**args_kwargs_dict)
 
-    assert (
-        returned == expected
-    ), f"Arguments not passed correctly in {get_function_location(accessor_method)}"
+    assert returned == expected, f"Arguments not passed correctly in {get_function_location(accessor_method)}"
 
 
 @pytest.mark.parametrize("accessor_method", base_accessor_methods + dataarray_accessor_methods)
@@ -225,6 +211,4 @@ def test_passed_arguments_dataarray(
     expected = {"xr_obj": da, **args_kwargs_dict}
     returned = da_accessor_method(**args_kwargs_dict)
 
-    assert (
-        returned == expected
-    ), f"Arguments not passed correctly in {get_function_location(accessor_method)}"
+    assert returned == expected, f"Arguments not passed correctly in {get_function_location(accessor_method)}"

@@ -236,11 +236,7 @@ def filter_by_product(filepaths, product, product_type="RS"):
 
     # -------------------------------------------------------------------------.
     # Subset by specific product
-    return [
-        filepath
-        for filepath in filepaths
-        if _string_match(pattern=product_pattern, string=filepath)
-    ]
+    return [filepath for filepath in filepaths if _string_match(pattern=product_pattern, string=filepath)]
 
     # -------------------------------------------------------------------------.
     # Return valid filepaths

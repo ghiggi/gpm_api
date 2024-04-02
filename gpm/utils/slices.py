@@ -105,11 +105,7 @@ def list_slices_intersection(*args, min_size=1):
     list_slices = [slice(-np.inf, np.inf)]
 
     for i in range(len(args)):
-        list_slices = [
-            _get_slices_intersection(slc1, slc2, min_size)
-            for slc1 in list_slices
-            for slc2 in args[i]
-        ]
+        list_slices = [_get_slices_intersection(slc1, slc2, min_size) for slc1 in list_slices for slc2 in args[i]]
         list_slices = [slc for slc in list_slices if slc is not None]
         if len(list_slices) == 0:
             return []
@@ -146,8 +142,7 @@ def list_slices_difference(list_slices1, list_slices2):
         return list_slices1
 
     list_slices = [
-        [slc for slc1 in list_slices1 for slc in _get_slices_difference(slc1, slc2)]
-        for slc2 in list_slices2
+        [slc for slc1 in list_slices1 for slc in _get_slices_difference(slc1, slc2)] for slc2 in list_slices2
     ]
     return list_slices_intersection(
         *list_slices,
@@ -247,9 +242,7 @@ def get_list_slices_from_bool_arr(bool_arr, include_false=True, skip_consecutive
         list_slices = [slice(0, len(bool_arr))]
     # If all False
     elif np.all(~bool_arr):
-        list_slices = (
-            [] if skip_consecutive_false else [slice(i, i + 1) for i in range(0, len(bool_arr))]
-        )
+        list_slices = [] if skip_consecutive_false else [slice(i, i + 1) for i in range(0, len(bool_arr))]
     # If True and False
     else:
         # Retrieve indices where False start to occur

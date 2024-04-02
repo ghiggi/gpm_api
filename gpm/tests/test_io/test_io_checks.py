@@ -701,9 +701,7 @@ def test_check_scan_mode(
 
             for scan_mode in scan_modes:
                 res = checks.check_scan_mode(scan_mode, product, version)
-                assert (
-                    res == scan_mode
-                ), f"Function returned {res} for scan_mode {scan_mode}, expected {scan_mode}"
+                assert res == scan_mode, f"Function returned {res} for scan_mode {scan_mode}, expected {scan_mode}"
 
             # Test a scan mode that doesn't exist
             for scan_mode in ["NOT", "A", "SCAN", "MODE"]:
@@ -712,9 +710,7 @@ def test_check_scan_mode(
 
             # Try to have function infer scan mode
             res = checks.check_scan_mode(None, product, version)
-            assert (
-                res in scan_modes
-            ), f"Function returned {res} for scan_mode {scan_mode}, expected {scan_mode}"
+            assert res in scan_modes, f"Function returned {res} for scan_mode {scan_mode}, expected {scan_mode}"
 
             # Test a scan mode that isn't a string
             with pytest.raises(ValueError):

@@ -321,31 +321,19 @@ def check_is_transect(da, strict=True, squeeze=True):
 
 def get_spatial_2d_variables(ds, strict=False, squeeze=True):
     """Get list of xr.Dataset 2D spatial variables."""
-    variables = [
-        var
-        for var in get_dataset_variables(ds)
-        if is_spatial_2d(ds[var], strict=strict, squeeze=squeeze)
-    ]
+    variables = [var for var in get_dataset_variables(ds) if is_spatial_2d(ds[var], strict=strict, squeeze=squeeze)]
     return sorted(variables)
 
 
 def get_spatial_3d_variables(ds, strict=False, squeeze=True):
     """Get list of xr.Dataset 3D spatial variables."""
-    variables = [
-        var
-        for var in get_dataset_variables(ds)
-        if is_spatial_3d(ds[var], strict=strict, squeeze=squeeze)
-    ]
+    variables = [var for var in get_dataset_variables(ds) if is_spatial_3d(ds[var], strict=strict, squeeze=squeeze)]
     return sorted(variables)
 
 
 def get_transect_variables(ds, strict=False, squeeze=True):
     """Get list of xr.Dataset trasect variables."""
-    variables = [
-        var
-        for var in get_dataset_variables(ds)
-        if is_transect(ds[var], strict=strict, squeeze=squeeze)
-    ]
+    variables = [var for var in get_dataset_variables(ds) if is_transect(ds[var], strict=strict, squeeze=squeeze)]
     return sorted(variables)
 
 

@@ -285,9 +285,7 @@ def decode_product(ds):
         ds["precipWaterIntegrated_Liquid"] = ds["precipWaterIntegrated"].isel({"LS": 0})
         ds["precipWaterIntegrated_Solid"] = ds["precipWaterIntegrated"].isel({"LS": 1})
         ds = ds.drop_vars(names="precipWaterIntegrated")
-        ds["precipWaterIntegrated"] = (
-            ds["precipWaterIntegrated_Liquid"] + ds["precipWaterIntegrated_Solid"]
-        )
+        ds["precipWaterIntegrated"] = ds["precipWaterIntegrated_Liquid"] + ds["precipWaterIntegrated_Solid"]
         # Add units
         variables = [
             "precipWaterIntegrated_Liquid",

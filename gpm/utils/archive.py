@@ -111,9 +111,7 @@ def check_time_period_coverage(filepaths, start_time, end_time, raise_error=Fals
         msg = f"The first file start_time ({first_start}) occurs after the specified start_time ({start_time})"
 
     if last_end < end_time:
-        msg1 = (
-            f"The last file end_time ({last_end}) occurs before the specified end_time ({end_time})"
-        )
+        msg1 = f"The last file end_time ({last_end}) occurs before the specified end_time ({end_time})"
         msg = msg + "; and t" + msg1[1:] if msg != "" else msg1
     if msg != "":
         if raise_error:

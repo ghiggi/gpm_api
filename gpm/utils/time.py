@@ -207,9 +207,7 @@ def infill_timesteps(timesteps, limit):
         if len(timesteps) <= 2:
             error_message = "Not enough timesteps available to infill NaTs."
         elif is_nat(timesteps[0]) or is_nat(timesteps[-1]):
-            error_message = (
-                "NaTs present at the beginning or at the end of the timesteps cannot be inferred."
-            )
+            error_message = "NaTs present at the beginning or at the end of the timesteps cannot be inferred."
         else:
             error_message = f"More than {limit} consecutive timesteps are NaT."
         raise ValueError(error_message)

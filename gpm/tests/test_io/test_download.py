@@ -173,9 +173,7 @@ class TestDownloadUtility:
             futures = dl._get_commands_futures(executor, commands)
             failing_commands = dl._get_list_failing_commands(futures)
             # Check the failing command is in the failing_commands list
-            assert (
-                commands[1] in failing_commands
-            ), "Failing command should be in the list of failed commands"
+            assert commands[1] in failing_commands, "Failing command should be in the list of failed commands"
             # Check the valid command is not in the failing_commands list
             assert (
                 commands[0] not in failing_commands

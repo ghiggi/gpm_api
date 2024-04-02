@@ -123,9 +123,7 @@ def get_grid_coords(dt, scan_mode):
 
 def get_coords(dt, scan_mode):
     """Get coordinates from GPM objects."""
-    return (
-        get_grid_coords(dt, scan_mode) if scan_mode == "Grid" else get_orbit_coords(dt, scan_mode)
-    )
+    return get_grid_coords(dt, scan_mode) if scan_mode == "Grid" else get_orbit_coords(dt, scan_mode)
 
 
 def _subset_dict_by_dataset(ds, dictionary):

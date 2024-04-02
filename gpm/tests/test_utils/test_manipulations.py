@@ -374,9 +374,7 @@ class TestGetPhaseMask:
     ) -> None:
         """Test get_liquid_phase_mask function."""
         returned_mask = manipulations.get_liquid_phase_mask(phase_dataarray)
-        expected_mask = (
-            phase_dataarray["height"].data[:, np.newaxis, np.newaxis] < self.height_zero_deg
-        )
+        expected_mask = phase_dataarray["height"].data[:, np.newaxis, np.newaxis] < self.height_zero_deg
         np.testing.assert_allclose(returned_mask.data, expected_mask)
 
     def test_get_solid_phase_mask(
@@ -385,9 +383,7 @@ class TestGetPhaseMask:
     ) -> None:
         """Test get_solid_phase_mask function."""
         returned_mask = manipulations.get_solid_phase_mask(phase_dataarray)
-        expected_mask = (
-            phase_dataarray["height"].data[:, np.newaxis, np.newaxis] >= self.height_zero_deg
-        )
+        expected_mask = phase_dataarray["height"].data[:, np.newaxis, np.newaxis] >= self.height_zero_deg
         np.testing.assert_allclose(returned_mask.data, expected_mask)
 
 

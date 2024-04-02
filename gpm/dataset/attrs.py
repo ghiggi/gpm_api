@@ -151,9 +151,7 @@ def decode_string(string):
     string = string.replace("\t", "").rstrip("\n")
     # Create dictionary if = is present
     if "=" in string:
-        list_key_value = [
-            key_value.split("=", 1) for key_value in string.split(";") if len(key_value) > 0
-        ]
+        list_key_value = [key_value.split("=", 1) for key_value in string.split(";") if len(key_value) > 0]
         value = {key.replace("\n", ""): _parse_attr_string(value) for key, value in list_key_value}
     else:
         value = _parse_attr_string(string)

@@ -198,9 +198,7 @@ def _get_ges_disc_file_list(url_product_dir, product, date, version, verbose=Tru
         # If no filepath (empty directory), print message if verbose=True
         if verbose:
             version_str = str(int(version))
-            msg = (
-                f"No data found on GES DISC on date {date} for product {product} (V0{version_str})"
-            )
+            msg = f"No data found on GES DISC on date {date} for product {product} (V0{version_str})"
             print(msg)
         filepaths = []
     return filepaths

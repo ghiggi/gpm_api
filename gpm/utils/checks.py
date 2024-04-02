@@ -356,9 +356,7 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
     if n_discontinuous > 0:
         # Retrieve discontinuous timesteps interval
         timesteps = _get_timesteps(xr_obj)
-        list_discontinuous = [
-            (timesteps[slc.start], timesteps[slc.stop - 1]) for slc in list_discontinuous_slices
-        ]
+        list_discontinuous = [(timesteps[slc.start], timesteps[slc.stop - 1]) for slc in list_discontinuous_slices]
         first_problematic_timestep = list_discontinuous[0][0]
         # Print non-regular timesteps
         if verbose:
@@ -583,9 +581,7 @@ def check_contiguous_scans(xr_obj, verbose=True):
     if n_discontinuous > 0:
         # Retrieve discontinuous timesteps interval
         timesteps = _get_timesteps(xr_obj)
-        list_discontinuous = [
-            (timesteps[slc.start], timesteps[slc.stop - 1]) for slc in list_discontinuous_slices
-        ]
+        list_discontinuous = [(timesteps[slc.start], timesteps[slc.stop - 1]) for slc in list_discontinuous_slices]
         first_problematic_timestep = list_discontinuous[0][0]
         # Print non-contiguous scans
         if verbose:
@@ -767,10 +763,7 @@ def apply_on_valid_geolocation(function):
             subset_slices = function(*args, **kwargs)
             # Add start offset to subset slices
             if len(subset_slices) > 0:
-                subset_slices = [
-                    slice(slc.start + start_offset, slc.stop + start_offset)
-                    for slc in subset_slices
-                ]
+                subset_slices = [slice(slc.start + start_offset, slc.stop + start_offset) for slc in subset_slices]
                 list_slices.append(subset_slices)
         # Flatten the list
         return list_slices_flatten(list_slices)
@@ -945,11 +938,7 @@ def _get_slices_variable_equal_value(da, value, dim=None, criteria="all"):
     da_bool = da == value
     # Collapse other dimension than dim
     dims_apply_over = list(dims.difference(dim))
-    bool_arr = (
-        da_bool.all(dim=dims_apply_over).data
-        if criteria == "all"
-        else da_bool.any(dim=dims_apply_over).data
-    )
+    bool_arr = da_bool.all(dim=dims_apply_over).data if criteria == "all" else da_bool.any(dim=dims_apply_over).data
     # Get list of slices with contiguous value
     return get_list_slices_from_bool_arr(bool_arr, include_false=False, skip_consecutive_false=True)
 
@@ -981,13 +970,10 @@ def get_slices_var_equals(da, dim, values, union=True, criteria="all"):
         return _get_slices_variable_equal_value(da=da, value=values, dim=dim, criteria=criteria)
     # If multiple values, apply recursively
     list_of_list_slices = [
-        _get_slices_variable_equal_value(da=da, value=value, dim=dim, criteria=criteria)
-        for value in values
+        _get_slices_variable_equal_value(da=da, value=value, dim=dim, criteria=criteria) for value in values
     ]
     # Return list_slices
-    return (
-        list_slices_union(*list_of_list_slices) if union else list_slices_sort(*list_of_list_slices)
-    )
+    return list_slices_union(*list_of_list_slices) if union else list_slices_sort(*list_of_list_slices)
 
 
 def get_slices_var_between(da, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
@@ -1012,10 +998,6 @@ def get_slices_var_between(da, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
     da_bool = np.logical_and(da >= vmin, da <= vmax)
     # Collapse other dimension than dim
     dims_apply_over = list(dims.difference(dim))
-    bool_arr = (
-        da_bool.all(dim=dims_apply_over).data
-        if criteria == "all"
-        else da_bool.any(dim=dims_apply_over).data
-    )
+    bool_arr = da_bool.all(dim=dims_apply_over).data if criteria == "all" else da_bool.any(dim=dims_apply_over).data
     # Get list of slices with contiguous value
     return get_list_slices_from_bool_arr(bool_arr, include_false=False, skip_consecutive_false=True)

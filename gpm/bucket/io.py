@@ -50,9 +50,7 @@ def _get_parquet_file_list(bin_dir_path):
     # Retrieve file path list
     with os.scandir(bin_dir_path) as file_it:
         file_list = [
-            file_entry.path
-            for file_entry in file_it
-            if (file_entry.is_file() and file_entry.name.endswith(".parquet"))
+            file_entry.path for file_entry in file_it if (file_entry.is_file() and file_entry.name.endswith(".parquet"))
         ]
 
     # Define dictionary key
@@ -68,8 +66,7 @@ def _get_filepaths_by_bin_parallel(list_bin_dir_path):
     results = {}
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future_dict = {
-            executor.submit(_get_parquet_file_list, bin_dir_path): bin_dir_path
-            for bin_dir_path in list_bin_dir_path
+            executor.submit(_get_parquet_file_list, bin_dir_path): bin_dir_path for bin_dir_path in list_bin_dir_path
         }
         for future in concurrent.futures.as_completed(future_dict):
             bin_dir_path = future_dict[future]

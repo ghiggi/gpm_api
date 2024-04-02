@@ -62,9 +62,7 @@ def remove_unfixed_attributes(ds):
 def check_dataset_equality(cut_filepath):
     processed_dir = os.path.dirname(cut_filepath.replace("cut", "processed"))
     processed_filenames = os.listdir(processed_dir)
-    processed_filepaths = [
-        os.path.join(processed_dir, filename) for filename in processed_filenames
-    ]
+    processed_filepaths = [os.path.join(processed_dir, filename) for filename in processed_filenames]
     scan_modes = [os.path.splitext(filename)[0] for filename in processed_filenames]
     for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths):
         ds = open_granule(cut_filepath, scan_mode=scan_mode).compute()
@@ -130,7 +128,5 @@ def test_open_granule_on_real_files():
         # Report which tests failed
         if len(list_failed_checks) > 0:
             failed_products = [product_id for (product_id, err) in list_failed_checks]
-            msg = (
-                f"Failed dataset comparison for {failed_products}. Errors are: {list_failed_checks}"
-            )
+            msg = f"Failed dataset comparison for {failed_products}. Errors are: {list_failed_checks}"
             raise ValueError(msg)

@@ -94,11 +94,7 @@ class TestFilterFilepaths:
         # Count and assert 2019 paths
         count_2019 = 0
         for info_dict in remote_filepaths.values():
-            if (
-                info_dict["year"] == 2019
-                and info_dict["product"] == self.product
-                and info_dict["version"] == 7
-            ):
+            if info_dict["year"] == 2019 and info_dict["product"] == self.product and info_dict["version"] == 7:
                 count_2019 += 1
 
         res = filter_filepaths(

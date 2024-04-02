@@ -120,8 +120,7 @@ class TestGetDailyFilepaths:
                     )
 
                     expected_filepaths = [
-                        os.path.join(*expected_filepath_elements, filename)
-                        for filename in self.mock_filenames
+                        os.path.join(*expected_filepath_elements, filename) for filename in self.mock_filenames
                     ]
 
                     with check:

@@ -16,9 +16,7 @@ def test_get_pmw_frequency_corra(
     # Try GPM CORRA Product
     res = co.get_pmw_frequency_corra("2B-GPM-CORRA")
     assert len(res) > 0
-    assert res == (
-        co.get_pmw_frequency("GMI", scan_mode="S1") + co.get_pmw_frequency("GMI", scan_mode="S2")
-    )
+    assert res == (co.get_pmw_frequency("GMI", scan_mode="S1") + co.get_pmw_frequency("GMI", scan_mode="S2"))
 
     # Try TRMM CORRA Product
     res = co.get_pmw_frequency_corra("2B-TRMM-CORRA")

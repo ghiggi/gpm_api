@@ -345,11 +345,7 @@ def plot_colorbar(p, ax, cbar_kwargs=None):
     p.figure.add_axes(cax)
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
     if ticklabels is not None:
-        _ = (
-            cbar.ax.set_yticklabels(ticklabels)
-            if orientation == "vertical"
-            else cbar.ax.set_xticklabels(ticklabels)
-        )
+        _ = cbar.ax.set_yticklabels(ticklabels) if orientation == "vertical" else cbar.ax.set_xticklabels(ticklabels)
     return cbar
 
 

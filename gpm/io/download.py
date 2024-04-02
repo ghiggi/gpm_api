@@ -457,9 +457,7 @@ def filter_download_list(remote_filepaths, local_filepaths, force_download=False
     # Check if data already exists
     if force_download is False:
         # Get index of files which does not exist on disk
-        idx_not_existing = [
-            i for i, filepath in enumerate(local_filepaths) if not os.path.exists(filepath)
-        ]
+        idx_not_existing = [i for i, filepath in enumerate(local_filepaths) if not os.path.exists(filepath)]
         # Select paths of files not present on disk
         local_filepaths = [local_filepaths[i] for i in idx_not_existing]
         remote_filepaths = [remote_filepaths[i] for i in idx_not_existing]
@@ -531,10 +529,7 @@ def get_filepaths_from_filenames(filepaths, storage, product_type):
         List of file paths on <storage> storage.
 
     """
-    return [
-        get_filepath_from_filename(filepath, storage=storage, product_type=product_type)
-        for filepath in filepaths
-    ]
+    return [get_filepath_from_filename(filepath, storage=storage, product_type=product_type) for filepath in filepaths]
 
 
 ####--------------------------------------------------------------------------.

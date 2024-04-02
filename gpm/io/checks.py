@@ -211,8 +211,7 @@ def check_time(time):
     """
     if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, np.ndarray, str)):
         raise TypeError(
-            "Specify time with datetime.datetime objects or a "
-            "string of format 'YYYY-MM-DD hh:mm:ss'.",
+            "Specify time with datetime.datetime objects or a " "string of format 'YYYY-MM-DD hh:mm:ss'.",
         )
 
     # If numpy array with datetime64 (and size=1)
@@ -427,8 +426,7 @@ def check_full_product_levels(full_product_levels):
         full_product_levels = [full_product_levels]
     if full_product_levels is not None:
         full_product_levels = [
-            check_full_product_level(full_product_level)
-            for full_product_level in full_product_levels
+            check_full_product_level(full_product_level) for full_product_level in full_product_levels
         ]
     return full_product_levels
 
@@ -447,9 +445,7 @@ def check_product_categories(product_categories):
     if isinstance(product_categories, str):
         product_categories = [product_categories]
     if product_categories is not None:
-        product_categories = [
-            check_product_category(product_category) for product_category in product_categories
-        ]
+        product_categories = [check_product_category(product_category) for product_category in product_categories]
     return product_categories
 
 

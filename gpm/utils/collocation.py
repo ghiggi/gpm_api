@@ -119,11 +119,7 @@ def collocate_product(
     list_remapped = [src_ds.gpm.remap_on(ds) for src_ds in list_ds]
 
     # Concatenate if necessary (PMW case)
-    output_ds = (
-        xr.concat(list_remapped, dim="pmw_frequency")
-        if len(list_remapped) > 1
-        else list_remapped[0]
-    )
+    output_ds = xr.concat(list_remapped, dim="pmw_frequency") if len(list_remapped) > 1 else list_remapped[0]
 
     # Assign attributes
     output_ds.attrs = list_ds[0].attrs

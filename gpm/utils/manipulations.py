@@ -206,11 +206,7 @@ def get_range_slices_within_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.
     n_bins = len(da[vertical_dim])
     first_true_index = is_within_interval.argmax(dim=vertical_dim).min().item()
     axis_idx = np.where(np.isin(list(da.dims), vertical_dim))[0]
-    last_true_index = (
-        n_bins
-        - 1
-        - np.flip(is_within_interval, axis=axis_idx).argmax(dim=vertical_dim).min().item()
-    )
+    last_true_index = n_bins - 1 - np.flip(is_within_interval, axis=axis_idx).argmax(dim=vertical_dim).min().item()
     return {vertical_dim: slice(first_true_index, last_true_index + 1)}
 
 

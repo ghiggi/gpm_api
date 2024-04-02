@@ -403,11 +403,7 @@ def _add_coords_crs_attrs(ds, crs):
         ds = _add_proj_coords_attrs(ds, crs)
     # Geographic CRS
     else:
-        ds = (
-            _add_swath_coords_attrs(ds, crs)
-            if has_swath_coords(ds)
-            else _add_proj_coords_attrs(ds, crs)
-        )
+        ds = _add_swath_coords_attrs(ds, crs) if has_swath_coords(ds) else _add_proj_coords_attrs(ds, crs)
     return ds
 
 
@@ -517,9 +513,7 @@ def _get_variables_with_spatial_dims(ds):
     if len(spatial_dims) == 0:
         raise ValueError("No spatial dimension identified in the dataset.")
     variables = list(ds.coords) + list(ds.data_vars)
-    list_spatial_variables = [
-        var for var in variables if set(ds[var].dims).issuperset(spatial_dims)
-    ]
+    list_spatial_variables = [var for var in variables if set(ds[var].dims).issuperset(spatial_dims)]
     # Remove spatial coordinates from the list
     coords = _get_spatial_coordinates(ds)
     return set(list_spatial_variables).difference(coords)
@@ -538,9 +532,7 @@ def _add_variables_crs_attrs(ds, crs, grid_mapping_name):
 
     for var in variables:
         grid_mapping = ds[var].attrs.get("grid_mapping", "")
-        grid_mapping = (
-            grid_mapping_value if grid_mapping == "" else grid_mapping + " " + grid_mapping_value
-        )
+        grid_mapping = grid_mapping_value if grid_mapping == "" else grid_mapping + " " + grid_mapping_value
         ds[var].attrs["grid_mapping"] = grid_mapping
 
     # Add coordinates attribute if swath data
@@ -684,11 +676,7 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 def _get_crs_coordinates(xr_obj):
     """Return a list with the name(s) of the CRS coordinate(s)."""
     crs_attributes = ["grid_mapping_name", "crs_wkt", "spatial_ref"]
-    return [
-        coord
-        for coord in xr_obj.coords
-        if np.any(np.isin(crs_attributes, list(xr_obj[coord].attrs)))
-    ]
+    return [coord for coord in xr_obj.coords if np.any(np.isin(crs_attributes, list(xr_obj[coord].attrs)))]
 
 
 def _get_list_pyproj_crs(xr_obj):

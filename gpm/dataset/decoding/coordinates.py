@@ -144,9 +144,7 @@ def _parse_sun_local_time(ds):
         pass
     else:
         raise ValueError("Expecting sunLocalTime as float or timedelta64[ns]")
-    ds["sunLocalTime"].attrs[
-        "units"
-    ] = "decimal hours"  # to avoid open_dataset netCDF convert to timedelta64[ns]
+    ds["sunLocalTime"].attrs["units"] = "decimal hours"  # to avoid open_dataset netCDF convert to timedelta64[ns]
     return ds
 
 

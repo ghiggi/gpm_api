@@ -75,9 +75,7 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
 
     # Add relevant coordinates of dst_ds
     dst_available_coords = list(dst_ds.coords)
-    useful_coords = [
-        coord for coord in dst_available_coords if np.all(np.isin(dst_ds[coord].dims, ds.dims))
-    ]
+    useful_coords = [coord for coord in dst_available_coords if np.all(np.isin(dst_ds[coord].dims, ds.dims))]
     dict_coords = {coord: dst_ds[coord] for coord in useful_coords}
     return ds.assign_coords(dict_coords)
 
