@@ -6,14 +6,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gpm_api"
-description = "Python API for the Global Precipitation Mission Data Archive"
+description = "Python Package for the Global Precipitation Measurement (GPM) Mission Data Archive"
 readme = "README.md"
 authors = [
 	{ name = "Gionata Ghiggi", email = "gionata.ghiggi@epfl.ch" },
 ]
 license = { file = "LICENSE" }
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Education",
     "License :: OSI Approved :: MIT License",
@@ -100,6 +100,7 @@ indent-width = 4
 
 # Addional file to be formatted by ruff (in addition to *py)
 extend-include = ["*.ipynb"]
+
 # Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
