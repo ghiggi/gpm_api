@@ -1,4 +1,5 @@
 prune .github
-prune dev
+prune ci
 prune docs
+prune gpm/tests
 prune tutorials
