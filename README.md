@@ -81,7 +81,7 @@ gpm.download(product=product,
 or from the terminal using i.e. `download_daily_gpm_data <product> <year> <month> <day>`:
 
 ```bash
-    download_daily_gpm_data 2A-DPR 2022 7 22
+download_daily_gpm_data 2A-DPR 2022 7 22
 ```
 -----------------------------------------------------------------------------------------
 #### 💫 Open GPM files into xarray
