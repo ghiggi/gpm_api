@@ -18,8 +18,6 @@
 
  [**Slack**](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) | [**Docs**](https://gpm-api.readthedocs.io/en/latest/)
 
-The GPM-API is still in development. Feel free to try it out and to report issues or to suggest changes.
-
 ## 🚀 Quick start
 GPM-API provides an easy-to-use python interface to download, read, process and visualize most
 of the products of the Global Precipitation Measurement Mission (GPM) data archive.
@@ -43,11 +41,11 @@ To facilitate the creation of the configuration file, you can run the following 
 ```python
 import gpm
 
-username = "<your PPS username>" # likely your mail
-password = "<your PPS password>" # likely your mail
+username_pps = "<your PPS username>" # likely your mail
+password_pps = "<your PPS password>" # likely your mail
 base_dir = "<path/to/directory/GPM"  # path to the directory where to download the data
-gpm.define_configs(username_pps=username,
-                   password_pps=password,
+gpm.define_configs(username_pps=username_pps,
+                   password_pps=password_pps,
                    base_dir=base_dir)
 
 # You can check that the config file has been correctly created with:
