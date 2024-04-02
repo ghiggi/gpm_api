@@ -4,7 +4,7 @@ changelog:
 	@echo "Updating CHANGELOG.md..."
 
 	@# Generate CHANGELOG.temp
-	@loghub ghiggi/pycolorbar
+	@loghub ghiggi/gpm_api
 
 	@# Put version in CHANGELOG.temp
 	@sed -i 's/<RELEASE_VERSION>/$(filter-out $@,$(MAKECMDGOALS))/g' CHANGELOG.temp
