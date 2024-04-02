@@ -221,7 +221,7 @@ def _get_list_failing_commands(dict_futures, pbar=None):
             pbar.update(1)  # Update the progress bar
         # Collect all commands that caused problems
         if future.exception() is not None:
-            index, cmd = dict_futures[future]
+            _, cmd = dict_futures[future]  # {index: cmd}
             l_cmd_error.append(cmd)
     return l_cmd_error
 
@@ -896,12 +896,12 @@ def _check_download_status(status, product, verbose):
     if all_already_local:
         if verbose:
             print(f"All the available GPM {product} product files are already on disk.")
-        pass
+        return True
     # - Files available but all download failed
-    elif n_failed == n_remote_files:
+    if n_failed == n_remote_files:
         print(f"{n_failed} files were available, but the download failed !")
         return None
-    elif verbose:
+    if verbose:
         if n_failed != 0:
             print(f"The download of {n_failed} files failed.")
         if n_downloads > 0:

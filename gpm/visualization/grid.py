@@ -252,7 +252,7 @@ def _plot_grid_image(
     if ax is None:
         if "rgb" not in plot_kwargs:
             check_is_spatial_2d(da)
-        fig, ax = plt.subplots(**fig_kwargs)
+        _, ax = plt.subplots(**fig_kwargs)
 
     # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
@@ -301,9 +301,9 @@ def plot_grid_mesh(
     subplot_kwargs=None,
     **plot_kwargs,
 ):
+    """Plot GPM grid mesh in a cartographic map."""
     from gpm.visualization.orbit import _plot_cartopy_pcolormesh
 
-    """Plot GPM grid mesh in a cartographic map."""
     # - Initialize figure if necessary
     ax = initialize_cartopy_plot(
         ax=ax,

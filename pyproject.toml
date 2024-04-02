@@ -45,7 +45,6 @@ dependencies = [
     "click",
     "donfig",
     "trollsift",
-
     "matplotlib>=3.8.3", # introduce pcolormesh rgb
     "cartopy>=0.22.0",
     "pyproj",
@@ -171,6 +170,7 @@ select = [
     "C4",
     # Ruff custom rules
     "RUF"
+
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
@@ -201,8 +201,6 @@ ignore = [
     "PLR2004",
     "PLR0912",
     "PLR0915",
-
-
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.

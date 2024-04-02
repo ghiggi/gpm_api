@@ -43,6 +43,7 @@ from gpm.utils.slices import (
     list_slices_filter,
     list_slices_flatten,
     list_slices_intersection,
+    list_slices_simplify,
     list_slices_sort,
     list_slices_union,
 )
@@ -205,8 +206,6 @@ def _get_timesteps(xr_obj):
 @check_is_gpm_object
 def _infer_time_tolerance(xr_obj):
     """Infer time interval tolerance between timesteps."""
-    from gpm.checks import is_grid, is_orbit
-
     # For GPM ORBIT objects, use the ORBIT_TIME_TOLERANCE
     if is_orbit(xr_obj):
         tolerance = ORBIT_TIME_TOLERANCE
@@ -806,8 +805,6 @@ def _replace_0_values(x):
 
 
 def _get_non_wobbling_lats(lats, threshold=100):
-    from gpm.utils.slices import list_slices_filter, list_slices_simplify
-
     # Get direction (1 ascending , -1 descending)
     directions = np.sign(np.diff(lats))
     directions = np.append(directions[0], directions)  # include startpoint
@@ -832,8 +829,6 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
     The function extract the along-track boundary on both swath sides and
     identify where the change in orbit direction occurs.
     """
-    from gpm.utils.slices import list_slices_intersection
-
     xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
     lats = xr_obj["lat"].to_numpy()
     lats_side0 = lats[0, :]
@@ -872,8 +867,6 @@ def is_regular(xr_obj):
     For GPM ORBITS, it checks that the scans are contiguous.
     For GPM GRID, it checks that the timesteps are regularly spaced.
     """
-    from gpm.checks import is_grid, is_orbit
-
     if is_orbit(xr_obj):
         return has_contiguous_scans(xr_obj)
     if is_grid(xr_obj):
@@ -911,8 +904,6 @@ def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
         Output format: [slice(start,stop), slice(start,stop),...]
 
     """
-    from gpm.checks import is_grid, is_orbit
-
     if is_orbit(xr_obj):
         min_size = 2 if min_size is None else min_size
         # Get swath portions where there are not missing scans (and granules)

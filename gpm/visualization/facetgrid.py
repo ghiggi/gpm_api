@@ -457,8 +457,6 @@ class CartopyFacetGrid(CustomFacetGrid):
 
     def set_extent(self, extent):
         """Modify extent of all Cartopy subplots."""
-        from cartopy.mpl.geoaxes import GeoAxes
-
         if extent is None:
             return
         # Modify extent

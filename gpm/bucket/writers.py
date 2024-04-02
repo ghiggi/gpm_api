@@ -182,7 +182,7 @@ def _try_write_granule_bucket(**kwargs):
     try:
         # synchronous
         with dask.config.set(scheduler="single-threaded"):
-            _ = write_granule_bucket(**kwargs)
+            write_granule_bucket(**kwargs)
             # If works, return None
             info = None
     except Exception as e:

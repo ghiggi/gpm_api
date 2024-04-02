@@ -19,7 +19,7 @@ instructions available at the following `link <https://disc.gsfc.nasa.gov/earthd
 .. note::
     For enhanced security and command-line robustness,
     refrain from including single quotes ('), double quotes ("), blank spaces, or backslashes (\\)
-    in both usernames and passwords
+    in both username and password.
 
 
 Register to the NASA PPS
@@ -35,7 +35,7 @@ NRT products includes for example the IMERG Early and Late Runs products.
 .. note::
     For enhanced security and command-line robustness,
     refrain from including single quotes ('), double quotes ("), blank spaces, or backslashes (\\)
-    in both usernames and passwords.
+    in both username and password.
 
 
 Create the GPM-API configuration file

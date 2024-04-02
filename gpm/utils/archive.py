@@ -29,12 +29,12 @@ import warnings
 
 import numpy as np
 
-from gpm.io.checks import (
-    check_start_end_time,
-)
+from gpm.io.checks import check_start_end_time
 from gpm.io.find import find_filepaths
 from gpm.io.info import (
+    get_end_time_from_filepaths,
     get_granule_from_filepaths,
+    get_start_time_from_filepaths,
 )
 from gpm.utils.warnings import GPM_Warning
 
@@ -98,11 +98,6 @@ def check_time_period_coverage(filepaths, start_time, end_time, raise_error=Fals
     If raise_error=False, it raise a GPM warning.
 
     """
-    from gpm.io.info import (
-        get_end_time_from_filepaths,
-        get_start_time_from_filepaths,
-    )
-
     # Check valid start/end time
     start_time, end_time = check_start_end_time(start_time, end_time)
 
@@ -142,11 +137,6 @@ def get_time_period_with_missing_files(filepaths):
         List of tuple (start_time, end_time).
 
     """
-    from gpm.io.info import (
-        get_end_time_from_filepaths,
-        get_granule_from_filepaths,
-        get_start_time_from_filepaths,
-    )
     from gpm.utils.checks import _is_contiguous_granule
     from gpm.utils.slices import get_list_slices_from_bool_arr
 

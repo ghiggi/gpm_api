@@ -51,10 +51,6 @@ It's a great place to connect with others and get support.
 
 Let's get started and unlock the full potential of the GPM data archive together!
 
-.. warning::
-
-   The GPM-API is still in development. Feel free to try it out and to report issues or to suggest changes.
-
 
 Documentation
 =============
