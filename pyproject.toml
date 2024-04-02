@@ -102,7 +102,6 @@ indent-width = 4
 extend-include = ["*.ipynb"]
 # Exclude a variety of commonly ignored directories.
 exclude = [
-    # "gpm/test*",
     ".bzr",
     ".direnv",
     ".eggs",
