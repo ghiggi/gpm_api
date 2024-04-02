@@ -46,33 +46,6 @@ Examples of non-breaking changes include :
 - Internal function refactoring that doesn't affect the behavior of the software directly.
 
 
-Release process
-----------------
-
-Before releasing a new version, the ``CHANGELOG.md`` file should be updated.
-
-Execute ``git tag`` to identify the last version and determine the new ``X.Y.Z`` version number.
-Then, run ``make changelog X.Y.Z`` to update the ``CHANGELOG.md`` file with the list of issues and pull requests that have been closed since the last release.
-Manually edit the ``CHANGELOG.md`` if necessary.
-
-Then, commit the new ``CHANGELOG.md`` file.
-
-.. code-block:: bash
-
-    git add CHANGELOG.md
-    git commit -m "update CHANGELOG.md for version X.Y.Z"
-    git push
-
-Finally, create a new tag to trigger the release process.
-
-.. code-block:: bash
-
-    git tag -a vX.Y.Z -m "Version X.Y.Z"
-    git push --tags
-
-On GitHub, edit the release description to add the list of changes from the ``CHANGELOG.md`` file.
-
-
 Ongoing version support
 -----------------------------------
 
@@ -85,7 +58,7 @@ The maintaners do their best but does not guarantee any period of support or mai
 Releases that are 2 years or older may be considered as deprecated.
 
 
-Documentation pipeline
+Documentation
 ========================
 
 GPM-API's documentation is built using the powerful `Sphinx <https://www.sphinx-doc.org/en/master/>`_ framework,
@@ -151,7 +124,7 @@ This webhook is linked to the GPM-API core developer.
 Ghiggi Gionata owns the `ReadTheDocs <https://readthedocs.org/>`__ account.
 
 
-Package releases pipeline
+Package release
 ============================
 
 A `GitHub Action <https://github.com/ghiggi/gpm_api/actions>`_ is configured to automate the packaging and uploading process to `PyPI <https://pypi.org/project/gpm-api/>`_.
@@ -163,6 +136,33 @@ Upon the release of the package on PyPI, a conda-forge bot attempts to automatic
 Once the conda-forge recipe is updated, a new conda-forge package is released.
 
 The PyPI project and the conda-forge recipes are collaboratively maintained by core contributors of the project.
+
+
+Release process
+----------------
+
+Before releasing a new version, the ``CHANGELOG.md`` file should be updated.
+
+Execute ``git tag`` to identify the last version and determine the new ``X.Y.Z`` version number.
+Then, run ``make changelog X.Y.Z`` to update the ``CHANGELOG.md`` file with the list of issues and pull requests that have been closed since the last release.
+Manually edit the ``CHANGELOG.md`` if necessary.
+
+Then, commit the new ``CHANGELOG.md`` file.
+
+.. code-block:: bash
+
+    git add CHANGELOG.md
+    git commit -m "update CHANGELOG.md for version X.Y.Z"
+    git push
+
+Finally, create a new tag to trigger the release process.
+
+.. code-block:: bash
+
+    git tag -a vX.Y.Z -m "Version X.Y.Z"
+    git push --tags
+
+On GitHub, edit the release description to add the list of changes from the ``CHANGELOG.md`` file.
 
 
 Reviewing process

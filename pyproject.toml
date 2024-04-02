@@ -119,6 +119,7 @@ exclude = [
     "_build",
     "buck-out",
     "build",
+    "docs",
     "dist",
     "node_modules",
     "venv",
@@ -215,7 +216,10 @@ convention = "numpy"
 # Rules to ignore in test files
 "test_*.py" = [
     "ARG",  # avoid problems with fixtures
+    "D100", "D101","D102", "D103", "D104", "D105",  # Missing docstrings
 ]
+"setup.py" = ["D100"]
+"*__init__.py" = ["D104"]
 
 
 [tool.codespell]
