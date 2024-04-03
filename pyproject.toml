@@ -75,7 +75,10 @@ changelog = "https://github.com/ghiggi/gpm_api/blob/main/CHANGELOG.md"
 write_to = "gpm/_version.py"
 
 [tool.setuptools]
-packages = ["gpm"] # explicitly list the packages in modules
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+include = ["gpm*"]
 
 [project.scripts]
 download_gpm_daily_data="gpm.scripts.download_gpm_daily_data:download_gpm_daily_data"
