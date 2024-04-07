@@ -78,7 +78,7 @@ TRMM PR
 The TRMM `Precipitation Radar (PR) <https://gpm.nasa.gov/missions/TRMM/satellite/PR>`_ is a Ku-band (13.6 GHz) cross-track scanning radar with a swath coverage of 215 km.
 The PR accurately quantifies heavier rainfall in the tropics and the subtropics, but lacks of sensitivity to detect light precipitation and drizzle.
 
-If you plan to use PR measurements, it's essential to consider the satellite orbit boost (from 350 km to 402.5 km) occured in August 2011 to extend the satellite lifetime.
+If you plan to use PR measurements, it's essential to consider the satellite orbit boost (from 350 km to 402.5 km) occurred in August 2011 to extend the satellite lifetime.
 Following the boost, the swath coverage has widened to 220 km but the spatial resolution of PR footprints has increased from 4.3 km to 5 km
 and the PR sensitivity has reduced by more than 1 dBZ.
 
@@ -95,8 +95,8 @@ The TMI has a swath coverage of 760 km and a spatial resolution ranging between 
 Build upon the highly successful Special Sensor Microwave/Imager (SSM/I) sensors onboard of the Defense Meteorological Satellite Program (DMSP) satellites, TMI has
 an additional 10.7 GHz channel and an improved spatial resolution (due to the lower flying altitude).
 
-If you plan to use TMI measurements, it's essential to consider the satellite orbit boost (from 350 km to 402.5 km) occured in August 2011 to extend the satellite lifetime.
-Following the boost, the swath coverage has widened and the instantanoues field of fiew of each channel has enlarged.
+If you plan to use TMI measurements, it's essential to consider the satellite orbit boost (from 350 km to 402.5 km) occurred in August 2011 to extend the satellite lifetime.
+Following the boost, the swath coverage has widened and the instantanoues field of view of each channel has enlarged.
 
 
 .. _gpm_core_satellite:
@@ -214,7 +214,7 @@ However, the  ``1C-GMI-R`` product addresses this issue providing the low-freque
 Furthermore, it's worth noting that only the central portion of the GMI swath overlaps the radar swath, with a delay of approximately 67 seconds caused by
 the spacecraft motion and geometric considerations.
 
-When using GMI measurements, it's essential to consider the satellite orbit boost (from 407 km to 442 km) occured the 7/8 November 2023 to extend the satellite lifetime.
+When using GMI measurements, it's essential to consider the satellite orbit boost (from 407 km to 442 km) occurred the 7/8 November 2023 to extend the satellite lifetime.
 Following the boost, the swath coverage has widened and the instantaneous field of view of each channel has enlarged.
 
 Data acquired by GMI are used as a reference standard for intercalibrating the passive microwave sensors within the GPM Constellation,
@@ -431,9 +431,9 @@ Satellite data are available in different levels of processing.
 
 - **Level 1C** products provides the inter-calibrated PMW brightness temperatures used for generating the L2 PMW products.
 
-- **Level 2A** products contains the geophysical paramaters derived from individual sensors.
+- **Level 2A** products contains the geophysical parameters derived from individual sensors.
 
-- **Level 2B** products contains the geophysical paramaters derived from combined DPR/GMI or PR/TMI sensors.
+- **Level 2B** products contains the geophysical parameters derived from combined DPR/GMI or PR/TMI sensors.
 
 - **Level 3** gridded products results from the temporal and spatial aggregation of the L2 products.
 
@@ -587,7 +587,7 @@ To fill these spatial and temporal gaps left by PMW satellites, IMERG exploits p
 Cloud-motion vectors enables the backward and forward propagation, or "morphing," of available PMW-derived precipitation measurements across the grid.
 While IMERG Early uses only forward propagation in time (extrapolation in time), IMERG Late benefits form from both forward and backward propagation (interpolation in time).
 
-When PMW data are too sparse, IMERG incorporates precipitation estimates derived from GEO IR imagery trough a weighted Kalman filter.
+When PMW data are too sparse, IMERG incorporates precipitation estimates derived from GEO IR imagery through a weighted Kalman filter.
 
 IR-based precipitation estimates are derived from the
 `Climate Prediction Center (CPC) Merged 4-km Global IR data product <https://disc.gsfc.nasa.gov/datasets/GPM_MERGIR_1/summary>`_.
@@ -642,7 +642,7 @@ and can also be assimilated operationally into numerical weather forecasts to co
 
 Two algorithms, the `Goddard Convective-Stratiform Heating (CSH) <https://gpm.nasa.gov/resources/documents/goddard-convective-stratiform-heating-csh-algorithm>`_ and the
 `Japanese Spectral Latent Heating (SLH) <https://www.eorc.jaxa.jp/GPM/doc/algorithm/TRMGPM_SLH_V07A_ATBD.pdf>`_,
-are employed for retrieving latent heating esimates from TRMM/GPM measurements.
+are employed for retrieving latent heating estimates from TRMM/GPM measurements.
 The SLH algorithm requires only radar data, while CSH make use of the joint PR/TMI and DPR/GMI measurements.
 
 Both algorithms are built upon pre-computed look-up tables derived from simulations from cloud-resolving models (CRMs)
@@ -725,7 +725,7 @@ GPM - GLM
 
 The GPM-GLM dataset collocates data from the `Geostationary Lightning Mapper (GLM) <https://www.goes-r.gov/spacesegment/glm.html>`_
 instruments onboard of the geostationary satellites GOES-16, GOES-17 and GOES-18 onto the GPM-DPR swath track.
-This dataset will expand the lightening record from the `TRMM-LIS <https://gpm.nasa.gov/data/directory/trmm-lis>`_ into the GPM era.
+This dataset will expand the lightning record from the `TRMM-LIS <https://gpm.nasa.gov/data/directory/trmm-lis>`_ into the GPM era.
 
 .. warning::
 

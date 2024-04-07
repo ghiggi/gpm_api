@@ -27,5 +27,5 @@ repos:
     rev: v2.2.6
     hooks:
     - id: codespell
-      types_or: [python, markdown]
+      types_or: [python, markdown, rst]
       additional_dependencies: [tomli]

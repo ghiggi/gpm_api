@@ -53,7 +53,7 @@ GPM-API major releases aims to move the community forward, focusing on specifica
 GPM-API minor releases will be backwards compatible.
 We strongly recommend adopting the latest release of GPM-API into production within 6 months for major releases, and 4 months for minor releases.
 
-The maintaners do their best but does not guarantee any period of support or maintenance.
+The maintainers do their best but does not guarantee any period of support or maintenance.
 
 Releases that are 2 years or older may be considered as deprecated.
 
@@ -165,7 +165,7 @@ Finally, create a new tag to trigger the release process.
 On GitHub, edit the release description to add the list of changes from the ``CHANGELOG.md`` file.
 
 
-Reviewing process
+Reviewing Process
 ============================
 
 
