@@ -391,8 +391,8 @@ Please note the BT depression over land in the high frequency channels, and the 
 GPM Data Archive
 -------------------
 
-GPM-API provides tools to easily search files on the `Precipitation Processing System` (PPS)
-and the `Goddard Earth Sciences Data and Information Services Center` (GES DISC) data archives
+GPM-API provides tools to easily search files on the *Precipitation Processing System* (PPS)
+and the *Goddard Earth Sciences Data and Information Services Center* (GES DISC) data archives
 and to download them to your local machine.
 However, the PPS and GES DISC data archives can also be explored on your browser.
 
@@ -574,8 +574,8 @@ By leveraging measurements from Geostationary (GEO) IR imagers and the :ref:`GPM
 IMERG provides a "best-estimate" of 30-minute average precipitation rates.
 
 IMERG generates three distinct precipitation products.
-The `IMERG Early` (``IMERG-ER``) product  is available 4 hours after real-time, followed by `IMERG Late` (``IMERG-LR``) after 14 hours.
-The final product version, `IMERG Final` (``IMERG-FR``), is released approximately 3.5 months later.
+The *IMERG Early* (``IMERG-ER``) product  is available 4 hours after real-time, followed by *IMERG Late* (``IMERG-LR``) after 14 hours.
+The final product version, *IMERG Final* (``IMERG-FR``), is released approximately 3.5 months later.
 
 The 4-hour and 14-hour delays for Early and Late products are necessary to gather and process satellite measurements from various space agencies.
 The 3.5-month delay for the Final product enables the incorporation of rain gauge data from the Global Precipitation Climatology Centre (GPCC)
@@ -813,7 +813,7 @@ TC-PRIMED contains over 197'000 PMW overpasses of 2'300 global tropical cyclones
 TC-PF
 ~~~~~~~~~~~
 
-The `Tropical Cyclone related Precipitation Feature` (TC-PF) database is a subset of the `TAMU-CC Precipitation Features` database.
+The *Tropical Cyclone related Precipitation Feature* (TC-PF) database is a subset of the *TAMU-CC Precipitation Features* database.
 Please refer to `Jiang et al., 2011 <https://journals.ametsoc.org/view/journals/apme/50/6/2011jamc2662.1.xml>`_ for more information on the TC-PF database.
 Data are available at `this link <https://ghrc.nsstc.nasa.gov/pub/tcpf/tcpf-L1/data/>`_.
 

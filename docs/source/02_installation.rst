@@ -31,13 +31,13 @@ or `conda <https://docs.conda.io/en/latest/>`__ (recommended).
   or `anaconda <https://docs.anaconda.com/anaconda/install/>`__
   if you don't have it already installed.
 
-* Create the `gpm-api-py311` (or any other custom name) conda environment:
+* Create the *gpm-api-py311* (or any other custom name) conda environment:
 
 .. code-block:: bash
 
 	conda create --name gpm-api-py311 python=3.11 --no-default-packages
 
-* Activate the `gpm-api-py311` conda environment:
+* Activate the *gpm-api-py311* conda environment:
 
 .. code-block:: bash
 
@@ -191,10 +191,10 @@ Run GPM-API on Jupyter Notebooks
 If you want to run GPM-API on a `Jupyter Notebook <https://jupyter.org/>`__,
 you have to take care to set up the IPython kernel environment where GPM-API is installed.
 
-For example, if your conda/virtual environment is named `gpm-api-dev`, run:
+For example, if your conda/virtual environment is named ``gpm-api-dev``, run:
 
 .. code-block:: bash
 
    python -m ipykernel install --user --name=gpm-api-dev
 
-When you will use the Jupyter Notebook, by clicking on `Kernel` and then `Change Kernel`, you will be able to select the `gpm-api-dev` kernel.
+When you will use the Jupyter Notebook, by clicking on ``Kernel`` and then ``Change Kernel``, you will be able to select the ``gpm-api-dev`` kernel.

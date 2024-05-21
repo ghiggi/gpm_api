@@ -9,7 +9,7 @@ To download the data, it is necessary to first create two accounts and successiv
 Register to the NASA GES DISC
 -------------------------------
 
-To access the GPM data through the GES DISC Data Archive you need to have an `Earthdata Login` account.
+To access the GPM data through the GES DISC Data Archive you need to have an *Earthdata Login* account.
 If you don't have one, you can register on the `EarthData Portal <https://urs.earthdata.nasa.gov/>`__.
 
 Once you have an EarthData account, to access the GES DISC Data Archive you need to authorize
@@ -235,8 +235,8 @@ For more information on the available options, you can use the following command
 Open the data
 ----------------
 
-Within the GPM-API, the name `granule` is used to refer to a single file,
-while the name `dataset`` is used to refer to a collection of granules.
+Within the GPM-API, the name *granule* is used to refer to a single file,
+while the name *dataset* is used to refer to a collection of granules.
 
 GPM-API enables to open single or multiple granules into an ``xarray.Dataset``, an object designed for working with labeled multi-dimensional arrays.
 
