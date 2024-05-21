@@ -29,3 +29,13 @@ repos:
     - id: codespell
       types_or: [python, markdown, rst]
       additional_dependencies: [tomli]
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-black
+        # this hook wrongly reformats md issue template files
+        exclude: "^.github/"

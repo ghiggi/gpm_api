@@ -5,7 +5,7 @@ styled with [Book Theme](https://sphinx-book-theme.readthedocs.io/en/stable/inde
 
 All documentation source files are neatly organized in the `docs/` directory within the project's repository.
 
------------------------------------------------------------------
+______________________________________________________________________
 
 ### Build the documentation
 
@@ -45,5 +45,5 @@ It first cleans previous builds (`make clean`) and then generates fresh document
 
 **Note**: It's important to review the output of the command. Look out for warnings or errors and address them to ensure the documentation is accurate and complete.
 
-By following these steps, you should have a local version of the GPM-API documentation in the ``docs/build/html/`` directory,
+By following these steps, you should have a local version of the GPM-API documentation in the `docs/build/html/` directory,
 ready for review or deployment!

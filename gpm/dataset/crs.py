@@ -292,7 +292,7 @@ def _add_swath_coords_attrs(ds, crs) -> xr.Dataset:
     Parameters
     ----------
     ds : `xarray.Dataset`
-    crs : `~pyproj.crs.CRS`
+    crs : `pyproj.crs.CRS`
         CRS information to be added to the `xarray.Dataset`
 
     Returns
@@ -330,7 +330,7 @@ def _add_proj_coords_attrs(ds, crs) -> xr.Dataset:
     Parameters
     ----------
     ds : `xarray.Dataset`
-    crs : `~pyproj.crs.CRS`
+    crs : `pyproj.crs.CRS`
         CRS information to be added to the `xarray.Dataset`
 
     Returns
@@ -389,7 +389,7 @@ def _add_coords_crs_attrs(ds, crs):
     Parameters
     ----------
     ds : `xarray.Dataset`
-    crs : `~pyproj.crs.CRS`
+    crs : `pyproj.crs.CRS`
         CRS information to be added to the `xarray.Dataset`
 
     Returns
@@ -413,7 +413,7 @@ def _add_crs_coord(ds, crs, grid_mapping_name="spatial_ref"):
     Parameters
     ----------
     ds : `xarray.Dataset`
-    crs : `~pyproj.crs.CRS`
+    crs : `pyproj.crs.CRS`
         CRS information to be added to the `xarray.Dataset`
     grid_mapping_name : str
         Name of the grid_mapping coordinate to store the CRS information
@@ -575,7 +575,7 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
     Parameters
     ----------
     ds : `xarray.Dataset`
-    crs : `~pyproj.crs.CRS`
+    crs : `pyproj.crs.CRS`
         CRS information to be added to the `xarray.Dataset`
     grid_mapping_name : str
         Name of the grid_mapping coordinate to store the CRS information
@@ -615,7 +615,7 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
     Parameters
     ----------
     ds : `xarray.Dataset`
-    crs : `~pyproj.crs.CRS`
+    crs : `pyproj.crs.CRS`
         CRS information to be added to the `xarray.Dataset`
     grid_mapping_name : str
         Name of the grid_mapping coordinate to store the CRS information
@@ -710,7 +710,7 @@ def get_pyproj_crs(xr_obj):
 
     Returns
     -------
-    proj_crs : `~pyproj.crs.CRS`
+    proj_crs : `pyproj.crs.CRS`
 
     """
     list_crs = _get_list_pyproj_crs(xr_obj)

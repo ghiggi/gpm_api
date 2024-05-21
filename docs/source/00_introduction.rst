@@ -2,7 +2,7 @@
 Introduction
 =================
 
-In this section an introduction to satellite missions, sensors and products available with GPM-API is provided.
+In this section, an introduction to satellite missions, sensors and products available with GPM-API is provided.
 Concepts are introduced in a progressive manner, but feel free to skip to the section that is of interest to you.
 
 .. contents:: Table of Contents
