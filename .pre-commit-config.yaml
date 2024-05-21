@@ -39,3 +39,9 @@ repos:
           - mdformat-black
         # this hook wrongly reformats md issue template files
         exclude: "^.github/"
+
+  - repo: https://github.com/MarcoGorelli/madforhooks
+    rev: 0.4.1
+    hooks:
+      - id: conda-env-sorter
+      - id: check-execution-order
