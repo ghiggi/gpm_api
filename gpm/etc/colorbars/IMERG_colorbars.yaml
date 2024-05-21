@@ -1,3 +1,4 @@
+---
 precipitation:
   reference: precipitation_rate
 precipitationCal:
@@ -22,31 +23,29 @@ MWprecipitation:
   norm:
     name: BoundaryNorm
     boundaries:
-    - 0.08
-    - 0.16
-    - 0.25
-    - 0.4
-    - 0.63
-    - 1
-    - 1.6
-    - 2.5
-    - 4
-    - 6.3
-    - 10
-    - 16
-    - 25
-    - 40
-    - 63
-    - 100
-    - 160
+      - 0.08
+      - 0.16
+      - 0.25
+      - 0.4
+      - 0.63
+      - 1
+      - 1.6
+      - 2.5
+      - 4
+      - 6.3
+      - 10
+      - 16
+      - 25
+      - 40
+      - 63
+      - 100
+      - 160
   cbar:
     extend: max
     extendrect: false
     label: Precipitation intensity [$mm \ hr^{-1}$]
   auxiliary:
-    category:
-    - GPM
-    - IMERG
+    category: [GPM, IMERG]
 precipitationQualityIndex:
   cmap:
     name: cat3_RdOrGr
@@ -56,27 +55,15 @@ precipitationQualityIndex:
     under_color: none
   norm:
     name: BoundaryNorm
-    boundaries:
-    - 0
-    - 0.5
-    - 0.75
-    - 1
+    boundaries: [0, 0.5, 0.75, 1]
     ncolors: 3
   cbar:
-    ticks:
-    - 0.25
-    - 0.625
-    - 0.875
-    ticklabels:
-    - Highly Uncertain
-    - Uncertain
-    - Reliable
+    ticks: [0.25, 0.625, 0.875]
+    ticklabels: [Highly Uncertain, Uncertain, Reliable]
     extend: neither
     label: Precipitation Quality Index
   auxiliary:
-    category:
-    - GPM
-    - IMERG
+    category: [GPM, IMERG]
     comment: 0.001 is set to display the 0s transparently
 IRinfluence:
   cmap:
@@ -87,25 +74,12 @@ IRinfluence:
     under_color: none
   norm:
     name: BoundaryNorm
-    boundaries:
-    - 1
-    - 10
-    - 20
-    - 30
-    - 40
-    - 50
-    - 60
-    - 70
-    - 80
-    - 90
-    - 100
+    boundaries: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
   cbar:
     extend: neither
     label: IR precipitation influence [%]
   auxiliary:
-    category:
-    - probability
-    - IMERG
+    category: [probability, IMERG]
     comment: 1 is set to display the 0s transparently
 probabilityLiquidPrecipitation:
   cmap:
@@ -114,25 +88,12 @@ probabilityLiquidPrecipitation:
     bad_color: gray
   norm:
     name: BoundaryNorm
-    boundaries:
-    - 0
-    - 10
-    - 20
-    - 30
-    - 40
-    - 50
-    - 60
-    - 70
-    - 80
-    - 90
-    - 100
+    boundaries: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
   cbar:
     extend: neither
     label: Probability of Rainfall [%]
   auxiliary:
-    category:
-    - probability
-    - IMERG
+    category: [probability, IMERG]
 randomError:
   cmap:
     name: STEPS-MCH
@@ -143,30 +104,28 @@ randomError:
   norm:
     name: BoundaryNorm
     boundaries:
-    - 0.24
-    - 0.4
-    - 0.63
-    - 1
-    - 1.6
-    - 2.5
-    - 4
-    - 6.3
-    - 10
-    - 16
-    - 25
-    - 40
-    - 63
-    - 100
-    - 160
+      - 0.24
+      - 0.4
+      - 0.63
+      - 1
+      - 1.6
+      - 2.5
+      - 4
+      - 6.3
+      - 10
+      - 16
+      - 25
+      - 40
+      - 63
+      - 100
+      - 160
   cbar:
     extend: max
     extendrect: false
     label: Uncertainty estimate [$mm \ hr^{-1}$]
   auxiliary:
-     comment: RandomError smallest values is 0.24 mm/hr
-     category:
-     - IMERG
-     - precipitation
+    comment: RandomError smallest values is 0.24 mm/hr
+    category: [IMERG, precipitation]
 MWobservationTime:
   cmap:
     name: Spectral
@@ -182,9 +141,7 @@ MWobservationTime:
     extend: neither
     label: PMW observation time lag [$minutes$]
   auxiliary:
-    category:
-    - probability
-    - IMERG
+    category: [probability, IMERG]
     comment: 0.1 is set to display the 0s transparently
 IMERG_Solid:
   cmap:
@@ -195,27 +152,12 @@ IMERG_Solid:
     under_color: none
   norm:
     name: BoundaryNorm
-    boundaries:
-    - 0.1
-    - 0.2
-    - 0.3
-    - 0.5
-    - 1
-    - 2
-    - 3
-    - 5
-    - 10
-    - 20
-    - 50
+    boundaries: [0.1, 0.2, 0.3, 0.5, 1, 2, 3, 5, 10, 20, 50]
   cbar:
     extend: max
     label: Precipitation intensity [$mm \ hr^{-1}$]
   auxiliary:
-    category:
-    - GPM
-    - IMERG
-    - precipitation
-    - snowfall
+    category: [GPM, IMERG, precipitation, snowfall]
 IMERG_Liquid:
   cmap:
     name: IMERG_Liquid
@@ -225,24 +167,9 @@ IMERG_Liquid:
     under_color: none
   norm:
     name: BoundaryNorm
-    boundaries:
-    - 0.1
-    - 0.2
-    - 0.3
-    - 0.5
-    - 1
-    - 2
-    - 3
-    - 5
-    - 10
-    - 20
-    - 50
+    boundaries: [0.1, 0.2, 0.3, 0.5, 1, 2, 3, 5, 10, 20, 50]
   cbar:
     extend: max
     label: Precipitation intensity [$mm \ hr^{-1}$]
   auxiliary:
-    category:
-    - GPM
-    - IMERG
-    - precipitation
-    - rainfall
+    category: [GPM, IMERG, precipitation, rainfall]

@@ -128,7 +128,7 @@ Package Release
 =================
 
 A `GitHub Action <https://github.com/ghiggi/gpm_api/actions>`_ is configured to automate the packaging and uploading process to `PyPI <https://pypi.org/project/gpm-api/>`_.
-This action, detailed `here <https://github.com/ghiggi/gpm_api/blob/main/.github/workflows/release_to_pypi.yml>`_, triggers the packaging workflow depicted in the following image:
+This action, detailed `here <https://github.com/ghiggi/gpm_api/blob/main/.github/workflows/release_to_pypi.yaml>`_, triggers the packaging workflow depicted in the following image:
 
 .. image:: /static/package_release.png
 

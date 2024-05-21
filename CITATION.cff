@@ -9,6 +9,6 @@ authors:
     family-names: Ghiggi
     email: gionata.ghiggi@epfl.ch
     affiliation: EFPL
-    orcid: 'https://orcid.org/0000-0002-0818-0865'
-repository-code: 'https://github.com/ghiggi/gpm_api'
+    orcid: "https://orcid.org/0000-0002-0818-0865"
+repository-code: "https://github.com/ghiggi/gpm_api"
 license: MIT

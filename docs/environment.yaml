@@ -1,21 +1,20 @@
+---
 name: build-doc-gpm-api
-channels:
-- conda-forge
+channels: [conda-forge]
 dependencies:
-- docutils
-- gpm-api
-- jupyter
-- nbsphinx==0.9.3
-- pandoc
-- pip
-- polars
-- python>=3.9
-- pyvista
-- sphinx-book-theme==1.1.0
-- sphinx-gallery
-- sphinx-mdinclude==0.5.3
-- sphinx==7.2.6
-- sphinxcontrib-youtube
-- ximage
-- pip:
-  - pycolorbar
+  - docutils
+  - gpm-api
+  - jupyter
+  - nbsphinx==0.9.3
+  - pandoc
+  - pip
+  - polars
+  - python>=3.9
+  - pyvista
+  - sphinx-book-theme==1.1.0
+  - sphinx-gallery
+  - sphinx-mdinclude==0.5.3
+  - sphinx==7.2.6
+  - sphinxcontrib-youtube
+  - ximage
+  - pip: [pycolorbar]

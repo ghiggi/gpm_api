@@ -1,3 +1,4 @@
+---
 echoPower:
   cmap:
     name: Spectral_r
@@ -12,8 +13,7 @@ echoPower:
     extendfrac: 0.05
     label: Total Echo Power [$dBm$]
   auxiliary:
-    category:
-    - radar
+    category: [radar]
 noisePower:
   cmap:
     name: Spectral_r
@@ -26,8 +26,7 @@ noisePower:
     extendfrac: 0.05
     label: Average Noise Power [$dBm$]
   auxiliary:
-    category:
-    - radar
+    category: [radar]
 signalPower:
   cmap:
     name: Spectral_r
@@ -42,8 +41,7 @@ signalPower:
     extendfrac: 0.05
     label: Signal Power [$dBm$]
   auxiliary:
-    category:
-    - radar
+    category: [radar]
 snRatio:
   cmap:
     name: Spectral_r
@@ -58,8 +56,7 @@ snRatio:
     extendfrac: 0.05
     label: Signal To Noise Ratio [$dB$]
   auxiliary:
-    category:
-    - radar
+    category: [radar]
 zEcho:
   reference: reflectivity
 zSignal:
