@@ -38,11 +38,11 @@ from gpm.utils.checks import check_contiguous_scans
 from gpm.utils.slices import ensure_is_slice, get_slice_size
 from gpm.utils.xarray import get_dimensions_without
 from gpm.visualization.plot import (
-    _plot_xr_imshow,
-    _plot_xr_pcolormesh,
     check_object_format,
     get_valid_pcolormesh_inputs,
     initialize_cartopy_plot,
+    plot_xr_imshow,
+    plot_xr_pcolormesh,
     preprocess_figure_args,
 )
 
@@ -301,9 +301,11 @@ def get_cross_track_horizontal_distance(xr_obj):
 
 
 def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
+    # Get 2D x and y coordinates
     da = da.copy()
-    da_x = da[x].broadcast_like(da)
-    da_y = da[y].broadcast_like(da)
+    da_template = da.isel({da.dims[-1]: 0}) if rgb else da
+    da_x = da[x].broadcast_like(da_template)
+    da_y = da[y].broadcast_like(da_template)
     # Get valid coordinates
     x_coord, y_coord, data = get_valid_pcolormesh_inputs(
         x=da_x.data,
@@ -424,7 +426,10 @@ def plot_transect(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot GPM transect."""
+    """Plot GPM transect.
+
+    If RGB DataArray, all other plot_kwargs are ignored !
+    """
     # Check inputs
     da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_transect, strict=True)
 
@@ -456,16 +461,16 @@ def plot_transect(
     # - Plot with xarray
     if da[y].ndim == 1:
         plot_kwargs["origin"] = origin
-        p = _plot_xr_imshow(
+        p = plot_xr_imshow(
             ax=ax,
             da=da,
             x=x,
             y=y,
             interpolation=interpolation,
             add_colorbar=add_colorbar,
-            plot_kwargs=plot_kwargs,
             cbar_kwargs=cbar_kwargs,
             visible_colorbar=True,
+            **plot_kwargs,
         )
     else:
 
@@ -474,14 +479,14 @@ def plot_transect(
         da = _ensure_valid_pcolormesh_coords(da, x=x, y=y, rgb=plot_kwargs.get("rgb", False))
 
         # Plot transect
-        p = _plot_xr_pcolormesh(
+        p = plot_xr_pcolormesh(
             ax=ax,
             da=da,
             x=x,
             y=y,
             add_colorbar=add_colorbar,
-            plot_kwargs=plot_kwargs,
             cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
     p.axes.set_xlabel(xlabel)
     p.axes.set_ylabel(ylabel)

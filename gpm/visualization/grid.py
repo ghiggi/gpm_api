@@ -35,13 +35,13 @@ from gpm.visualization.facetgrid import (
     sanitize_facetgrid_plot_kwargs,
 )
 from gpm.visualization.plot import (
-    _plot_cartopy_imshow,
-    #  _plot_mpl_imshow,
-    _plot_xr_imshow,
     add_optimize_layout_method,
     check_object_format,
     create_grid_mesh_data_array,
     initialize_cartopy_plot,
+    plot_cartopy_imshow,
+    #  plot_mpl_imshow,
+    plot_xr_imshow,
     preprocess_figure_args,
     preprocess_subplot_kwargs,
 )
@@ -90,7 +90,7 @@ def _plot_grid_map_cartopy(
         cbar_kwargs["label"] = f"{variable} [{unit}]"
 
     # - Add variable field with matplotlib
-    p = _plot_cartopy_imshow(
+    p = plot_cartopy_imshow(
         ax=ax,
         da=da,
         x=x,
@@ -140,15 +140,15 @@ def _plot_grid_image(
     )
 
     # - Plot with xarray
-    p = _plot_xr_imshow(
+    p = plot_xr_imshow(
         ax=ax,
         da=da,
         x=x,
         y=y,
         interpolation=interpolation,
         add_colorbar=add_colorbar,
-        plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
     )
 
     # - Add axis labels
@@ -414,7 +414,7 @@ def plot_grid_mesh(
     **plot_kwargs,
 ):
     """Plot GPM grid mesh in a cartographic map."""
-    from gpm.visualization.orbit import _plot_cartopy_pcolormesh
+    from gpm.visualization.orbit import plot_cartopy_pcolormesh
 
     # - Initialize figure if necessary
     ax = initialize_cartopy_plot(
@@ -435,7 +435,7 @@ def plot_grid_mesh(
     plot_kwargs["antialiased"] = True
 
     # - Add variable field with cartopy
-    p = _plot_cartopy_pcolormesh(
+    p = plot_cartopy_pcolormesh(
         da=da,
         ax=ax,
         x=x,

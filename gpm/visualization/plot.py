@@ -645,9 +645,9 @@ def set_colorbar_fully_transparent(p):
 
 
 ####--------------------------------------------------------------------------.
-####################
-#### pcolormesh ####
-####################
+##########################
+#### Cartopy wrappers ####
+##########################
 
 
 def _sanitize_cartopy_plot_kwargs(plot_kwargs):
@@ -664,7 +664,80 @@ def _sanitize_cartopy_plot_kwargs(plot_kwargs):
     return plot_kwargs
 
 
-def _plot_cartopy_pcolormesh(
+def get_dataarray_extent(da, x="lon", y="lat"):
+    # TODO: compute corners array to estimate the extent
+    # - OR increase by 1° in everydirection and then wrap between -180, 180,90,90
+    # Get the minimum and maximum longitude and latitude values
+    lon_min, lon_max = da[x].min(), da[x].max()
+    lat_min, lat_max = da[y].min(), da[y].max()
+    return (lon_min, lon_max, lat_min, lat_max)
+
+
+def _compute_extent(x_coords, y_coords):
+    """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+
+    This function assumes that the spacing between each pixel is uniform.
+    """
+    # Calculate the pixel size assuming uniform spacing between pixels
+    pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
+    pixel_size_y = (y_coords[-1] - y_coords[0]) / (len(y_coords) - 1)
+
+    # Adjust min and max to get the corners of the outer pixels
+    x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
+    y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
+
+    return [x_min, x_max, y_min, y_max]
+
+
+def plot_cartopy_imshow(
+    ax,
+    da,
+    x,
+    y,
+    interpolation="nearest",
+    add_colorbar=True,
+    plot_kwargs={},
+    cbar_kwargs=None,
+):
+    """Plot imshow with cartopy."""
+    # - Ensure image with correct dimensions orders
+    da = da.transpose(y, x, ...)
+    arr = np.asanyarray(da.data)
+
+    # - Compute coordinates
+    x_coords = da[x].to_numpy()
+    y_coords = da[y].to_numpy()
+
+    # - Derive extent
+    extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
+
+    # - Determine origin based on the orientation of da[y] values
+    # -->  If increasing, set origin="lower"
+    # -->  If decreasing, set origin="upper"
+    origin = "lower" if y_coords[1] > y_coords[0] else "upper"
+
+    # - Add variable field with cartopy
+    _ = plot_kwargs.pop("rgb", None)
+    p = ax.imshow(
+        arr,
+        transform=ccrs.PlateCarree(),
+        extent=extent,
+        origin=origin,
+        interpolation=interpolation,
+        **plot_kwargs,
+    )
+    # - Set the extent
+    extent = get_dataarray_extent(da, x="lon", y="lat")
+    ax.set_extent(extent)
+
+    # - Add colorbar
+    if add_colorbar:
+        # --> TODO: set axis proportion in a meaningful way ...
+        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
+    return p
+
+
+def plot_cartopy_pcolormesh(
     ax,
     da,
     x,
@@ -736,19 +809,32 @@ def _plot_cartopy_pcolormesh(
     return p
 
 
-def _plot_xr_pcolormesh(
+####-------------------------------------------------------------------------------.
+#########################
+#### Xarray wrappers ####
+#########################
+
+
+def plot_xr_pcolormesh(
     ax,
     da,
     x,
     y,
     add_colorbar=True,
-    plot_kwargs={},
     cbar_kwargs=None,
+    **plot_kwargs,
 ):
     """Plot pcolormesh with xarray."""
     ticklabels = cbar_kwargs.pop("ticklabels", None)
+
     if not add_colorbar:
         cbar_kwargs = None
+
+    if "rgb" in plot_kwargs:
+        cbar_kwargs = None
+        add_colorbar = False
+        plot_kwargs = {"rgb": plot_kwargs.get("rgb")}  # alpha currently skipped if RGB
+
     p = da.plot.pcolormesh(
         x=x,
         y=y,
@@ -763,95 +849,16 @@ def _plot_xr_pcolormesh(
     return p
 
 
-####-------------------------------------------------------------------------------.
-################
-#### imshow ####
-################
-
-
-def get_dataarray_extent(da, x="lon", y="lat"):
-    # TODO: compute corners array to estimate the extent
-    # - OR increase by 1° in everydirection and then wrap between -180, 180,90,90
-    # Get the minimum and maximum longitude and latitude values
-    lon_min, lon_max = da[x].min(), da[x].max()
-    lat_min, lat_max = da[y].min(), da[y].max()
-    return (lon_min, lon_max, lat_min, lat_max)
-
-
-def _compute_extent(x_coords, y_coords):
-    """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
-
-    This function assumes that the spacing between each pixel is uniform.
-    """
-    # Calculate the pixel size assuming uniform spacing between pixels
-    pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
-    pixel_size_y = (y_coords[-1] - y_coords[0]) / (len(y_coords) - 1)
-
-    # Adjust min and max to get the corners of the outer pixels
-    x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
-    y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
-
-    return [x_min, x_max, y_min, y_max]
-
-
-def _plot_cartopy_imshow(
+def plot_xr_imshow(
     ax,
     da,
     x,
     y,
     interpolation="nearest",
     add_colorbar=True,
-    plot_kwargs={},
-    cbar_kwargs=None,
-):
-    """Plot imshow with cartopy."""
-    # - Ensure image with correct dimensions orders
-    da = da.transpose(y, x, ...)
-    arr = np.asanyarray(da.data)
-
-    # - Compute coordinates
-    x_coords = da[x].to_numpy()
-    y_coords = da[y].to_numpy()
-
-    # - Derive extent
-    extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
-
-    # - Determine origin based on the orientation of da[y] values
-    # -->  If increasing, set origin="lower"
-    # -->  If decreasing, set origin="upper"
-    origin = "lower" if y_coords[1] > y_coords[0] else "upper"
-
-    # - Add variable field with cartopy
-    _ = plot_kwargs.pop("rgb", None)
-    p = ax.imshow(
-        arr,
-        transform=ccrs.PlateCarree(),
-        extent=extent,
-        origin=origin,
-        interpolation=interpolation,
-        **plot_kwargs,
-    )
-    # - Set the extent
-    extent = get_dataarray_extent(da, x="lon", y="lat")
-    ax.set_extent(extent)
-
-    # - Add colorbar
-    if add_colorbar:
-        # --> TODO: set axis proportion in a meaningful way ...
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
-    return p
-
-
-def _plot_xr_imshow(
-    ax,
-    da,
-    x,
-    y,
-    interpolation="nearest",
-    add_colorbar=True,
-    plot_kwargs={},
     cbar_kwargs=None,
     visible_colorbar=True,
+    **plot_kwargs,
 ):
     """Plot imshow with xarray.
 
@@ -862,6 +869,12 @@ def _plot_xr_imshow(
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     if not add_colorbar:
         cbar_kwargs = None
+
+    if "rgb" in plot_kwargs:
+        cbar_kwargs = None
+        add_colorbar = False
+        plot_kwargs = {"rgb": plot_kwargs.get("rgb")}  # alpha currently skipped if RGB
+
     p = da.plot.imshow(
         x=x,
         y=y,
@@ -892,36 +905,6 @@ def _plot_xr_imshow(
     # plt.title(da.name)
     # if add_colorbar:
     #     _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
-    return p
-
-
-def _plot_mpl_imshow(
-    ax,
-    da,
-    x,
-    y,
-    interpolation="nearest",
-    add_colorbar=True,
-    plot_kwargs={},
-    cbar_kwargs=None,
-):
-    """Plot imshow with matplotlib."""
-    # - Ensure image with correct dimensions orders
-    da = da.transpose(y, x, ...)
-    arr = np.asanyarray(da.data)
-
-    # - Add variable field with matplotlib
-    _ = plot_kwargs.pop("rgb", None)
-    p = ax.imshow(
-        arr,
-        origin="upper",
-        interpolation=interpolation,
-        **plot_kwargs,
-    )
-    # - Add colorbar
-    if add_colorbar:
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
-    # - Return mappable
     return p
 
 

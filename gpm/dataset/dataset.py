@@ -197,7 +197,7 @@ def open_dataset(
     scan_mode=None,
     version=None,
     product_type="RS",
-    chunks={},
+    chunks=-1,
     decode_cf=True,
     parallel=False,
     prefix_group=False,
@@ -251,12 +251,12 @@ def open_dataset(
     chunks : int, dict, str or None, optional
         Chunk size for dask array:
 
-        - ``chunks=-1`` loads the dataset with dask using a single chunk for all arrays.
+        - ``chunks=-1`` loads the dataset with dask using a single chunk for each granule arrays.
         - ``chunks={}`` loads the dataset with dask using the file chunks.
         - ``chunks='auto'`` will use dask ``auto`` chunking taking into account the file chunks.
 
         If you want to load data in memory directly, specify ``chunks=None``.
-        The default is ``{}``.
+        The default is ``auto``.
 
         Hint: xarray's lazy loading of remote or on-disk datasets is often but not always desirable.
         Before performing computationally intense operations, load the dataset
