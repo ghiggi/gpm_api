@@ -3,7 +3,8 @@ name: Tests Windows
 on: [push, pull_request, workflow_dispatch]
 jobs:
   tests:
-    name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ' with
+    name:
+      Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ' with
       latest dependencies' || '' }}
     runs-on: ${{ matrix.os }}
     defaults:
@@ -13,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ["3.9", "3.10", "3.11"]
         experimental: [false]
     steps:
       - uses: actions/checkout@v4

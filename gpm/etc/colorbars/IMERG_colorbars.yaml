@@ -148,7 +148,7 @@ IMERG_Solid:
     name: IMERG_Solid
     bad_alpha: 0.5
     bad_color: gray
-    over_color: '#8c149c'
+    over_color: "#8c149c"
     under_color: none
   norm:
     name: BoundaryNorm
@@ -163,7 +163,7 @@ IMERG_Liquid:
     name: IMERG_Liquid
     bad_alpha: 0.5
     bad_color: gray
-    over_color: '#910000'
+    over_color: "#910000"
     under_color: none
   norm:
     name: BoundaryNorm

@@ -45,4 +45,4 @@ jobs:
             dist/${{ env.asset_name }}
           draft: false
           prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}  # This token is provided by Actions, you do not need to create your own token
+          token: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token

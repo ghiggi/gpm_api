@@ -1,7 +1,7 @@
 ---
 name: 🐞 Bug Report
 description: File a bug/issue
-title: '[BUG] <title>'
+title: "[BUG] <title>"
 labels: [bug, triage]
 assignees: ghiggi
 body:
