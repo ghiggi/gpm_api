@@ -45,7 +45,7 @@ from gpm.io.checks import (
 )
 from gpm.io.filter import filter_filepaths
 from gpm.io.ges_disc import get_ges_disc_daily_filepaths
-from gpm.io.info import get_version_from_filepaths
+from gpm.io.info import get_version_from_filepaths, group_filepaths
 from gpm.io.local import get_local_daily_filepaths
 from gpm.io.pps import get_pps_daily_filepaths
 from gpm.io.products import available_products
@@ -149,13 +149,13 @@ def find_daily_filepaths(
 
     Parameters
     ----------
-    date : datetime.date
+    date : `datetime.date`
         Single date for which to retrieve the data.
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    start_time : datetime.datetime
+    start_time : `datetime.datetime`
         Filtering start time.
-    end_time : datetime.datetime
+    end_time : `datetime.datetime`
         Filtering end time.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
@@ -225,6 +225,7 @@ def find_filepaths(
     end_time,
     product_type="RS",
     version=None,
+    groups=None,
     verbose=True,
     parallel=True,
 ):
@@ -234,9 +235,9 @@ def find_filepaths(
     ----------
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    start_time : datetime.datetime
+    start_time : `datetime.datetime`
         Start time.
-    end_time : datetime.datetime
+    end_time : `datetime.datetime`
         End time.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
@@ -247,6 +248,16 @@ def find_filepaths(
     parallel : bool, optional
         Whether to loop over dates in parallel.
         The default is ``True``.
+    groups: list or str, optional
+        Whether to group the filepaths in a dictionary by a custom selection of keys.
+        Valid group keys are ``product_level``, ``satellite``, ``sensor``, ``algorithm``,
+        ``start_time``, ``end_time``,
+        ``granule_id``, ``version``, ``product_type``, ``product``, ``data_format``,
+        ``year``, ``month``, ``day``,  ``doy``, ``dow``, ``hour``, ``minute``, ``second``,
+        ``month_name``, ``quarter``, ``season``.
+        The time components are extracted from ``start_time`` !
+        If groups is ``None`` returns the filepaths list.
+        The default is ``None``.
 
     Returns
     -------
@@ -325,6 +336,12 @@ def find_filepaths(
 
     filepaths = flatten_list(list_filepaths)
 
+    # Sort filepaths
+    filepaths = sorted(filepaths)
+
+    # Group filepaths if groups is not None
+    filepaths = group_filepaths(filepaths, groups=groups)
+
     # -------------------------------------------------------------------------.
     # Check unique version
     # - TODO, warning if same integer but different letter
@@ -332,7 +349,7 @@ def find_filepaths(
 
     # -------------------------------------------------------------------------.
     # Return sorted filepaths
-    return sorted(filepaths)
+    return filepaths
 
 
 def find_associated_filepath(filepath, product, storage="LOCAL", product_type="RS", version=7):

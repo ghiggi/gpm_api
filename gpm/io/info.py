@@ -29,10 +29,9 @@
 import datetime
 import os
 import re
+from collections import defaultdict
 
 import numpy as np
-
-from gpm.io.products import get_products_pattern_dict
 
 ####---------------------------------------------------------------------------
 ########################
@@ -60,11 +59,11 @@ def _parse_gpm_filename(filename):
     try:
         p = Parser(NASA_RS_filename_PATTERN)
         info_dict = p.parse(filename)
-        product_type = "RS"
+        info_dict["product_type"] = "RS"
     except ValueError:
         p = Parser(NASA_NRT_filename_PATTERN)
         info_dict = p.parse(filename)
-        product_type = "NRT"
+        info_dict["product_type"] = "NRT"
 
     # Retrieve correct start_time and end_time
     start_date = info_dict["start_date"]
@@ -87,7 +86,7 @@ def _parse_gpm_filename(filename):
     info_dict["end_time"] = end_datetime
 
     # Cast granule_id to integer
-    if product_type == "RS":
+    if info_dict["product_type"] == "RS":
         info_dict["granule_id"] = int(info_dict["granule_id"])
     return info_dict
 
@@ -178,6 +177,8 @@ def get_key_from_filepaths(filepaths, key):
 
 def get_product_from_filepath(filepath):
     """Infer granules ``product`` from file path."""
+    from gpm.io.products import get_products_pattern_dict
+
     patterns_dict = get_products_pattern_dict()
     for product, pattern in patterns_dict.items():
         if re.search(pattern, filepath):
@@ -230,3 +231,137 @@ def get_start_end_time_from_filepaths(filepaths):
 
 
 ####--------------------------------------------------------------------------.
+#######################
+#### Group utility ####
+#######################
+
+
+FILE_KEYS = [
+    "product_level",
+    "satellite",
+    "sensor",
+    "algorithm",
+    "start_time",
+    "end_time",
+    "granule_id",
+    "version",
+    "product_type",
+    "product",
+    "data_format",
+]
+
+TIME_KEYS = [
+    "year",
+    "month",
+    "month_name",
+    "quarter",
+    "season",
+    "day",
+    "doy",
+    "dow",
+    "hour",
+    "minute",
+    "second",
+]
+
+
+def check_groups(groups):
+    """Check groups validity."""
+    if not isinstance(groups, (str, list)):
+        raise TypeError("'groups' must be a list (or a string if a single group is specified.")
+    if isinstance(groups, str):
+        groups = [groups]
+    groups = np.array(groups)
+    valid_keys = FILE_KEYS + TIME_KEYS
+    invalid_keys = groups[np.isin(groups, valid_keys, invert=True)]
+    if len(invalid_keys) > 0:
+        raise ValueError(f"The following group keys are invalid: {invalid_keys}. Valid values are {valid_keys}.")
+    return groups.tolist()
+
+
+def get_season(time):
+    """Get season from `datetime.datetime` or `datetime.date` object."""
+    month = time.month
+    if month in [12, 1, 2]:
+        return "DJF"  # Winter (December, January, February)
+    if month in [3, 4, 5]:
+        return "MAM"  # Spring (March, April, May)
+    if month in [6, 7, 8]:
+        return "JJA"  # Summer (June, July, August)
+    return "SON"  # Autumn (September, October, November)
+
+
+def get_time_component(time, component):
+    """Get time component from `datetime.datetime` object."""
+    func_dict = {
+        "year": lambda time: time.year,
+        "month": lambda time: time.month,
+        "day": lambda time: time.day,
+        "doy": lambda time: time.timetuple().tm_yday,  # Day of year
+        "dow": lambda time: time.weekday(),  # Day of week (0=Monday, 6=Sunday)
+        "hour": lambda time: time.hour,
+        "minute": lambda time: time.minute,
+        "second": lambda time: time.second,
+        # Additional
+        "month_name": lambda time: time.strftime("%B"),  # Full month name
+        "quarter": lambda time: (time.month - 1) // 3 + 1,  # Quarter (1-4)
+        "season": lambda time: get_season(time),  # Season (DJF, MAM, JJA, SON)
+    }
+    return str(func_dict[component](time))
+
+
+def _get_groups_value(groups, filepath):
+    """Return the value associated to the groups keys.
+
+    If multiple keys are specified, the value returned is a string of format: ``<group_value_1>/<group_value_2>/...``
+
+    If a single key is specified and is ``start_time`` or ``end_time``, the function
+    returns a `datetime.datetime` object.
+    """
+    single_key = len(groups) == 1
+    info_dict = get_info_from_filepath(filepath)
+    start_time = info_dict["start_time"]
+    list_key_values = []
+    for key in groups:
+        if key in TIME_KEYS:
+            list_key_values.append(get_time_component(start_time, component=key))
+        else:
+            value = info_dict.get(key, f"{key}=None")
+            list_key_values.append(value if single_key else str(value))
+    if single_key:
+        return list_key_values[0]
+    return "/".join(list_key_values)
+
+
+def group_filepaths(filepaths, groups=None):
+    """
+    Group filepaths in a dictionary if groups are specified.
+
+    Parameters
+    ----------
+    filepaths : list
+        List of filepaths.
+    groups: list or str
+        The group keys by which to group the filepaths.
+        Valid group keys are ``product_level``, ``satellite``, ``sensor``, ``algorithm``,
+        ``start_time``, ``end_time``,
+        ``granule_id``, ``version``, ``product_type``, ``product``, ``data_format``,
+        ``year``, ``month``, ``day``,  ``doy``, ``dow``, ``hour``, ``minute``, ``second``,
+        ``month_name``, ``quarter``, ``season``.
+        The time components are extracted from ``start_time`` !
+        If groups is ``None`` returns the input filepaths list.
+        The default is ``None``.
+
+    Returns
+    -------
+    dict or list
+        Either a dictionary of format ``{<group_value>: <list_filepaths>}``.
+        or the original input filepaths (if ``groups=None``)
+
+    """
+    if groups is None:
+        return filepaths
+    groups = check_groups(groups)
+    filepaths_dict = defaultdict(list)
+    _ = [filepaths_dict[_get_groups_value(groups, filepath)].append(filepath) for filepath in filepaths]
+    return dict(filepaths_dict)

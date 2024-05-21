@@ -185,7 +185,7 @@ def _get_proj_dim_coords(xr_obj):
 
     Parameters
     ----------
-    xr_obj : xr.Dataset or xr.DataArray
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
 
     Returns
     -------
@@ -235,7 +235,7 @@ def _get_swath_dim_coords(xr_obj):
 
     Parameters
     ----------
-    xr_obj : xr.Dataset or xr.DataArray
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
 
     Returns
     -------
@@ -291,9 +291,9 @@ def _add_swath_coords_attrs(ds, crs) -> xr.Dataset:
 
     Parameters
     ----------
-    ds : xarray.Dataset
-    crs : :py:class:`~pyproj.crs.CoordinateSystem`
-        CRS information to be added to the xr.Dataset
+    ds : `xarray.Dataset`
+    crs : `~pyproj.crs.CRS`
+        CRS information to be added to the `xarray.Dataset`
 
     Returns
     -------
@@ -329,9 +329,9 @@ def _add_proj_coords_attrs(ds, crs) -> xr.Dataset:
 
     Parameters
     ----------
-    ds : xarray.Dataset
-    crs : :py:class:`~pyproj.crs.CoordinateSystem`
-        CRS information to be added to the xr.Dataset
+    ds : `xarray.Dataset`
+    crs : `~pyproj.crs.CRS`
+        CRS information to be added to the `xarray.Dataset`
 
     Returns
     -------
@@ -388,9 +388,9 @@ def _add_coords_crs_attrs(ds, crs):
 
     Parameters
     ----------
-    ds : xarray.Dataset
-    crs : :py:class:`~pyproj.crs.CoordinateSystem`
-        CRS information to be added to the xr.Dataset
+    ds : `xarray.Dataset`
+    crs : `~pyproj.crs.CRS`
+        CRS information to be added to the `xarray.Dataset`
 
     Returns
     -------
@@ -408,13 +408,13 @@ def _add_coords_crs_attrs(ds, crs):
 
 
 def _add_crs_coord(ds, crs, grid_mapping_name="spatial_ref"):
-    """Add ``name`` coordinate derived from :py:class:`pyproj.crs.CoordinateSystem`.
+    """Add ``name`` coordinate derived from `pyproj.crs.CRS`.
 
     Parameters
     ----------
-    ds : xarray.Dataset
-    crs : :py:class:`~pyproj.crs.CoordinateSystem`
-        CRS information to be added to the xr.Dataset
+    ds : `xarray.Dataset`
+    crs : `~pyproj.crs.CRS`
+        CRS information to be added to the `xarray.Dataset`
     grid_mapping_name : str
         Name of the grid_mapping coordinate to store the CRS information
         The default is ``spatial_ref``.
@@ -422,7 +422,7 @@ def _add_crs_coord(ds, crs, grid_mapping_name="spatial_ref"):
 
     Returns
     -------
-    ds : xarray.Dataset
+    ds : `xarray.Dataset`
         Dataset including the CRS ``name`` coordinate.
 
     """
@@ -431,7 +431,7 @@ def _add_crs_coord(ds, crs, grid_mapping_name="spatial_ref"):
     attrs = _get_pyproj_crs_cf_dict(crs)
     # Add attributes to CRS variable
     spatial_ref.attrs.update(attrs)
-    # Add the CRS coordinate to the xr.Dataset
+    # Add the CRS coordinate to the `xarray.Dataset`
     return ds.assign_coords({grid_mapping_name: spatial_ref})
 
 
@@ -566,7 +566,7 @@ def remove_existing_crs_info(ds):
 
 
 def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
-    """Add CF-compliant CRS information to an xr.Dataset.
+    """Add CF-compliant CRS information to an `xarray.Dataset`.
 
     It assumes all dataset variables have same CRS !
     For projected CRS, it expects that the CRS dimension coordinates are specified.
@@ -574,9 +574,9 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
 
     Parameters
     ----------
-    ds : xarray.Dataset
-    crs : :py:class:`~pyproj.crs.CoordinateSystem`
-        CRS information to be added to the xr.Dataset
+    ds : `xarray.Dataset`
+    crs : `~pyproj.crs.CRS`
+        CRS information to be added to the `xarray.Dataset`
     grid_mapping_name : str
         Name of the grid_mapping coordinate to store the CRS information
         The default is ``spatial_ref``.
@@ -584,7 +584,7 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
 
     Returns
     -------
-    ds : xarray.Dataset
+    ds : `xarray.Dataset`
         Dataset with CF-compliant CRS information.
 
     """
@@ -603,7 +603,7 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
 
 
 def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
-    """Add CF-compliant CRS information to an xr.Dataset.
+    """Add CF-compliant CRS information to an `xarray.Dataset`.
 
     It assumes all dataset variables have same CRS !
     For projected CRS, it expects that the CRS dimension coordinates are specified.
@@ -614,9 +614,9 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 
     Parameters
     ----------
-    ds : xarray.Dataset
-    crs : :py:class:`~pyproj.crs.CoordinateSystem`
-        CRS information to be added to the xr.Dataset
+    ds : `xarray.Dataset`
+    crs : `~pyproj.crs.CRS`
+        CRS information to be added to the `xarray.Dataset`
     grid_mapping_name : str
         Name of the grid_mapping coordinate to store the CRS information
         The default is ``spatial_ref``.
@@ -624,7 +624,7 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 
     Returns
     -------
-    ds : xarray.Dataset
+    ds : `xarray.Dataset`
         Dataset with CF-compliant CRS information.
 
     """
@@ -700,17 +700,17 @@ def _get_geographic_crs(xr_obj):
 
 
 def get_pyproj_crs(xr_obj):
-    """Return :py:class:`pyproj.crs.CoordinateSystem` from CRS coordinate(s).
+    """Return `pyproj.crs.CRS` from CRS coordinate(s).
 
     If a geographic and projected CRS are present, it returns the projected.
 
     Parameters
     ----------
-    xr_obj : xarray.Dataset or xarray.DataArray
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
 
     Returns
     -------
-    proj_crs : :py:class:`~pyproj.crs.CoordinateSystem`
+    proj_crs : `~pyproj.crs.CRS`
 
     """
     list_crs = _get_list_pyproj_crs(xr_obj)
@@ -724,7 +724,7 @@ def get_pyproj_crs(xr_obj):
 
 
 def get_pyresample_swath(xr_obj):
-    """Get pyresample SwathDefinition from CF-compliant xarray object."""
+    """Get pyresample SwathDefinition from CF-compliant `xarray.DataArray` or `xarray.Dataset`."""
     from pyresample import SwathDefinition
 
     if not has_swath_coords(xr_obj):
@@ -740,7 +740,7 @@ def get_pyresample_swath(xr_obj):
         pyproj_crs = None
 
     # Define SwathDefinition
-    # - with xr.DataArray lat/lons
+    # - with xarray.DataArray lat/lons
     # - Otherwise fails https://github.com/pytroll/satpy/issues/1434
     # - In old pyresample versions requiring
     #   lons = np.ascontiguousarray(xr_obj[lons].data),
@@ -769,7 +769,7 @@ def _compute_extent(x_coords, y_coords):
 
 
 def get_pyresample_projection(xr_obj):
-    """Get pyresample AreaDefinition from CF-compliant xarray object."""
+    """Get pyresample AreaDefinition from CF-compliant `xarray.DataArray` or `xarray.Dataset`."""
     from pyresample import AreaDefinition
 
     if not has_proj_coords(xr_obj):
@@ -805,7 +805,7 @@ def get_pyresample_projection(xr_obj):
 
 
 def get_pyresample_area(xr_obj):
-    """Define pyresample area from CF-compliant xarray object.
+    """Define pyresample area from CF-compliant `xarray.DataArray` or `xarray.Dataset`.
 
     To be used by the pyresample accessor: ds.pyresample.area
     """

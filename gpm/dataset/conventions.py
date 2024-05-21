@@ -59,7 +59,7 @@ def _check_time_period_coverage(ds, start_time=None, end_time=None, raise_error=
     # Define tolerance in seconds
     tolerance = datetime.timedelta(seconds=5)
 
-    # Get first and last timestep from xr.Dataset
+    # Get first and last timestep from xarray.Dataset
     if "time_bnds" not in ds:
         first_start = ds["time"].data[0].astype("M8[s]").tolist()
         last_end = ds["time"].data[-1].astype("M8[s]").tolist()
@@ -100,7 +100,7 @@ def reshape_dataset(ds):
 
 
 def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_time=None):
-    """Finalize GPM xr.Dataset object."""
+    """Finalize GPM `xarray.Dataset` object."""
     import pyproj
 
     from gpm import config

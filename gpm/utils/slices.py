@@ -35,10 +35,7 @@ import numpy as np
 def get_list_slices_from_indices(indices):
     """Return a list of slices from a list/array of integer indices.
 
-    Example:
-    -------
-        [0,1,2,4,5,8] --> [slices(0,3),slice(4,6), slice(8,9)]
-
+    Example: ``[0,1,2,4,5,8]`` --> ``[slices(0,3),slice(4,6), slice(8,9)]``
     """
     if isinstance(indices, (int, float)):
         indices = [indices]
@@ -199,8 +196,8 @@ def list_slices_flatten(list_slices):
 
     Examples
     --------
-    [[slice(1, 7934, None)], [slice(1, 2, None)]] --> [slice(1, 7934, None), slice(1, 2, None)]
-    [slice(1, 7934, None), slice(1, 2, None)] --> [slice(1, 7934, None), slice(1, 2, None)]
+    ``[[slice(1, 7934, None)], [slice(1, 2, None)]] --> [slice(1, 7934, None), slice(1, 2, None)]``
+    ``[slice(1, 7934, None), slice(1, 2, None)] --> [slice(1, 7934, None), slice(1, 2, None)]``
 
     """
     flat_list = []
@@ -213,24 +210,24 @@ def list_slices_flatten(list_slices):
 
 
 def get_list_slices_from_bool_arr(bool_arr, include_false=True, skip_consecutive_false=True):
-    """Return the slices corresponding to sequences of True in the input arrays.
+    """Return the slices corresponding to sequences of ``True`` in the input arrays.
 
-    If include_false=True, the last element of each slice sequence (except the last) will be False.
-    If include_false=False, no element in each slice sequence will be False.
-    If skip_consecutive_false=True (default), the first element of each slice must be a True.
-    If skip_consecutive_false=False, it returns also slices of size 1 which selects just the False value.
-    If include_false = False, skip_consecutive_false is automatically True.
+    If ``include_false=True``, the last element of each slice sequence (except the last) will be ``False``.
+    If ``include_false=False``, no element in each slice sequence will be ``False``.
+    If ``skip_consecutive_false=True`` (default), the first element of each slice must be a ``True``.
+    If ``skip_consecutive_false=False``, it returns also slices of size 1 which selects just the ``False`` values.
+    If ``include_false=False``, skip_consecutive_false is automatically ``True``.
 
     Examples
     --------
-    If include_false=True and skip_consecutive_false=False:
-    --> [False, False] --> [slice(0,1), slice(1,2)]
-    If include_false=True and skip_consecutive_false=True:
-    --> [False, False] --> []
-    --> [False, False, True] --> [slice(2,3)]
-    --> [False, False, True, False] --> [slice(2,4)]
-    If include_false=False:
-    --> [False, False, True, False] --> [slice(2,3)]
+    If ``include_false=True`` and ``skip_consecutive_false=False``:
+    --> ``[False, False] --> ``[slice(0,1), slice(1,2)]``
+    If ``include_false=True`` and ``skip_consecutive_false=True``:
+    --> ``[False, False] --> []``
+    --> ``[False, False, True] --> ``[slice(2,3)]``
+    --> ``[False, False, True, False] --> [slice(2,4)]``
+    If ``include_false=False``:
+    --> ``[False, False, True, False] --> [slice(2,3)]``
 
     """
     # Check the arguments
@@ -340,7 +337,7 @@ def pad_slice(slc, padding, min_start=0, max_stop=np.inf):
 
     Returns
     -------
-    list_slices : TYPE
+    list_slices : list
         The list of slices after applying padding.
 
     """
@@ -354,14 +351,14 @@ def pad_slices(list_slices, padding, valid_shape):
     ----------
     list_slices : list
         List of slice objects.
-    padding : (int or tuple)
+    padding : int or tuple
         Padding to be applied on each slice.
-    valid_shape : (int or tuple)
+    valid_shape : int or tuple
         The shape of the array which the slices should be valid on.
 
     Returns
     -------
-    list_slices : TYPE
+    list_slices : list
         The list of slices after applying padding.
 
     """
@@ -396,19 +393,19 @@ def pad_slices(list_slices, padding, valid_shape):
 def enlarge_slice(slc, min_size, min_start=0, max_stop=np.inf):
     """Enlarge a slice object to have at least a size of min_size.
 
-    The function enforces the left and right bounds of the slice by max_stop and min_start.
-    If the original slice size is larger than min_size, the original slice will be returned.
+    The function enforces the left and right bounds of the slice by `max_stop` and `min_start`.
+    If the original slice size is larger than `min_size`, the original slice will be returned.
 
     Parameters
     ----------
     slc : slice
         The original slice object to be enlarged.
-    min_size : min_size
+    min_size : int
         The desired minimum size of the new slice.
     min_start : int, optional
        The minimum value for the start of the new slice.
        The default is 0.
-    max_stop : int
+    max_stop : int, optional
         The maximum value for the stop of the new slice.
         The default is np.inf.
 
@@ -473,9 +470,9 @@ def enlarge_slices(list_slices, min_size, valid_shape):
     ----------
     list_slices : list
         List of slice objects.
-    min_size : (int or tuple)
+    min_size : int or tuple
         Minimum size of the output slice.
-    valid_shape : (int or tuple)
+    valid_shape : int or tuple
         The shape of the array which the slices should be valid on.
 
     Returns

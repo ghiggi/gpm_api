@@ -50,7 +50,7 @@ DIM_DICT = {
     "nBnPSDhi": "range",  # V6 88 bins (250 m each bin)
     # "nBnEnv": "nBnEnv",
     # 2B-GPM SLH/CSH
-    "nlayer": "range",
+    "nlayer": "range",  # 80 bins
     # PMW 1B-GMI (V7)
     "npix1": "cross_track",  # PMW (i.e. GMI)
     "npix2": "cross_track",  # PMW (i.e. GMI)
@@ -95,7 +95,7 @@ SPATIAL_DIMS = [
     ["latitude", "longitude"],
     ["x", "y"],  # compatibility with satpy/gpm_geo i.e.
 ]
-VERTICAL_DIMS = ["range", "nBnEnv", "height"]
+VERTICAL_DIMS = ["range", "height"]  #  ORBIT --> "range", "GRID" --> "height"  (nBnEnv" in CORRA)
 FREQUENCY_DIMS = ["radar_frequency", "pmw_frequency"]
 GRID_SPATIAL_DIMS = ("lon", "lat")
 ORBIT_SPATIAL_DIMS = ("cross_track", "along_track")
@@ -110,7 +110,7 @@ def _has_a_phony_dim(xr_obj):
 
 
 def _get_dataarray_dim_dict(da):
-    """Return a dictionary mapping each DataArray phony_dim to the actual dimension name."""
+    """Return a dictionary mapping each `xarray.DataArray` phony_dim to the actual dimension name."""
     dim_dict = {}
     dim_names_str = da.attrs.get("DimensionNames", None)
     if dim_names_str is not None:
@@ -153,21 +153,21 @@ def _get_gpm_api_dims_dict(ds):
     return rename_dim_dict
 
 
-def _rename_datarray_dimensions(da):
-    """Rename DataArray dimensions."""
+def _rename_dataarray_dimensions(da):
+    """Rename `xarray.DataArray` dimensions."""
     if _has_a_phony_dim(da):
         da = da.rename(_get_dataarray_dim_dict(da))
     return da
 
 
 def _rename_dataset_dimensions(ds, use_api_defaults=True):
-    """Rename xr.Dataset dimension to the actual dimension names.
+    """Rename `xarray.Dataset` dimension to the actual dimension names.
 
-    The actual dimensions names are retrieved from the DataArrays DimensionNames attribute.
+    The actual dimensions names are retrieved from the `xarray.DataArray`s DimensionNames attribute.
     The dimension renaming is performed at each Dataset level.
     If use_api_defaults is True (the default), it sets the GPM-API dimension names.
     """
-    dict_da = {var: _rename_datarray_dimensions(ds[var]) for var in ds.data_vars}
+    dict_da = {var: _rename_dataarray_dimensions(ds[var]) for var in ds.data_vars}
     ds = xr.Dataset(dict_da, attrs=ds.attrs)
     if use_api_defaults:
         ds = ds.rename_dims(_get_gpm_api_dims_dict(ds))
@@ -175,14 +175,14 @@ def _rename_dataset_dimensions(ds, use_api_defaults=True):
 
 
 def _rename_datatree_dimensions(dt, use_api_defaults=True):
-    """Rename datatree dimension to the actual dimension names.
+    """Rename `xarray.DataTree` dimension to the actual dimension names.
 
-    The actual dimensions names are retrieved from the DataArrays DimensionNames attribute.
-    The renaming is performed at the DataArray level because DataArrays sharing same dimension
-    size (but semantic different dimension) are given the same phony_dim_number within xr.Dataset !
+    The actual dimensions names are retrieved from the `xarray.DataArray`s DimensionNames attribute.
+    The renaming is performed at the `xarray.DataArray` level because DataArrays sharing same dimension
+    size (but semantic different dimension) are given the same phony_dim_number within `xarray.Dataset` !
 
     The dimension renaming is performed at each Dataset level.
-    If use_api_defaults is True (the default), it sets the GPM-API dimension names.
+    If ``use_api_defaults`` is ``True`` (the default), it sets the GPM-API dimension names.
     """
     # TODO: report reproducible issue on datatree repo ...
     # --> dt[group].rename_dims(dim_dict) does not work

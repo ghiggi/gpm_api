@@ -77,6 +77,7 @@ def get_orbit_dataarray(
     width: float,
     n_along_track: int,
     n_cross_track: int,
+    n_range=0,
 ) -> xr.DataArray:
     """Create orbit data array on geodesic band."""
     np.random.seed(0)
@@ -84,7 +85,7 @@ def get_orbit_dataarray(
     along_track = np.arange(n_along_track)
     data = np.random.rand(n_cross_track, n_along_track)
     granule_id = np.zeros(n_along_track)
-
+    cross_track_id = np.arange(0, n_cross_track)
     # Coordinates
     lon, lat = get_geodesic_band(
         start_lon=start_lon,
@@ -101,7 +102,17 @@ def get_orbit_dataarray(
     da.coords["lat"] = (("cross_track", "along_track"), lat)
     da.coords["lon"] = (("cross_track", "along_track"), lon)
     da.coords["gpm_granule_id"] = ("along_track", granule_id)
+    da.coords["gpm_cross_track_id"] = ("cross_track", cross_track_id)
 
+    # Add range dimension if n_range not zero
+    if n_range != 0:
+        da = da.expand_dims(dim={"range": n_range})
+        # - Add range coordinate
+        da.coords["range"] = ("range", np.arange(1, n_range + 1))
+        # - Add height
+        height1d = xr.DataArray(np.arange(n_range)[::-1] * 1000, dims="range")
+        height_3d = xr.ones_like(da) * height1d
+        da = da.assign_coords({"height": height_3d})
     return da
 
 

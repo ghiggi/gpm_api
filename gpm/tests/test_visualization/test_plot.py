@@ -221,6 +221,7 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
+    ####------------------------------------------------------------------------
     #### Test with NaN coordinates
 
     def test_orbit_nan_coordinate_at_one_cell(
@@ -269,7 +270,7 @@ class TestPlotMap:
         self,
         orbit_nan_inner_cross_track_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting orbit data with all NaN coordinates on the outer cross-track cells."""
+        """Test plotting orbit data with all NaN coordinates on some inner cross-track cells."""
         p = plot.plot_map(orbit_nan_inner_cross_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
@@ -281,6 +282,68 @@ class TestPlotMap:
         p = plot.plot_map(orbit_nan_slice_along_track_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
+    ####------------------------------------------------------------------------
+    #### Test cross-track/along-track view
+
+    def test_orbit_cross_track(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data."""
+        p = plot.plot_map(orbit_dataarray.isel(along_track=0))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_along_track(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data."""
+        p = plot.plot_map(orbit_dataarray.isel(cross_track=0))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_cross_track_pole_projection(
+        self,
+        orbit_pole_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit cross-track view going over the south pole on orthographic projection."""
+        crs_proj = ccrs.Orthographic(0, -90)
+        p = plot.plot_map(orbit_pole_dataarray.isel(cross_track=0), subplot_kwargs={"projection": crs_proj})
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_along_track_pole_projection(
+        self,
+        orbit_pole_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit along-track view going over the south pole on orthographic projection."""
+        crs_proj = ccrs.Orthographic(0, -90)
+        p = plot.plot_map(orbit_pole_dataarray.isel(along_track=0), subplot_kwargs={"projection": crs_proj})
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_cross_track_nan_outer_cross_track(
+        self,
+        orbit_nan_outer_cross_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit cross-track view with some NaN coordinates on the outer cross-track cells."""
+        p = plot.plot_map(orbit_nan_outer_cross_track_dataarray.isel(along_track=0))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_cross_track_nan_inner_cross_track(
+        self,
+        orbit_nan_inner_cross_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit cross-track view with all NaN coordinates on some inner cross-track cells."""
+        p = plot.plot_map(orbit_nan_inner_cross_track_dataarray.isel(along_track=0))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_along_track_nan_slice_along_track(
+        self,
+        orbit_nan_slice_along_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit along-track view with some NaN latitudes along-track."""
+        p = plot.plot_map(orbit_nan_slice_along_track_dataarray.isel(cross_track=0))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    ####------------------------------------------------------------------------
     #### Test colorbar kwargs
 
     def test_orbit_cbar_kwargs(
@@ -677,3 +740,37 @@ class TestPlotPatches:
         ]
         generator = (t for t in invalid_list)
         plot.plot_patches(generator)  # passes without error
+
+
+class TestGetOrientationLocation:
+    """Test arguments for colorbar positioning."""
+
+    def test_defaults(self):
+        assert plot._get_orientation_location({}) == ("vertical", "right")
+
+    def test_defaults_with_valid_orientation(self):
+        assert plot._get_orientation_location({"orientation": "vertical"}) == ("vertical", "right")
+        assert plot._get_orientation_location({"orientation": "horizontal"}) == ("horizontal", "bottom")
+
+    def test_defaults_with_valid_location(self):
+        assert plot._get_orientation_location({"location": "left"}) == ("vertical", "left")
+        assert plot._get_orientation_location({"location": "bottom"}) == ("horizontal", "bottom")
+
+    def test_valid_orientation_location_combinations(self):
+        assert plot._get_orientation_location({"orientation": "horizontal", "location": "top"}) == ("horizontal", "top")
+        assert plot._get_orientation_location({"orientation": "vertical", "location": "left"}) == ("vertical", "left")
+
+    def test_invalid_orientation(self):
+        with pytest.raises(ValueError):
+            plot._get_orientation_location({"orientation": "invalid"})
+
+    def test_invalid_location(self):
+        with pytest.raises(ValueError):
+            plot._get_orientation_location({"location": "invalid"})
+
+    def test_invalid_orientation_location_combination(self):
+        with pytest.raises(ValueError):
+            plot._get_orientation_location({"orientation": "vertical", "location": "top"})
+
+        with pytest.raises(ValueError):
+            plot._get_orientation_location({"orientation": "horizontal", "location": "left"})

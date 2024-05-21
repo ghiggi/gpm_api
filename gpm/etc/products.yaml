@@ -94,11 +94,11 @@
   - 7
   scan_modes:
     V5:
-    - HS
     - MS
+    - HS
     V7:
-    - HS
     - MS
+    - HS
   product_level: 1B
   full_product_level: 1B
 1B-Ku:
@@ -1811,11 +1811,11 @@
   - 7
   scan_modes:
     V6:
-    - HS
     - MS
-    V7:
     - HS
+    V7:
     - FS
+    - HS
   product_level: 2A
   full_product_level: 2A
 2A-Ku:

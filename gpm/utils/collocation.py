@@ -71,7 +71,10 @@ def collocate_product(
     decode_cf=True,
     chunks={},
 ):
-    """Collocate a product on the provided dataset."""
+    """Collocate a product on the provided dataset.
+
+    It assumes that along all the input dataset, there is an approximate collocated product.
+    """
     # Get default collocation arguments
     scan_modes, variables, groups = _get_collocation_defaults_args(
         product=product,

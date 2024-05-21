@@ -86,7 +86,13 @@ download_gpm_monthly_data="gpm.scripts.download_gpm_monthly_data:download_gpm_mo
 download_gpm_files="gpm.scripts.download_gpm_files:download_gpm_files"
 
 [tool.pytest.ini_options]
-addopts = "--ignore=gpm/tests/0_tmp/ --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
+addopts = "--strict-config --strict-markers --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
+xfail_strict = true
+# filterwarnings = ["error"]
+log_cli_level = "info"
+testpaths = [
+  "gpm/tests",
+]
 
 [tool.black]
 line-length = 120
@@ -196,6 +202,7 @@ ignore = [
     "PLW0603",
     "RUF012",
     "RUF015",
+    "RET504",
     # Docstyle Rules
     "D404", # Docstring can't start with "This"
     "D401", # First sentence must be in imperative mood

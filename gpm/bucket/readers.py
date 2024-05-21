@@ -34,7 +34,7 @@ def _get_arrow_to_pandas_defaults():
         "zero_copy_only": False,  # Default is False. If True, raise error if doing copies
         "strings_to_categorical": False,
         "date_as_object": False,  # Default is True. If False convert to datetime64[ns]
-        "timestamp_as_object": False,  # Default is True. If False convert to np.datetime64[ns]
+        "timestamp_as_object": False,  # Default is True. If False convert to numpy.datetime64[ns]
         "use_threads": True,  #  parallelize the conversion using multiple threads.
         "safe": True,
         "split_blocks": False,

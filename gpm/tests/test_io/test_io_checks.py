@@ -459,7 +459,7 @@ def test_check_product_validity(
 
 
 def test_check_time() -> None:
-    """Test that time is returned a datetime object from varying inputs."""
+    """Test that time is returned a `datetime.datetime` object from varying inputs."""
     # Test a string
     res = checks.check_time("2014-12-31")
     assert isinstance(res, datetime.datetime)
@@ -485,7 +485,7 @@ def test_check_time() -> None:
     assert isinstance(res, datetime.datetime)
     assert res == datetime.datetime(2014, 12, 31, 12, 30, 30, 300)
 
-    # Test a np.datetime64 object of "datetime64[s]"
+    # Test a numpy.datetime64 object of "datetime64[s]"
     res = checks.check_time(np.datetime64("2014-12-31"))
     assert isinstance(res, datetime.datetime)
     assert res == datetime.datetime(2014, 12, 31)
@@ -546,7 +546,7 @@ def test_check_time() -> None:
 
 
 def test_check_date() -> None:
-    """Check date/datetime object is returned from varying inputs."""
+    """Check if `datetime.datetime` or `datetime.date` object is returned from varying inputs."""
     # Test a datetime object
     res = checks.check_date(datetime.datetime(2014, 12, 31))
     assert isinstance(res, datetime.date)

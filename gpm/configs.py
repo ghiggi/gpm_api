@@ -47,12 +47,8 @@ def set_ges_disc_authentification(username, password):
     ----------
     username : str
         EarthData login username.
-    password : TYPE
+    password : str
         EarthData login password.
-
-    Returns
-    -------
-    None.
 
     """
     urs = "urs.earthdata.nasa.gov"  # Earthdata URL to call for authentication
@@ -180,7 +176,7 @@ def read_configs() -> dict[str, str]:
 
 ####--------------------------------------------------------------------------.
 def _get_config_key(key):
-    """Return the config key if `value` is not None."""
+    """Return the config key."""
     import gpm
 
     value = gpm.config.get(key, None)

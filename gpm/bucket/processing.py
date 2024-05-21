@@ -39,7 +39,7 @@ from tqdm import tqdm
 
 from gpm.bucket.io import get_filepaths_by_bin
 from gpm.dataset.granule import remove_unused_var_dims
-from gpm.io.local import group_filepaths_by_time_group
+from gpm.io.info import group_filepaths
 from gpm.utils.timing import print_task_elapsed_time
 
 
@@ -69,8 +69,8 @@ def has_unique_chunking(ds):
 def ensure_unique_chunking(ds):
     """Ensure the dataset has unique chunking.
 
-    Conversion to dask.dataframe requires unique chunking.
-    If the xr.Dataset does not have unique chunking, perform ds.unify_chunks.
+    Conversion to `dask.dataframe.DataFrame` requires unique chunking.
+    If the `xarray.Dataset` does not have unique chunking, perform ``ds.unify_chunks``.
 
     Variable chunks can be visualized with:
 
@@ -104,9 +104,9 @@ def drop_undesired_columns(df):
 
 
 def ds_to_pd_df_function(ds):
-    """Convert an xr.Dataset to a pandas.Dataframe.
+    """Convert an `xarray.Dataset` to a `pandas.DataFrame`.
 
-    This function expects a xr.Dataset with only 2D spatial DataArrays.
+    This function expects a 2D spatial `xarray.Dataset`.
     """
     # Drop unrelevant coordinates
     ds = remove_unused_var_dims(ds)
@@ -126,9 +126,9 @@ def ds_to_pd_df_function(ds):
 
 
 def ds_to_dask_df_function(ds):
-    """Convert an xr.Dataset to a dask.Dataframe.
+    """Convert an `xarray.Dataset` to a `dask.Dataframe`.
 
-    This function expects a xr.Dataset with only 2D spatial DataArrays.
+    This function expects a 2D spatial `xarray.Dataset`.
     """
     # Drop unrelevant coordinates
     ds = remove_unused_var_dims(ds)
@@ -186,7 +186,7 @@ def assign_spatial_partitions(
 ):
     """Add partitioning bin columns to dataframe.
 
-    Works for both dask.dataframe and pandas.dataframe.
+    Works for both `dask.dataframe.DataFrame` and `pandas.DataFrame`.
     """
     # Remove invalid coordinates
     df = df[~df[x_column].isna()]
@@ -209,9 +209,6 @@ def _convert_size_to_bytes(size_str):
      - yottabytes, zetabytes, etc.
      - with & without spaces between & around units.
      - floats ("5.2 mb")
-
-    To reverse this, see hurry.filesize or the Django filesizeformat template
-    filter.
 
     :param size_str: A human-readable string representing a file size, e.g.,
     "22 megabytes".
@@ -285,9 +282,9 @@ def convert_size_to_bytes(size):
 
 
 def estimate_row_group_size(df, size="200MB"):
-    """Estimate row_group_size parameter based on the desired row group memory size.
+    """Estimate ``row_group_size`` parameter based on the desired row group memory size.
 
-    row_group_size is a Parquet argument controlling the number of rows
+    ``row_group_size`` is a Parquet argument controlling the number of rows
     in each Apache Parquet File Row Group.
     """
     if isinstance(df, pa.Table):
@@ -326,30 +323,30 @@ def merge_granule_buckets(
         Base directory of the per-granule bucket archive.
     dst_bucket_dir : str
         Directory path of the final bucket archive.
-    row_group_size : (int, str), optional
+    row_group_size : int or str, optional
         Maximum number of rows in each written Parquet row group.
-        If specified as a string (i.e. "400 MB"), the equivalent row group size
-        number is estimated. The default is "400MB".
+        If specified as a string (i.e. ``"400 MB"``), the equivalent row group size
+        number is estimated. The default is ``"400MB"``.
     max_file_size: str, optional
         The maximum size of each Parquet File. Ideally a multiple of row_group_size.
-        The default is "2GB".
+        The default is ``"2GB"``.
     compression : str, optional
         Specify the compression codec, either on a general basis or per-column.
-        Valid values: {"none", "snappy", "gzip", "brotli", "lz4", "zstd"}.
-        The default is "snappy".
-    compression : int or dict, optional
+        Valid values: ``{"none", "snappy", "gzip", "brotli", "lz4", "zstd"}``.
+        The default is ``snappy``.
+    compression_level : int or dict, optional
         Specify the compression level for a codec, either on a general basis or per-column.
         If ``None`` is passed, arrow selects the compression level for the compression codec in use.
         The compression level has a different meaning for each codec, so you have
         to read the pyArrow documentation of the codec you are using.
-        The default is compression_level=None.
+        The default is ``None``.
     max_open_files, int, optional
         If greater than 0 then this will limit the maximum number of files that can be left open.
         If an attempt is made to open too many files then the least recently used file will be closed.
         If this setting is set too low you may end up fragmenting your data into many small files.
-        The default is 0.
-        Note that Linux has a default limit of 1024. Before starting the python session,
-        increase it with ulimit -n <new_much_higher_limit>.
+        The default is ``0``.
+        Note that Linux has a default limit of ``1024``. Before starting the python session,
+        increase it with ``ulimit -n <new_much_higher_limit>``.
     use_threads: bool, optional
         If enabled, then maximum parallelism will be used to read and write files (in multithreading).
         The number of threads is determined by the number of available CPU cores.
@@ -357,15 +354,15 @@ def merge_granule_buckets(
     batch_size, int, optional
         The maximum row count for scanned record batches.
         If scanned record batches are overflowing memory then this value can be reduced to reduce the memory usage.
-        The default value is 131_072.
+        The default value is ``131_072``.
     batch_readahead
         The number of batches to read ahead in a file.
         Increasing this number will increase RAM usage but could also improve IO utilization.
-        The default is 16.
+        The default is ``16``.
     fragment_readahead
         The number of files to read ahead.
         Increasing this number will increase RAM usage but could also improve IO utilization.
-        The default is 4.
+        The default is ``4``.
 
     Returns
     -------
@@ -415,7 +412,7 @@ def merge_granule_buckets(
     n_bins = len(bin_path_dict)
     for bin_id, filepaths in tqdm(bin_path_dict.items(), total=n_bins):
         partition_dir = os.path.join(dst_bucket_dir, bin_id)
-        year_dict = group_filepaths_by_time_group(filepaths, group="year")
+        year_dict = group_filepaths(filepaths, groups="year")
         for year, year_filepaths in year_dict.items():
             basename_template = f"{year}_" + "{i}.parquet"
             # Read Dataset

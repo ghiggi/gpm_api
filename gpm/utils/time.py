@@ -50,16 +50,16 @@ def subset_by_time(xr_obj, start_time=None, end_time=None):
     ----------
     xr_obj :
         A xarray object.
-    start_time : datetime.datetime
+    start_time : `datetime.datetime`
         Start time.
         By default is ``None``
-    end_time : datetime.datetime
+    end_time : `datetime.datetime`
         End time.
         By default is ``None``
 
     Returns
     -------
-    xr_obj : (xr.Dataset, xr.DataArray)
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
         GPM xarray object
 
     """
@@ -133,33 +133,20 @@ def has_nat(timesteps):
 def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, limit_area=None):
     """Fill NaT values using an interpolation method.
 
+    For further information refers to `pandas.DataFrame.interpolate`.
+
     Parameters
     ----------
-    method : str, default 'linear'
-        Interpolation technique to use. One of:
-        * 'linear': Treat the timesteps as equally spaced.
-        * 'pad': Fill in NaTs using existing values.
-        * 'nearest', 'zero', 'slinear', 'quadratic', 'cubic', 'spline',
-        'barycentric', 'polynomial': Passed to `scipy.interpolate.interp1d`.
-        Both 'polynomial' and 'spline' require that you also specify an
-        `order` (int), e.g. ``interpolate_nat(method='polynomial', order=5)``.
-        * 'krogh', 'piecewise_polynomial', 'spline', 'pchip', 'akima',
-        'cubicspline': Wrappers around the SciPy interpolation methods of
-        similar names. See `Notes` in https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.interpolate.html
-
+    method : str
+        Interpolation technique to use.
+        ``'linear'``, the default, treat the timesteps as equally spaced.
     limit : int, optional
         Maximum number of consecutive NaTs to fill. Must be greater than 0.
-    limit_direction : {{'forward', 'backward', 'both'}}, Optional
+    limit_direction : str, optional
+        Valid values are ``'forward'``, ``'backward'`` and ``'both'``.
         Consecutive NaTs will be filled in this direction.
-
-        If limit is specified:
-            * If 'method' is 'pad' or 'ffill', 'limit_direction' must be 'forward'.
-            * If 'method' is 'backfill' or 'bfill', 'limit_direction' must be 'backwards'.
-
-        If 'limit' is not specified:
-            * If 'method' is 'backfill' or 'bfill', the default is 'backward' else the default is 'forward'
-
-    limit_area : {{`None`, 'inside', 'outside'}}, default None
+    limit_area : str, None
+        Valid values are ``None``, ``'inside'`` and ``'outside'``,
         If limit is specified, consecutive NaTs will be filled with this restriction.
         * ``None``: No fill restriction.
         * 'inside': Only fill NaTs surrounded by valid values (interpolate).
@@ -168,12 +155,12 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
     Notes
     -----
     Depending on the interpolation method (i.e. linear) the infilled values could have ns resolution.
-    For further information refers to https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.interpolate.html
+    For further information refers to `pandas.DataFrame.interpolate`.
 
     Returns
     -------
-    timesteps, np.array
-        Timesteps array of type datetime64[ns]
+    timesteps: `numpy.ndarray`
+        Timesteps array of type datetime64[ns].
 
     """
     if len(timesteps) == 0:
@@ -222,12 +209,12 @@ def ensure_time_validity(xr_obj, limit=10):
 
     Parameters
     ----------
-    xr_obj : (xr.Dataset, xr.DataArray)
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
         GPM xarray object.
 
     Returns
     -------
-    xr_obj : (xr.Dataset, xr.DataArray)
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
         GPM xarray object.
 
     """
@@ -250,7 +237,7 @@ def get_dataset_start_end_time(ds: xr.Dataset, time_dim="time"):
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : `xarray.Dataset`
         Input dataset
     time_dim: str
         Name of the time dimension.
@@ -278,23 +265,23 @@ def regularize_dataset(
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : `xarray.Dataset`
         xarray Dataset.
     time_dim : str, optional
-        The time dimension in the xr.Dataset. The default is ``"time"``.
+        The time dimension in the `xarray.Dataset`. The default is ``"time"``.
     freq : str
-        The ``freq`` string to pass to ``pd.date_range`` to define the new time coordinates.
+        The ``freq`` string to pass to `pd.date_range()` to define the new time coordinates.
         Examples: ``freq="2min"``.
     method : str, optional
         Method to use for filling missing timesteps.
         If ``None``, fill with ``fill_value``. The default is ``None``.
-        For other possible methods, see https://docs.xarray.dev/en/stable/generated/xarray.Dataset.reindex.html
+        For other possible methods, see `xarray.Dataset.reindex()`
     fill_value : float, optional
         Fill value to fill missing timesteps. The default is ``dtypes.NA``.
 
     Returns
     -------
-    ds_reindexed : xr.Dataset
+    ds_reindexed : `xarray.Dataset`
         Regularized dataset.
 
     """

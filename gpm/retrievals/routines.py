@@ -58,18 +58,21 @@ def _get_retrieval_function(module_name, retrieval):
 def _infer_product(ds):
     if "gpm_api_product" not in ds.attrs:
         raise ValueError(
-            "The xr.Dataset does not have the global attribute 'gpm_api_product' key !",
+            "The xarray.Dataset does not have the global attribute 'gpm_api_product' key !",
         )
     return ds.attrs["gpm_api_product"]
 
 
 def available_retrievals(ds):
-    """Decode the variables of a given GPM product."""
+    """Return the available GPM-API retrievals of the GPM product."""
     # Retrieve products
     product = _infer_product(ds)
     # Define retrievals for 2A-<RADAR> products
     if product in available_products(product_categories="RADAR", product_levels="2A"):
         module_name = "gpm.retrievals.retrieval_2a_radar"
+        return _get_available_retrievals(module_name)
+    if product in available_products(product_categories="RADAR", product_levels="1B"):
+        module_name = "gpm.retrievals.retrieval_1b_radar"
         return _get_available_retrievals(module_name)
     if product in available_products(product_categories="PMW", product_levels="2A"):
         module_name = "gpm.retrievals.retrieval_2a_pmw"
@@ -92,13 +95,17 @@ def check_retrieval_validity(ds, retrieval):
 
 
 def get_retrieval_variable(ds, name, *args, **kwargs):
-    """Compute the requested variable."""
+    """Retrieve the requested GPM-API variable."""
     # Retrieve products
     product = _infer_product(ds)
 
     # Define retrievals for 2A-<RADAR> products
     if product in available_products(product_categories="RADAR", product_levels="2A"):
         module_name = "gpm.retrievals.retrieval_2a_radar"
+        check_retrieval_validity(ds, name)
+        return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
+    if product in available_products(product_categories="RADAR", product_levels="1B"):
+        module_name = "gpm.retrievals.retrieval_1b_radar"
         check_retrieval_validity(ds, name)
         return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
     if product in available_products(product_categories="PMW", product_levels="2A"):

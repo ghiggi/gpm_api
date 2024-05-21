@@ -26,6 +26,8 @@
 # -----------------------------------------------------------------------------.
 import platform
 
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 import pytest
 import xarray as xr
 
@@ -128,6 +130,23 @@ class TestPlotMap:
         """Test plotting orbit data without valid col or row argument."""
         with pytest.raises(ValueError):
             plot.plot_map(orbit_dataarray_4_frames, col=None)
+
+    def test_with_specified_axis(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
+        """Test FacetGrid raise error if an axis is specified."""
+        fig, ax = plt.subplots(1, 1)
+        with pytest.raises(ValueError):
+            plot.plot_map(orbit_dataarray_4_frames, ax=ax, col=EXTRA_DIM)
+
+    def test_without_cartopy_projection(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
+        """Test FacetGrid raise error if a Cartopy projection is None."""
+        subplot_kwargs = {"projection": None}
+        with pytest.raises(ValueError):
+            plot.plot_map(orbit_dataarray_4_frames, subplot_kwargs=subplot_kwargs, col=EXTRA_DIM)
+
+    def test_with_custom_cartopy_projection(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
+        """Test plotting FacetGrid with a custom Cartopy projection."""
+        subplot_kwargs = {"projection": ccrs.PlateCarree()}
+        plot.plot_map(orbit_dataarray_4_frames, subplot_kwargs=subplot_kwargs, col=EXTRA_DIM)
 
     def test_orbit_one_empty_subplot(
         self,
@@ -248,3 +267,9 @@ class TestPlotImage:
         """Test plotting orbit data."""
         p = plot.plot_image(grid_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_with_specified_axis(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
+        """Test plotting FacetGrid with a specified ax raise an error."""
+        fig, ax = plt.subplots(1, 1)
+        with pytest.raises(ValueError):
+            plot.plot_image(orbit_dataarray_4_frames, ax=ax, col=2)

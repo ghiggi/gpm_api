@@ -33,14 +33,15 @@ def get_time_str(timesteps, time_idx=None, resolution="m", timezone="UTC"):
 
     If an array, it takes the timesteps in the middle of the array.
     """
+    timesteps = timesteps.squeeze()
     if timesteps.size == 1:
         timestep = timesteps
     else:
         timestep = timesteps[int(len(timesteps) / 2)] if time_idx is None else timesteps[time_idx]
     # Get time string with custom unit and timezone
     time_str = np.datetime_as_string(timestep, unit=resolution, timezone=timezone)
-    return time_str.replace("T", " ").replace("Z", "")
     # Return time string
+    return time_str.replace("T", " ").replace("Z", "")
 
 
 def get_dataset_title(
@@ -54,12 +55,12 @@ def get_dataset_title(
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : `xarray.Dataset`
         GPM xarray Dataset.
     add_timestep : bool, optional
         Whether to add time information to the title. The default is ``True``.
         For GRID objects (like IMERG), the timestep is added only if
-        the DataArray has 1 timestep.
+        the `xarray.DataArray` has 1 timestep.
     time_idx : int, optional
         Index of timestep to select, instead of selecting the middle.
         The default is ``None``.
@@ -105,11 +106,11 @@ def get_dataarray_title(
     resolution="m",
     timezone="UTC",
 ):
-    """Generate the GPM xarray DataArray title.
+    """Generate the plot title for a GPM `xarray.DataArray`.
 
     Parameters
     ----------
-    da : xr.DataArray
+    da : `xr.DataArray`
         GPM xarray DataArray.
     prefix_product : bool, optional
         Whether to add the GPM product as prefix.
@@ -117,7 +118,7 @@ def get_dataarray_title(
     add_timestep : bool, optional
         Whether to add time information to the title. The default is ``True``.
         For GRID objects (like IMERG), the timestep is added only if
-        the DataArray has 1 timestep.
+        the `xarray.DataArray` has 1 timestep.
     time_idx : int, optional
         Index of timestep to select, instead of selecting the middle.
         The default is ``None``.
@@ -131,7 +132,7 @@ def get_dataarray_title(
     Returns
     -------
     title_str : str
-        Title of the DataArray.
+        Title of the `xarray.DataArray`.
 
     """
     from gpm.checks import is_orbit

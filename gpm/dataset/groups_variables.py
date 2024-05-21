@@ -196,7 +196,6 @@ def _get_relevant_groups_variables(dt, scan_mode, variables=None, groups=None):
         groups = required_groups
     elif variables is None and groups is None:
         groups = available_groups
-        # variables = available_groups # variable=None
     else:  # groups is not None and variable is None
         # variables = _get_availables_variables_in_groups(dt, scan_mode, groups) # variable=None
         pass

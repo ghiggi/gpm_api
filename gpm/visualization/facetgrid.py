@@ -42,11 +42,16 @@ from xarray.plot.utils import label_from_attrs
 from gpm.visualization.plot import adapt_fig_size
 
 
-def _remove_title_dimension_prefix(ax):
-    title = ax.get_title()
+def _remove_dim_prefix(title):
     splitted_text = title.split("=")
     if len(splitted_text) >= 2:
         title = title.split("=")[-1].lstrip()
+    return title
+
+
+def _remove_title_dimension_prefix(ax):
+    title = ax.get_title()
+    title = _remove_dim_prefix(title)
     ax.set_title(title)
 
 
@@ -80,21 +85,22 @@ class CustomFacetGrid(FacetGrid, ABC):
 
         Parameters
         ----------
-        data : DataArray or Dataset
-            DataArray or Dataset to be plotted.
+        data : `xarray.DataArray` or `xarray.Dataset`
+            xarray object to be plotted.
         row, col : str
             Dimension names that define subsets of the data, which will be drawn
             on separate facets in the grid.
         col_wrap : int, optional
             "Wrap" the grid the for the column variable after this number of columns,
             adding rows if ``col_wrap`` is less than the number of facets.
-        axes_pad : float or (float, float), default: 0.02in
-           Padding or (horizontal padding, vertical padding) between axes, in
-           inches.
-        aspect : bool, default: True
+        axes_pad : tuple or float, optional
+            Padding or (horizontal padding, vertical padding) between axes, in
+            inches. The default is ``(0.1, 0.3)`` inches.
+        aspect : bool, optional
             Whether the axes aspect ratio follows the aspect ratio of the data
-            limits.
-        axes_class : subclass of `matplotlib.axes.Axes`, default: None
+            limits. The default is ``True``.
+        axes_class : subclass of `matplotlib.axes.Axes`, optional
+            The default is ``None``.
         add_colorbar: bool, optional
             Whether to add a colorbar to the figure.
             The default is ``True``.
@@ -103,20 +109,20 @@ class CustomFacetGrid(FacetGrid, ABC):
             The ``pad`` argument controls the space between the image axes and the colorbar axes.
             The ``pad`` default is 0.2.
             The ``size`` argument control the colorbar size. The default value is '3%'.
-            For other arguments, see :meth:`matplotlib:matplotlib.figure.Figure.colorbar`.
+            For other arguments, see `matplotlib.figure.Figure.colorbar`.
         facet_height: float, optional
             Height (in inches) of each facet. The default is 3.
             This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
         facet_aspect:  float, optional
-           Aspect ratio of each facet. The default is 1.
-           The facet width is determined by ``facet_height`` * ``facet_aspect``.
-           This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
+            Aspect ratio of each facet. The default is 1.
+            The facet width is determined by ``facet_height`` * ``facet_aspect``.
+            This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
         fig_kwargs : dict, optional
-             Dictionary of keyword arguments to pass to the Figure.
-             Typical arguments include ``figsize`` and ``dpi``.
-             ``figsize`` is a tuple (width, height) of the figure in inches.
-             If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
-             (see :meth:`matplotlib:matplotlib.figure.Figure`).
+                Dictionary of keyword arguments to pass to the Figure.
+                Typical arguments include ``figsize`` and ``dpi``.
+                ``figsize`` is a tuple (width, height) of the figure in inches.
+                If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
+                (see `matplotlib.figure.Figure`).
 
         """
         # Handle corner case of nonunique coordinates
@@ -160,9 +166,10 @@ class CustomFacetGrid(FacetGrid, ABC):
             axes_pad = (0.1, 0.3)
 
         # Define colorbar settings
+        default_pad = 0.3 if (row is not None and col is not None) else 0.2
         cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
         orientation = cbar_kwargs.get("orientation", "vertical")
-        cbar_pad = cbar_kwargs.get("pad", 0.2)
+        cbar_pad = cbar_kwargs.get("pad", default_pad)
         cbar_size = cbar_kwargs.get("size", "3%")
         if add_colorbar:
             cbar_mode = "single"
@@ -298,7 +305,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         # Don't pass 'extend' as kwarg if it is in the mappable
         if hasattr(self._mappables[-1], "extend"):
             cbar_kwargs.pop("extend", None)
-        # If label not specified, use the datarray name or attributes
+        # If label not specified, use the dataarray name or attributes
         if "label" not in cbar_kwargs:
             assert isinstance(self.data, xr.DataArray)
             cbar_kwargs.setdefault("label", label_from_attrs(self.data))
@@ -314,9 +321,15 @@ class CustomFacetGrid(FacetGrid, ABC):
         if ticklabels is not None:
             self.cbar.ax.set_yticklabels(ticklabels)
 
-    def remove_title_dimension_prefix(self):
+    def remove_title_dimension_prefix(self, row=True, col=True):
         """Remove the dimension prefix from the subplot labels."""
-        self.map(lambda: _remove_title_dimension_prefix(plt.gca()))
+        if len(self.row_names) == 0 or len(self.col_names) == 0:
+            self.map(lambda: _remove_title_dimension_prefix(plt.gca()))
+        else:
+            if col:
+                _ = [ann.set_text(_remove_dim_prefix(ann.get_text())) for ann in self.col_labels]
+            if row:
+                _ = [ann.set_text(_remove_dim_prefix(ann.get_text())) for ann in self.row_labels]
 
     def set_title(self, title, horizontalalignment="center", **kwargs):
         """Add a title above all sublots.
@@ -360,9 +373,9 @@ class CartopyFacetGrid(CustomFacetGrid):
 
         Parameters
         ----------
-        data : DataArray or Dataset
-            DataArray or Dataset to be plotted.
-        projection: cartopy.crs
+        data : `xarray.DataArray` or `xarray.Dataset`
+            xarray object to be plotted.
+        projection: `cartopy.crs.CRS`
             Cartopy projection.
         row, col : str
             Dimension names that define subsets of the data, which will be drawn
@@ -370,9 +383,9 @@ class CartopyFacetGrid(CustomFacetGrid):
         col_wrap : int, optional
             "Wrap" the grid the for the column variable after this number of columns,
             adding rows if ``col_wrap`` is less than the number of facets.
-        axes_pad : float or (float, float), default: 0.02in
-           Padding or (horizontal padding, vertical padding) between axes, in
-           inches.
+        axes_pad : tuple or float, optional
+            Padding or (horizontal padding, vertical padding) between axes, in
+            inches. The default is ``(0.1, 0.3)`` inches.
         add_colorbar: bool, optional
             Whether to add a colorbar to the figure.
             The default is ``True``.
@@ -380,8 +393,8 @@ class CartopyFacetGrid(CustomFacetGrid):
             Dictionary of keyword arguments to pass to the colorbar.
             The ``pad`` argument controls the space between the image axes and the colorbar axes.
             The ``pad`` default is 0.2.
-            The ``size`` argument control the colorbar size. The default value is '3%'.
-            For other arguments, see :meth:`matplotlib:matplotlib.figure.Figure.colorbar`.
+            The ``size`` argument control the colorbar size. The default value is ``'3%'``.
+            For other arguments, see `matplotlib.figure.Figure.colorbar`.
         facet_height: float, optional
             Height (in inches) of each facet. The default is 3.
             This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
@@ -394,7 +407,7 @@ class CartopyFacetGrid(CustomFacetGrid):
              Typical arguments include ``figsize`` and ``dpi``.
              ``figsize`` is a tuple (width, height) of the figure in inches.
              If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
-             (see :meth:`matplotlib:matplotlib.figure.Figure`).
+             (see `matplotlib.figure.Figure`).
 
         """
         # Define Cartopy axes
@@ -486,18 +499,20 @@ class ImageFacetGrid(CustomFacetGrid):
 
         Parameters
         ----------
-        data : DataArray or Dataset
-            DataArray or Dataset to be plotted.
+        data : `xarray.DataArray` or `xarray.Dataset`
+            xarray object to be plotted.
         row, col : str
             Dimension names that define subsets of the data, which will be drawn
             on separate facets in the grid.
         col_wrap : int, optional
             "Wrap" the grid the for the column variable after this number of columns,
             adding rows if ``col_wrap`` is less than the number of facets.
-        axes_pad : float or (float, float), default: 0.02in
-           Padding or (horizontal padding, vertical padding) between axes, in inches.
-        aspect : bool, default: False
+        axes_pad : tuple or float, optional
+            Padding or (horizontal padding, vertical padding) between axes, in
+            inches. The default is ``(0.1, 0.3)`` inches.
+        aspect : bool
             Whether the axes aspect ratio follows the aspect ratio of the data limits.
+            The default is ``False``.
         add_colorbar: bool, optional
             Whether to add a colorbar to the figure.
             The default is ``True``.
@@ -505,8 +520,8 @@ class ImageFacetGrid(CustomFacetGrid):
             Dictionary of keyword arguments to pass to the colorbar.
             The ``pad`` argument controls the space between the image axes and the colorbar axes.
             The ``pad`` default is 0.2.
-            The ``size`` argument control the colorbar size. The default value is '3%'.
-            For other arguments, see :meth:`matplotlib:matplotlib.figure.Figure.colorbar`.
+            The ``size`` argument control the colorbar size. The default value is ``'3%'``.
+            For other arguments, see `matplotlib.figure.Figure.colorbar`.
         facet_height: float, optional
             Height (in inches) of each facet. The default is 3.
             This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
@@ -519,7 +534,7 @@ class ImageFacetGrid(CustomFacetGrid):
              Typical arguments include ``figsize`` and ``dpi``.
              ``figsize`` is a tuple (width, height) of the figure in inches.
              If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
-             (see :meth:`matplotlib:matplotlib.figure.Figure`).
+             (see `matplotlib.figure.Figure`).
 
         """
         super().__init__(

@@ -112,7 +112,7 @@ def get_ges_disc_product_directory_tree(product, date, version):
     ----------
     product : str
         GPM product name. See ``gpm.available_products()``.
-    date : datetime.date
+    date : `datetime.date`
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve.
@@ -145,7 +145,7 @@ def get_ges_disc_product_directory(product, date, version):
     ----------
     product : str
         GPM product name. See ``gpm.available_products()``.
-    date : datetime.date
+    date : `datetime.date`
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve.
@@ -216,7 +216,7 @@ def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=T
     ----------
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    date : datetime
+    date : `datetime.date`
         Single date for which to retrieve the data.
     product_type : str
         GPM product type. Not used for GES DISC.
@@ -244,7 +244,7 @@ def get_ges_disc_daily_filepaths(product, product_type, date, version, verbose=T
 def define_ges_disc_filepath(product, product_type, date, version, filename):
     """Define GES DISC filepath from filename.
 
-    This function is called by get_filepath_from_filename(filename, storage, product_type).
+    This function is called by ``get_filepath_from_filename(filename, storage, product_type)``.
 
     Parameters
     ----------
@@ -252,7 +252,7 @@ def define_ges_disc_filepath(product, product_type, date, version, filename):
         GPM product acronym. See ``gpm.available_products()``.
     product_type : str
         GPM product type. Not used for GES DISC.
-    date : datetime
+    date : `datetime.date`
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.

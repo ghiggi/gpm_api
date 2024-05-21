@@ -495,17 +495,36 @@ def orbit_pole_dataarray() -> xr.DataArray:
 
 
 @pytest.fixture()
-def orbit_spatial_3d_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
+def orbit_spatial_3d_dataarray() -> xr.DataArray:
     """Return a 3D orbit data array."""
     # Add a vertical dimension with shape larger than 1 to prevent squeezing
-    return orbit_dataarray.expand_dims(dim={"height": 2})
+    orbit_dataarray_3d = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+        n_range=2,
+    )
+    return orbit_dataarray_3d
 
 
 @pytest.fixture()
-def orbit_transect_dataarray(orbit_dataarray: xr.DataArray) -> xr.DataArray:
+def orbit_transect_dataarray() -> xr.DataArray:
     """Return a transect orbit data array."""
-    orbit_dataarray = orbit_dataarray.expand_dims(dim={"height": 2})
-    return orbit_dataarray.isel(along_track=0)
+    orbit_dataarray_3d = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+        n_range=2,
+    )
+    return orbit_dataarray_3d.isel(along_track=0)
 
 
 #### Orbit Data Array with NaN values
@@ -575,7 +594,7 @@ def orbit_nan_inner_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
 
     lat = orbit_dataarray["lat"]
     lat[1, :] = float("nan")
-    lat[-2:, :] = float("nan")
+    lat[-2, :] = float("nan")
 
     return orbit_dataarray
 
@@ -627,26 +646,34 @@ def grid_transect_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
 
 
 @pytest.fixture()
-def dataset_collection(
+def orbit_dataset_collection(
     orbit_dataarray: xr.DataArray,
-    grid_dataarray: xr.DataArray,
     orbit_spatial_3d_dataarray: xr.DataArray,
-    grid_spatial_3d_dataarray: xr.DataArray,
-    orbit_transect_dataarray: xr.DataArray,
-    grid_transect_dataarray: xr.DataArray,
 ) -> xr.Dataset:
-    """Return a dataset with a variety of data arrays."""
+    """Return a dataset with a variety of data arrays (irrealistic format !)."""
     da_frequency = xr.DataArray(np.zeros((0, 0)), dims=["other", "radar_frequency"])
+    dict_da = {
+        "variable_2d": orbit_dataarray,
+        "variable_3d": orbit_spatial_3d_dataarray,
+        "variable_frequency": da_frequency,
+        "variable_empty": xr.DataArray(),
+        "bin_variable": orbit_dataarray,
+        "variableBin": orbit_dataarray,
+    }
+    return xr.Dataset(dict_da)
 
-    return xr.Dataset(
-        {
-            "variable_0": orbit_dataarray,
-            "variable_1": grid_dataarray,
-            "variable_2": orbit_spatial_3d_dataarray,
-            "variable_3": grid_spatial_3d_dataarray,
-            "variable_4": orbit_transect_dataarray,
-            "variable_5": grid_transect_dataarray,
-            "variable_6": da_frequency,
-            "variable_7": xr.DataArray(),
-        },
-    )
+
+@pytest.fixture()
+def grid_dataset_collection(
+    grid_dataarray: xr.DataArray,
+    grid_spatial_3d_dataarray: xr.DataArray,
+) -> xr.Dataset:
+    """Return a dataset with a variety of data arrays (irrealistic format !)."""
+    da_frequency = xr.DataArray(np.zeros((0, 0)), dims=["other", "radar_frequency"])
+    dict_da = {
+        "variable_2d": grid_dataarray,
+        "variable_3d": grid_spatial_3d_dataarray,
+        "variable_frequency": da_frequency,
+        "variable_empty": xr.DataArray(),
+    }
+    return xr.Dataset(dict_da)

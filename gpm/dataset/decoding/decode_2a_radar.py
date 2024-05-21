@@ -29,7 +29,7 @@ import xarray as xr
 
 from gpm.dataset.decoding.utils import (
     add_decoded_flag,
-    ceil_datarray,
+    ceil_dataarray,
     is_dataarray_decoded,
     remap_numeric_array,
 )
@@ -39,7 +39,7 @@ def decode_landSurfaceType(da):
     """Decode the 2A-<RADAR> variable landSurfaceType."""
     da = da.where(da >= 0)  # < 0 set to np.nan
     da = da / 100
-    da = ceil_datarray(da)
+    da = ceil_dataarray(da)
     da.attrs["flag_values"] = [0, 1, 2, 3]
     da.attrs["flag_meanings"] = ["Ocean", "Land", "Coast", "Inland Water"]
     da.attrs["description"] = "Land Surface type"
@@ -49,7 +49,7 @@ def decode_landSurfaceType(da):
 def decode_phase(da):
     """Decode the 2A-<RADAR> variable phase."""
     da = da / 100
-    da = ceil_datarray(da)
+    da = ceil_dataarray(da)
     da = da.where(da >= 0)  # < 0 set to np.nan
     da.attrs["flag_values"] = [0, 1, 2]
     da.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
@@ -60,7 +60,7 @@ def decode_phase(da):
 def decode_phaseNearSurface(da):
     """Decode the 2A-<RADAR> variable phaseNearSurface."""
     da = da / 100
-    da = ceil_datarray(da)
+    da = ceil_dataarray(da)
     da = da.where(da >= 0)  # < 0 set to np.nan
     da.attrs["flag_values"] = [0, 1, 2]
     da.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
@@ -71,14 +71,27 @@ def decode_phaseNearSurface(da):
 def decode_flagPrecip(da):
     """Decode the 2A-<RADAR> variable flagPrecip."""
     if da.attrs["gpm_api_product"] == "2A-DPR":
-        da.attrs["flag_values"] = [0, 1, 10, 11]
-        # TODO: 2, 10, 12, 20, 21, 22 values also present
-        da.attrs["flag_meanings"] = [
-            "not detected by both Ku and Ka",
-            "detected by Ka only",
-            "detected by Ku only",
-            "detected by both Ku and Ka",
-        ]
+        # V7
+        value_dict = {
+            0: "not detected by both Ku and Ka",
+            1: "detected by Ka only",
+            2: "detected by Ka only",
+            10: "detected by Ku only",
+            11: "detected by both Ku and Ka",
+            12: "detected by both Ku and Ka",
+            20: "detected by both Ku and Ka",
+            21: "detected by both Ku and Ka",
+            22: "detected by both Ku and Ka",
+        }
+        # V6
+        # value_dict = {
+        #     0: "not detected by both Ku and Ka",
+        #     1: "detected by Ka only",
+        #     10: "detected by Ku only",
+        #     11: "detected by both Ku and Ka",
+        # }
+        da.attrs["flag_values"] = list(value_dict)
+        da.attrs["flag_meanings"] = list(value_dict.values())
     else:
         da.attrs["flag_values"] = [0, 1]
         da.attrs["flag_meanings"] = ["not detected", "detected"]
@@ -197,41 +210,6 @@ def decode_heightBB(da):
     return da.where(da >= 0)  # -1111.1 is set to np.nan
 
 
-def decode_binBBPeak(da):
-    """Decode the 2A-<RADAR> variable binBBPeak."""
-    return da.where(da >= 0)  # -1111 is set to np.nan
-
-
-def decode_binBBTop(da):
-    """Decode the 2A-<RADAR> variable binBBTop."""
-    return da.where(da >= 0)  # -1111 is set to np.nan
-
-
-def decode_binBBBottom(da):
-    """Decode the 2A-<RADAR> variable binBBBottom."""
-    return da.where(da >= 0)  # -1111 is set to np.nan
-
-
-def decode_binDFRmMLBottom(da):
-    """Decode the 2A-<RADAR> variable binDFRmMLBottom."""
-    return da.where(da >= 0)  # -1111 is set to np.nan
-
-
-def decode_binDFRmMLTop(da):
-    """Decode the 2A-<RADAR> variable binDFRmMLTop."""
-    return da.where(da >= 0)  # -1111 is set to np.nan
-
-
-def decode_binHeavyIcePrecipTop(da):
-    """Decode the 2A-<RADAR> variable binHeavyIcePrecipTop."""
-    return da.where(da >= 0)  # -1111 is set to np.nan
-
-
-def decode_binHeavyIcePrecipBottom(da):
-    """Decode the 2A-<RADAR> variable binHeavyIcePrecipBottom."""
-    return da.where(da >= 0)  # -1111 is set to np.nan
-
-
 def _get_decoding_function(variable):
     function_name = f"decode_{variable}"
     decoding_function = globals().get(function_name)
@@ -253,13 +231,6 @@ def decode_product(ds):
         "flagSurfaceSnowfall",
         "widthBB",
         "heightBB",
-        "binBBPeak",
-        "binBBTop",
-        "binBBBottom",
-        "binDFRmMLBottom",
-        "binDFRmMLTop",
-        "binHeavyIcePrecipTop",
-        "binHeavyIcePrecipBottom",
         "qualityTypePrecip",
         "flagPrecip",
         "phaseNearSurface",
@@ -274,8 +245,12 @@ def decode_product(ds):
             with xr.set_options(keep_attrs=True):
                 ds[variable] = _get_decoding_function(variable)(ds[variable])
 
+    # Decode bin variables (set 0, -1111 and other invalid values to np.nan)
+    for variable in ds.gpm.bin_variables:
+        ds[variable] = ds[variable].where(ds[variable] > 0)
+
     # Added gpm_api_decoded flag
-    ds = add_decoded_flag(ds, variables=variables)
+    ds = add_decoded_flag(ds, variables=variables + ds.gpm.bin_variables)
 
     #### Preprocess other variables
     #### - precipWaterIntegrated

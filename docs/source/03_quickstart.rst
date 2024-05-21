@@ -235,7 +235,7 @@ For more information on the available options, you can use the following command
 Open the data
 ----------------
 
-Within the GPM-API, we use the name `granule` to refer to a single file,
+Within the GPM-API, the name `granule` is used to refer to a single file,
 while the name `dataset`` is used to refer to a collection of granules.
 
 GPM-API enables to open single or multiple granules into an ``xarray.Dataset``, an object designed for working with labeled multi-dimensional arrays.
@@ -284,4 +284,4 @@ The following example shows how to download and open a dataset over a specific t
 
 You are now ready to explore the various :ref:`tutorials <tutorials>` available in the documentation and learn more about the GPM-API functionalities.
 
-If you are not familiar with xarray, we highly suggest to first have a look also at the `xarray documentation <http://xarray.pydata.org/en/stable/>`__.
+If you are not familiar with xarray, it is highly suggested to first have a look also at the `xarray documentation <http://xarray.pydata.org/en/stable/>`__.

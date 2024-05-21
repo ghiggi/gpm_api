@@ -109,7 +109,7 @@ def write_granule_bucket(
         File path of the granule to store in the bucket archive.
     bucket_base_dir: str
         Base directory of the per-granule bucket archive.
-    ds_to_df_converter : callable,
+    ds_to_df_converter : Callable
         Function taking a granule filepath, opening it and returning a pandas or dask dataframe.
     xbin_name : str, optional
         Name of the binned column used to partition the data along the x dimension.
@@ -121,7 +121,7 @@ def write_granule_bucket(
         Longitude bin size. The default is 15.
     xbin_size : int
         Latitude bin size. The default is 15.
-    row_group_size : (int, str), optional
+    row_group_size : int or str, optional
         Maximum number of rows in each written Parquet row group.
         If specified as a string (i.e. ``"500 MB"``), the equivalent row group size
         number is estimated. The default is ``"500MB"``.
@@ -245,7 +245,7 @@ def write_granules_bucket(
     max_dask_total_tasks : None
         The maximum number of Dask tasks to be scheduled.
         The default is 500.
-    row_group_size : (int, str), optional
+    row_group_size : int or str, optional
         Maximum number of rows in each written Parquet row group.
         If specified as a string (i.e. "500 MB"), the equivalent row group size
         number is estimated. The default is "500MB".

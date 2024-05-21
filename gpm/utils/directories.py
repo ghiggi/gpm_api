@@ -24,32 +24,25 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains utilities for parallel processing."""
-import dask
+"""This module contains functions to search files and directories into the local machine."""
+import glob
+import os
+import pathlib
 
 
-def compute_list_delayed(list_delayed, max_concurrent_tasks=None):
-    """Compute the list of Dask delayed objects in blocks of max_concurrent_tasks.
+def _recursive_glob(dir_path, glob_pattern):
+    dir_path = pathlib.Path(dir_path)
+    return [str(path) for path in dir_path.rglob(glob_pattern)]
 
-    Parameters
-    ----------
-    list_delayed : list
-        List of Dask delayed objects.
-    max_concurrent_task : int
-        Maximum number of concurrent tasks to execute.
 
-    Returns
-    -------
-    list
-        List of computed results.
+def list_paths(dir_path, glob_pattern, recursive=False):
+    """Return a list of filepaths and directory paths."""
+    if not recursive:
+        return glob.glob(os.path.join(dir_path, glob_pattern))
+    return _recursive_glob(dir_path, glob_pattern)
 
-    """
-    if max_concurrent_tasks is None:
-        return dask.compute(*list_delayed)
 
-    max_concurrent_tasks = min(len(list_delayed), max_concurrent_tasks)
-    computed_results = []
-    for i in range(0, len(list_delayed), max_concurrent_tasks):
-        subset_delayed = list_delayed[i : (i + max_concurrent_tasks)]
-        computed_results.extend(dask.compute(*subset_delayed))
-    return computed_results
+def list_files(dir_path, glob_pattern, recursive=False):
+    """Return a list of filepaths (exclude directory paths)."""
+    paths = list_paths(dir_path, glob_pattern, recursive=recursive)
+    return [f for f in paths if os.path.isfile(f)]

@@ -24,32 +24,40 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains utilities for parallel processing."""
-import dask
+"""This module contains functions to decode GPM DPR, PR, Ka and Ku products."""
+import xarray as xr
+
+from gpm.dataset.decoding.utils import (
+    add_decoded_flag,
+    is_dataarray_decoded,
+)
 
 
-def compute_list_delayed(list_delayed, max_concurrent_tasks=None):
-    """Compute the list of Dask delayed objects in blocks of max_concurrent_tasks.
+def _get_decoding_function(variable):
+    function_name = f"decode_{variable}"
+    decoding_function = globals().get(function_name)
+    if decoding_function is None or not callable(decoding_function):
+        raise ValueError(f"No decoding function found for variable '{variable}'")
+    return decoding_function
 
-    Parameters
-    ----------
-    list_delayed : list
-        List of Dask delayed objects.
-    max_concurrent_task : int
-        Maximum number of concurrent tasks to execute.
 
-    Returns
-    -------
-    list
-        List of computed results.
+def decode_product(ds):
+    """Decode 2B-<satellite>-CORRA products."""
+    # Define variables to decode with _decode_<variable> functions
+    variables = [
+        # "flagShallowRain",
+    ]
+    # Decode such variables if present in the xarray object
+    for variable in variables:
+        if variable in ds and not is_dataarray_decoded(ds[variable]):
+            with xr.set_options(keep_attrs=True):
+                ds[variable] = _get_decoding_function(variable)(ds[variable])
 
-    """
-    if max_concurrent_tasks is None:
-        return dask.compute(*list_delayed)
+    # Decode bin variables (set 0, -1111 and other invalid values to np.nan)
+    for variable in ds.gpm.bin_variables:
+        ds[variable] = ds[variable].where(ds[variable] > 0)
 
-    max_concurrent_tasks = min(len(list_delayed), max_concurrent_tasks)
-    computed_results = []
-    for i in range(0, len(list_delayed), max_concurrent_tasks):
-        subset_delayed = list_delayed[i : (i + max_concurrent_tasks)]
-        computed_results.extend(dask.compute(*subset_delayed))
-    return computed_results
+    # Added gpm_api_decoded flag
+    ds = add_decoded_flag(ds, variables=variables + ds.gpm.bin_variables)
+
+    return ds

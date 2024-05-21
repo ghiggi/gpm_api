@@ -27,8 +27,8 @@
 """This module contains functions decorators checking GPM-API object type."""
 import functools
 
-from gpm.checks import check_has_along_track_dimension as check_has_along_track_dimension_fun
-from gpm.checks import check_has_cross_track_dimension as check_has_cross_track_dimension_fun
+from gpm.checks import check_has_along_track_dim as _check_has_along_track_dim
+from gpm.checks import check_has_cross_track_dim as _check_has_cross_track_dim
 from gpm.checks import check_is_gpm_object as check_is_gpm_object_fun
 from gpm.checks import check_is_grid as check_is_grid_fun
 from gpm.checks import check_is_orbit as check_is_orbit_fun
@@ -85,7 +85,7 @@ def check_has_cross_track_dimension(function):
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
         xr_obj = _get_xr_obj(args, kwargs)
-        check_has_cross_track_dimension_fun(xr_obj)
+        _check_has_cross_track_dim(xr_obj)
         return function(*args, **kwargs)
 
     return wrapper
@@ -100,7 +100,7 @@ def check_has_along_track_dimension(function):
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
         xr_obj = _get_xr_obj(args, kwargs)
-        check_has_along_track_dimension_fun(xr_obj)
+        _check_has_along_track_dim(xr_obj)
         return function(*args, **kwargs)
 
     return wrapper

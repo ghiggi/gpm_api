@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from gpm import get_plot_kwargs
-from gpm.checks import check_is_spatial_2d
+from gpm.checks import check_has_spatial_dim, check_is_spatial_2d
 from gpm.utils.checks import (
     check_contiguous_scans,
     get_slices_contiguous_scans,
@@ -100,10 +100,16 @@ def plot_swath(
     )
 
 
-def _remove_invalid_outer_cross_track(xr_obj, coord="lon"):
+def remove_invalid_outer_cross_track(xr_obj, coord="lon", alpha=None):
     """Remove outer crosstrack scans if geolocation is always missing."""
-    coord_arr = np.asanyarray(xr_obj[coord].transpose("cross_track", "along_track"))
-    isna = np.all(np.isnan(coord_arr), axis=1)
+    if "cross_track" not in xr_obj.dims:
+        return xr_obj, alpha
+    if "along_track" not in xr_obj.dims:
+        coord_arr = np.asanyarray(xr_obj[coord])
+        isna = np.isnan(coord_arr)
+    else:
+        coord_arr = np.asanyarray(xr_obj[coord].transpose("cross_track", "along_track"))
+        isna = np.all(np.isnan(coord_arr), axis=1)
     if isna[0] or isna[-1]:
         is_valid = ~isna
         # Find the index where coordinates start to be valid
@@ -114,10 +120,12 @@ def _remove_invalid_outer_cross_track(xr_obj, coord="lon"):
         slc = slice(start_index, end_index)
         # Subset object
         xr_obj = xr_obj.isel({"cross_track": slc})
-    return xr_obj
+        if alpha is not None:
+            alpha = alpha[slc, :]
+    return xr_obj, alpha
 
 
-def _call_over_contiguous_scans(function):
+def call_over_contiguous_scans(function):
     """Decorator to call the plotting function multiple times only over contiguous scans intervals."""
 
     @functools.wraps(function)
@@ -132,9 +140,10 @@ def _call_over_contiguous_scans(function):
 
         # Check data validity
         rgb = kwargs.get("rgb", False)
-        if not rgb:
-            # - Check data array
-            check_is_spatial_2d(da)
+
+        if "along_track" not in da.dims:
+            list_slices = [None]  # case: cross-track transect
+        elif not rgb:
             # - Get slices with contiguous scans
             # --> get_slices_regular would split when there is any NaN coordinate
             list_slices = get_slices_contiguous_scans(da, min_size=2, min_n_scans=2)
@@ -149,19 +158,28 @@ def _call_over_contiguous_scans(function):
         x = user_kwargs.get("x", "lon")
         y = user_kwargs.get("y", "lat")
         is_facetgrid = user_kwargs.get("_is_facetgrid", False)
+        alpha = user_kwargs.get("alpha", None)
+        alpha_2darray_provided = isinstance(alpha, np.ndarray)
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
             # Retrieve contiguous data array
-            tmp_da = da.isel({"along_track": slc})
+            # - slc=None when cross-track transect
+            tmp_da = da.isel({"along_track": slc}) if slc is not None else da
+
+            # Adapt for alpha
+            tmp_alpha = alpha[:, slc].copy() if alpha_2darray_provided else None
 
             # Remove outer cross-track indices if all without coordinates
             # - Infill of coordinates is done separately with infill_invalid_coordins
-            tmp_da = _remove_invalid_outer_cross_track(tmp_da, coord=x)
-            tmp_da = _remove_invalid_outer_cross_track(tmp_da, coord=y)
+            # - If along_track transect, return as it is
+            tmp_da, tmp_alpha = remove_invalid_outer_cross_track(tmp_da, coord=x, alpha=tmp_alpha)
+            tmp_da, _ = remove_invalid_outer_cross_track(tmp_da, coord=y, alpha=None)
 
             # Define temporary kwargs
             tmp_kwargs = user_kwargs.copy()
             tmp_kwargs["da"] = tmp_da
+            if alpha_2darray_provided:
+                tmp_kwargs["alpha"] = tmp_alpha
             if i == 0:
                 tmp_kwargs["ax"] = ax
 
@@ -176,7 +194,6 @@ def _call_over_contiguous_scans(function):
 
             # Before function call
             p = function(**tmp_kwargs)
-            # p.set_alpha(alpha)
 
         # Monkey patch the mappable instance to add optimize_layout
         if not is_facetgrid:
@@ -202,7 +219,7 @@ def _get_swath_line_sides(lon, lat):
     return (lon_top, lat_top), (lon_bottom, lat_bottom)
 
 
-@_call_over_contiguous_scans
+@call_over_contiguous_scans
 def plot_swath_lines(
     da,
     ax=None,
@@ -247,7 +264,7 @@ def plot_swath_lines(
 ####----------------------------------------------------------------------------
 
 
-@_call_over_contiguous_scans
+@call_over_contiguous_scans
 def _plot_orbit_map_cartopy(
     da,
     ax=None,
@@ -263,9 +280,8 @@ def _plot_orbit_map_cartopy(
     **plot_kwargs,
 ):
     """Plot GPM orbit granule in a cartographic map."""
-    # - Check inputs
     if not rgb:
-        check_is_spatial_2d(da)
+        check_has_spatial_dim(da, strict=True)  # only spatial dimensions
 
     # - Initialize figure if necessary
     ax = initialize_cartopy_plot(
@@ -275,7 +291,7 @@ def _plot_orbit_map_cartopy(
         add_background=add_background,
     )
 
-    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
     plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
@@ -286,7 +302,7 @@ def _plot_orbit_map_cartopy(
         user_cbar_kwargs=cbar_kwargs,
     )
     # - Specify colorbar label
-    if "label" not in cbar_kwargs:
+    if cbar_kwargs.get("label", None) is None:
         unit = da.attrs.get("units", "-")
         cbar_kwargs["label"] = f"{variable} [{unit}]"
 
@@ -319,6 +335,7 @@ def _plot_orbit_image(
     """Plot GPM orbit granule as in image."""
     # ----------------------------------------------
     # - Check inputs
+    # --> check_is_spatial_2d(strict=False) # for rgb
     check_contiguous_scans(da)
     fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
@@ -328,7 +345,7 @@ def _plot_orbit_image(
             check_is_spatial_2d(da)
         _, ax = plt.subplots(**fig_kwargs)
 
-    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
     plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
@@ -363,7 +380,7 @@ def _plot_orbit_image(
     return p
 
 
-@_call_over_contiguous_scans
+@call_over_contiguous_scans
 def plot_orbit_mesh(
     da,
     ax=None,
@@ -435,7 +452,7 @@ def _plot_orbit_map_facetgrid(
         user_plot_kwargs=plot_kwargs,
         user_cbar_kwargs=cbar_kwargs,
     )
-    # Retrieve projection
+    # Retrieve Cartopy projection
     projection = subplot_kwargs.get("projection", None)
     if projection is None:  # _preprocess_subplots_kwargs should set a default projection
         raise ValueError("Please specify a Cartopy projection in subplot_kwargs['projection'].")
@@ -560,7 +577,7 @@ def plot_orbit_map(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot DataArray 2D field with cartopy."""
+    """Plot `xarray.DataArray` 2D field with cartopy."""
     # Plot FacetGrid
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_orbit_map_facetgrid(
@@ -609,7 +626,7 @@ def plot_orbit_image(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot DataArray 2D field with cartopy."""
+    """Plot `xarray.DataArray` 2D field with cartopy."""
     # Plot FacetGrid with xarray imshow
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_orbit_image_facetgrid(

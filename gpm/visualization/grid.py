@@ -60,7 +60,7 @@ def _plot_grid_map_cartopy(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot DataArray 2D field with cartopy."""
+    """Plot `xarray.DataArray` 2D field with cartopy."""
     # - Check inputs
     if not rgb:
         check_is_spatial_2d(da)
@@ -73,7 +73,7 @@ def _plot_grid_map_cartopy(
         add_background=add_background,
     )
 
-    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
     plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
@@ -197,7 +197,7 @@ def plot_grid_map(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot DataArray 2D field with cartopy."""
+    """Plot `xarray.DataArray` 2D field with cartopy."""
     # Plot FacetGrid with xarray imshow
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_grid_map_facetgrid(
@@ -244,7 +244,7 @@ def _plot_grid_image(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot DataArray 2D image."""
+    """Plot `xarray.DataArray` 2D image."""
     # - Check inputs
     fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
@@ -254,7 +254,7 @@ def _plot_grid_image(
             check_is_spatial_2d(da)
         _, ax = plt.subplots(**fig_kwargs)
 
-    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_datarray
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
     is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
     plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
@@ -312,7 +312,7 @@ def plot_grid_mesh(
         add_background=add_background,
     )
 
-    # - Create 2D mesh DataArray
+    # - Create 2D mesh `xarray.DataArray`
     da = create_grid_mesh_data_array(xr_obj, x=x, y=y)
 
     # - Define plot_kwargs to display only the mesh
@@ -349,7 +349,7 @@ def plot_grid_image(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot DataArray 2D field with cartopy."""
+    """Plot `xarray.DataArray` 2D field with cartopy."""
     # Plot FacetGrid with xarray imshow
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_grid_image_facetgrid(
