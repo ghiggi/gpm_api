@@ -40,6 +40,7 @@ from gpm.utils.xarray import get_dimensions_without
 from gpm.visualization.plot import (
     _plot_xr_imshow,
     _plot_xr_pcolormesh,
+    check_object_format,
     get_valid_pcolormesh_inputs,
     initialize_cartopy_plot,
     preprocess_figure_args,
@@ -299,12 +300,18 @@ def get_cross_track_horizontal_distance(xr_obj):
     return da_dist
 
 
-def _ensure_valid_pcolormesh_coords(da, x, y):
+def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
     da = da.copy()
     da_x = da[x].broadcast_like(da)
     da_y = da[y].broadcast_like(da)
     # Get valid coordinates
-    x_coord, y_coord, data = get_valid_pcolormesh_inputs(x=da_x.data, y=da_y.data, data=da.data, mask_data=True)
+    x_coord, y_coord, data = get_valid_pcolormesh_inputs(
+        x=da_x.data,
+        y=da_y.data,
+        data=da.data,
+        rgb=rgb,
+        mask_data=True,
+    )
     # Mask data
     da.data = data
     # Set back validated coordinates
@@ -417,12 +424,9 @@ def plot_transect(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot GPM transect.
-
-    Do not check for contiguous scan across
-    """
-    # - Check is transect
-    check_is_transect(da)
+    """Plot GPM transect."""
+    # Check inputs
+    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_transect, strict=True)
 
     # - Check for contiguous along-track scans
     if "along_track" in da.dims:
@@ -467,7 +471,7 @@ def plot_transect(
 
         # Infill invalid coordinates and add mask to data if necessary
         # - This occur when extracting L2 dataset from L1B and use y = "height/rangeDist"
-        da = _ensure_valid_pcolormesh_coords(da, x=x, y=y)
+        da = _ensure_valid_pcolormesh_coords(da, x=x, y=y, rgb=plot_kwargs.get("rgb", False))
 
         # Plot transect
         p = _plot_xr_pcolormesh(

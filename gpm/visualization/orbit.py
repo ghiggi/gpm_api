@@ -47,6 +47,7 @@ from gpm.visualization.plot import (
     #  _plot_mpl_imshow,
     _plot_xr_imshow,
     add_optimize_layout_method,
+    check_object_format,
     infill_invalid_coords,
     initialize_cartopy_plot,
     plot_sides,
@@ -54,50 +55,8 @@ from gpm.visualization.plot import (
     preprocess_subplot_kwargs,
 )
 
-
-def plot_swath(
-    ds,
-    ax=None,
-    facecolor="orange",
-    edgecolor="black",
-    alpha=0.4,
-    add_background=True,
-    fig_kwargs=None,
-    subplot_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot GPM orbit granule."""
-    from shapely import Polygon
-
-    # TODO: pyresample swath_def.plot() in future
-    # - ensure ccw boundary
-    # - iterate by descending/ascending blocks
-    # --> da.gpm.pyresample_area.boundary
-    # --> da.gpm.pyresample_area.outer_boundary.polygon
-    # --> da.gpm.pyresample_area.outer_boundary.sides ..
-
-    # - Initialize figure if necessary
-    ax = initialize_cartopy_plot(
-        ax=ax,
-        fig_kwargs=fig_kwargs,
-        subplot_kwargs=subplot_kwargs,
-        add_background=add_background,
-    )
-
-    # Retrieve polygon
-    swath_def = ds.gpm.pyresample_area
-    boundary = swath_def.boundary(force_clockwise=True)
-    polygon = Polygon(boundary.vertices[::-1])
-
-    # Plot the swath polygon
-    return ax.add_geometries(
-        [polygon],
-        crs=ccrs.Geodetic(),
-        facecolor=facecolor,
-        edgecolor=edgecolor,
-        alpha=alpha,
-        **plot_kwargs,
-    )
+####----------------------------------------------------------------------------
+#### ORBIT utilities
 
 
 def remove_invalid_outer_cross_track(xr_obj, coord="lon", alpha=None):
@@ -125,6 +84,19 @@ def remove_invalid_outer_cross_track(xr_obj, coord="lon", alpha=None):
     return xr_obj, alpha
 
 
+def _get_contiguous_slices(da):
+    # NOTE: Using get_slices_regular would split when there is any NaN coordinate
+    if "along_track" not in da.dims:  # noqa: SIM108
+        list_slices = [None]  # case: cross-track transect
+    else:
+        list_slices = get_slices_contiguous_scans(da, min_size=2, min_n_scans=2)
+
+    # Check there are scans to plot
+    if len(list_slices) == 0:
+        raise ValueError("No regular scans available. Impossible to plot.")
+    return list_slices
+
+
 def call_over_contiguous_scans(function):
     """Decorator to call the plotting function multiple times only over contiguous scans intervals."""
 
@@ -138,19 +110,8 @@ def call_over_contiguous_scans(function):
         # Get axis
         ax = args[1] if len(args) > 1 else kwargs.get("ax")
 
-        # Check data validity
-        rgb = kwargs.get("rgb", False)
-
-        if "along_track" not in da.dims:
-            list_slices = [None]  # case: cross-track transect
-        elif not rgb:
-            # - Get slices with contiguous scans
-            # --> get_slices_regular would split when there is any NaN coordinate
-            list_slices = get_slices_contiguous_scans(da, min_size=2, min_n_scans=2)
-            if len(list_slices) == 0:
-                raise ValueError("No regular scans available. Impossible to plot.")
-        else:
-            list_slices = [slice(0, None)]
+        # Get slices with contiguous scans if along_track dimension is available
+        list_slices = _get_contiguous_slices(da)
 
         # - Define kwargs
         user_kwargs = kwargs.copy()
@@ -188,7 +149,7 @@ def call_over_contiguous_scans(function):
                 tmp_kwargs["add_background"] = False
 
             # Set colorbar to False for all except last iteration
-            # --> Avoid drawing multiple colorbars
+            # --> Avoid drawing multiple colorbars (one at each iteration)
             if i != len(list_slices) - 1 and "add_colorbar" in user_kwargs:
                 tmp_kwargs["add_colorbar"] = False
 
@@ -205,6 +166,9 @@ def call_over_contiguous_scans(function):
 
 
 ####----------------------------------------------------------------------------
+#### Swath plotting utilities
+
+
 def _get_swath_line_sides(lon, lat):
     """Compute the top and bottom swath sides."""
     from gpm.utils.area import _get_lonlat_corners
@@ -261,7 +225,53 @@ def plot_swath_lines(
     )
 
 
+def plot_swath(
+    ds,
+    ax=None,
+    facecolor="orange",
+    edgecolor="black",
+    alpha=0.4,
+    add_background=True,
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    **plot_kwargs,
+):
+    """Plot GPM orbit granule."""
+    from shapely import Polygon
+
+    # TODO: pyresample swath_def.plot() in future
+    # - ensure ccw boundary
+    # - iterate by descending/ascending blocks
+    # --> da.gpm.pyresample_area.boundary
+    # --> da.gpm.pyresample_area.outer_boundary.polygon
+    # --> da.gpm.pyresample_area.outer_boundary.sides ..
+
+    # - Initialize figure if necessary
+    ax = initialize_cartopy_plot(
+        ax=ax,
+        fig_kwargs=fig_kwargs,
+        subplot_kwargs=subplot_kwargs,
+        add_background=add_background,
+    )
+
+    # Retrieve polygon
+    swath_def = ds.gpm.pyresample_area
+    boundary = swath_def.boundary(force_clockwise=True)
+    polygon = Polygon(boundary.vertices[::-1])
+
+    # Plot the swath polygon
+    return ax.add_geometries(
+        [polygon],
+        crs=ccrs.Geodetic(),
+        facecolor=facecolor,
+        edgecolor=edgecolor,
+        alpha=alpha,
+        **plot_kwargs,
+    )
+
+
 ####----------------------------------------------------------------------------
+#### Low-level Functions
 
 
 @call_over_contiguous_scans
@@ -273,16 +283,12 @@ def _plot_orbit_map_cartopy(
     add_colorbar=True,
     add_swath_lines=True,
     add_background=True,
-    rgb=False,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot GPM orbit granule in a cartographic map."""
-    if not rgb:
-        check_has_spatial_dim(da, strict=True)  # only spatial dimensions
-
     # - Initialize figure if necessary
     ax = initialize_cartopy_plot(
         ax=ax,
@@ -307,7 +313,7 @@ def _plot_orbit_map_cartopy(
         cbar_kwargs["label"] = f"{variable} [{unit}]"
 
     # - Add variable field with cartopy
-    return _plot_cartopy_pcolormesh(
+    p = _plot_cartopy_pcolormesh(
         ax=ax,
         da=da,
         x=x,
@@ -316,9 +322,9 @@ def _plot_orbit_map_cartopy(
         cbar_kwargs=cbar_kwargs,
         add_colorbar=add_colorbar,
         add_swath_lines=add_swath_lines,
-        rgb=rgb,
     )
     # - Return mappable
+    return p
 
 
 def _plot_orbit_image(
@@ -333,16 +339,12 @@ def _plot_orbit_image(
     **plot_kwargs,
 ):
     """Plot GPM orbit granule as in image."""
-    # ----------------------------------------------
     # - Check inputs
-    # --> check_is_spatial_2d(strict=False) # for rgb
     check_contiguous_scans(da)
     fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
 
     # - Initialize figure
     if ax is None:
-        if "rgb" not in plot_kwargs:
-            check_is_spatial_2d(da)
         _, ax = plt.subplots(**fig_kwargs)
 
     # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
@@ -380,48 +382,8 @@ def _plot_orbit_image(
     return p
 
 
-@call_over_contiguous_scans
-def plot_orbit_mesh(
-    da,
-    ax=None,
-    x="lon",
-    y="lat",
-    edgecolors="k",
-    linewidth=0.1,
-    add_background=True,
-    fig_kwargs=None,
-    subplot_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot GPM orbit granule mesh in a cartographic map."""
-    # - Initialize figure if necessary
-    ax = initialize_cartopy_plot(
-        ax=ax,
-        fig_kwargs=fig_kwargs,
-        subplot_kwargs=subplot_kwargs,
-        add_background=add_background,
-    )
-
-    # - Define plot_kwargs to display only the mesh
-    plot_kwargs["facecolor"] = "none"
-    plot_kwargs["alpha"] = 1
-    plot_kwargs["edgecolors"] = (edgecolors,)  # Introduce bugs in Cartopy !
-    plot_kwargs["linewidth"] = (linewidth,)
-    plot_kwargs["antialiased"] = True
-
-    # - Add variable field with cartopy
-    return _plot_cartopy_pcolormesh(
-        da=da,
-        ax=ax,
-        x=x,
-        y=y,
-        plot_kwargs=plot_kwargs,
-        add_colorbar=False,
-    )
-    # - Return mappable
-
-
 ####----------------------------------------------------------------------------
+#### FacetGrid Wrappers
 
 
 def _plot_orbit_map_facetgrid(
@@ -432,7 +394,6 @@ def _plot_orbit_map_facetgrid(
     add_colorbar=True,
     add_swath_lines=True,
     add_background=True,
-    rgb=False,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
@@ -481,7 +442,6 @@ def _plot_orbit_map_facetgrid(
         add_colorbar=False,
         add_background=add_background,
         add_swath_lines=add_swath_lines,
-        rgb=rgb,
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
@@ -561,6 +521,7 @@ def _plot_orbit_image_facetgrid(
 
 
 ####----------------------------------------------------------------------------
+#### High-level Wrappers
 
 
 def plot_orbit_map(
@@ -571,13 +532,14 @@ def plot_orbit_map(
     add_colorbar=True,
     add_swath_lines=True,
     add_background=True,
-    rgb=False,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
     **plot_kwargs,
 ):
     """Plot `xarray.DataArray` 2D field with cartopy."""
+    # Check inputs
+    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_has_spatial_dim, strict=True)
     # Plot FacetGrid
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_orbit_map_facetgrid(
@@ -588,7 +550,6 @@ def plot_orbit_map(
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
-            rgb=rgb,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -596,7 +557,6 @@ def plot_orbit_map(
         )
     # Plot with cartopy imshow
     else:
-        da = da.squeeze()  # remove time if dim=1
         p = _plot_orbit_map_cartopy(
             da=da,
             x=x,
@@ -605,13 +565,12 @@ def plot_orbit_map(
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
-            rgb=rgb,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-    # - Return mappable
+    # Return mappable
     return p
 
 
@@ -626,7 +585,10 @@ def plot_orbit_image(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot `xarray.DataArray` 2D field with cartopy."""
+    """Plot `xarray.DataArray` 2D image with imshow."""
+    # Check inputs
+    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_spatial_2d, strict=True)
+
     # Plot FacetGrid with xarray imshow
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_orbit_image_facetgrid(
@@ -643,7 +605,6 @@ def plot_orbit_image(
 
     # Plot with cartopy imshow
     else:
-        da = da.squeeze()  # remove time if dim=1
         p = _plot_orbit_image(
             da=da,
             x=x,
@@ -655,5 +616,46 @@ def plot_orbit_image(
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-    # - Return imagepable
+    # Return mappable
     return p
+
+
+@call_over_contiguous_scans
+def plot_orbit_mesh(
+    da,
+    ax=None,
+    x="lon",
+    y="lat",
+    edgecolors="k",
+    linewidth=0.1,
+    add_background=True,
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    **plot_kwargs,
+):
+    """Plot GPM orbit granule mesh in a cartographic map."""
+    # - Initialize figure if necessary
+    ax = initialize_cartopy_plot(
+        ax=ax,
+        fig_kwargs=fig_kwargs,
+        subplot_kwargs=subplot_kwargs,
+        add_background=add_background,
+    )
+
+    # - Define plot_kwargs to display only the mesh
+    plot_kwargs["facecolor"] = "none"
+    plot_kwargs["alpha"] = 1
+    plot_kwargs["edgecolors"] = (edgecolors,)  # Introduce bugs in Cartopy !
+    plot_kwargs["linewidth"] = (linewidth,)
+    plot_kwargs["antialiased"] = True
+
+    # - Add variable field with cartopy
+    return _plot_cartopy_pcolormesh(
+        da=da,
+        ax=ax,
+        x=x,
+        y=y,
+        plot_kwargs=plot_kwargs,
+        add_colorbar=False,
+    )
+    # - Return mappable

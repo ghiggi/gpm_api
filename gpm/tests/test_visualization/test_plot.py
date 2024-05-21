@@ -371,7 +371,7 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit RGB data."""
         orbit_dataarray = expand_dims(orbit_dataarray, 3, dim="rgb", axis=2)
-        p = plot.plot_map(orbit_dataarray, rgb=True)
+        p = plot.plot_map(orbit_dataarray, rgb="rgb")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_rgba(
@@ -380,7 +380,7 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit RGBA data."""
         orbit_dataarray = expand_dims(orbit_dataarray, 4, dim="rgb", axis=2)
-        p = plot.plot_map(orbit_dataarray, rgb=True)
+        p = plot.plot_map(orbit_dataarray, rgb="rgb")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_rgb_antimeridian_recentered(
@@ -390,7 +390,7 @@ class TestPlotMap:
         """Test plotting orbit RGB data going over the antimeridian without masking (recentered)."""
         orbit_dataarray = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
         crs_proj = ccrs.PlateCarree(central_longitude=180)
-        p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb=True)
+        p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb="rgb")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_rgb_antimeridian_not_masked_recentered(
@@ -401,7 +401,7 @@ class TestPlotMap:
         orbit_dataarray = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
         crs_proj = ccrs.PlateCarree(central_longitude=180)
         with gpm.config.set({"viz_hide_antimeridian_data": False}):
-            p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb=True)
+            p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb="rgb")
             save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_rgb_invalid(
@@ -410,7 +410,7 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit data with RGB flag on non RGB data."""
         with pytest.raises(ValueError):
-            plot.plot_map(orbit_dataarray, rgb=True)
+            plot.plot_map(orbit_dataarray, rgb="rgb")
 
     def test_orbit_invalid_values(
         self,
