@@ -45,3 +45,8 @@ repos:
     hooks:
       - id: conda-env-sorter
       - id: check-execution-order
+
+  -   repo: https://github.com/asottile/pyupgrade
+      rev: v3.15.2
+      hooks:
+      -   id: pyupgrade
