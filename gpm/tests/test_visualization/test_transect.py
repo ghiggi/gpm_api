@@ -112,8 +112,7 @@ class TestPlotTransect:
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     # TODO: implement RGB for pcolormesh
-    # TODO: if rgb=True, 1D-coord not available as x/y plot !
-    # --> _infer_xy_labels_3d, _infer_xy_labels
+    # Test also with nan coordinates and RGB
 
     # def test_with_rgb_pcolormesh(
     #     self,

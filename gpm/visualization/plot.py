@@ -426,14 +426,18 @@ def mask_antimeridian_crossing_array(arr, lon, rgb, plot_kwargs):
 
     Here we assume not invalid lon coordinates anymore.
     Cartopy still bugs with several projections when data cross the antimeridian.
+    By default, GPM-API mask data crossing the antimeridian.
+    The GPM-API configuration default can be modified with: ``gpm.config.set({"viz_hide_antimeridian_data": False})``
     """
     antimeridian_mask = get_antimeridian_mask(lon)
     is_crossing_antimeridian = np.any(antimeridian_mask)
     if is_crossing_antimeridian:
-        arr = _mask_antimeridian_crossing_arr(arr, antimeridian_mask=antimeridian_mask, rgb=rgb)
         # Sanitize cmap to avoid cartopy bug related to cmap bad color
         # - Cartopy requires the bad color to be fully transparent
         plot_kwargs = _sanitize_cartopy_plot_kwargs(plot_kwargs)
+        # Mask data based on GPM-API config 'viz_hide_antimeridian_data'
+        if gpm.config.get("viz_hide_antimeridian_data"):  # default is True
+            arr = _mask_antimeridian_crossing_arr(arr, antimeridian_mask=antimeridian_mask, rgb=rgb)
     return arr, plot_kwargs
 
 
@@ -783,9 +787,8 @@ def plot_cartopy_pcolormesh(
     lon, lat = get_lon_lat_corners(lon, lat)
 
     # Mask cells crossing the antimeridian
-    # - with gpm.config.set({"viz_hide_antimeridian_data": False}): can be used to modify the behaviour
-    if gpm.config.get("viz_hide_antimeridian_data"):  # default is True
-        arr, plot_kwargs = mask_antimeridian_crossing_array(arr, lon, rgb, plot_kwargs)
+    # - with gpm.config.set({"viz_hide_antimeridian_data": False}): can be used to modify the masking behaviour
+    arr, plot_kwargs = mask_antimeridian_crossing_array(arr, lon, rgb, plot_kwargs)
 
     # Add variable field with cartopy
     _ = plot_kwargs.setdefault("shading", "flat")
