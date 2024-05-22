@@ -31,6 +31,7 @@ from collections import namedtuple
 from typing import Optional, Union
 
 import numpy as np
+import pyproj
 
 from gpm import _root_path
 from gpm.checks import is_grid, is_orbit
@@ -43,11 +44,8 @@ from gpm.utils.yaml import read_yaml
 # Cartopy extent: (xmin, xmax, ymin, ymax)
 # GPM-API extent: (xmin, xmax, ymin, ymax)
 
-#### TODO:
-# - croup_around(point, distance)
-# - get_extent_around(point, distance)
 
-# Define the namedtuple
+#### Extent (namedtuple)
 Extent = namedtuple("Extent", "xmin xmax ymin ymax")
 
 
@@ -85,6 +83,8 @@ def _check_size(size: Union[int, float, tuple, list] = 0):
             raise ValueError("Expecting a size (x, y) tuple.")
     else:
         raise TypeError("Accepted size type are int, float, list or tuple.")
+    if np.any(np.array(size) < 0):
+        raise ValueError("Expecting positive 'size' values.")
     return size
 
 
@@ -182,7 +182,7 @@ def adjust_geographic_extent(extent, size):
     Returns
     -------
     tuple
-        The extended extent.
+        The adjusted extent.
 
     """
     # Retrieve current extent
@@ -216,7 +216,90 @@ def adjust_geographic_extent(extent, size):
     if new_lat_max > 90:
         new_lat_min = new_lat_min - (new_lat_max - 90)
         new_lat_max = 90
-    return Extent(new_lon_min, new_lon_max, new_lat_min, new_lat_max)
+    return extend_geographic_extent([new_lon_min, new_lon_max, new_lat_min, new_lat_max], padding=0)
+
+
+def get_extent_around_point(lon, lat, distance=None, size=None):
+    """
+    Get the extent around a point.
+
+    Either specify ``distance`` (in meters) or the wished extent ``size`` (in degrees).
+
+    NOTE: this function is not yet designed to define an extent when the area of interest
+    would cross the antimeridian or the poles.
+
+    Parameters
+    ----------
+    lon : float
+        Longitude of the point.
+    lat : float
+        Latitude of the point.
+    distance: float
+        Distance (in meters) from the point in each direction.
+    size : int, float, tuple, list
+        The size in degrees of the extent in each direction.
+        If ``size`` is a single number, the same size is ensured in all directions.
+        If ``size`` is a tuple or list, it must of size 2  and specifying
+        the desired size of the extent in the x direction (longitude)
+        and the y direction (latitude).
+
+    Returns
+    -------
+    tuple
+        The adjusted extent.
+
+    """
+    geod = pyproj.Geod(ellps="WGS84")
+    if distance is not None and size is not None:
+        raise ValueError("Either provide the 'distance' in meter or the 'size' of the extent in degrees.")
+    if distance is None and size is None:
+        raise ValueError("Please provide the 'distance' in meter or the 'size' of the extent in degrees.")
+    if size is not None:
+        return adjust_geographic_extent(extent=[lon, lon, lat, lat], size=size)
+    # Define azimuths
+    azimuths = [0, 90, 180, 270]  # north, east, south, west
+    # Calculate new points in the four cardinal directions by the specified distance
+    lons, lats, _ = geod.fwd(np.ones(4) * lon, np.ones(4) * lat, azimuths, np.ones(4) * distance, radians=False)
+    extent = [lons.min().item(), lons.max().item(), lats.min().item(), lats.max().item()]
+    return extend_geographic_extent(extent, padding=0)
+
+
+def get_circle_coordinates_around_point(lon, lat, radius, num_vertices=360):
+    """Get the coordinates of a circle with custom radius around a point.
+
+    Parameters
+    ----------
+    lon : float
+        Longitude of the point.
+    lat : float
+        Latitude of the point.
+    radius : float
+        Radius (in meters) around the point.
+    num_vertices : int, optional
+        Number of circle coordinates to return. The default is 360.
+
+    Returns
+    -------
+    lons : `numpy.ndarray`
+        Longitude vertices of the circle around the point.
+    lats : `numpy.ndarray`
+        Latitude vertices of the circle around the point.
+
+    """
+    geod = pyproj.Geod(ellps="WGS84")
+
+    # Angle between each point in degrees
+    angles = np.linspace(0, 360, num_vertices, endpoint=False)
+
+    # Compute the coordinates of the circle's vertices
+    lons, lats, _ = geod.fwd(
+        np.ones(angles.shape) * lon,
+        np.ones(angles.shape) * lat,
+        angles,
+        np.ones(angles.shape) * radius,
+        radians=False,
+    )
+    return lons, lats
 
 
 def read_countries_extent_dictionary():
@@ -409,6 +492,7 @@ def get_extent(
         The extent follows the matplotlib/cartopy format ``(xmin, xmax, ymin, ymax)``.
 
     """
+    # TODO: should compute the corners and return based on the sides
     padding = _check_padding(padding=padding)
 
     lon = xr_obj["lon"].to_numpy()
@@ -423,6 +507,41 @@ def get_extent(
     if size is not None:
         extent = adjust_geographic_extent(extent, size=size)
     return extent
+
+
+def crop(xr_obj, extent):
+    """Crop a xarray object based on the provided bounding box.
+
+    Parameters
+    ----------
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+        xarray object.
+    extent : list or tuple
+        The bounding box over which to crop the xarray object.
+        `extent` must follow the matplotlib and cartopy extent conventions:
+        extent = [x_min, x_max, y_min, y_max]
+
+    Returns
+    -------
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+        Cropped xarray object.
+
+    """
+    if is_orbit(xr_obj):
+        # - Subset only along_track
+        list_isel_dicts = get_crop_slices_by_extent(xr_obj, extent)
+        if len(list_isel_dicts) > 1:
+            raise ValueError(
+                "The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !.",
+            )
+        return xr_obj.isel(list_isel_dicts[0])
+    if is_grid(xr_obj):
+        isel_dict = get_crop_slices_by_extent(xr_obj, extent)
+        return xr_obj.isel(isel_dict)
+    # Otherwise raise informative error
+    orbit_dims = ("cross_track", "along_track")
+    grid_dims = ("lon", "lat")
+    raise ValueError(f"Dataset not recognized. Expecting dimensions {orbit_dims} or {grid_dims}.")
 
 
 def crop_by_country(xr_obj, name: str):
@@ -462,6 +581,36 @@ def crop_by_continent(xr_obj, name: str):
 
     """
     extent = get_continent_extent(name)
+    return crop(xr_obj=xr_obj, extent=extent)
+
+
+def crop_around_point(xr_obj, lon: float, lat: float, distance=None, size=None):
+    """Crop an xarray object around a point.
+
+    Parameters
+    ----------
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+        xarray object.
+    lon : float
+        Longitude of the point.
+    lat : float
+        Latitude of the point.
+    distance: float
+        Distance (in meters) from the point in each direction.
+    size : int, float, tuple, list
+        The size in degrees of the extent in each direction.
+        If ``size`` is a single number, the same size is ensured in all directions.
+        If ``size`` is a tuple or list, it must of size 2  and specifying
+        the desired size of the extent in the x direction (longitude)
+        and the y direction (latitude).
+
+    Returns
+    -------
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+        Cropped xarray object.
+
+    """
+    extent = get_extent_around_point(lon=lon, lat=lat, distance=distance, size=size)
     return crop(xr_obj=xr_obj, extent=extent)
 
 
@@ -511,7 +660,7 @@ def get_crop_slices_by_extent(xr_obj, extent):
 def get_crop_slices_by_continent(xr_obj, name):
     """Compute the xarray object slices which are within the specified continent.
 
-    If the input is a GPM Orbit, it returns a list of along-track slices
+    If the input is a GPM Orbit, it returns a list of along-track slices.
     If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
 
     Parameters
@@ -529,7 +678,7 @@ def get_crop_slices_by_continent(xr_obj, name):
 def get_crop_slices_by_country(xr_obj, name):
     """Compute the xarray object slices which are within the specified country.
 
-    If the input is a GPM Orbit, it returns a list of along-track slices
+    If the input is a GPM Orbit, it returns a list of along-track slices.
     If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
 
     Parameters
@@ -544,17 +693,28 @@ def get_crop_slices_by_country(xr_obj, name):
     return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
 
 
-def crop(xr_obj, extent):
-    """Crop a xarray object based on the provided bounding box.
+def get_crop_slices_around_point(xr_obj, lon: float, lat: float, distance=None, size=None):
+    """Compute the xarray object slices which are within the specified distance from a point.
+
+    If the input is a GPM Orbit, it returns a list of along-track slices.
+    If the input is a GPM Grid, it returns a dictionary of the lon/lat slices.
 
     Parameters
     ----------
     xr_obj : `xarray.DataArray` or `xarray.Dataset`
         xarray object.
-    extent : list or tuple
-        The bounding box over which to crop the xarray object.
-        `extent` must follow the matplotlib and cartopy extent conventions:
-        extent = [x_min, x_max, y_min, y_max]
+    lon : float
+        Longitude of the point.
+    lat : float
+        Latitude of the point.
+    distance: float
+        Distance (in meters) from the point in each direction.
+    size : int, float, tuple, list
+        The size in degrees of the extent in each direction.
+        If ``size`` is a single number, the same size is ensured in all directions.
+        If ``size`` is a tuple or list, it must of size 2  and specifying
+        the desired size of the extent in the x direction (longitude)
+        and the y direction (latitude).
 
     Returns
     -------
@@ -562,18 +722,5 @@ def crop(xr_obj, extent):
         Cropped xarray object.
 
     """
-    if is_orbit(xr_obj):
-        # - Subset only along_track
-        list_isel_dicts = get_crop_slices_by_extent(xr_obj, extent)
-        if len(list_isel_dicts) > 1:
-            raise ValueError(
-                "The orbit is crossing the extent multiple times. Use get_crop_slices_by_extent !.",
-            )
-        return xr_obj.isel(list_isel_dicts[0])
-    if is_grid(xr_obj):
-        isel_dict = get_crop_slices_by_extent(xr_obj, extent)
-        return xr_obj.isel(isel_dict)
-    # Otherwise raise informative error
-    orbit_dims = ("cross_track", "along_track")
-    grid_dims = ("lon", "lat")
-    raise ValueError(f"Dataset not recognized. Expecting dimensions {orbit_dims} or {grid_dims}.")
+    extent = get_extent_around_point(lon=lon, lat=lat, distance=distance, size=size)
+    return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)

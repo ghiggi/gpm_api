@@ -406,8 +406,8 @@ def get_lon_lat_corners(lon, lat):
 def _mask_antimeridian_crossing_arr(arr, antimeridian_mask, rgb):
     if np.ma.is_masked(arr):
         if rgb:
-            data_mask = np.broadcast_to(np.expand_dims(antimeridian_mask, axis=-1), arr.shape)
-            combined_mask = np.logical_or(data_mask, antimeridian_mask)
+            antimeridian_mask = np.broadcast_to(np.expand_dims(antimeridian_mask, axis=-1), arr.shape)
+            combined_mask = np.logical_or(arr.mask, antimeridian_mask)
         else:
             combined_mask = np.logical_or(arr.mask, antimeridian_mask)
         arr = np.ma.masked_where(combined_mask, arr)
@@ -474,7 +474,9 @@ def check_object_format(da, plot_kwargs, check_function, **function_kwargs):
     return da
 
 
-def preprocess_figure_args(ax, fig_kwargs=None, subplot_kwargs=None):
+def preprocess_figure_args(ax, fig_kwargs=None, subplot_kwargs=None, is_facetgrid=False):
+    if is_facetgrid and ax is not None:
+        raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
     fig_kwargs = {} if fig_kwargs is None else fig_kwargs
     subplot_kwargs = {} if subplot_kwargs is None else subplot_kwargs
     if ax is not None:
@@ -668,15 +670,6 @@ def _sanitize_cartopy_plot_kwargs(plot_kwargs):
     return plot_kwargs
 
 
-def get_dataarray_extent(da, x="lon", y="lat"):
-    # TODO: compute corners array to estimate the extent
-    # - OR increase by 1° in everydirection and then wrap between -180, 180,90,90
-    # Get the minimum and maximum longitude and latitude values
-    lon_min, lon_max = da[x].min(), da[x].max()
-    lat_min, lat_max = da[y].min(), da[y].max()
-    return (lon_min, lon_max, lat_min, lat_max)
-
-
 def _compute_extent(x_coords, y_coords):
     """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
 
@@ -731,12 +724,10 @@ def plot_cartopy_imshow(
         **plot_kwargs,
     )
     # - Set the extent
-    extent = get_dataarray_extent(da, x="lon", y="lat")
     ax.set_extent(extent)
 
     # - Add colorbar
     if add_colorbar:
-        # --> TODO: set axis proportion in a meaningful way ...
         _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     return p
 
@@ -774,6 +765,7 @@ def plot_cartopy_pcolormesh(
     is_1d_case = lon.ndim == 1
 
     # Infill invalid value and mask data at invalid coordinates
+    # - No invalid values after this function call
     lon, lat, arr = get_valid_pcolormesh_inputs(lon, lat, arr, rgb=rgb, mask_data=True)
     if is_1d_case:
         arr = np.expand_dims(arr, axis=1)
@@ -806,7 +798,6 @@ def plot_cartopy_pcolormesh(
         plot_sides(sides=sides, ax=ax, linestyle="--", color="black")
 
     # Add colorbar
-    # --> TODO: set axis proportion in a meaningful way ...
     if add_colorbar:
         _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     return p
@@ -816,6 +807,17 @@ def plot_cartopy_pcolormesh(
 #########################
 #### Xarray wrappers ####
 #########################
+
+
+def _preprocess_xr_kwargs(add_colorbar, plot_kwargs, cbar_kwargs):
+    if not add_colorbar:
+        cbar_kwargs = None
+
+    if "rgb" in plot_kwargs:
+        cbar_kwargs = None
+        add_colorbar = False
+        plot_kwargs = {"rgb": plot_kwargs.get("rgb")}  # alpha currently skipped if RGB
+    return add_colorbar, plot_kwargs, cbar_kwargs
 
 
 def plot_xr_pcolormesh(
@@ -829,15 +831,11 @@ def plot_xr_pcolormesh(
 ):
     """Plot pcolormesh with xarray."""
     ticklabels = cbar_kwargs.pop("ticklabels", None)
-
-    if not add_colorbar:
-        cbar_kwargs = None
-
-    if "rgb" in plot_kwargs:
-        cbar_kwargs = None
-        add_colorbar = False
-        plot_kwargs = {"rgb": plot_kwargs.get("rgb")}  # alpha currently skipped if RGB
-
+    add_colorbar, plot_kwargs, cbar_kwargs = _preprocess_xr_kwargs(
+        add_colorbar=add_colorbar,
+        plot_kwargs=plot_kwargs,
+        cbar_kwargs=cbar_kwargs,
+    )
     p = da.plot.pcolormesh(
         x=x,
         y=y,
@@ -870,14 +868,11 @@ def plot_xr_imshow(
     different colorbars.
     """
     ticklabels = cbar_kwargs.pop("ticklabels", None)
-    if not add_colorbar:
-        cbar_kwargs = None
-
-    if "rgb" in plot_kwargs:
-        cbar_kwargs = None
-        add_colorbar = False
-        plot_kwargs = {"rgb": plot_kwargs.get("rgb")}  # alpha currently skipped if RGB
-
+    add_colorbar, plot_kwargs, cbar_kwargs = _preprocess_xr_kwargs(
+        add_colorbar=add_colorbar,
+        plot_kwargs=plot_kwargs,
+        cbar_kwargs=cbar_kwargs,
+    )
     p = da.plot.imshow(
         x=x,
         y=y,

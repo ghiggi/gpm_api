@@ -91,6 +91,14 @@ class TestPlotTransect:
         p = plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="height", x="lon")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
+    def test_with_height_on_x(
+        self,
+        orbit_spatial_3d_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting transect with height on y axis."""
+        p = plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="lon", x="height")
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
     def test_with_alpha_array(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,

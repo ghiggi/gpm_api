@@ -181,10 +181,8 @@ def _plot_grid_map_facetgrid(
     **plot_kwargs,
 ):
     """Plot 2D fields with FacetGrid."""
-    # - Check inputs
-    if ax is not None:
-        raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
-    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs)
+    # Check inputs
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs, is_facetgrid=True)
     subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
@@ -195,9 +193,15 @@ def _plot_grid_map_facetgrid(
         user_cbar_kwargs=cbar_kwargs,
     )
 
+    # Retrieve Cartopy projection
     projection = subplot_kwargs.get("projection", None)
     if projection is None:
         raise ValueError("Please specify a Cartopy projection in subplot_kwargs['projection'].")
+
+    # Disable colorbar if rgb
+    if plot_kwargs.get("rgb", False):
+        add_colorbar = False
+        cbar_kwargs = {}
 
     # Create FacetGrid
     optimize_layout = plot_kwargs.pop("optimize_layout", True)
@@ -243,8 +247,8 @@ def _plot_grid_map_facetgrid(
 
 def _plot_grid_image_facetgrid(
     da,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -253,10 +257,8 @@ def _plot_grid_image_facetgrid(
     **plot_kwargs,
 ):
     """Plot 2D image with FacetGrid."""
-    # - Check inputs
-    if ax is not None:
-        raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
-    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+    # Check inputs
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, is_facetgrid=True)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
@@ -265,6 +267,11 @@ def _plot_grid_image_facetgrid(
         user_plot_kwargs=plot_kwargs,
         user_cbar_kwargs=cbar_kwargs,
     )
+
+    # Disable colorbar if rgb
+    if plot_kwargs.get("rgb", False):
+        add_colorbar = False
+        cbar_kwargs = {}
 
     # Create FacetGrid
     fc = ImageFacetGrid(
@@ -358,8 +365,8 @@ def plot_grid_map(
 
 def plot_grid_image(
     da,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     interpolation="nearest",

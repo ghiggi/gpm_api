@@ -459,7 +459,7 @@ def plot_transect(
     y, ylabel, da, origin = _get_y_axis_options(da, y=y, origin=plot_kwargs.get("origin", None))
 
     # - Plot with xarray
-    if da[y].ndim == 1:
+    if da[y].ndim == 1 and da[x].ndim == 1:
         plot_kwargs["origin"] = origin
         p = plot_xr_imshow(
             ax=ax,

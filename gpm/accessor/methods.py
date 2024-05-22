@@ -114,6 +114,12 @@ class GPM_Base_Accessor:
         return crop_by_continent(self._obj, name)
 
     @auto_wrap_docstring
+    def crop_around_point(self, lon, lat, distance=None, size=None):
+        from gpm.utils.geospatial import crop_around_point
+
+        return crop_around_point(self._obj, lon=lon, lat=lat, distance=distance, size=size)
+
+    @auto_wrap_docstring
     def get_crop_slices_by_extent(self, extent):
         from gpm.utils.geospatial import get_crop_slices_by_extent
 
@@ -130,6 +136,12 @@ class GPM_Base_Accessor:
         from gpm.utils.geospatial import get_crop_slices_by_continent
 
         return get_crop_slices_by_continent(self._obj, name)
+
+    @auto_wrap_docstring
+    def get_crop_slices_around_point(self, lon, lat, distance=None, size=None):
+        from gpm.utils.geospatial import get_crop_slices_around_point
+
+        return get_crop_slices_around_point(self._obj, lon=lon, lat=lat, distance=distance, size=size)
 
     @property
     def pyresample_area(self):

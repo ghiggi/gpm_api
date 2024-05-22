@@ -92,28 +92,6 @@ def test_preprocess_figure_args() -> None:
         plot.preprocess_figure_args(ax, fig_kwargs=nothing, subplot_kwargs=something)
 
 
-class TestGetDataArrayExtent:
-    """Test the get_extent function."""
-
-    def test_orbit(
-        self,
-        orbit_dataarray: xr.DataArray,
-    ) -> None:
-        """Test getting the extent of orbit data."""
-        returned_extent = plot.get_dataarray_extent(orbit_dataarray)
-        expected_extent = (-2.77663454, 22.65579744, -3.53830585, 18.64709521)
-        np.testing.assert_allclose(returned_extent, expected_extent, rtol=1e-9)
-
-    def test_grid(
-        self,
-        grid_dataarray: xr.DataArray,
-    ) -> None:
-        """Test getting the extent of grid data."""
-        returned_extent = plot.get_dataarray_extent(grid_dataarray)
-        expected_extent = (-5, 20, -5, 15)
-        assert returned_extent == expected_extent
-
-
 def test_get_antimeridian_mask(
     orbit_antimeridian_dataarray: xr.DataArray,
 ) -> None:
@@ -141,7 +119,7 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_antimeridian(
+    def test_orbit_antimeridian_not_recentered(
         self,
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
@@ -149,11 +127,22 @@ class TestPlotMap:
         p = plot.plot_map(orbit_antimeridian_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_antimeridian_recentered(
+    def test_orbit_antimeridian(
         self,
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data going over the antimeridian with recentering."""
+        crs_proj = ccrs.PlateCarree(central_longitude=180)
+        cmap = "Spectral"  # check that bad is set to 0 to avoid cartopy bug
+        p = plot.plot_map(orbit_antimeridian_dataarray, cmap=cmap, subplot_kwargs={"projection": crs_proj})
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_antimeridian_with_nan_coordinates(
+        self,
+        orbit_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data going over the antimeridian and with masked values due to nan coordinates."""
+        orbit_antimeridian_dataarray["lon"].data[1, 2:6] = np.nan
         crs_proj = ccrs.PlateCarree(central_longitude=180)
         p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
@@ -167,7 +156,7 @@ class TestPlotMap:
         p = plot.plot_map(orbit_antimeridian_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_antimeridian_not_masked_recentered(
+    def test_orbit_antimeridian_not_masked(
         self,
         orbit_antimeridian_dataarray: xr.DataArray,
     ) -> None:
@@ -194,7 +183,8 @@ class TestPlotMap:
         p = plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    ## Test data with nan
+    ####------------------------------------------------------------------------
+    #### - Test with NaN in the data
 
     def test_orbit_data_nan_cross_track(
         self,
@@ -221,8 +211,17 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
+    def test_orbit_data_all_nan_values(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with some invalid values."""
+        orbit_dataarray.data[1:4, 1:4] = np.nan
+        p = plot.plot_map(orbit_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
     ####------------------------------------------------------------------------
-    #### Test with NaN coordinates
+    #### - Test with NaN coordinates
 
     def test_orbit_nan_coordinate_at_one_cell(
         self,
@@ -283,7 +282,7 @@ class TestPlotMap:
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     ####------------------------------------------------------------------------
-    #### Test cross-track/along-track view
+    #### - Test cross-track/along-track view
 
     def test_orbit_cross_track(
         self,
@@ -344,7 +343,116 @@ class TestPlotMap:
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     ####------------------------------------------------------------------------
+    #### - Test RGB options
+
+    def test_orbit_rgb(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGB data."""
+        orbit_dataarray = expand_dims(orbit_dataarray, 3, dim="rgb", axis=2)
+        p = plot.plot_map(orbit_dataarray, rgb="rgb")
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgba(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGBA data."""
+        orbit_dataarray = expand_dims(orbit_dataarray, 4, dim="rgb", axis=2)
+        p = plot.plot_map(orbit_dataarray, rgb="rgb")
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgb_alpha_value(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGB data with alpha value."""
+        orbit_dataarray = expand_dims(orbit_dataarray, 3, dim="rgb", axis=2)
+        p = plot.plot_map(orbit_dataarray, rgb="rgb", alpha=0.4)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+        # NOTE: alpha array not allowed currently
+
+    def test_orbit_rgb_with_nan_coordinates(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGB data with some NaN coordinates (and thus masked pixels)."""
+        orbit_dataarray_rgb = expand_dims(orbit_dataarray, 3, dim="rgb", axis=2)
+        orbit_dataarray_rgb["lon"].data[3, 5:15] = np.nan
+        p = plot.plot_map(orbit_dataarray_rgb, rgb="rgb")
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgb_antimeridian(
+        self,
+        orbit_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGB data going over the antimeridian without masking (recentered)."""
+        orbit_dataarray_rgb = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
+        crs_proj = ccrs.PlateCarree(central_longitude=180)
+        p = plot.plot_map(orbit_dataarray_rgb, subplot_kwargs={"projection": crs_proj}, rgb="rgb")
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgb_antimeridian_with_nan_coordinates(
+        self,
+        orbit_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGB data going over the antimeridian and with masked values due to nan coordinates."""
+        orbit_dataarray_rgb = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
+        orbit_dataarray_rgb["lon"].data[1, 2:6] = np.nan
+        crs_proj = ccrs.PlateCarree(central_longitude=180)
+        p = plot.plot_map(orbit_dataarray_rgb, subplot_kwargs={"projection": crs_proj}, rgb="rgb")
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgb_antimeridian_not_masked(
+        self,
+        orbit_antimeridian_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit RGB data going over the antimeridian without masking (recentered)."""
+        orbit_dataarray_rgb = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
+        crs_proj = ccrs.PlateCarree(central_longitude=180)
+        with gpm.config.set({"viz_hide_antimeridian_data": False}):
+            p = plot.plot_map(orbit_dataarray_rgb, subplot_kwargs={"projection": crs_proj}, rgb="rgb")
+            save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_rgb_invalid(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with RGB flag on non RGB data."""
+        with pytest.raises(ValueError):
+            plot.plot_map(orbit_dataarray, rgb="rgb")
+
+    ####------------------------------------------------------------------------
     #### Test colorbar kwargs
+
+    def test_orbit_alpha_value(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit with alpha value."""
+        p = plot.plot_map(orbit_dataarray, alpha=0.4)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_alpha_array(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit with alpha array."""
+        alpha_arr = np.ones(orbit_dataarray.shape) * np.linspace(0, 1, orbit_dataarray.shape[1])
+        p = plot.plot_map(orbit_dataarray, alpha=alpha_arr)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_alpha_nan_outer_cross_track(
+        self,
+        orbit_nan_outer_cross_track_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with some NaN coordinates on the outer cross-track cells and alpha array."""
+        alpha_arr = np.ones(orbit_nan_outer_cross_track_dataarray.shape)
+        alpha_arr = alpha_arr * np.linspace(0, 1, orbit_nan_outer_cross_track_dataarray.shape[1])
+        p = plot.plot_map(orbit_nan_outer_cross_track_dataarray, alpha=alpha_arr)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_cbar_kwargs(
         self,
@@ -365,61 +473,8 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray, cbar_kwargs=cbar_kwargs)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
-    def test_orbit_rgb(
-        self,
-        orbit_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit RGB data."""
-        orbit_dataarray = expand_dims(orbit_dataarray, 3, dim="rgb", axis=2)
-        p = plot.plot_map(orbit_dataarray, rgb="rgb")
-        save_and_check_figure(figure=p.figure, name=get_test_name())
-
-    def test_orbit_rgba(
-        self,
-        orbit_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit RGBA data."""
-        orbit_dataarray = expand_dims(orbit_dataarray, 4, dim="rgb", axis=2)
-        p = plot.plot_map(orbit_dataarray, rgb="rgb")
-        save_and_check_figure(figure=p.figure, name=get_test_name())
-
-    def test_orbit_rgb_antimeridian_recentered(
-        self,
-        orbit_antimeridian_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit RGB data going over the antimeridian without masking (recentered)."""
-        orbit_dataarray = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
-        crs_proj = ccrs.PlateCarree(central_longitude=180)
-        p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb="rgb")
-        save_and_check_figure(figure=p.figure, name=get_test_name())
-
-    def test_orbit_rgb_antimeridian_not_masked_recentered(
-        self,
-        orbit_antimeridian_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit RGB data going over the antimeridian without masking (recentered)."""
-        orbit_dataarray = expand_dims(orbit_antimeridian_dataarray, 3, dim="rgb", axis=2)
-        crs_proj = ccrs.PlateCarree(central_longitude=180)
-        with gpm.config.set({"viz_hide_antimeridian_data": False}):
-            p = plot.plot_map(orbit_dataarray, subplot_kwargs={"projection": crs_proj}, rgb="rgb")
-            save_and_check_figure(figure=p.figure, name=get_test_name())
-
-    def test_orbit_rgb_invalid(
-        self,
-        orbit_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data with RGB flag on non RGB data."""
-        with pytest.raises(ValueError):
-            plot.plot_map(orbit_dataarray, rgb="rgb")
-
-    def test_orbit_invalid_values(
-        self,
-        orbit_dataarray: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data with some invalid values."""
-        orbit_dataarray.data[1:4, 1:4] = np.nan
-        p = plot.plot_map(orbit_dataarray)
-        save_and_check_figure(figure=p.figure, name=get_test_name())
+    ####------------------------------------------------------------------------
+    #### Test GRID options
 
     def test_grid(
         self,
@@ -464,6 +519,31 @@ class TestPlotImage:
     ) -> None:
         """Test plotting orbit data."""
         p = plot.plot_image(orbit_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_alpha_array(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit with alpha array."""
+        alpha_arr = np.ones(orbit_dataarray.shape) * np.linspace(0, 1, orbit_dataarray.shape[1])
+        p = plot.plot_image(orbit_dataarray, alpha=alpha_arr)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_with_fully_transparent_cbar(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with invisible colorbar."""
+        p = plot.plot_image(orbit_dataarray, visible_colorbar=False)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_without_cbar(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data without colorbar."""
+        p = plot.plot_image(orbit_dataarray, add_colorbar=False)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_cbar_kwargs(
