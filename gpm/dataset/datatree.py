@@ -79,6 +79,8 @@ def check_valid_granule(filepath):
         with xr.open_dataset(filepath, engine="netcdf4", group="") as ds:
             check_non_empty_granule(ds, filepath)
     except Exception as e:
+        if "an EMPTY granule" in str(e):
+            raise e
         _identify_error(e, filepath)
 
 

@@ -76,8 +76,8 @@ def _define_config_filepath():
     """Define the config YAML file path."""
     # Retrieve user home directory
     home_directory = os.path.expanduser("~")
-    # Define path where .config_gpm.yaml file should be located
-    return os.path.join(home_directory, ".config_gpm.yaml")
+    # Define path where .config_gpm_api.yaml file should be located
+    return os.path.join(home_directory, ".config_gpm_api.yaml")
 
 
 def define_configs(
@@ -104,12 +104,12 @@ def define_configs(
 
     Notes
     -----
-    This function writes a YAML file to the user's home directory at ~/.config_gpm.yaml
+    This function writes a YAML file to the user's home directory at ~/.config_gpm_api.yaml
     with the given GPM-API credentials and base directory. The configuration file can be
     used for authentication when making GPM-API requests.
 
     """
-    # Define path to .config_gpm.yaml file
+    # Define path to .config_gpm_api.yaml file
     filepath = _define_config_filepath()
 
     # If the config exists, read it and update it ;)
@@ -159,11 +159,11 @@ def read_configs() -> dict[str, str]:
 
     Notes
     -----
-    This function reads the YAML configuration file located at ~/.config_gpm.yaml, which
+    This function reads the YAML configuration file located at ~/.config_gpm_api.yaml, which
     should contain the GPM-API credentials and base directory specified by `gpm.define_configs()`.
 
     """
-    # Define path to .config_gpm.yaml file
+    # Define path to .config_gpm_api.yaml file
     filepath = _define_config_filepath()
     # Check it exists
     if not os.path.exists(filepath):

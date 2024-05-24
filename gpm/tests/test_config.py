@@ -43,12 +43,12 @@ def test_define_configs(tmp_path, mocker):
     import gpm
 
     # Mock to save config YAML at custom location
-    config_filepath = str(tmp_path / ".config_gpm.yaml")
+    config_filepath = str(tmp_path / ".config_gpm_api.yaml")
     mocker.patch("gpm.configs._define_config_filepath", return_value=config_filepath)
 
     # Define config YAML
     gpm.configs.define_configs(**CONFIGS_TEST_KWARGS)
-    assert os.path.exists(tmp_path / ".config_gpm.yaml")
+    assert os.path.exists(tmp_path / ".config_gpm_api.yaml")
 
 
 def test_read_configs(tmp_path, mocker):
@@ -56,12 +56,12 @@ def test_read_configs(tmp_path, mocker):
     from gpm.configs import define_configs, read_configs
 
     # Mock to save config YAML at custom location
-    config_filepath = str(tmp_path / ".config_gpm.yaml")
+    config_filepath = str(tmp_path / ".config_gpm_api.yaml")
     mocker.patch("gpm.configs._define_config_filepath", return_value=config_filepath)
 
     # Define config YAML
     define_configs(**CONFIGS_TEST_KWARGS)
-    assert os.path.exists(tmp_path / ".config_gpm.yaml")
+    assert os.path.exists(tmp_path / ".config_gpm_api.yaml")
 
     # Read config YAML
     config_dict = read_configs()
@@ -76,7 +76,7 @@ def test_update_gpm_configs(tmp_path, mocker):
     from gpm.utils.yaml import read_yaml
 
     # Mock to save config YAML at custom location
-    config_filepath = str(tmp_path / ".config_gpm.yaml")
+    config_filepath = str(tmp_path / ".config_gpm_api.yaml")
     mocker.patch("gpm.configs._define_config_filepath", return_value=config_filepath)
 
     # Initialize

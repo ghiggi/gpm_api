@@ -35,7 +35,7 @@ from gpm.configs import read_configs
 
 
 def _get_default_configs():
-    """Retrieve the default GPM-API settings from the ``.config_gpm.yaml`` file."""
+    """Retrieve the default GPM-API settings from the ``.config_gpm_api.yaml`` file."""
     try:
         config_dict = read_configs()
         config_dict = {key: value for key, value in config_dict.items() if value is not None}

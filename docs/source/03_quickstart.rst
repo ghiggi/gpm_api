@@ -46,7 +46,7 @@ as well as other parameters such as the directory on your local machine where to
 save the GPM dataset of interest.
 
 To facilitate the creation of the configuration file, you can adapt and run the following script in Python.
-The configuration file will be created in the user's home directory under the name ``.config_gpm.yaml``.
+The configuration file will be created in the user's home directory under the name ``.config_gpm_api.yaml``.
 
 .. code-block:: python
 

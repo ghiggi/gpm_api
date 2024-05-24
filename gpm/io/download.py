@@ -919,7 +919,7 @@ def download_archive(
     storage="PPS",
     n_threads=4,
     transfer_tool="CURL",
-    progress_bar=False,
+    progress_bar=True,
     force_download=False,
     check_integrity=True,
     remove_corrupted=True,

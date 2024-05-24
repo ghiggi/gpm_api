@@ -34,6 +34,7 @@ from pytest_mock import MockFixture
 from gpm.tests.utils.fake_datasets import get_grid_dataarray, get_orbit_dataarray
 from gpm.utils.geospatial import (
     adjust_geographic_extent,
+    check_extent,
     crop,
     crop_around_point,
     crop_by_continent,
@@ -46,8 +47,8 @@ from gpm.utils.geospatial import (
     get_crop_slices_by_continent,
     get_crop_slices_by_country,
     get_crop_slices_by_extent,
-    get_extent,
-    get_extent_around_point,
+    get_geographic_extent_around_point,
+    get_geographic_extent_from_xarray,
     unwrap_longitude_degree,
 )
 
@@ -114,6 +115,40 @@ def grid_dataarray() -> xr.DataArray:
 
 
 # Tests ########################################################################
+
+
+class TestCheckExtent:
+    """Tests for the check_extent function."""
+
+    def test_valid_extent(self):
+        """Test that a valid extent passes without error."""
+        assert list(check_extent([-180, 180, -90, 90])) == [-180, 180, -90, 90]
+        assert list(check_extent([-360, 180, -98, 90])) == [-360, 180, -98, 90]  # should not assume lat/lon coords
+
+    def test_invalid_extent_length(self):
+        """Test that an error is raised when the extent does not contain exactly four elements."""
+        with pytest.raises(ValueError) as excinfo:
+            check_extent([-180, 180, -90])
+        assert "four elements" in str(excinfo.value)
+
+    def test_invalid_xmin_greater_than_xmax(self):
+        """Test that an error is raised when xmin is not less than xmax."""
+        with pytest.raises(ValueError) as excinfo:
+            check_extent([180, -180, -90, 90])
+        assert "xmin must be less than xmax" in str(excinfo.value)
+
+    def test_invalid_ymin_greater_than_ymax(self):
+        """Test that an error is raised when ymin is not less than ymax."""
+        with pytest.raises(ValueError) as excinfo:
+            check_extent([-180, 180, 90, -90])
+        assert "ymin must be less than ymax" in str(excinfo.value)
+
+    def test_invalid_numerical_values(self):
+        """Test that the function handles non-numerical inputs."""
+        with pytest.raises(ValueError):
+            check_extent(["west", "east", "south", "north"])
+        with pytest.raises(ValueError):
+            check_extent([None, None, None, None])
 
 
 class TestAdjustGeographicExtent:
@@ -209,13 +244,13 @@ class TestExtendGeographicExtent:
         assert extend_geographic_extent(extent, padding) == expected
 
 
-class TestGetExtentAroundPoint:
-    """Class to test get_extent_around_point function."""
+class TestGetGeographicExtentAroundPoint:
+    """Class to test get_geographic_extent_around_point function."""
 
     def test_with_valid_distance(self):
         """Test function with a valid distance and no size."""
         lon, lat, distance = -123.1207, 49.2827, 10000
-        result = get_extent_around_point(lon, lat, distance=distance)
+        result = get_geographic_extent_around_point(lon, lat, distance=distance)
         assert isinstance(result, tuple), "Should return a tuple"
         assert len(result) == 4, "Tuple should have four elements"
         np.testing.assert_almost_equal(result, [-123.258144, -122.983255, 49.1927835, 49.372615], decimal=6)
@@ -224,7 +259,7 @@ class TestGetExtentAroundPoint:
         """Test function with a valid size and no distance."""
         lon, lat = -123.1207, 49.2827
         size = (0.1, 0.1)
-        result = get_extent_around_point(lon, lat, size=size)
+        result = get_geographic_extent_around_point(lon, lat, size=size)
         assert isinstance(result, tuple), "Should return a tuple"
         assert len(result) == 4, "Tuple should have four elements"
         np.testing.assert_almost_equal(result, [-123.1707, -123.0707, 49.2327, 49.332699], decimal=6)
@@ -233,19 +268,19 @@ class TestGetExtentAroundPoint:
         """Test function raises ValueError when both distance and size are provided."""
         lon, lat, distance, size = -123.1207, 49.2827, 10000, (0.1, 0.1)
         with pytest.raises(ValueError):
-            get_extent_around_point(lon, lat, distance=distance, size=size)
+            get_geographic_extent_around_point(lon, lat, distance=distance, size=size)
 
     def test_with_neither_distance_nor_size(self):
         """Test function raises ValueError when neither distance nor size is provided."""
         lon, lat = -123.1207, 49.2827
         with pytest.raises(ValueError):
-            get_extent_around_point(lon, lat)
+            get_geographic_extent_around_point(lon, lat)
 
     def test_with_invalid_size_type(self):
         """Test function raises TypeError when size is of an invalid type."""
         lon, lat = -123.1207, 49.2827
         with pytest.raises(TypeError):
-            get_extent_around_point(lon, lat, size="invalid_size_type")
+            get_geographic_extent_around_point(lon, lat, size="invalid_size_type")
 
 
 def test_get_country_extent(
@@ -306,8 +341,8 @@ def test_get_continent_extent(
         get_continent_extent(continent)
 
 
-def test_get_extent() -> None:
-    """Test get_extent."""
+def test_get_geographic_extent_from_xarray() -> None:
+    """Test get_geographic_extent_from_xarray."""
     ds = xr.Dataset(
         {
             "lon": [-10, 0, 20],
@@ -317,44 +352,44 @@ def test_get_extent() -> None:
 
     # Test without padding
     expected_extent = (-10, 20, -30, 40)
-    returned_extent = get_extent(ds)
+    returned_extent = get_geographic_extent_from_xarray(ds)
     assert returned_extent == expected_extent
 
     # Test with float padding
     padding = 0.1
     expected_extent = (-10.1, 20.1, -30.1, 40.1)
-    returned_extent = get_extent(ds, padding=padding)
+    returned_extent = get_geographic_extent_from_xarray(ds, padding=padding)
     assert returned_extent == expected_extent
 
     # Test with size
     expected_extent = (0, 10, 0, 10)
-    returned_extent = get_extent(ds, size=10)
+    returned_extent = get_geographic_extent_from_xarray(ds, size=10)
     assert returned_extent == expected_extent
 
     # Test with padding exceeding bounds
     padding = 180
     expected_extent = (-180, 180, -90, 90)
-    returned_extent = get_extent(ds, padding=padding)
+    returned_extent = get_geographic_extent_from_xarray(ds, padding=padding)
     assert returned_extent == expected_extent
 
     # Test with tuple padding
     padding = (0.1, 0.2)
     expected_extent = (-10.1, 20.1, -30.2, 40.2)
-    returned_extent = get_extent(ds, padding=padding)
+    returned_extent = get_geographic_extent_from_xarray(ds, padding=padding)
     assert returned_extent == expected_extent
 
     padding = (0.1, 0.1, 0.2, 0.2)
     expected_extent = (-10.1, 20.1, -30.2, 40.2)
-    returned_extent = get_extent(ds, padding=padding)
+    returned_extent = get_geographic_extent_from_xarray(ds, padding=padding)
     assert returned_extent == expected_extent
 
     # Test with invalid padding
     with pytest.raises(TypeError):
-        get_extent(ds, padding="invalid")
+        get_geographic_extent_from_xarray(ds, padding="invalid")
     with pytest.raises(ValueError):
-        get_extent(ds, padding=(0.1,))
+        get_geographic_extent_from_xarray(ds, padding=(0.1,))
     with pytest.raises(ValueError):
-        get_extent(ds, padding=(0.1, 0.2, 0.3))
+        get_geographic_extent_from_xarray(ds, padding=(0.1, 0.2, 0.3))
 
     # Test with object crossing dateline
     ds = xr.Dataset(
@@ -364,7 +399,7 @@ def test_get_extent() -> None:
         },
     )
     with pytest.raises(NotImplementedError):
-        get_extent(ds)
+        get_geographic_extent_from_xarray(ds)
 
 
 def test_get_circle_coordinates_around_point():

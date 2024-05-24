@@ -91,9 +91,9 @@ class GPM_Base_Accessor:
 
     @auto_wrap_docstring
     def extent(self, padding=0, size=None):
-        from gpm.utils.geospatial import get_extent
+        from gpm.utils.geospatial import get_geographic_extent_from_xarray
 
-        return get_extent(self._obj, padding=padding, size=size)
+        return get_geographic_extent_from_xarray(self._obj, padding=padding, size=size)
 
     @auto_wrap_docstring
     def crop(self, extent):

@@ -133,6 +133,150 @@ def _check_padding(padding: Union[int, float, tuple, list] = 0):
     return padding
 
 
+def check_extent(extent):
+    """
+    Validates the extent to ensure it has the correct format and logical consistency.
+
+    Note: this function does not check for the realism of extent values !
+
+    Parameters
+    ----------
+    extent : list or tuple
+        The extent specified as [xmin, xmax, ymin, ymax].
+
+    Returns
+    -------
+    extent: tuple
+
+    """
+    if len(extent) != 4:
+        raise ValueError("Extent must contain exactly four elements: [xmin, xmax, ymin, ymax].")
+    for v in extent:
+        if not isinstance(v, (int, float, np.floating, np.integer)):
+            raise ValueError("The extent must be composed by numeric values.")
+    if not (extent[0] <= extent[1]):
+        raise ValueError("xmin must be less than xmax.")
+    if not (extent[2] <= extent[3]):
+        raise ValueError("ymin must be less than ymax.")
+    return Extent(*extent)
+
+
+####------------------------------------------------------------------------------------.
+#### Planar Extent
+
+
+def get_extent_around_point(x, y, distance=None, size=None):
+    """
+    Get the extent around a point.
+
+    Either specify ``distance`` or the wished extent ``size`` (in the unit of the extent).
+
+    Parameters
+    ----------
+    x : float
+        X coordinate of the point.
+    y : float
+        Y coordinate of the point.
+    distance: float
+        Distance from the point in each direction.
+    size : int, float, tuple, list
+        The size of the extent in each direction.
+        If ``size`` is a single number, the same size is ensured in all directions.
+        If ``size`` is a tuple or list, it must of size 2  and specifying
+        the desired size of the extent in the x direction
+        and the y direction.
+
+    Returns
+    -------
+    tuple
+        The adjusted extent.
+
+    """
+    if distance is not None and size is not None:
+        raise ValueError("Either provide the 'distance' or the 'size' of the extent.")
+    if distance is None and size is None:
+        raise ValueError("Please provide the 'distance' or the 'size' of the extent.")
+    if size is not None:
+        return adjust_extent(extent=[x, x, y, y], size=size)
+    # Calculate new points in the four cardinal directions by the specified distance
+    extent = [x - distance, x + distance, y - distance, y + distance]
+    return extend_extent(extent, padding=0)
+
+
+def adjust_extent(extent, size):
+    """
+    Adjust the extent to have the desired size.
+
+    Parameters
+    ----------
+    extent : tuple
+        A tuple of four values representing the extent.
+        The extent format must be ``[xmin, xmax, ymin, ymax]``.
+    size : int, float, tuple, list
+        The size in degrees of the extent in each direction.
+        If ``size`` is a single number, the same size is ensured in all directions.
+        If ``size`` is a tuple or list, it must of size 2  and specifying
+        the desired size of the extent in the x direction and the y direction.
+
+    Returns
+    -------
+    tuple
+        The adjusted extent.
+
+    """
+    # Retrieve desired size
+    x_size, y_size = _check_size(size)
+
+    # Retrieve current extent
+    extent = Extent(*extent)
+
+    # Center of the current extent
+    x_center = (extent.xmax + extent.xmin) / 2
+    y_center = (extent.ymax + extent.ymin) / 2
+
+    # Define new min and max xgitudes and yitudes
+    xmin = x_center - x_size / 2
+    xmax = x_center + x_size / 2
+    ymin = y_center - y_size / 2
+    ymax = y_center + y_size / 2
+
+    return Extent(xmin, xmax, ymin, ymax)
+
+
+def extend_extent(extent, padding: Union[int, float, tuple, list] = 0):
+    """Extend the extent by padding in every direction.
+
+    Parameters
+    ----------
+    extent : tuple
+        A tuple of four values representing the extent.
+        The extent format must be ``[xmin, xmax, ymin, ymax]``.
+    padding : int, float, tuple, list
+        The number of degrees to extend the extent in each direction.
+        If ``padding`` is a single number, the same padding is applied in all directions.
+        If ``padding`` is a tuple or list, it must contain 2 or 4 elements.
+        If two values are provided (x, y), they are interpreted as x and y padding, respectively.
+        If four values are provided, they directly correspond to padding for each side ``(left, right, top, bottom)``.
+
+    Returns
+    -------
+    tuple
+        The extended extent.
+
+    """
+    padding = _check_padding(padding)
+    xmin, xmax, ymin, ymax = extent
+    xmin = xmin - padding[0]
+    xmax = xmax + padding[1]
+    ymin = ymin - padding[2]
+    ymax = ymax + padding[3]
+    return Extent(xmin, xmax, ymin, ymax)
+
+
+####------------------------------------------------------------------------------------.
+#### Geographic Extent
+
+
 def extend_geographic_extent(extent, padding: Union[int, float, tuple, list] = 0):
     """Extend the lat/lon extent by x degrees in every direction.
 
@@ -154,12 +298,11 @@ def extend_geographic_extent(extent, padding: Union[int, float, tuple, list] = 0
         The extended extent.
 
     """
-    padding = _check_padding(padding)
-    xmin, xmax, ymin, ymax = extent
-    xmin = max(xmin - padding[0], -180)
-    xmax = min(xmax + padding[1], 180)
-    ymin = max(ymin - padding[2], -90)
-    ymax = min(ymax + padding[3], 90)
+    extent = extend_extent(extent, padding)
+    xmin = max(extent.xmin, -180)
+    xmax = min(extent.xmax, 180)
+    ymin = max(extent.ymin, -90)
+    ymax = min(extent.ymax, 90)
     return Extent(xmin, xmax, ymin, ymax)
 
 
@@ -185,22 +328,7 @@ def adjust_geographic_extent(extent, size):
         The adjusted extent.
 
     """
-    # Retrieve current extent
-    lon_min, lon_max, lat_min, lat_max = extent
-
-    # Retrieve desired size
-    x_size, y_size = _check_size(size)
-
-    # Center of the current extent
-    lon_center = (lon_max + lon_min) / 2
-    lat_center = (lat_max + lat_min) / 2
-
-    # Define new min and max longitudes and latitudes
-    new_lon_min = lon_center - x_size / 2
-    new_lon_max = lon_center + x_size / 2
-    new_lat_min = lat_center - y_size / 2
-    new_lat_max = lat_center + y_size / 2
-
+    new_lon_min, new_lon_max, new_lat_min, new_lat_max = adjust_extent(extent, size)
     # Ensure within [-180, 180] longitude extent and of desired size
     if new_lon_min < -180:
         new_lon_max = new_lon_max + (new_lon_min + 180)
@@ -208,7 +336,6 @@ def adjust_geographic_extent(extent, size):
     if new_lon_max > 180:
         new_lon_min = new_lon_min - (new_lon_max - 180)
         new_lon_max = 180
-
     # Ensure within [-90, 90] latitude extent and of desired size
     if new_lat_min < -90:
         new_lat_max = new_lat_min + (new_lat_min + 90)
@@ -219,9 +346,65 @@ def adjust_geographic_extent(extent, size):
     return extend_geographic_extent([new_lon_min, new_lon_max, new_lat_min, new_lat_max], padding=0)
 
 
-def get_extent_around_point(lon, lat, distance=None, size=None):
+def _is_crossing_dateline(lon: Union[list, np.ndarray]):
+    """Check if the longitude array is crossing the dateline."""
+    lon = np.asarray(lon)
+    diff = np.diff(lon)
+    return np.any(np.abs(diff) > 180)
+
+
+def get_geographic_extent_from_xarray(
+    xr_obj,
+    padding: Union[int, float, tuple, list] = 0,
+    size: Optional[Union[int, float, tuple, list]] = None,
+):
+    """Get the geographic extent from an xarray object.
+
+    Parameters
+    ----------
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+        xarray object.
+    padding : int, float, tuple, list
+        The number of degrees to extend the extent in each direction.
+        If ``padding`` is a single number, the same padding is applied in all directions.
+        If ``padding`` is a tuple or list, it must contain 2 or 4 elements.
+        If two values are provided (x, y), they are interpreted as longitude and latitude padding, respectively.
+        If four values are provided, they directly correspond to padding for each side ``(left, right, top, bottom)``.
+        The default is ``0``.
+    size : int, float, tuple, list
+        The desired size in degrees of the extent in each direction.
+        If ``size`` is a single number, the same size is enforced in all directions.
+        If ``size`` is a tuple or list, it must of size 2 and specify the desired size of
+        the extent in the x direction (longitude) and the y direction (latitude).
+        The default is ``None``.
+
+    Returns
+    -------
+    extent : tuple
+        A tuple containing the longitude and latitude extent of the xarray object.
+        The extent follows the matplotlib/cartopy format ``(xmin, xmax, ymin, ymax)``.
+
     """
-    Get the extent around a point.
+    # TODO: should compute the corners and return based on the sides
+    padding = _check_padding(padding=padding)
+
+    lon = xr_obj["lon"].to_numpy()
+    lat = xr_obj["lat"].to_numpy()
+
+    if _is_crossing_dateline(lon):
+        raise NotImplementedError(
+            "The object cross the dateline. The extent can't be currently defined.",
+        )
+    extent = Extent(np.nanmin(lon), np.nanmax(lon), np.nanmin(lat), np.nanmax(lat))
+    extent = extend_geographic_extent(extent, padding=padding)
+    if size is not None:
+        extent = adjust_geographic_extent(extent, size=size)
+    return extent
+
+
+def get_geographic_extent_around_point(lon, lat, distance=None, size=None):
+    """
+    Get the geographic extent around a point.
 
     Either specify ``distance`` (in meters) or the wished extent ``size`` (in degrees).
 
@@ -264,44 +447,6 @@ def get_extent_around_point(lon, lat, distance=None, size=None):
     return extend_geographic_extent(extent, padding=0)
 
 
-def get_circle_coordinates_around_point(lon, lat, radius, num_vertices=360):
-    """Get the coordinates of a circle with custom radius around a point.
-
-    Parameters
-    ----------
-    lon : float
-        Longitude of the point.
-    lat : float
-        Latitude of the point.
-    radius : float
-        Radius (in meters) around the point.
-    num_vertices : int, optional
-        Number of circle coordinates to return. The default is 360.
-
-    Returns
-    -------
-    lons : `numpy.ndarray`
-        Longitude vertices of the circle around the point.
-    lats : `numpy.ndarray`
-        Latitude vertices of the circle around the point.
-
-    """
-    geod = pyproj.Geod(ellps="WGS84")
-
-    # Angle between each point in degrees
-    angles = np.linspace(0, 360, num_vertices, endpoint=False)
-
-    # Compute the coordinates of the circle's vertices
-    lons, lats, _ = geod.fwd(
-        np.ones(angles.shape) * lon,
-        np.ones(angles.shape) * lat,
-        angles,
-        np.ones(angles.shape) * radius,
-        radians=False,
-    )
-    return lons, lats
-
-
 def read_countries_extent_dictionary():
     """Reads a YAML file containing countries extent information and returns it as a dictionary.
 
@@ -319,6 +464,25 @@ def read_countries_extent_dictionary():
         "country_extent.yaml",
     )
     return read_yaml(countries_extent_filepath)
+
+
+def read_continents_extent_dictionary():
+    """Read and return a dictionary containing the extents of continents.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the extents of continents.
+
+    """
+    continents_extent_filepath = os.path.join(
+        _root_path,
+        "gpm",
+        "etc",
+        "geospatial",
+        "continent_extent.yaml",
+    )
+    return read_yaml(continents_extent_filepath)
 
 
 def get_country_extent(name, padding=0.2):
@@ -377,25 +541,6 @@ def get_country_extent(name, padding=0.2):
     raise ValueError(f"No matching country. Maybe are you looking for '{possible_match}'?")
 
 
-def read_continents_extent_dictionary():
-    """Read and return a dictionary containing the extents of continents.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the extents of continents.
-
-    """
-    continents_extent_filepath = os.path.join(
-        _root_path,
-        "gpm",
-        "etc",
-        "geospatial",
-        "continent_extent.yaml",
-    )
-    return read_yaml(continents_extent_filepath)
-
-
 def get_continent_extent(name: str, padding: Union[int, float, tuple, list] = 0):
     """Retrieves the extent of a continent.
 
@@ -446,67 +591,8 @@ def get_continent_extent(name: str, padding: Union[int, float, tuple, list] = 0)
     raise ValueError(f"No matching continent. Maybe are you looking for '{possible_match}'?")
 
 
-def unwrap_longitude_degree(x, period=360):
-    """Unwrap longitude array."""
-    x = np.asarray(x)
-    mod = period / 2
-    return (x + mod) % (2 * mod) - mod
-
-
-def _is_crossing_dateline(lon: Union[list, np.ndarray]):
-    """Check if the longitude array is crossing the dateline."""
-    lon = np.asarray(lon)
-    diff = np.diff(lon)
-    return np.any(np.abs(diff) > 180)
-
-
-def get_extent(
-    xr_obj,
-    padding: Union[int, float, tuple, list] = 0,
-    size: Optional[Union[int, float, tuple, list]] = None,
-):
-    """Get the geographic extent from an xarray object.
-
-    Parameters
-    ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
-        xarray object.
-    padding : int, float, tuple, list
-        The number of degrees to extend the extent in each direction.
-        If ``padding`` is a single number, the same padding is applied in all directions.
-        If ``padding`` is a tuple or list, it must contain 2 or 4 elements.
-        If two values are provided (x, y), they are interpreted as longitude and latitude padding, respectively.
-        If four values are provided, they directly correspond to padding for each side ``(left, right, top, bottom)``.
-        The default is ``0``.
-    size : int, float, tuple, list
-        The desired size in degrees of the extent in each direction.
-        If ``size`` is a single number, the same size is enforced in all directions.
-        If ``size`` is a tuple or list, it must of size 2 and specify the desired size of
-        the extent in the x direction (longitude) and the y direction (latitude).
-        The default is ``None``.
-
-    Returns
-    -------
-    extent : tuple
-        A tuple containing the longitude and latitude extent of the xarray object.
-        The extent follows the matplotlib/cartopy format ``(xmin, xmax, ymin, ymax)``.
-
-    """
-    # TODO: should compute the corners and return based on the sides
-    padding = _check_padding(padding=padding)
-
-    lon = xr_obj["lon"].to_numpy()
-    lat = xr_obj["lat"].to_numpy()
-
-    if _is_crossing_dateline(lon):
-        raise NotImplementedError(
-            "The object cross the dateline. The extent can't be currently defined.",
-        )
-    extent = Extent(np.nanmin(lon), np.nanmax(lon), np.nanmin(lat), np.nanmax(lat))
-    extent = extend_geographic_extent(extent, padding=padding)
-    if size is not None:
-        extent = adjust_geographic_extent(extent, size=size)
-    return extent
+####------------------------------------------------------------------------------------.
+#### Geographic crop
 
 
 def crop(xr_obj, extent):
@@ -610,7 +696,7 @@ def crop_around_point(xr_obj, lon: float, lat: float, distance=None, size=None):
         Cropped xarray object.
 
     """
-    extent = get_extent_around_point(lon=lon, lat=lat, distance=distance, size=size)
+    extent = get_geographic_extent_around_point(lon=lon, lat=lat, distance=distance, size=size)
     return crop(xr_obj=xr_obj, extent=extent)
 
 
@@ -722,5 +808,54 @@ def get_crop_slices_around_point(xr_obj, lon: float, lat: float, distance=None, 
         Cropped xarray object.
 
     """
-    extent = get_extent_around_point(lon=lon, lat=lat, distance=distance, size=size)
+    extent = get_geographic_extent_around_point(lon=lon, lat=lat, distance=distance, size=size)
     return get_crop_slices_by_extent(xr_obj=xr_obj, extent=extent)
+
+
+####------------------------------------------------------------------------------------.
+#### Miscellaneous
+
+
+def unwrap_longitude_degree(x, period=360):
+    """Unwrap longitude array."""
+    x = np.asarray(x)
+    mod = period / 2
+    return (x + mod) % (2 * mod) - mod
+
+
+def get_circle_coordinates_around_point(lon, lat, radius, num_vertices=360):
+    """Get the coordinates of a circle with custom radius around a point.
+
+    Parameters
+    ----------
+    lon : float
+        Longitude of the point.
+    lat : float
+        Latitude of the point.
+    radius : float
+        Radius (in meters) around the point.
+    num_vertices : int, optional
+        Number of circle coordinates to return. The default is 360.
+
+    Returns
+    -------
+    lons : `numpy.ndarray`
+        Longitude vertices of the circle around the point.
+    lats : `numpy.ndarray`
+        Latitude vertices of the circle around the point.
+
+    """
+    geod = pyproj.Geod(ellps="WGS84")
+
+    # Angle between each point in degrees
+    angles = np.linspace(0, 360, num_vertices, endpoint=False)
+
+    # Compute the coordinates of the circle's vertices
+    lons, lats, _ = geod.fwd(
+        np.ones(angles.shape) * lon,
+        np.ones(angles.shape) * lat,
+        angles,
+        np.ones(angles.shape) * radius,
+        radians=False,
+    )
+    return lons, lats
