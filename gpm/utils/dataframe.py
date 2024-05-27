@@ -25,10 +25,11 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains general utility to convert xarray objects to dataframes."""
-import dask 
+import dask
+
 from gpm.dataset.granule import remove_unused_var_dims
 from gpm.utils.xarray import ensure_unique_chunking
- 
+
 
 def get_df_object_columns(df):
     """Get the dataframe columns which have 'object' type."""

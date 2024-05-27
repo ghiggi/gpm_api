@@ -27,22 +27,23 @@
 """This module provides the routines for the creation of GPM Geographic Buckets."""
 import os
 import time
+
 import dask
 import pyarrow as pa
-import pyarrow.parquet as pq
 import pyarrow.dataset
+import pyarrow.parquet as pq
 from tqdm import tqdm
 
+from gpm.bucket.io import get_bucket_partitioning, get_filepaths_by_bin, write_bucket_info
+from gpm.bucket.writers import preprocess_writer_kwargs, write_dataset_metadata, write_partitioned_dataset
 from gpm.io.info import group_filepaths
 from gpm.utils.dask import clean_memory, get_client
 from gpm.utils.parallel import compute_list_delayed
 from gpm.utils.timing import print_task_elapsed_time
-from gpm.bucket.io import get_filepaths_by_bin, write_bucket_info, get_bucket_partitioning
-from gpm.bucket.writers import write_partitioned_dataset, write_dataset_metadata, preprocess_writer_kwargs
-
 
 ####--------------------------------------------------------------------------------------------------.
-#### Bucket Granules 
+#### Bucket Granules
+
 
 def split_list_in_blocks(values, block_size):
     return [values[i : i + block_size] for i in range(0, len(values), block_size)]
@@ -53,8 +54,8 @@ def write_granule_bucket(
     bucket_dir,
     partitioning,
     granule_to_df_func,
-    x="lon", 
-    y="lat", 
+    x="lon",
+    y="lat",
     # Writer kwargs
     **writer_kwargs,
 ):
@@ -90,10 +91,10 @@ def write_granule_bucket(
 
     # Retrieve dataframe
     df = granule_to_df_func(src_filepath)
-    
-    # Add partitioning columns 
+
+    # Add partitioning columns
     df = partitioning.add_labels(df=df, x=x, y=y)
-            
+
     # Write partitioned dataframe
     write_partitioned_dataset(
         df=df,
@@ -103,8 +104,8 @@ def write_granule_bucket(
         partitioning_flavor=partitioning.partitioning_flavor,
         **writer_kwargs,
     )
-    
-    
+
+
 def _try_write_granule_bucket(**kwargs):
     try:
         # synchronous
@@ -124,7 +125,7 @@ def write_granules_bucket(
     filepaths,
     # Bucket configuration
     bucket_dir,
-    partitioning, 
+    partitioning,
     granule_to_df_func,
     # Processing options
     parallel=True,
@@ -144,7 +145,7 @@ def write_granules_bucket(
         Base directory of the per-granule bucket archive.
     partitioning: `gpm.bucket.SpatialPartitioning`
         A spatial partititioning class.
-        Carefully consider the size of the partitions.     
+        Carefully consider the size of the partitions.
         Earth partitioning by:
         - 1° degree corresponds to 64800 directories (360*180)
         - 5° degree corresponds to 2592 directories (72*36)
@@ -172,15 +173,14 @@ def write_granules_bucket(
         The default file ``format`` is ``parquet``.
         The default ``use_threads`` is ``True``, which enable multithreaded file writing.
         More information available at https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
-   
+
     """
-    # Define flavor of directory partitioning 
-    writer_kwargs["row_group_size"] = row_group_size  
-    
-    # Write down the information of the bucket 
-    write_bucket_info(bucket_dir=bucket_dir,
-                      partitioning=partitioning)
-   
+    # Define flavor of directory partitioning
+    writer_kwargs["row_group_size"] = row_group_size
+
+    # Write down the information of the bucket
+    write_bucket_info(bucket_dir=bucket_dir, partitioning=partitioning)
+
     # Split long list of files in blocks
     list_blocks = split_list_in_blocks(filepaths, block_size=max_dask_total_tasks)
 
@@ -225,21 +225,21 @@ def write_granules_bucket(
 
 
 ####--------------------------------------------------------------------------------------------------.
-#### Bucket DataFrame 
+#### Bucket DataFrame
 @print_task_elapsed_time(prefix="Dataset Bucket Operation Terminated.")
 def write_bucket(
     df,
     bucket_dir,
     partitioning,
-    x="lon", 
-    y="lat", 
+    x="lon",
+    y="lat",
     # Writer arguments
     filename_prefix="part",
     row_group_size="500MB",
     **writer_kwargs,
 ):
     """
-    Write a geographically partitioned Parquet Dataset. 
+    Write a geographically partitioned Parquet Dataset.
 
     Parameters
     ----------
@@ -249,7 +249,7 @@ def write_bucket(
         Base directory of the geographic bucket archive.
     partitioning: `gpm.bucket.SpatialPartitioning`
         A spatial partititioning class.
-        Carefully consider the size of the partitions.     
+        Carefully consider the size of the partitions.
         Earth partitioning by:
         - 1° degree corresponds to 64800 directories (360*180)
         - 5° degree corresponds to 2592 directories (72*36)
@@ -271,16 +271,17 @@ def write_bucket(
         More information available at https://arrow.apache.org/docs/python/generated/pyarrow.dataset.write_dataset.html
 
     """
-    # Write down the information of the bucket 
-    write_bucket_info(bucket_dir=bucket_dir,
-                      partitioning=partitioning, 
-                      )
-    
-    # Add partitioning columns 
+    # Write down the information of the bucket
+    write_bucket_info(
+        bucket_dir=bucket_dir,
+        partitioning=partitioning,
+    )
+
+    # Add partitioning columns
     df = partitioning.add_labels(df=df, x=x, y=y)
-    
+
     # Write bucket
-    writer_kwargs["row_group_size"] = row_group_size  
+    writer_kwargs["row_group_size"] = row_group_size
     write_partitioned_dataset(
         df=df,
         base_dir=bucket_dir,
@@ -290,9 +291,9 @@ def write_bucket(
         **writer_kwargs,
     )
 
- 
+
 ####--------------------------------------------------------------------------------------------------.
-#### Merge Granules 
+#### Merge Granules
 
 
 @print_task_elapsed_time(prefix="Bucket Merging Terminated.")
@@ -314,7 +315,7 @@ def merge_granule_buckets(
     fragment_readahead=4,
 ):
     """Merge the per-granule bucket archive in a single optimized archive.
-    
+
     Set ulimit -n 999999 before running this routine !
 
     Parameters
@@ -329,7 +330,7 @@ def merge_granule_buckets(
         The default is ``"400MB"``.
     max_file_size: str, optional
         Maximum number of rows to be written in a Parquet file.
-        If specified as a string, the equivalent number of rows is estimated. 
+        If specified as a string, the equivalent number of rows is estimated.
         Ideally the value should be a multiple of ``row_group_size``.
         The default is ``"2GB"``.
     compression : str, optional
@@ -340,7 +341,7 @@ def merge_granule_buckets(
         Specify the compression level for a codec, either on a general basis or per-column.
         If ``None`` is passed, arrow selects the compression level for the compression codec in use.
         The compression level has a different meaning for each codec, so you have
-        to read the pyArrow documentation of the codec you are using at 
+        to read the pyArrow documentation of the codec you are using at
         https://arrow.apache.org/docs/python/generated/pyarrow.Codec.html
         The default is ``None``.
     max_open_files, int, optional
@@ -371,7 +372,7 @@ def merge_granule_buckets(
     -------
     None.
 
-    """    
+    """
     # Identify Parquet filepaths for each bin
     print("Searching of Parquet files has started.")
     t_i = time.time()
@@ -384,37 +385,38 @@ def merge_granule_buckets(
 
     # Retrieve list of bins
     list_bin_names = list(bin_path_dict.keys())
-    
-    # Retrieve partitioning class 
+
+    # Retrieve partitioning class
     partitioning = get_bucket_partitioning(bucket_dir=src_bucket_dir)
-    
-    # Write the new partitioning class 
-    # TODO: add option maybe to provide new partitioning to this routine ! 
+
+    # Write the new partitioning class
+    # TODO: add option maybe to provide new partitioning to this routine !
     # --> Will require to load data into memory inside a partition (instead of scanner) !
     # --> Check that new partitioning is aligned and subset of original partitioning?
     write_bucket_info(bucket_dir=dst_bucket_dir, partitioning=partitioning)
 
-    #-----------------------------------------------------------------------------------------------.
+    # -----------------------------------------------------------------------------------------------.
     # Retrieve table schema
     template_filepath = bin_path_dict[list_bin_names[0]][0]
     template_table = pq.read_table(template_filepath)
     schema = template_table.schema
-    
-    # Define writer_kwargs 
-    writer_kwargs = {} 
+
+    # Define writer_kwargs
+    writer_kwargs = {}
     writer_kwargs["row_group_size"] = row_group_size
     writer_kwargs["max_file_size"] = max_file_size
     writer_kwargs["compression"] = compression
     writer_kwargs["compression_level"] = compression_level
     writer_kwargs["max_open_files"] = max_open_files
     writer_kwargs["use_threads"] = use_threads
-    writer_kwargs["write_metadata"] = write_metadata 
-    writer_kwargs["write_statistics"] = write_statistics 
-    writer_kwargs, metadata_collector = preprocess_writer_kwargs(writer_kwargs=writer_kwargs, 
-                                                                 df=template_table,
-                                                                 )
-      
-    #-----------------------------------------------------------------------------------------------.
+    writer_kwargs["write_metadata"] = write_metadata
+    writer_kwargs["write_statistics"] = write_statistics
+    writer_kwargs, metadata_collector = preprocess_writer_kwargs(
+        writer_kwargs=writer_kwargs,
+        df=template_table,
+    )
+
+    # -----------------------------------------------------------------------------------------------.
     # Concatenate data within bins
     # - Cannot rewrite directly the full pyarrow.dataset because there is no way to specify when
     #    data from each partition have been scanned completely (and can be written to disk)
@@ -447,11 +449,8 @@ def merge_granule_buckets(
                 create_dir=True,
                 existing_data_behavior="overwrite_or_ignore",
                 # Options
-                **writer_kwargs
+                **writer_kwargs,
             )
-            
-    if metadata_collector: 
-        write_dataset_metadata(base_dir=dst_bucket_dir, 
-                               metadata_collector=metadata_collector,
-                               schema=schema)
 
+    if metadata_collector:
+        write_dataset_metadata(base_dir=dst_bucket_dir, metadata_collector=metadata_collector, schema=schema)
