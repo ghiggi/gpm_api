@@ -25,3 +25,9 @@
 
 # -----------------------------------------------------------------------------.
 """This directory defines the GPM-API geographic binning toolbox."""
+from gpm.bucket.partitioning import GeographicPartitioning  # , TilePartitioning
+
+__all__ = [
+    "GeographicPartitioning",
+    # "TilePartitioning"
+]

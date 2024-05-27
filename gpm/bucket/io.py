@@ -25,7 +25,32 @@
 
 # -----------------------------------------------------------------------------.
 """This module provide utilities to search GPM Geographic Buckets files."""
+import importlib
 import os
+
+from gpm.utils.yaml import read_yaml, write_yaml
+
+
+def read_bucket_info(bucket_dir):
+    os.makedirs(bucket_dir, exist_ok=True)
+    bucket_info_filepath = os.path.join(bucket_dir, "bucket_info.yaml")
+    bucket_info = read_yaml(filepath=bucket_info_filepath)
+    return bucket_info
+
+
+def get_bucket_partitioning(bucket_dir):
+    bucket_info = read_bucket_info(bucket_dir)
+    class_name = bucket_info.pop("name")
+    partitioning_class = getattr(importlib.import_module("gpm.bucket.partitioning"), class_name)
+    partitioning = partitioning_class(**bucket_info)
+    return partitioning
+
+
+def write_bucket_info(bucket_dir, partitioning):
+    os.makedirs(bucket_dir, exist_ok=True)
+    bucket_info = partitioning.to_dict()
+    bucket_info_filepath = os.path.join(bucket_dir, "bucket_info.yaml")
+    write_yaml(bucket_info, filepath=bucket_info_filepath, sort_keys=False)
 
 
 def _retrieve_list_bin_dir_path(base_dir):

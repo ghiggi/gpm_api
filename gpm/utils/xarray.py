@@ -96,6 +96,46 @@ def get_dimensions_without(xr_obj, dims):
     return data_dims[np.isin(data_dims, dims, invert=True)].tolist()
 
 
+def has_unique_chunking(ds):
+    """Check if a dataset has unique chunking."""
+    if not isinstance(ds, xr.Dataset):
+        raise ValueError("Input must be an xarray Dataset.")
+
+    # Create a dictionary to store unique chunk shapes for each dimension
+    unique_chunks_per_dim = {}
+
+    # Iterate through each variable's chunks
+    for var_name in ds.variables:
+        if hasattr(ds[var_name].data, "chunks"):  # is dask array
+            var_chunks = ds[var_name].data.chunks
+            for dim, chunks in zip(ds[var_name].dims, var_chunks):
+                if dim not in unique_chunks_per_dim:
+                    unique_chunks_per_dim[dim] = set()
+                    unique_chunks_per_dim[dim].add(chunks)
+                if chunks not in unique_chunks_per_dim[dim]:
+                    return False
+
+    # If all chunks are unique for each dimension, return True
+    return True
+
+
+def ensure_unique_chunking(ds):
+    """Ensure the dataset has unique chunking.
+
+    Conversion to `dask.dataframe.DataFrame` requires unique chunking.
+    If the `xarray.Dataset` does not have unique chunking, perform ``ds.unify_chunks``.
+
+    Variable chunks can be visualized with:
+
+    for var in ds.data_vars:
+        print(var, ds[var].chunks)
+
+    """
+    if not has_unique_chunking(ds):
+        ds = ds.unify_chunks()
+    return ds
+
+
 ####-------------------------------------------------------------------
 ####################
 #### Decorators ####

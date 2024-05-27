@@ -794,23 +794,17 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             shortened_range=shortened_range,
         )
 
+    @auto_wrap_docstring
     def to_pandas_dataframe(self):
-        """Convert `xarray.Dataset` to `pandas.DataFrame`.
+        from gpm.utils.dataframe import to_pandas_dataframe
 
-        Expects a `xarray.Dataset` with only 2D spatial `xarray.DataArray`.
-        """
-        from gpm.bucket.processing import ds_to_pd_df_function
+        return to_pandas_dataframe(self._obj)
 
-        return ds_to_pd_df_function(self._obj)
-
+    @auto_wrap_docstring
     def to_dask_dataframe(self):
-        """Convert `xarray.Dataset` to `dask.dataframe.DataFrame`.
+        from gpm.utils.dataframe import to_dask_dataframe
 
-        Expects a `xarray.Dataset` with only 2D spatial `xarray.DataArray`.
-        """
-        from gpm.bucket.processing import ds_to_dask_df_function
-
-        return ds_to_dask_df_function(self._obj)
+        return to_dask_dataframe(self._obj)
 
 
 @xr.register_dataarray_accessor("gpm")

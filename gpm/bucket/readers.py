@@ -26,6 +26,7 @@
 # -----------------------------------------------------------------------------.
 """This module provide utilities to read GPM Geographic Buckets Apache Parquet files."""
 import dask.dataframe as dd
+import numpy as np
 import pandas as pd
 
 
@@ -43,10 +44,10 @@ def _get_arrow_to_pandas_defaults():
     }
 
 
-def read_partitioned_dataset(filepath, columns=None):
+def read_dask_partitioned_dataset(base_dir, columns=None):
     arrow_to_pandas = _get_arrow_to_pandas_defaults()
     return dd.read_parquet(
-        filepath,
+        base_dir,
         engine="pyarrow",
         dtype_backend="pyarrow",
         index=False,
@@ -61,3 +62,39 @@ def read_partitioned_dataset(filepath, columns=None):
         # Arrow options
         arrow_to_pandas=arrow_to_pandas,
     )
+
+
+def read_within_extent(bucket_dir, extent):
+    partitioning = get_bucket_partitioning(bucket_dir)
+    dir_trees = partitioning.directories_by_extent(extent)
+    dir_paths = np.char.add(bucket_dir, dir_trees)
+    # filter by existing
+
+    # list_filepaths within directories
+
+    # read in polars
+
+    # convert to
+
+
+# get glob pattern for read()
+
+# backend="polars" ... dask, pandas, polars
+
+
+# Readers
+# - gpm.bucket.read_within_extent(bucket_dir, extent, **polars_kwargs)
+# - gpm.bucket.read_within_country(bucket_dir, country, **polars_kwargs)
+# - gpm.bucket.read_within_continent(bucket_dir, continent, **polars_kwargs)
+# - gpm.bucket.read_around_point(bucket_dir, lon, lat, distance, size, **polars_kwargs)
+# -->  compute distance on subset and select below threshold
+# -->  https://stackoverflow.com/questions/76262681/i-need-to-create-a-column-with-the-distance-between-two-coordinates-in-polars
+
+
+# Routines
+# - Routine to repartition in smaller partitions (disaggregate bucket)
+# - Routine to repartition in larger partitions (aggregate bucket)
+
+# Analysis
+# - Group by overpass
+# - Reformat to dataset / Generator
