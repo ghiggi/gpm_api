@@ -2,10 +2,8 @@
 source =
 	gpm
 omit =
-	*dev*
 	*docs*
 	*tutorials*
-	gpm/bucket/*
 	gpm/cli/*
 	gpm/encoding/*
 	gpm/etc/*
