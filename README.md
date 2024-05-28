@@ -122,10 +122,17 @@ ______________________________________________________________________
 
 ### 📖 Explore the GPM-API documentation
 
-To discover all GPM-API download, manipulation, analysis and plotting utilities, or how to contribute your custom retrieval to GPM-API:
+To discover all GPM-API download, manipulation, analysis and plotting utilities, or how to contribute your custom retrieval to GPM-API
+please read the software documentation available at [https://gpm-api.readthedocs.io/en/latest/](https://gpm-api.readthedocs.io/en/latest/).
+Here is a bullet point list of the main sections of the documentation:
 
-- please read the software documentation available at [https://gpm-api.readthedocs.io/en/latest/](https://gpm-api.readthedocs.io/en/latest/).
-- dive into the Jupyter Notebooks [Tutorials](https://github.com/ghiggi/gpm_api/tree/main/tutorials).
+- [Introduction to GPM sensors, products, theoretical and practical aspects](https://gpm-api.readthedocs.io/en/latest/00_introduction.html)
+- [Software installation](https://gpm-api.readthedocs.io/en/latest/02_installation.html)
+- [Configuration of GPM-API to start download GPM Data from NASA PPS and GES DISC servers](https://gpm-api.readthedocs.io/en/latest/03_quickstart.html)
+- [Basic tutorials on how to read, manipulate and visualize radar, passive microwave sensors and IMERG products](https://gpm-api.readthedocs.io/en/latest/04_tutorials.htmls)
+- [Advanced analysis tutorials on how to extract image patches, label images, geographically bucket satellite data archive, apply or contribute scientific retrievals to GPM-API](https://gpm-api.readthedocs.io/en/latest/05_advanced_tools.html)
+
+All GPM-API tutorials are available as Jupyter Notebooks in the [`tutorial`](https://github.com/ghiggi/gpm_api/tree/main/tutorials) directory.
 
 ______________________________________________________________________
 
@@ -176,63 +183,8 @@ If you want to cite a specific software version, have a look at the [Zenodo site
 
 The content of this repository is released under the terms of the [MIT license](LICENSE).
 
-### Tutorials
-
-The documentation also includes some \[tutorials\]\[tut_link\], showing the most important use cases of GPM-API.
-These tutorial are also available as Jupyter Notebooks and in Google Colab:
-
-- 1. Download the GPM products \[[Notebook][tut1_download_link]\]\[[Colab][colab1_download_link]\]
-- 2. Introduction to the IMERG products \[[Notebook][tut2_imerg_link]\]\[[Colab][colab2_imerg_link]\]
-- 2. Introduction to the PMW 1B and 1C products \[[Notebook][tut2_pmw1bc_link]\]\[[Colab][colab_pmw1bc_link]\]
-- 2. Introduction to the PMW 2A products \[[Notebook][tut2_pmw2a_link]\]\[[Colab][colab2_pmw2a_link]\]
-- 2. Introduction to the RADAR 2A products \[[Notebook][tut2_radar_2a_link]\]\[[Colab][colab2_radar_2a_link]\]
-- 2. Introduction to the CORRA 2B products \[[Notebook][tut2_corra_2b_link]\]\[[Colab][colab2_corra_2b_link]\]
-- 2. Introduction to the Latent Heating products \[[Notebook][tut2_lh_link]\]\[[Colab][colab2_lh_link]\]
-- 2. Introduction to the ENVironment products \[[Notebook][tut2_env_link]\]\[[Colab][colab2_env_link]\]
-- 3. Introduction to image labeling and patch extraction \[[Notebook][tut3_label_link]\]\[[Colab][colab3_label_link]\]
-- 3. Introduction to image patch extraction \[[Notebook][tut3_patch_link]\]\[[Colab][colab3_patch_link]\]
-
-The associated python scripts are also provided in the `tutorial` folder.
-
-## Requirements:
-
-- [xarray](https://docs.xarray.dev/en/stable/)
-- [dask](https://www.dask.org/)
-- [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
-- [pycolorbar](https://pycolorbar.readthedocs.io/en/latest/)
-- [h5py](https://github.com/h5py/h5py)
-- [curl](https://curl.se/)
-
-### Optional
-
-- [zarr](https://zarr.readthedocs.io/en/stable/)
-- [ximage](https://github.com/ghiggi/ximage)
-- [pyresample](https://pyresample.readthedocs.io/en/latest/)
-- [pyvista](https://docs.pyvista.org/version/stable/)
-- [wget](https://www.gnu.org/software/wget/)
-
-[colab1_download_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab2_corra_2b_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab2_env_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab2_imerg_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab2_lh_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab2_pmw2a_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab2_radar_2a_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab3_label_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab3_patch_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[colab_pmw1bc_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
 [conda_forge_link]: https://github.com/conda-forge/gpm-api-feedstock#installing-gpm-api
 [conda_link]: https://docs.conda.io/en/latest/miniconda.html
 [dev_install_link]: https://gpm-api.readthedocs.io/en/latest/02_installation.html#installation-for-contributors
 [pip_link]: https://pypi.org/project/gpm-api
-[tut1_download_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut2_corra_2b_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut2_env_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut2_imerg_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut2_lh_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut2_pmw1bc_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut2_pmw2a_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut2_radar_2a_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut3_label_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
-[tut3_patch_link]: https://github.com/ghiggi/gpm_api/tree/master/tutorials
 [winpy_link]: https://winpython.github.io/
