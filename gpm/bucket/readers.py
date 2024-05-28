@@ -29,6 +29,8 @@ import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 
+from gpm.bucket.io import get_bucket_partitioning
+
 
 def _get_arrow_to_pandas_defaults():
     return {
@@ -68,6 +70,7 @@ def read_within_extent(bucket_dir, extent):
     partitioning = get_bucket_partitioning(bucket_dir)
     dir_trees = partitioning.directories_by_extent(extent)
     dir_paths = np.char.add(bucket_dir, dir_trees)
+    return dir_paths
     # filter by existing
 
     # list_filepaths within directories
@@ -90,6 +93,7 @@ def read_within_extent(bucket_dir, extent):
 # -->  compute distance on subset and select below threshold
 # -->  https://stackoverflow.com/questions/76262681/i-need-to-create-a-column-with-the-distance-between-two-coordinates-in-polars
 
+# Refactor examples
 
 # Routines
 # - Routine to repartition in smaller partitions (disaggregate bucket)

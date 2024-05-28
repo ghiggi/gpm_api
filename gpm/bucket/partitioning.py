@@ -96,7 +96,7 @@ def ensure_xy_without_nan_values(df, x, y, remove_invalid_rows=True):
         return df.filter(~pl.col(x).is_null() | ~pl.col(y).is_null())
 
     # Check no NaN values
-    if isinstance(df, pd.DataFrame):
+    if isinstance(df, pd.DataFrame):  # noqa
         indices = df[[x, y]].isna().any(axis=1)
     else:
         indices = df[x].is_null() | df[y].is_null()
@@ -117,13 +117,12 @@ def ensure_valid_partitions(df, xbin, ybin, remove_invalid_rows=True):
     if remove_invalid_rows:
         if isinstance(df, pd.DataFrame):
             return df.dropna(subset=[xbin, ybin])
-        else:
-            df = df.filter(~pl.col(xbin).is_in(["outside_right", "outside_left"]))
-            df = df.filter(~pl.col(ybin).is_in(["outside_right", "outside_left"]))
-            df = df.filter(~pl.col(xbin).is_null() | ~pl.col(ybin).is_null())
-            df = _remove_outside_cat_flags(df, column=xbin)
-            df = _remove_outside_cat_flags(df, column=ybin)
-            return df
+        df = df.filter(~pl.col(xbin).is_in(["outside_right", "outside_left"]))
+        df = df.filter(~pl.col(ybin).is_in(["outside_right", "outside_left"]))
+        df = df.filter(~pl.col(xbin).is_null() | ~pl.col(ybin).is_null())
+        df = _remove_outside_cat_flags(df, column=xbin)
+        df = _remove_outside_cat_flags(df, column=ybin)
+        return df
 
     # Check no invalid partitions (NaN or polars outside_right/outside_left)
     if isinstance(df, pd.DataFrame):
@@ -145,8 +144,7 @@ def get_partition_dir_name(partition_name, partition_labels, partitioning_flavor
     """Return the directories name of a partition."""
     if partitioning_flavor == "hive":
         return reduce(np.char.add, [partition_name, "=", partition_labels, os.sep])
-    else:
-        return np.char.add(partition_labels, os.sep)
+    return np.char.add(partition_labels, os.sep)
 
 
 def get_directories(dict_labels, partitions, partitioning_flavor):
@@ -238,7 +236,25 @@ def query_centroids(values, breaks, centroids):
     return pd.cut(values, bins=breaks, labels=centroids, include_lowest=True, right=True).astype(float)
 
 
+# TODO: ADD dask function   (maybe function better than cut and breaks?) --> write_bucket test should work
+# TODO: ADD tile code
+# TODO: add check-flavour --> directory instead of None
+# TODO: Add centroids
+# TODO: Add readers !
 # df_dask[xbin].map_partitions(pd.cut, bins)
+
+# add_polars_xy_centroids_midpoints
+
+
+# def add_polars_tile_labels(df, size, extent, x, y, tile_id):
+#     check_valid_x_y(df, x, y)
+#     raise NotImplementedError
+
+
+# def add_pandas_tile_labels(df, size, extent, x, y, tile_id):
+#     check_valid_x_y(df, x, y)
+#     raise NotImplementedError
+
 
 # def add_dask_xy_labels(df, size, extent, x, y, xbin, ybin, remove_invalid_rows=True):
 #     """Add partitions labels to a dask DataFrame based on x, y coordinates."""
@@ -276,6 +292,7 @@ def add_pandas_xy_labels(df, size, extent, x, y, xbin, ybin, remove_invalid_rows
     cut_x_breaks, cut_x_labels = get_breaks_and_labels(size[0], vmin=extent[0], vmax=extent[1])
     cut_y_breaks, cut_y_labels = get_breaks_and_labels(size[1], vmin=extent[2], vmax=extent[3])
     # Add partitions labels columns
+    df = df.copy()
     df[xbin] = query_labels(df[x].to_numpy(), breaks=cut_x_breaks, labels=cut_x_labels)
     df[ybin] = query_labels(df[y].to_numpy(), breaks=cut_y_breaks, labels=cut_y_labels)
     # Check/remove rows with invalid partitions (NaN)
@@ -308,40 +325,67 @@ def add_polars_xy_labels(df, x, y, size, extent, xbin, ybin, remove_invalid_rows
     return df
 
 
-# add_polars_xy_centroids_midpoints
+def _ensure_indices_list(indices):
+    if indices is None:
+        indices = []
+    indices = [indices] if isinstance(indices, str) else list(indices)
+    if indices == [None]:  # what is returned by df.index.names if no index !
+        indices = []
+    return indices
 
 
-# def add_polars_tile_labels(df, size, extent, x, y, tile_id):
-#     check_valid_x_y(df, x, y)
-#     raise NotImplementedError
+def _preprocess_dataframe_indices(df, spatial_indices, aux_indices):
+    # spatial_indices can be []
+    spatial_indices = _ensure_indices_list(spatial_indices)
+    aux_indices = _ensure_indices_list(aux_indices)
+    # Reset indices if present
+    src_indices = df.index.names  # no index returns None
+    src_indices = _ensure_indices_list(src_indices)
+    if set(spatial_indices).issubset(src_indices):
+        df = df.reset_index()
+
+    # Define future dataset indices
+    indices = np.unique([*spatial_indices, *aux_indices, *src_indices]).tolist()
+    non_spatial_indices = set(indices).symmetric_difference(set(spatial_indices))
+
+    # Ensure indices are float or string and that spatial indices are float
+    for idx_name in spatial_indices:
+        df[idx_name] = df[idx_name].astype(float)
+    for idx_name in non_spatial_indices:
+        if df.dtypes[idx_name].name == "category":
+            df[idx_name] = df[idx_name].astype(str)
+    df = df.set_index(indices)
+
+    # Define dictionary of indices
+    dict_indices = {idx_name: df.index.get_level_values(idx_name).unique().to_numpy() for idx_name in indices}
+    return df, dict_indices
 
 
-# def add_pandas_tile_labels(df, size, extent, x, y, tile_id):
-#     check_valid_x_y(df, x, y)
-#     raise NotImplementedError
-
-
-def df_to_xarray(df, xbin, ybin, size, extent, new_x=None, new_y=None):
+def df_to_xarray(df, xbin, ybin, size, extent, new_x=None, new_y=None, indices=None):
     """Convert dataframe to xarray Dataset based on specified partitions centroids.
 
     The partitioning cells not present in the dataframe are set to NaN.
     """
     if isinstance(df, pl.DataFrame):
         df = df.to_pandas()
-    if set(df.index.names) == {xbin, ybin}:
-        df = df.reset_index()
 
-    # Ensure index is float or string
-    df[xbin] = df[xbin].astype(float)
-    df[ybin] = df[ybin].astype(float)
-    df = df.set_index([xbin, ybin])
+    # Ppreprocess dataframe indices
+    # - Ensure indices are int, float or str (no categorical)
+    # - Ensure the returned dataframe is without index
+    # - List the indices which are not the partition centroids
+    spatial_indices = [xbin, ybin]
+    df, dict_indices = _preprocess_dataframe_indices(df, spatial_indices=spatial_indices, aux_indices=indices)
 
-    # Create an empty DataFrame with the MultiIndex
+    # Update dictionary of indices with all possible centroids
     x_centroids = get_centroids(size[0], vmin=extent[0], vmax=extent[1])
     y_centroids = get_centroids(size[1], vmin=extent[2], vmax=extent[3])
+    dict_indices[xbin] = x_centroids
+    dict_indices[ybin] = y_centroids
+
+    # Create an empty DataFrame with the MultiIndex
     multi_index = pd.MultiIndex.from_product(
-        [x_centroids, y_centroids],
-        names=[xbin, ybin],
+        dict_indices.values(),
+        names=dict_indices.keys(),
     )
     empty_df = pd.DataFrame(index=multi_index)
 
@@ -350,7 +394,6 @@ def df_to_xarray(df, xbin, ybin, size, extent, new_x=None, new_y=None):
 
     # Reshape to xarray
     ds = df_full.to_xarray()
-    ds[xbin] = ds[xbin].astype(float)
 
     # Rename dictionary
     rename_dict = {}
@@ -440,16 +483,17 @@ class XYPartitioning:
         )
 
     @check_valid_dataframe
-    def to_xarray(self, df, new_x=None, new_y=None):
+    def to_xarray(self, df, new_x=None, new_y=None, indices=None):
         """Convert a dataframe with partitions centroids to a ``xr.Dataset``."""
         return df_to_xarray(
-            df,
+            df=df,
             xbin=self.xbin,
             ybin=self.ybin,
             size=self.size,
             extent=self.extent,
             new_x=new_x,
             new_y=new_y,
+            indices=indices,
         )
 
     def to_dict(self):
@@ -658,7 +702,7 @@ class GeographicPartitioning(XYPartitioning):
         return self._directories(dict_labels=dict_labels)
 
     @check_valid_dataframe
-    def to_xarray(self, df, new_x="lon", new_y="lat"):
+    def to_xarray(self, df, new_x="lon", new_y="lat", indices=None):
         """Convert a dataframe with partitions centroids to a ``xr.Dataset``."""
         return df_to_xarray(
             df,
@@ -668,6 +712,7 @@ class GeographicPartitioning(XYPartitioning):
             extent=self.extent,
             new_x=new_x,
             new_y=new_y,
+            indices=indices,
         )
 
 

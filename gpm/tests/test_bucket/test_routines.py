@@ -47,10 +47,7 @@ def create_granule_dataframe(df_type="pandas"):
         n_cross_track=5,
     )
     ds = da.to_dataset(name="dummy_var")
-    if df_type == "pandas":
-        df = ds.gpm.to_pandas_dataframe()
-    else:
-        df = ds.gpm.to_dask_dataframe()
+    df = ds.gpm.to_pandas_dataframe() if df_type == "pandas" else ds.gpm.to_dask_dataframe()
     return df
 
 
@@ -80,13 +77,13 @@ def test_write_bucket(tmp_path, df_type):
     assert os.path.exists(os.path.join(bucket_dir, "lon_bin=5.0", "lat_bin=5.0", "filename_prefix_0.parquet"))
 
 
-@pytest.mark.parametrize("partitions", (["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]))
+@pytest.mark.parametrize("partitions", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])
 @pytest.mark.parametrize("partitioning_flavor", ["hive", None])
 def test_write_granules_bucket(tmp_path, partitions, partitioning_flavor):
     """Test write_granules_bucket routine with parallel=False."""
     # Define bucket dir
     # import pathlib
-    # tmp_path = pathlib.Path("/tmp/bucket12")
+    # tmp_path = pathlib.Path("/tmp/bucket14")
     bucket_dir = tmp_path
 
     # Define filepaths

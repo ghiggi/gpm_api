@@ -251,7 +251,9 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
+        xbin = "my_xbin"
+        ybin = "my_ybin"
+        partitioning = XYPartitioning(xbin=xbin, ybin=ybin, size=size, extent=extent)
 
         # Add partitions
         df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
@@ -278,6 +280,66 @@ class TestXYPartitioning:
         assert ds["lat"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
         np.testing.assert_allclose(ds["lon"].data, expected_xbin)
         np.testing.assert_allclose(ds["lat"].data, expected_ybin)
+
+    @pytest.mark.parametrize("index_type", ["set", "unset"])
+    def test_to_xarray_multindex(self, index_type):
+        """Test valid partitions are added to a pandas dataframe."""
+        # Create test pandas.DataFrame
+        df = pd.DataFrame(
+            {
+                "x": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                "y": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+            },
+        )
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        xbin = "my_xbin"
+        ybin = "my_ybin"
+        partitioning = XYPartitioning(xbin=xbin, ybin=ybin, size=size, extent=extent)
+
+        # Add partitions
+        df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
+
+        # Group over partitions
+        df_grouped = df.groupby(partitioning.partitions, observed=True).median()
+        df_grouped["dummy_var"] = 2
+
+        # Create df with additional index (i.e. time)
+        df_grouped1 = df_grouped.copy()
+        df_grouped2 = df_grouped.copy()
+        df_grouped1["frequency"] = "low"
+        df_grouped2["frequency"] = "high"
+        df_grouped1["month"] = 1
+        df_grouped2["month"] = 2
+
+        df = pd.concat((df_grouped1, df_grouped2))
+
+        # Test categorical dtype is converted !
+        df["frequency"] = pd.Categorical(df["frequency"])
+
+        # Convert to Dataset
+        if index_type == "set":
+            df = df.reset_index()
+            df = df.set_index([xbin, ybin, "frequency", "month"])
+            indices = None
+        else:
+            indices = ["frequency", "month"]
+        ds = partitioning.to_xarray(df, new_x="lon", new_y="lat", indices=indices)
+
+        # Test results
+        assert isinstance(ds, xr.Dataset), "Not a xr.Dataset"
+        assert "dummy_var" in ds, "The x columns has not become a xr.Dataset variable."
+        assert "frequency" in ds.coords, "'frequency' is not a xr.Dataset coordinate."
+        assert "month" in ds.coords, "'month' is not a xr.Dataset coordinate."
+        assert ds["lon"].data.dtype.name == "float64", "xr.Dataset 'lon' coordinate is not float64."
+        assert ds["lat"].data.dtype.name == "float64", "xr.Dataset 'lat' coordinate is not float64."
+        assert ds["frequency"].data.dtype.name == "object", "xr.Dataset 'frequency' coordinate is not an object."
+        assert ds["month"].data.dtype.name == "int64", "xr.Dataset 'month' coordinate is not int64."
+
+        da = ds["dummy_var"].isel(frequency=1, month=0, lon=slice(0, 2), lat=slice(0, 2))
+        expected_arr = np.array([[2.0, 2.0], [np.nan, np.nan]])
+        np.testing.assert_allclose(da.data, expected_arr)
 
     def test_query_labels(self):
         """Test valid labels queries."""

@@ -68,7 +68,7 @@ def write_granule_bucket(
     bucket_dir: str
         Base directory of the per-granule bucket archive.
     partitioning: `gpm.bucket.SpatialPartitioning`
-        A spatial partititioning class.
+        A spatial partitioning class.
     granule_to_df_func : Callable
         Function taking a granule filepath, opening it and returning a pandas or dask dataframe.
     x: str
@@ -144,7 +144,7 @@ def write_granules_bucket(
     bucket_dir: str
         Base directory of the per-granule bucket archive.
     partitioning: `gpm.bucket.SpatialPartitioning`
-        A spatial partititioning class.
+        A spatial partitioning class.
         Carefully consider the size of the partitions.
         Earth partitioning by:
         - 1° degree corresponds to 64800 directories (360*180)
@@ -248,7 +248,7 @@ def write_bucket(
     bucket_dir: str
         Base directory of the geographic bucket archive.
     partitioning: `gpm.bucket.SpatialPartitioning`
-        A spatial partititioning class.
+        A spatial partitioning class.
         Carefully consider the size of the partitions.
         Earth partitioning by:
         - 1° degree corresponds to 64800 directories (360*180)

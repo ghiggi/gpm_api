@@ -1,9 +1,30 @@
-#!/usr/bin/env python3
-"""
-Created on Sun May 26 15:22:39 2024
+# -----------------------------------------------------------------------------.
+# MIT License
 
-@author: ghiggi
-"""
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module tests the Apache Arrow Partitioned Dataset Writers."""
 import os
 
 import dask.dataframe as dd
@@ -324,13 +345,11 @@ class TestWriteDaskPartitionedDataset:
             write_metadata=True,
             row_group_size="100MB",  # enforce computation of first dask partition
         )
-
+        # Assert generated files
         assert os.listdir(os.path.join(tmp_path, "0")) == [
             "prefix_dask_partition_0_0.parquet",
             "prefix_dask_partition_1_0.parquet",
         ]
-        parquet_file = pq.ParquetFile(os.path.join(tmp_path, "0", "prefix_dask_partition_1_0.parquet"))
-
         # Assert can be read with dask using metadata
         df = read_dask_partitioned_dataset(base_dir=tmp_path)
         assert isinstance(df.compute(), pd.DataFrame)
