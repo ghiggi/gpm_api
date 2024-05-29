@@ -121,6 +121,8 @@ def _check_padding(padding: Union[int, float, tuple, list] = 0):
         If the input is not an int, float, tuple, or list.
 
     """
+    if padding is None:
+        padding = 0
     if isinstance(padding, (int, float, np.floating, np.integer)):
         padding = tuple([padding] * 4)
     elif isinstance(padding, (tuple, list)):

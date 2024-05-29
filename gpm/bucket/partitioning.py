@@ -158,6 +158,7 @@ def get_directories(dict_labels, partitions, partitioning_flavor):
         )
         list_dir_names.append(dir_name)
     dir_trees = reduce(np.char.add, list_dir_names)
+    dir_trees = np.char.rstrip(dir_trees, os.sep)
     return dir_trees
 
 
@@ -455,6 +456,7 @@ class XYPartitioning:
         # Define info
         self.shape = (len(self.x_labels), len(self.y_labels))
         self.n_partitions = len(self.x_labels) * len(self.y_labels)
+        self.n_levels = len(self.partitions)
         self.n_x = self.shape[0]
         self.n_y = self.shape[1]
 
@@ -578,7 +580,7 @@ class XYPartitioning:
             self.xbin: combinations[:, 0],
             self.ybin: combinations[:, 1],
         }
-        return dict_labels
+        return self._directories(dict_labels=dict_labels)
 
     def directories_by_extent(self, extent):
         """Return the directory trees with data within the specified extent."""
@@ -677,28 +679,32 @@ class GeographicPartitioning(XYPartitioning):
             lat=lat,
             distance=distance,
             size=size,
-            distance_type="geographic",
         )
         return self.get_partitions_by_extent(extent=extent)
 
     def get_partitions_by_country(self, name, padding=None):
         """Return the partition labels enclosing the specified country."""
-        extent = get_country_extent(name, padding=padding)
+        extent = get_country_extent(name=name, padding=padding)
         return self.get_partitions_by_extent(extent=extent)
 
     def get_partitions_by_continent(self, name, padding=None):
         """Return the partition labels enclosing the specified continent."""
-        extent = get_continent_extent(name, padding=padding)
+        extent = get_continent_extent(name=name, padding=padding)
         return self.get_partitions_by_extent(extent=extent)
 
     def directories_by_country(self, name, padding=None):
         """Return the directory trees with data within a country."""
-        dict_labels = self.get_partitions_by_country(name, padding=padding)
+        dict_labels = self.get_partitions_by_country(name=name, padding=padding)
         return self._directories(dict_labels=dict_labels)
 
     def directories_by_continent(self, name, padding=None):
         """Return the directory trees with data within a continent."""
-        dict_labels = self.get_continent_extent(name, padding=padding)
+        dict_labels = self.get_partitions_by_continent(name=name, padding=padding)
+        return self._directories(dict_labels=dict_labels)
+
+    def directories_around_point(self, lon, lat, distance=None, size=None):
+        """Return the directory trees with data within the distance/size from a point."""
+        dict_labels = self.get_partitions_around_point(lon=lon, lat=lat, distance=distance, size=size)
         return self._directories(dict_labels=dict_labels)
 
     @check_valid_dataframe

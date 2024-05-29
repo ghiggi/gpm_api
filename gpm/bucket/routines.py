@@ -34,7 +34,7 @@ import pyarrow.dataset
 import pyarrow.parquet as pq
 from tqdm import tqdm
 
-from gpm.bucket.io import get_bucket_partitioning, get_filepaths_by_bin, write_bucket_info
+from gpm.bucket.io import get_bucket_partitioning, get_filepaths_by_partition, write_bucket_info
 from gpm.bucket.writers import preprocess_writer_kwargs, write_dataset_metadata, write_partitioned_dataset
 from gpm.io.info import group_filepaths
 from gpm.utils.dask import clean_memory, get_client
@@ -373,21 +373,21 @@ def merge_granule_buckets(
     None.
 
     """
+    # Retrieve partitioning class
+    partitioning = get_bucket_partitioning(bucket_dir=src_bucket_dir)
+
     # Identify Parquet filepaths for each bin
     print("Searching of Parquet files has started.")
     t_i = time.time()
-    bin_path_dict = get_filepaths_by_bin(src_bucket_dir)
-    n_geographic_bins = len(bin_path_dict)
+    dict_partition_files = get_filepaths_by_partition(src_bucket_dir, parallel=True)
+    n_geographic_bins = len(dict_partition_files)
     t_f = time.time()
     t_elapsed = round((t_f - t_i) / 60, 1)
     print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
     print(f"{n_geographic_bins} geographic partitions to process.")
 
-    # Retrieve list of bins
-    list_bin_names = list(bin_path_dict.keys())
-
-    # Retrieve partitioning class
-    partitioning = get_bucket_partitioning(bucket_dir=src_bucket_dir)
+    # Retrieve list of partitions
+    list_partitions = list(dict_partition_files.keys())
 
     # Write the new partitioning class
     # TODO: add option maybe to provide new partitioning to this routine !
@@ -397,7 +397,7 @@ def merge_granule_buckets(
 
     # -----------------------------------------------------------------------------------------------.
     # Retrieve table schema
-    template_filepath = bin_path_dict[list_bin_names[0]][0]
+    template_filepath = dict_partition_files[list_partitions[0]][0]
     template_table = pq.read_table(template_filepath)
     schema = template_table.schema
 
@@ -421,11 +421,11 @@ def merge_granule_buckets(
     # - Cannot rewrite directly the full pyarrow.dataset because there is no way to specify when
     #    data from each partition have been scanned completely (and can be written to disk)
     print("Start concatenating the granules bucket archive")
-    # bin_id = "latbin=0/lonbin=10"
-    # filepaths = bin_path_dict[bin_id]
-    n_bins = len(bin_path_dict)
-    for bin_id, filepaths in tqdm(bin_path_dict.items(), total=n_bins):
-        partition_dir = os.path.join(dst_bucket_dir, bin_id)
+    # partition_label = "latbin=0/lonbin=10"
+    # filepaths = dict_partition_files[partition_label]
+    n_partitions = len(dict_partition_files)
+    for partition_label, filepaths in tqdm(dict_partition_files.items(), total=n_partitions):
+        partition_dir = os.path.join(dst_bucket_dir, partition_label)
         year_dict = group_filepaths(filepaths, groups="year")
         for year, year_filepaths in year_dict.items():
             basename_template = f"{year}_" + "{i}.parquet"

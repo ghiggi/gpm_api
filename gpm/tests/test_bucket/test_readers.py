@@ -1,0 +1,275 @@
+# -----------------------------------------------------------------------------.
+# MIT License
+
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module tests the bucket readers."""
+import pandas as pd
+import polars as pl
+import pyarrow as pa
+import pytest
+
+from gpm.bucket import GeographicPartitioning
+from gpm.bucket.readers import (
+    read_bucket,
+    read_bucket_around_point,
+    read_bucket_within_continent,
+    read_bucket_within_country,
+    read_bucket_within_extent,
+)
+from gpm.bucket.routines import write_granules_bucket
+from gpm.tests.utils.fake_datasets import get_orbit_dataarray
+
+
+def create_granule_dataframe(df_type="pandas"):
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=10,
+        end_lat=20,
+        width=1e6,
+        n_along_track=10,
+        n_cross_track=5,
+    )
+    ds = da.to_dataset(name="dummy_var")
+    df = ds.gpm.to_pandas_dataframe() if df_type == "pandas" else ds.gpm.to_dask_dataframe()
+    return df
+
+
+def granule_to_df_toy_func(filepath):
+    return create_granule_dataframe()
+
+
+def create_bucket_archive(bucket_dir):
+    # Define filepaths
+    filepaths = [
+        "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",
+        "2A.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07B.HDF5",
+        "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
+    ]
+    # Define partitioning
+    partitioning = GeographicPartitioning(size=(10, 10))
+
+    # Run processing
+    write_granules_bucket(
+        # Bucket Input/Output configuration
+        filepaths=filepaths,
+        bucket_dir=bucket_dir,
+        partitioning=partitioning,
+        granule_to_df_func=granule_to_df_toy_func,
+        # Processing options
+        parallel=False,
+    )
+
+
+# import pathlib
+# tmp_path = pathlib.Path("/tmp/bucket14")
+
+
+def test_read_bucket(tmp_path):
+    """Test read_bucket."""
+    # Define bucket dir
+    bucket_dir = tmp_path
+    create_bucket_archive(bucket_dir)
+
+    # Test read full database
+    df_pl = read_bucket(bucket_dir)
+    assert df_pl.shape == (150, 5)
+
+    # Test read row subset
+    df_pl = read_bucket(bucket_dir, n_rows=2)
+    assert df_pl.shape == (2, 5)
+
+    # Test read row, columns subset
+    df_pl = read_bucket(bucket_dir, n_rows=3, columns=["lon", "lat"])
+    assert df_pl.shape == (3, 2)
+    assert "lon" in df_pl
+    assert "lat" in df_pl
+
+    # Test filtering by file_extension
+    df_pl = read_bucket(bucket_dir, file_extension=".parquet")
+    assert df_pl.shape == (150, 5)
+
+    df_pl = read_bucket(bucket_dir, glob_pattern="*V07B*")
+    assert df_pl.shape == (50, 5)
+
+    # Test raise error if no files (after i.e. filtering criteria)
+    with pytest.raises(ValueError):
+        df_pl = read_bucket(bucket_dir, file_extension=".csv")
+    with pytest.raises(ValueError):
+        df_pl = read_bucket(bucket_dir, glob_pattern="dummy")
+
+    # Test backends
+    assert isinstance(read_bucket(bucket_dir), pl.DataFrame)
+    assert isinstance(read_bucket(bucket_dir, backend="polars"), pl.DataFrame)
+    assert isinstance(read_bucket(bucket_dir, backend="polars_lazy"), pl.LazyFrame)
+    assert isinstance(read_bucket(bucket_dir, backend="pandas"), pd.DataFrame)
+    assert isinstance(read_bucket(bucket_dir, backend="pyarrow"), pa.Table)
+
+    with pytest.raises(ValueError):
+        read_bucket(bucket_dir, backend="dask")
+    with pytest.raises(ValueError):
+        read_bucket(bucket_dir, backend="whatever_other")
+
+
+def test_read_bucket_within_extent(tmp_path):
+    """Test read_bucket_within_extent."""
+    # Define bucket dir
+    bucket_dir = tmp_path
+    create_bucket_archive(bucket_dir)
+
+    # Test read full database (extent larger than database extent)
+    extent = [-30, 30, -30, 30]
+    df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+    assert df_pl.shape == (150, 5)
+
+    # Test read inner portion of database (extent within database extent)
+    extent = [5, 8, 5, 8]
+    df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+    assert df_pl.shape == (48, 5)
+
+    # Test with partial extent outside database extent
+    extent = [-10, 1, -10, 1]
+    df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+    assert df_pl.shape == (75, 5)
+
+    # Test extent outside database extent
+    extent = [-50, -30, -50, -30]
+    with pytest.raises(ValueError):
+        df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+
+    # Test subsetting
+    extent = [-30, 30, -30, 30]
+    df_pl = read_bucket_within_extent(bucket_dir, extent=extent, n_rows=3, columns=["lon", "lat"])
+    assert df_pl.shape == (3, 2)
+    assert "lon" in df_pl
+    assert "lat" in df_pl
+
+    # Test filtering
+    extent = [-30, 30, -30, 30]
+    df_pl = read_bucket_within_extent(bucket_dir, extent=extent, glob_pattern="*V07B*")
+    assert df_pl.shape == (50, 5)
+
+    # Test filtering after partitions opening
+    # extent = [-10, -5, -10, -5]
+    # df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+    # should raise error this !
+
+
+def test_read_bucket_within_country(tmp_path):
+    """Test read_bucket_within_country."""
+    # Define bucket dir
+    bucket_dir = tmp_path
+    create_bucket_archive(bucket_dir)
+
+    # Test with country contained in bucket
+    df_pl = read_bucket_within_country(bucket_dir, country="Nigeria")
+    assert df_pl.shape == (117, 5)
+
+    # Test with country not contained in bucket
+    with pytest.raises(ValueError):
+        read_bucket_within_country(bucket_dir, country="Switzerland")
+
+
+def test_read_bucket_within_continent(tmp_path):
+    """Test read_bucket_within_continent."""
+    # Define bucket dir
+    bucket_dir = tmp_path
+    create_bucket_archive(bucket_dir)
+
+    # Test with continent contained in bucket
+    df_pl = read_bucket_within_continent(bucket_dir, continent="Africa")
+    assert df_pl.shape == (150, 5)
+
+    # Test with continent not contained in bucket
+    with pytest.raises(ValueError):
+        read_bucket_within_continent(bucket_dir, continent="Europe")
+
+
+def test_read_bucket_around_point(tmp_path):
+    """Test read_bucket_around_point."""
+    # Define bucket dir
+    bucket_dir = tmp_path
+    create_bucket_archive(bucket_dir)
+
+    # Test with point contained in bucket
+    lon = 3
+    lat = 3
+    distance = 100
+    df_pl = read_bucket_around_point(
+        bucket_dir,
+        lon=lon,
+        lat=lat,
+        distance=100,
+    )
+
+    df_pl = read_bucket_around_point(bucket_dir, lon=lon, lat=lat, size=2)
+
+    # Test with area outside intersecting partitions
+    df_pl = read_bucket_around_point(bucket_dir, lon=lon, lat=lat, size=2)
+
+    # Test with area intersecting partitions
+
+
+# ----------------------------------------------------------.
+
+
+# Filter extent after opening the data ... by extent values / distance !
+
+df_pl = df_pl.filter(
+    (pl.col("lon") > extent[0])
+    & (pl.col("lon") < extent[1])
+    & (pl.col("lat") > extent[2])
+    & (pl.col("lat") < extent[3]),
+)
+
+
+# Implement filter by distance   (if size --> use extent)
+# --> https://stackoverflow.com/questions/76262681/i-need-to-create-a-column-with-the-distance-between-two-coordinates-in-polars
+
+
+# Check polars works also for lazy polars
+# --> Filter with lazy polars to be faster ?
+
+# filter by year
+# filter by month
+# filter by season
+# filter_time_period(start_time, end_time)
+
+# Start_time, end_time options?
+
+# Filtering before conversion of backend !!!
+
+
+# -----------------------------------------------------------
+# Refactor examples
+
+# n_rows=100_000, # for prototyping
+# columns=columns,
+
+# -----------------------------------------------------------
+# Implement tiling
+
+# -----------------------------------------------------------
+# IMERG RECHUNKING
