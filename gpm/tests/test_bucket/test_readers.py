@@ -237,12 +237,12 @@ def test_read_bucket_around_point(tmp_path):
 
 # Filter extent after opening the data ... by extent values / distance !
 
-df_pl = df_pl.filter(
-    (pl.col("lon") > extent[0])
-    & (pl.col("lon") < extent[1])
-    & (pl.col("lat") > extent[2])
-    & (pl.col("lat") < extent[3]),
-)
+# df_pl = df_pl.filter(
+#     (pl.col("lon") > extent[0])
+#     & (pl.col("lon") < extent[1])
+#     & (pl.col("lat") > extent[2])
+#     & (pl.col("lat") < extent[3]),
+# )
 
 
 # Implement filter by distance   (if size --> use extent)
@@ -261,6 +261,22 @@ df_pl = df_pl.filter(
 
 # Filtering before conversion of backend !!!
 
+#### Identify time periods of Swiss overpass 
+
+# list_time_periods = [] 
+# start_time = timesteps[0]
+# for i in range(1, len(timesteps)):
+#     if timesteps[i] - timesteps[i-1] > np.array(60, dtype="m8[m]"):
+#         end_time = timesteps[i-1]
+#         time_period = (start_time, end_time)
+#         # time_period = (start_time.astype("M8[s]").astype(str), end_time.astype("M8[s]").astype(str))
+#         list_time_periods.append(time_period)
+#         # Update 
+#         start_time = timesteps[i]
+# # Last point 
+# end_time = timesteps[-1]
+# time_period = (start_time.astype(str), end_time.astype(str))
+# list_time_periods.append(time_period)
 
 # -----------------------------------------------------------
 # Refactor examples
