@@ -144,22 +144,27 @@ def test_read_bucket_within_extent(tmp_path):
     df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
     assert df_pl.shape == (150, 5)
 
-    # Test read inner portion of database (extent within database extent)
-    extent = [5, 8, 5, 8]
+    # Test read inner portion of database
+    extent = [5, 8, 0, 20]
     df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
-    assert df_pl.shape == (48, 5)
+    assert df_pl.shape == (33, 5)
 
     # Test with partial extent outside database extent
     extent = [-10, 1, -10, 1]
     df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
-    assert df_pl.shape == (75, 5)
+    assert df_pl.shape == (6, 5)
 
-    # Test extent outside database extent
+    # Test extent outside database extent (no intersecting partitions)
     extent = [-50, -30, -50, -30]
     with pytest.raises(ValueError):
         df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
 
-    # Test subsetting
+    # Test extent outside database extent (with intersecting partitions)
+    extent = [-10, -5, -10, -5]
+    with pytest.raises(ValueError):
+        read_bucket_within_extent(bucket_dir, extent=extent)
+
+    # Test polars kwargs subsetting
     extent = [-30, 30, -30, 30]
     df_pl = read_bucket_within_extent(bucket_dir, extent=extent, n_rows=3, columns=["lon", "lat"])
     assert df_pl.shape == (3, 2)
@@ -171,11 +176,6 @@ def test_read_bucket_within_extent(tmp_path):
     df_pl = read_bucket_within_extent(bucket_dir, extent=extent, glob_pattern="*V07B*")
     assert df_pl.shape == (50, 5)
 
-    # Test filtering after partitions opening
-    # extent = [-10, -5, -10, -5]
-    # df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
-    # should raise error this !
-
 
 def test_read_bucket_within_country(tmp_path):
     """Test read_bucket_within_country."""
@@ -185,7 +185,7 @@ def test_read_bucket_within_country(tmp_path):
 
     # Test with country contained in bucket
     df_pl = read_bucket_within_country(bucket_dir, country="Nigeria")
-    assert df_pl.shape == (117, 5)
+    assert df_pl.shape == (42, 5)
 
     # Test with country not contained in bucket
     with pytest.raises(ValueError):
@@ -213,79 +213,23 @@ def test_read_bucket_around_point(tmp_path):
     bucket_dir = tmp_path
     create_bucket_archive(bucket_dir)
 
-    # Test with point contained in bucket
+    # Test with point contained in bucket (with distance)
     lon = 3
     lat = 3
-    distance = 100
+    distance = 200_000
     df_pl = read_bucket_around_point(
         bucket_dir,
         lon=lon,
         lat=lat,
-        distance=100,
+        distance=distance,
     )
+    assert df_pl.shape == (9, 6)
+    assert "distance" in df_pl
 
-    df_pl = read_bucket_around_point(bucket_dir, lon=lon, lat=lat, size=2)
+    # Test with point contained in bucket (with size)
+    df_pl = read_bucket_around_point(bucket_dir, lon=lon, lat=lat, size=20)
+    assert df_pl.shape == (93, 5)
 
-    # Test with area outside intersecting partitions
-    df_pl = read_bucket_around_point(bucket_dir, lon=lon, lat=lat, size=2)
-
-    # Test with area intersecting partitions
-
-
-# ----------------------------------------------------------.
-
-
-# Filter extent after opening the data ... by extent values / distance !
-
-# df_pl = df_pl.filter(
-#     (pl.col("lon") > extent[0])
-#     & (pl.col("lon") < extent[1])
-#     & (pl.col("lat") > extent[2])
-#     & (pl.col("lat") < extent[3]),
-# )
-
-
-# Implement filter by distance   (if size --> use extent)
-# --> https://stackoverflow.com/questions/76262681/i-need-to-create-a-column-with-the-distance-between-two-coordinates-in-polars
-
-
-# Check polars works also for lazy polars
-# --> Filter with lazy polars to be faster ?
-
-# filter by year
-# filter by month
-# filter by season
-# filter_time_period(start_time, end_time)
-
-# Start_time, end_time options?
-
-# Filtering before conversion of backend !!!
-
-#### Identify time periods of Swiss overpass 
-
-# list_time_periods = [] 
-# start_time = timesteps[0]
-# for i in range(1, len(timesteps)):
-#     if timesteps[i] - timesteps[i-1] > np.array(60, dtype="m8[m]"):
-#         end_time = timesteps[i-1]
-#         time_period = (start_time, end_time)
-#         # time_period = (start_time.astype("M8[s]").astype(str), end_time.astype("M8[s]").astype(str))
-#         list_time_periods.append(time_period)
-#         # Update 
-#         start_time = timesteps[i]
-# # Last point 
-# end_time = timesteps[-1]
-# time_period = (start_time.astype(str), end_time.astype(str))
-# list_time_periods.append(time_period)
-
-# -----------------------------------------------------------
-# Refactor examples
-
-# n_rows=100_000, # for prototyping
-# columns=columns,
-
-# -----------------------------------------------------------
-# Implement tiling
-
-# -----------------------------------------------------------
-# IMERG RECHUNKING
+    # Test with point outside bucket  (but intersecting area outside intersecting partitions
+    df_pl = read_bucket_around_point(bucket_dir, lon=-10, lat=-10, size=25)
+    assert df_pl.shape == (15, 5)

@@ -31,10 +31,16 @@ import dask.dataframe as dd
 import pandas as pd
 import polars as pl
 
+from gpm.bucket.filters import apply_spatial_filters
 from gpm.bucket.io import (
     get_bucket_partitioning,
     get_filepaths,
     get_filepaths_within_paths,
+)
+from gpm.utils.geospatial import (
+    get_continent_extent,
+    get_country_extent,
+    get_geographic_extent_around_point,
 )
 
 
@@ -91,12 +97,14 @@ def _change_backend_from_polars(df, backend):
     return df
 
 
-def _read_dataframe(source, backend, **polars_kwargs):
+def _read_dataframe(source, backend, filters=None, **polars_kwargs):
     """Read bucket with polars and convert to backend of choice."""
     if source is None or len(source) == 0:
         raise ValueError("No files available matching your request.")
-
-    if backend == "polars_lazy":
+    is_lazy = False
+    # Read dataframe with polars
+    if "columns" not in polars_kwargs:  # backend == "polars_lazy":
+        is_lazy = True
         df = pl.scan_parquet(
             source=source,
             **polars_kwargs,
@@ -107,15 +115,18 @@ def _read_dataframe(source, backend, **polars_kwargs):
             **polars_kwargs,
         )
 
-    # Filtering options (filters = dict)
-    # bucket_filters
-    # Partitions filters
-    # - country/continent/point_distance, extent
-    # Data filtering
-    # - extent, point_distance (lon, lat, distance), start_time, end_time, month, season
+    # Apply spatial filtering to remove unrelevant data within partitions
+    df = apply_spatial_filters(df, filters=filters)
+
+    # Put data into memory if not polars lazy
+    if is_lazy and backend != "polars_lazy":
+        df = df.collect()
+        if df.shape[0] == 0:
+            raise ValueError("No data match your request.")
 
     # Convert backend if necessary
     df = _change_backend_from_polars(df, backend=backend)
+
     return df
 
 
@@ -159,21 +170,37 @@ def read_bucket(
     **polars_kwargs,
 ):
     """
-    Read bucket.
+    Read a geographic bucket.
 
-    https://docs.pola.rs/py-polars/html/reference/api/polars.read_parquet.html
+    To read only data for a specific country, continent, area of interest or distance from a point,
+    please use the ``read_bucket_within_country``, ``read_bucket_within_continent``,
+    ``read_bucket_within_extent`` or ``read_bucket_around_point``.
 
     Parameters
     ----------
-    bucket_dir : TYPE
-        DESCRIPTION.
-    **polars_kwargs : TYPE
-        DESCRIPTION.
+    bucket_dir : str
+        Base directory of the geographic bucket.
+    file_extension : str, optional
+        Name of the file extension. The default is ``None``.
+    glob_pattern : str, optional
+        Unix shell-style wildcards to subset the files to read in. The default is ``None``.
+    regex_pattern : str, optional
+        Regex pattern to subset the files to read in. The default is ``None``.
+    backend : str, optional
+        The wished type of dataframe returned by the function.
+        The default is a polars.DataFrame.
+        Valid backends are ``pandas``, ``polars_lazy`` and ``pyarrow``.
+
+    **polars_kwargs : dict
+        Arguments to be passed to polars.read_parquet()
+        ``columns`` allow to specify the subset of columns to read.
+        ``n_rows`` allows to stop reading data from Parquet files after reading n_rows.
+        For other arguments, please refer to:  https://docs.pola.rs/py-polars/html/reference/api/polars.read_parquet.html
 
     Returns
     -------
-    df_pl : TYPE
-        DESCRIPTION.
+    df : `pandas.DataFrame`, `polars.DataFrame`, `polars.LazyFrame` or `pyarrow.Table`
+        Bucket dataframe.
 
     """
     if file_extension is None and glob_pattern is None and regex_pattern is None:
@@ -206,6 +233,37 @@ def read_bucket_within_extent(
     backend="polars",
     **polars_kwargs,
 ):
+    """
+    Read the geographic bucket within the specified extent.
+
+    Parameters
+    ----------
+    bucket_dir : str
+        Base directory of the geographic bucket.
+    extent: list
+        The extent specified as [xmin, xmax, ymin, ymax].
+    file_extension : str, optional
+        Name of the file extension. The default is ``None``.
+    glob_pattern : str, optional
+        Unix shell-style wildcards to subset the files to read in. The default is ``None``.
+    regex_pattern : str, optional
+        Regex pattern to subset the files to read in. The default is ``None``.
+    backend : str, optional
+        The wished type of dataframe returned by the function.
+        The default is a polars.DataFrame.
+        Valid backends are ``pandas``, ``polars_lazy`` and ``pyarrow``.
+    **polars_kwargs : dict
+        Arguments to be passed to polars.read_parquet()
+        ``columns`` allow to specify the subset of columns to read.
+        ``n_rows`` allows to stop reading data from Parquet files after reading n_rows.
+        For other arguments, please refer to:  https://docs.pola.rs/py-polars/html/reference/api/polars.read_parquet.html
+
+    Returns
+    -------
+    df : `pandas.DataFrame`, `polars.DataFrame`, `polars.LazyFrame` or `pyarrow.Table`
+        Bucket dataframe.
+
+    """
     partitioning = get_bucket_partitioning(bucket_dir)
     dir_trees = partitioning.directories_by_extent(extent)
     return _read_polars_subset(
@@ -215,6 +273,7 @@ def read_bucket_within_extent(
         glob_pattern=glob_pattern,
         regex_pattern=regex_pattern,
         backend=backend,
+        filters={"extent": extent},
         **polars_kwargs,
     )
 
@@ -228,8 +287,40 @@ def read_bucket_within_country(
     backend="polars",
     **polars_kwargs,
 ):
+    """
+    Read the geographic bucket within the specified country.
+
+    Parameters
+    ----------
+    bucket_dir : str
+        Base directory of the geographic bucket.
+    country: str
+        The name of the country of interest.
+    file_extension : str, optional
+        Name of the file extension. The default is ``None``.
+    glob_pattern : str, optional
+        Unix shell-style wildcards to subset the files to read in. The default is ``None``.
+    regex_pattern : str, optional
+        Regex pattern to subset the files to read in. The default is ``None``.
+    backend : str, optional
+        The wished type of dataframe returned by the function.
+        The default is a polars.DataFrame.
+        Valid backends are ``pandas``, ``polars_lazy`` and ``pyarrow``.
+    **polars_kwargs : dict
+        Arguments to be passed to polars.read_parquet()
+        ``columns`` allow to specify the subset of columns to read.
+        ``n_rows`` allows to stop reading data from Parquet files after reading n_rows.
+        For other arguments, please refer to:  https://docs.pola.rs/py-polars/html/reference/api/polars.read_parquet.html
+
+    Returns
+    -------
+    df : `pandas.DataFrame`, `polars.DataFrame`, `polars.LazyFrame` or `pyarrow.Table`
+        Bucket dataframe.
+
+    """
     partitioning = get_bucket_partitioning(bucket_dir)
-    dir_trees = partitioning.directories_by_country(country)
+    extent = get_country_extent(name=country, padding=0)
+    dir_trees = partitioning.directories_by_extent(extent)
     return _read_polars_subset(
         bucket_dir=bucket_dir,
         dir_trees=dir_trees,
@@ -237,6 +328,7 @@ def read_bucket_within_country(
         glob_pattern=glob_pattern,
         regex_pattern=regex_pattern,
         backend=backend,
+        filters={"extent": extent},
         **polars_kwargs,
     )
 
@@ -250,8 +342,40 @@ def read_bucket_within_continent(
     backend="polars",
     **polars_kwargs,
 ):
+    """
+    Read the geographic bucket within the specified continet.
+
+    Parameters
+    ----------
+    bucket_dir : str
+        Base directory of the geographic bucket.
+    continent: str
+        The name of the continent of interest.
+    file_extension : str, optional
+        Name of the file extension. The default is ``None``.
+    glob_pattern : str, optional
+        Unix shell-style wildcards to subset the files to read in. The default is ``None``.
+    regex_pattern : str, optional
+        Regex pattern to subset the files to read in. The default is ``None``.
+    backend : str, optional
+        The wished type of dataframe returned by the function.
+        The default is a polars.DataFrame.
+        Valid backends are ``pandas``, ``polars_lazy`` and ``pyarrow``.
+    **polars_kwargs : dict
+        Arguments to be passed to polars.read_parquet()
+        ``columns`` allow to specify the subset of columns to read.
+        ``n_rows`` allows to stop reading data from Parquet files after reading n_rows.
+        For other arguments, please refer to:  https://docs.pola.rs/py-polars/html/reference/api/polars.read_parquet.html
+
+    Returns
+    -------
+    df : `pandas.DataFrame`, `polars.DataFrame`, `polars.LazyFrame` or `pyarrow.Table`
+        Bucket dataframe.
+
+    """
     partitioning = get_bucket_partitioning(bucket_dir)
-    dir_trees = partitioning.directories_by_continent(continent)
+    extent = get_continent_extent(name=continent, padding=0)
+    dir_trees = partitioning.directories_by_extent(extent)
     return _read_polars_subset(
         bucket_dir=bucket_dir,
         dir_trees=dir_trees,
@@ -259,6 +383,7 @@ def read_bucket_within_continent(
         glob_pattern=glob_pattern,
         regex_pattern=regex_pattern,
         backend=backend,
+        filters={"extent": extent},
         **polars_kwargs,
     )
 
@@ -275,8 +400,56 @@ def read_bucket_around_point(
     backend="polars",
     **polars_kwargs,
 ):
+    """
+    Read the geographic bucket within the distance from the specified point.
+
+    Parameters
+    ----------
+    bucket_dir : str
+        Base directory of the geographic bucket.
+    lon : float
+        Longitude of the point.
+    lat : float
+        Latitude of the point.
+    distance: float
+        Distance (in meters) from the point in each direction.
+    size : int, float, tuple, list
+        The size in degrees of the extent in each direction.
+        If ``size`` is a single number, the same size is ensured in all directions.
+        If ``size`` is a tuple or list, it must of size 2  and specifying
+        the desired size of the extent in the x direction (longitude)
+        and the y direction (latitude).
+    file_extension : str, optional
+        Name of the file extension. The default is ``None``.
+    glob_pattern : str, optional
+        Unix shell-style wildcards to subset the files to read in. The default is ``None``.
+    regex_pattern : str, optional
+        Regex pattern to subset the files to read in. The default is ``None``.
+    backend : str, optional
+        The wished type of dataframe returned by the function.
+        The default is a polars.DataFrame.
+        Valid backends are ``pandas``, ``polars_lazy`` and ``pyarrow``.
+    **polars_kwargs : dict
+        Arguments to be passed to polars.read_parquet()
+        ``columns`` allow to specify the subset of columns to read.
+        ``n_rows`` allows to stop reading data from Parquet files after reading n_rows.
+        For other arguments, please refer to:  https://docs.pola.rs/py-polars/html/reference/api/polars.read_parquet.html
+
+    Returns
+    -------
+    df : `pandas.DataFrame`, `polars.DataFrame`, `polars.LazyFrame` or `pyarrow.Table`
+        Bucket dataframe.
+
+    """
     partitioning = get_bucket_partitioning(bucket_dir)
-    dir_trees = partitioning.directories_around_point(lon=lon, lat=lat, distance=distance, size=size)
+    extent = get_geographic_extent_around_point(
+        lon=lon,
+        lat=lat,
+        distance=distance,
+        size=size,
+    )
+    dir_trees = partitioning.directories_by_extent(extent)
+    filters = {"point_radius": (lon, lat, distance)} if distance is not None else {"extent": extent}
     df = _read_polars_subset(
         bucket_dir=bucket_dir,
         dir_trees=dir_trees,
@@ -284,6 +457,7 @@ def read_bucket_around_point(
         glob_pattern=glob_pattern,
         regex_pattern=regex_pattern,
         backend=backend,
+        filters=filters,
         **polars_kwargs,
     )
     return df
