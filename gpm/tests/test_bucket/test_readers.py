@@ -31,13 +31,7 @@ import pyarrow as pa
 import pytest
 
 from gpm.bucket import GeographicPartitioning
-from gpm.bucket.readers import (
-    read_bucket,
-    read_bucket_around_point,
-    read_bucket_within_continent,
-    read_bucket_within_country,
-    read_bucket_within_extent,
-)
+from gpm.bucket.readers import read_bucket
 from gpm.bucket.routines import write_granules_bucket
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray
 
@@ -132,6 +126,10 @@ def test_read_bucket(tmp_path):
     with pytest.raises(ValueError):
         read_bucket(bucket_dir, backend="whatever_other")
 
+    # Test multiple spatial filters
+    with pytest.raises(ValueError):
+        read_bucket(bucket_dir, extent="dummy", country="dummy")
+
 
 def test_read_bucket_within_extent(tmp_path):
     """Test read_bucket_within_extent."""
@@ -141,39 +139,39 @@ def test_read_bucket_within_extent(tmp_path):
 
     # Test read full database (extent larger than database extent)
     extent = [-30, 30, -30, 30]
-    df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+    df_pl = read_bucket(bucket_dir, extent=extent)
     assert df_pl.shape == (150, 5)
 
     # Test read inner portion of database
     extent = [5, 8, 0, 20]
-    df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+    df_pl = read_bucket(bucket_dir, extent=extent)
     assert df_pl.shape == (33, 5)
 
     # Test with partial extent outside database extent
     extent = [-10, 1, -10, 1]
-    df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+    df_pl = read_bucket(bucket_dir, extent=extent)
     assert df_pl.shape == (6, 5)
 
     # Test extent outside database extent (no intersecting partitions)
     extent = [-50, -30, -50, -30]
     with pytest.raises(ValueError):
-        df_pl = read_bucket_within_extent(bucket_dir, extent=extent)
+        df_pl = read_bucket(bucket_dir, extent=extent)
 
     # Test extent outside database extent (with intersecting partitions)
     extent = [-10, -5, -10, -5]
     with pytest.raises(ValueError):
-        read_bucket_within_extent(bucket_dir, extent=extent)
+        read_bucket(bucket_dir, extent=extent)
 
     # Test polars kwargs subsetting
     extent = [-30, 30, -30, 30]
-    df_pl = read_bucket_within_extent(bucket_dir, extent=extent, n_rows=3, columns=["lon", "lat"])
+    df_pl = read_bucket(bucket_dir, extent=extent, n_rows=3, columns=["lon", "lat"])
     assert df_pl.shape == (3, 2)
     assert "lon" in df_pl
     assert "lat" in df_pl
 
     # Test filtering
     extent = [-30, 30, -30, 30]
-    df_pl = read_bucket_within_extent(bucket_dir, extent=extent, glob_pattern="*V07B*")
+    df_pl = read_bucket(bucket_dir, extent=extent, glob_pattern="*V07B*")
     assert df_pl.shape == (50, 5)
 
 
@@ -184,12 +182,12 @@ def test_read_bucket_within_country(tmp_path):
     create_bucket_archive(bucket_dir)
 
     # Test with country contained in bucket
-    df_pl = read_bucket_within_country(bucket_dir, country="Nigeria")
+    df_pl = read_bucket(bucket_dir, country="Nigeria")
     assert df_pl.shape == (42, 5)
 
     # Test with country not contained in bucket
     with pytest.raises(ValueError):
-        read_bucket_within_country(bucket_dir, country="Switzerland")
+        read_bucket(bucket_dir, country="Switzerland")
 
 
 def test_read_bucket_within_continent(tmp_path):
@@ -199,12 +197,12 @@ def test_read_bucket_within_continent(tmp_path):
     create_bucket_archive(bucket_dir)
 
     # Test with continent contained in bucket
-    df_pl = read_bucket_within_continent(bucket_dir, continent="Africa")
+    df_pl = read_bucket(bucket_dir, continent="Africa")
     assert df_pl.shape == (150, 5)
 
     # Test with continent not contained in bucket
     with pytest.raises(ValueError):
-        read_bucket_within_continent(bucket_dir, continent="Europe")
+        read_bucket(bucket_dir, continent="Europe")
 
 
 def test_read_bucket_around_point(tmp_path):
@@ -214,22 +212,20 @@ def test_read_bucket_around_point(tmp_path):
     create_bucket_archive(bucket_dir)
 
     # Test with point contained in bucket (with distance)
-    lon = 3
-    lat = 3
+    point = (3, 3)
     distance = 200_000
-    df_pl = read_bucket_around_point(
+    df_pl = read_bucket(
         bucket_dir,
-        lon=lon,
-        lat=lat,
+        point=point,
         distance=distance,
     )
     assert df_pl.shape == (9, 6)
     assert "distance" in df_pl
 
     # Test with point contained in bucket (with size)
-    df_pl = read_bucket_around_point(bucket_dir, lon=lon, lat=lat, size=20)
+    df_pl = read_bucket(bucket_dir, point=point, size=20)
     assert df_pl.shape == (93, 5)
 
     # Test with point outside bucket  (but intersecting area outside intersecting partitions
-    df_pl = read_bucket_around_point(bucket_dir, lon=-10, lat=-10, size=25)
+    df_pl = read_bucket(bucket_dir, point=(-10, -10), size=25)
     assert df_pl.shape == (15, 5)

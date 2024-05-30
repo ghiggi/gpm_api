@@ -27,17 +27,9 @@
 """This directory defines the GPM-API geographic binning toolbox."""
 from gpm.bucket.partitioning import GeographicPartitioning  # , TilePartitioning
 from gpm.bucket.readers import read_bucket as read
-from gpm.bucket.readers import read_bucket_around_point as read_around_point
-from gpm.bucket.readers import read_bucket_within_continent as read_within_continent
-from gpm.bucket.readers import read_bucket_within_country as read_within_country
-from gpm.bucket.readers import read_bucket_within_extent as read_within_extent
 
 __all__ = [
     "GeographicPartitioning",
     # "TilePartitioning"
     "read",
-    "read_around_point",
-    "read_within_country",
-    "read_within_continent",
-    "read_within_extent",
 ]
