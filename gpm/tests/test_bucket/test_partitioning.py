@@ -34,8 +34,8 @@ import xarray as xr
 from gpm.bucket.partitioning import (
     XYPartitioning,
     get_array_combinations,
-    get_breaks,
-    get_breaks_and_labels,
+    get_bounds,
+    get_bounds_and_labels,
     get_centroids,
     get_labels,
     get_n_decimals,
@@ -49,10 +49,10 @@ def test_get_n_decimals():
     assert get_n_decimals(123.0001) == 4
 
 
-def test_get_breaks():
-    """Verify the correct calculation of breaks."""
-    breaks = get_breaks(0.5, 0, 2)
-    assert np.array_equal(breaks, np.array([0, 0.5, 1.0, 1.5, 2]))
+def test_get_bounds():
+    """Verify the correct calculation of bounds."""
+    bounds = get_bounds(0.5, 0, 2)
+    assert np.array_equal(bounds, np.array([0, 0.5, 1.0, 1.5, 2]))
 
 
 def test_get_labels():
@@ -77,18 +77,19 @@ def test_get_centroids():
     np.testing.assert_allclose(centroids, expected_centroids)
 
 
-def test_get_breaks_and_labels():
-    """Ensure both breaks and labels are returned and accurate."""
-    breaks, labels = get_breaks_and_labels(0.5, 0, 2)
-    assert np.array_equal(breaks, np.array([0, 0.5, 1.0, 1.5, 2]))
+def test_get_bounds_and_labels():
+    """Ensure both bounds and labels are returned and accurate."""
+    bounds, labels = get_bounds_and_labels(0.5, 0, 2)
+    assert np.array_equal(bounds, np.array([0, 0.5, 1.0, 1.5, 2]))
     assert labels.tolist() == ["0.25", "0.75", "1.25", "1.75"]
 
 
 def test_get_array_combinations():
     x = np.array([1, 2, 3])
     y = np.array([4, 5])
-    expected_result = np.array([[1, 4], [2, 4], [3, 4], [1, 5], [2, 5], [3, 5]])
-    np.testing.assert_allclose(get_array_combinations(x, y), expected_result)
+    x_out, y_out = get_array_combinations(x, y)
+    np.testing.assert_allclose(x_out, [1, 2, 3, 1, 2, 3])
+    np.testing.assert_allclose(y_out, [4, 4, 4, 5, 5, 5])
 
 
 class TestXYPartitioning:
@@ -100,12 +101,12 @@ class TestXYPartitioning:
         assert partitioning.size == (1, 2)
         assert partitioning.partitions == ["xbin", "ybin"]
         assert list(partitioning.extent) == [0, 10, 0, 10]
-        assert partitioning.shape == (10, 5)
+        assert partitioning.shape == (5, 10)
         assert partitioning.n_partitions == 50
         assert partitioning.n_x == 10
         assert partitioning.n_y == 5
-        np.testing.assert_allclose(partitioning.x_breaks, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        np.testing.assert_allclose(partitioning.y_breaks, [0, 2, 4, 6, 8, 10])
+        np.testing.assert_allclose(partitioning.x_bounds, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        np.testing.assert_allclose(partitioning.y_bounds, [0, 2, 4, 6, 8, 10])
         np.testing.assert_allclose(partitioning.x_centroids, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
         np.testing.assert_allclose(partitioning.y_centroids, [1.0, 3.0, 5.0, 7.0, 9.0])
         assert partitioning.x_labels.tolist() == ["0.5", "1.5", "2.5", "3.5", "4.5", "5.5", "6.5", "7.5", "8.5", "9.5"]
@@ -118,6 +119,15 @@ class TestXYPartitioning:
 
         with pytest.raises(TypeError):
             XYPartitioning(xbin="xbin", ybin="ybin", size="invalid", extent=[0, 10, 0, 10])
+
+    def test_labels(self):
+        """Test labels attributes (origin="top")."""
+        partitioning = XYPartitioning(xbin="xbin", ybin="ybin", size=(1, 2), extent=[0, 10, 0, 10])
+        assert partitioning.labels.shape == (5, 10, 2)
+        assert partitioning.labels[0, 0, :].tolist() == ["0.5", "1.0"]
+        assert partitioning.labels[-1, 0, :].tolist() == ["0.5", "9.0"]
+        assert partitioning.labels[0, -1, :].tolist() == ["9.5", "1.0"]
+        assert partitioning.labels[-1, -1, :].tolist() == ["9.5", "9.0"]
 
     def test_add_labels_pandas(self):
         """Test valid partitions are added to a pandas dataframe."""
@@ -347,28 +357,40 @@ class TestXYPartitioning:
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
         partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
-        # Test results
-        assert partitioning._query_x_labels(1).tolist() == ["0.75"]
-        assert partitioning._query_y_labels(1).tolist() == ["0.875"]
-        assert partitioning._query_x_labels(np.array(1)).tolist() == ["0.75"]
-        assert partitioning._query_x_labels(np.array([1])).tolist() == ["0.75"]
-        assert partitioning._query_x_labels(np.array([1, 1])).tolist() == ["0.75", "0.75"]
-        assert partitioning._query_x_labels([1, 1]).tolist() == ["0.75", "0.75"]
-
-        x_labels, y_labels = partitioning.query_labels([1, 2], [0, 1])
+        # Test with various input type
+        # - float and 0D np.array
+        x_labels, y_labels = partitioning.query_labels(1, np.array(1))
+        assert x_labels.tolist() == ["0.75"]
+        assert y_labels.tolist() == ["0.875"]
+        # - list or 1D np.array
+        x_labels, y_labels = partitioning.query_labels([1, 2], np.array([0, 1]))
         assert x_labels.tolist() == ["0.75", "1.75"]
         assert y_labels.tolist() == ["0.125", "0.875"]
+        # - 2D np.array
+        arr = np.ones((2, 2))
+        x_labels, y_labels = partitioning.query_labels(arr, arr)
+        assert x_labels.shape == (2, 2)
+        assert x_labels.flatten().tolist() == ["0.75"] * 4
+        assert y_labels.flatten().tolist() == ["0.875"] * 4
 
-        # Test out of extent
-        assert partitioning._query_x_labels([-1, 1]).tolist() == ["nan", "0.75"]
+        # Test out of extent it returns "nan"
+        x_labels, y_labels = partitioning.query_labels(-1, 1)
+        assert x_labels.tolist() == ["nan"]
+        assert y_labels.tolist() == ["nan"]  # also the other (valid) value is set to NaN !
+
+        # Test with input None
+        x_labels, y_labels = partitioning.query_labels(None, 1)
+        assert x_labels.tolist() == ["nan"]
+        assert y_labels.tolist() == ["nan"]  # also the other (valid) value is set to NaN !
 
         # Test with input nan
-        assert partitioning._query_x_labels(np.nan).tolist() == ["nan"]
-        assert partitioning._query_x_labels(None).tolist() == ["nan"]
+        x_labels, y_labels = partitioning.query_labels(np.nan, 1)
+        assert x_labels.tolist() == ["nan"]
+        assert y_labels.tolist() == ["nan"]  # also the other (valid) value is set to NaN !
 
         # Test with input string
         with pytest.raises(ValueError):
-            partitioning._query_x_labels("dummy")
+            partitioning.query_labels("dummy", "dummy")
 
     def test_query_centroids(self):
         """Test valid midpoint queries."""
@@ -376,28 +398,41 @@ class TestXYPartitioning:
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
         partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
-        # Test results
-        np.testing.assert_allclose(partitioning._query_x_centroids(1), [0.75])
-        np.testing.assert_allclose(partitioning._query_y_centroids(1).tolist(), [0.875])
-        np.testing.assert_allclose(partitioning._query_x_centroids(np.array(1)), [0.75])
-        np.testing.assert_allclose(partitioning._query_x_centroids(np.array([1])), [0.75])
-        np.testing.assert_allclose(partitioning._query_x_centroids(np.array([1, 1])), [0.75, 0.75])
-        np.testing.assert_allclose(partitioning._query_x_centroids([1, 1]), [0.75, 0.75])
 
-        x_centroids, y_centroids = partitioning.query_centroids([1, 2], [0, 1])
-        np.testing.assert_allclose(x_centroids.tolist(), [0.75, 1.75])
-        np.testing.assert_allclose(y_centroids.tolist(), [0.125, 0.875])
+        # Test with various input type
+        # - float and 0D np.array
+        x_centroids, y_centroids = partitioning.query_centroids(1, np.array(1))
+        assert x_centroids.tolist() == [0.75]
+        assert y_centroids.tolist() == [0.875]
+        # - list or 1D np.array
+        x_centroids, y_centroids = partitioning.query_centroids([1, 2], np.array([0, 1]))
+        assert x_centroids.tolist() == [0.75, 1.75]
+        assert y_centroids.tolist() == [0.125, 0.875]
+        # - 2D np.array
+        arr = np.ones((2, 2))
+        x_centroids, y_centroids = partitioning.query_centroids(arr, arr)
+        assert x_centroids.shape == (2, 2)
+        assert x_centroids.flatten().tolist() == [0.75] * 4
+        assert y_centroids.flatten().tolist() == [0.875] * 4
 
-        # Test out of extent
-        np.testing.assert_allclose(partitioning._query_x_centroids([-1, 1]), [np.nan, 0.75])
+        # Test out of extent it returns np.nan
+        x_centroids, y_centroids = partitioning.query_centroids(-1, 1)
+        np.testing.assert_allclose(x_centroids, [np.nan])
+        np.testing.assert_allclose(y_centroids, [np.nan])  # also the other (valid) value is set to NaN !
 
-        # Test with input nan or None
-        np.testing.assert_allclose(partitioning._query_x_centroids(np.nan).tolist(), [np.nan])
-        np.testing.assert_allclose(partitioning._query_x_centroids(None).tolist(), [np.nan])
+        # Test with input nan
+        x_centroids, y_centroids = partitioning.query_centroids(np.nan, 1)
+        np.testing.assert_allclose(x_centroids, [np.nan])
+        np.testing.assert_allclose(y_centroids, [np.nan])  # also the other (valid) value is set to NaN !
+
+        # Test with input None
+        x_centroids, y_centroids = partitioning.query_centroids(None, 1)
+        np.testing.assert_allclose(x_centroids, [np.nan])
+        np.testing.assert_allclose(y_centroids, [np.nan])  # also the other (valid) value is set to NaN !
 
         # Test with input string
         with pytest.raises(ValueError):
-            partitioning._query_x_centroids("dummy")
+            partitioning.query_centroids("dummy", "dummy")
 
     def test_get_partitions_by_extent(self):
         """Test get_partitions_by_extent."""
@@ -481,6 +516,7 @@ class TestXYPartitioning:
             "xbin": xbin,
             "ybin": ybin,
             "partitions": [xbin, ybin],
-            "partitioning_flavor": None,
+            "partitioning_flavor": "directory",  # default
+            "labels_decimals": [2, 3],
         }
         assert partitioning.to_dict() == expected_dict

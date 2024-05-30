@@ -151,6 +151,8 @@ def preprocess_writer_kwargs(writer_kwargs, df):
     # Set default multithreaded parquet writing
     if "use_threads" not in writer_kwargs:
         writer_kwargs["use_threads"] = True
+    if writer_kwargs.get("partitioning_flavor", "") == "directory":
+        writer_kwargs["partitioning_flavor"] = None
     # Sanitize writer_kwargs
     _ = writer_kwargs.pop("create_dir", None)
     _ = writer_kwargs.pop("existing_data_behavior", None)

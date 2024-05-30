@@ -49,6 +49,150 @@ from gpm.utils.geospatial import (
 # to_geopandas [lat_bin, lon_bin, geometry]
 
 
+def _apply_flatten_arrays(self, func, x, y):
+    if isinstance(x, np.ndarray) and isinstance(y, np.ndarray) and x.ndim == 2 and y.ndim == 2:
+        original_shape = x.shape
+        x_flat = x.flatten()
+        y_flat = y.flatten()
+        result = func(self, x_flat, y_flat)
+        if isinstance(result, tuple):
+            result = tuple(r.reshape(original_shape) for r in result)
+        else:
+            result = result.reshape(original_shape)
+        return result
+    return func(self, x, y)
+
+
+def flatten_xy_arrays(func):
+    @wraps(func)
+    def wrapper(self, x, y):
+        return _apply_flatten_arrays(self, func=func, x=x, y=y)
+
+    return wrapper
+
+
+def flatten_indices_arrays(func):
+    @wraps(func)
+    def wrapper(self, x_indices, y_indices):
+        return _apply_flatten_arrays(self, func=func, x=x_indices, y=y_indices)
+
+    return wrapper
+
+
+def mask_invalid_indices(flag_value=np.nan):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # Extract arguments
+            x_indices = kwargs.get("x_indices", args[0] if len(args) > 0 else None)
+            y_indices = kwargs.get("y_indices", args[1] if len(args) > 1 else None)
+            # Ensure is a 1D numpy array
+            x_indices = np.atleast_1d(np.asanyarray(x_indices))
+            y_indices = np.atleast_1d(np.asanyarray(y_indices))
+            # Determine invalid indices
+            invalid_indices = ~np.isfinite(x_indices) | ~np.isfinite(y_indices)
+            # Set dummy value for invalid indices
+            x_indices[invalid_indices] = 0  # dummy index
+            y_indices[invalid_indices] = 0  # dummy index
+            # Ensure indices are integers !
+            x_indices = x_indices.astype(int)
+            y_indices = y_indices.astype(int)
+            # Call the original function
+            result = func(self, x_indices, y_indices)
+            # Apply the mask to the result
+            if isinstance(result, tuple):
+                masked_result = tuple(np.where(invalid_indices, flag_value, r) for r in result)
+            else:
+                masked_result = np.where(invalid_indices, flag_value, result)
+            return masked_result
+
+        return wrapper
+
+    return decorator
+
+
+def _check_partitions(names, partitions):
+    if set(names) != set(partitions):
+        raise ValueError(f"'partitions' ({partitions}) does not match with partition names {names}.")
+    return partitions
+
+
+def check_partitioning_flavor(partitioning_flavor):
+    """Validate the partitioning_flavor argument.
+
+    If ``None``, defaults to "directory".
+    """
+    if partitioning_flavor is None:
+        partitioning_flavor = "directory"
+    valid_flavors = ["directory", "hive"]
+    if partitioning_flavor not in valid_flavors:
+        raise ValueError(f"Invalid partitioning_flavor '{partitioning_flavor}'. Valid options are {valid_flavors}.")
+    return partitioning_flavor
+
+
+def get_array_combinations(x, y):
+    """Return all combinations between the two input arrays."""
+    # Create the mesh grid
+    grid1, grid2 = np.meshgrid(x, y)
+    # Stack and reshape the grid arrays to get combinations
+    combinations = np.vstack([grid1.ravel(), grid2.ravel()]).T
+    return combinations[:, 0], combinations[:, 1]
+
+
+def query_indices(values, bounds):
+    """Return the index for the specified coordinates.
+
+    Invalid values (NaN, None) or out of bounds values returns NaN.
+    """
+    values = np.atleast_1d(np.asanyarray(values)).astype(float)
+    return pd.cut(values, bins=bounds, labels=False, include_lowest=True, right=True)
+
+
+def get_partition_dir_name(partition_name, partition_labels, partitioning_flavor):
+    """Return the directories name of a partition."""
+    if partitioning_flavor == "hive":
+        return reduce(np.char.add, [partition_name, "=", partition_labels, os.sep])
+    return np.char.add(partition_labels, os.sep)
+
+
+def get_directories(dict_labels, partitions, partitioning_flavor):
+    """Return the directory trees of a partitioned dataset."""
+    list_dir_names = []
+    for partition in partitions:
+        dir_name = get_partition_dir_name(
+            partition_name=partition,
+            partition_labels=dict_labels[partition],
+            partitioning_flavor=partitioning_flavor,
+        )
+        list_dir_names.append(dir_name)
+    dir_trees = reduce(np.char.add, list_dir_names)
+    dir_trees = np.char.rstrip(dir_trees, os.sep)
+    return dir_trees
+
+
+####-------------------------------------------------------------------------------------------------------------------.
+#### XY utilities
+def get_n_decimals(number):
+    """Get the number of decimals of a number."""
+    number_str = str(number)
+    decimal_index = number_str.find(".")
+
+    if decimal_index == -1:
+        return 0  # No decimal point found
+
+    # Count the number of characters after the decimal point
+    return len(number_str) - decimal_index - 1
+
+
+def get_bounds(size, vmin, vmax):
+    """Define partitions edges."""
+    bounds = np.arange(vmin, vmax, size)
+    if bounds[-1] != vmax:
+        bounds = np.append(bounds, np.array([vmax]))
+    return bounds
+
+
+####------------------------------------------------------------------------------------------------------------------.
 def check_valid_dataframe(func):
     """Decorator checking if the first argument is a dataframe.
 
@@ -73,18 +217,6 @@ def check_valid_x_y(df, x, y):
         raise ValueError(f"y='{y}' is not a column of the dataframe.")
     if x not in df:
         raise ValueError(f"x='{x}' is not a column of the dataframe.")
-
-
-def _check_partitions(xbin, ybin, partitions):
-    if {xbin, ybin} != set(partitions):
-        raise ValueError(f"'partitions' ({partitions}) does not match with xbin ({xbin}) and ybin ({ybin}).")
-    return partitions
-
-
-# check_partitioning_flavor
-
-
-# TODO: get indices and then drop by indices ? Dask?
 
 
 def ensure_xy_without_nan_values(df, x, y, remove_invalid_rows=True):
@@ -140,61 +272,16 @@ def ensure_valid_partitions(df, xbin, ybin, remove_invalid_rows=True):
     return df
 
 
-def get_partition_dir_name(partition_name, partition_labels, partitioning_flavor):
-    """Return the directories name of a partition."""
-    if partitioning_flavor == "hive":
-        return reduce(np.char.add, [partition_name, "=", partition_labels, os.sep])
-    return np.char.add(partition_labels, os.sep)
-
-
-def get_directories(dict_labels, partitions, partitioning_flavor):
-    """Return the directory trees of a partitioned dataset."""
-    list_dir_names = []
-    for partition in partitions:
-        dir_name = get_partition_dir_name(
-            partition_name=partition,
-            partition_labels=dict_labels[partition],
-            partitioning_flavor=partitioning_flavor,
-        )
-        list_dir_names.append(dir_name)
-    dir_trees = reduce(np.char.add, list_dir_names)
-    dir_trees = np.char.rstrip(dir_trees, os.sep)
-    return dir_trees
-
-
-def get_array_combinations(x, y):
-    """Return all the combinations between the two array."""
-    # Create the mesh grid
-    grid1, grid2 = np.meshgrid(x, y)
-    # Stack and reshape the grid arrays to get combinations
-    combinations = np.vstack([grid1.ravel(), grid2.ravel()]).T
-    return combinations
-
-
-def get_n_decimals(number):
-    """Get the number of decimals of a number."""
-    number_str = str(number)
-    decimal_index = number_str.find(".")
-
-    if decimal_index == -1:
-        return 0  # No decimal point found
-
-    # Count the number of characters after the decimal point
-    return len(number_str) - decimal_index - 1
-
-
-def get_breaks(size, vmin, vmax):
-    """Define partitions edges."""
-    breaks = np.arange(vmin, vmax, size)
-    if breaks[-1] != vmax:
-        breaks = np.append(breaks, np.array([vmax]))
-    return breaks
-
-
 def get_centroids(size, vmin, vmax):
     """Define partitions centroids."""
-    breaks = get_breaks(size, vmin=vmin, vmax=vmax)
-    centroids = breaks[0:-1] + size / 2
+    bounds = get_bounds(size, vmin=vmin, vmax=vmax)
+    centroids = bounds[0:-1] + size / 2
+    return centroids
+
+
+def get_centroids_from_bounds(bounds):
+    """Define partitions centroids."""
+    centroids = (bounds[:-1] + bounds[1:]) / 2
     return centroids
 
 
@@ -205,82 +292,36 @@ def get_labels(size, vmin, vmax):
     return centroids.round(n_decimals + 1).astype(str)
 
 
-def get_breaks_and_centroids(size, vmin, vmax):
+def get_bounds_and_centroids(size, vmin, vmax):
     """Return the partitions edges and partitions centroids."""
-    breaks = get_breaks(size, vmin=vmin, vmax=vmax)
+    bounds = get_bounds(size, vmin=vmin, vmax=vmax)
     centroids = get_centroids(size, vmin=vmin, vmax=vmax)
-    return breaks, centroids
+    return bounds, centroids
 
 
-def get_breaks_and_labels(size, vmin, vmax):
+def get_bounds_and_labels(size, vmin, vmax):
     """Return the partitions edges and partitions labels."""
-    breaks = get_breaks(size, vmin=vmin, vmax=vmax)
+    bounds = get_bounds(size, vmin=vmin, vmax=vmax)
     labels = get_labels(size, vmin=vmin, vmax=vmax)
-    return breaks, labels
+    return bounds, labels
 
 
-def query_labels(values, breaks, labels):
+def query_labels(values, bounds, labels):
     """Return the partition labels for the specified coordinates.
 
-    Invalid values (NaN, None) or out of breaks values returns NaN.
+    Invalid values (NaN, None) or out of bounds values returns NaN.
     """
     values = np.atleast_1d(np.asanyarray(values)).astype(float)
-    return pd.cut(values, bins=breaks, labels=labels, include_lowest=True, right=True)
+    return pd.cut(values, bins=bounds, labels=labels, include_lowest=True, right=True)
 
 
-def query_centroids(values, breaks, centroids):
+def query_centroids(values, bounds, centroids):
     """Return the partition centroids for the specified coordinates.
 
-    Invalid values (NaN, None) or out of breaks values returns NaN.
+    Invalid values (NaN, None) or out of bounds values returns NaN.
     """
     values = np.atleast_1d(np.asanyarray(values)).astype(float)
-    return pd.cut(values, bins=breaks, labels=centroids, include_lowest=True, right=True).astype(float)
-
-
-# TODO: ADD dask function   (maybe function better than cut and breaks?) --> write_bucket test should work
-# TODO: ADD tile code
-# TODO: add check-flavour --> directory instead of None
-# TODO: Add centroids
-# TODO: Add readers !
-# df_dask[xbin].map_partitions(pd.cut, bins)
-
-# add_polars_xy_centroids_midpoints
-
-
-# def add_polars_tile_labels(df, size, extent, x, y, tile_id):
-#     check_valid_x_y(df, x, y)
-#     raise NotImplementedError
-
-
-# def add_pandas_tile_labels(df, size, extent, x, y, tile_id):
-#     check_valid_x_y(df, x, y)
-#     raise NotImplementedError
-
-
-# def add_dask_xy_labels(df, size, extent, x, y, xbin, ybin, remove_invalid_rows=True):
-#     """Add partitions labels to a dask DataFrame based on x, y coordinates."""
-#     import dask.dataframe as dd
-#     # df = dask.dataframe.from_pandas(df, npartitions=2)
-
-#     # Check x,y names
-#     check_valid_x_y(df, x, y)
-
-#     # Check/remove rows with NaN x,y columns
-#     # df = ensure_xy_without_nan_values(df, x=x, y=y, remove_invalid_rows=remove_invalid_rows)
-
-#     # Retrieve breaks and labels (N and N+1)
-#     cut_x_breaks, cut_x_labels = get_breaks_and_labels(size[0], vmin=extent[0], vmax=extent[1])
-#     cut_y_breaks, cut_y_labels = get_breaks_and_labels(size[1], vmin=extent[2], vmax=extent[3])
-
-#     # Add partitions labels columns
-#     xbin_values = pd.Series(query_labels(df[x].compute().to_numpy(),breaks=cut_x_breaks, labels=cut_x_labels))
-#     ybin_values = pd.Series(query_labels(df[y].compute().to_numpy(),breaks=cut_y_breaks, labels=cut_y_labels))
-#     df[xbin] = dd.from_pandas(xbin_values, npartitions=df.npartitions)
-#     df[ybin] = dd.from_pandas(ybin_values, npartitions=df.npartitions)
-
-#     # # Check/remove rows with invalid partitions (NaN)
-#     # df = ensure_valid_partitions(df, xbin=xbin, ybin=ybin, remove_invalid_rows=remove_invalid_rows)
-#     return df
+    return pd.cut(values, bins=bounds, labels=centroids, include_lowest=True, right=True).astype(float)
 
 
 def add_pandas_xy_labels(df, size, extent, x, y, xbin, ybin, remove_invalid_rows=True):
@@ -289,13 +330,13 @@ def add_pandas_xy_labels(df, size, extent, x, y, xbin, ybin, remove_invalid_rows
     check_valid_x_y(df, x, y)
     # Check/remove rows with NaN x,y columns
     df = ensure_xy_without_nan_values(df, x=x, y=y, remove_invalid_rows=remove_invalid_rows)
-    # Retrieve breaks and labels (N and N+1)
-    cut_x_breaks, cut_x_labels = get_breaks_and_labels(size[0], vmin=extent[0], vmax=extent[1])
-    cut_y_breaks, cut_y_labels = get_breaks_and_labels(size[1], vmin=extent[2], vmax=extent[3])
+    # Retrieve bounds and labels (N and N+1)
+    cut_x_bounds, cut_x_labels = get_bounds_and_labels(size[0], vmin=extent[0], vmax=extent[1])
+    cut_y_bounds, cut_y_labels = get_bounds_and_labels(size[1], vmin=extent[2], vmax=extent[3])
     # Add partitions labels columns
     df = df.copy()
-    df[xbin] = query_labels(df[x].to_numpy(), breaks=cut_x_breaks, labels=cut_x_labels)
-    df[ybin] = query_labels(df[y].to_numpy(), breaks=cut_y_breaks, labels=cut_y_labels)
+    df[xbin] = query_labels(df[x].to_numpy(), bounds=cut_x_bounds, labels=cut_x_labels)
+    df[ybin] = query_labels(df[y].to_numpy(), bounds=cut_y_bounds, labels=cut_y_labels)
     # Check/remove rows with invalid partitions (NaN)
     df = ensure_valid_partitions(df, xbin=xbin, ybin=ybin, remove_invalid_rows=remove_invalid_rows)
     return df
@@ -307,25 +348,27 @@ def add_polars_xy_labels(df, x, y, size, extent, xbin, ybin, remove_invalid_rows
     check_valid_x_y(df, x, y)
     # Check/remove rows with null x,y columns
     df = ensure_xy_without_nan_values(df, x=x, y=y, remove_invalid_rows=remove_invalid_rows)
-    # Retrieve breaks and labels (N and N+1)
-    cut_x_breaks, cut_x_labels = get_breaks_and_labels(size[0], vmin=extent[0], vmax=extent[1])
-    cut_y_breaks, cut_y_labels = get_breaks_and_labels(size[1], vmin=extent[2], vmax=extent[3])
+    # Retrieve bounds and labels (N and N+1)
+    cut_x_bounds, cut_x_labels = get_bounds_and_labels(size[0], vmin=extent[0], vmax=extent[1])
+    cut_y_bounds, cut_y_labels = get_bounds_and_labels(size[1], vmin=extent[2], vmax=extent[3])
     # Add outside labels for polars cut function
     cut_x_labels = ["outside_left", *cut_x_labels, "outside_right"]
     cut_y_labels = ["outside_left", *cut_y_labels, "outside_right"]
     # Deal with left inclusion
-    cut_x_breaks[0] = cut_x_breaks[0] - 1e-8
-    cut_y_breaks[0] = cut_y_breaks[0] - 1e-8
+    cut_x_bounds[0] = cut_x_bounds[0] - 1e-8
+    cut_y_bounds[0] = cut_y_bounds[0] - 1e-8
     # Add partitions columns
     df = df.with_columns(
-        pl.col(x).cut(cut_x_breaks, labels=cut_x_labels, left_closed=False).alias(xbin),
-        pl.col(y).cut(cut_y_breaks, labels=cut_y_labels, left_closed=False).alias(ybin),
+        pl.col(x).cut(cut_x_bounds, labels=cut_x_labels, left_closed=False).alias(xbin),
+        pl.col(y).cut(cut_y_bounds, labels=cut_y_labels, left_closed=False).alias(ybin),
     )
     # Check/remove rows with invalid partitions (out of extent or Null)
     df = ensure_valid_partitions(df, xbin=xbin, ybin=ybin, remove_invalid_rows=remove_invalid_rows)
     return df
 
 
+####-----------------------------------------------------------------------------------------------------------------.
+#### Xarray reformatting utility
 def _ensure_indices_list(indices):
     if indices is None:
         indices = []
@@ -406,9 +449,276 @@ def df_to_xarray(df, xbin, ybin, size, extent, new_x=None, new_y=None, indices=N
     return ds
 
 
-class XYPartitioning:
+####------------------------------------------------------------------------------------------------------------------.
+#### 2D Partitioning Classes
+
+
+class Base2DPartitioning:
     """
-    Handales partitioning of data into x and y bins.
+    Handles partitioning of 2D data into rectangular tiles.
+
+    The size of the partitions can varies between and across the x and y directions.
+
+    Parameters
+    ----------
+    names : str or list
+        Name or names of the partitions.
+        If partitioning by 1 level (i.e. by a unique partition id), specify a single partition name.
+        If partitioning by 2 or more levels (i.e. by x and y), specify the x, y (z, ...) partition levels names.
+    x_bounds : numpy.ndarray
+        The partition bounds across the x (horizontal) dimension.
+    y_bounds : numpy.ndarray
+        The partition bounds across the y (vertical) dimension.
+        Please provide the bounds with increasing values order.
+        The origin of the partition class indices is the top, left corner.
+    partitions : list
+        The order of the partitions when writing multi-level partitions (i.e. x, y) to disk.
+        The default, ``None``, corresponds to ``names``.
+    partitioning_flavor : str
+        This argument governs the directories names of partitioned datasets.
+        The default, ``None``, name the directories with the partitions labels (DirectoryPartitioning).
+        The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
+    """
+
+    def __init__(self, names, x_bounds, y_bounds, partitioning_flavor=None, partitions=None):
+
+        self.x_bounds = np.asanyarray(x_bounds)
+        self.y_bounds = np.asanyarray(y_bounds)
+        self.x_centroids = get_centroids_from_bounds(self.x_bounds)
+        self.y_centroids = get_centroids_from_bounds(self.y_bounds)
+
+        # Define partitions names, order and flavour
+        if isinstance(names, str):
+            names = [names]
+        self.names = list(names)
+        if partitions is None:
+            self.partitions = self.names
+        else:
+            self.partitions = _check_partitions(names=self.names, partitions=partitions)
+        self.partitioning_flavor = check_partitioning_flavor(partitioning_flavor)
+
+        # Define info
+        self.shape = (len(self.y_centroids), len(self.x_centroids))
+        self.n_partitions = self.shape[0] * self.shape[1]
+        self.n_levels = len(self.partitions)
+        self.n_x = self.shape[1]
+        self.n_y = self.shape[0]
+
+        # Define private attrs
+        self._labels = None
+        self._centroids = None
+
+    @flatten_xy_arrays
+    def query_indices(self, x, y):
+        """Return the 2D partition indices for the specified x,y coordinates."""
+        x_indices = query_indices(x, bounds=self.x_bounds)
+        y_indices = query_indices(y, bounds=self.y_bounds)
+        return x_indices, y_indices
+
+    @flatten_indices_arrays
+    @mask_invalid_indices(flag_value="nan")
+    def query_labels_by_index(self, x_indices, y_indices):
+        """Return the partition labels as function of the specified 2D partitions indices."""
+        return self._custom_labels_function(x_indices=x_indices, y_indices=y_indices)
+
+    def _custom_labels_function(self, x_indices, y_indices):  # noqa
+        """Return the partition labels for the specified x,y indices."""
+        class_name = self.__class__.name
+        raise NotImplementedError(f"'_custom_labels_function' has yet be implemented for subclass {class_name}!")
+
+    @flatten_xy_arrays
+    def query_labels(self, x, y):
+        """Return the partition labels for the specified x,y coordinates."""
+        x_indices, y_indices = self.query_indices(x=x, y=y)
+        return self.query_labels_by_index(x_indices, y_indices)
+
+    @flatten_indices_arrays
+    @mask_invalid_indices(flag_value=np.nan)
+    def query_centroids_by_index(self, x_indices, y_indices):
+        """Return the partition centroids for the specified x,y indices."""
+        x_centroids = self.x_centroids[x_indices]
+        y_centroids = self.y_centroids[y_indices]
+        return x_centroids, y_centroids
+
+    @flatten_xy_arrays
+    def query_centroids(self, x, y):
+        """Return the partition centroids for the specified x,y coordinates."""
+        x_indices, y_indices = self.query_indices(x=x, y=y)
+        return self.query_centroids_by_index(x_indices, y_indices)
+
+    @property
+    def labels(self):
+        """Return the labels array of shape (n_y, n_x, n_levels)."""
+        if self._labels is None:
+            # Retrieve labels combination of all (x,y) indices
+            x_indices, y_indices = np.meshgrid(np.arange(self.n_x), np.arange(self.n_y))
+            # Retrieve labels
+            # - If n_levels >= 2 --> query_labels_by_index return a tuple !
+            labels = self.query_labels_by_index(x_indices=x_indices, y_indices=y_indices)
+            if self.n_levels >= 2:
+                labels = np.stack(labels, axis=-1)
+            self._labels = labels
+        return self._labels
+
+    @property
+    def centroids(self):
+        """Return the centroids array of shape (n_y, n_x, 2)."""
+        if self._centroids is None:
+            # Retrieve centroids of all (x,y) indices
+            x_indices, y_indices = np.meshgrid(np.arange(self.n_x), np.arange(self.n_y))
+            centroids = self.query_centroids_by_index(x=x_indices, y_indices=y_indices)
+            centroids = np.stack(centroids, axis=-1)
+            self._centroids = centroids
+        return self._centroids
+
+    def quadmesh(self, origin="bottom"):
+        """Return the quadrilateral mesh.
+
+        A quadrilateral mesh is a grid of M by N adjacent quadrilaterals that are defined via a (M+1, N+1)
+        grid of vertices.
+
+        The quadrilateral mesh is accepted by `matplotlib.pyplot.pcolormesh`, `matplotlib.collections.QuadMesh`
+        `matplotlib.collections.PolyQuadMesh`.
+
+        Parameters
+        ----------
+        origin: str
+            Origin of the y axis.
+            The default is ``bottom``.
+
+        Return
+        --------
+        np.ndarray
+            Quadmesh array of shape (M+1, N+1, 2)
+        """
+        x_corners, y_corners = np.meshgrid(self.x_bounds, self.y_bounds)
+        if origin == "bottom":
+            y_corners = y_corners[::-1, :]
+        return np.stack((x_corners, y_corners), axis=2)
+
+    # TODO:
+    # def vertices (M,N, 4)
+    # def query_vertices
+
+    def _get_dict_labels_combo(self, x_indices, y_indices):
+        # Retrieve labels combination of all (x,y) indices
+        indices = get_array_combinations(x_indices, y_indices)
+        # Retrieve corresponding labels
+        # If n_levels >= 2 --> self.labels is a tuple
+        # If n_levels == 1 --> self.labels is a 1D array
+        labels = self.query_labels_by_index(x_indices=indices[0], y_indices=indices[1])
+        dict_labels = {}
+        if self.n_levels > 1:
+            dict_labels = {self.partitions[i]: labels[i] for i in range(0, self.n_levels)}
+        else:  # (tile_id)
+            dict_labels = {self.partitions[0]: labels}
+        return dict_labels
+
+    def _directories(self, dict_labels):
+        return get_directories(
+            dict_labels=dict_labels,
+            partitions=self.partitions,
+            partitioning_flavor=self.partitioning_flavor,
+        )
+
+    @property
+    def directories(self):
+        """Return the directory trees."""
+        dict_labels = self._get_dict_labels_combo(x_indices=np.arange(0, self.n_x), y_indices=np.arange(0, self.n_y))
+        return self._directories(dict_labels=dict_labels)
+
+    def get_partitions_by_extent(self, extent):
+        """Return the partitions labels containing data within the extent."""
+        extent = check_extent(extent)
+        # Define valid query extent (to be aligned with partitioning extent)
+        query_extent = [
+            max(extent.xmin, self.extent.xmin),
+            min(extent.xmax, self.extent.xmax),
+            max(extent.ymin, self.extent.ymin),
+            min(extent.ymax, self.extent.ymax),
+        ]
+        query_extent = Extent(*query_extent)
+        # Retrieve centroids
+        (xmin, xmax), (ymin, ymax) = self.query_centroids(
+            x=[query_extent.xmin, query_extent.xmax],
+            y=[query_extent.ymin, query_extent.ymax],
+        )
+
+        # Retrieve univariate x and y labels within the extent
+        x_indices = np.where(np.logical_and(self.x_centroids >= xmin, self.x_centroids <= xmax))[0]
+        y_indices = np.where(np.logical_and(self.y_centroids >= ymin, self.y_centroids <= ymax))[0]
+        # Retrieve labels corresponding to the combination of all (x,y) indices
+        return self._get_dict_labels_combo(x_indices, y_indices)
+
+    def get_partitions_around_point(self, x, y, distance=None, size=None):
+        """Return the partition labels with data within the distance/size from a point."""
+        extent = get_extent_around_point(x, y, distance=distance, size=size)
+        return self.get_partitions_by_extent(extent=extent)
+
+    def directories_by_extent(self, extent):
+        """Return the directory trees with data within the specified extent."""
+        dict_labels = self.get_partitions_by_extent(extent=extent)
+        return self._directories(dict_labels=dict_labels)
+
+    def directories_around_point(self, x, y, distance=None, size=None):
+        """Return the directory trees with data within the specified distance from a point."""
+        dict_labels = self.get_partitions_around_point(x=x, y=y, distance=distance, size=size)
+        return self._directories(dict_labels=dict_labels)
+
+    @check_valid_dataframe
+    def add_labels(self, df, x, y, remove_invalid_rows=True):
+
+        x = df[x]
+        y = df[y]
+
+        # Add columns using self.names !
+
+        # query_labels(self, x, y)
+
+    def add_centroids(self, df, x, y, x_centroid="x_c", y_centroid="y_c", remove_invalid_rows=True):
+
+        # query_centroids(self, x, y)
+
+        if isinstance(df, pd.DataFrame):
+            return add_pandas_xy_labels(
+                df=df,
+                x=x,
+                y=y,
+                size=self.size,
+                extent=self.extent,
+                xbin=self.xbin,
+                ybin=self.ybin,
+                remove_invalid_rows=remove_invalid_rows,
+            )
+        return add_polars_xy_labels(
+            df=df,
+            x=x,
+            y=y,
+            size=self.size,
+            extent=self.extent,
+            xbin=self.xbin,
+            ybin=self.ybin,
+            remove_invalid_rows=remove_invalid_rows,
+        )
+
+    @check_valid_dataframe
+    def to_xarray(self, df, new_x=None, new_y=None, indices=None):
+        """Convert a dataframe with partitions centroids to a ``xr.Dataset``."""
+        return df_to_xarray(
+            df=df,
+            xbin=self.xbin,
+            ybin=self.ybin,
+            size=self.size,
+            extent=self.extent,
+            new_x=new_x,
+            new_y=new_y,
+            indices=indices,
+        )
+
+
+class XYPartitioning(Base2DPartitioning):
+    """
+    Handles partitioning of data into x and y regularly spaced bins.
 
     Parameters
     ----------
@@ -424,7 +734,7 @@ class XYPartitioning:
     extent : list
         The extent for the partitioning specified as ``[xmin, xmax, ymin, ymax]``.
     partitions : list
-        The order of the partitions xbin and ybin (i.e. when writing to disk partitioned datasets)
+        The order of the x and y partitions (i.e. when writing to disk partitioned datasets)
         The default, ``None``, corresponds to ``[xbin, ybin]``.
     partitioning_flavor : str
         This argument governs the directories names of partitioned datasets.
@@ -432,33 +742,77 @@ class XYPartitioning:
         The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
     """
 
-    def __init__(self, xbin, ybin, size, extent, partitioning_flavor=None, partitions=None):
-        # Define extent
+    def __init__(self, xbin, ybin, size, extent, partitioning_flavor=None, partitions=None, labels_decimals=None):
+
+        # Check and set extent
         self.extent = check_extent(extent)
-        # Define bin size
+        # Check and set partitions size (except maybe last one)
         self.size = _check_size(size)
-        # Define bin names
+        # Set partition names
         self.xbin = xbin
         self.ybin = ybin
-        # Define partitions and partitioning flavour
-        if partitions is None:
-            self.partitions = [self.xbin, self.ybin]
+        # Calculate partitions bounds
+        x_bounds = get_bounds(size=self.size[0], vmin=self.extent.xmin, vmax=self.extent.xmax)
+        y_bounds = get_bounds(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)
+        # Define options for labels
+        if labels_decimals is None:
+            self._labels_decimals = get_n_decimals(self.size[0]) + 1, get_n_decimals(self.size[1]) + 1
         else:
-            self.partitions = _check_partitions(xbin=xbin, ybin=ybin, partitions=partitions)
-        self.partitioning_flavor = partitioning_flavor
-        # Define breaks, centroids and labels
-        self.x_breaks = get_breaks(size=self.size[0], vmin=self.extent.xmin, vmax=self.extent.xmax)
-        self.y_breaks = get_breaks(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)
-        self.x_centroids = get_centroids(size=self.size[0], vmin=self.extent.xmin, vmax=self.extent.xmax)
-        self.y_centroids = get_centroids(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)
-        self.x_labels = get_labels(size=self.size[0], vmin=self.extent.xmin, vmax=self.extent.xmax)
-        self.y_labels = get_labels(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)
-        # Define info
-        self.shape = (len(self.x_labels), len(self.y_labels))
-        self.n_partitions = len(self.x_labels) * len(self.y_labels)
-        self.n_levels = len(self.partitions)
-        self.n_x = self.shape[0]
-        self.n_y = self.shape[1]
+            self._labels_decimals = labels_decimals
+        # Initialize private attributes for labels
+        self._xlabels = None
+        self._ylabels = None
+        # Initialize class
+        super().__init__(
+            names=(xbin, ybin),
+            x_bounds=x_bounds,
+            y_bounds=y_bounds,
+            partitions=partitions,
+            partitioning_flavor=partitioning_flavor,
+        )
+
+    # -----------------------------------------------------------------------------------.
+    def _custom_labels_function(self, x_indices, y_indices):
+        """Return the partition labels as function of the specified 2D partitions indices."""
+        x_labels = self.x_centroids[x_indices].round(self._labels_decimals[0]).astype(str)
+        y_labels = self.y_centroids[y_indices].round(self._labels_decimals[1]).astype(str)
+        return x_labels, y_labels
+
+    def to_dict(self):
+        """Return the partitioning settings."""
+        dictionary = {
+            "name": self.__class__.__name__,
+            "extent": list(self.extent),
+            "size": list(self.size),
+            "xbin": self.xbin,
+            "ybin": self.ybin,
+            "partitions": self.partitions,
+            "partitioning_flavor": self.partitioning_flavor,
+            "labels_decimals": list(self._labels_decimals),
+        }
+        return dictionary
+
+    @property
+    def x_labels(self):
+        """Return the partition labels across the horizontal dimension."""
+        if self._xlabels is None:
+            x_labels, _ = self.query_labels_by_index(
+                x_indices=np.arange(0, self.n_x),
+                y_indices=np.zeros(self.n_x),
+            )
+            self._xlabels = x_labels
+        return self._xlabels
+
+    @property
+    def y_labels(self):
+        """Return the partition labels across the vertical dimension."""
+        if self._ylabels is None:
+            x_labels, y_labels = self.query_labels_by_index(
+                x_indices=np.zeros(self.n_y),
+                y_indices=np.arange(0, self.n_y),
+            )
+            self._ylabels = y_labels
+        return self._ylabels
 
     @check_valid_dataframe
     def add_labels(self, df, x, y, remove_invalid_rows=True):
@@ -497,125 +851,6 @@ class XYPartitioning:
             new_y=new_y,
             indices=indices,
         )
-
-    def to_dict(self):
-        """Return the partitioning settings."""
-        dictionary = {
-            "name": self.__class__.__name__,
-            "extent": list(self.extent),
-            "size": list(self.size),
-            "xbin": self.xbin,
-            "ybin": self.ybin,
-            "partitions": self.partitions,
-            "partitioning_flavor": self.partitioning_flavor,
-        }
-        return dictionary
-
-    def _query_x_labels(self, x):
-        """Return the x partition labels for the specified x coordinates."""
-        return query_labels(x, breaks=self.x_breaks, labels=self.x_labels).astype(str)
-
-    def _query_y_labels(self, y):
-        """Return the y partition labels for the specified y coordinates."""
-        return query_labels(y, breaks=self.y_breaks, labels=self.y_labels).astype(str)
-
-    def _query_x_centroids(self, x):
-        """Return the x partition centroids for the specified x coordinates."""
-        return query_centroids(x, breaks=self.x_breaks, centroids=self.x_centroids)
-
-    def _query_y_centroids(self, y):
-        """Return the y partition centroids for the specified y coordinates."""
-        return query_centroids(y, breaks=self.y_breaks, centroids=self.y_centroids)
-
-    def query_labels(self, x, y):
-        """Return the partition labels for the specified x,y coordinates."""
-        return self._query_x_labels(x), self._query_y_labels(y)
-
-    def query_centroids(self, x, y):
-        """Return the partition centroids for the specified x,y coordinates."""
-        return self._query_x_centroids(x), self._query_y_centroids(y)
-
-    def get_partitions_by_extent(self, extent):
-        """Return the partitions labels containing data within the extent."""
-        extent = check_extent(extent)
-        # Define valid query extent (to be aligned with partitioning extent)
-        query_extent = [
-            max(extent.xmin, self.extent.xmin),
-            min(extent.xmax, self.extent.xmax),
-            max(extent.ymin, self.extent.ymin),
-            min(extent.ymax, self.extent.ymax),
-        ]
-        query_extent = Extent(*query_extent)
-        # Retrieve centroids
-        xmin, xmax = self._query_x_centroids([query_extent.xmin, query_extent.xmax])
-        ymin, ymax = self._query_y_centroids([query_extent.ymin, query_extent.ymax])
-        # Retrieve univariate x and y labels within the extent
-        x_labels = self.x_labels[np.logical_and(self.x_centroids >= xmin, self.x_centroids <= xmax)]
-        y_labels = self.y_labels[np.logical_and(self.y_centroids >= ymin, self.y_centroids <= ymax)]
-        # Retrieve combination of all (x,y) labels within the extent
-        combinations = get_array_combinations(x_labels, y_labels)
-        dict_labels = {
-            self.xbin: combinations[:, 0],
-            self.ybin: combinations[:, 1],
-        }
-        return dict_labels
-
-    def get_partitions_around_point(self, x, y, distance=None, size=None):
-        """Return the partition labels with data within the distance/size from a point."""
-        extent = get_extent_around_point(x, y, distance=distance, size=size)
-        return self.get_partitions_by_extent(extent=extent)
-
-    def _directories(self, dict_labels):
-        return get_directories(
-            dict_labels=dict_labels,
-            partitions=self.partitions,
-            partitioning_flavor=self.partitioning_flavor,
-        )
-
-    @property
-    def directories(self):
-        """Return the directory trees."""
-        combinations = get_array_combinations(self.x_labels, self.y_labels)
-        dict_labels = {
-            self.xbin: combinations[:, 0],
-            self.ybin: combinations[:, 1],
-        }
-        return self._directories(dict_labels=dict_labels)
-
-    def directories_by_extent(self, extent):
-        """Return the directory trees with data within the specified extent."""
-        dict_labels = self.get_partitions_by_extent(extent=extent)
-        return self._directories(dict_labels=dict_labels)
-
-    def directories_around_point(self, x, y, distance=None, size=None):
-        """Return the directory trees with data within the specified distance from a point."""
-        dict_labels = self.get_partitions_around_point(x=x, y=y, distance=distance, size=size)
-        return self._directories(dict_labels=dict_labels)
-
-    def quadmesh(self, origin="bottom"):
-        """Return the quadrilateral mesh.
-
-        A quadrilateral mesh is a grid of M by N adjacent quadrilaterals that are defined via a (M+1, N+1)
-        grid of vertices.
-
-        The quadrilateral mesh is accepted by `matplotlib.pyplot.pcolormesh`, `matplotlib.collections.QuadMesh`
-        `matplotlib.collections.PolyQuadMesh`.
-
-        Parameters
-        ----------
-        origin: str
-            Origin of the y axis.
-            The default is ``bottom``.
-
-        Return
-        --------
-        np.ndarray
-            Quadmesh array of shape (M+1, N+1, 2)
-        """
-        x_corners, y_corners = np.meshgrid(self.x_breaks, self.y_breaks)
-        if origin == "bottom":
-            y_corners = y_corners[::-1, :]
-        return np.stack((x_corners, y_corners), axis=2)
 
 
 class GeographicPartitioning(XYPartitioning):
@@ -662,6 +897,7 @@ class GeographicPartitioning(XYPartitioning):
         extent=[-180, 180, -90, 90],
         partitioning_flavor="hive",
         partitions=None,
+        labels_decimals=None,
     ):
         super().__init__(
             xbin=xbin,
@@ -670,6 +906,7 @@ class GeographicPartitioning(XYPartitioning):
             extent=extent,
             partitions=partitions,
             partitioning_flavor=partitioning_flavor,
+            labels_decimals=labels_decimals,
         )
 
     def get_partitions_around_point(self, lon, lat, distance=None, size=None):
@@ -720,54 +957,3 @@ class GeographicPartitioning(XYPartitioning):
             new_y=new_y,
             indices=indices,
         )
-
-
-# class TilePartitioning:
-#     """
-#     Handles partitioning of data into tiles within a specified extent.
-
-#     Parameters
-#     ----------
-#     size : float
-#         The size of the tiles.
-#     extent : list
-#         The extent for the partitioning specified as [xmin, xmax, ymin, ymax].
-#     tile_id : str, optional
-#         Identifier for the tile bin. The default is ``'tile_id'``.
-
-
-#     """
-
-#     # Define option
-#     # 0 / 1 / 10 / 100
-#     # 000/ 001/ 010/ 100
-#     # origin="upper"
-
-#     def __init__(self, size, extent, tile_id="tile_id", partitioning_flavor=None):
-#         self.size = _check_size(size)
-#         self.extent = check_extent(extent)
-#         self.tile_id = tile_id
-
-#     @property
-#     def bins(self):
-#         return [self.tile_id]
-
-#     @check_valid_dataframe
-#     def add_labels(self, df, x, y):
-#         if isinstance(df, pd.DataFrame):
-#             return add_pandas_tile_labels(
-#                 df,
-#                 x=x,
-#                 y=x,
-#                 size=self.size,
-#                 extent=self.extent,
-#                 tile_id=self.tile_id,
-#             )
-#         return add_polars_tile_labels(
-#             df,
-#             x=x,
-#             y=x,
-#             size=self.size,
-#             extent=self.extent,
-#             tile_id=self.tile_id,
-#         )

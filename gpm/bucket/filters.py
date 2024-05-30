@@ -10,6 +10,7 @@ def get_geodesic_distance_from_point(lons, lats, lon, lat):
 
 
 def filter_around_point(df, lon, lat, distance):
+    # https://stackoverflow.com/questions/76262681/i-need-to-create-a-column-with-the-distance-between-two-coordinates-in-polars
     # Retrieve coordinates
     if isinstance(df, pl.LazyFrame):
         df_coords = df.select("lon", "lat").collect()
