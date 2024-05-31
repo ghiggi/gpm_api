@@ -2,8 +2,16 @@ import numpy as np
 import polars as pl
 import pyproj
 
+from gpm.bucket.dataframe import (
+    df_add_column,
+    df_get_column,
+    df_select_valid_rows,
+)
+
 
 def get_geodesic_distance_from_point(lons, lats, lon, lat):
+    lons = np.asanyarray(lons)
+    lats = np.asanyarray(lats)
     geod = pyproj.Geod(ellps="WGS84")
     _, _, distance = geod.inv(lons, lats, np.ones(lons.shape) * lon, np.ones(lats.shape) * lat, radians=False)
     return distance
@@ -12,23 +20,15 @@ def get_geodesic_distance_from_point(lons, lats, lon, lat):
 def filter_around_point(df, lon, lat, distance):
     # https://stackoverflow.com/questions/76262681/i-need-to-create-a-column-with-the-distance-between-two-coordinates-in-polars
     # Retrieve coordinates
-    if isinstance(df, pl.LazyFrame):
-        df_coords = df.select("lon", "lat").collect()
-        lons = np.asanyarray(df_coords["lon"])
-        lats = np.asanyarray(df_coords["lat"])
-    else:
-        lons = np.asanyarray(df["lon"])
-        lats = np.asanyarray(df["lat"])
+    lons = df_get_column(df, column="lon")
+    lats = df_get_column(df, column="lat")
     # Compute geodesic distance
     distances = get_geodesic_distance_from_point(lons=lons, lats=lats, lon=lon, lat=lat)
     valid_indices = distances <= distance
-    # Filter dataframe
-    if isinstance(df, (pl.LazyFrame, pl.DataFrame)):
-        df = df.with_columns(pl.Series("distance", distances))
-        df = df.filter(valid_indices)
-    else:
-        df["distance"] = distances
-        df = df.loc[valid_indices]
+    # Add distance
+    df = df_add_column(df, column="distance", values=distances)
+    # Select only valid rows
+    df = df_select_valid_rows(df, valid_rows=valid_indices)
     return df
 
 

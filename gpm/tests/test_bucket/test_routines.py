@@ -76,7 +76,12 @@ def test_write_bucket(tmp_path, df_type):
         row_group_size="500MB",
     )
     # Check file created with correct prefix
-    assert os.path.exists(os.path.join(bucket_dir, "lon_bin=5.0", "lat_bin=5.0", "filename_prefix_0.parquet"))
+    if df_type == "pandas":
+        assert os.path.exists(os.path.join(bucket_dir, "lon_bin=5.0", "lat_bin=5.0", "filename_prefix_0.parquet"))
+    else:  # dask
+        assert os.path.exists(
+            os.path.join(bucket_dir, "lon_bin=5.0", "lat_bin=5.0", "filename_prefix_dask_partition_0_0.parquet"),
+        )
 
 
 @pytest.mark.parametrize("partitioning_order", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])

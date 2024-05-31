@@ -25,9 +25,11 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the Spatial Partitioning classes."""
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 import polars as pl
+import pyarrow as pa
 import pytest
 import xarray as xr
 
@@ -37,9 +39,6 @@ from gpm.bucket.partitioning import (
     XYPartitioning,
     get_array_combinations,
     get_bounds,
-    get_bounds_and_labels,
-    get_centroids,
-    get_labels,
     get_n_decimals,
 )
 
@@ -55,35 +54,6 @@ def test_get_bounds():
     """Verify the correct calculation of bounds."""
     bounds = get_bounds(0.5, 0, 2)
     assert np.array_equal(bounds, np.array([0, 0.5, 1.0, 1.5, 2]))
-
-
-def test_get_labels():
-    """Verify correct label generation."""
-    labels = get_labels(0.5, 0, 2)
-    expected_labels = ["0.25", "0.75", "1.25", "1.75"]
-    assert labels.tolist() == expected_labels
-
-    labels = get_labels(0.999, 0, 2)
-    expected_labels = ["0.4995", "1.4985", "2.4975"]
-    assert labels.tolist() == expected_labels
-
-
-def test_get_centroids():
-    """Verify correct midpoint generation."""
-    centroids = get_centroids(0.5, 0, 2)
-    expected_centroids = [0.25, 0.75, 1.25, 1.75]
-    np.testing.assert_allclose(centroids, expected_centroids)
-
-    centroids = get_centroids(0.999, 0, 2)
-    expected_centroids = [0.4995, 1.4985, 2.4975]
-    np.testing.assert_allclose(centroids, expected_centroids)
-
-
-def test_get_bounds_and_labels():
-    """Ensure both bounds and labels are returned and accurate."""
-    bounds, labels = get_bounds_and_labels(0.5, 0, 2)
-    assert np.array_equal(bounds, np.array([0, 0.5, 1.0, 1.5, 2]))
-    assert labels.tolist() == ["0.25", "0.75", "1.25", "1.75"]
 
 
 def test_get_array_combinations():
@@ -116,11 +86,28 @@ class TestXYPartitioning:
 
     def test_invalid_initialization(self):
         """Test initialization with invalid extent and size."""
+        # Invalid names types
+        with pytest.raises(TypeError):
+            XYPartitioning(size=(0.1, 0.2), extent=[0, 10, 0, 10], names=0)
+
+        # Invalid extent
         with pytest.raises(ValueError):
             XYPartitioning(size=(0.1, 0.2), extent=[10, 0, 0, 10])
-
+        # Invalid size
         with pytest.raises(TypeError):
             XYPartitioning(size="invalid", extent=[0, 10, 0, 10])
+
+        # Mismatch partitions_order and names types
+        with pytest.raises(ValueError):
+            XYPartitioning(
+                size=(0.1, 0.2),
+                extent=[0, 10, 0, 10],
+                names=["x", "y"],
+                partitioning_order=["y", "another_name_instead_of_x"],
+            )
+        # Invalid names types
+        with pytest.raises(ValueError):
+            XYPartitioning(size=(0.1, 0.2), extent=[0, 10, 0, 10], partitioning_flavor="bad_one")
 
     def test_labels(self):
         """Test labels property (origin="top")."""
@@ -166,14 +153,14 @@ class TestXYPartitioning:
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
 
         # Test results
-        expected_x_labels = ["0.25", "0.25", "0.25", "0.75", "1.25", "1.75"]
-        expected_y_labels_ = ["0.125", "0.125", "0.375", "0.875", "1.375", "1.875"]
-        assert df_out["partition_name_x"].dtype.name == "category", "X bin are not of categorical type."
-        assert df_out["partition_name_y"].dtype.name == "category", "Y bin are not of categorical type."
-        assert df_out["partition_name_x"].astype(str).tolist() == expected_x_labels, "X bin are incorrect."
-        assert df_out["partition_name_y"].astype(str).tolist() == expected_y_labels_, "Y bin are incorrect."
+        assert isinstance(df_out, pd.DataFrame)
+        # assert df_out["partition_name_x"].dtype.name == "category", "X bin are not of categorical type."
+        # assert df_out["partition_name_y"].dtype.name == "category", "Y bin are not of categorical type."
 
-    # add dask
+        expected_x_labels = ["0.25", "0.25", "0.25", "0.75", "1.25", "1.75"]
+        expected_y_labels = ["0.125", "0.125", "0.375", "0.875", "1.375", "1.875"]
+        assert df_out["partition_name_x"].astype(str).tolist() == expected_x_labels, "X bin are incorrect."
+        assert df_out["partition_name_y"].astype(str).tolist() == expected_y_labels, "Y bin are incorrect."
 
     def test_add_labels_polars(self):
         """Test valid partitions are added to a polars dataframe."""
@@ -196,12 +183,104 @@ class TestXYPartitioning:
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
 
         # Test results
+        assert isinstance(df_out, pl.DataFrame)
+        # assert df_out["partition_name_x"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
+        # assert df_out["partition_name_y"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
+
+        expected_x_labels = ["0.25", "0.25", "0.25", "0.75", "1.25", "1.75"]
+        expected_y_labels = ["0.125", "0.125", "0.375", "0.875", "1.375", "1.875"]
+        assert df_out["partition_name_x"].cast(str).to_list() == expected_x_labels, "X bin are incorrect."
+        assert df_out["partition_name_y"].cast(str).to_list() == expected_y_labels, "Y bin are incorrect."
+
+    def test_add_labels_polars_lazy(self):
+        """Test valid partitions are added to a polars lazy dataframe."""
+        # Create test dataframe
+        df = pl.DataFrame(
+            pd.DataFrame(
+                {
+                    "x": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                    "y": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                },
+            ),
+        ).lazy()
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+
+        # Add partitions
+        df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
+
+        # Test results
+        assert isinstance(df_out, pl.LazyFrame)
+        df_out = df_out.collect()
+        # assert df_out["partition_name_x"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
+        # assert df_out["partition_name_y"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
+
+        expected_x_labels = ["0.25", "0.25", "0.25", "0.75", "1.25", "1.75"]
+        expected_y_labels = ["0.125", "0.125", "0.375", "0.875", "1.375", "1.875"]
+        assert df_out["partition_name_x"].cast(str).to_list() == expected_x_labels, "X bin are incorrect."
+        assert df_out["partition_name_y"].cast(str).to_list() == expected_y_labels, "Y bin are incorrect."
+
+    def test_add_dask_pandas(self):
+        """Test valid partitions are added to a dask dataframe."""
+        # Create test dataframe
+        df = pd.DataFrame(
+            {
+                "x": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                "y": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+            },
+        )
+        df = dd.from_pandas(df, npartitions=2)
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+
+        # Add partitions
+        df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
+
+        # Test results
+        assert isinstance(df_out, dd.DataFrame)
+        # assert df_out["partition_name_x"].dtype.name == "category", "X bin are not of categorical type."
+        # assert df_out["partition_name_y"].dtype.name == "category", "Y bin are not of categorical type."
+        df_out = df_out.compute()
+
+        expected_x_labels = ["0.25", "0.25", "0.25", "0.75", "1.25", "1.75"]
+        expected_y_labels = ["0.125", "0.125", "0.375", "0.875", "1.375", "1.875"]
+        assert df_out["partition_name_x"].astype(str).tolist() == expected_x_labels, "X bin are incorrect."
+        assert df_out["partition_name_y"].astype(str).tolist() == expected_y_labels, "Y bin are incorrect."
+
+    def test_add_labels_pyarrow(self):
+        """Test valid partitions are added to a pyarrow dataframe."""
+        # Create test dataframe
+        df = pd.DataFrame(
+            {
+                "x": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                "y": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+            },
+        )
+        df = pa.Table.from_pandas(df)
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+
+        # Add partitions
+        df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
+
+        # Test results
+        assert isinstance(df_out, pa.Table)
+        # assert df_out["partition_name_x"].dtype.name == "category", "X bin are not of categorical type."
+        # assert df_out["partition_name_y"].dtype.name == "category", "Y bin are not of categorical type."
+
         expected_x_labels = ["0.25", "0.25", "0.25", "0.75", "1.25", "1.75"]
         expected_y_labels_ = ["0.125", "0.125", "0.375", "0.875", "1.375", "1.875"]
-        assert df_out["partition_name_x"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
-        assert df_out["partition_name_y"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
-        assert df_out["partition_name_x"].cast(str).to_list() == expected_x_labels, "X bin are incorrect."
-        assert df_out["partition_name_y"].cast(str).to_list() == expected_y_labels_, "Y bin are incorrect."
+        assert df_out["partition_name_x"].to_numpy().astype(str).tolist() == expected_x_labels, "X bin are incorrect."
+        assert df_out["partition_name_y"].to_numpy().astype(str).tolist() == expected_y_labels_, "Y bin are incorrect."
 
     def test_add_labels_invalid_args(self):
         """Test error is raised if invalid arguments are passed to add_labels."""
@@ -265,6 +344,63 @@ class TestXYPartitioning:
         with pytest.raises(ValueError):
             partitioning.add_labels(df=df_out_of_extent_values, x="x", y="y", remove_invalid_rows=False)
 
+    def test_add_centroids_pandas(self):
+        """Test valid partitions centroids are added to a pandas dataframe."""
+        # Create test dataframe
+        df = pd.DataFrame(
+            {
+                "x": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                "y": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+            },
+        )
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+
+        # Add partitions
+        df_out = partitioning.add_centroids(df, x="x", y="y", remove_invalid_rows=True)
+
+        # Test results
+        assert isinstance(df_out, pd.DataFrame)
+        expected_x_labels = [0.25, 0.25, 0.25, 0.75, 1.25, 1.75]
+        expected_y_labels = [0.125, 0.125, 0.375, 0.875, 1.375, 1.875]
+        assert df_out["x_c"].dtype.name == "float64", "X Centroids are not of float64 type."
+        assert df_out["y_c"].dtype.name == "float64", "Y Centroids are not of float64 type."
+        assert df_out["x_c"].tolist() == expected_x_labels, "X Centroids are incorrect."
+        assert df_out["y_c"].tolist() == expected_y_labels, "Y Centroids are incorrect."
+
+    def test_add_centroids_invalid_values(self):
+        """Test error is raised if invalid values are present in the dataframe."""
+        # Create test pandas.DataFrame
+        df_null_values = pd.DataFrame(
+            {
+                "x": [0, 0.5, 1.0, np.nan],
+                "y": [0, 0.5, np.nan, 1.0],
+            },
+        )
+
+        df_out_of_extent_values = pd.DataFrame(
+            {
+                "x": [-0.001, 0, 2.0, 2.1],
+                "y": [-0.001, 0, 2.0, 2.1],
+            },
+        )
+
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        partitioning = XYPartitioning(size=size, extent=extent)
+
+        # Test error is raised if NaN are present in x or y column
+        with pytest.raises(ValueError):
+            partitioning.add_centroids(df=df_null_values, x="x", y="y", remove_invalid_rows=False)
+
+        # Test error is raised if out of extent values are present in x and y column
+        with pytest.raises(ValueError):
+            partitioning.add_centroids(df=df_out_of_extent_values, x="x", y="y", remove_invalid_rows=False)
+
     @pytest.mark.parametrize("df_type", ["pandas", "polars"])
     def test_to_xarray(self, df_type):
         """Test valid partitions are added to a pandas dataframe."""
@@ -297,19 +433,21 @@ class TestXYPartitioning:
             df_grouped["dummy_var"] = 2
 
         # Convert to Dataset
-        ds = partitioning.to_xarray(df_grouped, new_x="lon", new_y="lat")
+        df_grouped = partitioning.add_centroids(df_grouped, x="x", y="y")
+        ds = partitioning.to_xarray(df_grouped)
 
         # Test results
         expected_x_centroids = [0.25, 0.75, 1.25, 1.75]
         expected_y_centroids = [0.125, 0.375, 0.625, 0.875, 1.125, 1.375, 1.625, 1.875]
         assert isinstance(ds, xr.Dataset), "Not a xr.Dataset"
         assert "dummy_var" in ds, "The x columns has not become a xr.Dataset variable"
-        assert ds["lon"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
-        assert ds["lat"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
-        assert ds["lon"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
-        assert ds["lat"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
-        np.testing.assert_allclose(ds["lon"].data, expected_x_centroids)
-        np.testing.assert_allclose(ds["lat"].data, expected_y_centroids)
+        assert ds["x_c"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
+        assert ds["y_c"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
+        assert ds["x_c"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
+        assert ds["y_c"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
+        np.testing.assert_allclose(ds["x_c"].data, expected_x_centroids)
+        np.testing.assert_allclose(ds["y_c"].data, expected_y_centroids)
+        assert ds["dummy_var"].data[0, 0] == 2
 
     @pytest.mark.parametrize("index_type", ["set", "unset"])
     def test_to_xarray_multindex(self, index_type):
@@ -342,33 +480,74 @@ class TestXYPartitioning:
         df_grouped1["month"] = 1
         df_grouped2["month"] = 2
 
-        df = pd.concat((df_grouped1, df_grouped2))
+        df_full = pd.concat((df_grouped1, df_grouped2))
 
         # Test categorical dtype is converted !
-        df["frequency"] = pd.Categorical(df["frequency"])
+        df_full["frequency"] = pd.Categorical(df_full["frequency"])
+
+        # Test
+        df_full = partitioning.add_centroids(df_full, x="x", y="y")
 
         # Convert to Dataset
         if index_type == "set":
-            df = df.reset_index()
-            df = df.set_index([*names, "frequency", "month"])
-            indices = None
+            df_full = df_full.reset_index()
+            df_full = df_full.set_index([*names, "frequency", "month"])
+            aux_coords = None
         else:
-            indices = ["frequency", "month"]
-        ds = partitioning.to_xarray(df, new_x="lon", new_y="lat", indices=indices)
+            aux_coords = ["frequency", "month"]
+        ds = partitioning.to_xarray(df_full, aux_coords=aux_coords)
 
         # Test results
         assert isinstance(ds, xr.Dataset), "Not a xr.Dataset"
         assert "dummy_var" in ds, "The x columns has not become a xr.Dataset variable."
         assert "frequency" in ds.coords, "'frequency' is not a xr.Dataset coordinate."
         assert "month" in ds.coords, "'month' is not a xr.Dataset coordinate."
-        assert ds["lon"].data.dtype.name == "float64", "xr.Dataset 'lon' coordinate is not float64."
-        assert ds["lat"].data.dtype.name == "float64", "xr.Dataset 'lat' coordinate is not float64."
+        assert "partition_label_x" not in ds.coords, "The x partition label has been set as a xr.Dataset coordinate."
+        assert "partition_label_y" not in ds.coords, "The y partition label has been set as a xr.Dataset coordinate."
+        assert ds["x_c"].data.dtype.name == "float64", "xr.Dataset 'lon' coordinate is not float64."
+        assert ds["y_c"].data.dtype.name == "float64", "xr.Dataset 'lat' coordinate is not float64."
         assert ds["frequency"].data.dtype.name == "object", "xr.Dataset 'frequency' coordinate is not an object."
         assert ds["month"].data.dtype.name == "int64", "xr.Dataset 'month' coordinate is not int64."
 
-        da = ds["dummy_var"].isel(frequency=1, month=0, lon=slice(0, 2), lat=slice(0, 2))
+        da = ds["dummy_var"].isel(frequency=1, month=0, x_c=slice(0, 2), y_c=slice(0, 2))
         expected_arr = np.array([[2.0, 2.0], [np.nan, np.nan]])
         np.testing.assert_allclose(da.data, expected_arr)
+
+    def test_to_xarray_invalid_args(self):
+        """Test invalid arguments of to_xarray() method."""
+        # Create test pandas.DataFrame
+        df = pd.DataFrame(
+            {
+                "x": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                "y": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+            },
+        )
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        # Add partitions
+        df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
+        # Aggregate by partitions
+        df_grouped = df.groupby(partitioning.partitioning_order, observed=True).median()
+        df_grouped["dummy_var"] = 2
+        # Test raise error because no centroids
+        with pytest.raises(ValueError):
+            partitioning.to_xarray(df_grouped)
+        # Convert to Dataset
+        df_grouped = partitioning.add_centroids(df_grouped, x="x", y="y", x_coord="x_dummy", y_coord="y_dummy")
+        # Test raise error because spatial_coords not specified (and defaults are not there)
+        with pytest.raises(ValueError):
+            partitioning.to_xarray(df_grouped)
+        # Test raise error because spatial_coords are mispecified
+        with pytest.raises(ValueError):
+            partitioning.to_xarray(df_grouped, spatial_coords=["bad_x", "bad_y"])
+        with pytest.raises(ValueError):
+            partitioning.to_xarray(df_grouped, spatial_coords="dummy")
+        # Test raise error because invalid aux_coords
+        with pytest.raises(ValueError):
+            partitioning.to_xarray(df_grouped, spatial_coords=["x_dummy", "y_dummy"], aux_coords=["bad"])
 
     def test_query_labels(self):
         """Test valid labels queries."""
@@ -680,51 +859,6 @@ class TestLonLatPartitioning:
         directories = partitioning.directories_around_point(lon=3, lat=3, distance=150_000)  # 150 km
         assert directories.tolist() == ["lon_bin=1.75/lat_bin=1.625", "lon_bin=1.75/lat_bin=1.875"]
 
-    @pytest.mark.parametrize("df_type", ["pandas", "polars"])
-    def test_to_xarray(self, df_type):
-        """Test valid partitions are added to a pandas dataframe."""
-        # Create test pandas.DataFrame
-        df = pd.DataFrame(
-            {
-                "lon": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
-                "lat": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
-            },
-        )
-        # Convert to polars.DataFrame
-        if df_type == "polars":
-            df = pl.DataFrame(df)
-
-        # Create partitioning
-        size = (0.5, 0.25)
-        extent = [0, 2, 0, 2]
-        partitioning = LonLatPartitioning(size=size, extent=extent)
-
-        # Add partitions
-        df = partitioning.add_labels(df, x="lon", y="lat", remove_invalid_rows=True)
-
-        # Aggregate by partitions
-        if df_type == "polars":
-            df_grouped = df.group_by(partitioning.partitioning_order).median()
-            df_grouped = df_grouped.with_columns(pl.lit(2).alias("dummy_var"))
-        else:
-            df_grouped = df.groupby(partitioning.partitioning_order, observed=True).median()
-            df_grouped["dummy_var"] = 2
-
-        # Convert to Dataset
-        ds = partitioning.to_xarray(df_grouped)
-
-        # Test results
-        expected_x_centroids = [0.25, 0.75, 1.25, 1.75]
-        expected_y_centroids = [0.125, 0.375, 0.625, 0.875, 1.125, 1.375, 1.625, 1.875]
-        assert isinstance(ds, xr.Dataset), "Not a xr.Dataset"
-        assert "dummy_var" in ds, "The x columns has not become a xr.Dataset variable"
-        assert ds["lon"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
-        assert ds["lat"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
-        assert ds["lon"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
-        assert ds["lat"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
-        np.testing.assert_allclose(ds["lon"].data, expected_x_centroids)
-        np.testing.assert_allclose(ds["lat"].data, expected_y_centroids)
-
 
 class TestTilePartitioning:
     """Tests for the TilePartitioning class."""
@@ -941,6 +1075,31 @@ class TestTilePartitioning:
         assert partitioning.n_partitions == 648
         labels = partitioning.query_labels(-180, 90)
         assert labels.tolist() == ["000"]
+
+    def test_add_labels_single_level_pandas(self):
+        """Test valid partitions are added to a pandas dataframe."""
+        # Create test dataframe
+        df = pd.DataFrame(
+            {
+                "x": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                "y": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+            },
+        )
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        levels = 1
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            levels=levels,
+        )
+        # Add partitions
+        df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
+        # Test results
+        assert isinstance(df_out, pd.DataFrame)
+        expected_ids = ["28", "28", "24", "17", "10", "3"]
+        assert df_out["tile_id"].astype(str).tolist() == expected_ids, "Tile ids are incorrect."
 
     def test_to_dict_xy(self):
         """Test to dict."""

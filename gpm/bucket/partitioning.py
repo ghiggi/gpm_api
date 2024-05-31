@@ -28,11 +28,17 @@
 import os
 from functools import reduce, wraps
 
-import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-import polars as pl
 
+from gpm.bucket.dataframe import (
+    check_valid_dataframe,
+    df_add_column,
+    df_get_column,
+    df_is_column_in,
+    df_select_valid_rows,
+    df_to_pandas,
+)
 from gpm.utils.geospatial import (
     Extent,
     _check_size,
@@ -140,6 +146,14 @@ def check_partitioning_flavor(partitioning_flavor):
     return partitioning_flavor
 
 
+def check_valid_x_y(df, x, y):
+    """Check if the x and y columns are in the dataframe."""
+    if not df_is_column_in(df, column=y):
+        raise ValueError(f"y='{y}' is not a column of the dataframe.")
+    if not df_is_column_in(df, column=x):
+        raise ValueError(f"x='{x}' is not a column of the dataframe.")
+
+
 def get_array_combinations(x, y):
     """Return all combinations between the two input arrays."""
     # Create the mesh grid
@@ -147,6 +161,12 @@ def get_array_combinations(x, y):
     # Stack and reshape the grid arrays to get combinations
     combinations = np.vstack([grid1.ravel(), grid2.ravel()]).T
     return combinations[:, 0], combinations[:, 1]
+
+
+def get_centroids_from_bounds(bounds):
+    """Define partitions centroids from bounds."""
+    centroids = (bounds[:-1] + bounds[1:]) / 2
+    return centroids
 
 
 def query_indices(values, bounds):
@@ -181,7 +201,9 @@ def get_directories(dict_labels, partitioning_order, partitioning_flavor):
 
 
 ####-------------------------------------------------------------------------------------------------------------------.
-#### XY utilities
+##################################
+#### XYPartitioning Utilities ####
+##################################
 def get_n_decimals(number):
     """Get the number of decimals of a number."""
     number_str = str(number)
@@ -200,181 +222,6 @@ def get_bounds(size, vmin, vmax):
     if bounds[-1] != vmax:
         bounds = np.append(bounds, np.array([vmax]))
     return bounds
-
-
-####------------------------------------------------------------------------------------------------------------------.
-def check_valid_dataframe(func):
-    """Decorator checking if the first argument is a dataframe.
-
-    Accepted dataframes: `pandas.DataFrame`, `dask.DataFrame` or a `polars.DataFrame`.
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        # Check if 'df' is in kwargs, otherwise assume it is the first positional argument
-        df = kwargs.get("df", args[1] if len(args) == 2 else None)
-        # Validate the DataFrame
-        if not isinstance(df, (pd.DataFrame, dd.DataFrame, pl.DataFrame)):
-            raise TypeError("The 'df' argument must be either a pandas.DataFrame or a polars.DataFrame.")
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def check_valid_x_y(df, x, y):
-    """Check if the x and y columns are in the dataframe."""
-    if y not in df:
-        raise ValueError(f"y='{y}' is not a column of the dataframe.")
-    if x not in df:
-        raise ValueError(f"x='{x}' is not a column of the dataframe.")
-
-
-def ensure_xy_without_nan_values(df, x, y, remove_invalid_rows=True):
-    """Ensure valid coordinates in the dataframe."""
-    # Remove NaN vales
-    if remove_invalid_rows:
-        if isinstance(df, pd.DataFrame):
-            return df.dropna(subset=[x, y])
-        return df.filter(~pl.col(x).is_null() | ~pl.col(y).is_null())
-
-    # Check no NaN values
-    if isinstance(df, pd.DataFrame):  # noqa
-        indices = df[[x, y]].isna().any(axis=1)
-    else:
-        indices = df[x].is_null() | df[y].is_null()
-    if indices.any():
-        rows_indices = np.where(indices)[0].tolist()
-        raise ValueError(f"Null values present in columns {x} and {y} at rows: {rows_indices}")
-    return df
-
-
-def _remove_outside_cat_flags(df, column):
-    df = df.with_columns(df[column].cast(str).cast(pl.Categorical).alias(column))
-    return df
-
-
-def ensure_valid_partitions(df, xbin, ybin, remove_invalid_rows=True):
-    """Ensure valid partitions labels in the dataframe."""
-    # Remove NaN values
-    if remove_invalid_rows:
-        if isinstance(df, pd.DataFrame):
-            return df.dropna(subset=[xbin, ybin])
-        df = df.filter(~pl.col(xbin).is_in(["outside_right", "outside_left"]))
-        df = df.filter(~pl.col(ybin).is_in(["outside_right", "outside_left"]))
-        df = df.filter(~pl.col(xbin).is_null() | ~pl.col(ybin).is_null())
-        df = _remove_outside_cat_flags(df, column=xbin)
-        df = _remove_outside_cat_flags(df, column=ybin)
-        return df
-
-    # Check no invalid partitions (NaN or polars outside_right/outside_left)
-    if isinstance(df, pd.DataFrame):
-        indices = df[[xbin, ybin]].isna().any(axis=1)
-    else:
-        indices = df[xbin].is_in(["outside_right", "outside_left"]) | df[ybin].is_in(["outside_right", "outside_left"])
-
-    if indices.any():
-        rows_indices = np.where(indices)[0].tolist()
-        raise ValueError(f"Out of extent x,y coordinates at rows: {rows_indices}")
-    # Ensure no more "outside_right"/"outside_left" flag
-    if isinstance(df, pl.DataFrame):
-        df = _remove_outside_cat_flags(df, column=xbin)
-        df = _remove_outside_cat_flags(df, column=ybin)
-    return df
-
-
-def get_centroids(size, vmin, vmax):
-    """Define partitions centroids."""
-    bounds = get_bounds(size, vmin=vmin, vmax=vmax)
-    centroids = bounds[0:-1] + size / 2
-    return centroids
-
-
-def get_centroids_from_bounds(bounds):
-    """Define partitions centroids."""
-    centroids = (bounds[:-1] + bounds[1:]) / 2
-    return centroids
-
-
-def get_labels(size, vmin, vmax):
-    """Define partitions labels (rounding partitions centroids)."""
-    n_decimals = get_n_decimals(size)
-    centroids = get_centroids(size, vmin, vmax)
-    return centroids.round(n_decimals + 1).astype(str)
-
-
-def get_bounds_and_centroids(size, vmin, vmax):
-    """Return the partitions edges and partitions centroids."""
-    bounds = get_bounds(size, vmin=vmin, vmax=vmax)
-    centroids = get_centroids(size, vmin=vmin, vmax=vmax)
-    return bounds, centroids
-
-
-def get_bounds_and_labels(size, vmin, vmax):
-    """Return the partitions edges and partitions labels."""
-    bounds = get_bounds(size, vmin=vmin, vmax=vmax)
-    labels = get_labels(size, vmin=vmin, vmax=vmax)
-    return bounds, labels
-
-
-def query_labels(values, bounds, labels):
-    """Return the partition labels for the specified coordinates.
-
-    Invalid values (NaN, None) or out of bounds values returns NaN.
-    """
-    values = np.atleast_1d(np.asanyarray(values)).astype(float)
-    return pd.cut(values, bins=bounds, labels=labels, include_lowest=True, right=True)
-
-
-def query_centroids(values, bounds, centroids):
-    """Return the partition centroids for the specified coordinates.
-
-    Invalid values (NaN, None) or out of bounds values returns NaN.
-    """
-    values = np.atleast_1d(np.asanyarray(values)).astype(float)
-    return pd.cut(values, bins=bounds, labels=centroids, include_lowest=True, right=True).astype(float)
-
-
-def add_pandas_xy_labels(df, size, extent, x, y, xbin, ybin, remove_invalid_rows=True):
-    """Add partitions labels to a pandas DataFrame based on x, y coordinates."""
-    # Check x,y names
-    check_valid_x_y(df, x, y)
-    # Check/remove rows with NaN x,y columns
-    df = ensure_xy_without_nan_values(df, x=x, y=y, remove_invalid_rows=remove_invalid_rows)
-    # Retrieve bounds and labels (N and N+1)
-    cut_x_bounds, cut_x_labels = get_bounds_and_labels(size[0], vmin=extent[0], vmax=extent[1])
-    cut_y_bounds, cut_y_labels = get_bounds_and_labels(size[1], vmin=extent[2], vmax=extent[3])
-    # Add partitions labels columns
-    df = df.copy()
-    df[xbin] = query_labels(df[x].to_numpy(), bounds=cut_x_bounds, labels=cut_x_labels)
-    df[ybin] = query_labels(df[y].to_numpy(), bounds=cut_y_bounds, labels=cut_y_labels)
-    # Check/remove rows with invalid partitions (NaN)
-    df = ensure_valid_partitions(df, xbin=xbin, ybin=ybin, remove_invalid_rows=remove_invalid_rows)
-    return df
-
-
-def add_polars_xy_labels(df, x, y, size, extent, xbin, ybin, remove_invalid_rows=True):
-    """Add partitions to a polars DataFrame based on x, y coordinates."""
-    # Check x,y names
-    check_valid_x_y(df, x, y)
-    # Check/remove rows with null x,y columns
-    df = ensure_xy_without_nan_values(df, x=x, y=y, remove_invalid_rows=remove_invalid_rows)
-    # Retrieve bounds and labels (N and N+1)
-    cut_x_bounds, cut_x_labels = get_bounds_and_labels(size[0], vmin=extent[0], vmax=extent[1])
-    cut_y_bounds, cut_y_labels = get_bounds_and_labels(size[1], vmin=extent[2], vmax=extent[3])
-    # Add outside labels for polars cut function
-    cut_x_labels = ["outside_left", *cut_x_labels, "outside_right"]
-    cut_y_labels = ["outside_left", *cut_y_labels, "outside_right"]
-    # Deal with left inclusion
-    cut_x_bounds[0] = cut_x_bounds[0] - 1e-8
-    cut_y_bounds[0] = cut_y_bounds[0] - 1e-8
-    # Add partitions columns
-    df = df.with_columns(
-        pl.col(x).cut(cut_x_bounds, labels=cut_x_labels, left_closed=False).alias(xbin),
-        pl.col(y).cut(cut_y_bounds, labels=cut_y_labels, left_closed=False).alias(ybin),
-    )
-    # Check/remove rows with invalid partitions (out of extent or Null)
-    df = ensure_valid_partitions(df, xbin=xbin, ybin=ybin, remove_invalid_rows=remove_invalid_rows)
-    return df
 
 
 ####-----------------------------------------------------------------------------------------------------------------.
@@ -426,77 +273,6 @@ def _ensure_indices_list(indices):
     if indices == [None]:  # what is returned by df.index.names if no index !
         indices = []
     return indices
-
-
-def _preprocess_dataframe_indices(df, spatial_indices, aux_indices):
-    # spatial_indices can be []
-    spatial_indices = _ensure_indices_list(spatial_indices)
-    aux_indices = _ensure_indices_list(aux_indices)
-    # Reset indices if present
-    src_indices = df.index.names  # no index returns None
-    src_indices = _ensure_indices_list(src_indices)
-    if set(spatial_indices).issubset(src_indices):
-        df = df.reset_index()
-
-    # Define future dataset indices
-    indices = np.unique([*spatial_indices, *aux_indices, *src_indices]).tolist()
-    non_spatial_indices = set(indices).symmetric_difference(set(spatial_indices))
-
-    # Ensure indices are float or string and that spatial indices are float
-    for idx_name in spatial_indices:
-        df[idx_name] = df[idx_name].astype(float)
-    for idx_name in non_spatial_indices:
-        if df.dtypes[idx_name].name == "category":
-            df[idx_name] = df[idx_name].astype(str)
-    df = df.set_index(indices)
-
-    # Define dictionary of indices
-    dict_indices = {idx_name: df.index.get_level_values(idx_name).unique().to_numpy() for idx_name in indices}
-    return df, dict_indices
-
-
-def df_to_xarray(df, xbin, ybin, size, extent, new_x=None, new_y=None, indices=None):
-    """Convert dataframe to xarray Dataset based on specified partitions centroids.
-
-    The partitioning cells not present in the dataframe are set to NaN.
-    """
-    if isinstance(df, pl.DataFrame):
-        df = df.to_pandas()
-
-    # Ppreprocess dataframe indices
-    # - Ensure indices are int, float or str (no categorical)
-    # - Ensure the returned dataframe is without index
-    # - List the indices which are not the partition centroids
-    spatial_indices = [xbin, ybin]
-    df, dict_indices = _preprocess_dataframe_indices(df, spatial_indices=spatial_indices, aux_indices=indices)
-
-    # Update dictionary of indices with all possible centroids
-    x_centroids = get_centroids(size[0], vmin=extent[0], vmax=extent[1])
-    y_centroids = get_centroids(size[1], vmin=extent[2], vmax=extent[3])
-    dict_indices[xbin] = x_centroids
-    dict_indices[ybin] = y_centroids
-
-    # Create an empty DataFrame with the MultiIndex
-    multi_index = pd.MultiIndex.from_product(
-        dict_indices.values(),
-        names=dict_indices.keys(),
-    )
-    empty_df = pd.DataFrame(index=multi_index)
-
-    # Create final dataframe
-    df_full = empty_df.join(df, how="left")
-
-    # Reshape to xarray
-    ds = df_full.to_xarray()
-
-    # Rename dictionary
-    rename_dict = {}
-    if new_x is not None:
-        rename_dict[xbin] = new_x
-    if new_y is not None:
-        rename_dict[ybin] = new_y
-    ds = ds.rename(rename_dict)
-    return ds
 
 
 ####------------------------------------------------------------------------------------------------------------------.
@@ -554,6 +330,8 @@ class Base2DPartitioning:
         # Define private attrs
         self._labels = None
         self._centroids = None
+        self._x_coord = "x_c"  # default name for x centroid column for add_centroids
+        self._y_coord = "y_c"  # default name for y centroid column for add_centroids
 
     @flatten_xy_arrays
     def query_indices(self, x, y):
@@ -712,55 +490,190 @@ class Base2DPartitioning:
         dict_labels = self.get_partitions_around_point(x=x, y=y, distance=distance, size=size)
         return self._directories(dict_labels=dict_labels)
 
-    # @check_valid_dataframe
-    # def add_labels(self, df, x, y, remove_invalid_rows=True):
+    def add_labels(self, df, x, y, remove_invalid_rows=True):
+        """Add partitions labels to the dataframe.
 
-    #     x = df[x]
-    #     y = df[y]
+        Parameters
+        ----------
+        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame or polars.LazyFrame
+            Dataframe to which add partitions centroids.
+        x : str
+            Column name with the x coordinate.
+        y : str
+            Column name with the y coordinate.
+        remove_invalid_rows: bool, optional
+            Whether to remove dataframe rows for which coordinates are invalid or out of the partitioning extent.
+            The default is ``True``.
 
-    #     # Add columns using self.names !
+        Returns
+        -------
+        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame or polars.LazyFrame
+            Dataframe with the partitions label(s) column(s).
 
-    #     # query_labels(self, x, y)
+        """
+        check_valid_dataframe(df)
+        check_valid_x_y(df, x=x, y=y)
+        x_arr = df_get_column(df, column=x)
+        y_arr = df_get_column(df, column=y)
+        # Retrieve labels
+        # - If n_level = 1: array
+        # - If n_level = 2: tuple
+        labels = self.query_labels(x_arr, y_arr)
+        if self.n_levels == 1:
+            labels = [labels]
+        # Add labels to dataframe
+        for partition, values in zip(self.names, labels):
+            df = df_add_column(df=df, column=partition, values=values)
+        # Check if invalid labels
+        invalid_rows = labels[0] == "nan"
+        invalid_rows_indices = np.where(invalid_rows)[0]
+        if invalid_rows_indices.size > 0:
+            if not remove_invalid_rows:
+                raise ValueError(f"Invalid labels at rows: {invalid_rows_indices.tolist()}")
+            # Remove invalid labels if remove_invalid_rows=True
+            df = df_select_valid_rows(df, valid_rows=~invalid_rows)
+        return df
 
-    # def add_centroids(self, df, x, y, x_centroid="x_c", y_centroid="y_c", remove_invalid_rows=True):
+    def add_centroids(self, df, x, y, x_coord=None, y_coord=None, remove_invalid_rows=True):
+        """Add partitions centroids to the dataframe.
 
-    #     # query_centroids(self, x, y)
+        Parameters
+        ----------
+        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame or polars.LazyFrame
+            Dataframe to which add partitions centroids.
+        x : str
+            Column name with the x coordinate.
+        y : str
+            Column name with the y coordinate..
+        x_coord : str, optional
+            Name of the new column with the centroids x  coordinates.
+            The default is "x_c".
+        y_coord : str, optional
+            Name of the new column with the centroids y coordinates.
+            The default is "y_c".
+        remove_invalid_rows: bool, optional
+            Whether to remove dataframe rows for which coordinates are invalid or out of the partitioning extent.
+            The default is ``True``.
 
-    #     if isinstance(df, pd.DataFrame):
-    #         return add_pandas_xy_labels(
-    #             df=df,
-    #             x=x,
-    #             y=y,
-    #             size=self.size,
-    #             extent=self.extent,
-    #             xbin=self.xbin,
-    #             ybin=self.ybin,
-    #             remove_invalid_rows=remove_invalid_rows,
-    #         )
-    #     return add_polars_xy_labels(
-    #         df=df,
-    #         x=x,
-    #         y=y,
-    #         size=self.size,
-    #         extent=self.extent,
-    #         xbin=self.xbin,
-    #         ybin=self.ybin,
-    #         remove_invalid_rows=remove_invalid_rows,
-    #    )
+        Returns
+        -------
+        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame or polars.LazyFrame
+            Dataframe with the partitions centroids x and y coordinates columns.
 
-    @check_valid_dataframe
-    def to_xarray(self, df, new_x=None, new_y=None, indices=None):
-        """Convert a dataframe with partitions centroids to a ``xr.Dataset``."""
-        return df_to_xarray(
-            df=df,
-            xbin=self.xbin,
-            ybin=self.ybin,
-            size=self.size,
-            extent=self.extent,
-            new_x=new_x,
-            new_y=new_y,
-            indices=indices,
+        """
+        # Check inputs and retrieve default values
+        check_valid_dataframe(df)
+        check_valid_x_y(df, x=x, y=y)
+        if x_coord is None:
+            x_coord = self._x_coord
+        if y_coord is None:
+            y_coord = self._y_coord
+        # Retrieve x and y coordinates arrays
+        x_arr = df_get_column(df, column=x)
+        y_arr = df_get_column(df, column=y)
+        # Retrieve centroids tuple (x, y)
+        x_centroids, y_centroids = self.query_centroids(x_arr, y_arr)
+        # Add centroids to dataframe
+        df = df_add_column(df=df, column=x_coord, values=x_centroids)
+        df = df_add_column(df=df, column=y_coord, values=y_centroids)
+        # Check if invalid labels
+        invalid_rows = np.isnan(x_centroids)
+        invalid_rows_indices = np.where(invalid_rows)[0]
+        if invalid_rows_indices.size > 0:
+            if not remove_invalid_rows:
+                raise ValueError(f"Invalid centroids at rows: {invalid_rows_indices.tolist()}")
+            # Remove invalid labels if remove_invalid_rows=True
+            df = df_select_valid_rows(df, valid_rows=~invalid_rows)
+        return df
+
+    def to_xarray(self, df, spatial_coords=None, aux_coords=None):
+        """Convert dataframe to spatial xarray Dataset based on partitions centroids.
+
+        This routine assumes that you have grouped and aggregated the dataframe over
+        the partition labels or the partition centroids!
+
+        Please add the partition centroids to the dataframe with ``add_centroids`` before calling this method.
+        Please specify the partition centroids x and y columns in the ``spatial_coords`` argument.
+
+        Please also specify the presence of auxiliary coordinates (indices) with ``aux_coords``.
+        The array cells with coordinates not included in the dataframe will have NaN values.
+        """
+        # Check inputs
+        check_valid_dataframe(df)
+        spatial_coords = _ensure_indices_list(spatial_coords)  # [] if None
+        aux_coords = _ensure_indices_list(aux_coords)  # [] if None
+
+        # Ensure dataframe is pandas
+        df = df_to_pandas(df)
+
+        # Reset dataframe indices if present
+        src_indices = df.index.names  # no index returns None
+        src_indices = _ensure_indices_list(src_indices)
+        df = df.reset_index()
+
+        # Check aux_coords are in df (index or column)
+        # - If aux_coords were already in the DataFrame index, no need to specify it.
+        if aux_coords:
+            for coord in aux_coords:
+                if coord not in df.columns:
+                    raise ValueError(f"Auxiliary coordinate '{coord}' not found in DataFrame columns or index.")
+        # Check spatial coords are in df (if specified)
+        if spatial_coords:
+            for coord in spatial_coords:
+                if coord not in df.columns and coord not in src_indices:
+                    raise ValueError(f"Spatial coordinate '{coord}' not found in DataFrame columns or index.")
+        else:  # tentative guess and raise error if not present
+            spatial_coords = [self._x_coord, self._y_coord]
+            if self._x_coord not in df.columns or self._y_coord not in df.columns:
+                raise ValueError(
+                    "Partitiong centroids not found in the dataframe. Please add partitions centroids "
+                    "using the 'add_centroids' method and specify the columns in the 'spatial_coords' "
+                    "argument of 'to_xarray'.",
+                )
+        # Finalize auxiliary coords
+        possible_coords = np.unique([*spatial_coords, *aux_coords, *src_indices]).tolist()
+        possible_aux_coords = set(possible_coords).symmetric_difference(set(spatial_coords))
+        aux_coords = possible_aux_coords.difference(set(self.names))  # exclude also partition names
+        coords = list(spatial_coords) + list(aux_coords)
+
+        # Ensure valid coordinates types
+        # - Ensure indices are int, float or str (no categorical)
+        # - Ensure spatial indices are float
+        df = _ensure_valid_coordinates_dtype(df, spatial_coords=spatial_coords, aux_coords=aux_coords)
+
+        # Set coordinates as MultiIndex
+        df = df.set_index(coords)
+
+        # Define dictionary of current indices
+        dict_indices = {coord: df.index.get_level_values(coord).unique().to_numpy() for coord in coords}
+
+        # Update dictionary with the full x and centroids
+        dict_indices[spatial_coords[0]] = self.x_centroids
+        dict_indices[spatial_coords[1]] = self.y_centroids
+
+        # Create an empty DataFrame with the MultiIndex
+        multi_index = pd.MultiIndex.from_product(
+            dict_indices.values(),
+            names=dict_indices.keys(),
         )
+        empty_df = pd.DataFrame(index=multi_index)
+
+        # Create final dataframe
+        df_full = empty_df.join(df, how="left")
+
+        # Reshape to xarray
+        ds = df_full.to_xarray()
+
+        return ds
+
+
+def _ensure_valid_coordinates_dtype(df, spatial_coords, aux_coords):
+    for column in spatial_coords:
+        df[column] = df[column].astype(float)
+    for column in aux_coords:
+        if df.dtypes[column].name == "category":
+            df[column] = df[column].astype(str)
+    return df
 
 
 class XYPartitioning(Base2DPartitioning):
@@ -867,44 +780,6 @@ class XYPartitioning(Base2DPartitioning):
             )
             self._ylabels = y_labels
         return self._ylabels
-
-    @check_valid_dataframe
-    def add_labels(self, df, x, y, remove_invalid_rows=True):
-        if isinstance(df, pd.DataFrame):
-            return add_pandas_xy_labels(
-                df=df,
-                x=x,
-                y=y,
-                size=self.size,
-                extent=self.extent,
-                xbin=self.xbin,
-                ybin=self.ybin,
-                remove_invalid_rows=remove_invalid_rows,
-            )
-        return add_polars_xy_labels(
-            df=df,
-            x=x,
-            y=y,
-            size=self.size,
-            extent=self.extent,
-            xbin=self.xbin,
-            ybin=self.ybin,
-            remove_invalid_rows=remove_invalid_rows,
-        )
-
-    @check_valid_dataframe
-    def to_xarray(self, df, new_x=None, new_y=None, indices=None):
-        """Convert a dataframe with partitions centroids to a ``xr.Dataset``."""
-        return df_to_xarray(
-            df=df,
-            xbin=self.xbin,
-            ybin=self.ybin,
-            size=self.size,
-            extent=self.extent,
-            new_x=new_x,
-            new_y=new_y,
-            indices=indices,
-        )
 
 
 class TilePartitioning(Base2DPartitioning):
@@ -1087,6 +962,8 @@ class LonLatPartitioning(XYPartitioning):
             partitioning_flavor=partitioning_flavor,
             labels_decimals=labels_decimals,
         )
+        self._x_coord = "lon_c"  # default name for x centroid column for add_centroids
+        self._y_coord = "lat_c"  # default name for y centroid column for add_centroids
 
     def get_partitions_around_point(self, lon, lat, distance=None, size=None):
         """Return the partition labels with data within the distance/size from a point."""
@@ -1122,17 +999,3 @@ class LonLatPartitioning(XYPartitioning):
         """Return the directory trees with data within the distance/size from a point."""
         dict_labels = self.get_partitions_around_point(lon=lon, lat=lat, distance=distance, size=size)
         return self._directories(dict_labels=dict_labels)
-
-    @check_valid_dataframe
-    def to_xarray(self, df, new_x="lon", new_y="lat", indices=None):
-        """Convert a dataframe with partitions centroids to a ``xr.Dataset``."""
-        return df_to_xarray(
-            df,
-            xbin=self.xbin,
-            ybin=self.ybin,
-            size=self.size,
-            extent=self.extent,
-            new_x=new_x,
-            new_y=new_y,
-            indices=indices,
-        )
