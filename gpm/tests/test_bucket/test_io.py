@@ -38,11 +38,11 @@ from gpm.bucket.io import (
     search_leaf_files,
     write_bucket_info,
 )
-from gpm.bucket.partitioning import GeographicPartitioning
+from gpm.bucket.partitioning import LonLatPartitioning
 
 
 def create_test_bucket(bucket_dir):
-    partitioning = GeographicPartitioning(size=(10, 10), partitioning_flavor="hive")
+    partitioning = LonLatPartitioning(size=(10, 10), partitioning_flavor="hive")
     write_bucket_info(bucket_dir=bucket_dir, partitioning=partitioning)
     # Define test paths
     paths_components = [

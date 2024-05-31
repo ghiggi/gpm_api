@@ -44,7 +44,7 @@ def read_bucket_info(bucket_dir):
 
 def get_bucket_partitioning(bucket_dir):
     bucket_info = read_bucket_info(bucket_dir)
-    class_name = bucket_info.pop("name")
+    class_name = bucket_info.pop("partitioning_class")
     partitioning_class = getattr(importlib.import_module("gpm.bucket.partitioning"), class_name)
     partitioning = partitioning_class(**bucket_info)
     return partitioning

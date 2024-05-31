@@ -30,7 +30,7 @@ import os
 import pandas as pd
 import pytest
 
-from gpm.bucket import GeographicPartitioning
+from gpm.bucket import LonLatPartitioning
 from gpm.bucket.readers import read_dask_partitioned_dataset
 from gpm.bucket.routines import merge_granule_buckets, write_bucket, write_granules_bucket
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray
@@ -55,16 +55,18 @@ def granule_to_df_toy_func(filepath):
     return create_granule_dataframe()
 
 
+# # TO DEBUG
+# import pathlib
+# tmp_path = pathlib.Path("/tmp/bucket14")
+
+
 @pytest.mark.parametrize("df_type", ["pandas", "dask"])
 def test_write_bucket(tmp_path, df_type):
     # Define bucket dir
-    import pathlib
-
-    tmp_path = pathlib.Path("/tmp/bucket13")
     bucket_dir = tmp_path
     # Create dataframe
     df = create_granule_dataframe(df_type=df_type)
-    partitioning = GeographicPartitioning(size=(10, 10))
+    partitioning = LonLatPartitioning(size=(10, 10))
     write_bucket(
         df=df,
         bucket_dir=bucket_dir,
@@ -77,13 +79,11 @@ def test_write_bucket(tmp_path, df_type):
     assert os.path.exists(os.path.join(bucket_dir, "lon_bin=5.0", "lat_bin=5.0", "filename_prefix_0.parquet"))
 
 
-@pytest.mark.parametrize("partitions", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])
+@pytest.mark.parametrize("partitioning_order", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])
 @pytest.mark.parametrize("partitioning_flavor", ["hive", None])
-def test_write_granules_bucket(tmp_path, partitions, partitioning_flavor):
+def test_write_granules_bucket(tmp_path, partitioning_order, partitioning_flavor):
     """Test write_granules_bucket routine with parallel=False."""
     # Define bucket dir
-    # import pathlib
-    # tmp_path = pathlib.Path("/tmp/bucket14")
     bucket_dir = tmp_path
 
     # Define filepaths
@@ -94,9 +94,13 @@ def test_write_granules_bucket(tmp_path, partitions, partitioning_flavor):
     ]  # year 2023
 
     # Define partitioning
-    # partitions = ["lat_bin", "lon_bin"]
+    # partitioning_order = ["lat_bin", "lon_bin"]
     # partitioning_flavor = "hive" # None
-    partitioning = GeographicPartitioning(size=(10, 10), partitioning_flavor=partitioning_flavor, partitions=partitions)
+    partitioning = LonLatPartitioning(
+        size=(10, 10),
+        partitioning_flavor=partitioning_flavor,
+        partitioning_order=partitioning_order,
+    )
 
     # Run processing
     write_granules_bucket(
@@ -111,7 +115,7 @@ def test_write_granules_bucket(tmp_path, partitions, partitioning_flavor):
 
     # Check directories with wished partitioning format created
     if partitioning_flavor == "hive":
-        if partitions == ["lon_bin", "lat_bin"]:
+        if partitioning_order == ["lon_bin", "lat_bin"]:
             expected_directories = [
                 "bucket_info.yaml",  # always there
                 "lon_bin=-5.0",
@@ -126,7 +130,7 @@ def test_write_granules_bucket(tmp_path, partitions, partitioning_flavor):
                 "lat_bin=25.0",
                 "lat_bin=5.0",
             ]
-    elif partitions == ["lon_bin", "lat_bin"]:
+    elif partitioning_order == ["lon_bin", "lat_bin"]:
         expected_directories = [
             "-5.0",
             "15.0",
@@ -145,11 +149,11 @@ def test_write_granules_bucket(tmp_path, partitions, partitioning_flavor):
 
     # Check parquet files named by granule
     if partitioning_flavor == "hive":
-        if partitions == ["lon_bin", "lat_bin"]:
+        if partitioning_order == ["lon_bin", "lat_bin"]:
             partition_dir = os.path.join(bucket_dir, "lon_bin=-5.0", "lat_bin=5.0")
         else:
             partition_dir = os.path.join(bucket_dir, "lat_bin=5.0", "lon_bin=-5.0")
-    elif partitions == ["lon_bin", "lat_bin"]:
+    elif partitioning_order == ["lon_bin", "lat_bin"]:
         partition_dir = os.path.join(bucket_dir, "-5.0", "5.0")
     else:
         partition_dir = os.path.join(bucket_dir, "5.0", "-5.0")
@@ -168,7 +172,7 @@ def test_write_granules_bucket_capture_error(tmp_path, capsys):
     ]
 
     # Define partitioning
-    partitioning = GeographicPartitioning(size=(10, 10))
+    partitioning = LonLatPartitioning(size=(10, 10))
 
     # Define bad granule_to_df_func
     def granule_to_df_func(filepath):
@@ -193,7 +197,6 @@ def test_write_granules_bucket_parallel(tmp_path):
     from dask.distributed import Client, LocalCluster
 
     # Define bucket dir
-    # bucket_dir = "/tmp/test_bucket1"
     bucket_dir = tmp_path
 
     # Define filepaths
@@ -209,7 +212,7 @@ def test_write_granules_bucket_parallel(tmp_path):
     max_dask_total_tasks = 2
 
     # Define partitioning
-    partitioning = GeographicPartitioning(size=(10, 10))
+    partitioning = LonLatPartitioning(size=(10, 10))
 
     # Create Dask Distributed LocalCluster
     cluster = LocalCluster(
@@ -248,8 +251,6 @@ def test_write_granules_bucket_parallel(tmp_path):
 def test_merge_granule_buckets(tmp_path):
     """Test merge_granule_buckets routine."""
     # Define bucket dir
-    # import pathlib
-    # tmp_path = pathlib.Path("/tmp/bucket")
     src_bucket_dir = tmp_path / "src"
     dst_bucket_dir = tmp_path / "dst"
 
@@ -261,7 +262,7 @@ def test_merge_granule_buckets(tmp_path):
     ]  # year 2023
 
     # Define partitioning
-    partitioning = GeographicPartitioning(size=(10, 10))
+    partitioning = LonLatPartitioning(size=(10, 10))
 
     # Run processing
     write_granules_bucket(

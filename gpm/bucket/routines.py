@@ -100,7 +100,7 @@ def write_granule_bucket(
         df=df,
         base_dir=bucket_dir,
         filename_prefix=filename_prefix,
-        partitions=partitioning.partitions,
+        partitions=partitioning.partitioning_order,
         partitioning_flavor=partitioning.partitioning_flavor,
         **writer_kwargs,
     )
@@ -285,7 +285,7 @@ def write_bucket(
     write_partitioned_dataset(
         df=df,
         base_dir=bucket_dir,
-        partitions=partitioning.partitions,
+        partitions=partitioning.partitioning_order,
         partitioning_flavor=partitioning.partitioning_flavor,
         filename_prefix=filename_prefix,
         **writer_kwargs,

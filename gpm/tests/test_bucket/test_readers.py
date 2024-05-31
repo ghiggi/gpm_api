@@ -30,7 +30,7 @@ import polars as pl
 import pyarrow as pa
 import pytest
 
-from gpm.bucket import GeographicPartitioning
+from gpm.bucket import LonLatPartitioning
 from gpm.bucket.readers import read_bucket
 from gpm.bucket.routines import write_granules_bucket
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray
@@ -63,7 +63,7 @@ def create_bucket_archive(bucket_dir):
         "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
     ]
     # Define partitioning
-    partitioning = GeographicPartitioning(size=(10, 10))
+    partitioning = LonLatPartitioning(size=(10, 10))
 
     # Run processing
     write_granules_bucket(

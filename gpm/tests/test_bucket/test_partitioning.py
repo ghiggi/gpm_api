@@ -32,6 +32,8 @@ import pytest
 import xarray as xr
 
 from gpm.bucket.partitioning import (
+    LonLatPartitioning,
+    TilePartitioning,
     XYPartitioning,
     get_array_combinations,
     get_bounds,
@@ -97,9 +99,9 @@ class TestXYPartitioning:
 
     def test_initialization(self):
         """Test proper initialization of XYPartitioning objects."""
-        partitioning = XYPartitioning(xbin="xbin", ybin="ybin", size=(1, 2), extent=[0, 10, 0, 10])
+        partitioning = XYPartitioning(size=(1, 2), extent=[0, 10, 0, 10])
         assert partitioning.size == (1, 2)
-        assert partitioning.partitions == ["xbin", "ybin"]
+        assert partitioning.partitioning_order == ["xbin", "ybin"]  # default names
         assert list(partitioning.extent) == [0, 10, 0, 10]
         assert partitioning.shape == (5, 10)
         assert partitioning.n_partitions == 50
@@ -115,19 +117,35 @@ class TestXYPartitioning:
     def test_invalid_initialization(self):
         """Test initialization with invalid extent and size."""
         with pytest.raises(ValueError):
-            XYPartitioning(xbin="xbin", ybin="ybin", size=(0.1, 0.2), extent=[10, 0, 0, 10])
+            XYPartitioning(size=(0.1, 0.2), extent=[10, 0, 0, 10])
 
         with pytest.raises(TypeError):
-            XYPartitioning(xbin="xbin", ybin="ybin", size="invalid", extent=[0, 10, 0, 10])
+            XYPartitioning(size="invalid", extent=[0, 10, 0, 10])
 
     def test_labels(self):
-        """Test labels attributes (origin="top")."""
-        partitioning = XYPartitioning(xbin="xbin", ybin="ybin", size=(1, 2), extent=[0, 10, 0, 10])
+        """Test labels property (origin="top")."""
+        partitioning = XYPartitioning(size=(1, 2), extent=[0, 10, 0, 10])
         assert partitioning.labels.shape == (5, 10, 2)
         assert partitioning.labels[0, 0, :].tolist() == ["0.5", "1.0"]
         assert partitioning.labels[-1, 0, :].tolist() == ["0.5", "9.0"]
         assert partitioning.labels[0, -1, :].tolist() == ["9.5", "1.0"]
         assert partitioning.labels[-1, -1, :].tolist() == ["9.5", "9.0"]
+
+    def test_centroids(self):
+        """Test centroids property."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+        partitioning = XYPartitioning(
+            size=size,
+            extent=extent,
+        )
+        centroids = partitioning.centroids
+        # Test results
+        assert centroids.shape == (2, 3, 2)
+        x_centroids = np.array([[-120.0, 0.0, 120.0], [-120.0, 0.0, 120.0]])
+        y_centroids = np.array([[-45.0, -45.0, -45.0], [45.0, 45.0, 45.0]])
+        np.testing.assert_allclose(centroids[:, :, 0], x_centroids)
+        np.testing.assert_allclose(centroids[:, :, 1], y_centroids)
 
     def test_add_labels_pandas(self):
         """Test valid partitions are added to a pandas dataframe."""
@@ -141,18 +159,19 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
 
         # Add partitions
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
 
         # Test results
-        expected_xbin = [0.25, 0.25, 0.25, 0.75, 1.25, 1.75]
-        expected_ybin = [0.125, 0.125, 0.375, 0.875, 1.375, 1.875]
-        assert df_out["my_xbin"].dtype.name == "category", "X bin are not of categorical type."
-        assert df_out["my_ybin"].dtype.name == "category", "Y bin are not of categorical type."
-        assert df_out["my_xbin"].astype(float).tolist() == expected_xbin, "X bin are incorrect."
-        assert df_out["my_ybin"].astype(float).tolist() == expected_ybin, "Y bin are incorrect."
+        expected_x_labels = ["0.25", "0.25", "0.25", "0.75", "1.25", "1.75"]
+        expected_y_labels_ = ["0.125", "0.125", "0.375", "0.875", "1.375", "1.875"]
+        assert df_out["partition_name_x"].dtype.name == "category", "X bin are not of categorical type."
+        assert df_out["partition_name_y"].dtype.name == "category", "Y bin are not of categorical type."
+        assert df_out["partition_name_x"].astype(str).tolist() == expected_x_labels, "X bin are incorrect."
+        assert df_out["partition_name_y"].astype(str).tolist() == expected_y_labels_, "Y bin are incorrect."
 
     # add dask
 
@@ -170,18 +189,19 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
 
         # Add partitions
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
 
         # Test results
-        expected_xbin = [0.25, 0.25, 0.25, 0.75, 1.25, 1.75]
-        expected_ybin = [0.125, 0.125, 0.375, 0.875, 1.375, 1.875]
-        assert df_out["my_xbin"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
-        assert df_out["my_ybin"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
-        assert df_out["my_xbin"].cast(float).to_list() == expected_xbin, "X bin are incorrect."
-        assert df_out["my_ybin"].cast(float).to_list() == expected_ybin, "Y bin are incorrect."
+        expected_x_labels = ["0.25", "0.25", "0.25", "0.75", "1.25", "1.75"]
+        expected_y_labels_ = ["0.125", "0.125", "0.375", "0.875", "1.375", "1.875"]
+        assert df_out["partition_name_x"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
+        assert df_out["partition_name_y"].dtype == pl.datatypes.Categorical, "X bin are not of categorical type."
+        assert df_out["partition_name_x"].cast(str).to_list() == expected_x_labels, "X bin are incorrect."
+        assert df_out["partition_name_y"].cast(str).to_list() == expected_y_labels_, "Y bin are incorrect."
 
     def test_add_labels_invalid_args(self):
         """Test error is raised if invalid arguments are passed to add_labels."""
@@ -196,7 +216,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
 
         # Test invalid arguments
         with pytest.raises(TypeError):
@@ -234,7 +255,7 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
+        partitioning = XYPartitioning(size=size, extent=extent)
 
         # Test error is raised if NaN are present in x or y column
         with pytest.raises(ValueError):
@@ -261,35 +282,34 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        xbin = "my_xbin"
-        ybin = "my_ybin"
-        partitioning = XYPartitioning(xbin=xbin, ybin=ybin, size=size, extent=extent)
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
 
         # Add partitions
         df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
 
         # Aggregate by partitions
         if df_type == "polars":
-            df_grouped = df.group_by(partitioning.partitions).median()
+            df_grouped = df.group_by(partitioning.partitioning_order).median()
             df_grouped = df_grouped.with_columns(pl.lit(2).alias("dummy_var"))
         else:
-            df_grouped = df.groupby(partitioning.partitions, observed=True).median()
+            df_grouped = df.groupby(partitioning.partitioning_order, observed=True).median()
             df_grouped["dummy_var"] = 2
 
         # Convert to Dataset
         ds = partitioning.to_xarray(df_grouped, new_x="lon", new_y="lat")
 
         # Test results
-        expected_xbin = [0.25, 0.75, 1.25, 1.75]
-        expected_ybin = [0.125, 0.375, 0.625, 0.875, 1.125, 1.375, 1.625, 1.875]
+        expected_x_centroids = [0.25, 0.75, 1.25, 1.75]
+        expected_y_centroids = [0.125, 0.375, 0.625, 0.875, 1.125, 1.375, 1.625, 1.875]
         assert isinstance(ds, xr.Dataset), "Not a xr.Dataset"
         assert "dummy_var" in ds, "The x columns has not become a xr.Dataset variable"
         assert ds["lon"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
         assert ds["lat"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
         assert ds["lon"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
         assert ds["lat"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
-        np.testing.assert_allclose(ds["lon"].data, expected_xbin)
-        np.testing.assert_allclose(ds["lat"].data, expected_ybin)
+        np.testing.assert_allclose(ds["lon"].data, expected_x_centroids)
+        np.testing.assert_allclose(ds["lat"].data, expected_y_centroids)
 
     @pytest.mark.parametrize("index_type", ["set", "unset"])
     def test_to_xarray_multindex(self, index_type):
@@ -304,15 +324,14 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        xbin = "my_xbin"
-        ybin = "my_ybin"
-        partitioning = XYPartitioning(xbin=xbin, ybin=ybin, size=size, extent=extent)
+        names = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
 
         # Add partitions
         df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
 
         # Group over partitions
-        df_grouped = df.groupby(partitioning.partitions, observed=True).median()
+        df_grouped = df.groupby(partitioning.partitioning_order, observed=True).median()
         df_grouped["dummy_var"] = 2
 
         # Create df with additional index (i.e. time)
@@ -331,7 +350,7 @@ class TestXYPartitioning:
         # Convert to Dataset
         if index_type == "set":
             df = df.reset_index()
-            df = df.set_index([xbin, ybin, "frequency", "month"])
+            df = df.set_index([*names, "frequency", "month"])
             indices = None
         else:
             indices = ["frequency", "month"]
@@ -356,7 +375,7 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
+        partitioning = XYPartitioning(size=size, extent=extent)
         # Test with various input type
         # - float and 0D np.array
         x_labels, y_labels = partitioning.query_labels(1, np.array(1))
@@ -397,7 +416,7 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
+        partitioning = XYPartitioning(size=size, extent=extent)
 
         # Test with various input type
         # - float and 0D np.array
@@ -439,55 +458,72 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        xbin = "my_xbin"
-        ybin = "my_ybin"
-        partitioning = XYPartitioning(xbin=xbin, ybin=ybin, size=size, extent=extent)
+        x_name = "partition_name_x"
+        y_name = "partition_name_y"
+        names = [x_name, y_name]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
         # Test results with extent within
         new_extent = [0, 0.5, 0, 0.5]
         dict_labels = partitioning.get_partitions_by_extent(new_extent)
-        assert dict_labels[xbin].tolist() == ["0.25", "0.25"]
-        assert dict_labels[ybin].tolist() == ["0.125", "0.375"]
+        assert dict_labels[x_name].tolist() == ["0.25", "0.25"]
+        assert dict_labels[y_name].tolist() == ["0.125", "0.375"]
 
         # Test results with extent outside
         new_extent = [3, 4, 3, 4]
         dict_labels = partitioning.get_partitions_by_extent(new_extent)
-        assert dict_labels[xbin].size == 0
-        assert dict_labels[ybin].size == 0
+        assert dict_labels[x_name].size == 0
+        assert dict_labels[y_name].size == 0
 
         # Test results with extent partially overlapping
         new_extent = [1.5, 4, 1.75, 4]
         dict_labels = partitioning.get_partitions_by_extent(new_extent)
-        assert dict_labels[xbin].tolist() == ["1.25", "1.75", "1.25", "1.75"]
-        assert dict_labels[ybin].tolist() == ["1.625", "1.625", "1.875", "1.875"]
+        assert dict_labels[x_name].tolist() == ["1.25", "1.75", "1.25", "1.75"]
+        assert dict_labels[y_name].tolist() == ["1.625", "1.625", "1.875", "1.875"]
 
     def test_get_partitions_around_point(self):
         """Test get_partitions_around_point."""
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        xbin = "my_xbin"
-        ybin = "my_ybin"
-        partitioning = XYPartitioning(xbin=xbin, ybin=ybin, size=size, extent=extent)
+        x_name = "partition_name_x"
+        y_name = "partition_name_y"
+        names = [x_name, y_name]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names)
         # Test results with point within
         dict_labels = partitioning.get_partitions_around_point(x=1, y=1, distance=0)
-        assert dict_labels[xbin].tolist() == ["0.75"]
-        assert dict_labels[ybin].tolist() == ["0.875"]
+        assert dict_labels[x_name].tolist() == ["0.75"]
+        assert dict_labels[y_name].tolist() == ["0.875"]
 
         # Test results with point outside
         dict_labels = partitioning.get_partitions_around_point(x=3, y=3, distance=0)
-        assert dict_labels[xbin].size == 0
-        assert dict_labels[ybin].size == 0
+        assert dict_labels[x_name].size == 0
+        assert dict_labels[y_name].size == 0
 
         # Test results with point outside but area within
         dict_labels = partitioning.get_partitions_around_point(x=3, y=3, distance=1)
-        assert dict_labels[xbin].tolist() == ["1.75"]
-        assert dict_labels[ybin].tolist() == ["1.875"]
+        assert dict_labels[x_name].tolist() == ["1.75"]
+        assert dict_labels[y_name].tolist() == ["1.875"]
+
+    def test_directories_around_point(self):
+        """Test directories_around_point."""
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        partitioning = XYPartitioning(size=size, extent=extent)
+
+        # Test results with point and aoi outside extent
+        directories = partitioning.directories_around_point(x=3, y=3, distance=0)
+        assert directories.size == 0
+
+        # Test results with point outside but partial aoi inside extent
+        directories = partitioning.directories_around_point(x=3, y=3, distance=1)
+        assert directories.tolist() == ["1.75/1.875"]
 
     def test_quadmesh(self):
         """Test quadmesh."""
         size = (1, 1)
         extent = [0, 2, 1, 3]
-        partitioning = XYPartitioning(xbin="my_xbin", ybin="my_ybin", size=size, extent=extent)
+        partitioning = XYPartitioning(size=size, extent=extent)
         # Test shape
         assert partitioning.quadmesh(origin="bottom").shape == (3, 3, 2)
         assert partitioning.quadmesh(origin="top").shape == (3, 3, 2)
@@ -505,18 +541,497 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        xbin = "my_xbin"
-        ybin = "my_ybin"
-        partitioning = XYPartitioning(xbin=xbin, ybin=ybin, size=size, extent=extent)
+        names = ["name1", "name2"]
+        partitioning = XYPartitioning(size=size, extent=extent, names=names, partitioning_order=names[::-1])
         # Test results
         expected_dict = {
-            "name": "XYPartitioning",
+            "partitioning_class": "XYPartitioning",
             "extent": list(extent),
             "size": list(size),
-            "xbin": xbin,
-            "ybin": ybin,
-            "partitions": [xbin, ybin],
+            "names": names,
+            "partitioning_order": names[::-1],
             "partitioning_flavor": "directory",  # default
             "labels_decimals": [2, 3],
         }
         assert partitioning.to_dict() == expected_dict
+
+
+class TestLonLatPartitioning:
+    """Tests for the LonLatPartitioning class."""
+
+    def test_get_partitions_by_extent(self):
+        """Test get_partitions_by_extent."""
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test results with extent within
+        new_extent = [0, 0.5, 0, 0.5]
+        dict_labels = partitioning.get_partitions_by_extent(new_extent)
+        assert dict_labels["lon_bin"].tolist() == ["0.25", "0.25"]
+        assert dict_labels["lat_bin"].tolist() == ["0.125", "0.375"]
+
+        # Test results with extent outside
+        new_extent = [3, 4, 3, 4]
+        dict_labels = partitioning.get_partitions_by_extent(new_extent)
+        assert dict_labels["lon_bin"].size == 0
+        assert dict_labels["lat_bin"].size == 0
+
+        # Test results with extent partially overlapping
+        new_extent = [1.5, 4, 1.75, 4]
+        dict_labels = partitioning.get_partitions_by_extent(new_extent)
+        assert dict_labels["lon_bin"].tolist() == ["1.25", "1.75", "1.25", "1.75"]
+        assert dict_labels["lat_bin"].tolist() == ["1.625", "1.625", "1.875", "1.875"]
+
+    def test_get_partitions_around_point(self):
+        """Test get_partitions_around_point."""
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test results with point within
+        dict_labels = partitioning.get_partitions_around_point(lon=1, lat=1, distance=0)
+        assert dict_labels["lon_bin"].tolist() == ["0.75"]
+        assert dict_labels["lat_bin"].tolist() == ["0.875"]
+
+        # Test results with point outside
+        dict_labels = partitioning.get_partitions_around_point(lon=1, lat=3, distance=0)
+        assert dict_labels["lon_bin"].size == 0
+        assert dict_labels["lat_bin"].size == 0
+
+        # Test results with point and aoi outside
+        dict_labels = partitioning.get_partitions_around_point(lon=3, lat=3, distance=150_000)  # 150 km
+        assert dict_labels["lon_bin"].tolist() == ["1.75", "1.75"]
+        assert dict_labels["lat_bin"].tolist() == ["1.625", "1.875"]
+
+    def test_get_partitions_by_country(self):
+        """Test get_partitions_by_country."""
+        # Create partitioning
+        size = (60, 60)
+        extent = [-180, 180, -30, 30]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test country within extent
+        dict_labels = partitioning.get_partitions_by_country("Nigeria")
+        assert dict_labels["lon_bin"].tolist() == ["30.0"]
+        assert dict_labels["lat_bin"].tolist() == ["0.0"]
+
+        # Test country outside extent
+        dict_labels = partitioning.get_partitions_by_country("Switzerland")
+        assert dict_labels["lon_bin"].size == 0
+        assert dict_labels["lat_bin"].size == 0
+
+    def test_get_partitions_by_continent(self):
+        """Test get_partitions_by_continent."""
+        # Create partitioning
+        size = (60, 60)
+        extent = [-180, 180, -30, 30]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+
+        # Test continent within extent
+        dict_labels = partitioning.get_partitions_by_continent("Africa")
+        assert dict_labels["lon_bin"].tolist() == ["-30.0", "30.0"]
+        assert dict_labels["lat_bin"].tolist() == ["0.0", "0.0"]
+
+        # Test continent outside extent
+        dict_labels = partitioning.get_partitions_by_continent("Europe")
+        assert dict_labels["lon_bin"].size == 0
+        assert dict_labels["lat_bin"].size == 0
+
+    def test_directories_by_country(self):
+        """Test directories_by_country."""
+        # Create partitioning
+        size = (60, 60)
+        extent = [-180, 180, -30, 30]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test country within extent
+        directories = partitioning.directories_by_country("Nigeria")
+        assert directories.tolist() == ["lon_bin=30.0/lat_bin=0.0"]
+
+        # Test country outside extent
+        directories = partitioning.directories_by_country("Switzerland")
+        assert directories.size == 0
+
+    def test_directories_by_continent(self):
+        """Test directories_by_continent."""
+        # Create partitioning
+        size = (60, 60)
+        extent = [-180, 180, -30, 30]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test continent within directories_by_continent
+        directories = partitioning.directories_by_continent("Africa")
+        assert directories.tolist() == ["lon_bin=-30.0/lat_bin=0.0", "lon_bin=30.0/lat_bin=0.0"]
+
+        # Test continent outside extent
+        directories = partitioning.directories_by_continent("Europe")
+        assert directories.size == 0
+
+    def test_directories_around_point(self):
+        """Test directories_around_point."""
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+
+        # Test results with point and aoi outside
+        directories = partitioning.directories_around_point(lon=3, lat=3, distance=0)
+        assert directories.size == 0
+
+        # Test results with point outside extent but aoi inside
+        directories = partitioning.directories_around_point(lon=3, lat=3, distance=150_000)  # 150 km
+        assert directories.tolist() == ["lon_bin=1.75/lat_bin=1.625", "lon_bin=1.75/lat_bin=1.875"]
+
+    @pytest.mark.parametrize("df_type", ["pandas", "polars"])
+    def test_to_xarray(self, df_type):
+        """Test valid partitions are added to a pandas dataframe."""
+        # Create test pandas.DataFrame
+        df = pd.DataFrame(
+            {
+                "lon": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+                "lat": [-0.001, -0.0, 0, 0.5, 1.0, 1.5, 2.0, 2.1, np.nan],
+            },
+        )
+        # Convert to polars.DataFrame
+        if df_type == "polars":
+            df = pl.DataFrame(df)
+
+        # Create partitioning
+        size = (0.5, 0.25)
+        extent = [0, 2, 0, 2]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+
+        # Add partitions
+        df = partitioning.add_labels(df, x="lon", y="lat", remove_invalid_rows=True)
+
+        # Aggregate by partitions
+        if df_type == "polars":
+            df_grouped = df.group_by(partitioning.partitioning_order).median()
+            df_grouped = df_grouped.with_columns(pl.lit(2).alias("dummy_var"))
+        else:
+            df_grouped = df.groupby(partitioning.partitioning_order, observed=True).median()
+            df_grouped["dummy_var"] = 2
+
+        # Convert to Dataset
+        ds = partitioning.to_xarray(df_grouped)
+
+        # Test results
+        expected_x_centroids = [0.25, 0.75, 1.25, 1.75]
+        expected_y_centroids = [0.125, 0.375, 0.625, 0.875, 1.125, 1.375, 1.625, 1.875]
+        assert isinstance(ds, xr.Dataset), "Not a xr.Dataset"
+        assert "dummy_var" in ds, "The x columns has not become a xr.Dataset variable"
+        assert ds["lon"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
+        assert ds["lat"].data.dtype.name != "object", "xr.Dataset coordinates should not be a string."
+        assert ds["lon"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
+        assert ds["lat"].data.dtype.name == "float64", "xr.Dataset coordinates are not float64."
+        np.testing.assert_allclose(ds["lon"].data, expected_x_centroids)
+        np.testing.assert_allclose(ds["lat"].data, expected_y_centroids)
+
+
+class TestTilePartitioning:
+    """Tests for the TilePartitioning class."""
+
+    def test_invalid_arguments(self):
+        """Test invalid TilePartitioning arguments."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+
+        # Invalid levels
+        with pytest.raises(ValueError):
+            TilePartitioning(size=size, extent=extent, levels=3)
+
+        # Invalid levels and names
+        with pytest.raises(ValueError):
+            TilePartitioning(size=size, extent=extent, levels=2, names="one_name")
+        with pytest.raises(ValueError):
+            TilePartitioning(size=size, extent=extent, levels=1, names=["one", "two"])
+
+        # Invalid origin
+        with pytest.raises(ValueError):
+            TilePartitioning(size=size, extent=extent, levels=1, origin="bad")
+
+        # Invalid direction
+        with pytest.raises(ValueError):
+            TilePartitioning(size=size, extent=extent, levels=1, direction="bad")
+
+    def test_xy_bottom_partitioning(self):
+        """Test two-levels 2D TilePartitioning à la GoogleMap (origin='bottom')."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+        levels = 2
+        origin = "bottom"
+        justify = False
+        names = None  # ["x","y"]
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            names=names,
+            levels=levels,
+            origin=origin,
+            justify=justify,
+        )
+        # Check initialization
+        assert partitioning.n_partitions == 6
+        assert partitioning.shape == (2, 3)
+        assert partitioning.n_levels == levels
+        assert partitioning.partitioning_order == ["x", "y"]
+
+        # Check values for origin="bottom"
+        x_labels, y_labels = partitioning.query_labels(-150, 90)
+        assert y_labels.tolist() == ["0"]
+        assert x_labels.tolist() == ["0"]
+
+        x_labels, y_labels = partitioning.query_labels(150, 90)
+        assert y_labels.tolist() == ["0"]
+        assert x_labels.tolist() == ["2"]
+
+        x_labels, y_labels = partitioning.query_labels(150, -90)
+        assert y_labels.tolist() == ["1"]
+        assert x_labels.tolist() == ["2"]
+
+        # Test labels shape
+        labels = partitioning.labels
+        assert labels.shape == (2, 3, 2)
+        expected_x_labels = np.array([["0", "1", "2"], ["0", "1", "2"]])
+        expected_y_labels = np.array([["1", "1", "1"], ["0", "0", "0"]])
+        assert labels[:, :, 0].tolist() == expected_x_labels.tolist()
+        assert labels[:, :, 1].tolist() == expected_y_labels.tolist()
+
+    def test_xy_top_partitioning(self):
+        """Test two-levels TilePartitioning à la TMS (origin='top')."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+        levels = 2
+        origin = "top"
+        justify = False
+        names = None  # ["x","y"]
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            names=names,
+            levels=levels,
+            origin=origin,
+            justify=justify,
+        )
+        # Check initialization
+        assert partitioning.n_partitions == 6
+        assert partitioning.shape == (2, 3)
+        assert partitioning.n_levels == levels
+        assert partitioning.partitioning_order == ["x", "y"]
+
+        # Check values for origin="bottom"
+        x_labels, y_labels = partitioning.query_labels(-150, 90)
+        assert y_labels.tolist() == ["1"]
+        assert x_labels.tolist() == ["0"]
+
+        x_labels, y_labels = partitioning.query_labels(150, 90)
+        assert y_labels.tolist() == ["1"]
+        assert x_labels.tolist() == ["2"]
+
+        x_labels, y_labels = partitioning.query_labels(150, -90)
+        assert y_labels.tolist() == ["0"]
+        assert x_labels.tolist() == ["2"]
+
+        # Test labels shape
+        labels = partitioning.labels
+        assert labels.shape == (2, 3, 2)
+        expected_x_labels = np.array([["0", "1", "2"], ["0", "1", "2"]])
+        expected_y_labels = np.array([["0", "0", "0"], ["1", "1", "1"]])
+        assert labels[:, :, 0].tolist() == expected_x_labels.tolist()
+        assert labels[:, :, 1].tolist() == expected_y_labels.tolist()
+
+    @pytest.mark.parametrize("origin", ["bottom", "top"])
+    def test_single_level_x_partitioning(self, origin):
+        """Test single-level TilePartitioning id rows-by-rows."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+        levels = 1
+        justify = False
+        names = None  # ["x","y"]
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            names=names,
+            levels=levels,
+            # direction="x", # default
+            origin=origin,
+            justify=justify,
+        )
+        # Check initialization
+        assert partitioning.n_partitions == 6
+        assert partitioning.shape == (2, 3)
+        assert partitioning.n_levels == levels
+        assert partitioning.partitioning_order == ["tile_id"]
+
+        # Test labels
+        labels = partitioning.labels
+        assert labels.shape == (2, 3)
+        if origin == "bottom":
+            expected_labels = np.array([["3", "4", "5"], ["0", "1", "2"]])
+        else:
+            expected_labels = np.array([["0", "1", "2"], ["3", "4", "5"]])
+        assert labels.tolist() == expected_labels.tolist()
+
+    @pytest.mark.parametrize("origin", ["bottom", "top"])
+    def test_single_level_y_partitioning(self, origin):
+        """Test single-level TilePartitioning id column-by-column."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+        levels = 1
+        direction = "y"
+        justify = False
+        names = None  # ["x","y"]
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            names=names,
+            levels=levels,
+            origin=origin,
+            direction=direction,
+            justify=justify,
+        )
+        # Check initialization
+        assert partitioning.n_partitions == 6
+        assert partitioning.shape == (2, 3)
+        assert partitioning.n_levels == levels
+        assert partitioning.partitioning_order == ["tile_id"]
+
+        # Test labels
+        labels = partitioning.labels
+        assert labels.shape == (2, 3)
+        if origin == "bottom":
+            expected_labels = np.array([["1", "3", "5"], ["0", "2", "4"]])
+        else:
+            expected_labels = np.array([["0", "2", "4"], ["1", "3", "5"]])
+        assert labels.tolist() == expected_labels.tolist()
+
+    def test_justified_label_xy(self):
+        """Test labels justification of two-levels 2D TilePartitioning."""
+        size = (10, 10)
+        extent = [-180, 180, -90, 90]
+        levels = 2
+        origin = "bottom"
+        justify = True
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            levels=levels,
+            origin=origin,
+            justify=justify,
+        )
+        # Test id justification
+        assert partitioning.n_x == 36
+        x_labels, y_labels = partitioning.query_labels(-180, 90)
+        assert x_labels.tolist() == ["00"]
+        assert y_labels.tolist() == ["00"]
+
+    def test_justified_labels_single_level(self):
+        """Test labels justification of single-level 2D TilePartitioning."""
+        size = (10, 10)  #
+        extent = [-180, 180, -90, 90]
+        levels = 1
+        origin = "bottom"
+        justify = True
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            levels=levels,
+            origin=origin,
+            justify=justify,
+        )
+        # Test id justification
+        assert partitioning.n_partitions == 648
+        labels = partitioning.query_labels(-180, 90)
+        assert labels.tolist() == ["000"]
+
+    def test_to_dict_xy(self):
+        """Test to dict."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+        levels = 2
+        origin = "bottom"
+        direction = "x"
+        justify = True
+        names = ["xx", "yy"]
+        partitioning_order = ["yy", "xx"]
+        partitioning_flavor = "hive"
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            names=names,
+            levels=levels,
+            origin=origin,
+            justify=justify,
+            partitioning_order=partitioning_order,
+            partitioning_flavor=partitioning_flavor,
+        )
+        # Test results
+        expected_dict = {
+            "partitioning_class": "TilePartitioning",
+            "extent": list(extent),
+            "size": list(size),
+            "levels": levels,
+            "names": names,
+            "origin": origin,
+            "direction": direction,
+            "justify": justify,
+            "partitioning_order": partitioning_order,
+            "partitioning_flavor": partitioning_flavor,
+        }
+        assert partitioning.to_dict() == expected_dict
+
+    def test_to_dict_single_level(self):
+        """Test to dict."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+        levels = 1
+        names = "my_tile_id"
+        origin = "top"
+        direction = "y"
+        justify = False
+        partitioning_flavor = None
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            names=names,
+            levels=levels,
+            origin=origin,
+            direction=direction,
+            justify=justify,
+            partitioning_flavor=partitioning_flavor,
+        )
+        # Test results
+        expected_dict = {
+            "partitioning_class": "TilePartitioning",
+            "extent": list(extent),
+            "size": list(size),
+            "levels": levels,
+            "names": ["my_tile_id"],
+            "origin": origin,
+            "direction": direction,
+            "justify": justify,
+            "partitioning_order": ["my_tile_id"],
+            "partitioning_flavor": "directory",
+        }
+        assert partitioning.to_dict() == expected_dict
+
+    def test_directories_single_level(self):
+        """Test directories property."""
+        size = (120, 90)  # 3x2 partitions
+        extent = [-180, 180, -90, 90]
+        levels = 1
+        names = "my_tile_id"
+        origin = "top"
+        direction = "y"
+        justify = False
+        partitioning_flavor = None
+        partitioning = TilePartitioning(
+            size=size,
+            extent=extent,
+            names=names,
+            levels=levels,
+            origin=origin,
+            direction=direction,
+            justify=justify,
+            partitioning_flavor=partitioning_flavor,
+        )
+        directories = partitioning.directories
+        assert directories.tolist() == ["0", "2", "4", "1", "3", "5"]

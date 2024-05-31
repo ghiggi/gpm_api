@@ -25,11 +25,11 @@
 
 # -----------------------------------------------------------------------------.
 """This directory defines the GPM-API geographic binning toolbox."""
-from gpm.bucket.partitioning import GeographicPartitioning  # , TilePartitioning
+from gpm.bucket.partitioning import LonLatPartitioning  # , TilePartitioning
 from gpm.bucket.readers import read_bucket as read
 
 __all__ = [
-    "GeographicPartitioning",
+    "LonLatPartitioning",
     # "TilePartitioning"
     "read",
 ]

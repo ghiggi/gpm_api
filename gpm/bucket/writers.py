@@ -335,7 +335,7 @@ def write_partitioned_dataset(
     if isinstance(partitions, str):
         partitions = [partitions]
     if isinstance(df, dd.DataFrame):
-        _ = write_dask_partitioned_dataset(
+        write_dask_partitioned_dataset(
             df=df,
             base_dir=base_dir,
             filename_prefix=filename_prefix,

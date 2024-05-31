@@ -512,8 +512,6 @@ def select_transect_variables(ds, strict=False, squeeze=True):
 
 def select_vertical_variables(ds):
     """Return `xarray.Dataset` with only variables with vertical dimension."""
-    from gpm.checks import get_vertical_variables
-
     variables = get_vertical_variables(ds)
     return ds[variables]
 

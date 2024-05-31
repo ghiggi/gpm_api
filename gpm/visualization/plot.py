@@ -322,7 +322,7 @@ def compute_lon_lat_corners_for_1d_swath(lon, lat):
         lon2, lat2 = lon[i + 1], lat[i + 1]
 
         # Calculate the forward azimuth and distance between consecutive vertices
-        fwd_azimuth, back_azimuth, distance = geod.inv(lon1, lat1, lon2, lat2, radians=False)
+        fwd_azimuth, _, distance = geod.inv(lon1, lat1, lon2, lat2, radians=False)
 
         # Calculate the half distance for the orthogonal projection
         half_distance = distance / 2
@@ -693,10 +693,12 @@ def plot_cartopy_imshow(
     y,
     interpolation="nearest",
     add_colorbar=True,
-    plot_kwargs={},
+    plot_kwargs=None,
     cbar_kwargs=None,
 ):
     """Plot imshow with cartopy."""
+    plot_kwargs = {} if plot_kwargs is None else plot_kwargs
+
     # - Ensure image with correct dimensions orders
     da = da.transpose(y, x, ...)
     arr = np.asanyarray(da.data)
@@ -739,7 +741,7 @@ def plot_cartopy_pcolormesh(
     y,
     add_colorbar=True,
     add_swath_lines=True,
-    plot_kwargs={},
+    plot_kwargs=None,
     cbar_kwargs=None,
 ):
     """Plot imshow with cartopy.
@@ -751,6 +753,8 @@ def plot_cartopy_pcolormesh(
     key with the name of the RGB dimension.
 
     """
+    plot_kwargs = {} if plot_kwargs is None else plot_kwargs
+
     # Remove RGB from plot_kwargs
     rgb = plot_kwargs.pop("rgb", False)
 

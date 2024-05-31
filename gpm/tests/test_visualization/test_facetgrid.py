@@ -155,7 +155,7 @@ class TestPlotMap:
 
     def test_with_specified_axis(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
         """Test FacetGrid raise error if an axis is specified."""
-        fig, ax = plt.subplots(1, 1)
+        _, ax = plt.subplots(1, 1)
         with pytest.raises(ValueError):
             plot.plot_map(orbit_dataarray_4_frames, ax=ax, col=EXTRA_DIM)
 
@@ -330,6 +330,6 @@ class TestPlotImage:
 
     def test_with_specified_axis(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
         """Test plotting FacetGrid with a specified ax raise an error."""
-        fig, ax = plt.subplots(1, 1)
+        _, ax = plt.subplots(1, 1)
         with pytest.raises(ValueError):
             plot.plot_image(orbit_dataarray_4_frames, ax=ax, col=2)

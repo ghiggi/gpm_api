@@ -185,7 +185,7 @@ def create_gifski_gif(
     # --> I can not use /tmp or /ltenas
     base_dir = os.path.join(os.path.expanduser("~"), "tmp_gifski")  # /home/<user>/tmp_gifski
     os.makedirs(base_dir, exist_ok=True)
-    tmp_dir, pattern = _move_and_rename_image_to_tmp_dir(image_filepaths, tmp_dir=base_dir, delete_inputs=delete_inputs)
+    tmp_dir, _ = _move_and_rename_image_to_tmp_dir(image_filepaths, tmp_dir=base_dir, delete_inputs=delete_inputs)
     input_pattern = os.path.join(tmp_dir, "image_*.png")
     tmp_fpath = os.path.join(base_dir, os.path.basename(gif_fpath))
 

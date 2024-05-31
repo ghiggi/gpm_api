@@ -111,10 +111,20 @@ def mask_invalid_indices(flag_value=np.nan):
     return decorator
 
 
-def _check_partitions(names, partitions):
-    if set(names) != set(partitions):
-        raise ValueError(f"'partitions' ({partitions}) does not match with partition names {names}.")
-    return partitions
+def check_default_names(names, default_names):
+    if names is None:
+        names = default_names
+    if isinstance(names, str):
+        names = [names]
+    if not isinstance(names, list):
+        raise TypeError("'names' must be a list specifying the partition names.")
+    return names
+
+
+def check_partitioning_order(names, partitioning_order):
+    if set(names) != set(partitioning_order):
+        raise ValueError(f"'partitioning_order' ({partitioning_order}) does not match with partition names {names}.")
+    return partitioning_order
 
 
 def check_partitioning_flavor(partitioning_flavor):
@@ -155,10 +165,10 @@ def get_partition_dir_name(partition_name, partition_labels, partitioning_flavor
     return np.char.add(partition_labels, os.sep)
 
 
-def get_directories(dict_labels, partitions, partitioning_flavor):
+def get_directories(dict_labels, partitioning_order, partitioning_flavor):
     """Return the directory trees of a partitioned dataset."""
     list_dir_names = []
-    for partition in partitions:
+    for partition in partitioning_order:
         dir_name = get_partition_dir_name(
             partition_name=partition,
             partition_labels=dict_labels[partition],
@@ -368,6 +378,46 @@ def add_polars_xy_labels(df, x, y, size, extent, xbin, ybin, remove_invalid_rows
 
 
 ####-----------------------------------------------------------------------------------------------------------------.
+#### Tiles Utilities
+
+
+def justify_labels(labels, length):
+    return np.char.rjust(labels, length, "0")
+
+
+def get_tile_xy_labels(x_indices, y_indices, origin, n_x, n_y, justify=False):
+    """Return the 2D tile labels for the specified x,y indices."""
+    x_labels = x_indices.astype(str)
+    y_labels = y_indices.astype(str) if origin == "top" else (n_y - 1 - y_indices).astype(str)
+    # Optional justify the labels
+    if justify:
+        x_labels = justify_labels(x_labels, length=len(str(n_x)))
+        y_labels = justify_labels(y_labels, length=len(str(n_y)))
+    return x_labels, y_labels
+
+
+def get_tile_id_labels(x_indices, y_indices, origin, direction, n_x, n_y, justify):
+    """Return the 1D tile labels for the specified x,y indices."""
+    if direction == "x":
+        if origin == "top":
+            flattened_indices = np.ravel_multi_index((y_indices, x_indices), (n_y, n_x), order="C")
+        else:  # origin == "bottom"
+            y_indices_flipped = n_y - 1 - y_indices
+            flattened_indices = np.ravel_multi_index((y_indices_flipped, x_indices), (n_y, n_x), order="C")
+    elif origin == "top":
+        flattened_indices = np.ravel_multi_index((y_indices, x_indices), (n_y, n_x), order="F")
+    else:  # origin == "bottom"
+        y_indices_flipped = n_y - 1 - y_indices
+        flattened_indices = np.ravel_multi_index((y_indices_flipped, x_indices), (n_y, n_x), order="F")
+    # Conversion to string
+    labels = flattened_indices.astype(str)
+    # Optional justify the labels
+    if justify:
+        labels = justify_labels(labels, length=len(str(n_x * n_y)))
+    return labels
+
+
+####-----------------------------------------------------------------------------------------------------------------.
 #### Xarray reformatting utility
 def _ensure_indices_list(indices):
     if indices is None:
@@ -471,7 +521,7 @@ class Base2DPartitioning:
         The partition bounds across the y (vertical) dimension.
         Please provide the bounds with increasing values order.
         The origin of the partition class indices is the top, left corner.
-    partitions : list
+    partitioning_order : list
         The order of the partitions when writing multi-level partitions (i.e. x, y) to disk.
         The default, ``None``, corresponds to ``names``.
     partitioning_flavor : str
@@ -480,27 +530,24 @@ class Base2DPartitioning:
         The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
     """
 
-    def __init__(self, names, x_bounds, y_bounds, partitioning_flavor=None, partitions=None):
+    def __init__(self, x_bounds, y_bounds, names, partitioning_flavor=None, partitioning_order=None):
 
         self.x_bounds = np.asanyarray(x_bounds)
         self.y_bounds = np.asanyarray(y_bounds)
         self.x_centroids = get_centroids_from_bounds(self.x_bounds)
         self.y_centroids = get_centroids_from_bounds(self.y_bounds)
-
         # Define partitions names, order and flavour
-        if isinstance(names, str):
-            names = [names]
-        self.names = list(names)
-        if partitions is None:
-            self.partitions = self.names
+        self.names = check_default_names(names=names, default_names=None)
+        if partitioning_order is None:
+            self.partitioning_order = self.names
         else:
-            self.partitions = _check_partitions(names=self.names, partitions=partitions)
+            self.partitioning_order = check_partitioning_order(names=self.names, partitioning_order=partitioning_order)
         self.partitioning_flavor = check_partitioning_flavor(partitioning_flavor)
 
         # Define info
         self.shape = (len(self.y_centroids), len(self.x_centroids))
         self.n_partitions = self.shape[0] * self.shape[1]
-        self.n_levels = len(self.partitions)
+        self.n_levels = len(self.names)
         self.n_x = self.shape[1]
         self.n_y = self.shape[0]
 
@@ -517,7 +564,7 @@ class Base2DPartitioning:
 
     @flatten_indices_arrays
     @mask_invalid_indices(flag_value="nan")
-    def query_labels_by_index(self, x_indices, y_indices):
+    def query_labels_by_indices(self, x_indices, y_indices):
         """Return the partition labels as function of the specified 2D partitions indices."""
         return self._custom_labels_function(x_indices=x_indices, y_indices=y_indices)
 
@@ -530,11 +577,11 @@ class Base2DPartitioning:
     def query_labels(self, x, y):
         """Return the partition labels for the specified x,y coordinates."""
         x_indices, y_indices = self.query_indices(x=x, y=y)
-        return self.query_labels_by_index(x_indices, y_indices)
+        return self.query_labels_by_indices(x_indices, y_indices)
 
     @flatten_indices_arrays
     @mask_invalid_indices(flag_value=np.nan)
-    def query_centroids_by_index(self, x_indices, y_indices):
+    def query_centroids_by_indices(self, x_indices, y_indices):
         """Return the partition centroids for the specified x,y indices."""
         x_centroids = self.x_centroids[x_indices]
         y_centroids = self.y_centroids[y_indices]
@@ -544,7 +591,7 @@ class Base2DPartitioning:
     def query_centroids(self, x, y):
         """Return the partition centroids for the specified x,y coordinates."""
         x_indices, y_indices = self.query_indices(x=x, y=y)
-        return self.query_centroids_by_index(x_indices, y_indices)
+        return self.query_centroids_by_indices(x_indices, y_indices)
 
     @property
     def labels(self):
@@ -553,8 +600,8 @@ class Base2DPartitioning:
             # Retrieve labels combination of all (x,y) indices
             x_indices, y_indices = np.meshgrid(np.arange(self.n_x), np.arange(self.n_y))
             # Retrieve labels
-            # - If n_levels >= 2 --> query_labels_by_index return a tuple !
-            labels = self.query_labels_by_index(x_indices=x_indices, y_indices=y_indices)
+            # - If n_levels >= 2 --> query_labels_by_indices return a tuple !
+            labels = self.query_labels_by_indices(x_indices=x_indices, y_indices=y_indices)
             if self.n_levels >= 2:
                 labels = np.stack(labels, axis=-1)
             self._labels = labels
@@ -566,7 +613,7 @@ class Base2DPartitioning:
         if self._centroids is None:
             # Retrieve centroids of all (x,y) indices
             x_indices, y_indices = np.meshgrid(np.arange(self.n_x), np.arange(self.n_y))
-            centroids = self.query_centroids_by_index(x=x_indices, y_indices=y_indices)
+            centroids = self.query_centroids_by_indices(x_indices, y_indices)
             centroids = np.stack(centroids, axis=-1)
             self._centroids = centroids
         return self._centroids
@@ -606,18 +653,18 @@ class Base2DPartitioning:
         # Retrieve corresponding labels
         # If n_levels >= 2 --> self.labels is a tuple
         # If n_levels == 1 --> self.labels is a 1D array
-        labels = self.query_labels_by_index(x_indices=indices[0], y_indices=indices[1])
+        labels = self.query_labels_by_indices(x_indices=indices[0], y_indices=indices[1])
         dict_labels = {}
         if self.n_levels > 1:
-            dict_labels = {self.partitions[i]: labels[i] for i in range(0, self.n_levels)}
+            dict_labels = {self.names[i]: labels[i] for i in range(0, self.n_levels)}
         else:  # (tile_id)
-            dict_labels = {self.partitions[0]: labels}
+            dict_labels = {self.names[0]: labels}
         return dict_labels
 
     def _directories(self, dict_labels):
         return get_directories(
             dict_labels=dict_labels,
-            partitions=self.partitions,
+            partitioning_order=self.partitioning_order,
             partitioning_flavor=self.partitioning_flavor,
         )
 
@@ -665,41 +712,41 @@ class Base2DPartitioning:
         dict_labels = self.get_partitions_around_point(x=x, y=y, distance=distance, size=size)
         return self._directories(dict_labels=dict_labels)
 
-    @check_valid_dataframe
-    def add_labels(self, df, x, y, remove_invalid_rows=True):
+    # @check_valid_dataframe
+    # def add_labels(self, df, x, y, remove_invalid_rows=True):
 
-        x = df[x]
-        y = df[y]
+    #     x = df[x]
+    #     y = df[y]
 
-        # Add columns using self.names !
+    #     # Add columns using self.names !
 
-        # query_labels(self, x, y)
+    #     # query_labels(self, x, y)
 
-    def add_centroids(self, df, x, y, x_centroid="x_c", y_centroid="y_c", remove_invalid_rows=True):
+    # def add_centroids(self, df, x, y, x_centroid="x_c", y_centroid="y_c", remove_invalid_rows=True):
 
-        # query_centroids(self, x, y)
+    #     # query_centroids(self, x, y)
 
-        if isinstance(df, pd.DataFrame):
-            return add_pandas_xy_labels(
-                df=df,
-                x=x,
-                y=y,
-                size=self.size,
-                extent=self.extent,
-                xbin=self.xbin,
-                ybin=self.ybin,
-                remove_invalid_rows=remove_invalid_rows,
-            )
-        return add_polars_xy_labels(
-            df=df,
-            x=x,
-            y=y,
-            size=self.size,
-            extent=self.extent,
-            xbin=self.xbin,
-            ybin=self.ybin,
-            remove_invalid_rows=remove_invalid_rows,
-        )
+    #     if isinstance(df, pd.DataFrame):
+    #         return add_pandas_xy_labels(
+    #             df=df,
+    #             x=x,
+    #             y=y,
+    #             size=self.size,
+    #             extent=self.extent,
+    #             xbin=self.xbin,
+    #             ybin=self.ybin,
+    #             remove_invalid_rows=remove_invalid_rows,
+    #         )
+    #     return add_polars_xy_labels(
+    #         df=df,
+    #         x=x,
+    #         y=y,
+    #         size=self.size,
+    #         extent=self.extent,
+    #         xbin=self.xbin,
+    #         ybin=self.ybin,
+    #         remove_invalid_rows=remove_invalid_rows,
+    #    )
 
     @check_valid_dataframe
     def to_xarray(self, df, new_x=None, new_y=None, indices=None):
@@ -722,10 +769,6 @@ class XYPartitioning(Base2DPartitioning):
 
     Parameters
     ----------
-    xbin : float
-        Identifier for the x bin.
-    ybin : float
-        Identifier for the y bin.
     size : int, float, tuple, list
         The size value(s) of the bins.
         The function interprets the input as follows:
@@ -733,24 +776,36 @@ class XYPartitioning(Base2DPartitioning):
         - tuple or list: The bin size for the x and y directions.
     extent : list
         The extent for the partitioning specified as ``[xmin, xmax, ymin, ymax]``.
-    partitions : list
-        The order of the x and y partitions (i.e. when writing to disk partitioned datasets)
-        The default, ``None``, corresponds to ``[xbin, ybin]``.
-    partitioning_flavor : str
+    names: list, optional
+        Names of the x and y partitions.
+        The default is ``["xbin", "ybin"]``.
+    partitioning_order : list, optional
+        The order of the x and y partitions when writing partitioned datasets.
+        The default, ``None``, corresponds to ``names``.
+    partitioning_flavor : str, optional
         This argument governs the directories names of partitioned datasets.
         The default, ``None``, name the directories with the partitions labels (DirectoryPartitioning).
         The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
     """
 
-    def __init__(self, xbin, ybin, size, extent, partitioning_flavor=None, partitions=None, labels_decimals=None):
+    def __init__(
+        self,
+        size,
+        extent,
+        names=None,
+        partitioning_order=None,
+        partitioning_flavor=None,
+        labels_decimals=None,
+    ):
 
         # Check and set extent
         self.extent = check_extent(extent)
         # Check and set partitions size (except maybe last one)
         self.size = _check_size(size)
         # Set partition names
-        self.xbin = xbin
-        self.ybin = ybin
+        self.names = check_default_names(names=names, default_names=["xbin", "ybin"])
+        self.xbin = self.names[0]
+        self.ybin = self.names[1]
         # Calculate partitions bounds
         x_bounds = get_bounds(size=self.size[0], vmin=self.extent.xmin, vmax=self.extent.xmax)
         y_bounds = get_bounds(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)
@@ -764,10 +819,10 @@ class XYPartitioning(Base2DPartitioning):
         self._ylabels = None
         # Initialize class
         super().__init__(
-            names=(xbin, ybin),
+            names=self.names,
             x_bounds=x_bounds,
             y_bounds=y_bounds,
-            partitions=partitions,
+            partitioning_order=partitioning_order,
             partitioning_flavor=partitioning_flavor,
         )
 
@@ -781,12 +836,11 @@ class XYPartitioning(Base2DPartitioning):
     def to_dict(self):
         """Return the partitioning settings."""
         dictionary = {
-            "name": self.__class__.__name__,
+            "partitioning_class": self.__class__.__name__,
             "extent": list(self.extent),
             "size": list(self.size),
-            "xbin": self.xbin,
-            "ybin": self.ybin,
-            "partitions": self.partitions,
+            "names": self.names,
+            "partitioning_order": self.partitioning_order,
             "partitioning_flavor": self.partitioning_flavor,
             "labels_decimals": list(self._labels_decimals),
         }
@@ -796,7 +850,7 @@ class XYPartitioning(Base2DPartitioning):
     def x_labels(self):
         """Return the partition labels across the horizontal dimension."""
         if self._xlabels is None:
-            x_labels, _ = self.query_labels_by_index(
+            x_labels, _ = self.query_labels_by_indices(
                 x_indices=np.arange(0, self.n_x),
                 y_indices=np.zeros(self.n_x),
             )
@@ -807,7 +861,7 @@ class XYPartitioning(Base2DPartitioning):
     def y_labels(self):
         """Return the partition labels across the vertical dimension."""
         if self._ylabels is None:
-            x_labels, y_labels = self.query_labels_by_index(
+            _, y_labels = self.query_labels_by_indices(
                 x_indices=np.zeros(self.n_y),
                 y_indices=np.arange(0, self.n_y),
             )
@@ -853,7 +907,134 @@ class XYPartitioning(Base2DPartitioning):
         )
 
 
-class GeographicPartitioning(XYPartitioning):
+class TilePartitioning(Base2DPartitioning):
+    """
+    Handles partitioning of data into tiles.
+
+    Parameters
+    ----------
+    size : int, float, tuple, list
+        The size value(s) of the bins.
+        The function interprets the input as follows:
+        - int or float: The same size is enforced in both x and y directions.
+        - tuple or list: The bin size for the x and y directions.
+    extent : list
+        The extent for the partitioning specified as ``[xmin, xmax, ymin, ymax]``.
+    levels: int
+        The number of tile partitioning levels.
+        If ``levels=2``, a (x,y) label is assigned to each tile.
+        If ``levels=1``, a unique id label is assigned to each tile combining the x and y tile indices.
+        The ``origin`` and ``direction`` parameters governs its value.
+    names: list, optional
+         Names of the x and y partitions.
+         The default is ``["lon_bin", "lat_bin"]``.
+    origin: str, optional
+        The origin of the Y axis. Either ``"bottom"`` or ``"top"``.
+        TMS tiles assumes ``origin="top"``.
+        Google Maps tiles assumes ``origin="bottom"``.
+        The default is ``"bottom"``.
+    direction: str, optional
+        The direction to follow to define tile ids if ``levels=1`` is specified.
+        Valid direction values are "x" and "y".
+        ``direction=x`` numbers the tiles rows by rows.
+        ``direction=y`` numbers the tiles columns by columns.
+    justify: bool, optional
+        Whether to justify the labels to ensure having all same number of characters.
+        0 is added on the left side of the labels to justify the length.
+        THe default is ``False``.
+    partitioning_order : list, optional
+        The order of the partitions when writing partitioned datasets.
+        The default, ``None``, corresponds to ``names``.
+    partitioning_flavor : str, optional
+        This argument governs the directories names of partitioned datasets.
+        The default, ``None``, name the directories with the partitions labels (DirectoryPartitioning).
+        The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
+    """
+
+    def __init__(
+        self,
+        size,
+        extent,
+        levels,
+        names=None,
+        origin="bottom",
+        direction="x",
+        justify=False,
+        partitioning_flavor=None,
+        partitioning_order=None,
+    ):
+        # Check names and levels
+        if levels not in [1, 2]:
+            raise ValueError("Invalid value for 'levels'. Must be 1 or 2.")
+        default_names_dict = {1: "tile_id", 2: ["x", "y"]}
+        names = check_default_names(names=names, default_names=default_names_dict[levels])
+        if len(names) != levels:
+            raise ValueError(f"{levels} level specified, but {len(names)} partitions names specified.")
+        # Check and set extent
+        self.extent = check_extent(extent)
+        # Check and set partitions size (except maybe last one)
+        self.size = _check_size(size)
+        # Calculate partitions bounds
+        x_bounds = get_bounds(size=self.size[0], vmin=self.extent.xmin, vmax=self.extent.xmax)
+        y_bounds = get_bounds(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)
+        # Define tiling options
+        if direction not in ["x", "y"]:
+            raise ValueError("Invalid value for 'direction'. Must be 'x' or 'y'.")
+        if origin not in ["top", "bottom"]:
+            raise ValueError("Invalid value for 'origin'. Must be 'top' or 'bottom'.")
+        self.direction = direction
+        self.origin = origin
+        self.justify = justify
+        # Initialize class
+        super().__init__(
+            names=names,
+            x_bounds=x_bounds,
+            y_bounds=y_bounds,
+            partitioning_order=partitioning_order,
+            partitioning_flavor=partitioning_flavor,
+        )
+
+    # -----------------------------------------------------------------------------------.
+    def _custom_labels_function(self, x_indices, y_indices):
+        """Return the partition labels for the specified x,y indices based on the direction, origin, and levels."""
+        if self.n_levels == 2:
+            return get_tile_xy_labels(
+                x_indices,
+                y_indices,
+                origin=self.origin,
+                n_x=self.n_x,
+                n_y=self.n_y,
+                justify=self.justify,
+            )
+        # n_levels == 1
+        return get_tile_id_labels(
+            x_indices,
+            y_indices,
+            origin=self.origin,
+            direction=self.direction,
+            n_x=self.n_x,
+            n_y=self.n_y,
+            justify=self.justify,
+        )
+
+    def to_dict(self):
+        """Return the partitioning settings."""
+        dictionary = {
+            "partitioning_class": self.__class__.__name__,
+            "extent": list(self.extent),
+            "size": list(self.size),
+            "levels": self.n_levels,
+            "names": self.names,
+            "origin": self.origin,
+            "direction": self.direction,
+            "justify": self.justify,
+            "partitioning_order": self.partitioning_order,
+            "partitioning_flavor": self.partitioning_flavor,
+        }
+        return dictionary
+
+
+class LonLatPartitioning(XYPartitioning):
     """
     Handles geographic partitioning of data based on longitude and latitude bin sizes within a defined extent.
 
@@ -869,17 +1050,16 @@ class GeographicPartitioning(XYPartitioning):
         - 5° degree corresponds to 2592 directories (72*36)
         - 10° degree corresponds to 648 directories (36*18)
         - 15° degree corresponds to 288 directories (24*12)
-    xbin : str, optional
-        Name of the longitude bin, default is 'lon_bin'.
-    ybin : str, optional
-        Name of the latitude bin, default is 'lat_bin'.
+    names: list, optional
+        Names of the x and y partitions.
+        The default is ``["lon_bin", "lat_bin"]``.
     extent : list, optional
-        The geographical extent for the partitioning specified as [xmin, xmax, ymin, ymax].
-        Default is the whole earth: [-180, 180, -90, 90].
-    partitions : list
-        The order of the partitions xbin and ybin (i.e. when writing to disk partitioned datasets)
-        The default, ``None``, corresponds to ``[xbin, ybin]``.
-    partitioning_flavor : str
+        The geographical extent for the partitioning specified as ``[xmin, xmax, ymin, ymax]``.
+        Default is the whole Earth: ``[-180, 180, -90, 90]``.
+    partitioning_order : list, optional
+        The order of the partitions when writing partitioned datasets.
+        The default, ``None``, corresponds to ``names``.
+    partitioning_flavor : str, optional
         This argument governs the directories names of partitioned datasets.
         The default, `"hive"``, names the directories with the format ``{partition_name}={partition_label}``.
         If ``None``, names the directories with the partitions labels (DirectoryPartitioning).
@@ -892,19 +1072,18 @@ class GeographicPartitioning(XYPartitioning):
     def __init__(
         self,
         size,
-        xbin="lon_bin",
-        ybin="lat_bin",
         extent=[-180, 180, -90, 90],
+        names=None,
         partitioning_flavor="hive",
-        partitions=None,
+        partitioning_order=None,
         labels_decimals=None,
     ):
+        names = check_default_names(names=names, default_names=["lon_bin", "lat_bin"])
         super().__init__(
-            xbin=xbin,
-            ybin=ybin,
             size=size,
             extent=extent,
-            partitions=partitions,
+            names=names,
+            partitioning_order=partitioning_order,
             partitioning_flavor=partitioning_flavor,
             labels_decimals=labels_decimals,
         )
