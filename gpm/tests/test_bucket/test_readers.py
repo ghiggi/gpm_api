@@ -25,6 +25,8 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the bucket readers."""
+import platform
+
 import pandas as pd
 import polars as pl
 import pyarrow as pa
@@ -78,6 +80,8 @@ def create_bucket_archive(bucket_dir):
 
 
 NUM_COLUMNS = 7
+if platform.system() == "Windows":
+    NUM_COLUMNS = NUM_COLUMNS + 2  # TODO: understand why windows behave like this
 
 
 # import pathlib

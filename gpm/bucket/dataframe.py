@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module implements manipulation wrappers for multiple DataFrame classes."""
+import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
@@ -58,7 +59,7 @@ def df_select_valid_rows(df, valid_rows):
     if isinstance(df, (pl.DataFrame, pl.LazyFrame, pa.Table)):
         return df.filter(valid_rows)
     if isinstance(df, dd.DataFrame):
-        return df.loc[np.where(valid_rows)[0]]  # BUG by providing boolean when npartitions>1
+        return df.loc[np.where(valid_rows)[0]]  # BUG when providing boolean when npartitions>1
     # else: #  if isinstance(df, pd.DataFrame):
     return df.loc[valid_rows]
 
@@ -67,8 +68,17 @@ def df_add_column(df, column, values):
     """Add column to dataframe."""
     if isinstance(df, (pl.DataFrame, pl.LazyFrame)):
         return df.with_columns(pl.Series(column, values))
-    if isinstance(df, (dd.DataFrame, pd.DataFrame)):
-        df[column] = pd.Series(values)
+    if isinstance(df, pd.DataFrame):
+        # Use assign to not modify input df
+        # Do not use pd.Series(values) because mess up if df has Index/Multindex
+        return df.assign(**{column: values})
+    if isinstance(df, dd.DataFrame):
+        # 'df[column] = pd.Series(values)' conserve npartitions
+        # 'df[column] = pd.Series(values)' does not work if npartitions=1
+        if df.npartitions > 1:
+            df[column] = pd.Series(values)
+        else:  # npartitions=1
+            df[column] = dask.array.from_array(values)  # does not conserve npartition
         return df
     # else: # pyarrow.Table
     return df.append_column(column, pa.array(values))

@@ -77,7 +77,6 @@ def _move_and_rename_image_to_tmp_dir(filepaths, tmp_dir=None, delete_inputs=Fal
     # Copy files to the temporary directory and rename them
     # - Do not move because a single image can be referenced multiple times in filepaths
     for i, filepath in enumerate(filepaths):
-        _, filename = os.path.split(filepath)
         new_filename = pattern.format(i + 1)  # Start index from 1
         new_filepath = os.path.join(tmp_dir, new_filename)
         shutil.copy(filepath, new_filepath)
