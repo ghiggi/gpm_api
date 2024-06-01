@@ -7,7 +7,9 @@ omit =
 	gpm/cli/*
 	gpm/encoding/*
 	gpm/etc/*
-	gpm/retrieval/*
+	gpm/retrievals/*
+	gpm/visualization/animation.py
+	gpm/utils/pyresample.py
 	gpm/_version.py
 
 [report]

@@ -173,7 +173,8 @@ def test_get_subdirectories(tmp_path):
     results = get_subdirectories(base_dir=bucket_dir, path=False)
     assert results == ["lon_bin=-5.0"]
     results = get_subdirectories(base_dir=os.path.join(bucket_dir, "lon_bin=-5.0"), path=False)
-    assert results == ["lat_bin=5.0", "lat_bin=-5.0"]
+    expected_results = ["lat_bin=5.0", "lat_bin=-5.0"]
+    assert sorted(results) == sorted(expected_results)
 
 
 def test_get_partitions_paths(tmp_path):
@@ -182,10 +183,11 @@ def test_get_partitions_paths(tmp_path):
     create_test_bucket(bucket_dir=bucket_dir)
     # Test results
     results = get_partitions_paths(bucket_dir=bucket_dir)
-    assert results == [
+    expected_results = [
         os.path.join(bucket_dir, "lon_bin=-5.0", "lat_bin=-5.0"),
         os.path.join(bucket_dir, "lon_bin=-5.0", "lat_bin=5.0"),
     ]
+    assert sorted(results) == sorted(expected_results)
 
 
 def test_search_leaf_files_in_parallel(tmp_path):

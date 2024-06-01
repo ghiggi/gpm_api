@@ -301,7 +301,7 @@ def merge_granule_buckets(
     src_bucket_dir,
     dst_bucket_dir,
     row_group_size="400MB",
-    max_file_size="2GB",
+    max_file_size="1GB",
     compression="snappy",
     compression_level=None,
     write_metadata=False,

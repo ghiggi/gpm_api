@@ -97,6 +97,8 @@ class TestReadBucket:
 
         # Test read full database
         df_pl = read_bucket(bucket_dir)
+        assert df_pl.columns == []  # TODO WINDOW BUG
+        assert isinstance(df_pl, pl.DataFrame)
         assert df_pl.shape == (150, NUM_COLUMNS)
 
     def test_rows_columns_subsets(self, tmp_path):
@@ -106,10 +108,12 @@ class TestReadBucket:
 
         # Test read row subset
         df_pl = read_bucket(bucket_dir, n_rows=2)
+        assert isinstance(df_pl, pl.DataFrame)
         assert df_pl.shape == (2, NUM_COLUMNS)
 
         # Test read row, columns subset
         df_pl = read_bucket(bucket_dir, n_rows=3, columns=["lon", "lat"])
+        assert df_pl.columns == []  # TODO WINDOW BUG
         assert df_pl.shape == (3, 2)
         assert "lon" in df_pl
         assert "lat" in df_pl
