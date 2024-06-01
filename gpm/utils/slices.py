@@ -296,7 +296,6 @@ def ensure_is_slice(slc):
     elif isinstance(slc, np.ndarray) and slc.size == 1:
         slc = slice(slc.item(), slc.item() + 1)
     else:
-        # TODO: check if continuous
         raise ValueError("Impossibile to convert to a slice object.")
     return slc
 

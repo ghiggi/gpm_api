@@ -506,8 +506,6 @@ def test_find_filepaths(
     Since find_filepaths relies on find_daily_filepaths, we can mock
     find_daily_filepaths and only test some cases here.
     """
-    # TODO: test for all products?
-
     storage = "PPS"
     version = 7
     product = "2A-DPR"

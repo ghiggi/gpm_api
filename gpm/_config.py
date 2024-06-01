@@ -56,6 +56,7 @@ _CONFIG_DEFAULTS = {
     "warn_invalid_geolocation": True,
     "warn_multiple_product_versions": True,
     "viz_hide_antimeridian_data": True,
+    "remove_corrupted_files": False,
 }
 _CONFIG_DEFAULTS.update(_get_default_configs())
 

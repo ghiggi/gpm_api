@@ -101,9 +101,6 @@ GRID_SPATIAL_DIMS = ("lon", "lat")
 ORBIT_SPATIAL_DIMS = ("cross_track", "along_track")
 
 
-# TODO: read dictionary from yaml config
-
-
 def _has_a_phony_dim(xr_obj):
     """Check if the xarray object has a phony_dim_<number> dimension."""
     return np.any([dim.startswith("phony_dim") for dim in list(xr_obj.dims)]).item()

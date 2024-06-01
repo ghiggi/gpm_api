@@ -721,8 +721,6 @@ class XYPartitioning(Base2DPartitioning):
         self.size = _check_size(size)
         # Set partition names
         self.levels = check_default_levels(levels=levels, default_levels=["xbin", "ybin"])
-        self.xbin = self.levels[0]
-        self.ybin = self.levels[1]
         # Calculate partitions bounds
         x_bounds = get_bounds(size=self.size[0], vmin=self.extent.xmin, vmax=self.extent.xmax)
         y_bounds = get_bounds(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)

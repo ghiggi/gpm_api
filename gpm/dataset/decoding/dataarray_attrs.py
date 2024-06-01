@@ -55,7 +55,6 @@ def _check_fillvalue_format(attrs):
 
     # Check _FillValue and CodeMissingValue agrees
     # - Do not since _FillValue often badly defined !
-    # - TODO: report issues to NASA team
     # if "_FillValue" in attrs  and "CodeMissingValue" in attrs:
     #     if attrs["_FillValue"] != attrs["CodeMissingValue"]:
     #         name = da.name

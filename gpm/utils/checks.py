@@ -838,7 +838,6 @@ def get_slices_wobbling_swath(xr_obj, threshold=100):
     The function extract the along-track boundary on both swath sides and
     identify where the change in orbit direction occurs.
     """
-    # TODO: this has not been well checked...likely need +1 somewhere ...
     list_slices1 = get_slices_non_wobbling_swath(xr_obj, threshold=threshold)
     list_slices_full = [slice(0, len(xr_obj["along_track"]))]
     return list_slices_difference(list_slices_full, list_slices1)

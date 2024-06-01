@@ -265,7 +265,6 @@ def remote_filepaths() -> dict[str, dict[str, Any]]:
             "version": 7,
             "granule_id": 36097,
         },
-        # TODO: Add more products with varying attributes ...
     }
 
 
