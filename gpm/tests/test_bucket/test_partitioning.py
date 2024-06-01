@@ -73,7 +73,7 @@ class TestXYPartitioning:
         """Test proper initialization of XYPartitioning objects."""
         partitioning = XYPartitioning(size=(1, 2), extent=[0, 10, 0, 10])
         assert partitioning.size == (1, 2)
-        assert partitioning.partitioning_order == ["xbin", "ybin"]  # default names
+        assert partitioning.partitioning_order == ["xbin", "ybin"]  # default levels
         assert list(partitioning.extent) == [0, 10, 0, 10]
         assert partitioning.shape == (5, 10)
         assert partitioning.n_partitions == 50
@@ -90,7 +90,7 @@ class TestXYPartitioning:
         """Test initialization with invalid extent and size."""
         # Invalid names types
         with pytest.raises(TypeError):
-            XYPartitioning(size=(0.1, 0.2), extent=[0, 10, 0, 10], names=0)
+            XYPartitioning(size=(0.1, 0.2), extent=[0, 10, 0, 10], levels=0)
 
         # Invalid extent
         with pytest.raises(ValueError):
@@ -104,7 +104,7 @@ class TestXYPartitioning:
             XYPartitioning(
                 size=(0.1, 0.2),
                 extent=[0, 10, 0, 10],
-                names=["x", "y"],
+                levels=["x", "y"],
                 partitioning_order=["y", "another_name_instead_of_x"],
             )
         # Invalid names types
@@ -148,8 +148,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Add partitions
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
@@ -178,8 +178,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Add partitions
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
@@ -208,8 +208,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Add partitions
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
@@ -238,8 +238,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Add partitions
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
@@ -268,8 +268,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Add partitions
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
@@ -297,8 +297,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Test invalid arguments
         with pytest.raises(TypeError):
@@ -358,8 +358,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Add partitions
         df_out = partitioning.add_centroids(df, x="x", y="y", remove_invalid_rows=True)
@@ -420,8 +420,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Add partitions
         df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
@@ -464,8 +464,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
 
         # Add partitions
         df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
@@ -493,7 +493,7 @@ class TestXYPartitioning:
         # Convert to Dataset
         if index_type == "set":
             df_full = df_full.reset_index()
-            df_full = df_full.set_index([*names, "frequency", "month"])
+            df_full = df_full.set_index([*levels, "frequency", "month"])
             aux_coords = None
         else:
             aux_coords = ["frequency", "month"]
@@ -527,8 +527,8 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["partition_name_x", "partition_name_y"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = ["partition_name_x", "partition_name_y"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
         # Add partitions
         df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
         # Aggregate by partitions
@@ -641,8 +641,8 @@ class TestXYPartitioning:
         extent = [0, 2, 0, 2]
         x_name = "partition_name_x"
         y_name = "partition_name_y"
-        names = [x_name, y_name]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = [x_name, y_name]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
         # Test results with extent within
         new_extent = [0, 0.5, 0, 0.5]
         dict_labels = partitioning.get_partitions_by_extent(new_extent)
@@ -668,8 +668,8 @@ class TestXYPartitioning:
         extent = [0, 2, 0, 2]
         x_name = "partition_name_x"
         y_name = "partition_name_y"
-        names = [x_name, y_name]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names)
+        levels = [x_name, y_name]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels)
         # Test results with point within
         dict_labels = partitioning.get_partitions_around_point(x=1, y=1, distance=0)
         assert dict_labels[x_name].tolist() == ["0.75"]
@@ -722,15 +722,15 @@ class TestXYPartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        names = ["name1", "name2"]
-        partitioning = XYPartitioning(size=size, extent=extent, names=names, partitioning_order=names[::-1])
+        levels = ["name1", "name2"]
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels, partitioning_order=levels[::-1])
         # Test results
         expected_dict = {
             "partitioning_class": "XYPartitioning",
             "extent": list(extent),
             "size": list(size),
-            "names": names,
-            "partitioning_order": names[::-1],
+            "levels": levels,
+            "partitioning_order": levels[::-1],
             "partitioning_flavor": "directory",  # default
             "labels_decimals": [2, 3],
         }
@@ -872,34 +872,34 @@ class TestTilePartitioning:
 
         # Invalid levels
         with pytest.raises(ValueError):
-            TilePartitioning(size=size, extent=extent, levels=3)
+            TilePartitioning(size=size, extent=extent, n_levels=3)
 
         # Invalid levels and names
         with pytest.raises(ValueError):
-            TilePartitioning(size=size, extent=extent, levels=2, names="one_name")
+            TilePartitioning(size=size, extent=extent, n_levels=2, levels="one_name")
         with pytest.raises(ValueError):
-            TilePartitioning(size=size, extent=extent, levels=1, names=["one", "two"])
+            TilePartitioning(size=size, extent=extent, n_levels=1, levels=["one", "two"])
 
         # Invalid origin
         with pytest.raises(ValueError):
-            TilePartitioning(size=size, extent=extent, levels=1, origin="bad")
+            TilePartitioning(size=size, extent=extent, n_levels=1, origin="bad")
 
         # Invalid direction
         with pytest.raises(ValueError):
-            TilePartitioning(size=size, extent=extent, levels=1, direction="bad")
+            TilePartitioning(size=size, extent=extent, n_levels=1, direction="bad")
 
     def test_xy_bottom_partitioning(self):
         """Test two-levels 2D TilePartitioning à la GoogleMap (origin='bottom')."""
         size = (120, 90)  # 3x2 partitions
         extent = [-180, 180, -90, 90]
-        levels = 2
+        n_levels = 2
         origin = "bottom"
         justify = False
-        names = None  # ["x","y"]
+        levels = None  # ["x","y"]
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            names=names,
+            n_levels=n_levels,
             levels=levels,
             origin=origin,
             justify=justify,
@@ -907,7 +907,8 @@ class TestTilePartitioning:
         # Check initialization
         assert partitioning.n_partitions == 6
         assert partitioning.shape == (2, 3)
-        assert partitioning.n_levels == levels
+        assert partitioning.n_levels == n_levels
+        assert partitioning.levels == ["x", "y"]
         assert partitioning.partitioning_order == ["x", "y"]
 
         # Check values for origin="bottom"
@@ -935,14 +936,14 @@ class TestTilePartitioning:
         """Test two-levels TilePartitioning à la TMS (origin='top')."""
         size = (120, 90)  # 3x2 partitions
         extent = [-180, 180, -90, 90]
-        levels = 2
+        n_levels = 2
         origin = "top"
         justify = False
-        names = None  # ["x","y"]
+        levels = None  # ["x","y"]
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            names=names,
+            n_levels=n_levels,
             levels=levels,
             origin=origin,
             justify=justify,
@@ -950,7 +951,7 @@ class TestTilePartitioning:
         # Check initialization
         assert partitioning.n_partitions == 6
         assert partitioning.shape == (2, 3)
-        assert partitioning.n_levels == levels
+        assert partitioning.n_levels == n_levels
         assert partitioning.partitioning_order == ["x", "y"]
 
         # Check values for origin="bottom"
@@ -979,13 +980,13 @@ class TestTilePartitioning:
         """Test single-level TilePartitioning id rows-by-rows."""
         size = (120, 90)  # 3x2 partitions
         extent = [-180, 180, -90, 90]
-        levels = 1
+        n_levels = 1
         justify = False
-        names = None  # ["x","y"]
+        levels = None  # ["x","y"]
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            names=names,
+            n_levels=n_levels,
             levels=levels,
             # direction="x", # default
             origin=origin,
@@ -994,8 +995,8 @@ class TestTilePartitioning:
         # Check initialization
         assert partitioning.n_partitions == 6
         assert partitioning.shape == (2, 3)
-        assert partitioning.n_levels == levels
-        assert partitioning.partitioning_order == ["tile_id"]
+        assert partitioning.n_levels == n_levels
+        assert partitioning.partitioning_order == ["tile"]
 
         # Test labels
         labels = partitioning.labels
@@ -1011,14 +1012,14 @@ class TestTilePartitioning:
         """Test single-level TilePartitioning id column-by-column."""
         size = (120, 90)  # 3x2 partitions
         extent = [-180, 180, -90, 90]
-        levels = 1
+        n_levels = 1
         direction = "y"
         justify = False
-        names = None  # ["x","y"]
+        levels = None  # ["x","y"]
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            names=names,
+            n_levels=n_levels,
             levels=levels,
             origin=origin,
             direction=direction,
@@ -1027,8 +1028,8 @@ class TestTilePartitioning:
         # Check initialization
         assert partitioning.n_partitions == 6
         assert partitioning.shape == (2, 3)
-        assert partitioning.n_levels == levels
-        assert partitioning.partitioning_order == ["tile_id"]
+        assert partitioning.n_levels == n_levels
+        assert partitioning.partitioning_order == ["tile"]
 
         # Test labels
         labels = partitioning.labels
@@ -1043,13 +1044,13 @@ class TestTilePartitioning:
         """Test labels justification of two-levels 2D TilePartitioning."""
         size = (10, 10)
         extent = [-180, 180, -90, 90]
-        levels = 2
+        n_levels = 2
         origin = "bottom"
         justify = True
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            levels=levels,
+            n_levels=n_levels,
             origin=origin,
             justify=justify,
         )
@@ -1063,13 +1064,13 @@ class TestTilePartitioning:
         """Test labels justification of single-level 2D TilePartitioning."""
         size = (10, 10)  #
         extent = [-180, 180, -90, 90]
-        levels = 1
+        n_levels = 1
         origin = "bottom"
         justify = True
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            levels=levels,
+            n_levels=n_levels,
             origin=origin,
             justify=justify,
         )
@@ -1090,34 +1091,34 @@ class TestTilePartitioning:
         # Create partitioning
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
-        levels = 1
+        n_levels = 1
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            levels=levels,
+            n_levels=n_levels,
         )
         # Add partitions
         df_out = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
         # Test results
         assert isinstance(df_out, pd.DataFrame)
         expected_ids = ["28", "28", "24", "17", "10", "3"]
-        assert df_out["tile_id"].astype(str).tolist() == expected_ids, "Tile ids are incorrect."
+        assert df_out["tile"].astype(str).tolist() == expected_ids, "Tile ids are incorrect."
 
     def test_to_dict_xy(self):
         """Test to dict."""
         size = (120, 90)  # 3x2 partitions
         extent = [-180, 180, -90, 90]
-        levels = 2
+        n_levels = 2
         origin = "bottom"
         direction = "x"
         justify = True
-        names = ["xx", "yy"]
+        levels = ["xx", "yy"]
         partitioning_order = ["yy", "xx"]
         partitioning_flavor = "hive"
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            names=names,
+            n_levels=n_levels,
             levels=levels,
             origin=origin,
             justify=justify,
@@ -1129,8 +1130,8 @@ class TestTilePartitioning:
             "partitioning_class": "TilePartitioning",
             "extent": list(extent),
             "size": list(size),
+            "n_levels": n_levels,
             "levels": levels,
-            "names": names,
             "origin": origin,
             "direction": direction,
             "justify": justify,
@@ -1143,8 +1144,8 @@ class TestTilePartitioning:
         """Test to dict."""
         size = (120, 90)  # 3x2 partitions
         extent = [-180, 180, -90, 90]
-        levels = 1
-        names = "my_tile_id"
+        n_levels = 1
+        levels = "my_tile_id"
         origin = "top"
         direction = "y"
         justify = False
@@ -1152,7 +1153,7 @@ class TestTilePartitioning:
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            names=names,
+            n_levels=n_levels,
             levels=levels,
             origin=origin,
             direction=direction,
@@ -1164,8 +1165,8 @@ class TestTilePartitioning:
             "partitioning_class": "TilePartitioning",
             "extent": list(extent),
             "size": list(size),
-            "levels": levels,
-            "names": ["my_tile_id"],
+            "n_levels": n_levels,
+            "levels": ["my_tile_id"],
             "origin": origin,
             "direction": direction,
             "justify": justify,
@@ -1178,8 +1179,8 @@ class TestTilePartitioning:
         """Test directories property."""
         size = (120, 90)  # 3x2 partitions
         extent = [-180, 180, -90, 90]
-        levels = 1
-        names = "my_tile_id"
+        n_levels = 1
+        levels = "my_tile_id"
         origin = "top"
         direction = "y"
         justify = False
@@ -1187,7 +1188,7 @@ class TestTilePartitioning:
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
-            names=names,
+            n_levels=n_levels,
             levels=levels,
             origin=origin,
             direction=direction,

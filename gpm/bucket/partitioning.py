@@ -117,19 +117,19 @@ def mask_invalid_indices(flag_value=np.nan):
     return decorator
 
 
-def check_default_names(names, default_names):
-    if names is None:
-        names = default_names
-    if isinstance(names, str):
-        names = [names]
-    if not isinstance(names, list):
-        raise TypeError("'names' must be a list specifying the partition names.")
-    return names
+def check_default_levels(levels, default_levels):
+    if levels is None:
+        levels = default_levels
+    if isinstance(levels, str):
+        levels = [levels]
+    if not isinstance(levels, list):
+        raise TypeError("'levels' must be a list specifying the partition names.")
+    return levels
 
 
-def check_partitioning_order(names, partitioning_order):
-    if set(names) != set(partitioning_order):
-        raise ValueError(f"'partitioning_order' ({partitioning_order}) does not match with partition names {names}.")
+def check_partitioning_order(levels, partitioning_order):
+    if set(levels) != set(partitioning_order):
+        raise ValueError(f"'partitioning_order' ({partitioning_order}) does not match with partition names {levels}.")
     return partitioning_order
 
 
@@ -287,7 +287,7 @@ class Base2DPartitioning:
 
     Parameters
     ----------
-    names : str or list
+    levels : str or list
         Name or names of the partitions.
         If partitioning by 1 level (i.e. by a unique partition id), specify a single partition name.
         If partitioning by 2 or more levels (i.e. by x and y), specify the x, y (z, ...) partition levels names.
@@ -306,24 +306,27 @@ class Base2DPartitioning:
         The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
     """
 
-    def __init__(self, x_bounds, y_bounds, names, partitioning_flavor=None, partitioning_order=None):
+    def __init__(self, x_bounds, y_bounds, levels, partitioning_flavor=None, partitioning_order=None):
 
         self.x_bounds = np.asanyarray(x_bounds)
         self.y_bounds = np.asanyarray(y_bounds)
         self.x_centroids = get_centroids_from_bounds(self.x_bounds)
         self.y_centroids = get_centroids_from_bounds(self.y_bounds)
         # Define partitions names, order and flavour
-        self.names = check_default_names(names=names, default_names=None)
+        self.levels = check_default_levels(levels=levels, default_levels=None)
         if partitioning_order is None:
-            self.partitioning_order = self.names
+            self.partitioning_order = self.levels
         else:
-            self.partitioning_order = check_partitioning_order(names=self.names, partitioning_order=partitioning_order)
+            self.partitioning_order = check_partitioning_order(
+                levels=self.levels,
+                partitioning_order=partitioning_order,
+            )
         self.partitioning_flavor = check_partitioning_flavor(partitioning_flavor)
 
         # Define info
         self.shape = (len(self.y_centroids), len(self.x_centroids))
         self.n_partitions = self.shape[0] * self.shape[1]
-        self.n_levels = len(self.names)
+        self.n_levels = len(self.levels)
         self.n_x = self.shape[1]
         self.n_y = self.shape[0]
 
@@ -434,9 +437,9 @@ class Base2DPartitioning:
         labels = self.query_labels_by_indices(x_indices=indices[0], y_indices=indices[1])
         dict_labels = {}
         if self.n_levels > 1:
-            dict_labels = {self.names[i]: labels[i] for i in range(0, self.n_levels)}
+            dict_labels = {self.levels[i]: labels[i] for i in range(0, self.n_levels)}
         else:  # (tile_id)
-            dict_labels = {self.names[0]: labels}
+            dict_labels = {self.levels[0]: labels}
         return dict_labels
 
     def _directories(self, dict_labels):
@@ -522,7 +525,7 @@ class Base2DPartitioning:
         if self.n_levels == 1:
             labels = [labels]
         # Add labels to dataframe
-        for partition, values in zip(self.names, labels):
+        for partition, values in zip(self.levels, labels):
             df = df_add_column(df=df, column=partition, values=values)
         # Check if invalid labels
         invalid_rows = labels[0] == "nan"
@@ -634,7 +637,7 @@ class Base2DPartitioning:
         # Finalize auxiliary coords
         possible_coords = np.unique([*spatial_coords, *aux_coords, *src_indices]).tolist()
         possible_aux_coords = set(possible_coords).symmetric_difference(set(spatial_coords))
-        aux_coords = possible_aux_coords.difference(set(self.names))  # exclude also partition names
+        aux_coords = possible_aux_coords.difference(set(self.levels))  # exclude also partition names
         coords = list(spatial_coords) + list(aux_coords)
 
         # Ensure valid coordinates types
@@ -690,12 +693,12 @@ class XYPartitioning(Base2DPartitioning):
         - tuple or list: The bin size for the x and y directions.
     extent : list
         The extent for the partitioning specified as ``[xmin, xmax, ymin, ymax]``.
-    names: list, optional
+    levels: list, optional
         Names of the x and y partitions.
         The default is ``["xbin", "ybin"]``.
     partitioning_order : list, optional
         The order of the x and y partitions when writing partitioned datasets.
-        The default, ``None``, corresponds to ``names``.
+        The default, ``None``, corresponds to ``levels``.
     partitioning_flavor : str, optional
         This argument governs the directories names of partitioned datasets.
         The default, ``None``, name the directories with the partitions labels (DirectoryPartitioning).
@@ -706,7 +709,7 @@ class XYPartitioning(Base2DPartitioning):
         self,
         size,
         extent,
-        names=None,
+        levels=None,
         partitioning_order=None,
         partitioning_flavor=None,
         labels_decimals=None,
@@ -717,9 +720,9 @@ class XYPartitioning(Base2DPartitioning):
         # Check and set partitions size (except maybe last one)
         self.size = _check_size(size)
         # Set partition names
-        self.names = check_default_names(names=names, default_names=["xbin", "ybin"])
-        self.xbin = self.names[0]
-        self.ybin = self.names[1]
+        self.levels = check_default_levels(levels=levels, default_levels=["xbin", "ybin"])
+        self.xbin = self.levels[0]
+        self.ybin = self.levels[1]
         # Calculate partitions bounds
         x_bounds = get_bounds(size=self.size[0], vmin=self.extent.xmin, vmax=self.extent.xmax)
         y_bounds = get_bounds(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)
@@ -733,7 +736,7 @@ class XYPartitioning(Base2DPartitioning):
         self._ylabels = None
         # Initialize class
         super().__init__(
-            names=self.names,
+            levels=self.levels,
             x_bounds=x_bounds,
             y_bounds=y_bounds,
             partitioning_order=partitioning_order,
@@ -753,7 +756,7 @@ class XYPartitioning(Base2DPartitioning):
             "partitioning_class": self.__class__.__name__,
             "extent": list(self.extent),
             "size": list(self.size),
-            "names": self.names,
+            "levels": self.levels,
             "partitioning_order": self.partitioning_order,
             "partitioning_flavor": self.partitioning_flavor,
             "labels_decimals": list(self._labels_decimals),
@@ -796,14 +799,16 @@ class TilePartitioning(Base2DPartitioning):
         - tuple or list: The bin size for the x and y directions.
     extent : list
         The extent for the partitioning specified as ``[xmin, xmax, ymin, ymax]``.
-    levels: int
+    n_levels: int
         The number of tile partitioning levels.
-        If ``levels=2``, a (x,y) label is assigned to each tile.
-        If ``levels=1``, a unique id label is assigned to each tile combining the x and y tile indices.
+        If ``n_levels=2``, a (x,y) label is assigned to each tile.
+        If ``n_levels=1``, a unique id label is assigned to each tile combining the x and y tile indices.
         The ``origin`` and ``direction`` parameters governs its value.
-    names: list, optional
-         Names of the x and y partitions.
-         The default is ``["lon_bin", "lat_bin"]``.
+    levels: list, optional
+         If ``n_levels>=2``, the first two names must correspond to the x and y partitions.
+         The first two levels must
+         The default with ``n_levels=1`` is ``["tile"]``.
+         The default with ``n_levels=2`` is ``["x", "y"]``.
     origin: str, optional
         The origin of the Y axis. Either ``"bottom"`` or ``"top"``.
         TMS tiles assumes ``origin="top"``.
@@ -820,7 +825,7 @@ class TilePartitioning(Base2DPartitioning):
         THe default is ``False``.
     partitioning_order : list, optional
         The order of the partitions when writing partitioned datasets.
-        The default, ``None``, corresponds to ``names``.
+        The default, ``None``, corresponds to ``levels``.
     partitioning_flavor : str, optional
         This argument governs the directories names of partitioned datasets.
         The default, ``None``, name the directories with the partitions labels (DirectoryPartitioning).
@@ -831,21 +836,21 @@ class TilePartitioning(Base2DPartitioning):
         self,
         size,
         extent,
-        levels,
-        names=None,
+        n_levels,
+        levels=None,
         origin="bottom",
         direction="x",
         justify=False,
         partitioning_flavor=None,
         partitioning_order=None,
     ):
-        # Check names and levels
-        if levels not in [1, 2]:
+        # Check levels
+        if n_levels not in [1, 2]:
             raise ValueError("Invalid value for 'levels'. Must be 1 or 2.")
-        default_names_dict = {1: "tile_id", 2: ["x", "y"]}
-        names = check_default_names(names=names, default_names=default_names_dict[levels])
-        if len(names) != levels:
-            raise ValueError(f"{levels} level specified, but {len(names)} partitions names specified.")
+        default_levels_dict = {1: "tile", 2: ["x", "y"]}
+        levels = check_default_levels(levels=levels, default_levels=default_levels_dict[n_levels])
+        if len(levels) != n_levels:
+            raise ValueError(f"{n_levels} n_levels specified, but {len(levels)} partitions names specified.")
         # Check and set extent
         self.extent = check_extent(extent)
         # Check and set partitions size (except maybe last one)
@@ -863,7 +868,7 @@ class TilePartitioning(Base2DPartitioning):
         self.justify = justify
         # Initialize class
         super().__init__(
-            names=names,
+            levels=levels,
             x_bounds=x_bounds,
             y_bounds=y_bounds,
             partitioning_order=partitioning_order,
@@ -899,8 +904,8 @@ class TilePartitioning(Base2DPartitioning):
             "partitioning_class": self.__class__.__name__,
             "extent": list(self.extent),
             "size": list(self.size),
-            "levels": self.n_levels,
-            "names": self.names,
+            "n_levels": self.n_levels,
+            "levels": self.levels,
             "origin": self.origin,
             "direction": self.direction,
             "justify": self.justify,
@@ -926,15 +931,15 @@ class LonLatPartitioning(XYPartitioning):
         - 5° degree corresponds to 2592 directories (72*36)
         - 10° degree corresponds to 648 directories (36*18)
         - 15° degree corresponds to 288 directories (24*12)
-    names: list, optional
-        Names of the x and y partitions.
+    levels: list, optional
+        Names of the longitude and latitude partitions.
         The default is ``["lon_bin", "lat_bin"]``.
     extent : list, optional
         The geographical extent for the partitioning specified as ``[xmin, xmax, ymin, ymax]``.
         Default is the whole Earth: ``[-180, 180, -90, 90]``.
     partitioning_order : list, optional
         The order of the partitions when writing partitioned datasets.
-        The default, ``None``, corresponds to ``names``.
+        The default, ``None``, corresponds to ``levels``.
     partitioning_flavor : str, optional
         This argument governs the directories names of partitioned datasets.
         The default, `"hive"``, names the directories with the format ``{partition_name}={partition_label}``.
@@ -949,16 +954,16 @@ class LonLatPartitioning(XYPartitioning):
         self,
         size,
         extent=[-180, 180, -90, 90],
-        names=None,
+        levels=None,
         partitioning_flavor="hive",
         partitioning_order=None,
         labels_decimals=None,
     ):
-        names = check_default_names(names=names, default_names=["lon_bin", "lat_bin"])
+        levels = check_default_levels(levels=levels, default_levels=["lon_bin", "lat_bin"])
         super().__init__(
             size=size,
             extent=extent,
-            names=names,
+            levels=levels,
             partitioning_order=partitioning_order,
             partitioning_flavor=partitioning_flavor,
             labels_decimals=labels_decimals,

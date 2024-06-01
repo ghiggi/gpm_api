@@ -55,7 +55,7 @@ from gpm.visualization import plot
 
 pytestmark = pytest.mark.skipif(
     platform.system() == "Windows",
-    reason="Minor figure differences on Windows",
+    reason="Figure comparison is skipped because of minor differences against Linux.",
 )
 skip_tests_if_no_data()
 
