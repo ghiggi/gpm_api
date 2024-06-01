@@ -102,6 +102,9 @@ def _read_dataframe(source, backend, filters=None, **polars_kwargs):
     if source is None or len(source) == 0:
         raise ValueError("No files available matching your request.")
     is_lazy = False
+    # Preprocess polars kwargs
+    if "hive_partitioning" not in polars_kwargs:
+        polars_kwargs["hive_partitioning"] = False
     # Read dataframe with polars
     if "columns" not in polars_kwargs:  # backend == "polars_lazy":
         is_lazy = True

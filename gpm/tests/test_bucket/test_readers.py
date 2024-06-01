@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the bucket readers."""
-import platform
 
 import pandas as pd
 import polars as pl
@@ -80,9 +79,6 @@ def create_bucket_archive(bucket_dir):
 
 
 NUM_COLUMNS = 7
-if platform.system() == "Windows":
-    NUM_COLUMNS = NUM_COLUMNS + 2  # TODO: understand why windows behave like this
-
 
 # import pathlib
 # tmp_path = pathlib.Path("/tmp/bucket14")
@@ -97,7 +93,6 @@ class TestReadBucket:
 
         # Test read full database
         df_pl = read_bucket(bucket_dir)
-        assert df_pl.columns == []  # TODO WINDOW BUG
         assert isinstance(df_pl, pl.DataFrame)
         assert df_pl.shape == (150, NUM_COLUMNS)
 
@@ -113,7 +108,6 @@ class TestReadBucket:
 
         # Test read row, columns subset
         df_pl = read_bucket(bucket_dir, n_rows=3, columns=["lon", "lat"])
-        assert df_pl.columns == []  # TODO WINDOW BUG
         assert df_pl.shape == (3, 2)
         assert "lon" in df_pl
         assert "lat" in df_pl

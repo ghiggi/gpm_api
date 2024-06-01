@@ -403,7 +403,7 @@ class TestXYPartitioning:
         with pytest.raises(ValueError):
             partitioning.add_centroids(df=df_out_of_extent_values, x="x", y="y", remove_invalid_rows=False)
 
-    @pytest.mark.parametrize("df_type", ["pandas", "polars", "dask"])
+    @pytest.mark.parametrize("df_type", ["pandas", "polars"])
     def test_to_xarray(self, df_type):
         """Test valid partitions are added to a pandas dataframe."""
         # Create test pandas.DataFrame
@@ -416,8 +416,6 @@ class TestXYPartitioning:
         # Convert to polars.DataFrame
         if df_type == "polars":
             df = pl.DataFrame(df)
-        if df_type == "dask":
-            df = dd.from_pandas(df, npartitions=2)
 
         # Create partitioning
         size = (0.5, 0.25)

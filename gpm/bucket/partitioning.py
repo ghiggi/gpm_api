@@ -609,7 +609,8 @@ class Base2DPartitioning:
         # Reset dataframe indices if present
         src_indices = df.index.names  # no index returns None
         src_indices = _ensure_indices_list(src_indices)
-        df = df.reset_index()
+        if src_indices:
+            df = df.reset_index()
 
         # Check aux_coords are in df (index or column)
         # - If aux_coords were already in the DataFrame index, no need to specify it.

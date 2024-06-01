@@ -75,6 +75,7 @@ def df_add_column(df, column, values):
     if isinstance(df, dd.DataFrame):
         # 'df[column] = pd.Series(values)' conserve npartitions
         # 'df[column] = pd.Series(values)' does not work if npartitions=1
+        # BUG: THIS DOES NOT WORK IF DF HAS A MULTINDEX !
         if df.npartitions > 1:
             df[column] = pd.Series(values)
         else:  # npartitions=1
