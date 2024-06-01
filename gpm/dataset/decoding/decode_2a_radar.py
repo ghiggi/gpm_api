@@ -110,18 +110,18 @@ def decode_qualityTypePrecip(da):
 
 def decode_flagShallowRain(da):
     """Decode the 2A-<RADAR> variable flagShallowRain."""
-    da = da.where(da > -1112, 0)
-    remapping_dict = {-1111: 0, 0: 1, 10: 2, 11: 3, 20: 4, 21: 5}
-    da.data = remap_numeric_array(da.data, remapping_dict)  # TODO
-    da.attrs["flag_values"] = list(remapping_dict.values())
-    da.attrs["flag_meanings"] = [
-        "no rain",
-        "no shallow rain",
-        "Shallow isolated (maybe)",
-        "Shallow isolated (certain)",
-        "Shallow non-isolated (maybe)",
-        "Shallow non-isolated (certain)",
-    ]
+    da = da.where(da >= 0)  # -11111 is set to np.nan
+    remapping_dict = {0: 0, 10: 1, 11: 2, 20: 3, 21: 4}
+    da.data = remap_numeric_array(da.data, remapping_dict)
+    value_dict = {
+        0: "No shallow rain",
+        1: "Shallow isolated (maybe)",
+        2: "Shallow isolated (certain)",
+        3: "Shallow non-isolated (maybe)",
+        4: "Shallow non-isolated (certain)",
+    }
+    da.attrs["flag_values"] = list(value_dict)
+    da.attrs["flag_meanings"] = list(value_dict.values())
     da.attrs["description"] = "Type of shallow rain"
     return da
 
@@ -223,7 +223,7 @@ def decode_product(ds):
     # Define variables to decode with _decode_<variable> functions
     variables = [
         "flagBB",
-        # "flagShallowRain",
+        "flagShallowRain",
         "flagAnvil",
         "flagHeavyIcePrecip",
         "flagHail",

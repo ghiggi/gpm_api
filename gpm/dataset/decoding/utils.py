@@ -42,21 +42,36 @@ def add_decoded_flag(ds, variables):
     return ds
 
 
-def remap_numeric_array(arr, remapping_dict):
+# def _np_remap_numeric_array1(arr, remapping_dict, fill_value=np.nan):
+#     # VERY SLOW ALTERNATIVE
+#     isna = np.isnan(arr)
+#     arr[isna] = -1 # dummy
+#     unique_values = np.unique(arr[~np.isnan(arr)])
+#     _ = [remapping_dict.setdefault(value, fill_value) for value in unique_values if value not in remapping_dict]
+#     remapping_dict = {float(k): float(v) for k, v in remapping_dict.items()}
+#     new_arr = np.vectorize(remapping_dict.__getitem__)(arr)
+#     new_arr[isna] = np.nan
+#     return new_arr
+
+
+def _np_remap_numeric_array(arr, remapping_dict, fill_value=np.nan):
+    # Define conditions
+    conditions = [arr == i for i in remapping_dict]
+    # Define choices corresponding to conditions
+    choices = remapping_dict.values()
+    # Apply np.select to transform the array
+    return np.select(conditions, choices, default=fill_value)
+
+
+def _dask_remap_numeric_array(arr, remapping_dict, fill_value=np.nan):
+    return dask.array.map_blocks(_np_remap_numeric_array, arr, remapping_dict, fill_value, dtype=arr.dtype)
+
+
+def remap_numeric_array(arr, remapping_dict, fill_value=np.nan):
     """Remap the values of a numeric array."""
-    # TODO: this is erroneous
-    # TODO: implement that works with dask array also !
-    # TODO: implement it works if values not in remapping dict
-    # TODO: implement it works if only np.nan values
-    # remapping_dict = {-1111: 0, 0: 1, 10: 2, 11: 3, 20: 4, 21: 5}
-    original_values = list(remapping_dict.keys())
-
-    # Use np.searchsorted to remap the array
-    # TODO: works only if not np.nan and reamp to 0-n ?
-    return np.searchsorted(original_values, arr, sorter=np.argsort(original_values))
-
-    # Correct Alternative (but less performant) :
-    # np.vectorize(remapping_dict.__getitem__)(arr)
+    if hasattr(arr, "chunks"):
+        return _dask_remap_numeric_array(arr, remapping_dict, fill_value=fill_value)
+    return _np_remap_numeric_array(arr, remapping_dict, fill_value=fill_value)
 
 
 def ceil_dataarray(da):
