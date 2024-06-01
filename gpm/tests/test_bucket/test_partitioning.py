@@ -25,6 +25,8 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the Spatial Partitioning classes."""
+import os
+
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
@@ -696,7 +698,7 @@ class TestXYPartitioning:
 
         # Test results with point outside but partial aoi inside extent
         directories = partitioning.directories_around_point(x=3, y=3, distance=1)
-        assert directories.tolist() == ["1.75/1.875"]
+        assert directories.tolist() == [f"1.75{os.sep}1.875"]
 
     def test_quadmesh(self):
         """Test quadmesh."""
@@ -824,7 +826,7 @@ class TestLonLatPartitioning:
         partitioning = LonLatPartitioning(size=size, extent=extent)
         # Test country within extent
         directories = partitioning.directories_by_country("Nigeria")
-        assert directories.tolist() == ["lon_bin=30.0/lat_bin=0.0"]
+        assert directories.tolist() == [f"lon_bin=30.0{os.sep}lat_bin=0.0"]
 
         # Test country outside extent
         directories = partitioning.directories_by_country("Switzerland")
@@ -838,7 +840,7 @@ class TestLonLatPartitioning:
         partitioning = LonLatPartitioning(size=size, extent=extent)
         # Test continent within directories_by_continent
         directories = partitioning.directories_by_continent("Africa")
-        assert directories.tolist() == ["lon_bin=-30.0/lat_bin=0.0", "lon_bin=30.0/lat_bin=0.0"]
+        assert directories.tolist() == [f"lon_bin=-30.0{os.sep}lat_bin=0.0", f"lon_bin=30.0{os.sep}lat_bin=0.0"]
 
         # Test continent outside extent
         directories = partitioning.directories_by_continent("Europe")
@@ -857,7 +859,7 @@ class TestLonLatPartitioning:
 
         # Test results with point outside extent but aoi inside
         directories = partitioning.directories_around_point(lon=3, lat=3, distance=150_000)  # 150 km
-        assert directories.tolist() == ["lon_bin=1.75/lat_bin=1.625", "lon_bin=1.75/lat_bin=1.875"]
+        assert directories.tolist() == [f"lon_bin=1.75{os.sep}lat_bin=1.625", f"lon_bin=1.75{os.sep}lat_bin=1.875"]
 
 
 class TestTilePartitioning:

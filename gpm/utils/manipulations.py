@@ -581,7 +581,8 @@ def _add_new_range_coords(ds, new_range_size):
     return ds
 
 
-def _get_vertical_variables(ds):
+def get_vertical_coords_and_vars(ds):
+    """Return a 'prototype' with only spatial and vertical dimensions."""
     vertical_variables = get_vertical_variables(ds)
     vertical_coords = [coord for coord in ds.coords if has_vertical_dim(ds[coord]) and has_spatial_dim(ds[coord])]
     vertical_variables += vertical_coords
@@ -590,13 +591,22 @@ def _get_vertical_variables(ds):
     return vertical_variables
 
 
-def _get_vertical_prototype(ds, vertical_variables):
-    da = ds[vertical_variables[0]].squeeze()
+def get_vertical_datarray_prototype(ds, fill_value=np.nan):
+    """Return a `xarray.DataArray` 'prototype' with only spatial and vertical dimensions."""
+    vertical_variables = get_vertical_coords_and_vars(ds)
+    da = ds[vertical_variables[0]]
+    da = xr.full_like(da, fill_value=fill_value).compute()
+    da.name = "prototype"
+    return ensure_vertical_datarray_prototype(da)
+
+
+def ensure_vertical_datarray_prototype(da):
+    """Return a `xarray.DataArray` with only spatial and vertical dimensions."""
     valid_dims = da.gpm.spatial_dimensions + da.gpm.vertical_dimension
     invalid_dims = set(da.dims) - set(valid_dims)
     if invalid_dims:
         da = da.isel({dim: 0 for dim in invalid_dims})
-    return xr.full_like(da, fill_value=np.nan)
+    return da
 
 
 def reverse_range(ds):
@@ -652,7 +662,7 @@ def extract_dataset_above_bin(ds, bins, new_range_size=None, strict=False, rever
     ds = ds.transpose(..., "range")
 
     # Identify vertical variables and coordinates
-    vertical_variables = _get_vertical_variables(ds)
+    vertical_variables = get_vertical_coords_and_vars(ds)
 
     # Set default new_range_size
     if new_range_size is None:
@@ -660,7 +670,7 @@ def extract_dataset_above_bin(ds, bins, new_range_size=None, strict=False, rever
 
     # Get DataArray prototype
     # - The DataArray is subsetted to have only spatial and vertical dimensions
-    da_ex = _get_vertical_prototype(ds, vertical_variables)
+    dst_data_mask = get_vertical_datarray_prototype(ds, fill_value=True)
 
     # Ensure dataset into memory
     # - Currently dask does not support array1[mask1] = array2[mask2]
@@ -674,14 +684,13 @@ def extract_dataset_above_bin(ds, bins, new_range_size=None, strict=False, rever
 
     # Identify mask with True values where equal or above bin
     src_data_mask = ds["range"] < da_bin if strict else ds["range"] <= da_bin
-    src_data_mask = src_data_mask.transpose(*da_ex.dims)
+    src_data_mask = src_data_mask.transpose(*dst_data_mask.dims)
 
     # Identify regions where to move the L1B data
     # - Define new 'range_index' to account for "range" coordinate not starting at 1 !
     n_range = len(ds["range"])
     dst_first_valid_index = n_range - src_data_mask.sum(dim="range") + 1
     dst_first_valid_index = dst_first_valid_index.astype(int)
-    dst_data_mask = xr.full_like(da_ex, fill_value=True).compute()
 
     dst_data_mask = dst_data_mask.assign_coords({"range_index": ("range", np.arange(1, n_range + 1))})
     dst_data_mask = dst_data_mask.where(dst_data_mask["range_index"] >= dst_first_valid_index, False)
@@ -757,7 +766,7 @@ def extract_dataset_below_bin(ds, bins, new_range_size=None, strict=False, rever
     ds = ds.transpose(..., "range")
 
     # Identify vertical variables and coordinates
-    vertical_variables = _get_vertical_variables(ds)
+    vertical_variables = get_vertical_coords_and_vars(ds)
 
     # Set default new_range_size
     if new_range_size is None:
@@ -765,7 +774,7 @@ def extract_dataset_below_bin(ds, bins, new_range_size=None, strict=False, rever
 
     # Get DataArray prototype
     # - The DataArray is subsetted to have only spatial and vertical dimensions
-    da_ex = _get_vertical_prototype(ds, vertical_variables)
+    dst_data_mask = get_vertical_datarray_prototype(ds, fill_value=True)
 
     # Ensure dataset into memory
     # - Currently dask does not support array1[mask1] = array2[mask2]
@@ -779,14 +788,13 @@ def extract_dataset_below_bin(ds, bins, new_range_size=None, strict=False, rever
 
     # Identify mask with True values where equal or below bin
     src_data_mask = ds["range"] > da_bin if strict else ds["range"] >= da_bin
-    src_data_mask = src_data_mask.transpose(*da_ex.dims)
+    src_data_mask = src_data_mask.transpose(*dst_data_mask.dims)
 
     # Identify regions where to move the L1B data
     # - Define new 'range_index' to account for "range" coordinate not starting at 1 !
     n_range = len(ds["range"])
     dst_last_valid_index = src_data_mask.sum(dim="range")
     dst_last_valid_index = dst_last_valid_index.astype(int)
-    dst_data_mask = xr.full_like(da_ex, fill_value=True).compute()
 
     dst_data_mask = dst_data_mask.assign_coords({"range_index": ("range", np.arange(1, n_range + 1))})
     dst_data_mask = dst_data_mask.where(dst_data_mask["range_index"] <= dst_last_valid_index, False)

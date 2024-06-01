@@ -36,7 +36,7 @@ from gpm.bucket.routines import write_granules_bucket
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray
 
 
-def create_granule_dataframe(df_type="pandas"):
+def create_granule_dataframe():
     da = get_orbit_dataarray(
         start_lon=0,
         start_lat=0,
@@ -47,7 +47,7 @@ def create_granule_dataframe(df_type="pandas"):
         n_cross_track=5,
     )
     ds = da.to_dataset(name="dummy_var")
-    df = ds.gpm.to_pandas_dataframe() if df_type == "pandas" else ds.gpm.to_dask_dataframe()
+    df = ds.gpm.to_pandas_dataframe()
     return df
 
 
@@ -77,58 +77,81 @@ def create_bucket_archive(bucket_dir):
     )
 
 
+NUM_COLUMNS = 7
+
+
 # import pathlib
 # tmp_path = pathlib.Path("/tmp/bucket14")
 
 
-def test_read_bucket(tmp_path):
-    """Test read_bucket."""
-    # Define bucket dir
-    bucket_dir = tmp_path
-    create_bucket_archive(bucket_dir)
+class TestReadBucket:
 
-    # Test read full database
-    df_pl = read_bucket(bucket_dir)
-    assert df_pl.shape == (150, 5)
+    def test_read_full_bucket(self, tmp_path):
+        # Define bucket dir
+        bucket_dir = tmp_path
+        create_bucket_archive(bucket_dir)
 
-    # Test read row subset
-    df_pl = read_bucket(bucket_dir, n_rows=2)
-    assert df_pl.shape == (2, 5)
+        # Test read full database
+        df_pl = read_bucket(bucket_dir)
+        assert df_pl.shape == (150, NUM_COLUMNS)
 
-    # Test read row, columns subset
-    df_pl = read_bucket(bucket_dir, n_rows=3, columns=["lon", "lat"])
-    assert df_pl.shape == (3, 2)
-    assert "lon" in df_pl
-    assert "lat" in df_pl
+    def test_rows_columns_subsets(self, tmp_path):
+        # Define bucket dir
+        bucket_dir = tmp_path
+        create_bucket_archive(bucket_dir)
 
-    # Test filtering by file_extension
-    df_pl = read_bucket(bucket_dir, file_extension=".parquet")
-    assert df_pl.shape == (150, 5)
+        # Test read row subset
+        df_pl = read_bucket(bucket_dir, n_rows=2)
+        assert df_pl.shape == (2, NUM_COLUMNS)
 
-    df_pl = read_bucket(bucket_dir, glob_pattern="*V07B*")
-    assert df_pl.shape == (50, 5)
+        # Test read row, columns subset
+        df_pl = read_bucket(bucket_dir, n_rows=3, columns=["lon", "lat"])
+        assert df_pl.shape == (3, 2)
+        assert "lon" in df_pl
+        assert "lat" in df_pl
 
-    # Test raise error if no files (after i.e. filtering criteria)
-    with pytest.raises(ValueError):
-        df_pl = read_bucket(bucket_dir, file_extension=".csv")
-    with pytest.raises(ValueError):
-        df_pl = read_bucket(bucket_dir, glob_pattern="dummy")
+    def test_files_filters(self, tmp_path):
+        # Define bucket dir
+        bucket_dir = tmp_path
+        create_bucket_archive(bucket_dir)
 
-    # Test backends
-    assert isinstance(read_bucket(bucket_dir), pl.DataFrame)
-    assert isinstance(read_bucket(bucket_dir, backend="polars"), pl.DataFrame)
-    assert isinstance(read_bucket(bucket_dir, backend="polars_lazy"), pl.LazyFrame)
-    assert isinstance(read_bucket(bucket_dir, backend="pandas"), pd.DataFrame)
-    assert isinstance(read_bucket(bucket_dir, backend="pyarrow"), pa.Table)
+        # Test filtering by file_extension
+        df_pl = read_bucket(bucket_dir, file_extension=".parquet")
+        assert df_pl.shape == (150, NUM_COLUMNS)
 
-    with pytest.raises(ValueError):
-        read_bucket(bucket_dir, backend="dask")
-    with pytest.raises(ValueError):
-        read_bucket(bucket_dir, backend="whatever_other")
+        df_pl = read_bucket(bucket_dir, glob_pattern="*V07B*")
+        assert df_pl.shape == (50, NUM_COLUMNS)
 
-    # Test multiple spatial filters
-    with pytest.raises(ValueError):
-        read_bucket(bucket_dir, extent="dummy", country="dummy")
+        # Test raise error if no files (after i.e. filtering criteria)
+        with pytest.raises(ValueError):
+            df_pl = read_bucket(bucket_dir, file_extension=".csv")
+        with pytest.raises(ValueError):
+            df_pl = read_bucket(bucket_dir, glob_pattern="dummy")
+
+    def test_backends(self, tmp_path):
+        # Define bucket dir
+        bucket_dir = tmp_path
+        create_bucket_archive(bucket_dir)
+
+        # Test backends
+        assert isinstance(read_bucket(bucket_dir), pl.DataFrame)
+        assert isinstance(read_bucket(bucket_dir, backend="polars"), pl.DataFrame)
+        assert isinstance(read_bucket(bucket_dir, backend="polars_lazy"), pl.LazyFrame)
+        assert isinstance(read_bucket(bucket_dir, backend="pandas"), pd.DataFrame)
+        assert isinstance(read_bucket(bucket_dir, backend="pyarrow"), pa.Table)
+
+        with pytest.raises(ValueError):
+            read_bucket(bucket_dir, backend="dask")
+        with pytest.raises(ValueError):
+            read_bucket(bucket_dir, backend="whatever_other")
+
+    def test_invalid_arguments(self, tmp_path):
+        # Define bucket dir
+        bucket_dir = tmp_path
+        create_bucket_archive(bucket_dir)
+        # Test multiple spatial filters
+        with pytest.raises(ValueError):
+            read_bucket(bucket_dir, extent="dummy", country="dummy")
 
 
 def test_read_bucket_within_extent(tmp_path):
@@ -140,17 +163,17 @@ def test_read_bucket_within_extent(tmp_path):
     # Test read full database (extent larger than database extent)
     extent = [-30, 30, -30, 30]
     df_pl = read_bucket(bucket_dir, extent=extent)
-    assert df_pl.shape == (150, 5)
+    assert df_pl.shape == (150, NUM_COLUMNS)
 
     # Test read inner portion of database
     extent = [5, 8, 0, 20]
     df_pl = read_bucket(bucket_dir, extent=extent)
-    assert df_pl.shape == (33, 5)
+    assert df_pl.shape == (33, NUM_COLUMNS)
 
     # Test with partial extent outside database extent
     extent = [-10, 1, -10, 1]
     df_pl = read_bucket(bucket_dir, extent=extent)
-    assert df_pl.shape == (6, 5)
+    assert df_pl.shape == (6, NUM_COLUMNS)
 
     # Test extent outside database extent (no intersecting partitions)
     extent = [-50, -30, -50, -30]
@@ -172,7 +195,7 @@ def test_read_bucket_within_extent(tmp_path):
     # Test filtering
     extent = [-30, 30, -30, 30]
     df_pl = read_bucket(bucket_dir, extent=extent, glob_pattern="*V07B*")
-    assert df_pl.shape == (50, 5)
+    assert df_pl.shape == (50, NUM_COLUMNS)
 
 
 def test_read_bucket_within_country(tmp_path):
@@ -183,7 +206,7 @@ def test_read_bucket_within_country(tmp_path):
 
     # Test with country contained in bucket
     df_pl = read_bucket(bucket_dir, country="Nigeria")
-    assert df_pl.shape == (42, 5)
+    assert df_pl.shape == (42, NUM_COLUMNS)
 
     # Test with country not contained in bucket
     with pytest.raises(ValueError):
@@ -198,7 +221,7 @@ def test_read_bucket_within_continent(tmp_path):
 
     # Test with continent contained in bucket
     df_pl = read_bucket(bucket_dir, continent="Africa")
-    assert df_pl.shape == (150, 5)
+    assert df_pl.shape == (150, NUM_COLUMNS)
 
     # Test with continent not contained in bucket
     with pytest.raises(ValueError):
@@ -219,13 +242,13 @@ def test_read_bucket_around_point(tmp_path):
         point=point,
         distance=distance,
     )
-    assert df_pl.shape == (9, 6)
+    assert df_pl.shape == (9, NUM_COLUMNS + 1)
     assert "distance" in df_pl
 
     # Test with point contained in bucket (with size)
     df_pl = read_bucket(bucket_dir, point=point, size=20)
-    assert df_pl.shape == (93, 5)
+    assert df_pl.shape == (93, NUM_COLUMNS)
 
     # Test with point outside bucket  (but intersecting area outside intersecting partitions
     df_pl = read_bucket(bucket_dir, point=(-10, -10), size=25)
-    assert df_pl.shape == (15, 5)
+    assert df_pl.shape == (15, NUM_COLUMNS)

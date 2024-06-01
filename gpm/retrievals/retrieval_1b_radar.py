@@ -31,11 +31,12 @@ import numpy as np
 import xarray as xr
 
 import gpm
-from gpm.checks import check_has_vertical_dim, get_vertical_variables
+from gpm.checks import check_has_vertical_dim
 from gpm.utils.manipulations import (
     conversion_factors_degree_to_meter,
     convert_from_decibel,
     convert_to_decibel,
+    get_vertical_datarray_prototype,
 )
 from gpm.utils.xarray import get_xarray_variable
 
@@ -49,8 +50,7 @@ def retrieve_range_distance_from_satellite(ds, mask_below_ellipsoid=False, first
     """
     # Retrieve required DataArrays
     check_has_vertical_dim(ds)
-    da_vertical = ds[get_vertical_variables(ds)[0]]
-    range_bin = xr.ones_like(da_vertical) * ds["range"]  # 'range' start at 1 !
+    range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # 'range' start at 1 !
 
     # Requires: scRangeEllipsoid, ellipsoidBinOffset, rangeBinSize, binEllipsoid
     if first_option:
@@ -88,8 +88,7 @@ def retrieve_range_distance_from_ellipsoid(ds, mask_below_ellipsoid=False):
     """
     # Retrieve required DataArrays
     check_has_vertical_dim(ds)
-    da_vertical = ds[get_vertical_variables(ds)[0]]
-    range_bin = xr.ones_like(da_vertical) * ds["range"]  # start at 1 !
+    range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # start at 1 !
 
     binEllipsoid = get_xarray_variable(ds, variable="binEllipsoid")
     rangeBinSize = get_xarray_variable(ds, variable="rangeBinSize")
@@ -116,8 +115,7 @@ def retrieve_height(ds, mask_below_ellipsoid=False):
     """
     # Retrieve required DataArrays
     check_has_vertical_dim(ds)
-    da_vertical = ds[get_vertical_variables(ds)[0]]
-    range_bin = xr.ones_like(da_vertical) * ds["range"]  # start at 1 !
+    range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # start at 1 !
 
     binEllipsoid = get_xarray_variable(ds, variable="binEllipsoid")
     rangeBinSize = get_xarray_variable(ds, variable="rangeBinSize")
@@ -142,9 +140,9 @@ def retrieve_height(ds, mask_below_ellipsoid=False):
 def retrieve_sampling_type(ds):
     """Retrieve sampling type: low vs high resolution."""
     check_has_vertical_dim(ds)
-    da_vertical = ds[get_vertical_variables(ds)[0]]
-    da_sampling_type_0 = xr.ones_like(da_vertical) * 1
-    da_sampling_type_1 = xr.ones_like(da_vertical) * 2
+    da_vertical = get_vertical_datarray_prototype(ds, fill_value=1)
+    da_sampling_type_0 = da_vertical * 1
+    da_sampling_type_1 = da_vertical * 2
     echoLowResBinNumber = get_xarray_variable(ds, variable="echoLowResBinNumber")
     echoHighResBinNumber = get_xarray_variable(ds, variable="echoHighResBinNumber")
     bin_HighResBinNumber = echoLowResBinNumber + echoHighResBinNumber
@@ -448,7 +446,7 @@ def resample_hs_to_fs(ds_hs, smooth=True, except_vars=["echoCount", "sampling_ty
     ds_r : `xarray.Dataset`
         L1B or L2 Ka-band Dataset with resampled range gates (as in FS/NS/MS scan modes).
     """
-    from gpm.utils.manipulations import _get_vertical_variables
+    from gpm.utils.manipulations import get_vertical_coords_and_vars
 
     # Find range index (using LUT)
     n_along_track = ds_hs.sizes["along_track"]
@@ -506,7 +504,7 @@ def resample_hs_to_fs(ds_hs, smooth=True, except_vars=["echoCount", "sampling_ty
     # --> Roll on range and then reset natives !
     if smooth:
         ds_r = ds_r.transpose(..., "range")
-        for var in _get_vertical_variables(ds_r):
+        for var in get_vertical_coords_and_vars(ds_r):
             if var not in except_vars:
                 da = ds_r[var]
                 src_data = da.data.copy()

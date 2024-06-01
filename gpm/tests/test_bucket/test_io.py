@@ -40,6 +40,10 @@ from gpm.bucket.io import (
 )
 from gpm.bucket.partitioning import LonLatPartitioning
 
+# # TO DEBUG
+# import pathlib
+# tmp_path = pathlib.Path("/tmp/bucket14")
+
 
 def create_test_bucket(bucket_dir):
     partitioning = LonLatPartitioning(size=(10, 10), partitioning_flavor="hive")
@@ -49,7 +53,7 @@ def create_test_bucket(bucket_dir):
         ("lon_bin=-5.0", "lat_bin=5.0", "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A_0.parquet"),
         # Special case to test filtering
         ("lon_bin=-5.0", "lat_bin=5.0", "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A_0.bad_extension"),
-        ("lon_bin=-5.0", "lat_bin=5.0", "2A.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07B_0.parquet"),
+        ("lon_bin=-5.0", "lat_bin=5.0", "2B.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07B_0.parquet"),
         # Other files
         ("lon_bin=-5.0", "lat_bin=-5.0", "2A.GPM.DPR.V10-20211125.20230705-S013942-E031214.041760.V07A_0.parquet"),
         ("lon_bin=-5.0", "lat_bin=-5.0", "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A_0.parquet"),
@@ -94,8 +98,8 @@ def test_get_filepaths_within_paths(tmp_path):
     assert filepaths == filepaths_p
 
     # Test results with regexp
-    filepaths_p = get_filepaths_within_paths(paths, parallel=True, regex_pattern="(?s:(?>.*?\\.V07B_).*)\\Z")
-    filepaths = get_filepaths_within_paths(paths, parallel=False, regex_pattern="(?s:(?>.*?\\.V07B_).*)\\Z")
+    filepaths_p = get_filepaths_within_paths(paths, parallel=True, regex_pattern="2B\\.GPM.*\\.parquet$")
+    filepaths = get_filepaths_within_paths(paths, parallel=False, regex_pattern="2B\\.GPM.*\\.parquet$")
     assert len(filepaths) == 1
     assert filepaths == filepaths_p
 
@@ -127,8 +131,8 @@ def test_get_filepaths_by_path(tmp_path):
     assert dict_filepaths[path1] == []
 
     # Test results filtering with regexp
-    dict_filepaths_p = get_filepaths_by_path(paths, parallel=True, regex_pattern="(?s:(?>.*?\\.V07B_).*)\\Z")
-    dict_filepaths = get_filepaths_by_path(paths, parallel=False, regex_pattern="(?s:(?>.*?\\.V07B_).*)\\Z")
+    dict_filepaths_p = get_filepaths_by_path(paths, parallel=True, regex_pattern=r"2B\.GPM.*\.parquet$")
+    dict_filepaths = get_filepaths_by_path(paths, parallel=False, regex_pattern=r"2B\.GPM.*\.parquet$")
     assert len(dict_filepaths) == 2
     assert dict_filepaths == dict_filepaths_p
     assert len(dict_filepaths[path1]) == 0
