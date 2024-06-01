@@ -73,7 +73,7 @@ class TestXYPartitioning:
         """Test proper initialization of XYPartitioning objects."""
         partitioning = XYPartitioning(size=(1, 2), extent=[0, 10, 0, 10])
         assert partitioning.size == (1, 2)
-        assert partitioning.partitioning_order == ["xbin", "ybin"]  # default levels
+        assert partitioning.order == ["xbin", "ybin"]  # default levels
         assert list(partitioning.extent) == [0, 10, 0, 10]
         assert partitioning.shape == (5, 10)
         assert partitioning.n_partitions == 50
@@ -105,7 +105,7 @@ class TestXYPartitioning:
                 size=(0.1, 0.2),
                 extent=[0, 10, 0, 10],
                 levels=["x", "y"],
-                partitioning_order=["y", "another_name_instead_of_x"],
+                order=["y", "another_name_instead_of_x"],
             )
         # Invalid names types
         with pytest.raises(ValueError):
@@ -428,10 +428,10 @@ class TestXYPartitioning:
 
         # Aggregate by partitions
         if df_type == "polars":
-            df_grouped = df.group_by(partitioning.partitioning_order).median()
+            df_grouped = df.group_by(partitioning.order).median()
             df_grouped = df_grouped.with_columns(pl.lit(2).alias("dummy_var"))
         else:  # pandas or dask
-            df_grouped = df.groupby(partitioning.partitioning_order, observed=True).median()
+            df_grouped = df.groupby(partitioning.order, observed=True).median()
             df_grouped["dummy_var"] = 2
 
         # Convert to Dataset
@@ -471,7 +471,7 @@ class TestXYPartitioning:
         df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
 
         # Group over partitions
-        df_grouped = df.groupby(partitioning.partitioning_order, observed=True).median()
+        df_grouped = df.groupby(partitioning.order, observed=True).median()
         df_grouped["dummy_var"] = 2
 
         # Create df with additional index (i.e. time)
@@ -532,7 +532,7 @@ class TestXYPartitioning:
         # Add partitions
         df = partitioning.add_labels(df, x="x", y="y", remove_invalid_rows=True)
         # Aggregate by partitions
-        df_grouped = df.groupby(partitioning.partitioning_order, observed=True).median()
+        df_grouped = df.groupby(partitioning.order, observed=True).median()
         df_grouped["dummy_var"] = 2
         # Test raise error because no centroids
         with pytest.raises(ValueError):
@@ -723,14 +723,14 @@ class TestXYPartitioning:
         size = (0.5, 0.25)
         extent = [0, 2, 0, 2]
         levels = ["name1", "name2"]
-        partitioning = XYPartitioning(size=size, extent=extent, levels=levels, partitioning_order=levels[::-1])
+        partitioning = XYPartitioning(size=size, extent=extent, levels=levels, order=levels[::-1])
         # Test results
         expected_dict = {
             "partitioning_class": "XYPartitioning",
             "extent": list(extent),
             "size": list(size),
             "levels": levels,
-            "partitioning_order": levels[::-1],
+            "order": levels[::-1],
             "partitioning_flavor": "directory",  # default
             "labels_decimals": [2, 3],
         }
@@ -909,7 +909,7 @@ class TestTilePartitioning:
         assert partitioning.shape == (2, 3)
         assert partitioning.n_levels == n_levels
         assert partitioning.levels == ["x", "y"]
-        assert partitioning.partitioning_order == ["x", "y"]
+        assert partitioning.order == ["x", "y"]
 
         # Check values for origin="bottom"
         x_labels, y_labels = partitioning.query_labels(-150, 90)
@@ -952,7 +952,7 @@ class TestTilePartitioning:
         assert partitioning.n_partitions == 6
         assert partitioning.shape == (2, 3)
         assert partitioning.n_levels == n_levels
-        assert partitioning.partitioning_order == ["x", "y"]
+        assert partitioning.order == ["x", "y"]
 
         # Check values for origin="bottom"
         x_labels, y_labels = partitioning.query_labels(-150, 90)
@@ -996,7 +996,7 @@ class TestTilePartitioning:
         assert partitioning.n_partitions == 6
         assert partitioning.shape == (2, 3)
         assert partitioning.n_levels == n_levels
-        assert partitioning.partitioning_order == ["tile"]
+        assert partitioning.order == ["tile"]
 
         # Test labels
         labels = partitioning.labels
@@ -1029,7 +1029,7 @@ class TestTilePartitioning:
         assert partitioning.n_partitions == 6
         assert partitioning.shape == (2, 3)
         assert partitioning.n_levels == n_levels
-        assert partitioning.partitioning_order == ["tile"]
+        assert partitioning.order == ["tile"]
 
         # Test labels
         labels = partitioning.labels
@@ -1113,7 +1113,7 @@ class TestTilePartitioning:
         direction = "x"
         justify = True
         levels = ["xx", "yy"]
-        partitioning_order = ["yy", "xx"]
+        order = ["yy", "xx"]
         partitioning_flavor = "hive"
         partitioning = TilePartitioning(
             size=size,
@@ -1122,7 +1122,7 @@ class TestTilePartitioning:
             levels=levels,
             origin=origin,
             justify=justify,
-            partitioning_order=partitioning_order,
+            order=order,
             partitioning_flavor=partitioning_flavor,
         )
         # Test results
@@ -1135,7 +1135,7 @@ class TestTilePartitioning:
             "origin": origin,
             "direction": direction,
             "justify": justify,
-            "partitioning_order": partitioning_order,
+            "order": order,
             "partitioning_flavor": partitioning_flavor,
         }
         assert partitioning.to_dict() == expected_dict
@@ -1170,7 +1170,7 @@ class TestTilePartitioning:
             "origin": origin,
             "direction": direction,
             "justify": justify,
-            "partitioning_order": ["my_tile_id"],
+            "order": ["my_tile_id"],
             "partitioning_flavor": "directory",
         }
         assert partitioning.to_dict() == expected_dict

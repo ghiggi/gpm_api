@@ -127,10 +127,10 @@ def check_default_levels(levels, default_levels):
     return levels
 
 
-def check_partitioning_order(levels, partitioning_order):
-    if set(levels) != set(partitioning_order):
-        raise ValueError(f"'partitioning_order' ({partitioning_order}) does not match with partition names {levels}.")
-    return partitioning_order
+def check_partitioning_order(levels, order):
+    if set(levels) != set(order):
+        raise ValueError(f"Partitions 'order' ({order}) does not match with partition names {levels}.")
+    return order
 
 
 def check_partitioning_flavor(partitioning_flavor):
@@ -185,10 +185,10 @@ def get_partition_dir_name(partition_name, partition_labels, partitioning_flavor
     return np.char.add(partition_labels, os.sep)
 
 
-def get_directories(dict_labels, partitioning_order, partitioning_flavor):
+def get_directories(dict_labels, order, partitioning_flavor):
     """Return the directory trees of a partitioned dataset."""
     list_dir_names = []
-    for partition in partitioning_order:
+    for partition in order:
         dir_name = get_partition_dir_name(
             partition_name=partition,
             partition_labels=dict_labels[partition],
@@ -297,7 +297,7 @@ class Base2DPartitioning:
         The partition bounds across the y (vertical) dimension.
         Please provide the bounds with increasing values order.
         The origin of the partition class indices is the top, left corner.
-    partitioning_order : list
+    order : list
         The order of the partitions when writing multi-level partitions (i.e. x, y) to disk.
         The default, ``None``, corresponds to ``names``.
     partitioning_flavor : str
@@ -306,7 +306,7 @@ class Base2DPartitioning:
         The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
     """
 
-    def __init__(self, x_bounds, y_bounds, levels, partitioning_flavor=None, partitioning_order=None):
+    def __init__(self, x_bounds, y_bounds, levels, partitioning_flavor=None, order=None):
 
         self.x_bounds = np.asanyarray(x_bounds)
         self.y_bounds = np.asanyarray(y_bounds)
@@ -314,12 +314,12 @@ class Base2DPartitioning:
         self.y_centroids = get_centroids_from_bounds(self.y_bounds)
         # Define partitions names, order and flavour
         self.levels = check_default_levels(levels=levels, default_levels=None)
-        if partitioning_order is None:
-            self.partitioning_order = self.levels
+        if order is None:
+            self.order = self.levels
         else:
-            self.partitioning_order = check_partitioning_order(
+            self.order = check_partitioning_order(
                 levels=self.levels,
-                partitioning_order=partitioning_order,
+                order=order,
             )
         self.partitioning_flavor = check_partitioning_flavor(partitioning_flavor)
 
@@ -445,7 +445,7 @@ class Base2DPartitioning:
     def _directories(self, dict_labels):
         return get_directories(
             dict_labels=dict_labels,
-            partitioning_order=self.partitioning_order,
+            order=self.order,
             partitioning_flavor=self.partitioning_flavor,
         )
 
@@ -696,7 +696,7 @@ class XYPartitioning(Base2DPartitioning):
     levels: list, optional
         Names of the x and y partitions.
         The default is ``["xbin", "ybin"]``.
-    partitioning_order : list, optional
+    order : list, optional
         The order of the x and y partitions when writing partitioned datasets.
         The default, ``None``, corresponds to ``levels``.
     partitioning_flavor : str, optional
@@ -710,7 +710,7 @@ class XYPartitioning(Base2DPartitioning):
         size,
         extent,
         levels=None,
-        partitioning_order=None,
+        order=None,
         partitioning_flavor=None,
         labels_decimals=None,
     ):
@@ -739,7 +739,7 @@ class XYPartitioning(Base2DPartitioning):
             levels=self.levels,
             x_bounds=x_bounds,
             y_bounds=y_bounds,
-            partitioning_order=partitioning_order,
+            order=order,
             partitioning_flavor=partitioning_flavor,
         )
 
@@ -757,7 +757,7 @@ class XYPartitioning(Base2DPartitioning):
             "extent": list(self.extent),
             "size": list(self.size),
             "levels": self.levels,
-            "partitioning_order": self.partitioning_order,
+            "order": self.order,
             "partitioning_flavor": self.partitioning_flavor,
             "labels_decimals": list(self._labels_decimals),
         }
@@ -823,7 +823,7 @@ class TilePartitioning(Base2DPartitioning):
         Whether to justify the labels to ensure having all same number of characters.
         0 is added on the left side of the labels to justify the length.
         THe default is ``False``.
-    partitioning_order : list, optional
+    order : list, optional
         The order of the partitions when writing partitioned datasets.
         The default, ``None``, corresponds to ``levels``.
     partitioning_flavor : str, optional
@@ -842,7 +842,7 @@ class TilePartitioning(Base2DPartitioning):
         direction="x",
         justify=False,
         partitioning_flavor=None,
-        partitioning_order=None,
+        order=None,
     ):
         # Check levels
         if n_levels not in [1, 2]:
@@ -871,7 +871,7 @@ class TilePartitioning(Base2DPartitioning):
             levels=levels,
             x_bounds=x_bounds,
             y_bounds=y_bounds,
-            partitioning_order=partitioning_order,
+            order=order,
             partitioning_flavor=partitioning_flavor,
         )
 
@@ -909,7 +909,7 @@ class TilePartitioning(Base2DPartitioning):
             "origin": self.origin,
             "direction": self.direction,
             "justify": self.justify,
-            "partitioning_order": self.partitioning_order,
+            "order": self.order,
             "partitioning_flavor": self.partitioning_flavor,
         }
         return dictionary
@@ -937,7 +937,7 @@ class LonLatPartitioning(XYPartitioning):
     extent : list, optional
         The geographical extent for the partitioning specified as ``[xmin, xmax, ymin, ymax]``.
         Default is the whole Earth: ``[-180, 180, -90, 90]``.
-    partitioning_order : list, optional
+    order : list, optional
         The order of the partitions when writing partitioned datasets.
         The default, ``None``, corresponds to ``levels``.
     partitioning_flavor : str, optional
@@ -956,7 +956,7 @@ class LonLatPartitioning(XYPartitioning):
         extent=[-180, 180, -90, 90],
         levels=None,
         partitioning_flavor="hive",
-        partitioning_order=None,
+        order=None,
         labels_decimals=None,
     ):
         levels = check_default_levels(levels=levels, default_levels=["lon_bin", "lat_bin"])
@@ -964,7 +964,7 @@ class LonLatPartitioning(XYPartitioning):
             size=size,
             extent=extent,
             levels=levels,
-            partitioning_order=partitioning_order,
+            order=order,
             partitioning_flavor=partitioning_flavor,
             labels_decimals=labels_decimals,
         )

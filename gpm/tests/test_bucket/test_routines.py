@@ -84,9 +84,9 @@ def test_write_bucket(tmp_path, df_type):
         )
 
 
-@pytest.mark.parametrize("partitioning_order", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])
+@pytest.mark.parametrize("order", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])
 @pytest.mark.parametrize("partitioning_flavor", ["hive", None])
-def test_write_granules_bucket(tmp_path, partitioning_order, partitioning_flavor):
+def test_write_granules_bucket(tmp_path, order, partitioning_flavor):
     """Test write_granules_bucket routine with parallel=False."""
     # Define bucket dir
     bucket_dir = tmp_path
@@ -99,12 +99,12 @@ def test_write_granules_bucket(tmp_path, partitioning_order, partitioning_flavor
     ]  # year 2023
 
     # Define partitioning
-    # partitioning_order = ["lat_bin", "lon_bin"]
+    # order = ["lat_bin", "lon_bin"]
     # partitioning_flavor = "hive" # None
     partitioning = LonLatPartitioning(
         size=(10, 10),
         partitioning_flavor=partitioning_flavor,
-        partitioning_order=partitioning_order,
+        order=order,
     )
 
     # Run processing
@@ -120,7 +120,7 @@ def test_write_granules_bucket(tmp_path, partitioning_order, partitioning_flavor
 
     # Check directories with wished partitioning format created
     if partitioning_flavor == "hive":
-        if partitioning_order == ["lon_bin", "lat_bin"]:
+        if order == ["lon_bin", "lat_bin"]:
             expected_directories = [
                 "bucket_info.yaml",  # always there
                 "lon_bin=-5.0",
@@ -135,7 +135,7 @@ def test_write_granules_bucket(tmp_path, partitioning_order, partitioning_flavor
                 "lat_bin=25.0",
                 "lat_bin=5.0",
             ]
-    elif partitioning_order == ["lon_bin", "lat_bin"]:
+    elif order == ["lon_bin", "lat_bin"]:
         expected_directories = [
             "-5.0",
             "15.0",
@@ -154,11 +154,11 @@ def test_write_granules_bucket(tmp_path, partitioning_order, partitioning_flavor
 
     # Check parquet files named by granule
     if partitioning_flavor == "hive":
-        if partitioning_order == ["lon_bin", "lat_bin"]:
+        if order == ["lon_bin", "lat_bin"]:
             partition_dir = os.path.join(bucket_dir, "lon_bin=-5.0", "lat_bin=5.0")
         else:
             partition_dir = os.path.join(bucket_dir, "lat_bin=5.0", "lon_bin=-5.0")
-    elif partitioning_order == ["lon_bin", "lat_bin"]:
+    elif order == ["lon_bin", "lat_bin"]:
         partition_dir = os.path.join(bucket_dir, "-5.0", "5.0")
     else:
         partition_dir = os.path.join(bucket_dir, "5.0", "-5.0")
