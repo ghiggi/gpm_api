@@ -55,34 +55,40 @@ from gpm.utils.geospatial import (
 # to_geopandas [lat_bin, lon_bin, geometry]
 
 
-def _apply_flatten_arrays(self, func, x, y):
+def _apply_flatten_arrays(self, func, x, y, **kwargs):
     if isinstance(x, np.ndarray) and isinstance(y, np.ndarray) and x.ndim == 2 and y.ndim == 2:
         original_shape = x.shape
         x_flat = x.flatten()
         y_flat = y.flatten()
-        result = func(self, x_flat, y_flat)
+        result = func(self, x_flat, y_flat, **kwargs)
         if isinstance(result, tuple):
             result = tuple(r.reshape(original_shape) for r in result)
-        else:
-            result = result.reshape(original_shape)
+        else:  # np.array
+            result = result.reshape(original_shape + result.shape[1:])
         return result
-    return func(self, x, y)
+    return func(self, x, y, **kwargs)
 
 
 def flatten_xy_arrays(func):
     @wraps(func)
-    def wrapper(self, x, y):
-        return _apply_flatten_arrays(self, func=func, x=x, y=y)
+    def wrapper(self, x, y, **kwargs):
+        return _apply_flatten_arrays(self, func=func, x=x, y=y, **kwargs)
 
     return wrapper
 
 
 def flatten_indices_arrays(func):
     @wraps(func)
-    def wrapper(self, x_indices, y_indices):
-        return _apply_flatten_arrays(self, func=func, x=x_indices, y=y_indices)
+    def wrapper(self, x_indices, y_indices, **kwargs):
+        return _apply_flatten_arrays(self, func=func, x=x_indices, y=y_indices, **kwargs)
 
     return wrapper
+
+
+def np_broadcast_like(x, shape):
+    arr = np.zeros(shape, x.dtype)
+    arr[:] = np.expand_dims(x, axis=tuple(range(1, len(shape))))
+    return arr
 
 
 def mask_invalid_indices(flag_value=np.nan):
@@ -104,11 +110,12 @@ def mask_invalid_indices(flag_value=np.nan):
             x_indices = x_indices.astype(int)
             y_indices = y_indices.astype(int)
             # Call the original function
-            result = func(self, x_indices, y_indices)
+            result = func(self, x_indices, y_indices, **kwargs)
             # Apply the mask to the result
             if isinstance(result, tuple):
                 masked_result = tuple(np.where(invalid_indices, flag_value, r) for r in result)
-            else:
+            else:  # np.array
+                invalid_indices = np_broadcast_like(invalid_indices, result.shape)
                 masked_result = np.where(invalid_indices, flag_value, result)
             return masked_result
 
@@ -399,6 +406,11 @@ class Base2DPartitioning:
             self._centroids = centroids
         return self._centroids
 
+    @property
+    def bounds(self):
+        """Return the partitions bounds."""
+        return self.x_bounds, self.y_bounds
+
     def quadmesh(self, origin="bottom"):
         """Return the quadrilateral mesh.
 
@@ -424,9 +436,62 @@ class Base2DPartitioning:
             y_corners = y_corners[::-1, :]
         return np.stack((x_corners, y_corners), axis=2)
 
-    # TODO:
-    # def vertices (M,N, 4)
-    # def query_vertices
+    def vertices(self, origin="bottom", ccw=True):
+        """Return the partitions vertices in an array of shape (N, M, 4, 2).
+
+        The output vertices, once the first 2 dimension are flattened,
+        can be passed directly to a matplotlib.PolyCollection.
+        For plotting with cartopy, the polygon order must be "counterclockwise".
+
+        Parameters
+        ----------
+        origin : str
+            Origin of the y axis.
+            The default is ``bottom``.
+        ccw : bool, optional
+            If ``True``, vertices are ordered counterclockwise.
+            If ``False``, vertices are ordered clockwise.
+            The default is ``True``.
+        """
+        # Retrieve corners
+        corners = self.quadmesh(origin=origin)
+        top_left = corners[:-1, :-1]
+        top_right = corners[:-1, 1:]
+        bottom_right = corners[1:, 1:]
+        bottom_left = corners[1:, :-1]
+        if ccw:
+            list_vertices = [top_left, bottom_left, bottom_right, top_right]
+        else:
+            list_vertices = [top_left, top_right, bottom_right, bottom_left]
+        if origin == "top":
+            list_vertices = list_vertices[::-1]
+            list_vertices = [list_vertices[i] for i in [2, 3, 0, 1]]
+        vertices = np.stack(list_vertices, axis=2)
+        return vertices
+
+    @flatten_indices_arrays
+    @mask_invalid_indices(flag_value=np.nan)
+    def query_vertices_by_indices(self, x_indices, y_indices, ccw=True):
+        """Return the partitions vertices in an array of shape (indices, 4, 2)."""
+        x_indices = np.atleast_1d(np.asanyarray(x_indices))
+        y_indices = np.atleast_1d(np.asanyarray(y_indices))
+        x_bnds = (self.x_bounds[x_indices], self.x_bounds[x_indices + 1])
+        y_bnds = (self.y_bounds[y_indices], self.y_bounds[y_indices + 1])
+        top_left = np.stack((x_bnds[0], y_bnds[1]), axis=1)
+        top_right = np.stack((x_bnds[1], y_bnds[1]), axis=1)
+        bottom_right = np.stack((x_bnds[1], y_bnds[0]), axis=1)
+        bottom_left = np.stack((x_bnds[0], y_bnds[0]), axis=1)
+        if ccw:
+            list_vertices = [top_left, bottom_left, bottom_right, top_right]
+        else:
+            list_vertices = [top_left, top_right, bottom_right, bottom_left]
+        vertices = np.stack(list_vertices, axis=1)
+        return vertices
+
+    @flatten_xy_arrays
+    def query_vertices(self, x, y, ccw=True):
+        x_indices, y_indices = self.query_indices(x, y)
+        return self.query_vertices_by_indices(x_indices, y_indices, ccw=ccw)
 
     def _get_dict_labels_combo(self, x_indices, y_indices):
         # Retrieve labels combination of all (x,y) indices

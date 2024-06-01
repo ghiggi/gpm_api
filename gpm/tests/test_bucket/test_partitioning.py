@@ -136,6 +136,17 @@ class TestXYPartitioning:
         np.testing.assert_allclose(centroids[:, :, 0], x_centroids)
         np.testing.assert_allclose(centroids[:, :, 1], y_centroids)
 
+    def test_bounds(self):
+        """Test bounds property."""
+        # Create partitioning
+        size = (25, 20)
+        extent = [0, 50, 60, 80]
+        partitioning = XYPartitioning(size=size, extent=extent)
+        # Test bounds
+        x_bounds, y_bounds = partitioning.bounds
+        np.testing.assert_allclose(x_bounds, [0, 25, 50])
+        np.testing.assert_allclose(y_bounds, [60, 80])
+
     def test_add_labels_pandas(self):
         """Test valid partitions are added to a pandas dataframe."""
         # Create test dataframe
@@ -860,6 +871,113 @@ class TestLonLatPartitioning:
         # Test results with point outside extent but aoi inside
         directories = partitioning.directories_around_point(lon=3, lat=3, distance=150_000)  # 150 km
         assert directories.tolist() == [f"lon_bin=1.75{os.sep}lat_bin=1.625", f"lon_bin=1.75{os.sep}lat_bin=1.875"]
+
+    def test_quadmesh(self):
+        # Create partitioning
+        size = (20, 10)
+        extent = [0, 60, 60, 80]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test quadmesh array (M+1, N+1, 2)
+        quadmesh = partitioning.quadmesh()
+        assert quadmesh.shape == (3, 4, 2)
+        x_mesh = np.array([[0, 20, 40, 60], [0, 20, 40, 60], [0, 20, 40, 60]])
+        y_mesh = np.array([[80, 80, 80, 80], [70, 70, 70, 70], [60, 60, 60, 60]])
+        np.testing.assert_allclose(quadmesh[:, :, 0], x_mesh)
+        np.testing.assert_allclose(quadmesh[:, :, 1], y_mesh)
+
+    def test_vertices_origin_bottom(self):
+        # Create partitioning
+        size = (20, 10)
+        extent = [0, 60, 60, 80]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test vertices array (M, N, 4, 2)
+        vertices = partitioning.vertices(ccw=True)  # origin="bottom"
+        assert vertices.shape == (2, 3, 4, 2)
+        # Test bottom left cell (geographic top left)
+        expected_vertices = np.array([[0, 80], [0, 70], [20, 70], [20, 80]])
+        np.testing.assert_allclose(vertices[0, 0, :, :], expected_vertices)
+        # Test clockwise order
+        vertices = partitioning.vertices(ccw=False)
+        assert vertices.shape == (2, 3, 4, 2)
+        # Test bottom left cell (geographic top left)
+        expected_vertices = np.array([[0, 80], [20, 80], [20, 70], [0, 70]])
+        np.testing.assert_allclose(vertices[0, 0, :, :], expected_vertices)
+
+    def test_vertices_origin_top(self):
+        # Create partitioning
+        size = (20, 10)
+        extent = [0, 60, 60, 80]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test vertices array (M, N, 4, 2)
+        vertices = partitioning.vertices(origin="top", ccw=True)
+        assert vertices.shape == (2, 3, 4, 2)
+        # Test bottom left cell (geographic top left)
+        expected_vertices = np.array([[0, 70], [0, 60], [20, 60], [20, 70]])
+        np.testing.assert_allclose(vertices[0, 0, :, :], expected_vertices)
+        # Test clockwise order
+        vertices = partitioning.vertices(origin="top", ccw=False)
+        assert vertices.shape == (2, 3, 4, 2)
+        # Test bottom left cell (geographic top left)
+        expected_vertices = np.array([[20, 60], [0, 60], [0, 70], [20, 70]])
+        np.testing.assert_allclose(vertices[0, 0, :, :], expected_vertices)
+
+    def test_query_vertices_by_indices_flat(self):
+        # Create partitioning
+        size = (20, 10)
+        extent = [0, 60, 60, 80]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test vertices array (M, N, 4, 2)
+        vertices = partitioning.query_vertices_by_indices(x_indices=0, y_indices=[0], ccw=True)
+        vertices1 = partitioning.query_vertices_by_indices(x_indices=0, y_indices=np.array(0), ccw=True)
+        np.testing.assert_allclose(vertices, vertices1)
+        assert vertices.shape == (1, 4, 2)
+        expected_vertices = np.array([[0, 70], [0, 60], [20, 60], [20, 70]])
+        np.testing.assert_allclose(vertices[0, :, :], expected_vertices)
+        # Test clockwise
+        vertices = partitioning.query_vertices_by_indices(x_indices=[0, 0], y_indices=[0, 0], ccw=False)
+        assert vertices.shape == (2, 4, 2)
+        expected_vertices = np.array([[0, 70], [20, 70], [20, 60], [0, 60]])
+        np.testing.assert_allclose(vertices[0, :, :], expected_vertices)
+        np.testing.assert_allclose(vertices[0, :, :], vertices[1, :, :])
+
+    def test_query_vertices_by_indices_2d(self):
+        # Create partitioning
+        size = (20, 10)
+        extent = [0, 60, 60, 80]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test vertices array with query_vertices_by_indices match vertices(origin="top") method
+        x_indices, y_indices = np.meshgrid(np.arange(partitioning.n_x), np.arange(partitioning.n_y))
+        vertices = partitioning.query_vertices_by_indices(x_indices=x_indices, y_indices=y_indices, ccw=True)
+        assert vertices.shape == (2, 3, 4, 2)
+        expected_vertices = np.array([[0, 70], [0, 60], [20, 60], [20, 70]])
+        np.testing.assert_allclose(vertices[0, 0, :, :], expected_vertices)
+        np.testing.assert_allclose(vertices, partitioning.vertices(origin="top"))
+
+    def test_query_vertices(self):
+        # Create partitioning
+        size = (20, 10)
+        extent = [0, 60, 60, 80]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test vertices array (M, N, 4, 2)
+        vertices = partitioning.query_vertices(x=10, y=[65], ccw=True)
+        vertices1 = partitioning.query_vertices(x=10, y=np.array(65), ccw=True)
+        np.testing.assert_allclose(vertices, vertices1)
+        assert vertices.shape == (1, 4, 2)
+        expected_vertices = np.array([[0, 70], [0, 60], [20, 60], [20, 70]])
+        np.testing.assert_allclose(vertices[0, :, :], expected_vertices)
+
+    def test_query_vertices_2d(self):
+        # Create partitioning
+        size = (20, 10)
+        extent = [0, 60, 60, 80]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Test vertices array with query_vertices_by_indices match vertices(origin="top") method
+        x_centroids, y_centroids = np.meshgrid(partitioning.x_centroids, partitioning.y_centroids)
+        vertices = partitioning.query_vertices(x=x_centroids, y=y_centroids, ccw=True)
+        assert vertices.shape == (2, 3, 4, 2)
+        expected_vertices = np.array([[0, 70], [0, 60], [20, 60], [20, 70]])
+        np.testing.assert_allclose(vertices[0, 0, :, :], expected_vertices)
+        np.testing.assert_allclose(vertices, partitioning.vertices(origin="top"))
 
 
 class TestTilePartitioning:
