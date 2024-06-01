@@ -109,7 +109,7 @@ class TestXYPartitioning:
             )
         # Invalid names types
         with pytest.raises(ValueError):
-            XYPartitioning(size=(0.1, 0.2), extent=[0, 10, 0, 10], partitioning_flavor="bad_one")
+            XYPartitioning(size=(0.1, 0.2), extent=[0, 10, 0, 10], flavor="bad_one")
 
     def test_labels(self):
         """Test labels property (origin="top")."""
@@ -731,7 +731,7 @@ class TestXYPartitioning:
             "size": list(size),
             "levels": levels,
             "order": levels[::-1],
-            "partitioning_flavor": "directory",  # default
+            "flavor": "directory",  # default
             "labels_decimals": [2, 3],
         }
         assert partitioning.to_dict() == expected_dict
@@ -1114,7 +1114,7 @@ class TestTilePartitioning:
         justify = True
         levels = ["xx", "yy"]
         order = ["yy", "xx"]
-        partitioning_flavor = "hive"
+        flavor = "hive"
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
@@ -1123,7 +1123,7 @@ class TestTilePartitioning:
             origin=origin,
             justify=justify,
             order=order,
-            partitioning_flavor=partitioning_flavor,
+            flavor=flavor,
         )
         # Test results
         expected_dict = {
@@ -1136,7 +1136,7 @@ class TestTilePartitioning:
             "direction": direction,
             "justify": justify,
             "order": order,
-            "partitioning_flavor": partitioning_flavor,
+            "flavor": flavor,
         }
         assert partitioning.to_dict() == expected_dict
 
@@ -1149,7 +1149,7 @@ class TestTilePartitioning:
         origin = "top"
         direction = "y"
         justify = False
-        partitioning_flavor = None
+        flavor = None
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
@@ -1158,7 +1158,7 @@ class TestTilePartitioning:
             origin=origin,
             direction=direction,
             justify=justify,
-            partitioning_flavor=partitioning_flavor,
+            flavor=flavor,
         )
         # Test results
         expected_dict = {
@@ -1171,7 +1171,7 @@ class TestTilePartitioning:
             "direction": direction,
             "justify": justify,
             "order": ["my_tile_id"],
-            "partitioning_flavor": "directory",
+            "flavor": "directory",
         }
         assert partitioning.to_dict() == expected_dict
 
@@ -1184,7 +1184,7 @@ class TestTilePartitioning:
         origin = "top"
         direction = "y"
         justify = False
-        partitioning_flavor = None
+        flavor = None
         partitioning = TilePartitioning(
             size=size,
             extent=extent,
@@ -1193,7 +1193,7 @@ class TestTilePartitioning:
             origin=origin,
             direction=direction,
             justify=justify,
-            partitioning_flavor=partitioning_flavor,
+            flavor=flavor,
         )
         directories = partitioning.directories
         assert directories.tolist() == ["0", "2", "4", "1", "3", "5"]

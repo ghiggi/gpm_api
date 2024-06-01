@@ -133,17 +133,17 @@ def check_partitioning_order(levels, order):
     return order
 
 
-def check_partitioning_flavor(partitioning_flavor):
-    """Validate the partitioning_flavor argument.
+def check_partitioning_flavor(flavor):
+    """Validate the flavor argument.
 
     If ``None``, defaults to "directory".
     """
-    if partitioning_flavor is None:
-        partitioning_flavor = "directory"
+    if flavor is None:
+        flavor = "directory"
     valid_flavors = ["directory", "hive"]
-    if partitioning_flavor not in valid_flavors:
-        raise ValueError(f"Invalid partitioning_flavor '{partitioning_flavor}'. Valid options are {valid_flavors}.")
-    return partitioning_flavor
+    if flavor not in valid_flavors:
+        raise ValueError(f"Invalid partitioning 'flavor '{flavor}'. Valid options are {valid_flavors}.")
+    return flavor
 
 
 def check_valid_x_y(df, x, y):
@@ -178,21 +178,21 @@ def query_indices(values, bounds):
     return pd.cut(values, bins=bounds, labels=False, include_lowest=True, right=True)
 
 
-def get_partition_dir_name(partition_name, partition_labels, partitioning_flavor):
+def get_partition_dir_name(partition_name, partition_labels, flavor):
     """Return the directories name of a partition."""
-    if partitioning_flavor == "hive":
+    if flavor == "hive":
         return reduce(np.char.add, [partition_name, "=", partition_labels, os.sep])
     return np.char.add(partition_labels, os.sep)
 
 
-def get_directories(dict_labels, order, partitioning_flavor):
+def get_directories(dict_labels, order, flavor):
     """Return the directory trees of a partitioned dataset."""
     list_dir_names = []
     for partition in order:
         dir_name = get_partition_dir_name(
             partition_name=partition,
             partition_labels=dict_labels[partition],
-            partitioning_flavor=partitioning_flavor,
+            flavor=flavor,
         )
         list_dir_names.append(dir_name)
     dir_trees = reduce(np.char.add, list_dir_names)
@@ -300,13 +300,13 @@ class Base2DPartitioning:
     order : list
         The order of the partitions when writing multi-level partitions (i.e. x, y) to disk.
         The default, ``None``, corresponds to ``names``.
-    partitioning_flavor : str
+    flavor : str
         This argument governs the directories names of partitioned datasets.
         The default, ``None``, name the directories with the partitions labels (DirectoryPartitioning).
         The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
     """
 
-    def __init__(self, x_bounds, y_bounds, levels, partitioning_flavor=None, order=None):
+    def __init__(self, x_bounds, y_bounds, levels, flavor=None, order=None):
 
         self.x_bounds = np.asanyarray(x_bounds)
         self.y_bounds = np.asanyarray(y_bounds)
@@ -321,7 +321,7 @@ class Base2DPartitioning:
                 levels=self.levels,
                 order=order,
             )
-        self.partitioning_flavor = check_partitioning_flavor(partitioning_flavor)
+        self.flavor = check_partitioning_flavor(flavor)
 
         # Define info
         self.shape = (len(self.y_centroids), len(self.x_centroids))
@@ -446,7 +446,7 @@ class Base2DPartitioning:
         return get_directories(
             dict_labels=dict_labels,
             order=self.order,
-            partitioning_flavor=self.partitioning_flavor,
+            flavor=self.flavor,
         )
 
     @property
@@ -699,7 +699,7 @@ class XYPartitioning(Base2DPartitioning):
     order : list, optional
         The order of the x and y partitions when writing partitioned datasets.
         The default, ``None``, corresponds to ``levels``.
-    partitioning_flavor : str, optional
+    flavor : str, optional
         This argument governs the directories names of partitioned datasets.
         The default, ``None``, name the directories with the partitions labels (DirectoryPartitioning).
         The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
@@ -711,7 +711,7 @@ class XYPartitioning(Base2DPartitioning):
         extent,
         levels=None,
         order=None,
-        partitioning_flavor=None,
+        flavor=None,
         labels_decimals=None,
     ):
 
@@ -740,7 +740,7 @@ class XYPartitioning(Base2DPartitioning):
             x_bounds=x_bounds,
             y_bounds=y_bounds,
             order=order,
-            partitioning_flavor=partitioning_flavor,
+            flavor=flavor,
         )
 
     # -----------------------------------------------------------------------------------.
@@ -758,7 +758,7 @@ class XYPartitioning(Base2DPartitioning):
             "size": list(self.size),
             "levels": self.levels,
             "order": self.order,
-            "partitioning_flavor": self.partitioning_flavor,
+            "flavor": self.flavor,
             "labels_decimals": list(self._labels_decimals),
         }
         return dictionary
@@ -826,7 +826,7 @@ class TilePartitioning(Base2DPartitioning):
     order : list, optional
         The order of the partitions when writing partitioned datasets.
         The default, ``None``, corresponds to ``levels``.
-    partitioning_flavor : str, optional
+    flavor : str, optional
         This argument governs the directories names of partitioned datasets.
         The default, ``None``, name the directories with the partitions labels (DirectoryPartitioning).
         The option ``"hive"``, name the directories with the format ``{partition_name}={partition_label}``.
@@ -841,7 +841,7 @@ class TilePartitioning(Base2DPartitioning):
         origin="bottom",
         direction="x",
         justify=False,
-        partitioning_flavor=None,
+        flavor=None,
         order=None,
     ):
         # Check levels
@@ -872,7 +872,7 @@ class TilePartitioning(Base2DPartitioning):
             x_bounds=x_bounds,
             y_bounds=y_bounds,
             order=order,
-            partitioning_flavor=partitioning_flavor,
+            flavor=flavor,
         )
 
     # -----------------------------------------------------------------------------------.
@@ -910,7 +910,7 @@ class TilePartitioning(Base2DPartitioning):
             "direction": self.direction,
             "justify": self.justify,
             "order": self.order,
-            "partitioning_flavor": self.partitioning_flavor,
+            "flavor": self.flavor,
         }
         return dictionary
 
@@ -940,7 +940,7 @@ class LonLatPartitioning(XYPartitioning):
     order : list, optional
         The order of the partitions when writing partitioned datasets.
         The default, ``None``, corresponds to ``levels``.
-    partitioning_flavor : str, optional
+    flavor : str, optional
         This argument governs the directories names of partitioned datasets.
         The default, `"hive"``, names the directories with the format ``{partition_name}={partition_label}``.
         If ``None``, names the directories with the partitions labels (DirectoryPartitioning).
@@ -955,7 +955,7 @@ class LonLatPartitioning(XYPartitioning):
         size,
         extent=[-180, 180, -90, 90],
         levels=None,
-        partitioning_flavor="hive",
+        flavor="hive",
         order=None,
         labels_decimals=None,
     ):
@@ -965,7 +965,7 @@ class LonLatPartitioning(XYPartitioning):
             extent=extent,
             levels=levels,
             order=order,
-            partitioning_flavor=partitioning_flavor,
+            flavor=flavor,
             labels_decimals=labels_decimals,
         )
         self._x_coord = "lon_c"  # default name for x centroid column for add_centroids

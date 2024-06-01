@@ -85,8 +85,8 @@ def test_write_bucket(tmp_path, df_type):
 
 
 @pytest.mark.parametrize("order", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])
-@pytest.mark.parametrize("partitioning_flavor", ["hive", None])
-def test_write_granules_bucket(tmp_path, order, partitioning_flavor):
+@pytest.mark.parametrize("flavor", ["hive", None])
+def test_write_granules_bucket(tmp_path, order, flavor):
     """Test write_granules_bucket routine with parallel=False."""
     # Define bucket dir
     bucket_dir = tmp_path
@@ -100,10 +100,10 @@ def test_write_granules_bucket(tmp_path, order, partitioning_flavor):
 
     # Define partitioning
     # order = ["lat_bin", "lon_bin"]
-    # partitioning_flavor = "hive" # None
+    # flavor = "hive" # None
     partitioning = LonLatPartitioning(
         size=(10, 10),
-        partitioning_flavor=partitioning_flavor,
+        flavor=flavor,
         order=order,
     )
 
@@ -119,7 +119,7 @@ def test_write_granules_bucket(tmp_path, order, partitioning_flavor):
     )
 
     # Check directories with wished partitioning format created
-    if partitioning_flavor == "hive":
+    if flavor == "hive":
         if order == ["lon_bin", "lat_bin"]:
             expected_directories = [
                 "bucket_info.yaml",  # always there
@@ -153,7 +153,7 @@ def test_write_granules_bucket(tmp_path, order, partitioning_flavor):
     assert sorted(expected_directories) == sorted(os.listdir(bucket_dir))
 
     # Check parquet files named by granule
-    if partitioning_flavor == "hive":
+    if flavor == "hive":
         if order == ["lon_bin", "lat_bin"]:
             partition_dir = os.path.join(bucket_dir, "lon_bin=-5.0", "lat_bin=5.0")
         else:
