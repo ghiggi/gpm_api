@@ -25,13 +25,11 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to visualize GPM-API GRID data."""
-import matplotlib.pyplot as plt
 
 from gpm import get_plot_kwargs
 from gpm.checks import check_is_spatial_2d
 from gpm.visualization.facetgrid import (
     CartopyFacetGrid,
-    ImageFacetGrid,
     sanitize_facetgrid_plot_kwargs,
 )
 from gpm.visualization.plot import (
@@ -41,13 +39,12 @@ from gpm.visualization.plot import (
     initialize_cartopy_plot,
     plot_cartopy_imshow,
     #  plot_mpl_imshow,
-    plot_xr_imshow,
     preprocess_figure_args,
     preprocess_subplot_kwargs,
 )
 
 ####----------------------------------------------------------------------------
-#### Low-level Functions
+#### Low-level Function
 
 
 def _plot_grid_map_cartopy(
@@ -109,62 +106,8 @@ def _plot_grid_map_cartopy(
     return p
 
 
-def _plot_grid_image(
-    da,
-    x=None,
-    y=None,
-    ax=None,
-    add_colorbar=True,
-    interpolation="nearest",
-    fig_kwargs=None,
-    cbar_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot `xarray.DataArray` 2D image (with optional RGB dimension) with xarray."""
-    # - Check inputs
-    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
-
-    # - Initialize figure
-    if ax is None:
-        _, ax = plt.subplots(**fig_kwargs)
-
-    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
-    is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
-    plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
-
-    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
-    plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=da.name,
-        user_plot_kwargs=plot_kwargs,
-        user_cbar_kwargs=cbar_kwargs,
-    )
-
-    # - Plot with xarray
-    p = plot_xr_imshow(
-        ax=ax,
-        da=da,
-        x=x,
-        y=y,
-        interpolation=interpolation,
-        add_colorbar=add_colorbar,
-        cbar_kwargs=cbar_kwargs,
-        **plot_kwargs,
-    )
-
-    # - Add axis labels
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
-
-    # - Monkey patch the mappable instance to add optimize_layout
-    if not is_facetgrid:
-        p = add_optimize_layout_method(p)
-
-    # - Return mappable
-    return p
-
-
 ####----------------------------------------------------------------------------
-#### FacetGrid Wrappers
+#### FacetGrid Wrapper
 
 
 def _plot_grid_map_facetgrid(
@@ -245,70 +188,6 @@ def _plot_grid_map_facetgrid(
     return fc
 
 
-def _plot_grid_image_facetgrid(
-    da,
-    x=None,
-    y=None,
-    ax=None,
-    add_colorbar=True,
-    interpolation="nearest",
-    fig_kwargs=None,
-    cbar_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot 2D image with FacetGrid."""
-    # Check inputs
-    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, is_facetgrid=True)
-
-    # Retrieve GPM-API defaults cmap and cbar kwargs
-    variable = da.name
-    plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=variable,
-        user_plot_kwargs=plot_kwargs,
-        user_cbar_kwargs=cbar_kwargs,
-    )
-
-    # Disable colorbar if rgb
-    if plot_kwargs.get("rgb", False):
-        add_colorbar = False
-        cbar_kwargs = {}
-
-    # Create FacetGrid
-    fc = ImageFacetGrid(
-        data=da.compute(),
-        col=plot_kwargs.pop("col", None),
-        row=plot_kwargs.pop("row", None),
-        col_wrap=plot_kwargs.pop("col_wrap", None),
-        axes_pad=plot_kwargs.pop("axes_pad", None),
-        fig_kwargs=fig_kwargs,
-        cbar_kwargs=cbar_kwargs,
-        add_colorbar=add_colorbar,
-        aspect=plot_kwargs.pop("aspect", False),
-        facet_height=plot_kwargs.pop("facet_height", 3),
-        facet_aspect=plot_kwargs.pop("facet_aspect", 1),
-    )
-
-    # Plot the maps
-    fc = fc.map_dataarray(
-        _plot_grid_image,
-        x=x,
-        y=y,
-        add_colorbar=False,
-        interpolation=interpolation,
-        cbar_kwargs=cbar_kwargs,
-        **plot_kwargs,
-    )
-
-    # Remove duplicated axis labels
-    fc.remove_duplicated_axis_labels()
-
-    # Add colorbar
-    if add_colorbar:
-        fc.add_colorbar(**cbar_kwargs)
-
-    return fc
-
-
 ####----------------------------------------------------------------------------
 #### High-level Wrappers
 
@@ -359,52 +238,7 @@ def plot_grid_map(
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-    # - Return mappable
-    return p
-
-
-def plot_grid_image(
-    da,
-    x=None,
-    y=None,
-    ax=None,
-    add_colorbar=True,
-    interpolation="nearest",
-    fig_kwargs=None,
-    cbar_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot `xarray.DataArray` 2D image (with optional RGB dimension) with xarray."""
-    # Check inputs
-    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_spatial_2d, strict=True)
-    # Plot FacetGrid with xarray imshow
-    if "col" in plot_kwargs or "row" in plot_kwargs:
-        p = _plot_grid_image_facetgrid(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-
-    # Plot with cartopy imshow
-    else:
-        p = _plot_grid_image(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-    # - Return imagepable
+    # Return mappable
     return p
 
 
@@ -423,7 +257,7 @@ def plot_grid_mesh(
     """Plot GPM grid mesh in a cartographic map."""
     from gpm.visualization.orbit import plot_cartopy_pcolormesh
 
-    # - Initialize figure if necessary
+    # Initialize figure if necessary
     ax = initialize_cartopy_plot(
         ax=ax,
         fig_kwargs=fig_kwargs,
@@ -431,17 +265,17 @@ def plot_grid_mesh(
         add_background=add_background,
     )
 
-    # - Create 2D mesh `xarray.DataArray`
+    # Create 2D mesh `xarray.DataArray`
     da = create_grid_mesh_data_array(xr_obj, x=x, y=y)
 
-    # - Define plot_kwargs to display only the mesh
+    # Define plot_kwargs to display only the mesh
     plot_kwargs["facecolor"] = "none"
     plot_kwargs["alpha"] = 1
     plot_kwargs["edgecolors"] = (edgecolors,)
     plot_kwargs["linewidth"] = (linewidth,)
     plot_kwargs["antialiased"] = True
 
-    # - Add variable field with cartopy
+    # Add variable field with cartopy
     p = plot_cartopy_pcolormesh(
         da=da,
         ax=ax,
@@ -451,7 +285,8 @@ def plot_grid_mesh(
         add_colorbar=False,
     )
 
-    # - Monkey patch the mappable instance to add optimize_layout
-    return add_optimize_layout_method(p)
+    # Monkey patch the mappable instance to add optimize_layout
+    p = add_optimize_layout_method(p)
 
-    # - Return mappable
+    # Return mappable
+    return p

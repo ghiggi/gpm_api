@@ -28,18 +28,15 @@
 import functools
 
 import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import numpy as np
 
 from gpm import get_plot_kwargs
-from gpm.checks import check_has_spatial_dim, check_is_spatial_2d
+from gpm.checks import check_has_spatial_dim
 from gpm.utils.checks import (
-    check_contiguous_scans,
     get_slices_contiguous_scans,
 )
 from gpm.visualization.facetgrid import (
     CartopyFacetGrid,
-    ImageFacetGrid,
     sanitize_facetgrid_plot_kwargs,
 )
 from gpm.visualization.plot import (
@@ -50,7 +47,6 @@ from gpm.visualization.plot import (
     plot_cartopy_pcolormesh,
     plot_sides,
     #  plot_mpl_imshow,
-    plot_xr_imshow,
     preprocess_figure_args,
     preprocess_subplot_kwargs,
 )
@@ -271,7 +267,7 @@ def plot_swath(
 
 
 ####----------------------------------------------------------------------------
-#### Low-level Functions
+#### Low-level Function
 
 
 @call_over_contiguous_scans
@@ -289,7 +285,7 @@ def _plot_orbit_map_cartopy(
     **plot_kwargs,
 ):
     """Plot GPM orbit granule in a cartographic map."""
-    # - Initialize figure if necessary
+    # Initialize figure if necessary
     ax = initialize_cartopy_plot(
         ax=ax,
         fig_kwargs=fig_kwargs,
@@ -297,22 +293,22 @@ def _plot_orbit_map_cartopy(
         add_background=add_background,
     )
 
-    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
+    # Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
     plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
 
-    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
+    # If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of variable name
     variable = da.name
     plot_kwargs, cbar_kwargs = get_plot_kwargs(
         name=variable,
         user_plot_kwargs=plot_kwargs,
         user_cbar_kwargs=cbar_kwargs,
     )
-    # - Specify colorbar label
+    # Specify colorbar label
     if cbar_kwargs.get("label", None) is None:
         unit = da.attrs.get("units", "-")
         cbar_kwargs["label"] = f"{variable} [{unit}]"
 
-    # - Add variable field with cartopy
+    # Add variable field with cartopy
     p = plot_cartopy_pcolormesh(
         ax=ax,
         da=da,
@@ -323,67 +319,12 @@ def _plot_orbit_map_cartopy(
         add_colorbar=add_colorbar,
         add_swath_lines=add_swath_lines,
     )
-    # - Return mappable
-    return p
-
-
-def _plot_orbit_image(
-    da,
-    x=None,
-    y=None,
-    ax=None,
-    add_colorbar=True,
-    interpolation="nearest",
-    fig_kwargs=None,
-    cbar_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot GPM orbit granule as in image."""
-    # - Check inputs
-    check_contiguous_scans(da)
-    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
-
-    # - Initialize figure
-    if ax is None:
-        _, ax = plt.subplots(**fig_kwargs)
-
-    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
-    is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
-    plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
-
-    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
-    plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=da.name,
-        user_plot_kwargs=plot_kwargs,
-        user_cbar_kwargs=cbar_kwargs,
-    )
-
-    # - Plot with xarray
-    p = plot_xr_imshow(
-        ax=ax,
-        da=da,
-        x=x,
-        y=y,
-        interpolation=interpolation,
-        add_colorbar=add_colorbar,
-        cbar_kwargs=cbar_kwargs,
-        **plot_kwargs,
-    )
-
-    # - Add axis labels
-    p.axes.set_xlabel("Along-Track")
-    p.axes.set_ylabel("Cross-Track")
-
-    # - Monkey patch the mappable instance to add optimize_layout
-    if not is_facetgrid:
-        p = add_optimize_layout_method(p)
-
-    # - Return mappable
+    # Return mappable
     return p
 
 
 ####----------------------------------------------------------------------------
-#### FacetGrid Wrappers
+#### FacetGrid Wrapper
 
 
 def _plot_orbit_map_facetgrid(
@@ -463,69 +404,6 @@ def _plot_orbit_map_facetgrid(
     return fc
 
 
-def _plot_orbit_image_facetgrid(
-    da,
-    x=None,  # "along_track",
-    y=None,  # "cross_track",
-    ax=None,
-    add_colorbar=True,
-    interpolation="nearest",
-    fig_kwargs=None,
-    cbar_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot 2D fields with FacetGrid."""
-    # Check inputs
-    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, is_facetgrid=True)
-
-    # Retrieve GPM-API defaults cmap and cbar kwargs
-    variable = da.name
-    plot_kwargs, cbar_kwargs = get_plot_kwargs(
-        name=variable,
-        user_plot_kwargs=plot_kwargs,
-        user_cbar_kwargs=cbar_kwargs,
-    )
-
-    # Disable colorbar if rgb
-    if plot_kwargs.get("rgb", False):
-        add_colorbar = False
-        cbar_kwargs = {}
-
-    # Create FacetGrid
-    fc = ImageFacetGrid(
-        data=da.compute(),
-        col=plot_kwargs.pop("col", None),
-        row=plot_kwargs.pop("row", None),
-        col_wrap=plot_kwargs.pop("col_wrap", None),
-        axes_pad=plot_kwargs.pop("axes_pad", None),
-        fig_kwargs=fig_kwargs,
-        cbar_kwargs=cbar_kwargs,
-        add_colorbar=add_colorbar,
-        aspect=plot_kwargs.pop("aspect", False),
-        facet_height=plot_kwargs.pop("facet_height", 3),
-        facet_aspect=plot_kwargs.pop("facet_aspect", 1),
-    )
-
-    # Plot the maps
-    fc = fc.map_dataarray(
-        _plot_orbit_image,
-        x=x,
-        y=y,
-        add_colorbar=False,
-        interpolation=interpolation,
-        cbar_kwargs=cbar_kwargs,
-        **plot_kwargs,
-    )
-
-    fc.remove_duplicated_axis_labels()
-
-    # Add colorbar
-    if add_colorbar:
-        fc.add_colorbar(**cbar_kwargs)
-
-    return fc
-
-
 ####----------------------------------------------------------------------------
 #### High-level Wrappers
 
@@ -580,52 +458,6 @@ def plot_orbit_map(
     return p
 
 
-def plot_orbit_image(
-    da,
-    x=None,  # "along_track",
-    y=None,  # "cross_track",
-    ax=None,
-    add_colorbar=True,
-    interpolation="nearest",
-    fig_kwargs=None,
-    cbar_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot `xarray.DataArray` 2D image with imshow."""
-    # Check inputs
-    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_spatial_2d, strict=True)
-
-    # Plot FacetGrid with xarray imshow
-    if "col" in plot_kwargs or "row" in plot_kwargs:
-        p = _plot_orbit_image_facetgrid(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-
-    # Plot with cartopy imshow
-    else:
-        p = _plot_orbit_image(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-    # Return mappable
-    return p
-
-
 @call_over_contiguous_scans
 def plot_orbit_mesh(
     da,
@@ -640,7 +472,7 @@ def plot_orbit_mesh(
     **plot_kwargs,
 ):
     """Plot GPM orbit granule mesh in a cartographic map."""
-    # - Initialize figure if necessary
+    # Initialize figure if necessary
     ax = initialize_cartopy_plot(
         ax=ax,
         fig_kwargs=fig_kwargs,
@@ -648,15 +480,15 @@ def plot_orbit_mesh(
         add_background=add_background,
     )
 
-    # - Define plot_kwargs to display only the mesh
+    # Define plot_kwargs to display only the mesh
     plot_kwargs["facecolor"] = "none"
     plot_kwargs["alpha"] = 1
     plot_kwargs["edgecolors"] = (edgecolors,)  # Introduce bugs in Cartopy !
     plot_kwargs["linewidth"] = (linewidth,)
     plot_kwargs["antialiased"] = True
 
-    # - Add variable field with cartopy
-    return plot_cartopy_pcolormesh(
+    # Add variable field with cartopy
+    p = plot_cartopy_pcolormesh(
         da=da,
         ax=ax,
         x=x,
@@ -664,4 +496,5 @@ def plot_orbit_mesh(
         plot_kwargs=plot_kwargs,
         add_colorbar=False,
     )
-    # - Return mappable
+    # Return mappable
+    return p

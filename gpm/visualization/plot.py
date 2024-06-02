@@ -38,6 +38,7 @@ from pyproj import Geod
 from scipy.interpolate import griddata
 
 import gpm
+from gpm import get_plot_kwargs
 
 
 def is_generator(obj):
@@ -911,6 +912,230 @@ def plot_xr_imshow(
 
 
 ####--------------------------------------------------------------------------.
+####################
+#### Plot Image ####
+####################
+
+
+def _plot_image(
+    da,
+    x=None,
+    y=None,
+    ax=None,
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs=None,
+    cbar_kwargs=None,
+    **plot_kwargs,
+):
+    """Plot GPM orbit granule as in image."""
+    from gpm.checks import is_grid, is_orbit
+    from gpm.visualization.facetgrid import sanitize_facetgrid_plot_kwargs
+
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+
+    # - Initialize figure
+    if ax is None:
+        _, ax = plt.subplots(**fig_kwargs)
+
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
+    is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
+    plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
+
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=da.name,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
+    )
+
+    # - Plot with xarray
+    p = plot_xr_imshow(
+        ax=ax,
+        da=da,
+        x=x,
+        y=y,
+        interpolation=interpolation,
+        add_colorbar=add_colorbar,
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+
+    if is_orbit(da):
+        ax.set_xlabel("Along-Track")
+        ax.set_ylabel("Cross-Track")
+    elif is_grid(da):
+        ax.set_xlabel("Longitude")
+        ax.set_ylabel("Latitude")
+    # - Monkey patch the mappable instance to add optimize_layout
+    if not is_facetgrid:
+        p = add_optimize_layout_method(p)
+
+    # - Return mappable
+    return p
+
+
+def _plot_image_facetgrid(
+    da,
+    x=None,
+    y=None,
+    ax=None,
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs=None,
+    cbar_kwargs=None,
+    **plot_kwargs,
+):
+    """Plot 2D fields with FacetGrid."""
+    from gpm.visualization.facetgrid import ImageFacetGrid
+
+    # Check inputs
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, is_facetgrid=True)
+
+    # Retrieve GPM-API defaults cmap and cbar kwargs
+    variable = da.name
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=variable,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
+    )
+
+    # Disable colorbar if rgb
+    if plot_kwargs.get("rgb", False):
+        add_colorbar = False
+        cbar_kwargs = {}
+
+    # Create FacetGrid
+    fc = ImageFacetGrid(
+        data=da.compute(),
+        col=plot_kwargs.pop("col", None),
+        row=plot_kwargs.pop("row", None),
+        col_wrap=plot_kwargs.pop("col_wrap", None),
+        axes_pad=plot_kwargs.pop("axes_pad", None),
+        fig_kwargs=fig_kwargs,
+        cbar_kwargs=cbar_kwargs,
+        add_colorbar=add_colorbar,
+        aspect=plot_kwargs.pop("aspect", False),
+        facet_height=plot_kwargs.pop("facet_height", 3),
+        facet_aspect=plot_kwargs.pop("facet_aspect", 1),
+    )
+
+    # Plot the maps
+    fc = fc.map_dataarray(
+        _plot_image,
+        x=x,
+        y=y,
+        add_colorbar=False,
+        interpolation=interpolation,
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+
+    fc.remove_duplicated_axis_labels()
+
+    # Add colorbar
+    if add_colorbar:
+        fc.add_colorbar(**cbar_kwargs)
+
+    return fc
+
+
+def plot_image(
+    da,
+    x=None,
+    y=None,
+    ax=None,
+    add_colorbar=True,
+    interpolation="nearest",
+    fig_kwargs=None,
+    cbar_kwargs=None,
+    **plot_kwargs,
+):
+    """Plot data using imshow.
+
+    Parameters
+    ----------
+    da : `xr.DataArray`
+        xarray DataArray.
+    x : str, optional
+        X dimension name.
+        If ``None``, takes the second dimension.
+        The default is ``None``.
+    y : str, optional
+        Y dimension name.
+        If ``None``, takes the first dimension.
+        The default is ``None``.
+    ax : `cartopy.GeoAxes`, optional
+        The matplotlib axes where to plot the image.
+        If ``None``, a figure is initialized using the
+        specified ``fig_kwargs``.
+        The default is ``None``.
+    add_colorbar : bool, optional
+        Whether to add a colorbar. The default is ``True``.
+    interpolation : str, optional
+        Argument to be passed to imshow.
+        The default is ``"nearest"``.
+    fig_kwargs : dict, optional
+        Figure options to be passed to `matplotlib.pyplot.subplots``.
+        The default is ``None``.
+        Only used if ``ax`` is ``None``.
+    subplot_kwargs : dict, optional
+        Subplot options to be passed to `matplotlib.pyplot.subplots`.
+        The default is ``None``.
+        Only used if ```ax``` is ``None``.
+    cbar_kwargs : dict, optional
+        Colorbar options. The default is ``None``.
+    **plot_kwargs
+        Additional arguments to be passed to the plotting function.
+        Examples include ``cmap``, ``norm``, ``vmin``, ``vmax``, ``levels``, ...
+        For FacetGrid plots, specify ``row``, ``col`` and ``col_wrap``.
+        With ``rgb`` you can specify the name of the `xarray.DataArray` RGB dimension.
+
+
+    """
+    from gpm.checks import check_is_spatial_2d, is_spatial_2d
+
+    # Plot orbit
+    if not is_spatial_2d(da, strict=False):
+        raise ValueError("Can not plot. It's not a spatial 2D object.")
+
+    # Check inputs
+    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_spatial_2d, strict=True)
+
+    # Plot FacetGrid with xarray imshow
+    if "col" in plot_kwargs or "row" in plot_kwargs:
+        p = _plot_image_facetgrid(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    # Plot with xarray imshow
+    else:
+        p = _plot_image(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    # Return mappable
+    return p
+
+
+####--------------------------------------------------------------------------.
+##################
+#### Plot map ####
+##################
 
 
 def plot_map(
@@ -1013,147 +1238,6 @@ def plot_map(
     return p
 
 
-def plot_image(
-    da,
-    x=None,
-    y=None,
-    ax=None,
-    add_colorbar=True,
-    interpolation="nearest",
-    fig_kwargs=None,
-    cbar_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot data using imshow.
-
-    Parameters
-    ----------
-    da : `xr.DataArray`
-        xarray DataArray.
-    x : str, optional
-        X dimension name.
-        If ``None``, takes the second dimension.
-        The default is ``None``.
-    y : str, optional
-        Y dimension name.
-        If ``None``, takes the first dimension.
-        The default is ``None``.
-    ax : `cartopy.GeoAxes`, optional
-        The matplotlib axes where to plot the image.
-        If ``None``, a figure is initialized using the
-        specified ``fig_kwargs``.
-        The default is ``None``.
-    add_colorbar : bool, optional
-        Whether to add a colorbar. The default is ``True``.
-    interpolation : str, optional
-        Argument to be passed to imshow.
-        The default is ``"nearest"``.
-    fig_kwargs : dict, optional
-        Figure options to be passed to `matplotlib.pyplot.subplots``.
-        The default is ``None``.
-        Only used if ``ax`` is ``None``.
-    subplot_kwargs : dict, optional
-        Subplot options to be passed to `matplotlib.pyplot.subplots`.
-        The default is ``None``.
-        Only used if ```ax``` is ``None``.
-    cbar_kwargs : dict, optional
-        Colorbar options. The default is ``None``.
-    **plot_kwargs
-        Additional arguments to be passed to the plotting function.
-        Examples include ``cmap``, ``norm``, ``vmin``, ``vmax``, ``levels``, ...
-        For FacetGrid plots, specify ``row``, ``col`` and ``col_wrap``.
-        With ``rgb`` you can specify the name of the `xarray.DataArray` RGB dimension.
-
-
-    """
-    # figsize, dpi, subplot_kw only used if ax is None
-    from gpm.checks import is_grid, is_orbit, is_spatial_2d
-    from gpm.visualization.grid import plot_grid_image
-    from gpm.visualization.orbit import plot_orbit_image
-
-    # Plot orbit
-    if is_orbit(da) and is_spatial_2d(da, strict=False):
-        p = plot_orbit_image(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-    # Plot grid
-    elif is_grid(da) and is_spatial_2d(da, strict=False):
-        p = plot_grid_image(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-    else:
-        raise ValueError("Can not plot. It's neither a GPM GRID or GPM ORBIT spatial 2D object.")
-    # Return mappable
-    return p
-
-
-####--------------------------------------------------------------------------.
-
-
-def create_grid_mesh_data_array(xr_obj, x, y):
-    """Create a 2D mesh coordinates DataArray.
-
-    Takes as input the 1D coordinate arrays from an existing `xarray.DataArray` or `xarray.Dataset` object.
-
-    The function creates a 2D grid (mesh) of x and y coordinates and initializes
-    the data values to NaN.
-
-    Parameters
-    ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
-        The input xarray object containing the 1D coordinate arrays.
-    x : str
-        The name of the x-coordinate in `xr_obj`.
-    y : str
-        The name of the y-coordinate in `xr_obj`.
-
-    Returns
-    -------
-    da_mesh : `xarray.DataArray`
-        A 2D `xarray.DataArray` with mesh coordinates for `x` and `y`, and NaN values for data points.
-
-    Notes
-    -----
-    The resulting `xarray.DataArray` has dimensions named 'y' and 'x', corresponding to the
-    y and x coordinates respectively.
-    The coordinate values are taken directly from the input 1D coordinate arrays,
-    and the data values are set to NaN.
-
-    """
-    # Extract 1D coordinate arrays
-    x_coords = xr_obj[x].to_numpy()
-    y_coords = xr_obj[y].to_numpy()
-
-    # Create 2D meshgrid for x and y coordinates
-    X, Y = np.meshgrid(x_coords, y_coords, indexing="xy")
-
-    # Create a 2D array of NaN values with the same shape as the meshgrid
-    dummy_values = np.full(X.shape, np.nan)
-
-    # Create a new DataArray with 2D coordinates and NaN values
-    return xr.DataArray(
-        dummy_values,
-        coords={x: (("y", "x"), X), y: (("y", "x"), Y)},
-        dims=("y", "x"),
-    )
-
-
 def plot_map_mesh(
     xr_obj,
     x="lon",
@@ -1219,7 +1303,7 @@ def plot_map_mesh_centroids(
     """Plot GPM orbit granule mesh centroids in a cartographic map."""
     from gpm.checks import is_grid
 
-    # - Initialize figure if necessary
+    # Initialize figure if necessary
     ax = initialize_cartopy_plot(
         ax=ax,
         fig_kwargs=fig_kwargs,
@@ -1227,16 +1311,65 @@ def plot_map_mesh_centroids(
         add_background=add_background,
     )
 
-    # - Retrieve centroids
+    # Retrieve centroids
     if is_grid(xr_obj):
         xr_obj = create_grid_mesh_data_array(xr_obj, x=x, y=y)
     lon = xr_obj[x].to_numpy()
     lat = xr_obj[y].to_numpy()
 
-    # - Plot centroids
-    return ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
+    # Plot centroids
+    p = ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
 
-    # - Return mappable
+    # Return mappable
+    return p
+
+
+def create_grid_mesh_data_array(xr_obj, x, y):
+    """Create a 2D mesh coordinates DataArray.
+
+    Takes as input the 1D coordinate arrays from an existing `xarray.DataArray` or `xarray.Dataset` object.
+
+    The function creates a 2D grid (mesh) of x and y coordinates and initializes
+    the data values to NaN.
+
+    Parameters
+    ----------
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+        The input xarray object containing the 1D coordinate arrays.
+    x : str
+        The name of the x-coordinate in `xr_obj`.
+    y : str
+        The name of the y-coordinate in `xr_obj`.
+
+    Returns
+    -------
+    da_mesh : `xarray.DataArray`
+        A 2D `xarray.DataArray` with mesh coordinates for `x` and `y`, and NaN values for data points.
+
+    Notes
+    -----
+    The resulting `xarray.DataArray` has dimensions named 'y' and 'x', corresponding to the
+    y and x coordinates respectively.
+    The coordinate values are taken directly from the input 1D coordinate arrays,
+    and the data values are set to NaN.
+
+    """
+    # Extract 1D coordinate arrays
+    x_coords = xr_obj[x].to_numpy()
+    y_coords = xr_obj[y].to_numpy()
+
+    # Create 2D meshgrid for x and y coordinates
+    X, Y = np.meshgrid(x_coords, y_coords, indexing="xy")
+
+    # Create a 2D array of NaN values with the same shape as the meshgrid
+    dummy_values = np.full(X.shape, np.nan)
+
+    # Create a new DataArray with 2D coordinates and NaN values
+    return xr.DataArray(
+        dummy_values,
+        coords={x: (("y", "x"), X), y: (("y", "x"), Y)},
+        dims=("y", "x"),
+    )
 
 
 ####--------------------------------------------------------------------------.

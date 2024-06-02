@@ -55,6 +55,10 @@ def _remove_title_dimension_prefix(ax):
     ax.set_title(title)
 
 
+def _remove_title(ax):
+    ax.set_title("")
+
+
 def sanitize_facetgrid_plot_kwargs(plot_kwargs):
     """Remove defaults values set by FacetGrid.map_dataarray."""
     plot_kwargs = plot_kwargs.copy()
@@ -275,6 +279,14 @@ class CustomFacetGrid(FacetGrid, ABC):
     def _remove_left_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the left of the subplots."""
 
+    def remove_bottom_ticks_and_labels(self):
+        """Remove the bottom ticks and labels from each subplot."""
+        self.map(lambda: self._remove_bottom_ticks_and_labels(plt.gca()))
+
+    def remove_left_ticks_and_labels(self):
+        """Remove the left ticks and labels from each subplot."""
+        self.map(lambda: self._remove_left_ticks_and_labels(plt.gca()))
+
     def remove_duplicated_axis_labels(self):
         """Remove axis labels which are not located on the left or bottom of the figure."""
         n_rows, n_cols = self.axs.shape
@@ -330,6 +342,16 @@ class CustomFacetGrid(FacetGrid, ABC):
                 _ = [ann.set_text(_remove_dim_prefix(ann.get_text())) for ann in self.col_labels]
             if row:
                 _ = [ann.set_text(_remove_dim_prefix(ann.get_text())) for ann in self.row_labels]
+
+    def remove_titles(self, row=True, col=True):
+        """Remove the plot titles."""
+        if len(self.row_names) == 0 or len(self.col_names) == 0:
+            self.map(lambda: _remove_title(plt.gca()))
+        else:
+            if col:
+                _ = [ann.set_text("") for ann in self.col_labels]
+            if row:
+                _ = [ann.set_text("") for ann in self.row_labels]
 
     def set_title(self, title, horizontalalignment="center", **kwargs):
         """Add a title above all sublots.
