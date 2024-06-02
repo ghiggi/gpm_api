@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains GPM RADAR L1B products community-based retrivals."""
+"""This module contains GPM RADAR L1B products community-based retrievals."""
 import datetime
 
 import numpy as np

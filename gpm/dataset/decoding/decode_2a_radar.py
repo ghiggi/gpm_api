@@ -99,6 +99,20 @@ def decode_flagPrecip(da):
     return da
 
 
+def decode_qualityFlag(da):
+    """Decode the 2A-<RADAR> variable qualityFlag."""
+    da = da.where(da >= 0)  # < 0 (-99) set to np.nan
+    value_dict = {
+        0: "High quality. No issues.",
+        1: "Low quality (warnings during retrieval)",
+        2: "Bad (errors during retrieval)",
+    }
+    da.attrs["flag_values"] = list(value_dict)
+    da.attrs["flag_meanings"] = list(value_dict.values())
+    da.attrs["description"] = "Flag for precipitation detection"
+    return da
+
+
 def decode_qualityTypePrecip(da):
     """Decode the 2A-<RADAR> variable qualityTypePrecip."""
     da = da.where(da > 0, 0)
@@ -231,6 +245,7 @@ def decode_product(ds):
         "flagSurfaceSnowfall",
         "widthBB",
         "heightBB",
+        "qualityFlag",
         "qualityTypePrecip",
         "flagPrecip",
         "phaseNearSurface",
