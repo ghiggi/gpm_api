@@ -43,7 +43,7 @@ def test_granule_within_time() -> None:
     # Set a file time 01.01.14 01:00 to 04:00 (start, end)
     file_time = ("2014-01-01T01:00:00Z", "2014-01-01T04:00:00Z")
 
-    # Test `True` assumptions
+    # Test True assumptions
     true_assumptions = [
         ("2014-01-01T00:00:00Z", "2014-01-01T05:00:00Z"),  # Crosses start
         ("2014-01-01T02:00:00Z", "2014-01-01T03:00:00Z"),  # Within

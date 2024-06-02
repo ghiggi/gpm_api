@@ -26,6 +26,8 @@
 # -----------------------------------------------------------------------------.
 import platform
 
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 import pytest
 import xarray as xr
 
@@ -121,6 +123,28 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray_2x2_frames, col=EXTRA_DIM, row=EXTRA_DIM_2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
+    def test_orbit_col_row_rgb(
+        self,
+        orbit_dataarray_2x2_frames: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data using row, col and rgb arguments."""
+        # Calling with call_wrap=1, which should be ignored
+        orbit_dataarray_2x2_rgb = expand_dims(orbit_dataarray_2x2_frames, 3, dim="rgb", axis=2)
+        p = plot.plot_map(orbit_dataarray_2x2_rgb, col=EXTRA_DIM, row=EXTRA_DIM_2, rgb="rgb")
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_orbit_col_row_rgb_alpha(
+        self,
+        orbit_dataarray_2x2_frames: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data using row, col and rgb arguments with alpha value."""
+        # Calling with call_wrap=1, which should be ignored
+        orbit_dataarray_2x2_rgb = expand_dims(orbit_dataarray_2x2_frames, 3, dim="rgb", axis=2)
+        p = plot.plot_map(orbit_dataarray_2x2_rgb, col=EXTRA_DIM, row=EXTRA_DIM_2, rgb="rgb", alpha=0.4)
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    # NOTE: option with alpha array not implemented currently
+
     def test_orbit_no_col_row(
         self,
         orbit_dataarray_4_frames: xr.DataArray,
@@ -128,6 +152,23 @@ class TestPlotMap:
         """Test plotting orbit data without valid col or row argument."""
         with pytest.raises(ValueError):
             plot.plot_map(orbit_dataarray_4_frames, col=None)
+
+    def test_with_specified_axis(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
+        """Test FacetGrid raise error if an axis is specified."""
+        _, ax = plt.subplots(1, 1)
+        with pytest.raises(ValueError):
+            plot.plot_map(orbit_dataarray_4_frames, ax=ax, col=EXTRA_DIM)
+
+    def test_without_cartopy_projection(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
+        """Test FacetGrid raise error if a Cartopy projection is None."""
+        subplot_kwargs = {"projection": None}
+        with pytest.raises(ValueError):
+            plot.plot_map(orbit_dataarray_4_frames, subplot_kwargs=subplot_kwargs, col=EXTRA_DIM)
+
+    def test_with_custom_cartopy_projection(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
+        """Test plotting FacetGrid with a custom Cartopy projection."""
+        subplot_kwargs = {"projection": ccrs.PlateCarree()}
+        plot.plot_map(orbit_dataarray_4_frames, subplot_kwargs=subplot_kwargs, col=EXTRA_DIM)
 
     def test_orbit_one_empty_subplot(
         self,
@@ -221,6 +262,17 @@ class TestPlotMap:
         p = plot.plot_map(grid_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
+    def test_grid_col_rgb(
+        self,
+        grid_dataarray_4_frames: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data using row, col and rgb arguments."""
+        grid_dataarray_4_frames_rgb = expand_dims(grid_dataarray_4_frames, 3, dim="rgb", axis=-1)
+        # BUG in xarray if y,x not provided
+        # p = plot.plot_map(grid_dataarray_4_frames_rgb, col=EXTRA_DIM, col_wrap=2, rgb="rgb")
+        p = plot.plot_map(grid_dataarray_4_frames_rgb, y="lat", x="lon", col=EXTRA_DIM, col_wrap=2, rgb="rgb")
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
 
 class TestPlotImage:
     """Test the plot_image function while using the facetgrid module."""
@@ -231,6 +283,32 @@ class TestPlotImage:
     ) -> None:
         """Test plotting orbit data."""
         p = plot.plot_image(orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_orbit_without_coords(
+        self,
+        orbit_dataarray_4_frames: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data without coordinates."""
+        p = plot.plot_image(orbit_dataarray_4_frames.drop_vars(["lon", "lat"]), col=EXTRA_DIM, col_wrap=2)
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_orbit_col_row_rgb(
+        self,
+        orbit_dataarray_2x2_frames: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data using row, col and rgb arguments."""
+        orbit_dataarray_2x2_rgb = expand_dims(orbit_dataarray_2x2_frames, 3, dim="rgb", axis=2)
+        # BUG in xarray if y,x not provided
+        # p = plot.plot_image(orbit_dataarray_2x2_rgb, col=EXTRA_DIM, row=EXTRA_DIM_2, rgb="rgb")
+        p = plot.plot_image(
+            orbit_dataarray_2x2_rgb,
+            y="cross_track",
+            x="along_track",
+            col=EXTRA_DIM,
+            row=EXTRA_DIM_2,
+            rgb="rgb",
+        )
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_high_aspect_ratio(
@@ -248,3 +326,20 @@ class TestPlotImage:
         """Test plotting orbit data."""
         p = plot.plot_image(grid_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_grid_col_rgb(
+        self,
+        grid_dataarray_4_frames: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data using col and rgb arguments."""
+        grid_dataarray_4_frames_rgb = expand_dims(grid_dataarray_4_frames, 3, dim="rgb", axis=-1)
+        # BUG in xarray if y,x not provided
+        # p = plot.plot_image(grid_dataarray_4_frames_rgb, col=EXTRA_DIM, col_wrap=2, rgb="rgb")
+        p = plot.plot_image(grid_dataarray_4_frames_rgb, y="lat", x="lon", col=EXTRA_DIM, col_wrap=2, rgb="rgb")
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_with_specified_axis(self, orbit_dataarray_4_frames: xr.DataArray) -> None:
+        """Test plotting FacetGrid with a specified ax raise an error."""
+        _, ax = plt.subplots(1, 1)
+        with pytest.raises(ValueError):
+            plot.plot_image(orbit_dataarray_4_frames, ax=ax, col=2)

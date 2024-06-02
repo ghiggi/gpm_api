@@ -442,7 +442,7 @@ def filter_download_list(remote_filepaths, local_filepaths, force_download=False
         GPM directory on disk for a specific product and date.
     remote_filepaths : str
         Filepaths on which GPM data are stored on PPS servers.
-    force_download : boolean, optional
+    force_download : bool, optional
         Whether to redownload data if already existing on disk. The default is ``False``.
 
     Returns
@@ -554,7 +554,7 @@ def download_files(
 
     Parameters
     ----------
-    filepaths: (str or list)
+    filepaths: str or list
         List of GPM file names to download.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
@@ -570,9 +570,9 @@ def download_files(
         Whether to use ``curl`` or ``wget`` for data download. The default is  ``curl``.
     verbose : bool, optional
         Whether to print processing details. The default is ``False``.
-    force_download : boolean, optional
+    force_download : bool, optional
         Whether to redownload data if already existing on disk. The default is ``False``.
-    remove_corrupted : boolean, optional
+    remove_corrupted : bool, optional
        Whether to remove the corrupted files.
        By default is ``True``.
     retry : int, optional,
@@ -780,9 +780,9 @@ def _download_daily_data(
         GPM product name. See ``gpm.available_products()``.
     date : datetime
         Single date for which to retrieve the data.
-    start_time : datetime.datetime
+    start_time : `datetime.datetime`
         Filtering start time.
-    end_time : datetime.datetime
+    end_time : `datetime.datetime`
         Filtering end time.
     product_type : str
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
@@ -797,7 +797,7 @@ def _download_daily_data(
         Whether to display progress.
     transfer_tool : str
         Whether to use ``curl`` or ``wget`` for data download.
-    force_download : boolean
+    force_download : bool
         Whether to redownload data if already existing on disk.
     verbose : bool
         Whether to print processing details. T
@@ -919,7 +919,7 @@ def download_archive(
     storage="PPS",
     n_threads=4,
     transfer_tool="CURL",
-    progress_bar=False,
+    progress_bar=True,
     force_download=False,
     check_integrity=True,
     remove_corrupted=True,
@@ -932,13 +932,13 @@ def download_archive(
     ----------
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    start_time : (datetime.datetime, datetime.date, np.datetime64, str)
+    start_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
         Start time.
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
-    end_time : (datetime.datetime, datetime.date, np.datetime64, str)
+    end_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
         End time.
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
@@ -953,7 +953,7 @@ def download_archive(
         Whether to display progress. The default is ``True``.
     transfer_tool : str, optional
         Whether to use ``curl`` or ``wget`` for data download. The default is  ``curl``.
-    force_download : boolean, optional
+    force_download : bool, optional
         Whether to redownload data if already existing on disk. The default is ``False``.
     verbose : bool, optional
         Whether to print processing details. The default is ``False``.

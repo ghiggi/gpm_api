@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains GPM PMW 2A products community-based retrivals."""
+"""This module contains GPM PMW 2A products community-based retrievals."""
 
 
 def retrieve_totalWaterPath(ds):

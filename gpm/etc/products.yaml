@@ -1,29 +1,19 @@
+---
 1A-GMI:
   pattern: 1A.GPM.GMI.*
   sensor: GMI
   satellite: GPM
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1A
   ges_disc_dir: GPM_L1A/GPM_1AGMI
   start_time: 2014-03-04 17:59:32
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S4
-    - S5
-    V7:
-    - S1
-    - S2
-    - S4
-    - S5
+    V5: [S1, S2, S4, S5]
+    V7: [S1, S2, S4, S5]
   product_level: 1A
   full_product_level: 1A
 1A-TMI:
@@ -31,25 +21,16 @@
   sensor: TMI
   satellite: TRMM
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1A
   ges_disc_dir: TRMM_L1A/GPM_1ATMI
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-08 15:25:02
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    V7:
-    - S1
-    - S2
-    - S3
+    V5: [S1, S2, S3]
+    V7: [S1, S2, S3]
   product_level: 1A
   full_product_level: 1A
 1B-GMI:
@@ -57,24 +38,16 @@
   sensor: GMI
   satellite: GPM
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GMI1B
   pps_rs_dir: 1B
   ges_disc_dir: GPM_L1B/GPM_1BGMI
   start_time: 2014-03-04 17:59:32
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V7: [S1, S2]
   product_level: 1B
   full_product_level: 1B
 1B-Ka:
@@ -82,23 +55,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1B
   ges_disc_dir: GPM_L1B/GPM_PRL1KA
   start_time: 2014-03-08 22:09:00
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - HS
-    - MS
-    V7:
-    - HS
-    - MS
+    V5: [MS, HS]
+    V7: [MS, HS]
   product_level: 1B
   full_product_level: 1B
 1B-Ku:
@@ -106,21 +72,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1B
   ges_disc_dir: GPM_L1B/GPM_PRL1KU
   start_time: 2014-03-08 22:09:00
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - NS
-    V7:
-    - FS
+    V5: [NS]
+    V7: [FS]
   product_level: 1B
   full_product_level: 1B
 1B-PR:
@@ -128,21 +89,16 @@
   sensor: PR
   satellite: TRMM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1B
   ges_disc_dir: TRMM_L1/GPM_1BPR
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-01 11:58:38
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - NS
-    V7:
-    - FS
+    V5: [NS]
+    V7: [FS]
   product_level: 1B
   full_product_level: 1B
 1B-TMI:
@@ -150,25 +106,16 @@
   sensor: TMI
   satellite: TRMM
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1B
   ges_disc_dir: TRMM_L1/GPM_1BTMI
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-08 15:25:02
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    V7:
-    - S1
-    - S2
-    - S3
+    V5: [S1, S2, S3]
+    V7: [S1, S2, S3]
   product_level: 1B
   full_product_level: 1B
 1C-AMSR2-GCOMW1:
@@ -176,32 +123,16 @@
   sensor: AMSR2
   satellite: GCOMW1
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/AMSR2
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CGCOMW1AMSR2
   start_time: 2012-07-02 22:31:17
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    - S4
-    - S5
-    - S6
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
-    - S5
-    - S6
+    V5: [S1, S2, S3, S4, S5, S6]
+    V7: [S1, S2, S3, S4, S5, S6]
   product_level: 1C
   full_product_level: 1C
 1C-AMSRE-AQUA:
@@ -209,31 +140,16 @@
   sensor: AMSRE
   satellite: AQUA
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CAQUAAMSRE
   start_time: 2002-06-01 15:48:29
   end_time: 2011-10-04 07:44:29
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    - S4
-    - S5
-    - S6
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
-    - S5
-    - S6
+    V5: [S1, S2, S3, S4, S5, S6]
+    V7: [S1, S2, S3, S4, S5, S6]
   product_level: 1C
   full_product_level: 1C
 1C-AMSUB-NOAA15:
@@ -241,21 +157,16 @@
   sensor: AMSUB
   satellite: NOAA15
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNOAA15AMSUB
   start_time: 2000-01-01 01:16:38
   end_time: 2010-09-15 02:12:20
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-AMSUB-NOAA16:
@@ -263,21 +174,16 @@
   sensor: AMSUB
   satellite: NOAA16
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNOAA16AMSUB
   start_time: 2000-10-04 12:12:03
   end_time: 2010-05-01 02:31:07
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-AMSUB-NOAA17:
@@ -285,21 +191,16 @@
   sensor: AMSUB
   satellite: NOAA17
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNOAA17AMSUB
   start_time: 2002-06-28 19:13:47
   end_time: 2009-12-18 01:33:07
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-ATMS-NOAA20:
@@ -307,28 +208,16 @@
   sensor: ATMS
   satellite: NOAA20
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/ATMS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNOAA20ATMS
   start_time: 2017-11-29 04:46:18
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    - S4
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
+    V5: [S1, S2, S3, S4]
+    V7: [S1, S2, S3, S4]
   product_level: 1C
   full_product_level: 1C
 1C-ATMS-NOAA21:
@@ -336,22 +225,15 @@
   sensor: ATMS
   satellite: NOAA21
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/ATMS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNOAA21ATMS
   start_time: 2023-05-17 22:53:14
   end_time: null
-  available_versions:
-  - 7
+  available_versions: [7]
   scan_modes:
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
+    V7: [S1, S2, S3, S4]
   product_level: 1C
   full_product_level: 1C
 1C-ATMS-NPP:
@@ -359,28 +241,16 @@
   sensor: ATMS
   satellite: NPP
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/ATMS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNPPATMS
   start_time: 2011-11-08 20:04:11
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    - S4
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
+    V5: [S1, S2, S3, S4]
+    V7: [S1, S2, S3, S4]
   product_level: 1C
   full_product_level: 1C
 1C-GMI:
@@ -388,24 +258,16 @@
   sensor: GMI
   satellite: GPM
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/GMI
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CGPMGMI
   start_time: 2014-03-04 17:59:32
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V7: [S1, S2]
   product_level: 1C
   full_product_level: 1C
 1C-GMI-R:
@@ -413,24 +275,16 @@
   sensor: GMI
   satellite: GPM
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/GMI
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CGPMGMI_R
   start_time: 2014-03-04 17:59:32
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V7: [S1, S2]
   product_level: 1C
   full_product_level: 1C-R
 1C-MHS-METOPA:
@@ -438,21 +292,16 @@
   sensor: MHS
   satellite: METOPA
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CMETOPAMHS
   start_time: 2006-11-23 10:24:51
   end_time: 2019-12-23 22:37:47
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-MHS-METOPB:
@@ -460,22 +309,16 @@
   sensor: MHS
   satellite: METOPB
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/MHS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CMETOPBMHS
   start_time: 2012-09-25 07:30:57
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-MHS-METOPC:
@@ -483,22 +326,16 @@
   sensor: MHS
   satellite: METOPC
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/MHS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CMETOPCMHS
   start_time: 2018-11-16 06:45:21
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-MHS-NOAA18:
@@ -506,21 +343,16 @@
   sensor: MHS
   satellite: NOAA18
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNOAA18MHS
   start_time: 2005-05-25 16:54:59
   end_time: 2018-10-20 19:58:16
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-MHS-NOAA19:
@@ -528,22 +360,16 @@
   sensor: MHS
   satellite: NOAA19
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/MHS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNOAA19MHS
   start_time: 2009-02-12 11:37:53
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-SAPHIR-MT1:
@@ -551,22 +377,16 @@
   sensor: SAPHIR
   satellite: MT1
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/SAPHIR
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CMT1SAPHIR
   start_time: 2011-10-13 04:12:29
   end_time: 2022-01-01 00:13:27
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F08:
@@ -574,26 +394,17 @@
   sensor: SSMI
   satellite: F08
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF08SSMI
   start_time: 1987-07-09 12:55:14
   end_time: 1991-12-31 19:54:12
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V6:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V6: [S1, S2]
+    V7: [S1, S2]
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F10:
@@ -601,26 +412,17 @@
   sensor: SSMI
   satellite: F10
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF10SSMI
   start_time: 1990-12-08 14:49:37
   end_time: 1997-11-14 19:51:59
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V6:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V6: [S1, S2]
+    V7: [S1, S2]
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F11:
@@ -628,27 +430,17 @@
   sensor: SSMI
   satellite: F11
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF11SSMI
   start_time: 1991-12-03 18:06:01
   end_time: 2000-05-16 16:57:56
-  available_versions:
-  - 5
-  - 6
-  - 7
+  available_versions: [5, 6, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V6:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V6: [S1, S2]
+    V7: [S1, S2]
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F13:
@@ -656,27 +448,17 @@
   sensor: SSMI
   satellite: F13
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF13SSMI
   start_time: 1995-05-03 15:09:53
   end_time: 2009-11-20 01:08:59
-  available_versions:
-  - 5
-  - 6
-  - 7
+  available_versions: [5, 6, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V6:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V6: [S1, S2]
+    V7: [S1, S2]
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F14:
@@ -684,27 +466,17 @@
   sensor: SSMI
   satellite: F14
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF14SSMI
   start_time: 1997-05-07 17:25:06
   end_time: 2008-08-24 00:48:17
-  available_versions:
-  - 5
-  - 6
-  - 7
+  available_versions: [5, 6, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V6:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V6: [S1, S2]
+    V7: [S1, S2]
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F15:
@@ -712,27 +484,17 @@
   sensor: SSMI
   satellite: F15
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF15SSMI
   start_time: 2000-02-23 09:49:02
   end_time: 2006-08-14 01:23:04
-  available_versions:
-  - 5
-  - 6
-  - 7
+  available_versions: [5, 6, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    V6:
-    - S1
-    - S2
-    V7:
-    - S1
-    - S2
+    V5: [S1, S2]
+    V6: [S1, S2]
+    V7: [S1, S2]
   product_level: 1C
   full_product_level: 1C
 1C-SSMIS-F16:
@@ -740,28 +502,16 @@
   sensor: SSMIS
   satellite: F16
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/SSMIS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF16SSMIS
   start_time: 2005-11-20 02:35:27
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    - S4
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
+    V5: [S1, S2, S3, S4]
+    V7: [S1, S2, S3, S4]
   product_level: 1C
   full_product_level: 1C
 1C-SSMIS-F17:
@@ -769,28 +519,16 @@
   sensor: SSMIS
   satellite: F17
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/SSMIS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF17SSMIS
   start_time: 2008-03-19 10:14:53
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    - S4
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
+    V5: [S1, S2, S3, S4]
+    V7: [S1, S2, S3, S4]
   product_level: 1C
   full_product_level: 1C
 1C-SSMIS-F18:
@@ -798,28 +536,16 @@
   sensor: SSMIS
   satellite: F18
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: 1C/SSMIS
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF18SSMIS
   start_time: 2010-03-08 00:32:16
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    - S4
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
+    V5: [S1, S2, S3, S4]
+    V7: [S1, S2, S3, S4]
   product_level: 1C
   full_product_level: 1C
 1C-SSMIS-F19:
@@ -827,27 +553,16 @@
   sensor: SSMIS
   satellite: F19
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CF19SSMIS
   start_time: 2014-12-18 14:05:14
   end_time: 2016-02-11 11:39:37
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    - S4
-    V7:
-    - S1
-    - S2
-    - S3
-    - S4
+    V5: [S1, S2, S3, S4]
+    V7: [S1, S2, S3, S4]
   product_level: 1C
   full_product_level: 1C
 1C-TMI:
@@ -855,25 +570,16 @@
   sensor: TMI
   satellite: TRMM
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: 1C
   ges_disc_dir: TRMM_L1/GPM_1CTRMMTMI
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-08 15:25:02
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    - S2
-    - S3
-    V7:
-    - S1
-    - S2
-    - S3
+    V5: [S1, S2, S3]
+    V7: [S1, S2, S3]
   product_level: 1C
   full_product_level: 1C
 2A-AMSR2-GCOMW1:
@@ -881,21 +587,16 @@
   sensor: AMSR2
   satellite: GCOMW1
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/AMSR2
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFGCOMW1AMSR2
   start_time: 2014-01-31 23:57:35
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-ATMS-NOAA20:
@@ -903,21 +604,16 @@
   sensor: ATMS
   satellite: NOAA20
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA20ATMS
   start_time: 2017-11-29 04:46:18
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-ATMS-NOAA21:
@@ -925,19 +621,15 @@
   sensor: ATMS
   satellite: NOAA21
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA21ATMS
   start_time: 2023-02-01 00:23:08
   end_time: null
-  available_versions:
-  - 7
+  available_versions: [7]
   scan_modes:
-    V7:
-    - S1
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-ATMS-NPP:
@@ -945,21 +637,16 @@
   sensor: ATMS
   satellite: NPP
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNPPATMS
   start_time: 2014-01-31 23:41:54
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-GMI:
@@ -967,22 +654,16 @@
   sensor: GMI
   satellite: GPM
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/GMI
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFGPMGMI
   start_time: 2014-03-04 17:59:32
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-MHS-METOPA:
@@ -990,20 +671,16 @@
   sensor: MHS
   satellite: METOPA
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPAMHS
   start_time: 2014-01-31 23:23:51
   end_time: 2019-12-23 22:37:47
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-MHS-METOPB:
@@ -1011,21 +688,16 @@
   sensor: MHS
   satellite: METOPB
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPBMHS
   start_time: 2014-01-31 22:37:53
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-MHS-METOPC:
@@ -1033,21 +705,16 @@
   sensor: MHS
   satellite: METOPC
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPCMHS
   start_time: 2019-07-02 23:18:47
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-MHS-NOAA18:
@@ -1055,20 +722,16 @@
   sensor: MHS
   satellite: NOAA18
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA18MHS
   start_time: 2014-01-31 22:43:29
   end_time: 2018-10-20 19:58:16
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-MHS-NOAA19:
@@ -1076,21 +739,16 @@
   sensor: MHS
   satellite: NOAA19
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA19MHS
   start_time: 2014-01-31 22:42:30
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-SAPHIR-MT1:
@@ -1098,19 +756,15 @@
   sensor: SAPHIR
   satellite: MT1
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: PRPS
   pps_rs_dir: prps
   ges_disc_dir: GPM_L2/GPM_2APRPSMT1SAPHIR
   start_time: 2014-01-31 22:45:58
   end_time: 2022-01-01 00:13:27
-  available_versions:
-  - 6
+  available_versions: [6]
   scan_modes:
-    V6:
-    - S1
+    V6: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-SSMIS-F16:
@@ -1118,21 +772,16 @@
   sensor: SSMIS
   satellite: F16
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF16SSMIS
   start_time: 2014-01-31 23:33:43
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-SSMIS-F17:
@@ -1140,21 +789,16 @@
   sensor: SSMIS
   satellite: F17
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF17SSMIS
   start_time: 2014-01-31 22:50:50
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-SSMIS-F18:
@@ -1162,21 +806,16 @@
   sensor: SSMIS
   satellite: F18
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF18SSMIS
   start_time: 2014-01-31 23:42:13
   end_time: null
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-SSMIS-F19:
@@ -1184,21 +823,16 @@
   sensor: SSMIS
   satellite: F19
   product_category: PMW
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF19SSMIS
   start_time: 2014-12-18 14:05:14
   end_time: 2016-02-11 11:39:37
-  available_versions:
-  - 5
+  available_versions: [5]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A
 2A-AMSR2-GCOMW1-CLIM:
@@ -1206,21 +840,16 @@
   sensor: AMSR2
   satellite: GCOMW1
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/AMSR2
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFGCOMW1AMSR2_CLIM
   start_time: 2012-07-02 22:31:17
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-AMSRE-AQUA-CLIM:
@@ -1228,21 +857,16 @@
   sensor: AMSRE
   satellite: AQUA
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFAQUAAMSRE_CLIM
   start_time: 2002-06-01 15:48:29
   end_time: 2011-10-04 07:44:29
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-AMSUB-NOAA15-CLIM:
@@ -1250,21 +874,16 @@
   sensor: AMSUB
   satellite: NOAA15
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA15AMSUB_CLIM
   start_time: 2000-01-01 01:16:38
   end_time: 2010-09-15 02:12:20
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-AMSUB-NOAA16-CLIM:
@@ -1272,21 +891,16 @@
   sensor: AMSUB
   satellite: NOAA16
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA16AMSUB_CLIM
   start_time: 2000-10-04 12:12:03
   end_time: 2010-05-01 02:31:07
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-AMSUB-NOAA17-CLIM:
@@ -1294,21 +908,16 @@
   sensor: AMSUB
   satellite: NOAA17
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA17AMSUB_CLIM
   start_time: 2002-06-28 19:13:47
   end_time: 2009-12-18 01:33:07
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-ATMS-NOAA20-CLIM:
@@ -1316,21 +925,16 @@
   sensor: ATMS
   satellite: NOAA20
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA20ATMS_CLIM
   start_time: 2017-11-29 04:46:18
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-ATMS-NOAA21-CLIM:
@@ -1338,18 +942,15 @@
   sensor: ATMS
   satellite: NOAA21
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA21ATMS_CLIM
   start_time: 2023-04-11 14:00:40
   end_time: null
-  available_versions:
-  - 7
+  available_versions: [7]
   scan_modes:
-    V7:
-    - S1
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-ATMS-NPP-CLIM:
@@ -1357,21 +958,16 @@
   sensor: ATMS
   satellite: NPP
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/ATMS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNPPATMS_CLIM
   start_time: 2011-11-08 20:04:11
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-GMI-CLIM:
@@ -1379,21 +975,16 @@
   sensor: GMI
   satellite: GPM
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/GMI
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFGPMGMI_CLIM
   start_time: 2014-03-04 17:59:32
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-METOPA-CLIM:
@@ -1401,21 +992,16 @@
   sensor: MHS
   satellite: METOPA
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPAMHS_CLIM
   start_time: 2006-11-23 13:47:35
   end_time: 2019-12-23 22:37:47
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-METOPB-CLIM:
@@ -1423,21 +1009,16 @@
   sensor: MHS
   satellite: METOPB
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPBMHS_CLIM
   start_time: 2012-09-25 09:12:03
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-METOPC-CLIM:
@@ -1445,21 +1026,16 @@
   sensor: MHS
   satellite: METOPC
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFMETOPCMHS_CLIM
   start_time: 2018-11-16 08:26:37
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-NOAA18-CLIM:
@@ -1467,21 +1043,16 @@
   sensor: MHS
   satellite: NOAA18
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA18MHS_CLIM
   start_time: 2005-05-26 15:02:35
   end_time: 2018-10-20 19:58:16
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-NOAA19-CLIM:
@@ -1489,21 +1060,16 @@
   sensor: MHS
   satellite: NOAA19
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/MHS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA19MHS_CLIM
   start_time: 2009-02-12 13:20:00
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SAPHIR-MT1-CLIM:
@@ -1511,18 +1077,15 @@
   sensor: SAPHIR
   satellite: MT1
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: PRPS
   pps_rs_dir: prps
   ges_disc_dir: GPM_L2/GPM_2APRPSMT1SAPHIR_CLIM
   start_time: 2011-10-13 04:12:29
   end_time: 2022-01-01 00:13:27
-  available_versions:
-  - 6
+  available_versions: [6]
   scan_modes:
-    V6:
-    - S1
+    V6: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F08-CLIM:
@@ -1530,21 +1093,16 @@
   sensor: SSMI
   satellite: F08
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF08SSMI_CLIM
   start_time: 1987-07-09 12:55:14
   end_time: 1991-12-31 19:54:12
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F10-CLIM:
@@ -1552,21 +1110,16 @@
   sensor: SSMI
   satellite: F10
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF10SSMI_CLIM
   start_time: 1990-12-08 14:49:37
   end_time: 1997-11-14 19:51:59
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F11-CLIM:
@@ -1574,21 +1127,16 @@
   sensor: SSMI
   satellite: F11
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF11SSMI_CLIM
   start_time: 1991-12-03 18:06:01
   end_time: 2000-05-16 16:57:56
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F13-CLIM:
@@ -1596,21 +1144,16 @@
   sensor: SSMI
   satellite: F13
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF13SSMI_CLIM
   start_time: 1995-05-03 15:09:53
   end_time: 2009-11-20 01:08:59
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F14-CLIM:
@@ -1618,21 +1161,16 @@
   sensor: SSMI
   satellite: F14
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF14SSMI_CLIM
   start_time: 1997-05-07 17:25:06
   end_time: 2008-08-24 00:48:17
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F15-CLIM:
@@ -1640,21 +1178,16 @@
   sensor: SSMI
   satellite: F15
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF15SSMI_CLIM
   start_time: 2000-02-23 09:49:02
   end_time: 2006-08-14 01:23:04
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMIS-F16-CLIM:
@@ -1662,21 +1195,16 @@
   sensor: SSMIS
   satellite: F16
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF16SSMIS_CLIM
   start_time: 2005-11-20 02:35:27
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMIS-F17-CLIM:
@@ -1684,21 +1212,16 @@
   sensor: SSMIS
   satellite: F17
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF17SSMIS_CLIM
   start_time: 2008-03-19 10:14:53
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMIS-F18-CLIM:
@@ -1706,21 +1229,16 @@
   sensor: SSMIS
   satellite: F18
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF18SSMIS_CLIM
   start_time: 2010-03-08 00:32:16
   end_time: null
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMIS-F19-CLIM:
@@ -1728,21 +1246,16 @@
   sensor: SSMIS
   satellite: F19
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: GPROF/SSMIS
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFF19SSMIS_CLIM
   start_time: 2014-12-18 14:05:14
   end_time: 2016-02-11 11:39:37
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-TMI-CLIM:
@@ -1750,21 +1263,16 @@
   sensor: TMI
   satellite: TRMM
   product_category: PMW
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: gprof
   ges_disc_dir: TRMM_L2/GPM_2AGPROFTRMMTMI_CLIM
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-08 15:25:02
-  available_versions:
-  - 5
-  - 7
+  available_versions: [5, 7]
   scan_modes:
-    V5:
-    - S1
-    V7:
-    - S1
+    V5: [S1]
+    V7: [S1]
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-DPR:
@@ -1772,25 +1280,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: radar/DprL2
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2ADPR
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - NS
-    - MS
-    - HS
-    V7:
-    - FS
-    - HS
+    V6: [NS, MS, HS]
+    V7: [FS, HS]
   product_level: 2A
   full_product_level: 2A
 2A-Ka:
@@ -1798,24 +1297,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: radar/KaL2
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2AKa
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - HS
-    - MS
-    V7:
-    - HS
-    - FS
+    V6: [MS, HS]
+    V7: [FS, HS]
   product_level: 2A
   full_product_level: 2A
 2A-Ku:
@@ -1823,22 +1314,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: radar/KuL2
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2AKu
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - NS
-    V7:
-    - FS
+    V6: [NS]
+    V7: [FS]
   product_level: 2A
   full_product_level: 2A
 2A-PR:
@@ -1846,21 +1331,16 @@
   sensor: PR
   satellite: TRMM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: TRMM_L2/GPM_2APR
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-01 11:58:38
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - NS
-    V7:
-    - FS
+    V6: [NS]
+    V7: [FS]
   product_level: 2A
   full_product_level: 2A
 2A-ENV-DPR:
@@ -1868,23 +1348,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2ADPRENV
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - NS
-    - HS
-    V7:
-    - FS
-    - HS
+    V6: [NS, HS]
+    V7: [FS, HS]
   product_level: 2A
   full_product_level: 2A-ENV
 2A-ENV-Ka:
@@ -1892,23 +1365,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2AKaENV
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - HS
-    - MS
-    V7:
-    - HS
-    - FS
+    V6: [HS, MS]
+    V7: [HS, FS]
   product_level: 2A
   full_product_level: 2A-ENV
 2A-ENV-Ku:
@@ -1916,21 +1382,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2AKuENV
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - NS
-    V7:
-    - FS
+    V6: [NS]
+    V7: [FS]
   product_level: 2A
   full_product_level: 2A-ENV
 2A-ENV-PR:
@@ -1938,21 +1399,16 @@
   sensor: PR
   satellite: TRMM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: TRMM_L2/GPM_2APRENV
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-01 11:58:38
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - NS
-    V7:
-    - FS
+    V6: [NS]
+    V7: [FS]
   product_level: 2A
   full_product_level: 2A-ENV
 2A-GPM-SLH:
@@ -1960,21 +1416,16 @@
   sensor: DPR
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2HSLH
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - Swath
-    V7:
-    - Swath
+    V6: [Swath]
+    V7: [Swath]
   product_level: 2A
   full_product_level: 2A
 2A-TRMM-SLH:
@@ -1982,21 +1433,16 @@
   sensor: PR
   satellite: TRMM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: TRMM_L2/GPM_2HSLH_TRMM
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-01 11:58:38
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - Swath
-    V7:
-    - Swath
+    V6: [Swath]
+    V7: [Swath]
   product_level: 2A
   full_product_level: 2A
 2B-GPM-CSAT:
@@ -2004,18 +1450,15 @@
   sensor: null
   satellite: GPM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: null
   start_time: null
   end_time: null
-  available_versions:
-  - 4
+  available_versions: [4]
   scan_modes:
-    V4:
-    - null
+    V4: [null]
   product_level: 2B
   full_product_level: 2B
 2B-TRMM-CSAT:
@@ -2023,174 +1466,127 @@
   sensor: null
   satellite: TRMM
   product_category: RADAR
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: null
   start_time: null
   end_time: null
-  available_versions:
-  - 4
+  available_versions: [4]
   scan_modes:
-    V4:
-    - null
+    V4: [null]
   product_level: 2B
   full_product_level: 2B
 2B-GPM-CORRA:
   pattern: 2B.GPM.DPRGMI.CORRA*
-  sensor:
-  - DPR
-  - GMI
+  sensor: [DPR, GMI]
   satellite: GPM
   product_category: CMB
-  product_types:
-  - RS
-  - NRT
+  product_types: [RS, NRT]
   pps_nrt_dir: combine
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2BCMB
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - NS
-    - MS
-    V7:
-    - KuKaGMI
-    - KuGMI
+    V6: [NS, MS]
+    V7: [KuKaGMI, KuGMI]
   product_level: 2B
   full_product_level: 2B
 2B-TRMM-CORRA:
   pattern: 2B.TRMM.PRTMI.CORRA*
-  sensor:
-  - PR
-  - TMI
+  sensor: [PR, TMI]
   satellite: TRMM
   product_category: CMB
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: TRMM_L2/GPM_2BCMB_TRMM
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-01 11:58:38
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - NS
-    V7:
-    - KuTMI
+    V6: [NS]
+    V7: [KuTMI]
   product_level: 2B
   full_product_level: 2B
 2B-GPM-CSH:
   pattern: 2B.GPM.DPRGMI.2HCSHv*
-  sensor:
-  - DPR
-  - GMI
+  sensor: [DPR, GMI]
   satellite: GPM
   product_category: CMB
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: GPM_L2/GPM_2HCSH
   start_time: 2014-03-08 22:09:50
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - Swath
-    V7:
-    - Swath
+    V6: [Swath]
+    V7: [Swath]
   product_level: 2B
   full_product_level: 2B
 2B-TRMM-CSH:
   pattern: 2B.TRMM.PRTMI.2HCSHv*
-  sensor:
-  - PR
-  - TMI
+  sensor: [PR, TMI]
   satellite: TRMM
   product_category: CMB
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: TRMM_L2/GPM_2HCSH_TRMM
   start_time: 1997-12-07 23:57:17
   end_time: 2015-04-01 11:58:38
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - Swath
-    V7:
-    - Swath
+    V6: [Swath]
+    V7: [Swath]
   product_level: 2B
   full_product_level: 2B
 IMERG-ER:
   pattern: 3B-HHR-E.MS.MRG*
   product_category: IMERG
-  product_types:
-  - NRT
+  product_types: [NRT]
   pps_nrt_dir: imerg/early
   pps_rs_dir: null
   ges_disc_dir: GPM_L3/GPM_3IMERGHHE
   start_time: 2000-06-01 00:00:00
   end_time: null
-  available_versions:
-  - 6
+  available_versions: [6]
   scan_modes:
-    V6:
-    - Grid
-    V7:
-    - Grid
+    V6: [Grid]
+    V7: [Grid]
   product_level: 3B
   full_product_level: 3B-HHR-E
 IMERG-LR:
   pattern: 3B-HHR-L.MS.MRG*
   product_category: IMERG
-  product_types:
-  - NRT
+  product_types: [NRT]
   pps_nrt_dir: imerg/late
   pps_rs_dir: null
   ges_disc_dir: GPM_L3/GPM_3IMERGHHL
   start_time: 2000-06-01 00:00:00
   end_time: null
-  available_versions:
-  - 6
+  available_versions: [6]
   scan_modes:
-    V6:
-    - Grid
-    V7:
-    - Grid
+    V6: [Grid]
+    V7: [Grid]
   product_level: 3B
   full_product_level: 3B-HHR-L
 IMERG-FR:
   pattern: 3B-HHR.MS.MRG.*
   product_category: IMERG
-  product_types:
-  - RS
+  product_types: [RS]
   pps_nrt_dir: null
   pps_rs_dir: imerg
   ges_disc_dir: GPM_L3/GPM_3IMERGHH
   start_time: 2000-06-01 00:00:00
   end_time: null
-  available_versions:
-  - 6
-  - 7
+  available_versions: [6, 7]
   scan_modes:
-    V6:
-    - Grid
-    V7:
-    - Grid
+    V6: [Grid]
+    V7: [Grid]
   product_level: 3B
   full_product_level: 3B-HHR

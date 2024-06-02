@@ -1,0 +1,48 @@
+---
+name: Package Release to PyPI
+on:
+  push:
+    tags: [v*]
+jobs:
+  build-n-publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Install pypa/build
+        run: >-
+          python -m
+          pip install build
+      - name: Build a binary wheel
+        run: >-
+          python -m build
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Get Asset name
+        if: success() || failure()
+        run: |
+          export PKG=$(ls dist/ | grep tar)
+          set -- $PKG
+          echo "asset_name=$1" >> $GITHUB_ENV
+      - name: Create GitHub Release
+        if: success() || failure()
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref }}
+          tag_name: ${{ github.ref }}
+          files: |
+            dist/${{ env.asset_name }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token

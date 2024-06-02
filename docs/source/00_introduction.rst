@@ -2,7 +2,7 @@
 Introduction
 =================
 
-In this section we provide an introduction to satellite missions, sensors and products available with GPM-API.
+In this section, an introduction to satellite missions, sensors and products available with GPM-API is provided.
 Concepts are introduced in a progressive manner, but feel free to skip to the section that is of interest to you.
 
 .. contents:: Table of Contents
@@ -264,7 +264,7 @@ GPM Sensors
 -------------
 
 The GPM mission relies on passive and active remote sensing measurements to measure the properties of precipitation.
-In the following subsections we introduce some theoretical fundamentals of spaceborne radars and passive microwave sensors.
+In the following subsections some theoretical fundamentals of spaceborne radars and passive microwave sensors are introduced.
 
 
 .. _radars:
@@ -380,7 +380,7 @@ Middle and high frequencies (e.g., 89 GHz and 183 GHz) are utilized to detect BT
 It's important to note that unlike infrared radiation, which is strongly tied with an object's temperature, the emitted microwave radiation
 is governed by the object's physical properties (which controls the microwave emissivity).
 
-Here below we display the BTs sensed by GMI Hurricane Ida's landfall on August 29, 2021, at 15:13:00 UTC.
+The figure below displays the BTs sensed by GMI Hurricane Ida's landfall on August 29, 2021, at 15:13:00 UTC.
 Please note the BT depression over land in the high frequency channels, and the higher BT in the lower frequency channels over the ocean.
 
 .. image:: /static/example_pmw_frequency.png
@@ -391,8 +391,8 @@ Please note the BT depression over land in the high frequency channels, and the 
 GPM Data Archive
 -------------------
 
-GPM-API provides tools to easily search files on the `Precipitation Processing System` (PPS)
-and the `Goddard Earth Sciences Data and Information Services Center` (GES DISC) data archives
+GPM-API provides tools to easily search files on the *Precipitation Processing System* (PPS)
+and the *Goddard Earth Sciences Data and Information Services Center* (GES DISC) data archives
 and to download them to your local machine.
 However, the PPS and GES DISC data archives can also be explored on your browser.
 
@@ -458,7 +458,7 @@ for detailed information on product variables and their attributes.
 GPM Products
 -------------------
 
-Here below we provide an introduction to the different types of GPM products.
+In the following subsections the different types of GPM products are presented.
 
 
 .. _radar_reflectivity:
@@ -574,8 +574,8 @@ By leveraging measurements from Geostationary (GEO) IR imagers and the :ref:`GPM
 IMERG provides a "best-estimate" of 30-minute average precipitation rates.
 
 IMERG generates three distinct precipitation products.
-The `IMERG Early` (``IMERG-ER``) product  is available 4 hours after real-time, followed by `IMERG Late` (``IMERG-LR``) after 14 hours.
-The final product version, `IMERG Final` (``IMERG-FR``), is released approximately 3.5 months later.
+The *IMERG Early* (``IMERG-ER``) product  is available 4 hours after real-time, followed by *IMERG Late* (``IMERG-LR``) after 14 hours.
+The final product version, *IMERG Final* (``IMERG-FR``), is released approximately 3.5 months later.
 
 The 4-hour and 14-hour delays for Early and Late products are necessary to gather and process satellite measurements from various space agencies.
 The 3.5-month delay for the Final product enables the incorporation of rain gauge data from the Global Precipitation Climatology Centre (GPCC)
@@ -663,8 +663,8 @@ please refer to `Tao et al., 2022 <https://www.jstage.jst.go.jp/article/jmsj/100
 Coincidence Datasets
 ------------------------
 
-Here below we detail some of the coincidence satellite datasets available within the TRMM and GPM era.
-None of the following datasets is currently supported by GPM-API but we welcome contributions to expand the API to include these datasets.
+In the following subsections some of the coincidence satellite datasets available within the TRMM and GPM era are presented.
+None of the following datasets is currently supported by GPM-API but we welcome contributions to expand the software capabilities.
 
 AMSR-E - CloudSat
 ~~~~~~~~~~~~~~~~~~~
@@ -715,7 +715,7 @@ and the `Algorithm Theoretical Basis Document (ATBD) <https://gpm.nasa.gov/resou
 
 The coincidence dataset can be download with GPM-API using the ``2B-GPM-CSAT`` and ``2B-TRMM-CSAT`` product acronyms.
 
-Here below we display an example quick-look radar time-height profile imagery from the GPM - CloudSat Coincidence dataset.
+The figure below displays a quick-look radar time-height profile imagery from the GPM - CloudSat Coincidence dataset.
 
 .. image:: /static/CSAT-GPM-COIN.png
 
@@ -750,8 +750,8 @@ and from the `Advanced Himawari Imager (AHI) <https://www.data.jma.go.jp/mscweb/
 Features Database
 ------------------
 
-Here below we provide details about several "feature" database derived from the TRMM and GPM sensors.
-While these datasets are not currently supported by the GPM-API, we welcome contributions to expand the API to include them.
+In the following subsections several "feature" database derived from the TRMM and GPM sensors are described.
+While these datasets are not currently supported by the GPM-API, we welcome contributions to expand the software capabilities.
 
 
 .. _tamu_cc:
@@ -813,7 +813,7 @@ TC-PRIMED contains over 197'000 PMW overpasses of 2'300 global tropical cyclones
 TC-PF
 ~~~~~~~~~~~
 
-The `Tropical Cyclone related Precipitation Feature` (TC-PF) database is a subset of the `TAMU-CC Precipitation Features` database.
+The *Tropical Cyclone related Precipitation Feature* (TC-PF) database is a subset of the *TAMU-CC Precipitation Features* database.
 Please refer to `Jiang et al., 2011 <https://journals.ametsoc.org/view/journals/apme/50/6/2011jamc2662.1.xml>`_ for more information on the TC-PF database.
 Data are available at `this link <https://ghrc.nsstc.nasa.gov/pub/tcpf/tcpf-L1/data/>`_.
 
@@ -888,7 +888,7 @@ of 30 minutes and 0.1° and 0.1° spatial resolutions are GSMAP and IMERG.
 These products are based on the merging of multiple satellite sensors, including PMW and VIS/IR sensors.
 
 Based on the type of applications your are interested in, you may also want to consider other products, such as PERSIANN, MSWEP, and ERA5.
-Here below we provide a table summarizing some high-quality global precipitation products.
+THe following table summarizes some high-quality global precipitation products.
 
 +------------+---------------------------------------------------------------------------------+---------------------+--------------------+--------------------------------------------------------------------------------------------------+
 | Acronym    | Full Name                                                                       | Temporal Resolution | Spatial Resolution | Data Source                                                                                      |

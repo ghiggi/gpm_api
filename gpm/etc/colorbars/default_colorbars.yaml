@@ -1,3 +1,4 @@
+---
 reflectivity:
   cmap:
     name: Spectral_r
@@ -12,8 +13,7 @@ reflectivity:
     extendfrac: 0.05
     label: Reflectivity [$dBZ$]
   auxiliary:
-    category:
-    - reflectivity
+    category: [reflectivity]
 dual_frequency_ratio:
   cmap:
     name: turbo
@@ -61,18 +61,7 @@ probability_1:
     under_color: none
   norm:
     name: BoundaryNorm
-    boundaries:
-    - 0.001
-    - 0.1
-    - 0.2
-    - 0.3
-    - 0.4
-    - 0.5
-    - 0.6
-    - 0.7
-    - 0.8
-    - 0.9
-    - 1.0
+    boundaries: [0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
   auxiliary:
     category: probability
     citation: pycolorbar
@@ -87,18 +76,7 @@ probability_100:
     under_color: none
   norm:
     name: BoundaryNorm
-    boundaries:
-    - 0.1
-    - 10
-    - 20
-    - 30
-    - 40
-    - 50
-    - 60
-    - 70
-    - 80
-    - 90
-    - 100
+    boundaries: [0.1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
   auxiliary:
     category: probability
     citation: pycolorbar
@@ -114,31 +92,29 @@ precipitation_rate:
   norm:
     name: BoundaryNorm
     boundaries:
-    - 0.08
-    - 0.16
-    - 0.25
-    - 0.4
-    - 0.63
-    - 1
-    - 1.6
-    - 2.5
-    - 4
-    - 6.3
-    - 10
-    - 16
-    - 25
-    - 40
-    - 63
-    - 100
-    - 160
+      - 0.08
+      - 0.16
+      - 0.25
+      - 0.4
+      - 0.63
+      - 1
+      - 1.6
+      - 2.5
+      - 4
+      - 6.3
+      - 10
+      - 16
+      - 25
+      - 40
+      - 63
+      - 100
+      - 160
   cbar:
     extend: max
     extendrect: false
     label: Precipitation intensity [$mm \ hr^{-1}$]
   auxiliary:
-     category:
-     - pysteps
-     - precipitation
+    category: [pysteps, precipitation]
 reflectivity_pysteps:
   cmap:
     name: STEPS-MCH
@@ -147,19 +123,6 @@ reflectivity_pysteps:
     over_color: darkred
   norm:
     name: BoundaryNorm
-    boundaries:
-    - 10
-    - 15
-    - 20
-    - 25
-    - 30
-    - 35
-    - 40
-    - 45
-    - 50
-    - 55
-    - 60
+    boundaries: [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
   auxiliary:
-     category:
-     - reflectivity
-     - pysteps
+    category: [reflectivity, pysteps]

@@ -9,7 +9,7 @@ To download the data, it is necessary to first create two accounts and successiv
 Register to the NASA GES DISC
 -------------------------------
 
-To access the GPM data through the GES DISC Data Archive you need to have an `Earthdata Login` account.
+To access the GPM data through the GES DISC Data Archive you need to have an *Earthdata Login* account.
 If you don't have one, you can register on the `EarthData Portal <https://urs.earthdata.nasa.gov/>`__.
 
 Once you have an EarthData account, to access the GES DISC Data Archive you need to authorize
@@ -46,7 +46,7 @@ as well as other parameters such as the directory on your local machine where to
 save the GPM dataset of interest.
 
 To facilitate the creation of the configuration file, you can adapt and run the following script in Python.
-The configuration file will be created in the user's home directory under the name ``.config_gpm.yaml``.
+The configuration file will be created in the user's home directory under the name ``.config_gpm_api.yaml``.
 
 .. code-block:: python
 
@@ -235,8 +235,8 @@ For more information on the available options, you can use the following command
 Open the data
 ----------------
 
-Within the GPM-API, we use the name `granule` to refer to a single file,
-while the name `dataset`` is used to refer to a collection of granules.
+Within the GPM-API, the name *granule* is used to refer to a single file,
+while the name *dataset* is used to refer to a collection of granules.
 
 GPM-API enables to open single or multiple granules into an ``xarray.Dataset``, an object designed for working with labeled multi-dimensional arrays.
 
@@ -284,4 +284,4 @@ The following example shows how to download and open a dataset over a specific t
 
 You are now ready to explore the various :ref:`tutorials <tutorials>` available in the documentation and learn more about the GPM-API functionalities.
 
-If you are not familiar with xarray, we highly suggest to first have a look also at the `xarray documentation <http://xarray.pydata.org/en/stable/>`__.
+If you are not familiar with xarray, it is highly suggested to first have a look also at the `xarray documentation <http://xarray.pydata.org/en/stable/>`__.

@@ -1,3 +1,4 @@
+---
 Afghanistan: AF
 Albania: AL
 Algeria: DZ
@@ -114,7 +115,7 @@ New Zealand: NZ
 Nicaragua: NI
 Niger: NE
 Nigeria: NG
-Norway: 'NO'
+Norway: "NO"
 Oman: OM
 Pakistan: PK
 Panama: PA

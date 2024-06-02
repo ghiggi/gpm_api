@@ -48,9 +48,17 @@ def _get_decoding_function(module_name):
 
 def decode_variables(ds, product):
     """Decode the variables of a given GPM product."""
+    # Decode variables of 1B-<RADAR> products
+    if product in available_products(product_categories="RADAR", product_levels="1B"):
+        ds = _get_decoding_function("gpm.dataset.decoding.decode_1b_radar")(ds)
+
     # Decode variables of 2A-<RADAR> products
-    if product in available_products(product_categories="RADAR", product_levels="2A"):
+    elif product in available_products(product_categories="RADAR", product_levels="2A"):
         ds = _get_decoding_function("gpm.dataset.decoding.decode_2a_radar")(ds)
+
+    # Decode variables of 2B-<CORRA> products
+    elif "CORRA" in product:
+        ds = _get_decoding_function("gpm.dataset.decoding.decode_2b_corra")(ds)
 
     # Decode variables of 2A-<PMW> products
     elif product in available_products(product_categories="PMW", product_levels="2A"):

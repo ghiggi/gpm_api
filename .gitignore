@@ -9,11 +9,10 @@
 /dask-worker-space/
 
 # Byte-compiled / optimized / DLL files
-__pycache__/
+*/__pycache__/
 *.py[cod]
 *$py.class
-gpm/__pycache__/
-gpm/utils/__pycache__/
+.pytest_cache/*
 
 # C extensions
 *.so
@@ -39,6 +38,7 @@ share/python-wheels/
 MANIFEST
 _version.py
 gpm/_version.py
+docs/build/
 
 
 # PyInstaller

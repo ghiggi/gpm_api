@@ -45,9 +45,12 @@ def get_class_methods(accessor_class) -> dict[str, Callable]:
     return {name: function for name, function in method_tuples_list if not name.startswith("_")}
 
 
+# Create dictionary {<methond_name>: <callable>}
 base_accessor_methods_dict = get_class_methods(GPM_Base_Accessor)
 dataset_accessor_methods_dict = get_class_methods(GPM_Dataset_Accessor)
 dataarray_accessor_methods_dict = get_class_methods(GPM_DataArray_Accessor)
+
+# List accessor methods
 base_accessor_methods = list(base_accessor_methods_dict.values())
 dataset_accessor_methods = [v for v in dataset_accessor_methods_dict.values() if v not in base_accessor_methods]
 dataarray_accessor_methods = [v for v in dataarray_accessor_methods_dict.values() if v not in base_accessor_methods]
@@ -55,7 +58,10 @@ accessor_methods = base_accessor_methods + dataset_accessor_methods + dataarray_
 
 
 def get_arguments_list(function: Callable, remove_self: bool = True) -> list:
-    """Get list of arguments of a function."""
+    """Get list of function arguments.
+
+    If the first argument is 'self', is removed from the list if `remove_self=True`.
+    """
     signature = inspect.signature(function)
     arguments = list(signature.parameters.keys())
 
@@ -71,7 +77,7 @@ def get_function_location(function: Callable) -> str:
 
 
 def get_imported_gpm_method_path(function: Callable) -> tuple[str, str]:
-    """Get path of imported gpm method in accessor method source code (format is "module.method"))."""
+    """Get the path of the original GPM-API function called by the accessor method."""
     source = inspect.getsource(function)
     import_pattern = re.compile(r"from (\S+) import (\S+)")
     match = import_pattern.search(source)
@@ -84,6 +90,7 @@ def get_imported_gpm_method_path(function: Callable) -> tuple[str, str]:
 
 
 def get_imported_gpm_method(accessor_method: Callable) -> Callable:
+    """Get the original GPM-API function called by the accessor method."""
     imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
     module = importlib.import_module(imported_module)
     return getattr(module, imported_method_name)

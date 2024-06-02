@@ -30,6 +30,7 @@ import os
 import datatree
 import xarray as xr
 
+import gpm
 from gpm.dataset.attrs import decode_string
 from gpm.dataset.dimensions import _rename_datatree_dimensions
 
@@ -79,17 +80,20 @@ def check_valid_granule(filepath):
         with xr.open_dataset(filepath, engine="netcdf4", group="") as ds:
             check_non_empty_granule(ds, filepath)
     except Exception as e:
+        if "an EMPTY granule" in str(e):
+            raise e
         _identify_error(e, filepath)
 
 
 def _identify_error(e, filepath):
     """Identify error when opening HDF file."""
     error_str = str(e)
-    # TODO: to create test case with corrupted file (i.e. interrupted download)
-    # netCDF4._netCDF4._ensure_nc_success
     if "[Errno -101] NetCDF: HDF error" in error_str:
-        # os.remove(filepath) # TODO: gpm_api flag !
-        msg = f"The file {filepath} is corrupted and is being removed. It must be redownload."
+        info = ""
+        if gpm.config.get("remove_corrupted_files"):  # default False
+            info = " and is being removed"
+            os.remove(filepath)
+        msg = f"The file {filepath} is corrupted{info}. It must be redownload."
         raise ValueError(msg)
     if "[Errno -51] NetCDF: Unknown file format" in error_str:
         msg = f"The GPM-API is not currently able to read the file format of {filepath}. Report the issue please."

@@ -34,9 +34,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from pyproj import Geod
 from scipy.interpolate import griddata
 
 import gpm
+from gpm import get_plot_kwargs
 
 
 def is_generator(obj):
@@ -167,10 +169,10 @@ def get_valid_pcolormesh_inputs(x, y, data, rgb=False, mask_data=True):
     This operation is required to plot with pcolormesh since it
     does not accept non-finite values in the coordinates.
 
-    If  mask_data=True, data values with invalid coordinates are masked
+    If  ``mask_data=True``, data values with invalid coordinates are masked
     and a numpy masked array is returned.
     Masked data values are not displayed in pcolormesh !
-    If rgb=True, it assumes the RGB dimension is the last data dimension.
+    If ``rgb=True``, it assumes the RGB dimension is the last data dimension.
 
     """
     # Retrieve mask of invalid coordinates
@@ -181,6 +183,10 @@ def get_valid_pcolormesh_inputs(x, y, data, rgb=False, mask_data=True):
     # If no invalid coordinates, return original data
     if np.all(~mask):
         return x, y, data
+
+    # Check at least ome valid coordinates
+    if np.all(mask):
+        raise ValueError("No valid coordinates.")
 
     # Mask the data
     if mask_data:
@@ -193,6 +199,8 @@ def get_valid_pcolormesh_inputs(x, y, data, rgb=False, mask_data=True):
         data_masked = data
 
     # Infill x and y
+    # - Note: currently cause issue if NaN when crossing antimeridian ...
+    # --> TODO: interpolation should be done in X,Y,Z
     if np.any(x_invalid):
         x = _interpolate_data(x, method="linear")  # interpolation
         x = _interpolate_data(x, method="nearest")  # nearest neighbours outside the convex hull
@@ -203,6 +211,46 @@ def get_valid_pcolormesh_inputs(x, y, data, rgb=False, mask_data=True):
 
 
 def _interpolate_data(arr, method="linear"):
+    # 1D coordinate (i.e. along_track/cross_track view)
+    if arr.ndim == 1:
+        return _interpolate_1d_coord(arr, method=method)
+    # 2D coordinates (swath image)
+    return _interpolate_2d_coord(arr, method=method)
+
+
+def _interpolate_1d_coord(arr, method="linear"):
+    # Find invalid locations
+    is_invalid = ~np.isfinite(arr)
+
+    # Find the indices of NaN values
+    nan_indices = np.where(is_invalid)[0]
+
+    # Return array if not NaN values
+    if len(nan_indices) == 0:
+        return arr
+
+    # Find the indices of non-NaN values
+    non_nan_indices = np.where(~is_invalid)
+
+    # Create indices
+    indices = np.arange(len(arr))
+
+    # Points where we have valid data
+    points = indices[non_nan_indices]
+
+    # Points where data is NaN
+    points_nan = indices[nan_indices]
+
+    # Values at the non-NaN points
+    values = arr[non_nan_indices]
+
+    # Interpolate using griddata
+    arr_new = arr.copy()
+    arr_new[nan_indices] = griddata(points, values, points_nan, method=method)
+    return arr_new
+
+
+def _interpolate_2d_coord(arr, method="linear"):
     # Find invalid locations
     is_invalid = ~np.isfinite(arr)
 
@@ -234,17 +282,209 @@ def _interpolate_data(arr, method="linear"):
     return arr_new
 
 
+def _predict_forward_point(lon1, lat1, lon2, lat2, geod):
+    """
+    Predict a point in the forward direction at the same distance as between two given vertices.
+
+    Parameters
+    ----------
+    lon1, lat1 : Longitude and latitude of the starting vertex.
+    lon2, lat2 : Longitude and latitude of the ending vertex.
+    geod       : Pyproj Geod object for geodesic calculations.
+
+    Returns
+    -------
+    (lon3, lat3): Longitude and latitude of the predicted point in the forward direction.
+    """
+    # Calculate the forward azimuth and distance between the start and end vertices
+    fwd_azimuth, _, distance = geod.inv(lon1, lat1, lon2, lat2)
+
+    # Predict the point in the forward direction from the end vertex
+    lon3, lat3, _ = geod.fwd(lon2, lat2, fwd_azimuth, distance)
+
+    return lon3, lat3
+
+
+def compute_lon_lat_corners_for_1d_swath(lon, lat):
+    """Compute lon/lat corners from 1D swath.
+
+    It infer the footprint size based on the spacing between footprints.
+    """
+    geod = Geod(ellps="WGS84")
+    # Define corners between centroids
+    ortho_line1_lon = []
+    ortho_line1_lat = []
+    ortho_line2_lon = []
+    ortho_line2_lat = []
+
+    # Process each segment of the original line
+    for i in range(len(lon) - 1):
+        lon1, lat1 = lon[i], lat[i]
+        lon2, lat2 = lon[i + 1], lat[i + 1]
+
+        # Calculate the forward azimuth and distance between consecutive vertices
+        fwd_azimuth, _, distance = geod.inv(lon1, lat1, lon2, lat2, radians=False)
+
+        # Calculate the half distance for the orthogonal projection
+        half_distance = distance / 2
+
+        # Orthogonal azimuths, +90 degrees and -90 degrees
+        ortho_azimuth1 = (fwd_azimuth + 90) % 360
+        ortho_azimuth2 = (fwd_azimuth - 90) % 360
+
+        # Calculate the orthogonal points from the midpoint of the segment
+        mid_lon, mid_lat, _ = geod.fwd((lon1 + lon2) / 2, (lat1 + lat2) / 2, fwd_azimuth, distance / 2)
+
+        # Project the orthogonal points
+        lon_ortho1, lat_ortho1, _ = geod.fwd(mid_lon, mid_lat, ortho_azimuth1, half_distance)
+        lon_ortho2, lat_ortho2, _ = geod.fwd(mid_lon, mid_lat, ortho_azimuth2, half_distance)
+
+        # Append the calculated orthogonal points to the lines
+        ortho_line1_lon.append(lon_ortho1)
+        ortho_line1_lat.append(lat_ortho1)
+        ortho_line2_lon.append(lon_ortho2)
+        ortho_line2_lat.append(lat_ortho2)
+
+    # Extend at the extremities to define the corners
+    # - Extend the start of ortho_line1
+    start_ext_lon1, start_ext_lat1 = _predict_forward_point(
+        ortho_line1_lon[1],
+        ortho_line1_lat[1],
+        ortho_line1_lon[0],
+        ortho_line1_lat[0],
+        geod=geod,
+    )
+    # - Extend the end of ortho_line1
+    end_ext_lon1, end_ext_lat1 = _predict_forward_point(
+        ortho_line1_lon[-2],
+        ortho_line1_lat[-2],
+        ortho_line1_lon[-1],
+        ortho_line1_lat[-1],
+        geod=geod,
+    )
+
+    # - Extend the start of ortho_line2
+    start_ext_lon2, start_ext_lat2 = _predict_forward_point(
+        ortho_line2_lon[1],
+        ortho_line2_lat[1],
+        ortho_line2_lon[0],
+        ortho_line2_lat[0],
+        geod=geod,
+    )
+    # - Extend the end of ortho_line2
+    end_ext_lon2, end_ext_lat2 = _predict_forward_point(
+        ortho_line2_lon[-2],
+        ortho_line2_lat[-2],
+        ortho_line2_lon[-1],
+        ortho_line2_lat[-1],
+        geod=geod,
+    )
+
+    # Define corners
+    lon_corners1 = np.array([start_ext_lon1, *ortho_line1_lon, end_ext_lon1])
+    lat_corners1 = np.array([start_ext_lat1, *ortho_line1_lat, end_ext_lat1])
+
+    lat_corners2 = np.array([start_ext_lat2, *ortho_line2_lat, end_ext_lat2])
+    lon_corners2 = np.array([start_ext_lon2, *ortho_line2_lon, end_ext_lon2])
+
+    lon_corners = np.vstack((lon_corners1, lon_corners2)).T
+    lat_corners = np.vstack((lat_corners1, lat_corners2)).T
+
+    # Define lon lat corners
+    return lon_corners, lat_corners
+
+
+def get_lon_lat_corners(lon, lat):
+    from gpm.utils.area import _get_lonlat_corners
+
+    if lon.ndim == 1:
+        lon, lat = compute_lon_lat_corners_for_1d_swath(lon, lat)
+    else:
+        lon, lat = _get_lonlat_corners(lon, lat)
+    return lon, lat
+
+
+def _mask_antimeridian_crossing_arr(arr, antimeridian_mask, rgb):
+    if np.ma.is_masked(arr):
+        if rgb:
+            antimeridian_mask = np.broadcast_to(np.expand_dims(antimeridian_mask, axis=-1), arr.shape)
+            combined_mask = np.logical_or(arr.mask, antimeridian_mask)
+        else:
+            combined_mask = np.logical_or(arr.mask, antimeridian_mask)
+        arr = np.ma.masked_where(combined_mask, arr)
+    else:
+        if rgb:
+            antimeridian_mask = np.broadcast_to(
+                np.expand_dims(antimeridian_mask, axis=-1),
+                arr.shape,
+            )
+        arr = np.ma.masked_where(antimeridian_mask, arr)
+    return arr
+
+
+def mask_antimeridian_crossing_array(arr, lon, rgb, plot_kwargs):
+    """Mask the array cells crossing the antimeridian.
+
+    Here we assume not invalid lon coordinates anymore.
+    Cartopy still bugs with several projections when data cross the antimeridian.
+    By default, GPM-API mask data crossing the antimeridian.
+    The GPM-API configuration default can be modified with: ``gpm.config.set({"viz_hide_antimeridian_data": False})``
+    """
+    antimeridian_mask = get_antimeridian_mask(lon)
+    is_crossing_antimeridian = np.any(antimeridian_mask)
+    if is_crossing_antimeridian:
+        # Sanitize cmap to avoid cartopy bug related to cmap bad color
+        # - Cartopy requires the bad color to be fully transparent
+        plot_kwargs = _sanitize_cartopy_plot_kwargs(plot_kwargs)
+        # Mask data based on GPM-API config 'viz_hide_antimeridian_data'
+        if gpm.config.get("viz_hide_antimeridian_data"):  # default is True
+            arr = _mask_antimeridian_crossing_arr(arr, antimeridian_mask=antimeridian_mask, rgb=rgb)
+    return arr, plot_kwargs
+
+
 ####--------------------------------------------------------------------------.
+########################
+#### Plot utilities ####
+########################
 
 
-def preprocess_figure_args(ax, fig_kwargs=None, subplot_kwargs=None):
+def preprocess_rgb_dataarray(da, rgb):
+    if rgb:
+        if rgb not in da.dims:
+            raise ValueError(f"The specified rgb='{rgb}' must be a dimension of the DataArray.")
+        if da[rgb].size not in [3, 4]:
+            raise ValueError("The RGB dimension must have size 3 or 4.")
+        da = da.transpose(..., rgb)
+    return da
+
+
+def check_object_format(da, plot_kwargs, check_function, **function_kwargs):
+    """Check object format and valid dimension names."""
+    # Preprocess RGB DataArrays
+    da = da.squeeze()
+    da = preprocess_rgb_dataarray(da, plot_kwargs.get("rgb", False))
+    # Retrieve rgb or FacetGrid column/row dimensions
+    dims_dict = {key: plot_kwargs.get(key) for key in ["rgb", "col", "row"] if plot_kwargs.get(key, None)}
+    # Check such dimensions are available
+    for key, dim in dims_dict.items():
+        if dim not in da.dims:
+            raise ValueError(f"The DataArray does not have a {key}='{dim}' dimension.")
+    # Subset DataArray to check if complies with specific check function
+    isel_dict = {dim: 0 for dim in dims_dict.values()}
+    check_function(da.isel(isel_dict), **function_kwargs)
+    return da
+
+
+def preprocess_figure_args(ax, fig_kwargs=None, subplot_kwargs=None, is_facetgrid=False):
+    if is_facetgrid and ax is not None:
+        raise ValueError("When plotting with FacetGrid, do not specify the 'ax'.")
     fig_kwargs = {} if fig_kwargs is None else fig_kwargs
     subplot_kwargs = {} if subplot_kwargs is None else subplot_kwargs
     if ax is not None:
         if len(subplot_kwargs) >= 1:
-            raise ValueError("Provide `subplot_kwargs`only if `ax`is None")
+            raise ValueError("Provide `subplot_kwargs`only if ``ax``is None")
         if len(fig_kwargs) >= 1:
-            raise ValueError("Provide `fig_kwargs` only if `ax`is None")
+            raise ValueError("Provide `fig_kwargs` only if ``ax``is None")
     return fig_kwargs
 
 
@@ -254,6 +494,14 @@ def preprocess_subplot_kwargs(subplot_kwargs):
     if "projection" not in subplot_kwargs:
         subplot_kwargs["projection"] = ccrs.PlateCarree()
     return subplot_kwargs
+
+
+def infer_xy_labels(da, x=None, y=None, rgb=None):
+    from xarray.plot.utils import _infer_xy_labels
+
+    # Infer dimensions
+    x, y = _infer_xy_labels(da, x=x, y=y, imshow=True, rgb=rgb)  # dummy flag for rgb
+    return x, y
 
 
 def initialize_cartopy_plot(
@@ -277,9 +525,6 @@ def initialize_cartopy_plot(
     if add_background:
         ax = plot_cartopy_background(ax)
     return ax
-
-
-####--------------------------------------------------------------------------.
 
 
 def plot_cartopy_background(ax):
@@ -315,242 +560,74 @@ def plot_sides(sides, ax, **plot_kwargs):
     return p[0]
 
 
+####--------------------------------------------------------------------------.
+############################
+#### Colorbar utilities ####
+############################
+
+
+def _get_orientation_location(cbar_kwargs):
+    location = cbar_kwargs.get("location", None)
+    orientation = cbar_kwargs.get("orientation", None)
+    # Set defaults
+    if location is None and orientation is None:
+        return "vertical", "right"
+    # Check orientation is horizontal or vertical
+    if orientation is not None and orientation not in ("horizontal", "vertical"):
+        raise ValueError("Invalid orientation. Choose 'horizontal' or 'vertical'.")
+    # Check location is top, left, right or bottom
+    if location is not None and location not in ("top", "left", "right", "bottom"):
+        raise ValueError("Invalid location. Choose 'top', 'left', 'right', or 'bottom'.")
+    # Check compatible arguments
+    if orientation is not None and location is not None:
+        if orientation == "vertical":
+            # Raise error if not right or left
+            if location not in ("right", "left"):
+                raise ValueError("Invalid location for vertical orientation. Choose 'right' or 'left'.")
+        elif location not in ("bottom", "top"):
+            raise ValueError("Invalid location for horizontal orientation. Choose 'bottom' or 'top'.")
+        return orientation, location
+    # Return with default location if missing
+    if orientation is not None:
+        if orientation == "vertical":
+            return "vertical", "right"
+        return "horizontal", "bottom"
+    # Return with correct orientation if missing
+    # if location is not None:
+    if location in ("right", "left"):
+        return "vertical", location
+    return "horizontal", location
+
+
 def plot_colorbar(p, ax, cbar_kwargs=None):
     """Add a colorbar to a matplotlib/cartopy plot.
 
     cbar_kwargs 'size' and 'pad' controls the size of the colorbar.
     and the padding between the plot and the colorbar.
 
-    p: matplotlib.image.AxesImage
-    ax:  cartopy.mpl.geoaxes.GeoAxesSubplot^
+    p: `matplotlib.image.AxesImage`
+    ax:  `cartopy.mpl.geoaxes.GeoAxesSubplot`
     """
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
     cbar_kwargs = cbar_kwargs.copy()  # otherwise pop ticklabels outside the function
     ticklabels = cbar_kwargs.pop("ticklabels", None)
-    orientation = cbar_kwargs.get("orientation", "vertical")
-
+    orientation, location = _get_orientation_location(cbar_kwargs)
+    # Defne colorbar axis
     divider = make_axes_locatable(ax)
-
     if orientation == "vertical":
         size = cbar_kwargs.get("size", "5%")
         pad = cbar_kwargs.get("pad", 0.1)
-        cax = divider.append_axes("right", size=size, pad=pad, axes_class=plt.Axes)
-    elif orientation == "horizontal":
+        cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
+    else:  # orientation == "horizontal":
         size = cbar_kwargs.get("size", "5%")
         pad = cbar_kwargs.get("pad", 0.25)
-        cax = divider.append_axes("bottom", size=size, pad=pad, axes_class=plt.Axes)
-    else:
-        raise ValueError("Invalid orientation. Choose 'vertical' or 'horizontal'.")
-
+        cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
     p.figure.add_axes(cax)
+    # Add colorbar
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
     if ticklabels is not None:
         _ = cbar.ax.set_yticklabels(ticklabels) if orientation == "vertical" else cbar.ax.set_xticklabels(ticklabels)
     return cbar
-
-
-####--------------------------------------------------------------------------.
-
-
-def get_dataarray_extent(da, x="lon", y="lat"):
-    # TODO: compute corners array to estimate the extent
-    # - OR increase by 1° in everydirection and then wrap between -180, 180,90,90
-    # Get the minimum and maximum longitude and latitude values
-    lon_min, lon_max = da[x].min(), da[x].max()
-    lat_min, lat_max = da[y].min(), da[y].max()
-    return (lon_min, lon_max, lat_min, lat_max)
-
-
-def _compute_extent(x_coords, y_coords):
-    """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
-
-    This function assumes that the spacing between each pixel is uniform.
-    """
-    # Calculate the pixel size assuming uniform spacing between pixels
-    pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
-    pixel_size_y = (y_coords[-1] - y_coords[0]) / (len(y_coords) - 1)
-
-    # Adjust min and max to get the corners of the outer pixels
-    x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
-    y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
-
-    return [x_min, x_max, y_min, y_max]
-
-
-def _plot_cartopy_imshow(
-    ax,
-    da,
-    x,
-    y,
-    interpolation="nearest",
-    add_colorbar=True,
-    plot_kwargs={},
-    cbar_kwargs=None,
-):
-    """Plot imshow with cartopy."""
-    # - Ensure image with correct dimensions orders
-    da = da.transpose(y, x)
-    arr = np.asanyarray(da.data)
-
-    # - Compute coordinates
-    x_coords = da[x].to_numpy()
-    y_coords = da[y].to_numpy()
-
-    # - Derive extent
-    extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
-
-    # - Determine origin based on the orientation of da[y] values
-    # -->  If increasing, set origin="lower"
-    # -->  If decreasing, set origin="upper"
-    origin = "lower" if y_coords[1] > y_coords[0] else "upper"
-
-    # - Add variable field with cartopy
-    p = ax.imshow(
-        arr,
-        transform=ccrs.PlateCarree(),
-        extent=extent,
-        origin=origin,
-        interpolation=interpolation,
-        **plot_kwargs,
-    )
-    # - Set the extent
-    extent = get_dataarray_extent(da, x="lon", y="lat")
-    ax.set_extent(extent)
-
-    # - Add colorbar
-    if add_colorbar:
-        # --> TODO: set axis proportion in a meaningful way ...
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
-    return p
-
-
-def _mask_antimeridian_crossing_arr(arr, antimeridian_mask, rgb):
-    if np.ma.is_masked(arr):
-        if rgb:
-            data_mask = np.broadcast_to(np.expand_dims(antimeridian_mask, axis=-1), arr.shape)
-            combined_mask = np.logical_or(data_mask, antimeridian_mask)
-        else:
-            combined_mask = np.logical_or(arr.mask, antimeridian_mask)
-        arr = np.ma.masked_where(combined_mask, arr)
-    else:
-        if rgb:
-            antimeridian_mask = np.broadcast_to(
-                np.expand_dims(antimeridian_mask, axis=-1),
-                arr.shape,
-            )
-        arr = np.ma.masked_where(antimeridian_mask, arr)
-    return arr
-
-
-def _plot_cartopy_pcolormesh(
-    ax,
-    da,
-    x,
-    y,
-    rgb=False,
-    add_colorbar=True,
-    add_swath_lines=True,
-    plot_kwargs={},
-    cbar_kwargs=None,
-):
-    """Plot imshow with cartopy.
-
-    The function currently does not allow to zoom on regions across the antimeridian.
-    The function mask scanning pixels which spans across the antimeridian.
-    If rgb=True, expect rgb dimension to be at last position.
-    x and y must represents longitude and latitudes.
-    """
-    # Get x, y, and array to plot
-    da = da.compute()
-    lon = da[x].data
-    lat = da[y].data
-    arr = da.data
-
-    # If RGB, expect last dimension to have 3 channels
-    if rgb and arr.shape[-1] != 3 and arr.shape[-1] != 4:
-        raise ValueError("RGB array must have 3 or 4 channels in the last dimension.")
-
-    # Infill invalid value and add mask if necessary
-    lon, lat, arr = get_valid_pcolormesh_inputs(lon, lat, arr, rgb=rgb)
-
-    # Ensure arguments
-    if rgb:
-        add_colorbar = False
-
-    # Compute coordinates of cell corners for pcolormesh quadrilateral mesh
-    # - This enable correct masking of cells crossing the antimeridian
-    from gpm.utils.area import _get_lonlat_corners
-
-    lon, lat = _get_lonlat_corners(lon, lat)
-
-    # Mask cells crossing the antimeridian
-    # --> Here we assume not invalid coordinates anymore
-    # --> Cartopy still bugs with several projections when data cross the antimeridian
-    # --> This flag can be unset with gpm.config.set({"viz_hide_antimeridian_data": False})
-    if gpm.config.get("viz_hide_antimeridian_data"):
-        antimeridian_mask = get_antimeridian_mask(lon)
-        is_crossing_antimeridian = np.any(antimeridian_mask)
-        if is_crossing_antimeridian:
-            arr = _mask_antimeridian_crossing_arr(arr, antimeridian_mask=antimeridian_mask, rgb=rgb)
-
-            # Sanitize cmap bad color to avoid cartopy bug
-            # - TODO cartopy requires bad_color to be transparent ...
-            cmap = plot_kwargs.get("cmap", None)
-            if cmap is not None:
-                bad = cmap.get_bad()
-                bad[3] = 0  # enforce to 0 (transparent)
-                cmap.set_bad(bad)
-                plot_kwargs["cmap"] = cmap
-
-    # Add variable field with cartopy
-    p = ax.pcolormesh(
-        lon,
-        lat,
-        arr,
-        transform=ccrs.PlateCarree(),
-        **plot_kwargs,
-    )
-
-    # Add swath lines
-    if add_swath_lines:
-        sides = [(lon[0, :], lat[0, :]), (lon[-1, :], lat[-1, :])]
-        plot_sides(sides=sides, ax=ax, linestyle="--", color="black")
-
-    # Add colorbar
-    # --> TODO: set axis proportion in a meaningful way ...
-    if add_colorbar:
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
-    return p
-
-
-def _plot_mpl_imshow(
-    ax,
-    da,
-    x,
-    y,
-    interpolation="nearest",
-    add_colorbar=True,
-    plot_kwargs={},
-    cbar_kwargs=None,
-):
-    """Plot imshow with matplotlib."""
-    # - Ensure image with correct dimensions orders
-    da = da.transpose(y, x)
-    arr = np.asanyarray(da.data)
-
-    # - Add variable field with matplotlib
-    p = ax.imshow(
-        arr,
-        origin="upper",
-        interpolation=interpolation,
-        **plot_kwargs,
-    )
-    # - Add colorbar
-    if add_colorbar:
-        # --> TODO: set axis proportion in a meaningful way ...
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
-    # - Return mappable
-    return p
 
 
 def set_colorbar_fully_transparent(p):
@@ -582,16 +659,222 @@ def set_colorbar_fully_transparent(p):
     fig.patches.append(rect)
 
 
-def _plot_xr_imshow(
+####--------------------------------------------------------------------------.
+##########################
+#### Cartopy wrappers ####
+##########################
+
+
+def _sanitize_cartopy_plot_kwargs(plot_kwargs):
+    """Sanitize 'cmap' to avoid cartopy bug related to cmap bad color.
+
+    Cartopy requires the bad color to be fully transparent.
+    """
+    cmap = plot_kwargs.get("cmap", None)
+    if cmap is not None:
+        bad = cmap.get_bad()
+        bad[3] = 0  # enforce to 0 (transparent)
+        cmap.set_bad(bad)
+        plot_kwargs["cmap"] = cmap
+    return plot_kwargs
+
+
+def _compute_extent(x_coords, y_coords):
+    """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+
+    This function assumes that the spacing between each pixel is uniform.
+    """
+    # Calculate the pixel size assuming uniform spacing between pixels
+    pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
+    pixel_size_y = (y_coords[-1] - y_coords[0]) / (len(y_coords) - 1)
+
+    # Adjust min and max to get the corners of the outer pixels
+    x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
+    y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
+
+    return [x_min, x_max, y_min, y_max]
+
+
+def plot_cartopy_imshow(
     ax,
     da,
     x,
     y,
     interpolation="nearest",
     add_colorbar=True,
-    plot_kwargs={},
+    plot_kwargs=None,
+    cbar_kwargs=None,
+):
+    """Plot imshow with cartopy."""
+    plot_kwargs = {} if plot_kwargs is None else plot_kwargs
+
+    # Infer x and y
+    x, y = infer_xy_labels(da, x=x, y=y, rgb=plot_kwargs.get("rgb", None))
+    # - Ensure image with correct dimensions orders
+    da = da.transpose(y, x, ...)
+    arr = np.asanyarray(da.data)
+
+    # - Compute coordinates
+    x_coords = da[x].to_numpy()
+    y_coords = da[y].to_numpy()
+
+    # - Derive extent
+    extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
+
+    # - Determine origin based on the orientation of da[y] values
+    # -->  If increasing, set origin="lower"
+    # -->  If decreasing, set origin="upper"
+    origin = "lower" if y_coords[1] > y_coords[0] else "upper"
+
+    # - Add variable field with cartopy
+    rgb = plot_kwargs.pop("rgb", False)
+    p = ax.imshow(
+        arr,
+        transform=ccrs.PlateCarree(),
+        extent=extent,
+        origin=origin,
+        interpolation=interpolation,
+        **plot_kwargs,
+    )
+    # - Set the extent
+    ax.set_extent(extent)
+
+    # - Add colorbar
+    if add_colorbar and not rgb:
+        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
+    return p
+
+
+def plot_cartopy_pcolormesh(
+    ax,
+    da,
+    x,
+    y,
+    add_colorbar=True,
+    add_swath_lines=True,
+    plot_kwargs=None,
+    cbar_kwargs=None,
+):
+    """Plot imshow with cartopy.
+
+    x and y must represents longitude and latitudes.
+    The function currently does not allow to zoom on regions across the antimeridian.
+    The function mask scanning pixels which spans across the antimeridian.
+    If the DataArray has a RGB dimension, plot_kwargs should contain the ``rgb``
+    key with the name of the RGB dimension.
+
+    """
+    plot_kwargs = {} if plot_kwargs is None else plot_kwargs
+
+    # Remove RGB from plot_kwargs
+    rgb = plot_kwargs.pop("rgb", False)
+
+    # Get x, y, and array to plot
+    da = preprocess_rgb_dataarray(da, rgb=rgb)
+    da = da.compute()
+    lon = da[x].data.copy()
+    lat = da[y].data.copy()
+    arr = da.data
+
+    # Check if 1D coordinate (nadir-looking / transect / cross-section case)
+    is_1d_case = lon.ndim == 1
+
+    # Infill invalid value and mask data at invalid coordinates
+    # - No invalid values after this function call
+    lon, lat, arr = get_valid_pcolormesh_inputs(lon, lat, arr, rgb=rgb, mask_data=True)
+    if is_1d_case:
+        arr = np.expand_dims(arr, axis=1)
+
+    # Ensure arguments
+    if rgb:
+        add_colorbar = False
+
+    # Compute coordinates of cell corners for pcolormesh quadrilateral mesh
+    # - This enable correct masking of cells crossing the antimeridian
+    lon, lat = get_lon_lat_corners(lon, lat)
+
+    # Mask cells crossing the antimeridian
+    # - with gpm.config.set({"viz_hide_antimeridian_data": False}): can be used to modify the masking behaviour
+    arr, plot_kwargs = mask_antimeridian_crossing_array(arr, lon, rgb, plot_kwargs)
+
+    # Add variable field with cartopy
+    _ = plot_kwargs.setdefault("shading", "flat")
+    p = ax.pcolormesh(
+        lon,
+        lat,
+        arr,
+        transform=ccrs.PlateCarree(),
+        **plot_kwargs,
+    )
+
+    # Add swath lines
+    if add_swath_lines and not is_1d_case:
+        sides = [(lon[0, :], lat[0, :]), (lon[-1, :], lat[-1, :])]
+        plot_sides(sides=sides, ax=ax, linestyle="--", color="black")
+
+    # Add colorbar
+    if add_colorbar:
+        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
+    return p
+
+
+####-------------------------------------------------------------------------------.
+#########################
+#### Xarray wrappers ####
+#########################
+
+
+def _preprocess_xr_kwargs(add_colorbar, plot_kwargs, cbar_kwargs):
+    if not add_colorbar:
+        cbar_kwargs = None
+
+    if "rgb" in plot_kwargs:
+        cbar_kwargs = None
+        add_colorbar = False
+        plot_kwargs = {"rgb": plot_kwargs.get("rgb")}  # alpha currently skipped if RGB
+    return add_colorbar, plot_kwargs, cbar_kwargs
+
+
+def plot_xr_pcolormesh(
+    ax,
+    da,
+    x,
+    y,
+    add_colorbar=True,
+    cbar_kwargs=None,
+    **plot_kwargs,
+):
+    """Plot pcolormesh with xarray."""
+    ticklabels = cbar_kwargs.pop("ticklabels", None)
+    add_colorbar, plot_kwargs, cbar_kwargs = _preprocess_xr_kwargs(
+        add_colorbar=add_colorbar,
+        plot_kwargs=plot_kwargs,
+        cbar_kwargs=cbar_kwargs,
+    )
+    p = da.plot.pcolormesh(
+        x=x,
+        y=y,
+        ax=ax,
+        add_colorbar=add_colorbar,
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+    plt.title(da.name)
+    if add_colorbar and ticklabels is not None:
+        p.colorbar.ax.set_yticklabels(ticklabels)
+    return p
+
+
+def plot_xr_imshow(
+    ax,
+    da,
+    x,
+    y,
+    interpolation="nearest",
+    add_colorbar=True,
     cbar_kwargs=None,
     visible_colorbar=True,
+    **plot_kwargs,
 ):
     """Plot imshow with xarray.
 
@@ -599,10 +882,12 @@ def _plot_xr_imshow(
     when calling this function multiple times on different fields with
     different colorbars.
     """
-    # --> BUG with colorbar: https://github.com/pydata/xarray/issues/7014
     ticklabels = cbar_kwargs.pop("ticklabels", None)
-    if not add_colorbar:
-        cbar_kwargs = None
+    add_colorbar, plot_kwargs, cbar_kwargs = _preprocess_xr_kwargs(
+        add_colorbar=add_colorbar,
+        plot_kwargs=plot_kwargs,
+        cbar_kwargs=cbar_kwargs,
+    )
     p = da.plot.imshow(
         x=x,
         y=y,
@@ -636,134 +921,133 @@ def _plot_xr_imshow(
     return p
 
 
-def _plot_xr_pcolormesh(
-    ax,
+####--------------------------------------------------------------------------.
+####################
+#### Plot Image ####
+####################
+
+
+def _plot_image(
     da,
-    x,
-    y,
+    x=None,
+    y=None,
+    ax=None,
     add_colorbar=True,
-    plot_kwargs={},
+    interpolation="nearest",
+    fig_kwargs=None,
     cbar_kwargs=None,
+    **plot_kwargs,
 ):
-    """Plot pcolormesh with xarray."""
-    ticklabels = cbar_kwargs.pop("ticklabels", None)
-    if not add_colorbar:
-        cbar_kwargs = None
-    p = da.plot.pcolormesh(
+    """Plot GPM orbit granule as in image."""
+    from gpm.checks import is_grid, is_orbit
+    from gpm.visualization.facetgrid import sanitize_facetgrid_plot_kwargs
+
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+
+    # - Initialize figure
+    if ax is None:
+        _, ax = plt.subplots(**fig_kwargs)
+
+    # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
+    is_facetgrid = plot_kwargs.get("_is_facetgrid", False)
+    plot_kwargs = sanitize_facetgrid_plot_kwargs(plot_kwargs)
+
+    # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=da.name,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
+    )
+
+    # - Plot with xarray
+    p = plot_xr_imshow(
+        ax=ax,
+        da=da,
         x=x,
         y=y,
-        ax=ax,
+        interpolation=interpolation,
         add_colorbar=add_colorbar,
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
-    plt.title(da.name)
-    if add_colorbar and ticklabels is not None:
-        p.colorbar.ax.set_yticklabels(ticklabels)
+
+    if is_orbit(da):
+        ax.set_xlabel("Along-Track")
+        ax.set_ylabel("Cross-Track")
+    elif is_grid(da):
+        ax.set_xlabel("Longitude")
+        ax.set_ylabel("Latitude")
+    # - Monkey patch the mappable instance to add optimize_layout
+    if not is_facetgrid:
+        p = add_optimize_layout_method(p)
+
+    # - Return mappable
     return p
 
 
-####--------------------------------------------------------------------------.
-
-
-def plot_map(
+def _plot_image_facetgrid(
     da,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
-    add_swath_lines=True,  # used only for GPM orbit objects
-    add_background=True,
-    rgb=False,
-    interpolation="nearest",  # used only for GPM grid objects
+    interpolation="nearest",
     fig_kwargs=None,
-    subplot_kwargs=None,
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot data on a geographic map.
+    """Plot 2D fields with FacetGrid."""
+    from gpm.visualization.facetgrid import ImageFacetGrid
 
-    Parameters
-    ----------
-    da : xr.DataArray
-        xarray DataArray.
-    x : str, optional
-        Longitude coordinate name. The default is `"lon"`.
-    y : str, optional
-        Latitude coordinate name. The default is `"lat"`.
-    ax : cartopy.GeoAxes, optional
-        The cartopy GeoAxes where to plot the map.
-        If `None`, a figure is initialized using the
-        specified `fig_kwargs`and `subplot_kwargs`.
-        The default is `None`.
-    add_colorbar : bool, optional
-        Whether to add a colorbar. The default is `True`.
-    add_swath_lines : bool, optional
-        Whether to plot the swath sides with a dashed line. The default is `True`.
-        This argument only applies for ORBIT objects.
-    add_background : bool, optional
-        Whether to add the map background. The default is `True`.
-    rgb : bool, optional
-        Whether the input DataArray has a rgb dimension. The default is `False`.
-    interpolation : str, optional
-        Argument to be passed to imshow. Only applies for GRID objects.
-        The default is `"nearest"`.
-    fig_kwargs : dict, optional
-        Figure options to be passed to plt.subplots.
-        The default is `None`.
-        Only used if `ax` is `None`.
-    subplot_kwargs : dict, optional
-        Dictionary of keyword arguments for Matplotlib subplots.
-        Must contain the Cartopy CRS `'projection'` key if specified.
-        The default is `None`.
-        Only used if `ax` is `None`.
-    cbar_kwargs : dict, optional
-        Colorbar options. The default is `None`.
-    **plot_kwargs
-        Additional arguments to be passed to the plotting function.
-        Examples include `cmap`, `norm`, `vmin`, `vmax`, `levels`, ...
-        For FacetGrid plots, specify `row`, `col` and `col_wrap`.
+    # Check inputs
+    fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, is_facetgrid=True)
 
-    """
-    from gpm.checks import is_grid, is_orbit
-    from gpm.visualization.grid import plot_grid_map
-    from gpm.visualization.orbit import plot_orbit_map
+    # Retrieve GPM-API defaults cmap and cbar kwargs
+    variable = da.name
+    plot_kwargs, cbar_kwargs = get_plot_kwargs(
+        name=variable,
+        user_plot_kwargs=plot_kwargs,
+        user_cbar_kwargs=cbar_kwargs,
+    )
 
-    # Plot orbit
-    if is_orbit(da):
-        p = plot_orbit_map(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            add_swath_lines=add_swath_lines,
-            add_background=add_background,
-            rgb=rgb,
-            fig_kwargs=fig_kwargs,
-            subplot_kwargs=subplot_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-    # Plot grid
-    elif is_grid(da):
-        p = plot_grid_map(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            add_background=add_background,
-            fig_kwargs=fig_kwargs,
-            subplot_kwargs=subplot_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
-    else:
-        raise ValueError("Can not plot. It's neither a GPM grid, neither a GPM orbit.")
-    # Return mappable
-    return p
+    # Disable colorbar if rgb
+    if plot_kwargs.get("rgb", False):
+        add_colorbar = False
+        cbar_kwargs = {}
+
+    # Create FacetGrid
+    fc = ImageFacetGrid(
+        data=da.compute(),
+        col=plot_kwargs.pop("col", None),
+        row=plot_kwargs.pop("row", None),
+        col_wrap=plot_kwargs.pop("col_wrap", None),
+        axes_pad=plot_kwargs.pop("axes_pad", None),
+        fig_kwargs=fig_kwargs,
+        cbar_kwargs=cbar_kwargs,
+        add_colorbar=add_colorbar,
+        aspect=plot_kwargs.pop("aspect", False),
+        facet_height=plot_kwargs.pop("facet_height", 3),
+        facet_aspect=plot_kwargs.pop("facet_aspect", 1),
+    )
+
+    # Plot the maps
+    fc = fc.map_dataarray(
+        _plot_image,
+        x=x,
+        y=y,
+        add_colorbar=False,
+        interpolation=interpolation,
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+
+    fc.remove_duplicated_axis_labels()
+
+    # Add colorbar
+    if add_colorbar:
+        fc.add_colorbar(**cbar_kwargs)
+
+    return fc
 
 
 def plot_image(
@@ -781,50 +1065,56 @@ def plot_image(
 
     Parameters
     ----------
-    da : xr.DataArray
+    da : `xr.DataArray`
         xarray DataArray.
     x : str, optional
         X dimension name.
         If ``None``, takes the second dimension.
-        The default is `None`.
+        The default is ``None``.
     y : str, optional
         Y dimension name.
         If ``None``, takes the first dimension.
-        The default is `None`.
-    ax : cartopy.GeoAxes, optional
+        The default is ``None``.
+    ax : `cartopy.GeoAxes`, optional
         The matplotlib axes where to plot the image.
         If ``None``, a figure is initialized using the
-        specified `fig_kwargs`.
-        The default is `None`.
+        specified ``fig_kwargs``.
+        The default is ``None``.
     add_colorbar : bool, optional
-        Whether to add a colorbar. The default is `True`.
+        Whether to add a colorbar. The default is ``True``.
     interpolation : str, optional
         Argument to be passed to imshow.
-        The default is `"nearest"`.
+        The default is ``"nearest"``.
     fig_kwargs : dict, optional
-        Figure options to be passed to `plt.subplots`.
+        Figure options to be passed to `matplotlib.pyplot.subplots``.
         The default is ``None``.
-        Only used if `ax` is None.
+        Only used if ``ax`` is ``None``.
     subplot_kwargs : dict, optional
-        Subplot options to be passed to `plt.subplots`.
-        The default is `None`.
-        Only used if `ax` is `None`.
+        Subplot options to be passed to `matplotlib.pyplot.subplots`.
+        The default is ``None``.
+        Only used if ```ax``` is ``None``.
     cbar_kwargs : dict, optional
-        Colorbar options. The default is `None`.
+        Colorbar options. The default is ``None``.
     **plot_kwargs
         Additional arguments to be passed to the plotting function.
-        Examples include `cmap`, `norm`, `vmin`, `vmax`, `levels`, ...
-        For FacetGrid plots, specify `row`, `col` and `col_wrap`.
+        Examples include ``cmap``, ``norm``, ``vmin``, ``vmax``, ``levels``, ...
+        For FacetGrid plots, specify ``row``, ``col`` and ``col_wrap``.
+        With ``rgb`` you can specify the name of the `xarray.DataArray` RGB dimension.
+
 
     """
-    # figsize, dpi, subplot_kw only used if ax is None
-    from gpm.checks import is_grid, is_orbit
-    from gpm.visualization.grid import plot_grid_image
-    from gpm.visualization.orbit import plot_orbit_image
+    from gpm.checks import check_is_spatial_2d, is_spatial_2d
 
     # Plot orbit
-    if is_orbit(da):
-        p = plot_orbit_image(
+    if not is_spatial_2d(da, strict=False):
+        raise ValueError("Can not plot. It's not a spatial 2D object.")
+
+    # Check inputs
+    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_spatial_2d, strict=True)
+
+    # Plot FacetGrid with xarray imshow
+    if "col" in plot_kwargs or "row" in plot_kwargs:
+        p = _plot_image_facetgrid(
             da=da,
             x=x,
             y=y,
@@ -835,39 +1125,238 @@ def plot_image(
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-    # Plot grid
-    elif is_grid(da):
-        p = plot_grid_image(
-            da=da,
-            x=x,
-            y=y,
-            ax=ax,
-            add_colorbar=add_colorbar,
-            interpolation=interpolation,
-            fig_kwargs=fig_kwargs,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
+    # Plot with xarray imshow
     else:
-        raise ValueError("Can not plot. It's neither a GPM GRID, neither a GPM ORBIT.")
+        p = _plot_image(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            fig_kwargs=fig_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
     # Return mappable
     return p
 
 
 ####--------------------------------------------------------------------------.
+##################
+#### Plot map ####
+##################
+
+
+def plot_map(
+    da,
+    x=None,
+    y=None,
+    ax=None,
+    add_colorbar=True,
+    add_swath_lines=True,  # used only for GPM orbit objects
+    add_background=True,
+    interpolation="nearest",  # used only for GPM grid objects
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    cbar_kwargs=None,
+    **plot_kwargs,
+):
+    """Plot data on a geographic map.
+
+    Parameters
+    ----------
+    da : `xr.DataArray`
+        xarray DataArray.
+    x : str, optional
+        Longitude coordinate name.
+        If ``None``, takes the second dimension.
+        The default is ``None``.
+    y : str, optional
+        Latitude coordinate name.
+        If ``None``, takes the first dimension.
+        The default is ``None``.
+    ax : `cartopy.GeoAxes`, optional
+        The cartopy GeoAxes where to plot the map.
+        If ``None``, a figure is initialized using the
+        specified ``fig_kwargs`` and ``subplot_kwargs``.
+        The default is ``None``.
+    add_colorbar : bool, optional
+        Whether to add a colorbar. The default is ``True``.
+    add_swath_lines : bool, optional
+        Whether to plot the swath sides with a dashed line. The default is ``True``.
+        This argument only applies for ORBIT objects.
+    add_background : bool, optional
+        Whether to add the map background. The default is ``True``.
+    interpolation : str, optional
+        Argument to be passed to `matplotlib.pyplot.imshow`. Only applies for GRID objects.
+        The default is ``"nearest"``.
+    fig_kwargs : dict, optional
+        Figure options to be passed to `matplotlib.pyplot.subplots`.
+        The default is ``None``.
+        Only used if ``ax`` is ``None``.
+    subplot_kwargs : dict, optional
+        Dictionary of keyword arguments for `matplotlib.pyplot.subplots`.
+        Must contain the Cartopy CRS `'projection'` key if specified.
+        The default is ``None``.
+        Only used if ``ax`` is ``None``.
+    cbar_kwargs : dict, optional
+        Colorbar options. The default is ``None``.
+    **plot_kwargs
+        Additional arguments to be passed to the plotting function.
+        Examples include ``cmap``, ``norm``, ``vmin``, ``vmax``, ``levels``, ...
+        For FacetGrid plots, specify ``row``, ``col`` and ``col_wrap``.
+        With ``rgb`` you can specify the name of the `xarray.DataArray` RGB dimension.
+
+
+    """
+    from gpm.checks import has_spatial_dim, is_grid, is_orbit, is_spatial_2d
+    from gpm.visualization.grid import plot_grid_map
+    from gpm.visualization.orbit import plot_orbit_map
+
+    # Plot orbit
+    # - allow vertical or other dimensions for FacetGrid
+    # - allow to plot a swath of size 1 (i.e. nadir-looking)
+    if is_orbit(da) and has_spatial_dim(da):
+        p = plot_orbit_map(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            add_swath_lines=add_swath_lines,
+            add_background=add_background,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    # Plot grid
+    elif is_grid(da) and is_spatial_2d(da, strict=False):
+        p = plot_grid_map(
+            da=da,
+            x=x,
+            y=y,
+            ax=ax,
+            add_colorbar=add_colorbar,
+            interpolation=interpolation,
+            add_background=add_background,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+    else:
+        raise ValueError("Can not plot. It's neither a GPM GRID or GPM ORBIT spatial 2D object.")
+    # Return mappable
+    return p
+
+
+def plot_map_mesh(
+    xr_obj,
+    x=None,
+    y=None,
+    ax=None,
+    edgecolors="k",
+    linewidth=0.1,
+    add_background=True,
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    **plot_kwargs,
+):
+    from gpm.checks import is_grid, is_orbit
+    from gpm.visualization.grid import plot_grid_mesh
+    from gpm.visualization.orbit import infer_orbit_xy_coords, plot_orbit_mesh
+
+    # Plot orbit
+    if is_orbit(xr_obj):
+        x, y = infer_orbit_xy_coords(xr_obj, x=x, y=y)
+        p = plot_orbit_mesh(
+            da=xr_obj[y],
+            ax=ax,
+            x=x,
+            y=y,
+            edgecolors=edgecolors,
+            linewidth=linewidth,
+            add_background=add_background,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
+    elif is_grid(xr_obj):
+        p = plot_grid_mesh(
+            xr_obj=xr_obj,
+            x=x,
+            y=y,
+            ax=ax,
+            edgecolors=edgecolors,
+            linewidth=linewidth,
+            add_background=add_background,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
+            **plot_kwargs,
+        )
+    else:
+        raise ValueError("Can not plot. It's neither a GPM GRID or GPM ORBIT spatial object.")
+    # Return mappable
+    return p
+
+
+def plot_map_mesh_centroids(
+    xr_obj,
+    x=None,
+    y=None,
+    ax=None,
+    c="r",
+    s=1,
+    add_background=True,
+    fig_kwargs=None,
+    subplot_kwargs=None,
+    **plot_kwargs,
+):
+    """Plot GPM orbit granule mesh centroids in a cartographic map."""
+    from gpm.checks import is_grid, is_orbit
+    from gpm.visualization.orbit import infer_orbit_xy_coords
+
+    # Initialize figure if necessary
+    ax = initialize_cartopy_plot(
+        ax=ax,
+        fig_kwargs=fig_kwargs,
+        subplot_kwargs=subplot_kwargs,
+        add_background=add_background,
+    )
+
+    # Retrieve orbits lon, lat coordinates
+    if is_orbit(xr_obj):
+        x, y = infer_orbit_xy_coords(xr_obj, x=x, y=y)
+
+    # Retrieve grid centroids mesh
+    if is_grid(xr_obj):
+        x, y = infer_xy_labels(xr_obj, x=x, y=y)
+        xr_obj = create_grid_mesh_data_array(xr_obj, x=x, y=y)
+
+    # Extract numpy arrays
+    lon = xr_obj[x].to_numpy()
+    lat = xr_obj[y].to_numpy()
+
+    # Plot centroids
+    p = ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
+
+    # Return mappable
+    return p
 
 
 def create_grid_mesh_data_array(xr_obj, x, y):
     """Create a 2D mesh coordinates DataArray.
 
-    Takes as input the 1D coordinate arrays from an existing xarray object (Dataset or DataArray).
+    Takes as input the 1D coordinate arrays from an existing `xarray.DataArray` or `xarray.Dataset` object.
 
     The function creates a 2D grid (mesh) of x and y coordinates and initializes
     the data values to NaN.
 
     Parameters
     ----------
-    xr_obj : xarray.DataArray or xarray.Dataset
+    xr_obj : `xarray.DataArray` or `xarray.Dataset`
         The input xarray object containing the 1D coordinate arrays.
     x : str
         The name of the x-coordinate in `xr_obj`.
@@ -876,13 +1365,15 @@ def create_grid_mesh_data_array(xr_obj, x, y):
 
     Returns
     -------
-    da_mesh : xarray.DataArray
-        A 2D xarray DataArray with mesh coordinates for `x` and `y`, and NaN values for data points.
+    da_mesh : `xarray.DataArray`
+        A 2D `xarray.DataArray` with mesh coordinates for `x` and `y`, and NaN values for data points.
 
     Notes
     -----
-    The resulting DataArray has dimensions named 'y' and 'x', corresponding to the y and x coordinates respectively.
-    The coordinate values are taken directly from the input 1D coordinate arrays, and the data values are set to NaN.
+    The resulting `xarray.DataArray` has dimensions named 'y' and 'x', corresponding to the
+    y and x coordinates respectively.
+    The coordinate values are taken directly from the input 1D coordinate arrays,
+    and the data values are set to NaN.
 
     """
     # Extract 1D coordinate arrays
@@ -901,89 +1392,6 @@ def create_grid_mesh_data_array(xr_obj, x, y):
         coords={x: (("y", "x"), X), y: (("y", "x"), Y)},
         dims=("y", "x"),
     )
-
-
-def plot_map_mesh(
-    xr_obj,
-    x="lon",
-    y="lat",
-    ax=None,
-    edgecolors="k",
-    linewidth=0.1,
-    add_background=True,
-    fig_kwargs=None,
-    subplot_kwargs=None,
-    **plot_kwargs,
-):
-    from gpm.checks import is_orbit  # is_grid
-
-    from .grid import plot_grid_mesh
-    from .orbit import plot_orbit_mesh
-
-    # Plot orbit
-    if is_orbit(xr_obj):
-        p = plot_orbit_mesh(
-            da=xr_obj[y],
-            ax=ax,
-            x=x,
-            y=y,
-            edgecolors=edgecolors,
-            linewidth=linewidth,
-            add_background=add_background,
-            fig_kwargs=fig_kwargs,
-            subplot_kwargs=subplot_kwargs,
-            **plot_kwargs,
-        )
-    else:  # Plot grid
-        p = plot_grid_mesh(
-            xr_obj=xr_obj,
-            x=x,
-            y=y,
-            ax=ax,
-            edgecolors=edgecolors,
-            linewidth=linewidth,
-            add_background=add_background,
-            fig_kwargs=fig_kwargs,
-            subplot_kwargs=subplot_kwargs,
-            **plot_kwargs,
-        )
-    # Return mappable
-    return p
-
-
-def plot_map_mesh_centroids(
-    xr_obj,
-    x="lon",
-    y="lat",
-    ax=None,
-    c="r",
-    s=1,
-    add_background=True,
-    fig_kwargs=None,
-    subplot_kwargs=None,
-    **plot_kwargs,
-):
-    """Plot GPM orbit granule mesh centroids in a cartographic map."""
-    from gpm.checks import is_grid
-
-    # - Initialize figure if necessary
-    ax = initialize_cartopy_plot(
-        ax=ax,
-        fig_kwargs=fig_kwargs,
-        subplot_kwargs=subplot_kwargs,
-        add_background=add_background,
-    )
-
-    # - Retrieve centroids
-    if is_grid(xr_obj):
-        xr_obj = create_grid_mesh_data_array(xr_obj, x=x, y=y)
-    lon = xr_obj[x].to_numpy()
-    lat = xr_obj[y].to_numpy()
-
-    # - Plot centroids
-    return ax.scatter(lon, lat, transform=ccrs.PlateCarree(), c=c, s=s, **plot_kwargs)
-
-    # - Return mappable
 
 
 ####--------------------------------------------------------------------------.
@@ -1092,7 +1500,7 @@ def plot_patches(
     for _, xr_patch in patch_gen:  # label_id, xr_obj
         if isinstance(xr_patch, xr.Dataset):
             if variable is None:
-                raise ValueError("'variable' must be specified when plotting xr.Dataset patches.")
+                raise ValueError("'variable' must be specified when plotting xarray.Dataset patches.")
             xr_patch = xr_patch[variable]
         try:
             plot_image(
@@ -1128,15 +1536,15 @@ def get_inset_bounds(
     Parameters
     ----------
     loc : str
-        The location of the inset within the figure. Valid options are 'lower left', 'lower right',
-        'upper left', and 'upper right'. The default is 'upper right'.
+        The location of the inset within the figure. Valid options are ``'lower left'``, ``'lower right'``,
+        ``'upper left'``, and ``'upper right'``. The default is ``'upper right'``.
     inset_height : float
         The size of the inset height, specified as a fraction of the figure's height.
         For example, a value of 0.2 indicates that the inset's height will be 20% of the figure's height.
-        The aspect ratio will govern the inset_width.
+        The aspect ratio will govern the ``inset_width``.
     inside_figure : bool, optional
-        Determines whether the inset is constrained to be fully inside the figure bounds. If `True` (default),
-        the inset is placed fully within the figure. If `False`, the inset can extend beyond the figure's edges,
+        Determines whether the inset is constrained to be fully inside the figure bounds. If  ``True`` (default),
+        the inset is placed fully within the figure. If ``False``, the inset can extend beyond the figure's edges,
         allowing for a half-outside placement.
     aspect_ratio : float, optional
         The width-to-height ratio of the inset figure.
@@ -1147,9 +1555,9 @@ def get_inset_bounds(
     Returns
     -------
     inset_bounds : list of float
-        The calculated bounds of the inset, in the format [x0, y0, width, height], where `x0` and `y0`
-        are the normalized figure coordinates of the lower left corner of the inset, and `width` and
-        `height` are the normalized width and height of the inset, respectively.
+        The calculated bounds of the inset, in the format ``[x0, y0, width, height]``, where ``x0`` and ``y0``
+        are the normalized figure coordinates of the lower left corner of the inset, and ``width`` and
+        ``height`` are the normalized width and height of the inset, respectively.
 
     """
     # Get the bounding box of the parent axes in figure coordinates
@@ -1189,26 +1597,26 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
 
     Parameters
     ----------
-    ax : (matplotlib.axes.Axes, cartopy.mpl.geoaxes.GeoAxes)
+    ax : `matplotlib.axes.Axes` or `cartopy.mpl.geoaxes.GeoAxes`
         The main matplotlib or cartopy axis object where the geographic data is plotted.
     loc : str, optional
         The location of the inset map within the main plot.
-        Options include 'lower left', 'lower right', 'upper left', 'upper right'.
-        The default is 'upper left'.
-    inset_height : float
+        Options include ``'lower left'``, ``'lower right'``,
+        ``'upper left'``, and ``'upper right'``. The default is ``'upper left'``.
+    inset_height : float, optional
         The size of the inset height, specified as a fraction of the figure's height.
         For example, a value of 0.2 indicates that the inset's height will be 20% of the figure's height.
-        The aspect ratio (of the map inset) will govern the inset_width.
+        The aspect ratio (of the map inset) will govern the ``inset_width``.
     inside_figure : bool, optional
-        Determines whether the inset is constrained to be fully inside the figure bounds. If `True` (default),
-        the inset is placed fully within the figure. If `False`, the inset can extend beyond the figure's edges,
+        Determines whether the inset is constrained to be fully inside the figure bounds. If ``True`` (default),
+        the inset is placed fully within the figure. If ``False``, the inset can extend beyond the figure's edges,
         allowing for a half-outside placement.
-    projection: cartopy.crs.Projection
+    projection: `cartopy.crs.Projection`, optional
         A cartopy projection. If ``None``, am Orthographic projection centered on the extent center is used.
 
     Returns
     -------
-    ax2 : cartopy.mpl.geoaxes.GeoAxes
+    ax2 : `cartopy.mpl.geoaxes.GeoAxes`
         The Cartopy GeoAxesSubplot object for the inset map.
 
     Notes

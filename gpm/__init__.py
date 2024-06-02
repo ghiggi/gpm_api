@@ -67,6 +67,7 @@ from gpm.utils.checks import (  # noqa
     check_regular_time,
     check_valid_geolocation,
 )
+from gpm.utils.subsetting import align_along_track, align_cross_track  # noqa
 from gpm.visualization.plot import plot_labels, plot_patches  # noqa
 
 _root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

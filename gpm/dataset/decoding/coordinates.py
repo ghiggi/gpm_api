@@ -52,13 +52,55 @@ def ensure_valid_coords(ds, raise_error=False):
     return ds
 
 
-def _add_cmb_range_coordinate(ds, scan_mode):
-    """Add range coordinate to 2B-<CMB> products."""
-    if "range" in list(ds.dims) and scan_mode in ["NS", "KuKaGMI", "KuGMI", "KuTMI"]:
-        range_values = np.arange(0, 88 * 250, step=250)
-        ds = ds.assign_coords({"range": range_values})
-        ds["range"].attrs["units"] = "m"
+def add_lh_height(ds):
+    """Add 'height' coordinate to latent heat CSH and SLH products."""
+    # Fixed heights for 2HSLH and 2HCSH
+    # - FileSpec v7: p.2395, 2463
+    # NOTE: In SLH/CSH, the first row of the array correspond to the surface
+    # Instead, for the other GPM RADAR prodcuts, is the last row that correspond to the surface !!!
+    height = np.linspace(0.25 / 2, 20 - 0.25 / 2, 80) * 1000  # in meters
+    ds = ds.assign_coords({"height": ("range", height)})
+    ds["height"].attrs["units"] = "m a.s.l"
     return ds
+
+
+def add_cmb_height(ds):
+    """Add the 'height' coordinate to CMB products."""
+    from gpm.utils.manipulations import get_vertical_datarray_prototype
+
+    if "ellipsoidBinOffset" in ds and "localZenithAngle" in ds and "range" in ds.dims:
+        # Retrieve required DataArrays
+        range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # start at 1 !
+        ellipsoidBinOffset = ds["ellipsoidBinOffset"]
+        localZenithAngle = ds["localZenithAngle"]
+        rangeBinSize = 250  # approximation
+        # Compute height
+        height = ((1 - range_bin) * rangeBinSize + ellipsoidBinOffset) * np.cos(np.deg2rad(localZenithAngle))
+        ds = ds.assign_coords({"height": height})
+    return ds
+
+
+# def _add_cmb_range_coordinate(ds, scan_mode):
+#     """Add range coordinate to 2B-<CMB> products."""
+#     if "range" in list(ds.dims) and scan_mode in ["NS", "KuKaGMI", "KuGMI", "KuTMI"]:
+#         range_values = np.arange(0, 88 * 250, step=250)
+#         ds = ds.assign_coords({"range_interval": ("range", range_values)})
+#         ds["range_interval"].attrs["units"] = "m"
+#     return ds
+
+
+# def _add_radar_range_coordinate(ds, scan_mode):
+#     """Add range coordinate to 2A-<RADAR> products."""
+#     # - V6 and V7: 1BKu 260 bins NS and MS, 130 at HS
+#     if "range" in list(ds.dims):
+#         if scan_mode in ["HS"]:
+#             range_values = np.arange(0, 88 * 250, step=250)
+#             ds = ds.assign_coords({"range_interval": ("range", range_values)})
+#         if scan_mode in ["FS", "MS", "NS"]:
+#             range_values = np.arange(0, 176 * 125, step=125)
+#             ds = ds.assign_coords({"range_interval": ("range", range_values)})
+#         ds["range_interval"].attrs["units"] = "m"
+#     return ds
 
 
 def _add_cmb_coordinates(ds, product, scan_mode):
@@ -69,21 +111,11 @@ def _add_cmb_coordinates(ds, product, scan_mode):
 
     if (scan_mode in ("KuKaGMI", "NS")) and "radar_frequency" in list(ds.dims):
         ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
+    # Add height coordinate
+    ds = add_cmb_height(ds)
 
-    return _add_cmb_range_coordinate(ds, scan_mode)
-
-
-def _add_radar_range_coordinate(ds, scan_mode):
-    """Add range coordinate to 2A-<RADAR> products."""
-    # - V6 and V7: 1BKu 260 bins NS and MS, 130 at HS
-    if "range" in list(ds.dims):
-        if scan_mode in ["HS"]:
-            range_values = np.arange(0, 88 * 250, step=250)
-            ds = ds.assign_coords({"range": range_values})
-        if scan_mode in ["FS", "MS", "NS"]:
-            range_values = np.arange(0, 176 * 125, step=125)
-            ds = ds.assign_coords({"range": range_values})
-        ds["range"].attrs["units"] = "m"
+    # # Add range_interval coordinate
+    # ds = _add_cmb_range_coordinate(ds, scan_mode)
     return ds
 
 
@@ -97,14 +129,15 @@ def _add_wished_coordinates(ds):
     return ds
 
 
-def _add_radar_coordinates(ds, product, scan_mode):
+def _add_radar_coordinates(ds, product, scan_mode):  # noqa ARG001
     """Add range, height, radar_frequency, paramDSD coordinates to <RADAR> products."""
     if product == "2A-DPR" and "radar_frequency" in list(ds.dims):
         ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
     if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR"] and "paramDSD" in list(ds):
         ds = ds.assign_coords({"DSD_params": ["Nw", "Dm"]})
-    # Add radar range
-    return _add_radar_range_coordinate(ds, scan_mode)
+    # # Add range_interval coordinate
+    # ds = _add_radar_range_coordinate(ds, scan_mode)
+    return ds
 
 
 @functools.cache
@@ -168,10 +201,16 @@ def set_coordinates(ds, product, scan_mode):
     if "cross_track" in list(ds.dims):
         ds = ensure_valid_coords(ds, raise_error=False)
 
-    # Add gpm_range_id coordinate
+    # Add range and gpm_range_id coordinates
+    # - range starts at 1 (for value-based selection with bin variables)
+    # - gpm_range_id starts at 0 (following python based indexing)
     if "range" in list(ds.dims):
-        range_id = np.arange(ds.sizes["range"])
-        ds = ds.assign_coords({"gpm_range_id": ("range", range_id)})
+        range_size = ds.sizes["range"]
+        range_coords = {
+            "range": ("range", np.arange(1, range_size + 1)),
+            "gpm_range_id": ("range", np.arange(0, range_size)),
+        }
+        ds = ds.assign_coords(range_coords)
 
     # Add wished coordinates
     ds = _add_wished_coordinates(ds)
@@ -187,7 +226,7 @@ def set_coordinates(ds, product, scan_mode):
         ds = _add_pmw_coordinates(ds, product, scan_mode)
 
     #### RADAR
-    if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR"]:
+    if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR", "2A-ENV-DPR", "2A-ENV-PR", "2A-ENV-Ka", "2A-ENV-Ku"]:
         ds = _add_radar_coordinates(ds, product, scan_mode)
 
     #### CMB
@@ -195,13 +234,8 @@ def set_coordinates(ds, product, scan_mode):
         ds = _add_cmb_coordinates(ds, product, scan_mode)
 
     #### SLH and CSH products
-    if product in ["2A-GPM-SLH", "2B-GPM-CSH"] and "nlayer" in list(ds.dims):
-        # Fixed heights for 2HSLH and 2HCSH
-        # - FileSpec v7: p.2395, 2463
-        height = np.linspace(0.25 / 2, 20 - 0.25 / 2, 80) * 1000  # in meters
-        ds = ds.rename_dims({"nlayer": "height"})
-        ds = ds.assign_coords({"height": height})
-        ds["height"].attrs["units"] = "km a.s.l"
+    if product in ["2A-GPM-SLH", "2B-GPM-CSH"] and "range" in list(ds.dims):
+        ds = add_lh_height(ds)
 
     #### IMERG
     if "HQobservationTime" in ds:

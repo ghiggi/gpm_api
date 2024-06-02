@@ -149,9 +149,9 @@ def _open_valid_granules(
     Returns
     -------
     list_datasets : list
-        List of xr.Datasets.
+        List of `xarray.Dataset`s.
     list_closers : list
-         List of xr.Datasets closers.
+         List of `xarray.Dataset`s closers.
 
     """
     if parallel and chunks is None:
@@ -193,17 +193,17 @@ def open_dataset(
     start_time,
     end_time,
     variables=None,
-    groups=None,  # TODO implement
+    groups=None,
     scan_mode=None,
     version=None,
     product_type="RS",
-    chunks={},
+    chunks=-1,
     decode_cf=True,
     parallel=False,
     prefix_group=False,
     verbose=False,
 ):
-    """Lazily map HDF5 data into ``xarray.Dataset`` with relevant GPM data and attributes.
+    """Lazily map HDF5 data into `xarray.Dataset` with relevant GPM data and attributes.
 
     Note:
 
@@ -218,13 +218,13 @@ def open_dataset(
     ----------
     product : str
         GPM product acronym.
-    start_time :  (datetime.datetime, datetime.date, np.datetime64, str)
+    start_time :  `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
         Start time.
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
-    end_time :  (datetime.datetime, datetime.date, np.datetime64, str)
+    end_time :  `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
         End time.
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
     variables : list, str, optional
         Variables to read from the HDF5 file.
@@ -248,15 +248,15 @@ def open_dataset(
     version : int, optional
         GPM version of the data to retrieve if ``product_type = "RS"``.
         GPM data readers currently support version 4, 5, 6 and 7.
-    chunks : int, dict, 'auto' or None, optional
+    chunks : int, dict, str or None, optional
         Chunk size for dask array:
 
-        - ``chunks=-1`` loads the dataset with dask using a single chunk for all arrays.
+        - ``chunks=-1`` loads the dataset with dask using a single chunk for each granule arrays.
         - ``chunks={}`` loads the dataset with dask using the file chunks.
         - ``chunks='auto'`` will use dask ``auto`` chunking taking into account the file chunks.
 
         If you want to load data in memory directly, specify ``chunks=None``.
-        The default is ``{}``.
+        The default is ``auto``.
 
         Hint: xarray's lazy loading of remote or on-disk datasets is often but not always desirable.
         Before performing computationally intense operations, load the dataset

@@ -25,57 +25,123 @@
 
 # -----------------------------------------------------------------------------.
 """This module defines GPM-API xarray accessors."""
+import functools
+import importlib
+import inspect
+import re
+import sys
+from typing import Callable
+
 import numpy as np
 import xarray as xr
+
+
+def get_imported_gpm_method_path(function: Callable) -> tuple[str, str]:
+    """Get path of imported gpm method in accessor method source code (format is "module.method"))."""
+    source = inspect.getsource(function)
+    import_pattern = re.compile(r"from (\S+) import (\S+)")
+    match = import_pattern.search(source)
+    if match:
+        module = match.group(1)
+        method_name = match.group(2)
+        return module, method_name
+    raise ValueError(f"No import statement found in accessor {function} method.")
+
+
+def get_imported_gpm_method(accessor_method: Callable) -> Callable:
+    """Return the source function called by the accessor method."""
+    try:
+        imported_module, imported_method_name = get_imported_gpm_method_path(accessor_method)
+        module = importlib.import_module(imported_module)
+        function = getattr(module, imported_method_name)
+    except Exception:
+        function = None
+    return function
+
+
+def auto_wrap_docstring(func):
+    """Decorator to add the source function docstring to the accessor method."""
+    # If running pytest units, return the original accessor method
+    # - This is required for testing accessor arguments against source functions
+    if "pytest" in sys.modules:
+        return func
+    # Else find the source function
+    source_function = get_imported_gpm_method(func)
+    # Retrieve current accessor docstring
+    accessor_doc = func.__doc__
+    # If source function found and accessor docstring not specified
+    if callable(source_function) and accessor_doc is None:
+        # Set docstring of the source function
+        return functools.wraps(source_function, assigned=("__doc__",))(func)
+    # If no import statement is found or docstring already specified, return the original function
+    return func
 
 
 class GPM_Base_Accessor:
     def __init__(self, xarray_obj):
         if not isinstance(xarray_obj, (xr.DataArray, xr.Dataset)):
-            raise TypeError("The 'gpm' accessor is available only for xr.Dataset and xr.DataArray.")
+            raise TypeError("The 'gpm' accessor is available only for xarray.Dataset and xarray.DataArray.")
         self._obj = xarray_obj
 
-    def extent(self, padding=0):
-        """Return the geographic extent (bbox) of the object."""
-        from gpm.utils.geospatial import get_extent
+    @auto_wrap_docstring
+    def sel(self, indexers=None, drop=False, **indexers_kwargs):
+        from gpm.utils.subsetting import sel
 
-        return get_extent(self._obj, padding=padding)
+        return sel(self._obj, indexers=indexers, drop=drop, **indexers_kwargs)
 
+    @auto_wrap_docstring
+    def extent(self, padding=0, size=None):
+        from gpm.utils.geospatial import get_geographic_extent_from_xarray
+
+        return get_geographic_extent_from_xarray(self._obj, padding=padding, size=size)
+
+    @auto_wrap_docstring
     def crop(self, extent):
-        """Crop xarray object by bounding box."""
         from gpm.utils.geospatial import crop
 
         return crop(self._obj, extent)
 
+    @auto_wrap_docstring
     def crop_by_country(self, name):
-        """Crop xarray object by country name."""
         from gpm.utils.geospatial import crop_by_country
 
         return crop_by_country(self._obj, name)
 
+    @auto_wrap_docstring
     def crop_by_continent(self, name):
-        """Crop xarray object by continent name."""
         from gpm.utils.geospatial import crop_by_continent
 
         return crop_by_continent(self._obj, name)
 
+    @auto_wrap_docstring
+    def crop_around_point(self, lon, lat, distance=None, size=None):
+        from gpm.utils.geospatial import crop_around_point
+
+        return crop_around_point(self._obj, lon=lon, lat=lat, distance=distance, size=size)
+
+    @auto_wrap_docstring
     def get_crop_slices_by_extent(self, extent):
-        """Get subsetting slices given the extent."""
         from gpm.utils.geospatial import get_crop_slices_by_extent
 
         return get_crop_slices_by_extent(self._obj, extent)
 
+    @auto_wrap_docstring
     def get_crop_slices_by_country(self, name):
-        """Get subsetting slices given the country name."""
         from gpm.utils.geospatial import get_crop_slices_by_country
 
         return get_crop_slices_by_country(self._obj, name)
 
+    @auto_wrap_docstring
     def get_crop_slices_by_continent(self, name):
-        """Get subsetting slices given the continent name."""
         from gpm.utils.geospatial import get_crop_slices_by_continent
 
         return get_crop_slices_by_continent(self._obj, name)
+
+    @auto_wrap_docstring
+    def get_crop_slices_around_point(self, lon, lat, distance=None, size=None):
+        from gpm.utils.geospatial import get_crop_slices_around_point
+
+        return get_crop_slices_around_point(self._obj, lon=lon, lat=lat, distance=distance, size=size)
 
     @property
     def pyresample_area(self):
@@ -83,8 +149,8 @@ class GPM_Base_Accessor:
 
         return get_pyresample_area(self._obj)
 
+    @auto_wrap_docstring
     def remap_on(self, dst_ds, radius_of_influence=20000, fill_value=np.nan):
-        """Remap data from one dataset to another one."""
         from gpm.utils.pyresample import remap
 
         return remap(
@@ -94,6 +160,7 @@ class GPM_Base_Accessor:
             fill_value=fill_value,
         )
 
+    @auto_wrap_docstring
     def collocate(
         self,
         product,
@@ -106,10 +173,6 @@ class GPM_Base_Accessor:
         decode_cf=True,
         chunks={},
     ):
-        """Collocate another product on the dataset.
-
-        It assumes that along all the input dataset, there is an approximate collocated product.
-        """
         from gpm.utils.collocation import collocate_product
 
         return collocate_product(
@@ -126,6 +189,7 @@ class GPM_Base_Accessor:
         )
 
     #### Transect utility
+    @auto_wrap_docstring
     def define_transect_slices(
         self,
         direction="cross_track",
@@ -145,6 +209,7 @@ class GPM_Base_Accessor:
             transect_kwargs=transect_kwargs,
         )
 
+    @auto_wrap_docstring
     def select_transect(
         self,
         direction="cross_track",
@@ -167,50 +232,50 @@ class GPM_Base_Accessor:
         )
 
     #### Profile utility
-    def get_variable_at_bin(self, bin, variable=None):
-        """Retrieve variable values at specific range bins."""
-        from gpm.utils.manipulations import get_variable_at_bin
+    @auto_wrap_docstring
+    def slice_range_at_bin(self, bins):
+        from gpm.utils.manipulations import slice_range_at_bin
 
-        return get_variable_at_bin(self._obj, bin=bin, variable=variable)
+        return slice_range_at_bin(self._obj, bins=bins)
 
-    def get_height_at_bin(self, bin):
-        """Retrieve height values at specific range bins."""
+    @auto_wrap_docstring
+    def get_height_at_bin(self, bins):
         from gpm.utils.manipulations import get_height_at_bin
 
-        return get_height_at_bin(self._obj, bin=bin)
+        return get_height_at_bin(self._obj, bins=bins)
 
-    def slice_range_with_valid_data(self, variable=None):
-        """Select the 'range' interval with valid data."""
-        from gpm.utils.manipulations import slice_range_with_valid_data
+    @auto_wrap_docstring
+    def subset_range_with_valid_data(self, variable=None):
+        from gpm.utils.manipulations import subset_range_with_valid_data
 
-        return slice_range_with_valid_data(self._obj, variable=variable)
+        return subset_range_with_valid_data(self._obj, variable=variable)
 
-    def slice_range_where_values(self, variable=None, vmin=-np.inf, vmax=np.inf):
-        """Select the 'range' interval where values are within the [vmin, vmax] interval."""
-        from gpm.utils.manipulations import slice_range_where_values
+    @auto_wrap_docstring
+    def subset_range_where_values(self, variable=None, vmin=-np.inf, vmax=np.inf):
+        from gpm.utils.manipulations import subset_range_where_values
 
-        return slice_range_where_values(self._obj, variable=variable, vmin=vmin, vmax=vmax)
+        return subset_range_where_values(self._obj, variable=variable, vmin=vmin, vmax=vmax)
 
-    def slice_range_at_height(self, height):
-        """Slice the 3D array at a given height."""
+    @auto_wrap_docstring
+    def slice_range_at_height(self, value):
         from gpm.utils.manipulations import slice_range_at_height
 
-        return slice_range_at_height(self._obj, height=height)
+        return slice_range_at_height(self._obj, value=value)
 
+    @auto_wrap_docstring
     def slice_range_at_value(self, value, variable=None):
-        """Slice the 3D arrays where the variable values are close to value."""
         from gpm.utils.manipulations import slice_range_at_value
 
         return slice_range_at_value(self._obj, variable=variable, value=value)
 
+    @auto_wrap_docstring
     def slice_range_at_max_value(self, variable=None):
-        """Slice the 3D arrays where the variable values are at maximum."""
         from gpm.utils.manipulations import slice_range_at_max_value
 
         return slice_range_at_max_value(self._obj, variable=variable)
 
+    @auto_wrap_docstring
     def slice_range_at_min_value(self, variable=None):
-        """Slice the 3D arrays where the variable values are at minimum."""
         from gpm.utils.manipulations import slice_range_at_min_value
 
         return slice_range_at_min_value(self._obj, variable=variable)
@@ -308,48 +373,105 @@ class GPM_Base_Accessor:
         return has_valid_geolocation(self._obj)
 
     #### Subsetting utility
+    @auto_wrap_docstring
     def subset_by_time(self, start_time=None, end_time=None):
         from gpm.utils.time import subset_by_time
 
         return subset_by_time(self._obj, start_time=start_time, end_time=end_time)
 
+    @auto_wrap_docstring
     def subset_by_time_slice(self, slice):
         from gpm.utils.time import subset_by_time_slice
 
         return subset_by_time_slice(self._obj, slice=slice)
 
+    @auto_wrap_docstring
     def get_slices_regular_time(self, tolerance=None, min_size=1):
         from gpm.utils.checks import get_slices_regular_time
 
         return get_slices_regular_time(self._obj, tolerance=tolerance, min_size=min_size)
 
-    def get_slices_contiguous_scans(self, min_size=2, min_n_scans=3):
+    @auto_wrap_docstring
+    def get_slices_contiguous_scans(
+        self,
+        min_size=2,
+        min_n_scans=3,
+        x="lon",
+        y="lat",
+        along_track_dim="along_track",
+        cross_track_dim="cross_track",
+    ):
         from gpm.utils.checks import get_slices_contiguous_scans
 
-        return get_slices_contiguous_scans(self._obj, min_size=min_size, min_n_scans=min_n_scans)
+        return get_slices_contiguous_scans(
+            self._obj,
+            min_size=min_size,
+            min_n_scans=min_n_scans,
+            x=x,
+            y=y,
+            cross_track_dim=cross_track_dim,
+            along_track_dim=along_track_dim,
+        )
 
+    @auto_wrap_docstring
     def get_slices_contiguous_granules(self, min_size=2):
         from gpm.utils.checks import get_slices_contiguous_granules
 
         return get_slices_contiguous_granules(self._obj, min_size=min_size)
 
-    def get_slices_valid_geolocation(self, min_size=2):
+    @auto_wrap_docstring
+    def get_slices_valid_geolocation(
+        self,
+        min_size=2,
+        x="lon",
+        y="lat",
+        along_track_dim="along_track",
+        cross_track_dim="cross_track",
+    ):
         from gpm.utils.checks import get_slices_valid_geolocation
 
-        return get_slices_valid_geolocation(self._obj, min_size=min_size)
+        return get_slices_valid_geolocation(
+            self._obj,
+            min_size=min_size,
+            x=x,
+            y=y,
+            cross_track_dim=cross_track_dim,
+            along_track_dim=along_track_dim,
+        )
 
-    def get_slices_regular(self, min_size=None, min_n_scans=3):
+    @auto_wrap_docstring
+    def get_slices_regular(
+        self,
+        min_size=None,
+        min_n_scans=3,
+        x="lon",
+        y="lat",
+        along_track_dim="along_track",
+        cross_track_dim="cross_track",
+    ):
         from gpm.utils.checks import get_slices_regular
 
-        return get_slices_regular(self._obj, min_size=min_size, min_n_scans=min_n_scans)
+        return get_slices_regular(
+            self._obj,
+            min_size=min_size,
+            min_n_scans=min_n_scans,
+            x=x,
+            y=y,
+            cross_track_dim=cross_track_dim,
+            along_track_dim=along_track_dim,
+        )
 
     #### Plotting utility
+    @auto_wrap_docstring
     def plot_transect_line(
         self,
-        ax,
+        ax=None,
         add_direction=True,
-        text_kwargs={},
-        line_kwargs={},
+        add_background=True,
+        fig_kwargs=None,
+        subplot_kwargs=None,
+        text_kwargs=None,
+        line_kwargs=None,
         **common_kwargs,
     ):
         from gpm.visualization.profile import plot_transect_line
@@ -358,11 +480,15 @@ class GPM_Base_Accessor:
             self._obj,
             ax=ax,
             add_direction=add_direction,
+            add_background=add_background,
+            fig_kwargs=fig_kwargs,
+            subplot_kwargs=subplot_kwargs,
             text_kwargs=text_kwargs,
             line_kwargs=line_kwargs,
             **common_kwargs,
         )
 
+    @auto_wrap_docstring
     def plot_swath(
         self,
         ax=None,
@@ -388,6 +514,7 @@ class GPM_Base_Accessor:
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def plot_swath_lines(
         self,
         ax=None,
@@ -415,10 +542,11 @@ class GPM_Base_Accessor:
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def plot_map_mesh(
         self,
-        x="lon",
-        y="lat",
+        x=None,
+        y=None,
         ax=None,
         edgecolors="k",
         linewidth=0.1,
@@ -442,10 +570,11 @@ class GPM_Base_Accessor:
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def plot_map_mesh_centroids(
         self,
-        x="lon",
-        y="lat",
+        x=None,
+        y=None,
         ax=None,
         c="r",
         s=1,
@@ -477,9 +606,15 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 
     @property
     def variables(self):
-        from gpm.checks import get_dataset_variables
+        from gpm.utils.xarray import get_dataset_variables
 
         return get_dataset_variables(self._obj, sort=True)
+
+    @property
+    def vertical_variables(self):
+        from gpm.checks import get_vertical_variables
+
+        return get_vertical_variables(self._obj)
 
     @property
     def spatial_2d_variables(self):
@@ -499,21 +634,49 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 
         return get_frequency_variables(self._obj)
 
+    @property
+    def bin_variables(self):
+        from gpm.checks import get_bin_variables
+
+        return get_bin_variables(self._obj)
+
+    @auto_wrap_docstring
     def select_spatial_3d_variables(self, strict=False, squeeze=True):
         from gpm.utils.manipulations import select_spatial_3d_variables
 
         return select_spatial_3d_variables(self._obj, strict=strict, squeeze=squeeze)
 
+    @auto_wrap_docstring
     def select_spatial_2d_variables(self, strict=False, squeeze=True):
         from gpm.utils.manipulations import select_spatial_2d_variables
 
         return select_spatial_2d_variables(self._obj, strict=strict, squeeze=squeeze)
 
+    @auto_wrap_docstring
+    def select_vertical_variables(self):
+        from gpm.utils.manipulations import select_vertical_variables
+
+        return select_vertical_variables(self._obj)
+
+    @auto_wrap_docstring
+    def select_frequency_variables(self):
+        from gpm.utils.manipulations import select_frequency_variables
+
+        return select_frequency_variables(self._obj)
+
+    @auto_wrap_docstring
+    def select_bin_variables(self):
+        from gpm.utils.manipulations import select_bin_variables
+
+        return select_bin_variables(self._obj)
+
+    @auto_wrap_docstring
     def set_encoding(self, encoding_dict=None):
         from gpm.encoding.routines import set_encoding
 
         return set_encoding(self._obj, encoding_dict=encoding_dict)
 
+    @auto_wrap_docstring
     def title(
         self,
         add_timestep=True,
@@ -531,13 +694,13 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             timezone=timezone,
         )
 
+    @auto_wrap_docstring
     def plot_map(
         self,
         variable,
         ax=None,
-        x="lon",
-        y="lat",
-        rgb=False,
+        x=None,
+        y=None,
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
@@ -549,14 +712,12 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
     ):
         from gpm.visualization.plot import plot_map
 
-        da = self._obj[variable]
         return plot_map(
-            da,
+            self._obj[variable],
             ax=ax,
             x=x,
             y=y,
             add_colorbar=add_colorbar,
-            rgb=rgb,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
             interpolation=interpolation,
@@ -566,6 +727,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def plot_image(
         self,
         variable,
@@ -580,9 +742,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
     ):
         from gpm.visualization.plot import plot_image
 
-        da = self._obj[variable]
         return plot_image(
-            da,
+            self._obj[variable],
             ax=ax,
             x=x,
             y=y,
@@ -593,11 +754,15 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def plot_transect(
         self,
         variable,
         ax=None,
+        x=None,
+        y=None,
         add_colorbar=True,
+        interpolation="nearest",
         zoom=True,
         fig_kwargs=None,
         cbar_kwargs=None,
@@ -605,31 +770,33 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
     ):
         from gpm.visualization.profile import plot_transect
 
-        da = self._obj[variable]
         return plot_transect(
-            da,
+            self._obj[variable],
             ax=ax,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
+            interpolation=interpolation,
             zoom=zoom,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def available_retrievals(self):
-        """Available GPM-API retrievals for that GPM product."""
         from gpm.retrievals.routines import available_retrievals
 
         return available_retrievals(self._obj)
 
+    @auto_wrap_docstring
     def retrieve(self, name, **kwargs):
-        """Retrieve a GPM-API variable."""
         from gpm.retrievals.routines import get_retrieval_variable
 
         return get_retrieval_variable(self._obj, name=name, **kwargs)
 
+    @auto_wrap_docstring
     def slice_range_at_temperature(self, temperature, variable_temperature="airTemperature"):
-        """Slice the 3D arrays along a specific isotherm."""
         from gpm.utils.manipulations import slice_range_at_temperature
 
         return slice_range_at_temperature(
@@ -638,17 +805,52 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             variable_temperature=variable_temperature,
         )
 
+    @auto_wrap_docstring
+    def extract_dataset_above_bin(self, bins, new_range_size=None, strict=False, reverse=False):
+        from gpm.utils.manipulations import extract_dataset_above_bin
+
+        return extract_dataset_above_bin(
+            self._obj,
+            bins=bins,
+            new_range_size=new_range_size,
+            strict=strict,
+            reverse=reverse,
+        )
+
+    @auto_wrap_docstring
+    def extract_dataset_below_bin(self, bins, new_range_size=None, strict=False, reverse=False):
+        from gpm.utils.manipulations import extract_dataset_below_bin
+
+        return extract_dataset_below_bin(
+            self._obj,
+            bins=bins,
+            new_range_size=new_range_size,
+            strict=strict,
+            reverse=reverse,
+        )
+
+    @auto_wrap_docstring
+    def extract_l2_dataset(self, bin_ellipsoid="binEllipsoid", new_range_size=None, shortened_range=True):
+        from gpm.utils.manipulations import extract_l2_dataset
+
+        return extract_l2_dataset(
+            self._obj,
+            bin_ellipsoid=bin_ellipsoid,
+            new_range_size=new_range_size,
+            shortened_range=shortened_range,
+        )
+
+    @auto_wrap_docstring
     def to_pandas_dataframe(self):
-        """Convert xr.Dataset to Pandas Dataframe. Expects xr.Dataset with only 2D spatial DataArrays."""
-        from gpm.bucket.processing import ds_to_pd_df_function
+        from gpm.utils.dataframe import to_pandas_dataframe
 
-        return ds_to_pd_df_function(self._obj)
+        return to_pandas_dataframe(self._obj)
 
+    @auto_wrap_docstring
     def to_dask_dataframe(self):
-        """Convert xr.Dataset to Dask Dataframe. Expects xr.Dataset with only 2D spatial DataArrays."""
-        from gpm.bucket.processing import ds_to_dask_df_function
+        from gpm.utils.dataframe import to_dask_dataframe
 
-        return ds_to_dask_df_function(self._obj)
+        return to_dask_dataframe(self._obj)
 
 
 @xr.register_dataarray_accessor("gpm")
@@ -656,6 +858,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     def __init__(self, xarray_obj):
         super().__init__(xarray_obj)
 
+    @auto_wrap_docstring
     def get_slices_var_equals(self, dim, values, union=True, criteria="all"):
         from gpm.utils.checks import get_slices_var_equals
 
@@ -667,11 +870,13 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             criteria=criteria,
         )
 
+    @auto_wrap_docstring
     def get_slices_var_between(self, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
         from gpm.utils.checks import get_slices_var_between
 
         return get_slices_var_between(self._obj, dim=dim, vmin=vmin, vmax=vmax, criteria=criteria)
 
+    @auto_wrap_docstring
     def title(
         self,
         prefix_product=True,
@@ -691,16 +896,16 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             timezone=timezone,
         )
 
+    @auto_wrap_docstring
     def plot_map(
         self,
         ax=None,
-        x="lon",
-        y="lat",
+        x=None,
+        y=None,
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
         interpolation="nearest",  # used only for GPM grid object
-        rgb=False,
         fig_kwargs=None,
         subplot_kwargs=None,
         cbar_kwargs=None,
@@ -708,16 +913,14 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     ):
         from gpm.visualization.plot import plot_map
 
-        da = self._obj
         return plot_map(
-            da,
+            self._obj,
             ax=ax,
             x=x,
             y=y,
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
-            rgb=rgb,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
@@ -725,6 +928,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def plot_image(
         self,
         ax=None,
@@ -738,9 +942,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     ):
         from gpm.visualization.plot import plot_image
 
-        da = self._obj
         return plot_image(
-            da,
+            self._obj,
             ax=ax,
             x=x,
             y=y,
@@ -751,10 +954,14 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def plot_transect(
         self,
         ax=None,
+        x=None,
+        y=None,
         add_colorbar=True,
+        interpolation="nearest",
         zoom=True,
         fig_kwargs=None,
         cbar_kwargs=None,
@@ -762,17 +969,20 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     ):
         from gpm.visualization.profile import plot_transect
 
-        da = self._obj
         return plot_transect(
-            da,
+            self._obj,
             ax=ax,
+            x=x,
+            y=y,
             add_colorbar=add_colorbar,
+            interpolation=interpolation,
             zoom=zoom,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
 
+    @auto_wrap_docstring
     def integrate_profile_concentration(self, name, scale_factor=None, units=None):
         from gpm.utils.manipulations import integrate_profile_concentration
 

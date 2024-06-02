@@ -195,18 +195,18 @@ def check_product_validity(product, product_type=None):
 def check_time(time):
     """Check time validity.
 
-    It returns a datetime.datetime object to seconds precision.
+    It returns a `datetime.datetime` object to seconds precision.
 
     Parameters
     ----------
-    time : (datetime.datetime, datetime.date, np.datetime64, str)
+    time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
         Time object.
-        Accepted types: ``datetime.datetime``, ``datetime.date``, ``np.datetime64`` or ``str``.
+        Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
 
     Returns
     -------
-    time : datetime.datetime
+    time : `datetime.datetime`
 
     """
     if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, np.ndarray, str)):
@@ -222,7 +222,7 @@ def check_time(time):
             else:
                 raise ValueError("Expecting a single timestep!")
         else:
-            raise ValueError("The numpy array does not have a np.datetime64 dtype!")
+            raise ValueError("The numpy array does not have a numpy.datetime64 dtype!")
 
     # If np.datetime64, convert to datetime.datetime
     if isinstance(time, np.datetime64):
@@ -246,7 +246,7 @@ def check_time(time):
 
 
 def check_date(date):
-    """Check is a datetime.date object."""
+    """Check is a `datetime.date` object."""
     if date is None:
         raise ValueError("date cannot be None")
     # Use check_time to convert to datetime.datetime

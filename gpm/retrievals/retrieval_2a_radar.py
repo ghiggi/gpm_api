@@ -24,21 +24,47 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains GPM RADAR 2A products community-based retrivals."""
+"""This module contains GPM RADAR 2A products community-based retrievals."""
 import numpy as np
 import xarray as xr
 
 from gpm.utils.manipulations import (
     get_bright_band_mask,
-    get_dims_without,
     get_height_at_temperature,
     get_liquid_phase_mask,
     get_range_axis,
     get_solid_phase_mask,
-    get_variable_dataarray,
+)
+from gpm.utils.xarray import (
+    get_dimensions_without,
+    get_xarray_variable,
 )
 
 ### TODO: requirements Ku, Ka band ...
+
+
+# def retrieve_range_distance(ds):
+#     """Retrieve range distance in L2 RADAR Products.
+
+#     Not possible because scRangeEllipsoid is not provided !
+#     """
+#     # rangeBinSize :
+#     da_vertical = ds[get_vertical_variables(ds)[0]]
+#     range_bin = xr.ones_like(da_vertical) * ds["range"] # start at 1 !
+#     rangeBinSize = 125 # To estimate based on scan_mode !
+#     binEllipsoid_2A = get_xarray_variable(ds, variable="binEllipsoid_2A")
+#     ellipsoidBinOffset = get_xarray_variable(ds, variable="ellipsoidBinOffset")
+#     scRangeEllipsoid = get_xarray_variable(ds, variable="scRangeEllipsoid") # MISSING
+
+#     # Compute range distance
+#     index_from_ellipsoid = binEllipsoid_2A - range_bin  # 0 at ellipsoid, increasing above
+#     range_distance_from_ellipsoid = index_from_ellipsoid * rangeBinSize
+#     range_distance_at_ellispoid = scRangeEllipsoid - ellipsoidBinOffset
+#     range_distance = range_distance_at_ellispoid - range_distance_from_ellipsoid
+
+#     # Name the DataArray
+#     range_distance.name = "range_distance"
+#     return range_distance
 
 
 def retrieve_dfrMeasured(ds):
@@ -67,28 +93,28 @@ def retrieve_dfrFinalNearSurface(ds):
 
 def retrieve_heightClutterFreeBottom(ds):
     """Retrieve clutter height."""
-    da = ds.gpm.get_height_at_bin(bin="binClutterFreeBottom")
+    da = ds.gpm.get_height_at_bin(bins="binClutterFreeBottom")
     da.name = "heightClutterFreeBottom"
     return da
 
 
 def retrieve_heightRealSurfaceKa(ds):
     """Retrieve height of real surface at Ka band."""
-    da = ds.gpm.get_height_at_bin(bin=ds["binRealSurface"].sel({"radar_frequency": "Ka"}))
+    da = ds.gpm.get_height_at_bin(bins=ds["binRealSurface"].sel({"radar_frequency": "Ka"}))
     da.name = "heightRealSurfaceKa"
     return da
 
 
 def retrieve_heightRealSurfaceKu(ds):
     """Retrieve height of real surface at Ku band."""
-    da = ds.gpm.get_height_at_bin(bin=ds["binRealSurface"].sel({"radar_frequency": "Ku"}))
+    da = ds.gpm.get_height_at_bin(bins=ds["binRealSurface"].sel({"radar_frequency": "Ku"}))
     da.name = "heightRealSurfaceKu"
     return da
 
 
-def retrieve_precipitationType(xr_obj, method="major_rain_type"):
+def retrieve_flagPrecipitationType(xr_obj, method="major_rain_type"):
     """Retrieve major rain type from the 2A-<RADAR> typePrecip variable."""
-    da = get_variable_dataarray(xr_obj, variable="typePrecip")
+    da = get_xarray_variable(xr_obj, variable="typePrecip")
     available_methods = ["major_rain_type"]
     if method not in available_methods:
         raise NotImplementedError(f"Implemented methods are {available_methods}")
@@ -117,8 +143,8 @@ def retrieve_REFC(
     if mask_solid_phase and mask_liquid_phase:
         raise ValueError("Either specify 'mask_solid_phase' or 'mask_liquid_phase'.")
     # Retrieve required DataArrays
-    da = get_variable_dataarray(ds, variable=variable)
-    if len(da["radar_frequency"].data) != 1:
+    da = get_xarray_variable(ds, variable=variable).squeeze()
+    if "radar_frequency" in da.dims:
         da = da.sel({"radar_frequency": radar_frequency})
     # Mask bright band region
     if mask_bright_band:
@@ -151,8 +177,8 @@ def retrieve_REFCH(ds, variable="zFactorFinal", radar_frequency="Ku"):
     Also called: Composite REFlectivity Height
     """
     # Retrieve required DataArrays
-    da = get_variable_dataarray(ds, variable=variable)
-    if len(da["radar_frequency"].data) != 1:
+    da = get_xarray_variable(ds, variable=variable).squeeze()
+    if "radar_frequency" in da.dims:
         da = da.sel({"radar_frequency": radar_frequency})
     da_height = ds["height"]
 
@@ -185,8 +211,8 @@ def retrieve_EchoDepth(
     Common thresholds are 18, 30, 50, 60 dbZ.
     """
     # Retrieve required DataArrays
-    da = get_variable_dataarray(ds, variable=variable)
-    if len(da["radar_frequency"].data) != 1:
+    da = get_xarray_variable(ds, variable=variable).squeeze()
+    if "radar_frequency" in da.dims:
         da = da.sel({"radar_frequency": radar_frequency})
     da_height = ds["height"].copy()
     # Mask height bin where not raining
@@ -238,8 +264,8 @@ def retrieve_EchoTopHeight(
     References: Delobbe and Holleman, 2006; Stefan and Barbu, 2018
     """
     # Retrieve required DataArrays
-    da = get_variable_dataarray(ds, variable=variable)
-    if len(da["radar_frequency"].data) != 1:
+    da = get_xarray_variable(ds, variable=variable).squeeze()
+    if "radar_frequency" in da.dims:
         da = da.sel({"radar_frequency": radar_frequency})
     da_height = ds["height"].copy()
 
@@ -297,7 +323,7 @@ def retrieve_VIL(ds, variable="zFactorFinal", radar_frequency="Ku"):
 
     # Compute VIL
     range_axis = get_range_axis(da)
-    dims = get_dims_without(da, dims=["range"])
+    dims = get_dimensions_without(da, dims="range")
     scale_factor = 3.44 * 10**-6
     vil_profile_arr[np.isnan(vil_profile_arr)] = 0  # because numpy.sum does not remove nan
     vil_arr = scale_factor * vil_profile_arr.sum(axis=range_axis)  # DataArray.sum is very slow !
@@ -417,25 +443,27 @@ def retrieve_SHI(
 
     Parameters
     ----------
-    ds : TYPE
-        DESCRIPTION.
+    ds : `xarray.Dataset`
+        GPM L2 RADAR Dataset.
     variable : str, optional
         Reflectivity field. The default is "zFactorFinal".
     radar_frequency : str, optional
         Radar frequency. The default is "Ku".
-    lower_z_threshold : (int, float), optional
+    lower_z_threshold : int or  float, optional
         Lower reflectivity threshold. The default is 40 dBZ.
-    upper_z_threshold : (int, float), optional
+    upper_z_threshold : int or  float, optional
         Upper reflectivity threshold. The default is 50 dBZ.
 
     Returns
     -------
-    da_shi : xr.DataArray
+    da_shi : `xarray.DataArray`
         Severe Hail Index (SHI)
 
     """
     # Retrieve required DataArrays
-    da_z = ds[variable].sel({"radar_frequency": radar_frequency})
+    da_z = get_xarray_variable(ds, variable=variable).squeeze()
+    if "radar_frequency" in da_z.dims:
+        da_z = da_z.sel({"radar_frequency": radar_frequency})
     da_t = ds["airTemperature"]
     da_height = ds["height"]
     da_mask = np.isnan(da_z).all(dim="range")
@@ -460,6 +488,7 @@ def retrieve_SHI(
         lower_threshold=da_height_zero_deg,
         upper_threshold=da_height_minus_20_deg,
     )  # 14 s per granule
+
     # Compute HailKineticEnergy
     da_e = retrieve_HailKineticEnergy(
         ds,

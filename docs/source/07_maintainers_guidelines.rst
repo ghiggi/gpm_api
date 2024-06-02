@@ -77,7 +77,7 @@ To build the documentation locally, follow the next three steps.
 	The python packages required to build the documentation are listed in the
 	`environment.yaml <https://github.com/ghiggi/gpm_api/blob/main/docs/environment.yaml>`_ file.
 
-	For an efficient setup, we recommend creating a dedicated virtual environment.
+	For an efficient setup, it is recommended to create a dedicated virtual environment.
 	Navigate to the ``docs/`` directory and execute the following command.
 	This will create a new environment and install the required packages:
 
@@ -125,10 +125,10 @@ Ghiggi Gionata owns the `ReadTheDocs <https://readthedocs.org/>`__ account.
 
 
 Package Release
-============================
+=================
 
 A `GitHub Action <https://github.com/ghiggi/gpm_api/actions>`_ is configured to automate the packaging and uploading process to `PyPI <https://pypi.org/project/gpm-api/>`_.
-This action, detailed `here <https://github.com/ghiggi/gpm_api/blob/main/.github/workflows/release_to_pypi.yml>`_, triggers the packaging workflow depicted in the following image:
+This action, detailed `here <https://github.com/ghiggi/gpm_api/blob/main/.github/workflows/release_to_pypi.yaml>`_, triggers the packaging workflow depicted in the following image:
 
 .. image:: /static/package_release.png
 

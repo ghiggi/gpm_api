@@ -1,0 +1,63 @@
+---
+echoPower:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -120
+    vmax: -20
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Total Echo Power [$dBm$]
+  auxiliary:
+    category: [radar]
+noisePower:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Average Noise Power [$dBm$]
+  auxiliary:
+    category: [radar]
+signalPower:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -140
+    vmax: -50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Signal Power [$dBm$]
+  auxiliary:
+    category: [radar]
+snRatio:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 1
+    vmax: 20
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Signal To Noise Ratio [$dB$]
+  auxiliary:
+    category: [radar]
+zEcho:
+  reference: reflectivity
+zSignal:
+  reference: reflectivity

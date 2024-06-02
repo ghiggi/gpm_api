@@ -122,13 +122,13 @@ def test_get_gpm_dims_dict(monkeypatch):
     assert returned_dict == expected_dict
 
 
-def test_rename_datarray_dimensions():
-    """Test _rename_datarray_dimensions."""
+def test_rename_dataarray_dimensions():
+    """Test _rename_dataarray_dimensions."""
     array = np.zeros(shape=(3, 3))
     dataarray = xr.DataArray(data=array, dims=["phony_dim_1", "not_replaced"])
     dataarray.attrs["DimensionNames"] = "replaced_dim_1"
 
-    returned_dataarray = dimensions._rename_datarray_dimensions(dataarray)
+    returned_dataarray = dimensions._rename_dataarray_dimensions(dataarray)
     expected_dims = ("replaced_dim_1", "not_replaced")
     assert returned_dataarray.dims == expected_dims
 
