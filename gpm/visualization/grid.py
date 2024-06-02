@@ -36,6 +36,7 @@ from gpm.visualization.plot import (
     add_optimize_layout_method,
     check_object_format,
     create_grid_mesh_data_array,
+    infer_xy_labels,
     initialize_cartopy_plot,
     plot_cartopy_imshow,
     #  plot_mpl_imshow,
@@ -49,8 +50,8 @@ from gpm.visualization.plot import (
 
 def _plot_grid_map_cartopy(
     da,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -112,8 +113,8 @@ def _plot_grid_map_cartopy(
 
 def _plot_grid_map_facetgrid(
     da,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -194,8 +195,8 @@ def _plot_grid_map_facetgrid(
 
 def plot_grid_map(
     da,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     interpolation="nearest",
@@ -244,8 +245,8 @@ def plot_grid_map(
 
 def plot_grid_mesh(
     xr_obj,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     edgecolors="k",
     linewidth=0.1,
@@ -264,6 +265,9 @@ def plot_grid_mesh(
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
     )
+
+    # Infer x and y
+    x, y = infer_xy_labels(xr_obj, x=x, y=y, rgb=plot_kwargs.get("rgb", None))
 
     # Create 2D mesh `xarray.DataArray`
     da = create_grid_mesh_data_array(xr_obj, x=x, y=y)

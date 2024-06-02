@@ -183,6 +183,22 @@ class TestPlotMap:
         p = plot.plot_map(orbit_pole_dataarray, subplot_kwargs={"projection": crs_proj})
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
+    def test_orbit_xy_dim(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with x and y dimensions."""
+        p = plot.plot_map(orbit_dataarray.rename({"cross_track": "y", "along_track": "x"}))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_longitude_latitude_coords(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with longitude and latitude  coordinates."""
+        p = plot.plot_map(orbit_dataarray.rename({"lon": "longitude", "lat": "latitude"}))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
     ####------------------------------------------------------------------------
     #### - Test with NaN in the data
 
@@ -501,6 +517,22 @@ class TestPlotMap:
         with pytest.raises(ValueError):  # Expecting a 2D GPM field
             plot.plot_map(grid_dataarray)
 
+    def test_grid_xy_dim(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data with x and y dimensions."""
+        p = plot.plot_map(grid_dataarray.rename({"lat": "y", "lon": "x"}))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_grid_longitude_latitude_coords(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data with longitude and latitude  coordinates."""
+        p = plot.plot_map(grid_dataarray.rename({"lon": "longitude", "lat": "latitude"}))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
     def test_invalid(
         self,
     ) -> None:
@@ -518,7 +550,23 @@ class TestPlotImage:
         orbit_dataarray: xr.DataArray,
     ) -> None:
         """Test plotting orbit data."""
-        p = plot.plot_image(orbit_dataarray)
+        p = plot.plot_image(orbit_dataarray.drop_vars(["lon", "lat"]))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_without_coords(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data without coordinates."""
+        p = plot.plot_image(orbit_dataarray.drop_vars(["lon", "lat"]))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_orbit_with_xy_dims(
+        self,
+        orbit_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data with x and y dimensions."""
+        p = plot.plot_image(orbit_dataarray.rename({"cross_track": "y", "along_track": "x"}))
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_orbit_alpha_array(
@@ -579,6 +627,30 @@ class TestPlotImage:
     ) -> None:
         """Test plotting grid data."""
         p = plot.plot_image(grid_dataarray)
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_grid_without_coords(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data without coordinates."""
+        p = plot.plot_image(grid_dataarray.drop_vars(["lon", "lat"]))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_grid_with_xy_dims(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data with x and y dimensions."""
+        p = plot.plot_image(grid_dataarray.rename({"lat": "y", "lon": "x"}))
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
+    def test_grid_with_longitude_latitude_coords(
+        self,
+        grid_dataarray: xr.DataArray,
+    ) -> None:
+        """Test plotting grid data with x and y dimensions."""
+        p = plot.plot_image(grid_dataarray.rename({"lat": "latitude", "lon": "longitude"}))
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_invalid(

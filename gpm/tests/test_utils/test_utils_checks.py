@@ -417,8 +417,8 @@ class TestContinuousScans:
         ds["lat"] = (("cross_track", "along_track"), lat)
         ds["lon"] = (("cross_track", "along_track"), lon)
         ds["gpm_granule_id"] = np.ones(self.n_along_track)
-        ds["time"] = time
-
+        ds = ds.set_coords(["lon", "lat"])
+        ds = ds.assign_coords({"time": ("along_track", time)})
         return ds
 
     @pytest.fixture()
@@ -596,7 +596,8 @@ class TestValidGeolocation:
         ds = xr.Dataset()
         ds["lon"] = (("cross_track", "along_track"), lon)
         ds["lat"] = (("cross_track", "along_track"), lat)
-        ds["time"] = (("along_track"), time)
+        ds = ds.set_coords(["lon", "lat"])
+        ds = ds.assign_coords({"time": ("along_track", time)})
         return ds
 
     @pytest.fixture()
@@ -631,11 +632,11 @@ class TestValidGeolocation:
     ) -> None:
         """Test _is_valid_geolocation."""
         # Valid
-        valid = checks._is_valid_geolocation(ds_orbit_valid)
+        valid = checks._is_valid_geolocation(ds_orbit_valid, coord="lon")
         assert np.all(valid)
 
         # Invalid
-        valid = checks._is_valid_geolocation(ds_orbit_invalid)
+        valid = checks._is_valid_geolocation(ds_orbit_invalid, coord="lon")
         assert np.sum(valid.all(dim="cross_track")) == self.n_along_track - 1
 
     @pytest.mark.usefixtures("_set_is_orbit_to_true")
@@ -708,7 +709,8 @@ class TestWobblingSwath:
     ds["lat"] = (("cross_track", "along_track"), lat)
     ds["lon"] = (("cross_track", "along_track"), lon)
     ds["gpm_granule_id"] = np.ones(n_along_track)
-    ds["time"] = time
+    ds = ds.set_coords(["lon", "lat"])
+    ds = ds.assign_coords({"time": ("along_track", time)})
 
     # Threshold must be at least 3 to remove wobbling slices
     threshold = 3
@@ -773,8 +775,10 @@ class TestGetSlicesRegular:
         ds = xr.Dataset()
         ds["lon"] = (("cross_track", "along_track"), lon)
         ds["lat"] = (("cross_track", "along_track"), lon)
+        ds = ds.set_coords(["lon", "lat"])
         granule_ids = np.array([0, 0, 0, 1, 1, 1, 2, 2, 7, 8])
-        return ds.assign_coords({"gpm_granule_id": ("along_track", granule_ids)})
+        ds = ds.assign_coords({"gpm_granule_id": ("along_track", granule_ids)})
+        return ds
 
     @pytest.fixture()
     def ds_grid(self) -> xr.Dataset:

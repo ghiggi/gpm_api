@@ -496,6 +496,14 @@ def preprocess_subplot_kwargs(subplot_kwargs):
     return subplot_kwargs
 
 
+def infer_xy_labels(da, x=None, y=None, rgb=None):
+    from xarray.plot.utils import _infer_xy_labels
+
+    # Infer dimensions
+    x, y = _infer_xy_labels(da, x=x, y=y, imshow=True, rgb=rgb)  # dummy flag for rgb
+    return x, y
+
+
 def initialize_cartopy_plot(
     ax,
     fig_kwargs,
@@ -700,6 +708,8 @@ def plot_cartopy_imshow(
     """Plot imshow with cartopy."""
     plot_kwargs = {} if plot_kwargs is None else plot_kwargs
 
+    # Infer x and y
+    x, y = infer_xy_labels(da, x=x, y=y, rgb=plot_kwargs.get("rgb", None))
     # - Ensure image with correct dimensions orders
     da = da.transpose(y, x, ...)
     arr = np.asanyarray(da.data)
@@ -717,7 +727,7 @@ def plot_cartopy_imshow(
     origin = "lower" if y_coords[1] > y_coords[0] else "upper"
 
     # - Add variable field with cartopy
-    _ = plot_kwargs.pop("rgb", None)
+    rgb = plot_kwargs.pop("rgb", False)
     p = ax.imshow(
         arr,
         transform=ccrs.PlateCarree(),
@@ -730,7 +740,7 @@ def plot_cartopy_imshow(
     ax.set_extent(extent)
 
     # - Add colorbar
-    if add_colorbar:
+    if add_colorbar and not rgb:
         _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
     return p
 
@@ -1140,8 +1150,8 @@ def plot_image(
 
 def plot_map(
     da,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     add_swath_lines=True,  # used only for GPM orbit objects
@@ -1159,9 +1169,13 @@ def plot_map(
     da : `xr.DataArray`
         xarray DataArray.
     x : str, optional
-        Longitude coordinate name. The default is ``"lon"``.
+        Longitude coordinate name.
+        If ``None``, takes the second dimension.
+        The default is ``None``.
     y : str, optional
-        Latitude coordinate name. The default is ``"lat"``.
+        Latitude coordinate name.
+        If ``None``, takes the first dimension.
+        The default is ``None``.
     ax : `cartopy.GeoAxes`, optional
         The cartopy GeoAxes where to plot the map.
         If ``None``, a figure is initialized using the
@@ -1240,8 +1254,8 @@ def plot_map(
 
 def plot_map_mesh(
     xr_obj,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     edgecolors="k",
     linewidth=0.1,
@@ -1251,12 +1265,12 @@ def plot_map_mesh(
     **plot_kwargs,
 ):
     from gpm.checks import is_grid, is_orbit
-
-    from .grid import plot_grid_mesh
-    from .orbit import plot_orbit_mesh
+    from gpm.visualization.grid import plot_grid_mesh
+    from gpm.visualization.orbit import infer_orbit_xy_coords, plot_orbit_mesh
 
     # Plot orbit
     if is_orbit(xr_obj):
+        x, y = infer_orbit_xy_coords(xr_obj, x=x, y=y)
         p = plot_orbit_mesh(
             da=xr_obj[y],
             ax=ax,
@@ -1290,8 +1304,8 @@ def plot_map_mesh(
 
 def plot_map_mesh_centroids(
     xr_obj,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     c="r",
     s=1,
@@ -1301,7 +1315,8 @@ def plot_map_mesh_centroids(
     **plot_kwargs,
 ):
     """Plot GPM orbit granule mesh centroids in a cartographic map."""
-    from gpm.checks import is_grid
+    from gpm.checks import is_grid, is_orbit
+    from gpm.visualization.orbit import infer_orbit_xy_coords
 
     # Initialize figure if necessary
     ax = initialize_cartopy_plot(
@@ -1311,9 +1326,16 @@ def plot_map_mesh_centroids(
         add_background=add_background,
     )
 
-    # Retrieve centroids
+    # Retrieve orbits lon, lat coordinates
+    if is_orbit(xr_obj):
+        x, y = infer_orbit_xy_coords(xr_obj, x=x, y=y)
+
+    # Retrieve grid centroids mesh
     if is_grid(xr_obj):
+        x, y = infer_xy_labels(xr_obj, x=x, y=y)
         xr_obj = create_grid_mesh_data_array(xr_obj, x=x, y=y)
+
+    # Extract numpy arrays
     lon = xr_obj[x].to_numpy()
     lat = xr_obj[y].to_numpy()
 

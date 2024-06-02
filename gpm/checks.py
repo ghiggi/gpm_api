@@ -241,19 +241,21 @@ def _is_expected_spatial_dims(spatial_dims):
 def is_orbit(xr_obj):
     """Check whether the xarray object is a GPM ORBIT.
 
-    An orbit transect or nadir view is considered ORBIT.
+    An ORBIT transect or nadir view is considered ORBIT.
+    An ORBIT object must have the coordinates available !
+
     """
-    from gpm.dataset.crs import _get_proj_dim_coords
+    from gpm.dataset.crs import _get_swath_dim_coords
 
     # Check dimension names
     spatial_dims = get_spatial_dimensions(xr_obj)
     if not _is_orbit_expected_spatial_dims(spatial_dims):
         return False
 
-    # Check that no 1D coords exists
-    # - Swath objects are determined by 2D coordinates only
-    x_coord, y_coord = _get_proj_dim_coords(xr_obj)
-    if x_coord is None and y_coord is None:
+    # Check that swath coords exists
+    # - Swath objects are determined by 1D (nadir looking) and 2D coordinates
+    x_coord, y_coord = _get_swath_dim_coords(xr_obj)
+    if x_coord is not None and y_coord is not None:
         return True
     return False
 
@@ -262,6 +264,7 @@ def is_grid(xr_obj):
     """Check whether the xarray object is a GPM GRID.
 
     A GRID slice is not considered a GRID object !
+    An GRID object must have the coordinates available !
     """
     from gpm.dataset.crs import _get_proj_dim_coords
 
@@ -431,14 +434,14 @@ def check_is_gpm_object(xr_obj):
         raise ValueError("Unrecognized GPM xarray object.")
 
 
-def check_has_cross_track_dim(xr_obj):
-    if "cross_track" not in xr_obj.dims:
-        raise ValueError("The 'cross-track' dimension is not available.")
+def check_has_cross_track_dim(xr_obj, dim="cross_track"):
+    if dim not in xr_obj.dims:
+        raise ValueError(f"The 'cross-track' dimension {dim} is not available.")
 
 
-def check_has_along_track_dim(xr_obj):
-    if "along_track" not in xr_obj.dims:
-        raise ValueError("The 'along_track' dimension is not available.")
+def check_has_along_track_dim(xr_obj, dim="along_track"):
+    if dim not in xr_obj.dims:
+        raise ValueError(f"The 'along_track' dimension {dim} is not available.")
 
 
 def check_is_spatial_2d(xr_obj, strict=True, squeeze=True):

@@ -77,6 +77,8 @@ intersphinx_mapping = {
     "xarray": ("https://docs.xarray.dev/en/stable/", None),
     "pyvista": ("https://docs.pyvista.org/version/stable/", None),
     "pyresample": ("https://pyresample.readthedocs.io/en/stable/", None),
+    "dask": ("https://docs.dask.org/en/stable/", None),
+    # "polars": ("https://docs.pola.rs/", None),
 }
 always_document_param_types = True
 

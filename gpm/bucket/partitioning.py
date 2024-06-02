@@ -428,7 +428,7 @@ class Base2DPartitioning:
 
         Return
         --------
-        np.ndarray
+        numpy.ndarray
             Quadmesh array of shape (M+1, N+1, 2)
         """
         x_corners, y_corners = np.meshgrid(self.x_bounds, self.y_bounds)
@@ -440,7 +440,7 @@ class Base2DPartitioning:
         """Return the partitions vertices in an array of shape (N, M, 4, 2).
 
         The output vertices, once the first 2 dimension are flattened,
-        can be passed directly to a matplotlib.PolyCollection.
+        can be passed directly to a `matplotlib.PolyCollection`.
         For plotting with cartopy, the polygon order must be "counterclockwise".
 
         Parameters
@@ -563,7 +563,7 @@ class Base2DPartitioning:
 
         Parameters
         ----------
-        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame or polars.LazyFrame
+        df : `pandas.DataFrame`, `dask.DataFrame`, `polars.DataFrame`, `pyarrow.Table` or `polars.LazyFrame`
             Dataframe to which add partitions centroids.
         x : str
             Column name with the x coordinate.
@@ -575,7 +575,7 @@ class Base2DPartitioning:
 
         Returns
         -------
-        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame or polars.LazyFrame
+        df : `pandas.DataFrame`, `dask.DataFrame`, `polars.DataFrame`, `pyarrow.Table` or `polars.LazyFrame`
             Dataframe with the partitions label(s) column(s).
 
         """
@@ -607,7 +607,7 @@ class Base2DPartitioning:
 
         Parameters
         ----------
-        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame or polars.LazyFrame
+        df : `pandas.DataFrame`, `dask.DataFrame`, `polars.DataFrame`, `pyarrow.Table` or `polars.LazyFrame`
             Dataframe to which add partitions centroids.
         x : str
             Column name with the x coordinate.
@@ -625,7 +625,7 @@ class Base2DPartitioning:
 
         Returns
         -------
-        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame or polars.LazyFrame
+        df : `pandas.DataFrame`, `dask.DataFrame`, `polars.DataFrame`, `pyarrow.Table` or `polars.LazyFrame`
             Dataframe with the partitions centroids x and y coordinates columns.
 
         """
@@ -979,10 +979,9 @@ class TilePartitioning(Base2DPartitioning):
 
 
 class LonLatPartitioning(XYPartitioning):
-    """
-    Handles geographic partitioning of data based on longitude and latitude bin sizes within a defined extent.
+    """Handles geographic partitioning of data based on longitude and latitude bin sizes within a defined extent.
 
-    The last bin size (in lon and lat direction) might not be of size ``size` !
+    The last bin size (in lon and lat direction) might not be of size ``size`` !
 
     Parameters
     ----------

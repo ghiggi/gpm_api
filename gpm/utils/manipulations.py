@@ -124,11 +124,13 @@ def conversion_factors_degree_to_meter(latitude):
 
     Parameters
     ----------
-    latitude : Latitude in degrees where the conversion is needed
+    latitude : numpy.ndarray
+        Latitude in degrees where the conversion is needed
 
     Returns
     -------
-    (cx, cy) : Tuple containing conversion factors for longitude and latitude
+    (cx, cy) : tuple
+        Tuple containing conversion factors for longitude and latitude
     """
     # Earth's radius at the equator (in meters)
     R = 6378137

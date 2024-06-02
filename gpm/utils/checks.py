@@ -30,9 +30,8 @@ import functools
 import numpy as np
 import pandas as pd
 
-from gpm.checks import is_grid, is_orbit
+from gpm.checks import check_has_along_track_dim, is_grid, is_orbit
 from gpm.utils.decorators import (
-    check_has_along_track_dimension,
     check_is_gpm_object,
     check_is_orbit,
 )
@@ -382,26 +381,26 @@ def has_regular_time(xr_obj):
 ########################
 
 
-def _select_lons_lats_centroids(xr_obj):
-    if "cross_track" not in xr_obj.dims:
-        lons = xr_obj["lon"].to_numpy()
-        lats = xr_obj["lat"].to_numpy()
+def _select_lons_lats_centroids(xr_obj, x="lon", y="lat", cross_track_dim="cross_track"):
+    if cross_track_dim not in xr_obj.dims:
+        lons = xr_obj[x].to_numpy()
+        lats = xr_obj[y].to_numpy()
     else:
         # Select centroids coordinates in the middle of the cross_track scan
-        middle_idx = int(xr_obj["cross_track"].shape[0] / 2)
-        lons = xr_obj["lon"].isel(cross_track=middle_idx).to_numpy()
-        lats = xr_obj["lat"].isel(cross_track=middle_idx).to_numpy()
+        middle_idx = int(xr_obj[cross_track_dim].shape[0] / 2)
+        lons = xr_obj[x].isel({cross_track_dim: middle_idx}).to_numpy()
+        lats = xr_obj[y].isel({cross_track_dim: middle_idx}).to_numpy()
     return lons, lats
 
 
-def _get_along_track_scan_distance(xr_obj):
+def _get_along_track_scan_distance(xr_obj, x="lon", y="lat", cross_track_dim="cross_track"):
     """Compute the distance between along_track centroids."""
     from pyproj import Geod
 
     # Select centroids coordinates
     # - If no cross-track, take the available lat/lon 1D array
     # - If cross-track dimension is present, takes the coordinates in the swath middle.
-    lons, lats = _select_lons_lats_centroids(xr_obj)
+    lons, lats = _select_lons_lats_centroids(xr_obj, x=x, y=y, cross_track_dim=cross_track_dim)
 
     # Define between-centroids line coordinates
     start_lons = lons[:-1]
@@ -415,7 +414,7 @@ def _get_along_track_scan_distance(xr_obj):
     return dist
 
 
-def _is_contiguous_scans(xr_obj):
+def _is_contiguous_scans(xr_obj, x="lon", y="lat", cross_track_dim="cross_track"):
     """Return a boolean array indicating if the next scan is contiguous.
 
     It assumes at least 3 scans are provided.
@@ -423,7 +422,7 @@ def _is_contiguous_scans(xr_obj):
     The last element is set to True since it can not be verified.
     """
     # Compute along track scan distance
-    dist = _get_along_track_scan_distance(xr_obj)
+    dist = _get_along_track_scan_distance(xr_obj, x=x, y=y, cross_track_dim=cross_track_dim)
 
     # Convert to km and round
     dist_km = np.round(dist / 1000, 0)
@@ -451,8 +450,15 @@ def _is_contiguous_scans(xr_obj):
 
 
 @check_is_orbit
-@check_has_along_track_dimension
-def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
+def get_slices_contiguous_scans(
+    xr_obj,
+    min_size=2,
+    min_n_scans=3,
+    x="lon",
+    y="lat",
+    along_track_dim="along_track",
+    cross_track_dim="cross_track",
+):
     """Return a list of slices ensuring contiguous scans (and granules).
 
     It checks for contiguous scans only in the middle of the cross-track !
@@ -477,8 +483,10 @@ def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
         Output format: ``[slice(start,stop), slice(start,stop),...]``
 
     """
+    check_has_along_track_dim(xr_obj, dim=along_track_dim)
+
     # Get number of scans
-    n_scans = xr_obj["along_track"].shape[0]
+    n_scans = xr_obj[along_track_dim].shape[0]
 
     # Define behaviour if less than 2/3 scan along track
     # --> Contiguity can't be verified without at least 3 slices !
@@ -488,7 +496,7 @@ def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
         return []
 
     # Get boolean array indicating if the next scan is contiguous
-    is_contiguous = _is_contiguous_scans(xr_obj)
+    is_contiguous = _is_contiguous_scans(xr_obj, x=x, y=y, cross_track_dim=cross_track_dim)
 
     # If non-contiguous scans are present, get the slices with contiguous scans
     # - It discard consecutive non-contiguous scans
@@ -511,8 +519,13 @@ def get_slices_contiguous_scans(xr_obj, min_size=2, min_n_scans=3):
 
 
 @check_is_orbit
-@check_has_along_track_dimension
-def get_slices_non_contiguous_scans(xr_obj):
+def get_slices_non_contiguous_scans(
+    xr_obj,
+    x="lon",
+    y="lat",
+    along_track_dim="along_track",
+    cross_track_dim="cross_track",
+):
     """Return a list of slices where the scans discontinuity occurs.
 
     An input with less than ``2`` scans (along-track) returns an empty list.
@@ -529,8 +542,10 @@ def get_slices_non_contiguous_scans(xr_obj):
         Output format: ``[slice(start,stop), slice(start,stop),...]``
 
     """
+    check_has_along_track_dim(xr_obj, dim=along_track_dim)
+
     # Get number of scans
-    n_scans = xr_obj["along_track"].shape[0]
+    n_scans = xr_obj[along_track_dim].shape[0]
 
     # Define behaviour if less than 3 scan along track
     # --> Contiguity can't be verified without at least 3 slices !
@@ -550,19 +565,32 @@ def get_slices_non_contiguous_scans(xr_obj):
     #     list_slices = []
     # return list_slices
 
-    list_slices_valid = get_slices_contiguous_scans(xr_obj, min_size=2)
-    list_slices_full = [slice(0, len(xr_obj["along_track"]))]
+    list_slices_valid = get_slices_contiguous_scans(
+        xr_obj,
+        min_size=2,
+        x=x,
+        y=y,
+        along_track_dim=along_track_dim,
+        cross_track_dim=cross_track_dim,
+    )
+    list_slices_full = [slice(0, len(xr_obj[along_track_dim]))]
     return list_slices_difference(list_slices_full, list_slices_valid)
 
 
-# @check_has_cross_track_dimension
-@check_has_along_track_dimension
-def check_contiguous_scans(xr_obj, verbose=True):
+def check_contiguous_scans(
+    xr_obj,
+    verbose=True,
+    x="lon",
+    y="lat",
+    along_track_dim="along_track",
+    cross_track_dim="cross_track",
+):
     """Check no missing scans across the along_track direction.
 
     Note:
     - This sometimes occurs between orbit granules.
     - This sometimes occurs within a orbit granule.
+    - This function also works for nadir-looking only orbits (no cross-track).
 
     Parameters
     ----------
@@ -572,7 +600,14 @@ def check_contiguous_scans(xr_obj, verbose=True):
         If ``True``, it prints the time interval when the non contiguous scans occurs.
 
     """
-    list_discontinuous_slices = get_slices_non_contiguous_scans(xr_obj)
+    check_has_along_track_dim(xr_obj, dim=along_track_dim)
+    list_discontinuous_slices = get_slices_non_contiguous_scans(
+        xr_obj,
+        x=x,
+        y=y,
+        along_track_dim=along_track_dim,
+        cross_track_dim=cross_track_dim,
+    )
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         # Retrieve discontinuous timesteps interval
@@ -590,11 +625,19 @@ def check_contiguous_scans(xr_obj, verbose=True):
         raise ValueError(msg)
 
 
-# @check_has_cross_track_dimension
-@check_has_along_track_dimension
-def has_contiguous_scans(xr_obj):
-    """Return ``True`` if all scans are contiguous. ``False`` otherwise."""
-    list_discontinuous_slices = get_slices_non_contiguous_scans(xr_obj)
+def has_contiguous_scans(xr_obj, x="lon", y="lat", along_track_dim="along_track", cross_track_dim="cross_track"):
+    """Return ``True`` if all scans are contiguous. ``False`` otherwise.
+
+    This functions also works with nadir-only looking orbit.
+    """
+    check_has_along_track_dim(xr_obj, dim=along_track_dim)
+    list_discontinuous_slices = get_slices_non_contiguous_scans(
+        xr_obj,
+        x=x,
+        y=y,
+        along_track_dim=along_track_dim,
+        cross_track_dim=cross_track_dim,
+    )
     n_discontinuous = len(list_discontinuous_slices)
     if n_discontinuous > 0:
         return False
@@ -607,24 +650,31 @@ def has_contiguous_scans(xr_obj):
 #############################
 
 
-def _is_non_valid_geolocation(xr_obj, x="lon"):
+def _is_non_valid_geolocation(xr_obj, coord):
     """Return a boolean array indicating if the geolocation is invalid.
 
     `True = Invalid`, `False = Valid`.
     """
-    return np.isnan(xr_obj[x])
+    return np.isnan(xr_obj[coord])
 
 
-def _is_valid_geolocation(xr_obj, x="lon"):
+def _is_valid_geolocation(xr_obj, coord):
     """Return a boolean array indicating if the geolocation is valid.
 
     `True = Valid`, `False = Invalid`.
     """
-    return ~np.isnan(xr_obj[x])
+    return ~np.isnan(xr_obj[coord])
 
 
 @check_is_orbit
-def get_slices_valid_geolocation(xr_obj, min_size=2):
+def get_slices_valid_geolocation(
+    xr_obj,
+    min_size=2,
+    x="lon",
+    y="lat",
+    along_track_dim="along_track",
+    cross_track_dim="cross_track",
+):
     """Return a list of GPM ORBIT along-track slices with valid geolocation.
 
     The minimum size of the output slices is ``2``.
@@ -648,19 +698,19 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
 
     """
     # - Get invalid coordinates
-    invalid_lon_coords = _is_non_valid_geolocation(xr_obj, x="lon")
-    invalid_lat_coords = _is_non_valid_geolocation(xr_obj, x="lat")
+    invalid_lon_coords = _is_non_valid_geolocation(xr_obj, coord=x)
+    invalid_lat_coords = _is_non_valid_geolocation(xr_obj, coord=y)
     invalid_coords = np.logical_or(invalid_lon_coords, invalid_lat_coords)
 
     # - Identify cross-track index that along-track are always invalid
-    idx_cross_track_not_all_invalid = np.where(~invalid_coords.all("along_track"))[0]
+    idx_cross_track_not_all_invalid = np.where(~invalid_coords.all(along_track_dim))[0]
     # - If all invalid, return empty list
     if len(idx_cross_track_not_all_invalid) == 0:
         return []
     # - Select only cross-track index that are not all invalid along-track
-    invalid_coords = invalid_coords.isel(cross_track=idx_cross_track_not_all_invalid)
+    invalid_coords = invalid_coords.isel({cross_track_dim: idx_cross_track_not_all_invalid})
     # - Now identify scans across which there are still invalid coordinates
-    invalid_scans = invalid_coords.any(dim="cross_track")
+    invalid_scans = invalid_coords.any(dim=cross_track_dim)
     valid_scans = ~invalid_scans
     # - Now identify valid along-track slices
     list_slices = get_list_slices_from_bool_arr(
@@ -672,7 +722,13 @@ def get_slices_valid_geolocation(xr_obj, min_size=2):
     return list_slices_filter(list_slices, min_size=min_size)
 
 
-def get_slices_non_valid_geolocation(xr_obj):
+def get_slices_non_valid_geolocation(
+    xr_obj,
+    x="lon",
+    y="lat",
+    along_track_dim="along_track",
+    cross_track_dim="cross_track",
+):
     """Return a list of GPM ORBIT along-track slices with non-valid geolocation.
 
     The minimum size of the output slices is 2.
@@ -695,12 +751,26 @@ def get_slices_non_valid_geolocation(xr_obj):
         Output format: ``[slice(start,stop), slice(start,stop),...]``
 
     """
-    list_slices_valid = get_slices_valid_geolocation(xr_obj, min_size=1)
-    list_slices_full = [slice(0, len(xr_obj["along_track"]))]
+    list_slices_valid = get_slices_valid_geolocation(
+        xr_obj,
+        min_size=1,
+        x=x,
+        y=y,
+        along_track_dim=along_track_dim,
+        cross_track_dim=cross_track_dim,
+    )
+    list_slices_full = [slice(0, len(xr_obj[along_track_dim]))]
     return list_slices_difference(list_slices_full, list_slices_valid)
 
 
-def check_valid_geolocation(xr_obj, verbose=True):
+def check_valid_geolocation(
+    xr_obj,
+    verbose=True,
+    x="lon",
+    y="lat",
+    along_track_dim="along_track",
+    cross_track_dim="cross_track",
+):
     """Check no geolocation errors in the GPM Dataset.
 
     Parameters
@@ -709,7 +779,13 @@ def check_valid_geolocation(xr_obj, verbose=True):
         xarray object.
 
     """
-    list_invalid_slices = get_slices_non_valid_geolocation(xr_obj)
+    list_invalid_slices = get_slices_non_valid_geolocation(
+        xr_obj,
+        x=x,
+        y=y,
+        along_track_dim=along_track_dim,
+        cross_track_dim=cross_track_dim,
+    )
     n_invalid_scan_slices = len(list_invalid_slices)
     if n_invalid_scan_slices > 0:
         # Retrieve timesteps interval with non valid geolocation
@@ -727,10 +803,16 @@ def check_valid_geolocation(xr_obj, verbose=True):
 
 
 @check_is_gpm_object
-def has_valid_geolocation(xr_obj):
+def has_valid_geolocation(xr_obj, x="lon", y="lat", along_track_dim="along_track", cross_track_dim="cross_track"):
     """Checks GPM object has valid geolocation."""
     if is_orbit(xr_obj):
-        list_invalid_slices = get_slices_non_valid_geolocation(xr_obj)
+        list_invalid_slices = get_slices_non_valid_geolocation(
+            xr_obj,
+            x=x,
+            y=y,
+            along_track_dim=along_track_dim,
+            cross_track_dim=cross_track_dim,
+        )
         n_invalid_scan_slices = len(list_invalid_slices)
         return n_invalid_scan_slices == 0
     if is_grid(xr_obj):
@@ -753,7 +835,7 @@ def apply_on_valid_geolocation(function):
             # Retrieve slice offset
             start_offset = slc.start
             # Retrieve dataset subset
-            subset_xr_obj = xr_obj.isel(along_track=slc)
+            subset_xr_obj = xr_obj.isel({"along_track": slc})
             # Update args
             new_args[0] = subset_xr_obj
             # Apply function
@@ -811,7 +893,13 @@ def _get_non_wobbling_lats(lats, threshold=100):
 
 
 @apply_on_valid_geolocation
-def get_slices_non_wobbling_swath(xr_obj, threshold=100):
+def get_slices_non_wobbling_swath(
+    xr_obj,
+    threshold=100,
+    y="lat",
+    along_track_dim="along_track",
+    cross_track_dim="cross_track",
+):
     """Return the GPM ORBIT along-track slices along which the swath is not wobbling.
 
     For wobbling, we define the occurrence of changes in latitude directions
@@ -819,8 +907,8 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
     The function extract the along-track boundary on both swath sides and
     identify where the change in orbit direction occurs.
     """
-    xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
-    lats = xr_obj["lat"].to_numpy()
+    xr_obj = xr_obj.transpose(cross_track_dim, along_track_dim, ...)
+    lats = xr_obj[y].to_numpy()
     lats_side0 = lats[0, :]
     lats_side2 = lats[-1, :]
     # Get valid slices
@@ -830,7 +918,13 @@ def get_slices_non_wobbling_swath(xr_obj, threshold=100):
 
 
 @apply_on_valid_geolocation
-def get_slices_wobbling_swath(xr_obj, threshold=100):
+def get_slices_wobbling_swath(
+    xr_obj,
+    threshold=100,
+    y="lat",
+    cross_track_dim="cross_track",
+    along_track_dim="along_track",
+):
     """Return the GPM ORBIT along-track slices along which the swath is wobbling.
 
     For wobbling, we define the occurrence of changes in latitude directions
@@ -838,8 +932,14 @@ def get_slices_wobbling_swath(xr_obj, threshold=100):
     The function extract the along-track boundary on both swath sides and
     identify where the change in orbit direction occurs.
     """
-    list_slices1 = get_slices_non_wobbling_swath(xr_obj, threshold=threshold)
-    list_slices_full = [slice(0, len(xr_obj["along_track"]))]
+    list_slices1 = get_slices_non_wobbling_swath(
+        xr_obj,
+        threshold=threshold,
+        y=y,
+        along_track_dim=along_track_dim,
+        cross_track_dim=cross_track_dim,
+    )
+    list_slices_full = [slice(0, len(xr_obj[along_track_dim]))]
     return list_slices_difference(list_slices_full, list_slices1)
 
 
@@ -864,7 +964,15 @@ def is_regular(xr_obj):
 
 
 @check_is_gpm_object
-def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
+def get_slices_regular(
+    xr_obj,
+    min_size=None,
+    min_n_scans=3,
+    x="lon",
+    y="lat",
+    along_track_dim="along_track",
+    cross_track_dim="cross_track",
+):
     """Return a list of slices to select regular GPM objects.
 
     For GPM ORBITS, it returns slices to select contiguous scans with valid geolocation.
@@ -900,9 +1008,13 @@ def get_slices_regular(xr_obj, min_size=None, min_n_scans=3):
             xr_obj,
             min_size=min_size,
             min_n_scans=min_n_scans,
+            x=x,
+            y=y,
+            along_track_dim=along_track_dim,
+            cross_track_dim=cross_track_dim,
         )
         # Get swath portions where there are valid geolocation
-        list_slices_geolocation = get_slices_valid_geolocation(xr_obj, min_size=min_size)
+        list_slices_geolocation = get_slices_valid_geolocation(xr_obj, min_size=min_size, x=x, y=y)
         # Find swath portions meeting all the requirements
         return list_slices_intersection(list_slices_geolocation, list_slices_contiguous)
 

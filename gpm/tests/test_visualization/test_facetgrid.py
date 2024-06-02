@@ -268,7 +268,9 @@ class TestPlotMap:
     ) -> None:
         """Test plotting orbit data using row, col and rgb arguments."""
         grid_dataarray_4_frames_rgb = expand_dims(grid_dataarray_4_frames, 3, dim="rgb", axis=-1)
-        p = plot.plot_map(grid_dataarray_4_frames_rgb, col=EXTRA_DIM, col_wrap=2, rgb="rgb")
+        # BUG in xarray if y,x not provided
+        # p = plot.plot_map(grid_dataarray_4_frames_rgb, col=EXTRA_DIM, col_wrap=2, rgb="rgb")
+        p = plot.plot_map(grid_dataarray_4_frames_rgb, y="lat", x="lon", col=EXTRA_DIM, col_wrap=2, rgb="rgb")
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
 
@@ -281,6 +283,14 @@ class TestPlotImage:
     ) -> None:
         """Test plotting orbit data."""
         p = plot.plot_image(orbit_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
+        save_and_check_figure(figure=p.fig, name=get_test_name())
+
+    def test_orbit_without_coords(
+        self,
+        orbit_dataarray_4_frames: xr.DataArray,
+    ) -> None:
+        """Test plotting orbit data without coordinates."""
+        p = plot.plot_image(orbit_dataarray_4_frames.drop_vars(["lon", "lat"]), col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_col_row_rgb(

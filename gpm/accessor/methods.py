@@ -392,10 +392,26 @@ class GPM_Base_Accessor:
         return get_slices_regular_time(self._obj, tolerance=tolerance, min_size=min_size)
 
     @auto_wrap_docstring
-    def get_slices_contiguous_scans(self, min_size=2, min_n_scans=3):
+    def get_slices_contiguous_scans(
+        self,
+        min_size=2,
+        min_n_scans=3,
+        x="lon",
+        y="lat",
+        along_track_dim="along_track",
+        cross_track_dim="cross_track",
+    ):
         from gpm.utils.checks import get_slices_contiguous_scans
 
-        return get_slices_contiguous_scans(self._obj, min_size=min_size, min_n_scans=min_n_scans)
+        return get_slices_contiguous_scans(
+            self._obj,
+            min_size=min_size,
+            min_n_scans=min_n_scans,
+            x=x,
+            y=y,
+            cross_track_dim=cross_track_dim,
+            along_track_dim=along_track_dim,
+        )
 
     @auto_wrap_docstring
     def get_slices_contiguous_granules(self, min_size=2):
@@ -404,16 +420,46 @@ class GPM_Base_Accessor:
         return get_slices_contiguous_granules(self._obj, min_size=min_size)
 
     @auto_wrap_docstring
-    def get_slices_valid_geolocation(self, min_size=2):
+    def get_slices_valid_geolocation(
+        self,
+        min_size=2,
+        x="lon",
+        y="lat",
+        along_track_dim="along_track",
+        cross_track_dim="cross_track",
+    ):
         from gpm.utils.checks import get_slices_valid_geolocation
 
-        return get_slices_valid_geolocation(self._obj, min_size=min_size)
+        return get_slices_valid_geolocation(
+            self._obj,
+            min_size=min_size,
+            x=x,
+            y=y,
+            cross_track_dim=cross_track_dim,
+            along_track_dim=along_track_dim,
+        )
 
     @auto_wrap_docstring
-    def get_slices_regular(self, min_size=None, min_n_scans=3):
+    def get_slices_regular(
+        self,
+        min_size=None,
+        min_n_scans=3,
+        x="lon",
+        y="lat",
+        along_track_dim="along_track",
+        cross_track_dim="cross_track",
+    ):
         from gpm.utils.checks import get_slices_regular
 
-        return get_slices_regular(self._obj, min_size=min_size, min_n_scans=min_n_scans)
+        return get_slices_regular(
+            self._obj,
+            min_size=min_size,
+            min_n_scans=min_n_scans,
+            x=x,
+            y=y,
+            cross_track_dim=cross_track_dim,
+            along_track_dim=along_track_dim,
+        )
 
     #### Plotting utility
     @auto_wrap_docstring
@@ -499,8 +545,8 @@ class GPM_Base_Accessor:
     @auto_wrap_docstring
     def plot_map_mesh(
         self,
-        x="lon",
-        y="lat",
+        x=None,
+        y=None,
         ax=None,
         edgecolors="k",
         linewidth=0.1,
@@ -527,8 +573,8 @@ class GPM_Base_Accessor:
     @auto_wrap_docstring
     def plot_map_mesh_centroids(
         self,
-        x="lon",
-        y="lat",
+        x=None,
+        y=None,
         ax=None,
         c="r",
         s=1,
@@ -653,8 +699,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         self,
         variable,
         ax=None,
-        x="lon",
-        y="lat",
+        x=None,
+        y=None,
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
@@ -854,8 +900,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
     def plot_map(
         self,
         ax=None,
-        x="lon",
-        y="lat",
+        x=None,
+        y=None,
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,

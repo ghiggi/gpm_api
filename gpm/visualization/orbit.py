@@ -55,15 +55,106 @@ from gpm.visualization.plot import (
 #### ORBIT utilities
 
 
-def remove_invalid_outer_cross_track(xr_obj, coord="lon", alpha=None):
-    """Remove outer crosstrack scans if geolocation is always missing."""
-    if "cross_track" not in xr_obj.dims:
+def infer_orbit_xy_coords(da, x=None, y=None):
+    """
+    Infer possible x and y coordinates for the given DataArray.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The input DataArray.
+    x : str, optional
+        The name of the x (longitude) coordinate. If None, it will be inferred.
+    y : str, optional
+        The name of the y (latitude) coordinate. If None, it will be inferred.
+
+    Returns
+    -------
+    tuple
+        The inferred (x, y) coordinates.
+    """
+    possible_x_coords = ["x", "lon", "longitude"]
+    possible_y_coords = ["y", "lat", "latitude"]
+
+    if x is None:
+        for coord in possible_x_coords:
+            if coord in da.coords:
+                x = coord
+                break
+        else:
+            raise ValueError("Cannot infer x coordinate. Please provide the x coordinate.")
+
+    if y is None:
+        for coord in possible_y_coords:
+            if coord in da.coords:
+                y = coord
+                break
+        else:
+            raise ValueError("Cannot infer y coordinate. Please provide the y coordinate.")
+
+    return x, y
+
+
+def infer_orbit_xy_dim(da, x, y):
+    """
+    Infer possible along-track and cross-track dimensions for the given DataArray.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The input DataArray.
+    x : str
+        The name of the x coordinate.
+    y : str
+        The name of the y coordinate.
+
+    Returns
+    -------
+    tuple
+        The inferred (along_track_dim, cross_track_dim) dimensions.
+    """
+    possible_along_track_dim = ["x", "along_track"]
+    possible_cross_track_dim = ["y", "cross_track"]
+    coordinates_dims = np.unique(list(da[x].dims) + list(da[y].dims)).tolist()
+
+    # Retrieve n_dims
+    n_dims = len(coordinates_dims)  # nadir-only vs 2D
+    # Check for cross_track_dim
+    cross_track_dim = None
+    for dim in coordinates_dims:
+        if dim in possible_cross_track_dim:
+            cross_track_dim = dim
+            break
+
+    # Check for along_track_dim
+    along_track_dim = None
+    for dim in coordinates_dims:
+        if dim in possible_along_track_dim:
+            along_track_dim = dim
+            break
+    if n_dims > 1:
+        if cross_track_dim is None:
+            raise ValueError(f"Cross-track dimension could not be identified across {coordinates_dims}.")
+        if along_track_dim is None:
+            raise ValueError(f"Along-track dimension could not be identified across {coordinates_dims}.")
+    return along_track_dim, cross_track_dim
+
+
+def remove_invalid_outer_cross_track(
+    xr_obj,
+    coord="lon",
+    cross_track_dim="cross_track",
+    along_track_dim="along_track",
+    alpha=None,
+):
+    """Remove outer cross-track scans if geolocation is always missing."""
+    if cross_track_dim not in xr_obj.dims:
         return xr_obj, alpha
-    if "along_track" not in xr_obj.dims:
+    if along_track_dim not in xr_obj.dims:
         coord_arr = np.asanyarray(xr_obj[coord])
         isna = np.isnan(coord_arr)
     else:
-        coord_arr = np.asanyarray(xr_obj[coord].transpose("cross_track", "along_track"))
+        coord_arr = np.asanyarray(xr_obj[coord].transpose(cross_track_dim, along_track_dim))
         isna = np.all(np.isnan(coord_arr), axis=1)
     if isna[0] or isna[-1]:
         is_valid = ~isna
@@ -74,18 +165,26 @@ def remove_invalid_outer_cross_track(xr_obj, coord="lon", alpha=None):
         # Define slice
         slc = slice(start_index, end_index)
         # Subset object
-        xr_obj = xr_obj.isel({"cross_track": slc})
+        xr_obj = xr_obj.isel({cross_track_dim: slc})
         if alpha is not None:
             alpha = alpha[slc, :]
     return xr_obj, alpha
 
 
-def _get_contiguous_slices(da):
+def _get_contiguous_slices(da, x="lon", y="lat", along_track_dim="along_track", cross_track_dim="cross_track"):
     # NOTE: Using get_slices_regular would split when there is any NaN coordinate
-    if "along_track" not in da.dims:  # noqa: SIM108
+    if along_track_dim not in da.dims:
         list_slices = [None]  # case: cross-track transect
     else:
-        list_slices = get_slices_contiguous_scans(da, min_size=2, min_n_scans=2)
+        list_slices = get_slices_contiguous_scans(
+            da,
+            min_size=2,
+            min_n_scans=2,
+            x=x,
+            y=y,
+            along_track_dim=along_track_dim,
+            cross_track_dim=cross_track_dim,
+        )
 
     # Check there are scans to plot
     if len(list_slices) == 0:
@@ -106,22 +205,33 @@ def call_over_contiguous_scans(function):
         # Get axis
         ax = args[1] if len(args) > 1 else kwargs.get("ax")
 
-        # Get slices with contiguous scans if along_track dimension is available
-        list_slices = _get_contiguous_slices(da)
+        # Define dimensions and coordinates
+        x, y = infer_orbit_xy_coords(da, x=kwargs.get("x", None), y=kwargs.get("y", None))
+        along_track_dim, cross_track_dim = infer_orbit_xy_dim(da, x=x, y=y)
 
-        # - Define kwargs
+        # Define kwargs
         user_kwargs = kwargs.copy()
+        user_kwargs["x"] = x
+        user_kwargs["y"] = y
         p = None
-        x = user_kwargs.get("x", "lon")
-        y = user_kwargs.get("y", "lat")
         is_facetgrid = user_kwargs.get("_is_facetgrid", False)
         alpha = user_kwargs.get("alpha", None)
         alpha_2darray_provided = isinstance(alpha, np.ndarray)
+
+        # Get slices with contiguous scans if along_track dimension is available
+        list_slices = _get_contiguous_slices(
+            da,
+            x=x,
+            y=y,
+            along_track_dim=along_track_dim,
+            cross_track_dim=cross_track_dim,
+        )
+
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
             # Retrieve contiguous data array
             # - slc=None when cross-track transect
-            tmp_da = da.isel({"along_track": slc}) if slc is not None else da
+            tmp_da = da.isel({along_track_dim: slc}) if slc is not None else da
 
             # Adapt for alpha
             tmp_alpha = alpha[:, slc].copy() if alpha_2darray_provided else None
@@ -129,8 +239,20 @@ def call_over_contiguous_scans(function):
             # Remove outer cross-track indices if all without coordinates
             # - Infill of coordinates is done separately with infill_invalid_coordins
             # - If along_track transect, return as it is
-            tmp_da, tmp_alpha = remove_invalid_outer_cross_track(tmp_da, coord=x, alpha=tmp_alpha)
-            tmp_da, _ = remove_invalid_outer_cross_track(tmp_da, coord=y, alpha=None)
+            tmp_da, tmp_alpha = remove_invalid_outer_cross_track(
+                tmp_da,
+                alpha=tmp_alpha,
+                coord=x,
+                cross_track_dim=cross_track_dim,
+                along_track_dim=along_track_dim,
+            )
+            tmp_da, _ = remove_invalid_outer_cross_track(
+                tmp_da,
+                alpha=None,
+                coord=y,
+                cross_track_dim=cross_track_dim,
+                along_track_dim=along_track_dim,
+            )
 
             # Define temporary kwargs
             tmp_kwargs = user_kwargs.copy()
@@ -274,8 +396,8 @@ def plot_swath(
 def _plot_orbit_map_cartopy(
     da,
     ax=None,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     add_colorbar=True,
     add_swath_lines=True,
     add_background=True,
@@ -329,8 +451,8 @@ def _plot_orbit_map_cartopy(
 
 def _plot_orbit_map_facetgrid(
     da,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     ax=None,
     add_colorbar=True,
     add_swath_lines=True,
@@ -379,6 +501,7 @@ def _plot_orbit_map_facetgrid(
     )
 
     # Plot the maps
+    x, y = infer_orbit_xy_coords(da, x=x, y=y)
     fc = fc.map_dataarray(
         _plot_orbit_map_cartopy,
         x=x,
@@ -411,8 +534,8 @@ def _plot_orbit_map_facetgrid(
 def plot_orbit_map(
     da,
     ax=None,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     add_colorbar=True,
     add_swath_lines=True,
     add_background=True,
@@ -426,6 +549,7 @@ def plot_orbit_map(
     da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_has_spatial_dim, strict=True)
     # Plot FacetGrid
     if "col" in plot_kwargs or "row" in plot_kwargs:
+        x, y = infer_orbit_xy_coords(da, x=x, y=y)
         p = _plot_orbit_map_facetgrid(
             da=da,
             x=x,
@@ -462,8 +586,8 @@ def plot_orbit_map(
 def plot_orbit_mesh(
     da,
     ax=None,
-    x="lon",
-    y="lat",
+    x=None,
+    y=None,
     edgecolors="k",
     linewidth=0.1,
     add_background=True,

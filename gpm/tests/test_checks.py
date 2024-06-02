@@ -369,9 +369,22 @@ def test_is_orbit(
     assert is_orbit(orbit_dataarray.isel(along_track=0))
     assert is_orbit(orbit_dataarray.isel(cross_track=0))  # nadir-view
 
+    # Check with other dimensions names
+    assert is_orbit(orbit_dataarray.rename({"lon": "longitude", "lat": "latitude"}))
+    assert is_orbit(orbit_dataarray.rename({"cross_track": "y", "along_track": "x"}))
+    assert is_orbit(orbit_dataarray.isel(along_track=0).rename({"cross_track": "y"}))
+    assert is_orbit(orbit_dataarray.isel(cross_track=0).rename({"along_track": "x"}))
+
+    # Check grid is not confound with orbit
     assert not is_orbit(grid_dataarray.isel(lon=0))
     assert not is_orbit(grid_dataarray.isel(lat=0))
     assert not is_orbit(xr.DataArray())
+
+    # Check also strange edge cases
+    assert not is_orbit(grid_dataarray.isel(lat=0).rename({"lon": "x"}))
+    assert not is_orbit(grid_dataarray.isel(lon=0).rename({"lat": "y"}))
+    assert not is_orbit(grid_dataarray.isel(lon=0).rename({"lat": "cross_track"}))
+    assert not is_orbit(grid_dataarray.isel(lon=0).rename({"lat": "along_track"}))
 
     # With one dimensional longitude
     n_x = 10
@@ -381,6 +394,10 @@ def test_is_orbit(
     data = np.random.rand(n_x, n_y)
     invalid_da = xr.DataArray(data, coords={"x": x, "y": y})
     assert not is_orbit(invalid_da)
+
+    # Assert without coordinates
+    assert not is_orbit(grid_dataarray.drop_vars(["lon", "lat"]))
+    assert not is_orbit(orbit_dataarray.drop_vars(["lon", "lat"]))
 
 
 def test_is_grid(
@@ -392,10 +409,19 @@ def test_is_grid(
     assert not is_grid(grid_dataarray.isel(lon=0))
     assert not is_grid(grid_dataarray.isel(lat=0))
 
+    # Check with other dimensions names
+    assert is_grid(grid_dataarray.rename({"lon": "longitude", "lat": "latitude"}))
+    assert is_grid(grid_dataarray.rename({"lon": "x", "lat": "y"}))
+
+    # Check orbit is not confound with grid
     assert not is_grid(orbit_dataarray)
     assert not is_grid(orbit_dataarray.isel(along_track=0))
     assert not is_grid(orbit_dataarray.isel(cross_track=0))
     assert not is_grid(xr.DataArray())
+
+    # Assert without coordinates
+    assert not is_grid(grid_dataarray.drop_vars(["lon", "lat"]))
+    assert not is_grid(orbit_dataarray.drop_vars(["lon", "lat"]))
 
 
 def test_check_is_orbit(

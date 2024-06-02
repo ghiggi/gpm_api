@@ -530,6 +530,8 @@ def open_dataset_1b_ka_fs(
     """Open 1B-Ka dataset in FS scan_mode format in either L1B or L2 format.
 
     It expects start_time after the GPM DPR scan pattern change occurred the 8 May 2018.
+    (Over)Resample HS on MS (using LUT/range distance).
+    The L2 FS format has 176 bins.
 
     Notes
     -----
@@ -539,8 +541,6 @@ def open_dataset_1b_ka_fs(
     - 1B-Ka MS have range resolution of 125 m (260 bins)
     - 2A-Ka HS have range resolution of 125 m (88 bins)
     - 2A-Ka MS have range resolution of 125 m (176 bins)
-    --> (Over)Resample HS on MS (using LUT/range distance)
-    --> L2 FS format has 176 bins
 
     """
     from gpm.io.checks import check_time
