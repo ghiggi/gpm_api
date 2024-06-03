@@ -37,7 +37,7 @@ import xarray as xr
 from cartopy.mpl.geoaxes import GeoAxes
 from mpl_toolkits.axes_grid1 import ImageGrid
 from xarray.plot.facetgrid import FacetGrid
-from xarray.plot.utils import label_from_attrs
+from xarray.plot.utils import _infer_xy_labels, _process_cmap_cbar_kwargs, label_from_attrs
 
 from gpm.visualization.plot import adapt_fig_size
 
@@ -270,6 +270,88 @@ class CustomFacetGrid(FacetGrid, ABC):
         self._cmap_extend = None
         self._mappables = []
         self._finalized = False
+
+    def map_dataarray(
+        self,
+        func,
+        x=None,
+        y=None,
+        **kwargs,
+    ):
+        """
+        Apply a plotting function to a 2d facet's subset of the data.
+
+        This is more convenient and less general than ``FacetGrid.map``
+
+        Parameters
+        ----------
+        func : callable
+            A plotting function with the same signature as a 2d xarray
+            plotting method such as `xarray.plot.imshow`
+        x, y : string
+            Names of the coordinates to plot on x, y axes
+        **kwargs
+            additional keyword arguments to func
+
+        Returns
+        -------
+        self : FacetGrid object
+
+        """
+        if kwargs.get("cbar_ax", None) is not None:
+            raise ValueError("cbar_ax not supported by FacetGrid.")
+
+        cmap_params, cbar_kwargs = _process_cmap_cbar_kwargs(
+            func,
+            self.data.to_numpy(),
+            **kwargs,
+        )
+
+        self._cmap_extend = cmap_params.get("extend")
+
+        # Order is important
+        func_kwargs = {k: v for k, v in kwargs.items() if k not in {"cmap", "colors", "cbar_kwargs", "levels"}}
+        func_kwargs.update(cmap_params)
+        func_kwargs["add_colorbar"] = False
+        if func.__name__ != "surface":
+            func_kwargs["add_labels"] = False
+
+        # Get x, y labels for the first subplot
+        # - Get DataArray prototype without row, col and rgb !
+        da_proto = self.data.loc[self.name_dicts.flat[0]]
+        if self._row_var in list(da_proto.dims):
+            da_proto = da_proto.isel({self._row_var: 0})
+        if self._col_var in list(da_proto.dims):
+            da_proto = da_proto.isel({self._col_var: 0})
+        if kwargs.get("rgb", None):
+            da_proto = da_proto.isel({kwargs.get("rgb", None): 0})
+        x, y = _infer_xy_labels(
+            darray=da_proto,
+            x=x,
+            y=y,
+            imshow=True,
+            # rgb=kwargs.get("rgb", None),
+        )
+        for d, ax in zip(self.name_dicts.flat, self.axs.flat):
+            # None is the sentinel value
+            if d is not None:
+                subset = self.data.loc[d]
+                mappable = func(
+                    subset,
+                    x=x,
+                    y=y,
+                    ax=ax,
+                    **func_kwargs,
+                    _is_facetgrid=True,
+                )
+                self._mappables.append(mappable)
+
+        self._finalize_grid(x, y)
+
+        if kwargs.get("add_colorbar", True):
+            self.add_colorbar(**cbar_kwargs)
+
+        return self
 
     @abstractmethod
     def _remove_bottom_ticks_and_labels(self, ax):
