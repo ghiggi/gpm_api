@@ -124,6 +124,30 @@ def mask_invalid_indices(flag_value=np.nan):
     return decorator
 
 
+def _check_labels_decimals(decimals):
+    """Check and normalize the size input.
+
+    This function accepts the number of labels decimals defined as an integer, float, tuple, or list.
+    It normalizes the input into a tuple of two elements, each representing the
+    desired number of decimals for the x and y partition labels.
+
+    Returns
+    -------
+    list
+        A list of two elements (x_decimals, y_decimals)
+    """
+    if isinstance(decimals, (int, np.integer)):
+        decimals = list([decimals] * 2)
+    elif isinstance(decimals, (tuple, list)):
+        if len(decimals) != 2:
+            raise ValueError("Expecting a decimals (x, y) tuple.")
+    else:
+        raise TypeError("Accepted decimals type are int, list or tuple.")
+    if np.any(np.array(decimals) < 0):
+        raise ValueError("Expecting positive 'labels_decimals' values.")
+    return list(decimals)
+
+
 def check_default_levels(levels, default_levels):
     if levels is None:
         levels = default_levels
@@ -791,9 +815,8 @@ class XYPartitioning(Base2DPartitioning):
         y_bounds = get_bounds(size=self.size[1], vmin=self.extent.ymin, vmax=self.extent.ymax)
         # Define options for labels
         if labels_decimals is None:
-            self._labels_decimals = get_n_decimals(self.size[0]) + 1, get_n_decimals(self.size[1]) + 1
-        else:
-            self._labels_decimals = labels_decimals
+            labels_decimals = get_n_decimals(self.size[0]) + 1, get_n_decimals(self.size[1]) + 1
+        self._labels_decimals = _check_labels_decimals(labels_decimals)
         # Initialize private attributes for labels
         self._xlabels = None
         self._ylabels = None
