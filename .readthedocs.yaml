@@ -13,20 +13,21 @@ build:
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
   configuration: docs/source/conf.py
-  fail_on_warning: true
-# Optionally build your docs in additional formats such as PDF and ePub
+  # fail_on_warning: true
+
+# Build your docs in additional formats such as PDF and ePub
 formats:
   - pdf
-# Optional but recommended, declare the Python requirements required
-# to build your documentation
+
+# Declare the Python requirements required to build your documentation
 # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
-# python:
-#    install:
-#    - method: pip
-#      path: .
-#      extra_requirements:
-#        - image
-#        - dev
 # See https://docs.readthedocs.io/en/stable/guides/conda.html#making-builds-faster-with-mamba
 conda:
   environment: docs/environment.yaml
+python:
+  install:
+    - method: pip
+      path: .
+#      extra_requirements:
+#        - image
+#        - dev
