@@ -46,9 +46,12 @@ from gpm.utils.slices import (
     list_slices_union,
 )
 
-ORBIT_TIME_TOLERANCE = np.timedelta64(5, "s")
-
 # TODO: maybe infer from time? <3 s for DPR, up to 5s per old PMW
+ORBIT_TIME_TOLERANCE = np.timedelta64(5, "s")
+DEFAULT_CROSS_TRACK_DIM = "cross_track"
+DEFAULT_ALONG_TRACK_DIM = "along_track"
+DEFAULT_X = "lon"
+DEFAULT_Y = "lat"
 
 ####--------------------------------------------------------------------------.
 ##########################
@@ -381,7 +384,7 @@ def has_regular_time(xr_obj):
 ########################
 
 
-def _select_lons_lats_centroids(xr_obj, x="lon", y="lat", cross_track_dim="cross_track"):
+def _select_lons_lats_centroids(xr_obj, x=DEFAULT_X, y=DEFAULT_Y, cross_track_dim=DEFAULT_CROSS_TRACK_DIM):
     if cross_track_dim not in xr_obj.dims:
         lons = xr_obj[x].to_numpy()
         lats = xr_obj[y].to_numpy()
@@ -393,7 +396,7 @@ def _select_lons_lats_centroids(xr_obj, x="lon", y="lat", cross_track_dim="cross
     return lons, lats
 
 
-def _get_along_track_scan_distance(xr_obj, x="lon", y="lat", cross_track_dim="cross_track"):
+def _get_along_track_scan_distance(xr_obj, x=DEFAULT_X, y=DEFAULT_Y, cross_track_dim=DEFAULT_CROSS_TRACK_DIM):
     """Compute the distance between along_track centroids."""
     from pyproj import Geod
 
@@ -414,7 +417,7 @@ def _get_along_track_scan_distance(xr_obj, x="lon", y="lat", cross_track_dim="cr
     return dist
 
 
-def _is_contiguous_scans(xr_obj, x="lon", y="lat", cross_track_dim="cross_track"):
+def _is_contiguous_scans(xr_obj, x=DEFAULT_X, y=DEFAULT_Y, cross_track_dim=DEFAULT_CROSS_TRACK_DIM):
     """Return a boolean array indicating if the next scan is contiguous.
 
     It assumes at least 3 scans are provided.
@@ -454,10 +457,10 @@ def get_slices_contiguous_scans(
     xr_obj,
     min_size=2,
     min_n_scans=3,
-    x="lon",
-    y="lat",
-    along_track_dim="along_track",
-    cross_track_dim="cross_track",
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
 ):
     """Return a list of slices ensuring contiguous scans (and granules).
 
@@ -521,10 +524,10 @@ def get_slices_contiguous_scans(
 @check_is_orbit
 def get_slices_non_contiguous_scans(
     xr_obj,
-    x="lon",
-    y="lat",
-    along_track_dim="along_track",
-    cross_track_dim="cross_track",
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
 ):
     """Return a list of slices where the scans discontinuity occurs.
 
@@ -580,10 +583,10 @@ def get_slices_non_contiguous_scans(
 def check_contiguous_scans(
     xr_obj,
     verbose=True,
-    x="lon",
-    y="lat",
-    along_track_dim="along_track",
-    cross_track_dim="cross_track",
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
 ):
     """Check no missing scans across the along_track direction.
 
@@ -625,7 +628,13 @@ def check_contiguous_scans(
         raise ValueError(msg)
 
 
-def has_contiguous_scans(xr_obj, x="lon", y="lat", along_track_dim="along_track", cross_track_dim="cross_track"):
+def has_contiguous_scans(
+    xr_obj,
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
+):
     """Return ``True`` if all scans are contiguous. ``False`` otherwise.
 
     This functions also works with nadir-only looking orbit.
@@ -670,10 +679,10 @@ def _is_valid_geolocation(xr_obj, coord):
 def get_slices_valid_geolocation(
     xr_obj,
     min_size=2,
-    x="lon",
-    y="lat",
-    along_track_dim="along_track",
-    cross_track_dim="cross_track",
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
 ):
     """Return a list of GPM ORBIT along-track slices with valid geolocation.
 
@@ -724,10 +733,10 @@ def get_slices_valid_geolocation(
 
 def get_slices_non_valid_geolocation(
     xr_obj,
-    x="lon",
-    y="lat",
-    along_track_dim="along_track",
-    cross_track_dim="cross_track",
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
 ):
     """Return a list of GPM ORBIT along-track slices with non-valid geolocation.
 
@@ -766,10 +775,10 @@ def get_slices_non_valid_geolocation(
 def check_valid_geolocation(
     xr_obj,
     verbose=True,
-    x="lon",
-    y="lat",
-    along_track_dim="along_track",
-    cross_track_dim="cross_track",
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
 ):
     """Check no geolocation errors in the GPM Dataset.
 
@@ -803,7 +812,13 @@ def check_valid_geolocation(
 
 
 @check_is_gpm_object
-def has_valid_geolocation(xr_obj, x="lon", y="lat", along_track_dim="along_track", cross_track_dim="cross_track"):
+def has_valid_geolocation(
+    xr_obj,
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
+):
     """Checks GPM object has valid geolocation."""
     if is_orbit(xr_obj):
         list_invalid_slices = get_slices_non_valid_geolocation(
@@ -896,9 +911,9 @@ def _get_non_wobbling_lats(lats, threshold=100):
 def get_slices_non_wobbling_swath(
     xr_obj,
     threshold=100,
-    y="lat",
-    along_track_dim="along_track",
-    cross_track_dim="cross_track",
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
 ):
     """Return the GPM ORBIT along-track slices along which the swath is not wobbling.
 
@@ -921,9 +936,9 @@ def get_slices_non_wobbling_swath(
 def get_slices_wobbling_swath(
     xr_obj,
     threshold=100,
-    y="lat",
-    cross_track_dim="cross_track",
-    along_track_dim="along_track",
+    y=DEFAULT_Y,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
 ):
     """Return the GPM ORBIT along-track slices along which the swath is wobbling.
 
@@ -968,10 +983,10 @@ def get_slices_regular(
     xr_obj,
     min_size=None,
     min_n_scans=3,
-    x="lon",
-    y="lat",
-    along_track_dim="along_track",
-    cross_track_dim="cross_track",
+    x=DEFAULT_X,
+    y=DEFAULT_Y,
+    along_track_dim=DEFAULT_ALONG_TRACK_DIM,
+    cross_track_dim=DEFAULT_CROSS_TRACK_DIM,
 ):
     """Return a list of slices to select regular GPM objects.
 

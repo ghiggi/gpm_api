@@ -122,15 +122,15 @@ ______________________________________________________________________
 
 ### 📖 Explore the GPM-API documentation
 
-To discover all GPM-API download, manipulation, analysis and plotting utilities, or how to contribute your custom retrieval to GPM-API
+To discover all GPM-API download, manipulation, analysis and plotting features,
 please read the software documentation available at [https://gpm-api.readthedocs.io/en/latest/](https://gpm-api.readthedocs.io/en/latest/).
-Here is a bullet point list of the main sections of the documentation:
+
+If you are new to GPM-API, we recommend starting with the following pages:
 
 - [Introduction to GPM sensors, products, theoretical and practical aspects](https://gpm-api.readthedocs.io/en/latest/00_introduction.html)
 - [Software installation](https://gpm-api.readthedocs.io/en/latest/02_installation.html)
 - [Configuration of GPM-API to start download GPM Data from NASA PPS and GES DISC servers](https://gpm-api.readthedocs.io/en/latest/03_quickstart.html)
 - [Basic tutorials on how to read, manipulate and visualize radar, passive microwave sensors and IMERG products](https://gpm-api.readthedocs.io/en/latest/04_tutorials.htmls)
-- [Advanced analysis tutorials on how to extract image patches, label images, geographically bucket satellite data archive, apply or contribute scientific retrievals to GPM-API](https://gpm-api.readthedocs.io/en/latest/05_advanced_tools.html)
 
 All GPM-API tutorials are available as Jupyter Notebooks in the [`tutorial`](https://github.com/ghiggi/gpm_api/tree/main/tutorials) directory.
 

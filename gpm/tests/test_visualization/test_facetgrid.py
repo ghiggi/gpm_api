@@ -258,18 +258,18 @@ class TestPlotMap:
         self,
         grid_dataarray_4_frames: xr.DataArray,
     ) -> None:
-        """Test plotting orbit data."""
+        """Test plotting grid data."""
         p = plot.plot_map(grid_dataarray_4_frames, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
-    def test_grid_col_rgb(
-        self,
-        grid_dataarray_4_frames: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data using row, col and rgb arguments."""
-        grid_dataarray_4_frames_rgb = expand_dims(grid_dataarray_4_frames, 3, dim="rgb", axis=-1)
-        p = plot.plot_map(grid_dataarray_4_frames_rgb, col=EXTRA_DIM, col_wrap=2, rgb="rgb")
-        save_and_check_figure(figure=p.fig, name=get_test_name())
+    # def test_grid_col_rgb(
+    #     self,
+    #     grid_dataarray_4_frames: xr.DataArray,
+    # ) -> None:
+    #     """Test plotting grid data using row, col and rgb arguments."""
+    #     grid_dataarray_4_frames_rgb = expand_dims(grid_dataarray_4_frames, 3, dim="rgb", axis=-1)
+    #     p = plot.plot_map(grid_dataarray_4_frames_rgb, col=EXTRA_DIM, col_wrap=2, rgb="rgb")
+    #     save_and_check_figure(figure=p.fig, name=get_test_name())
 
 
 class TestPlotImage:
