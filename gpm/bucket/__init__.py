@@ -25,6 +25,20 @@
 
 # -----------------------------------------------------------------------------.
 """This directory defines the GPM-API geographic binning toolbox."""
+import importlib
+
+if not importlib.util.find_spec("pyarrow"):
+    raise ImportError(
+        "The 'pyarrow' package is required but not found. "
+        "Please install it using the following command: "
+        "conda install -c conda-forge pyarrow",
+    )
+if not importlib.util.find_spec("polars"):
+    raise ImportError(
+        "The 'polars' package is required but not found. "
+        "Please install it using the following command: "
+        "conda install -c conda-forge polars",
+    )
 from gpm.bucket.partitioning import LonLatPartitioning, TilePartitioning
 from gpm.bucket.readers import read_bucket as read
 from gpm.bucket.routines import merge_granule_buckets, write_bucket, write_granules_bucket
