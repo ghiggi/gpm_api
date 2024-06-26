@@ -348,7 +348,7 @@ class TestWriteDaskPartitionedDataset:
             row_group_size="100MB",  # enforce computation of first dask partition
         )
         # Assert generated files
-        assert os.listdir(os.path.join(tmp_path, "0")) == sorted(
+        assert sorted(os.listdir(os.path.join(tmp_path, "0"))) == sorted(
             [
                 "prefix_dask_partition_0_0.parquet",
                 "prefix_dask_partition_1_0.parquet",
