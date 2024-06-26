@@ -759,7 +759,8 @@ class TestPlotLabels:
         orbit_dataarray: xr.DataArray,
     ) -> xr.DataArray:
         """Create an orbit data array with label coordinates."""
-        labels = np.random.randint(0, 10, orbit_dataarray.shape)
+        rng = np.random.default_rng(seed=0)
+        labels = rng.integers(0, 10, size=orbit_dataarray.shape)
         return orbit_dataarray.assign_coords(
             {self.label_name: (("cross_track", "along_track"), labels)},
         )
@@ -770,7 +771,8 @@ class TestPlotLabels:
         grid_dataarray: xr.DataArray,
     ) -> xr.DataArray:
         """Create a grid data array with label coordinates."""
-        labels = np.random.randint(0, 10, grid_dataarray.shape)
+        rng = np.random.default_rng(seed=0)
+        labels = rng.integers(0, 10, size=grid_dataarray.shape)
         return grid_dataarray.assign_coords({self.label_name: (("lat", "lon"), labels)})
 
     def test_orbit(

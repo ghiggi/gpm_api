@@ -122,7 +122,9 @@ def test_get_xarray_variable() -> None:
 
 def test_get_dimensions_without() -> None:
     """Test get_dimensions_without function."""
-    dataarray_3d = xr.DataArray(np.random.rand(2, 2, 2), dims=["range", "cross_track", "along_track"])
+    rng = np.random.default_rng()
+    data = rng.random((2, 2, 2))
+    dataarray_3d = xr.DataArray(data, dims=["range", "cross_track", "along_track"])
     # Test with list input
     returned_dims = get_dimensions_without(dataarray_3d, ["cross_track", "range"])
     expected_dims = ["along_track"]
@@ -137,10 +139,11 @@ def test_get_dimensions_without() -> None:
 def test_ensure_dim_order_dataarray():
     """Test the ensure_dim_order_dataarray function."""
     # Create a sample DataArray
-    data = np.random.rand(2, 3, 4)
+    rng = np.random.default_rng()
+    data = rng.random((2, 3, 4))
     coords = {"time": [1, 2], "lat": [1, 2, 3], "lon": [10, 20, 30, 40]}
     da = xr.DataArray(data, coords=coords, dims=("time", "lat", "lon"))
-    da = da.assign_coords({"height": (("lon", "lat"), np.random.rand(4, 3))})  # coord with different dim order
+    da = da.assign_coords({"height": (("lon", "lat"), rng.random((4, 3)))})  # coord with different dim order
 
     # Test with dimensions which are removed
     def remove_dimension(da):
@@ -170,10 +173,11 @@ def test_ensure_dim_order_dataarray():
 def test_ensure_dim_order_dataset():
     """Test the ensure_dim_order_dataset function."""
     # Create sample DataArray
-    data = np.random.rand(2, 3, 4)
+    rng = np.random.default_rng()
+    data = rng.random((2, 3, 4))
     coords = {"time": [1, 2], "lat": [1, 2, 3], "lon": [10, 20, 30, 40]}
     da1 = xr.DataArray(data, coords=coords, dims=("time", "lat", "lon"))
-    da1 = da1.assign_coords({"height": (("lon", "lat"), np.random.rand(4, 3))})
+    da1 = da1.assign_coords({"height": (("lon", "lat"), rng.random((4, 3)))})
     da2 = da1.copy().transpose("lon", "time", "lat")
     ds = xr.Dataset({"var1": da1, "var2": da2})
 
@@ -207,7 +211,8 @@ def test_ensure_dim_order_dataset():
 def test_xr_ensure_dimension_order():
     """Test the decorator xr_ensure_dimension_order."""
     # Create a sample DataArray
-    data = np.random.rand(2, 3, 4)
+    rng = np.random.default_rng()
+    data = rng.random((2, 3, 4))
     coords = {"time": [1, 2], "lat": [1, 2, 3], "lon": [10, 20, 30, 40]}
     da = xr.DataArray(data, coords=coords, dims=("time", "lat", "lon"))
 
@@ -222,7 +227,8 @@ def test_xr_ensure_dimension_order():
 def test_squeeze_unsqueeze_dataarray():
     """Test the squeeze_unsqueeze_dataarray function."""
     # Create a sample DataArray
-    data = np.random.rand(3, 4, 1, 1)
+    rng = np.random.default_rng()
+    data = rng.random((3, 4, 1, 1))
     coords = {
         "lat": [1, 2, 3],
         "lon": [10, 20, 30, 40],
@@ -263,7 +269,8 @@ def test_squeeze_unsqueeze_dataarray():
 def test_squeeze_unsqueeze_dataset():
     """Test the squeeze_unsqueeze_dataset function."""
     # Create a sample DataArray
-    data = np.random.rand(3, 4, 1, 1)
+    rng = np.random.default_rng()
+    data = rng.random((3, 4, 1, 1))
     coords = {
         "lat": [1, 2, 3],
         "lon": [10, 20, 30, 40],
@@ -302,7 +309,8 @@ def test_squeeze_unsqueeze_dataset():
 def test_xr_squeeze_unsqueeze():
     """Test the decorator xr_squeeze_unsqueeze."""
     # Create a sample DataArray
-    data = np.random.rand(3, 4, 1, 1)
+    rng = np.random.default_rng()
+    data = rng.random((3, 4, 1, 1))
     coords = {
         "lat": [1, 2, 3],
         "lon": [10, 20, 30, 40],

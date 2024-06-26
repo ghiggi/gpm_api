@@ -44,7 +44,8 @@ MAX_TIMESTAMP = 2**31 - 1
 
 def get_random_datetime_array_and_dataset(n_values):
     """Return random datetimes as numpy array and xarrray dataset."""
-    timestamps = np.random.randint(0, MAX_TIMESTAMP, size=n_values)
+    rng = np.random.default_rng()
+    timestamps = rng.integers(0, MAX_TIMESTAMP, size=n_values)
     datetimes = pd.to_datetime(timestamps, unit="s")
     ds = xr.Dataset(
         {
@@ -65,12 +66,14 @@ def get_random_datetime_array_and_dataset(n_values):
 def test_get_orbit_coords():
     """Test get_orbit_coords."""
     scan_mode = "S1"
-    granule_id = np.random.randint(0, 100000)
     shape = (10, 3)
+    rng = np.random.default_rng()
+    granule_id = rng.integers(0, 100000)
 
     # Create random datatree
-    lon = xr.DataArray(np.random.rand(*shape), dims=["along_track", "cross_track"])
-    lat = xr.DataArray(np.random.rand(*shape), dims=["along_track", "cross_track"])
+    rng = np.random.default_rng()
+    lon = xr.DataArray(rng.random(shape), dims=["along_track", "cross_track"])
+    lat = xr.DataArray(rng.random(shape), dims=["along_track", "cross_track"])
     time_array, time_ds = get_random_datetime_array_and_dataset(shape[0])
 
     dt = DataTree.from_dict({scan_mode: DataTree.from_dict({"ScanTime": time_ds})})
@@ -101,10 +104,10 @@ def test_get_grid_coords():
     n_values = 10
 
     # Create random datatree
-    # time = np.random.randint(0, MAX_TIMESTAMP)
-    lon = np.random.rand(n_values)
-    lat = np.random.rand(n_values)
-    timestamp = np.random.randint(0, MAX_TIMESTAMP)
+    rng = np.random.default_rng()
+    lon = rng.random(n_values)
+    lat = rng.random(n_values)
+    timestamp = rng.integers(0, MAX_TIMESTAMP)
     time_formated = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
     ds = xr.Dataset()

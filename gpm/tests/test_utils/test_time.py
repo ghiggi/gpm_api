@@ -60,7 +60,8 @@ class TestSubsetByTime:
 
     @pytest.fixture()
     def data_array(self) -> xr.DataArray:
-        return xr.DataArray(np.random.rand(len(self.time)), coords={"time": self.time})
+        rng = np.random.default_rng()
+        return xr.DataArray(rng.random(len(self.time)), coords={"time": self.time})
 
     def test_no_subset(self, data_array: xr.DataArray) -> None:
         returned_da = subset_by_time(data_array, start_time=None, end_time=None)
@@ -130,7 +131,9 @@ class TestSubsetByTime:
     def test_wrong_time_dimension(self):
         lat = np.arange(5)
         lon = np.arange(5)
-        time = np.random.rand(len(lat), len(lon)) * 1e9
+        shape = len(lat), len(lon)
+        rng = np.random.default_rng()
+        time = rng.random(shape) * 1e9
         time = np.array(time, dtype="datetime64[ns]")
         da = xr.DataArray(time, coords=[("lat", lat), ("lon", lon)])
         ds = xr.Dataset({"time": da})
@@ -156,7 +159,8 @@ class TestSubsetByTime:
 def test_subset_by_time_slice():
     """Test subset_by_time_slice."""
     time = get_time_range(0, 23)
-    da = xr.DataArray(np.random.rand(len(time)), coords={"time": time})
+    rng = np.random.default_rng()
+    da = xr.DataArray(rng.random(len(time)), coords={"time": time})
     start_time = datetime.datetime(2020, 12, 31, 6, 0, 0)
     end_time = datetime.datetime(2020, 12, 31, 18, 0, 0)
     time_slice = slice(start_time, end_time)
@@ -267,7 +271,8 @@ class TestEnsureTimeValidity:
     expected_time = create_fake_datetime_array_from_hours_list([1, 2, 3, 4, 5, 6, 7])
 
     def test_with_time_in_dims(self) -> None:
-        da = xr.DataArray(np.random.rand(len(self.time)), coords={"time": self.time})
+        rng = np.random.default_rng()
+        da = xr.DataArray(rng.random(len(self.time)), coords={"time": self.time})
         returned_da = ensure_time_validity(da, limit=5)
         np.testing.assert_equal(self.expected_time, returned_da["time"])
 
@@ -281,7 +286,8 @@ class TestEnsureTimeValidity:
 def create_test_dataset():
     """Create a mock xarray.Dataset for testing."""
     times = pd.date_range("2023-01-01", periods=10, freq="D")
-    data = np.random.rand(10, 2, 2)  # Random data for the sake of example
+    rng = np.random.default_rng()
+    data = rng.random((10, 2, 2))  # Random data for the sake of example
     return xr.Dataset({"my_data": (("time", "x", "y"), data)}, coords={"time": times})
 
 
@@ -304,7 +310,8 @@ def test_get_dataset_start_end_time():
 def test_regularize_dataset():
     # Create a sample Dataset
     times = pd.date_range("2020-01-01", periods=4, freq="2min")
-    data = np.random.rand(4)
+    rng = np.random.default_rng()
+    data = rng.random(4)
     ds = xr.Dataset({"data": ("time", data)}, coords={"time": times})
 
     # Regularize the dataset

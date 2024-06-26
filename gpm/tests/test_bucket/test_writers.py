@@ -270,7 +270,9 @@ class TestWriteDaskPartitionedDataset:
             partitions=None,
         )
         # Assert structure
-        assert os.listdir(tmp_path) == ["prefix_dask_partition_0_0.parquet", "prefix_dask_partition_1_0.parquet"]
+        assert sorted(os.listdir(tmp_path)) == sorted(
+            ["prefix_dask_partition_0_0.parquet", "prefix_dask_partition_1_0.parquet"],
+        )
         parquet_file = pq.ParquetFile(os.path.join(tmp_path, "prefix_dask_partition_1_0.parquet"))
         assert parquet_file.metadata.row_group(0).num_rows == 26
         assert parquet_file.metadata.num_rows == 26
@@ -346,10 +348,12 @@ class TestWriteDaskPartitionedDataset:
             row_group_size="100MB",  # enforce computation of first dask partition
         )
         # Assert generated files
-        assert os.listdir(os.path.join(tmp_path, "0")) == [
-            "prefix_dask_partition_0_0.parquet",
-            "prefix_dask_partition_1_0.parquet",
-        ]
+        assert os.listdir(os.path.join(tmp_path, "0")) == sorted(
+            [
+                "prefix_dask_partition_0_0.parquet",
+                "prefix_dask_partition_1_0.parquet",
+            ],
+        )
         # Assert can be read with dask using metadata
         df = read_dask_partitioned_dataset(base_dir=tmp_path)
         assert isinstance(df.compute(), pd.DataFrame)

@@ -2,6 +2,8 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
+    ci:
+      - autofix_prs: false
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer

@@ -180,14 +180,13 @@ select = [
     # flake8-comprehensions
     "C4",
     # Ruff custom rules
-    "RUF"
-
+    "RUF",
+    # NumPy-specific rules  (for 2.0)
+    "NPY",
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
     # "PTH",
-    # NumPy-specific rules  (for 2.0)
-    # "NPY",
     # refurb
     # "FURB", # require preview
 

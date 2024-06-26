@@ -91,7 +91,7 @@ If you plan to use PR measurements, it's essential to consider the satellite orb
 Following the boost, the swath coverage has widened to 220 km but the spatial resolution of PR footprints has increased from 4.3 km to 5 km
 and the PR sensitivity has reduced by more than 1 dBZ.
 
-Please note that PR routine operations has ended on October 7th, 2014, although PR data are still available till January 15th 2015
+Please note that PR routine operations has ended on October 7th, 2014, although PR data are still available till January 15th, 2015
 while TRMM descended to the decommissioning altitude of 335 km.
 
 

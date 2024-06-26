@@ -759,7 +759,8 @@ def test_get_bright_band_mask() -> None:
 class TestGetPhaseMask:
     """Test get_liquid_phase_mask and get_solid_phase_mask functions."""
 
-    height_zero_deg = np.random.randint(3, 6, size=(5, 6)) * 8
+    rng = np.random.default_rng()
+    height_zero_deg = rng.integers(3, 6, size=(5, 6)) * 8
     da_height_zero_deg = xr.DataArray(height_zero_deg, dims=["cross_track", "along_track"])
 
     @pytest.fixture()

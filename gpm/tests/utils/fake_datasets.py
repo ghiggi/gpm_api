@@ -80,8 +80,8 @@ def get_orbit_dataarray(
     n_range=0,
 ) -> xr.DataArray:
     """Create orbit data array on geodesic band."""
-    np.random.seed(0)
-    data = np.random.rand(n_cross_track, n_along_track)
+    rng = np.random.default_rng(seed=0)
+    data = rng.random((n_cross_track, n_along_track))
     granule_id = np.zeros(n_along_track)
     cross_track_id = np.arange(0, n_cross_track)
     along_track_id = np.arange(0, n_along_track)
@@ -127,10 +127,10 @@ def get_grid_dataarray(
     n_lat: int,
 ) -> xr.DataArray:
     """Create grid data array."""
-    np.random.seed(0)
     lon = np.linspace(start_lon, end_lon, n_lon)
     lat = np.linspace(start_lat, end_lat, n_lat)
-    data = np.random.rand(n_lat, n_lon)
+    rng = np.random.default_rng(seed=0)
+    data = rng.random((n_lat, n_lon))
 
     # Create data array
     return xr.DataArray(data, coords={"lat": lat, "lon": lon})

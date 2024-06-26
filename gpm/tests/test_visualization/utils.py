@@ -133,6 +133,6 @@ def expand_dims(
 ) -> xr.DataArray:
     """Expand dimensions of a dataarray and fill with random data."""
     dataarray = dataarray.expand_dims(dim={dim: size}, axis=axis)
-    np.random.seed(0)
-    dataarray.data = np.random.rand(*dataarray.data.shape)
+    rng = np.random.default_rng(seed=0)
+    dataarray.data = rng.random(dataarray.data.shape)
     return dataarray
