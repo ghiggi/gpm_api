@@ -316,7 +316,7 @@ def _get_groups_value(groups, filepath):
     If multiple keys are specified, the value returned is a string of format: ``<group_value_1>/<group_value_2>/...``
 
     If a single key is specified and is ``start_time`` or ``end_time``, the function
-    returns a `datetime.datetime` object.
+    returns a :py:class:`datetime.datetime` object.
     """
     single_key = len(groups) == 1
     info_dict = get_info_from_filepath(filepath)
