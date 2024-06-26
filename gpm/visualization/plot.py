@@ -605,8 +605,8 @@ def plot_colorbar(p, ax, cbar_kwargs=None):
     cbar_kwargs 'size' and 'pad' controls the size of the colorbar.
     and the padding between the plot and the colorbar.
 
-    p: `matplotlib.image.AxesImage`
-    ax:  `cartopy.mpl.geoaxes.GeoAxesSubplot`
+    p: matplotlib.image.AxesImage
+    ax:  cartopy.mpl.geoaxes.GeoAxesSubplot
     """
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
     cbar_kwargs = cbar_kwargs.copy()  # otherwise pop ticklabels outside the function
@@ -1065,7 +1065,7 @@ def plot_image(
 
     Parameters
     ----------
-    da : `xr.DataArray`
+    da : xarray.DataArray
         xarray DataArray.
     x : str, optional
         X dimension name.
@@ -1075,7 +1075,7 @@ def plot_image(
         Y dimension name.
         If ``None``, takes the first dimension.
         The default is ``None``.
-    ax : `cartopy.GeoAxes`, optional
+    ax : cartopy.GeoAxes, optional
         The matplotlib axes where to plot the image.
         If ``None``, a figure is initialized using the
         specified ``fig_kwargs``.
@@ -1086,11 +1086,11 @@ def plot_image(
         Argument to be passed to imshow.
         The default is ``"nearest"``.
     fig_kwargs : dict, optional
-        Figure options to be passed to `matplotlib.pyplot.subplots``.
+        Figure options to be passed to :py:class:`matplotlib.pyplot.subplots``.
         The default is ``None``.
         Only used if ``ax`` is ``None``.
     subplot_kwargs : dict, optional
-        Subplot options to be passed to `matplotlib.pyplot.subplots`.
+        Subplot options to be passed to :py:class:`matplotlib.pyplot.subplots`.
         The default is ``None``.
         Only used if ```ax``` is ``None``.
     cbar_kwargs : dict, optional
@@ -1099,7 +1099,7 @@ def plot_image(
         Additional arguments to be passed to the plotting function.
         Examples include ``cmap``, ``norm``, ``vmin``, ``vmax``, ``levels``, ...
         For FacetGrid plots, specify ``row``, ``col`` and ``col_wrap``.
-        With ``rgb`` you can specify the name of the `xarray.DataArray` RGB dimension.
+        With ``rgb`` you can specify the name of the xarray.DataArray RGB dimension.
 
 
     """
@@ -1166,7 +1166,7 @@ def plot_map(
 
     Parameters
     ----------
-    da : `xr.DataArray`
+    da : xarray.DataArray
         xarray DataArray.
     x : str, optional
         Longitude coordinate name.
@@ -1176,7 +1176,7 @@ def plot_map(
         Latitude coordinate name.
         If ``None``, takes the first dimension.
         The default is ``None``.
-    ax : `cartopy.GeoAxes`, optional
+    ax : cartopy.GeoAxes, optional
         The cartopy GeoAxes where to plot the map.
         If ``None``, a figure is initialized using the
         specified ``fig_kwargs`` and ``subplot_kwargs``.
@@ -1189,15 +1189,15 @@ def plot_map(
     add_background : bool, optional
         Whether to add the map background. The default is ``True``.
     interpolation : str, optional
-        Argument to be passed to `matplotlib.pyplot.imshow`. Only applies for GRID objects.
+        Argument to be passed to :py:class:`matplotlib.pyplot.imshow`. Only applies for GRID objects.
         The default is ``"nearest"``.
     fig_kwargs : dict, optional
         Figure options to be passed to `matplotlib.pyplot.subplots`.
         The default is ``None``.
         Only used if ``ax`` is ``None``.
     subplot_kwargs : dict, optional
-        Dictionary of keyword arguments for `matplotlib.pyplot.subplots`.
-        Must contain the Cartopy CRS `'projection'` key if specified.
+        Dictionary of keyword arguments for :py:class:`matplotlib.pyplot.subplots`.
+        Must contain the Cartopy CRS ` ``projection`` key if specified.
         The default is ``None``.
         Only used if ``ax`` is ``None``.
     cbar_kwargs : dict, optional
@@ -1206,7 +1206,7 @@ def plot_map(
         Additional arguments to be passed to the plotting function.
         Examples include ``cmap``, ``norm``, ``vmin``, ``vmax``, ``levels``, ...
         For FacetGrid plots, specify ``row``, ``col`` and ``col_wrap``.
-        With ``rgb`` you can specify the name of the `xarray.DataArray` RGB dimension.
+        With ``rgb`` you can specify the name of the xarray.DataArray RGB dimension.
 
 
     """
@@ -1349,14 +1349,14 @@ def plot_map_mesh_centroids(
 def create_grid_mesh_data_array(xr_obj, x, y):
     """Create a 2D mesh coordinates DataArray.
 
-    Takes as input the 1D coordinate arrays from an existing `xarray.DataArray` or `xarray.Dataset` object.
+    Takes as input the 1D coordinate arrays from an existing xarray.DataArray or xarray.Dataset object.
 
     The function creates a 2D grid (mesh) of x and y coordinates and initializes
     the data values to NaN.
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         The input xarray object containing the 1D coordinate arrays.
     x : str
         The name of the x-coordinate in `xr_obj`.
@@ -1365,12 +1365,12 @@ def create_grid_mesh_data_array(xr_obj, x, y):
 
     Returns
     -------
-    da_mesh : `xarray.DataArray`
-        A 2D `xarray.DataArray` with mesh coordinates for `x` and `y`, and NaN values for data points.
+    da_mesh : xarray.DataArray
+        A 2D xarray.DataArray with mesh coordinates for `x` and `y`, and NaN values for data points.
 
     Notes
     -----
-    The resulting `xarray.DataArray` has dimensions named 'y' and 'x', corresponding to the
+    The resulting xarray.DataArray has dimensions named 'y' and 'x', corresponding to the
     y and x coordinates respectively.
     The coordinate values are taken directly from the input 1D coordinate arrays,
     and the data values are set to NaN.
@@ -1597,7 +1597,7 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
 
     Parameters
     ----------
-    ax : `matplotlib.axes.Axes` or `cartopy.mpl.geoaxes.GeoAxes`
+    ax : matplotlib.axes.Axes or cartopy.mpl.geoaxes.GeoAxes
         The main matplotlib or cartopy axis object where the geographic data is plotted.
     loc : str, optional
         The location of the inset map within the main plot.
@@ -1611,12 +1611,12 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
         Determines whether the inset is constrained to be fully inside the figure bounds. If ``True`` (default),
         the inset is placed fully within the figure. If ``False``, the inset can extend beyond the figure's edges,
         allowing for a half-outside placement.
-    projection: `cartopy.crs.Projection`, optional
+    projection: cartopy.crs.Projection, optional
         A cartopy projection. If ``None``, am Orthographic projection centered on the extent center is used.
 
     Returns
     -------
-    ax2 : `cartopy.mpl.geoaxes.GeoAxes`
+    ax2 : cartopy.mpl.geoaxes.GeoAxes
         The Cartopy GeoAxesSubplot object for the inset map.
 
     Notes

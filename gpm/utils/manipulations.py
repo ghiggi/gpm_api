@@ -151,7 +151,7 @@ def conversion_factors_degree_to_meter(latitude):
 
 
 def get_bin_dataarray(xr_obj, bins, mask_first_bin=False, mask_last_bin=False, fillvalue=None):
-    """Get bin `xarray.DataArray`."""
+    """Get bin xarray.DataArray."""
     # Retrieve bins DataArray
     da_bin = _get_bin_dataarray(xr_obj, bins=bins)
 
@@ -191,7 +191,7 @@ def _get_bin_dataarray(xr_obj, bins):
 
 
 def _get_valid_da_bin(xr_obj, da_bin, mask_first_bin=False, mask_last_bin=False, fillvalue=None):
-    """Return a valid bin `xarray.DataArray` with a mask for the invalid/unavailable bins."""
+    """Return a valid bin xarray.DataArray with a mask for the invalid/unavailable bins."""
     # Retrieve minimum and maximum available range indices
     vmin = xr_obj["range"].data.min()
     vmax = xr_obj["range"].data.max()
@@ -241,7 +241,7 @@ def _select_range_slice(da, da_bin, da_mask):
 def slice_range_at_bin(xr_obj, bins):
     """Extract values at the range bins specified by ``bin_variable``.
 
-    ``bin_variable`` can be a bin `xarray.DataArray` or the name of a bin variable of the input `xarray.Dataset`.
+    ``bin_variable`` can be a bin xarray.DataArray or the name of a bin variable of the input xarray.Dataset.
 
     The function extract the gates based on the 'range' coordinate values.
     Bin values are assumed to start at 1, not 0 !
@@ -250,15 +250,15 @@ def slice_range_at_bin(xr_obj, bins):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object with the 'range' dimension (and coordinate).
-    bins : str or `xarray.DataArray`
-        Either a `xarray.DataArray` or a string pointing to the dataset variable with the range bins to extract.
+    bins : str or xarray.DataArray
+        Either a xarray.DataArray or a string pointing to the dataset variable with the range bins to extract.
         Bin values are assumed to start at 1, not 0 !
 
     Returns
     -------
-    xr_out : `xarray.Dataset` or `xarray.DataArray`
+    xr_out : xarray.Dataset or xarray.DataArray
         xarray object with values at the specified range bins.
 
     """
@@ -293,19 +293,19 @@ def slice_range_at_bin(xr_obj, bins):
 
 
 def get_range_index_at_value(da, value):
-    """Retrieve index along the range dimension where the `xarray.DataArray` values is closest to value."""
+    """Retrieve index along the range dimension where the xarray.DataArray values is closest to value."""
     vertical_dim = _get_vertical_dim(da)
     return np.abs(da - value).argmin(dim=vertical_dim).compute()
 
 
 def get_range_index_at_min(da):
-    """Retrieve index along the range dimension where the `xarray.DataArray` has minimum values."""
+    """Retrieve index along the range dimension where the xarray.DataArray has minimum values."""
     vertical_dim = _get_vertical_dim(da)
     return da.argmin(dim=vertical_dim).compute()
 
 
 def get_range_index_at_max(da):
-    """Retrieve index along the range dimension where the `xarray.DataArray` has maximum values."""
+    """Retrieve index along the range dimension where the xarray.DataArray has maximum values."""
     vertical_dim = _get_vertical_dim(da)
     return da.argmax(dim=vertical_dim).compute()
 
@@ -489,7 +489,7 @@ def get_solid_phase_mask(ds):
 
 
 def select_spatial_3d_variables(ds, strict=False, squeeze=True):
-    """Return `xarray.Dataset` with only 3D spatial variables."""
+    """Return xarray.Dataset with only 3D spatial variables."""
     from gpm.checks import get_spatial_3d_variables
 
     variables = get_spatial_3d_variables(ds, strict=strict, squeeze=squeeze)
@@ -497,7 +497,7 @@ def select_spatial_3d_variables(ds, strict=False, squeeze=True):
 
 
 def select_spatial_2d_variables(ds, strict=False, squeeze=True):
-    """Return `xarray.Dataset` with only 2D spatial variables."""
+    """Return xarray.Dataset with only 2D spatial variables."""
     from gpm.checks import get_spatial_2d_variables
 
     variables = get_spatial_2d_variables(ds, strict=strict, squeeze=squeeze)
@@ -505,7 +505,7 @@ def select_spatial_2d_variables(ds, strict=False, squeeze=True):
 
 
 def select_transect_variables(ds, strict=False, squeeze=True):
-    """Return `xarray.Dataset` with only transect variables."""
+    """Return xarray.Dataset with only transect variables."""
     from gpm.checks import get_transect_variables
 
     variables = get_transect_variables(ds, strict=strict, squeeze=squeeze)
@@ -513,13 +513,13 @@ def select_transect_variables(ds, strict=False, squeeze=True):
 
 
 def select_vertical_variables(ds):
-    """Return `xarray.Dataset` with only variables with vertical dimension."""
+    """Return xarray.Dataset with only variables with vertical dimension."""
     variables = get_vertical_variables(ds)
     return ds[variables]
 
 
 def select_frequency_variables(ds):
-    """Return `xarray.Dataset` with only multifrequency variables."""
+    """Return xarray.Dataset with only multifrequency variables."""
     from gpm.checks import get_frequency_variables
 
     variables = get_frequency_variables(ds)
@@ -527,7 +527,7 @@ def select_frequency_variables(ds):
 
 
 def select_bin_variables(ds):
-    """Return `xarray.Dataset` with only bin variables."""
+    """Return xarray.Dataset with only bin variables."""
     from gpm.checks import get_bin_variables
 
     variables = get_bin_variables(ds)
@@ -594,7 +594,7 @@ def get_vertical_coords_and_vars(ds):
 
 
 def get_vertical_datarray_prototype(ds, fill_value=np.nan):
-    """Return a `xarray.DataArray` 'prototype' with only spatial and vertical dimensions."""
+    """Return a xarray.DataArray 'prototype' with only spatial and vertical dimensions."""
     vertical_variables = get_vertical_coords_and_vars(ds)
     da = ds[vertical_variables[0]]
     da = xr.full_like(da, fill_value=fill_value).compute()
@@ -603,7 +603,7 @@ def get_vertical_datarray_prototype(ds, fill_value=np.nan):
 
 
 def ensure_vertical_datarray_prototype(da):
-    """Return a `xarray.DataArray` with only spatial and vertical dimensions."""
+    """Return a xarray.DataArray with only spatial and vertical dimensions."""
     valid_dims = da.gpm.spatial_dimensions + da.gpm.vertical_dimension
     invalid_dims = set(da.dims) - set(valid_dims)
     if invalid_dims:
@@ -637,7 +637,7 @@ def extract_dataset_above_bin(ds, bins, new_range_size=None, strict=False, rever
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM RADAR xarray dataset.
     bin_variable : str
         The variable name containing the radar gate bin index of interest.
@@ -656,7 +656,7 @@ def extract_dataset_above_bin(ds, bins, new_range_size=None, strict=False, rever
 
     Returns
     -------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         xarray dataset with the range bins above the specified bin.
 
     """
@@ -741,7 +741,7 @@ def extract_dataset_below_bin(ds, bins, new_range_size=None, strict=False, rever
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM RADAR xarray dataset.
     bins : str
         The variable name containing the radar gate bin index of interest.
@@ -760,7 +760,7 @@ def extract_dataset_below_bin(ds, bins, new_range_size=None, strict=False, rever
 
     Returns
     -------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         xarray dataset with the range bins below the specified bin.
 
     """
@@ -860,7 +860,7 @@ def extract_l2_dataset(
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM RADAR L1B xarray dataset.
     bin_ellipsoid : str, optional
         The variable name containing the bin index of the ellipsoid.
@@ -879,7 +879,7 @@ def extract_l2_dataset(
 
     Returns
     -------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         xarray dataset with the last range bin corresponding to the ellipsoid.
 
     """

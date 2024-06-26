@@ -204,7 +204,7 @@ def read_bucket(
 
     Returns
     -------
-    df : `pandas.DataFrame`, `polars.DataFrame`, `polars.LazyFrame` or `pyarrow.Table`
+    df : pandas.DataFrame, polars.DataFrame, polars.LazyFrame or pyarrow.Table
         Bucket dataframe.
 
     """

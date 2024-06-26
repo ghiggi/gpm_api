@@ -160,11 +160,11 @@ def filter_info_dict_by_time(info_dict, start_time, end_time):
 
     Parameters
     ----------
-    start_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    start_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         Start time.
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
-    end_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    end_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         Start time.
         Accepted types:  ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
@@ -491,12 +491,12 @@ def available_products(
         If ``None`` (default), provide products from all sensors.
         If ``str``, must be a valid sensor.
         The list of available sensors can be retrieved using ``available_sensors()``.
-    start_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    start_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         Start time period over which to search for available products.
         The default is ``None`` (start of the GPM mission).
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
-    end_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    end_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         End time period over which to search for available products.
         The default is ``None`` (current time).
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
@@ -676,12 +676,12 @@ def available_satellites(
         If ``None`` (default), provide products from all sensors.
         If ``str``, must be a valid sensor.
         The list of available sensors can be retrieved using ``available_sensors()``.
-    start_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    start_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         Start time period over which to search for available products.
         The default is ``None`` (start of the GPM mission).
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
-    end_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    end_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         End time period over which to search for available products.
         The default is ``None`` (current time).
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
@@ -757,12 +757,12 @@ def available_sensors(
         If ``None`` (default), provide products from all satellites.
         If ``str``, must be a valid satellites.
         The list of available satellites can be retrieved using ``available_satellites()``.
-    start_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    start_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         Start time period over which to search for available products.
         The default is ``None`` (start of the GPM mission).
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
-    end_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    end_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         End time period over which to search for available products.
         The default is ``None`` (current time).
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.

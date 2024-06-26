@@ -35,7 +35,7 @@ from gpm.utils import checks as gpm_checks
 
 
 def create_fake_datetime_array_from_hours_list(hours: Union[list, np.ndarray]) -> np.ndarray:
-    """Convert list of integers and NaNs into a `numpy.datetime64` array."""
+    """Convert list of integers and NaNs into a numpy.datetime64 array."""
     start_time = np.array(["2020-12-31 00:00:00"]).astype("M8[ns]")
     hours = np.array(hours).astype("m8[h]")
     return start_time + hours

@@ -149,9 +149,9 @@ def _open_valid_granules(
     Returns
     -------
     list_datasets : list
-        List of `xarray.Dataset`s.
+        List of xarray.Datasets.
     list_closers : list
-         List of `xarray.Dataset`s closers.
+         List of xarray.Datasets closers.
 
     """
     if parallel and chunks is None:
@@ -203,7 +203,7 @@ def open_dataset(
     prefix_group=False,
     verbose=False,
 ):
-    """Lazily map HDF5 data into `xarray.Dataset` with relevant GPM data and attributes.
+    """Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
 
     Note:
 
@@ -218,11 +218,11 @@ def open_dataset(
     ----------
     product : str
         GPM product acronym.
-    start_time :  `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    start_time :  datetime.datetime, datetime.date, numpy.datetime64 or str
         Start time.
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
-    end_time :  `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    end_time :  datetime.datetime, datetime.date, numpy.datetime64 or str
         End time.
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
@@ -269,8 +269,8 @@ def open_dataset(
         or later remove the prefix before writing the dataset.
         The default is ``False``.
     parallel : bool
-        If ``True``, the dataset are opened in parallel using ``dask.delayed``.
-        If ``parallel=True``, ``'chunks'`` can not be ``None``. The underlying data must be ``dask.Array``.
+        If ``True``, the dataset are opened in parallel using :py:class:`dask.delayed`.
+        If ``parallel=True``, ``'chunks'`` can not be ``None``. The underlying data must be :py:class:`dask.Array`.
         The default is ``False``.
 
     Returns

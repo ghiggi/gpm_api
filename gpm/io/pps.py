@@ -89,7 +89,7 @@ def _get_pps_nrt_product_dir(product, date):
     ----------
     product : str
         GPM product name. See ``gpm.available_products()``.
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
         Note: this is currently only needed when retrieving IMERG data.
 
@@ -110,7 +110,7 @@ def _get_pps_rs_product_dir(product, date, version):
     ----------
     product : str
         GPM product name. See ``gpm.available_products()``. .
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
@@ -164,7 +164,7 @@ def _get_pps_directory_tree(product, product_type, date, version):
         GPM product name. See ``gpm.available_products()``. .
     product_type : str
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
@@ -194,7 +194,7 @@ def get_pps_product_directory(product, product_type, date, version, server_type)
         GPM product name. See ``gpm.available_products()``.
     product_type : str
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
@@ -295,7 +295,7 @@ def get_pps_daily_filepaths(product, product_type, date, version, verbose=True):
     ----------
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).

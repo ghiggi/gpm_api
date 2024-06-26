@@ -233,11 +233,6 @@ convention = "numpy"
 "setup.py" = ["D100"]
 "*__init__.py" = ["D104"]
 
-[tool.yamlfix]
-allow_duplicate_keys = false
-line_length = 100
-none_representation = "null"
-
 [tool.doc8]
 ignore-path = [
     "docs/build",

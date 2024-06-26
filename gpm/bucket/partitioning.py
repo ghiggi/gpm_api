@@ -441,8 +441,8 @@ class Base2DPartitioning:
         A quadrilateral mesh is a grid of M by N adjacent quadrilaterals that are defined via a (M+1, N+1)
         grid of vertices.
 
-        The quadrilateral mesh is accepted by `matplotlib.pyplot.pcolormesh`, `matplotlib.collections.QuadMesh`
-        `matplotlib.collections.PolyQuadMesh`.
+        The quadrilateral mesh is accepted by :py:class:`matplotlib.pyplot.pcolormesh`,
+        :py:class:`matplotlib.collections.QuadMesh` and :py:class:`matplotlib.collections.PolyQuadMesh`.
 
         Parameters
         ----------
@@ -464,7 +464,7 @@ class Base2DPartitioning:
         """Return the partitions vertices in an array of shape (N, M, 4, 2).
 
         The output vertices, once the first 2 dimension are flattened,
-        can be passed directly to a `matplotlib.PolyCollection`.
+        can be passed directly to a :py:class:`matplotlib.PolyCollection`.
         For plotting with cartopy, the polygon order must be "counterclockwise".
 
         Parameters
@@ -587,7 +587,7 @@ class Base2DPartitioning:
 
         Parameters
         ----------
-        df : `pandas.DataFrame`, `dask.DataFrame`, `polars.DataFrame`, `pyarrow.Table` or `polars.LazyFrame`
+        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
             Dataframe to which add partitions centroids.
         x : str
             Column name with the x coordinate.
@@ -599,7 +599,7 @@ class Base2DPartitioning:
 
         Returns
         -------
-        df : `pandas.DataFrame`, `dask.DataFrame`, `polars.DataFrame`, `pyarrow.Table` or `polars.LazyFrame`
+        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
             Dataframe with the partitions label(s) column(s).
 
         """
@@ -631,7 +631,7 @@ class Base2DPartitioning:
 
         Parameters
         ----------
-        df : `pandas.DataFrame`, `dask.DataFrame`, `polars.DataFrame`, `pyarrow.Table` or `polars.LazyFrame`
+        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
             Dataframe to which add partitions centroids.
         x : str
             Column name with the x coordinate.
@@ -649,7 +649,7 @@ class Base2DPartitioning:
 
         Returns
         -------
-        df : `pandas.DataFrame`, `dask.DataFrame`, `polars.DataFrame`, `pyarrow.Table` or `polars.LazyFrame`
+        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
             Dataframe with the partitions centroids x and y coordinates columns.
 
         """
@@ -832,8 +832,14 @@ class XYPartitioning(Base2DPartitioning):
     # -----------------------------------------------------------------------------------.
     def _custom_labels_function(self, x_indices, y_indices):
         """Return the partition labels as function of the specified 2D partitions indices."""
-        x_labels = self.x_centroids[x_indices].round(self._labels_decimals[0]).astype(str)
-        y_labels = self.y_centroids[y_indices].round(self._labels_decimals[1]).astype(str)
+        x_labels_value = self.x_centroids[x_indices].round(self._labels_decimals[0])
+        y_labels_value = self.y_centroids[y_indices].round(self._labels_decimals[1])
+        if self._labels_decimals[0] == 0:
+            x_labels_value = x_labels_value.astype(int)
+        if self._labels_decimals[1] == 0:
+            y_labels_value = y_labels_value.astype(int)
+        x_labels = x_labels_value.astype(str)
+        y_labels = y_labels_value.astype(str)
         return x_labels, y_labels
 
     def to_dict(self):

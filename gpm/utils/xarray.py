@@ -66,7 +66,7 @@ def check_variable_availabilty(ds, variable, argname):
 
 
 def get_dataset_variables(ds, sort=False):
-    """Get list of `xarray.Dataset` variables."""
+    """Get list of xarray.Dataset variables."""
     variables = list(ds.data_vars)
     if sort:
         variables = sorted(variables)
@@ -122,8 +122,8 @@ def has_unique_chunking(ds):
 def ensure_unique_chunking(ds):
     """Ensure the dataset has unique chunking.
 
-    Conversion to `dask.dataframe.DataFrame` requires unique chunking.
-    If the `xarray.Dataset` does not have unique chunking, perform ``ds.unify_chunks``.
+    Conversion to :py:class:`dask.dataframe.DataFrame` requires unique chunking.
+    If the xarray.Dataset does not have unique chunking, perform ``ds.unify_chunks``.
 
     Variable chunks can be visualized with:
 

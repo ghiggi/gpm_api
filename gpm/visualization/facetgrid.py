@@ -89,7 +89,7 @@ class CustomFacetGrid(FacetGrid, ABC):
 
         Parameters
         ----------
-        data : `xarray.DataArray` or `xarray.Dataset`
+        data : xarray.DataArray or xarray.Dataset
             xarray object to be plotted.
         row, col : str
             Dimension names that define subsets of the data, which will be drawn
@@ -103,7 +103,7 @@ class CustomFacetGrid(FacetGrid, ABC):
         aspect : bool, optional
             Whether the axes aspect ratio follows the aspect ratio of the data
             limits. The default is ``True``.
-        axes_class : subclass of `matplotlib.axes.Axes`, optional
+        axes_class : subclass of :py:class:`matplotlib.axes.Axes`, optional
             The default is ``None``.
         add_colorbar: bool, optional
             Whether to add a colorbar to the figure.
@@ -113,7 +113,7 @@ class CustomFacetGrid(FacetGrid, ABC):
             The ``pad`` argument controls the space between the image axes and the colorbar axes.
             The ``pad`` default is 0.2.
             The ``size`` argument control the colorbar size. The default value is '3%'.
-            For other arguments, see `matplotlib.figure.Figure.colorbar`.
+            For other arguments, see :py:class:`matplotlib.figure.Figure.colorbar`.
         facet_height: float, optional
             Height (in inches) of each facet. The default is 3.
             This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
@@ -126,7 +126,7 @@ class CustomFacetGrid(FacetGrid, ABC):
                 Typical arguments include ``figsize`` and ``dpi``.
                 ``figsize`` is a tuple (width, height) of the figure in inches.
                 If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
-                (see `matplotlib.figure.Figure`).
+                (see :py:class:`matplotlib.figure.Figure`).
 
         """
         # Handle corner case of nonunique coordinates
@@ -287,15 +287,16 @@ class CustomFacetGrid(FacetGrid, ABC):
         ----------
         func : callable
             A plotting function with the same signature as a 2d xarray
-            plotting method such as `xarray.plot.imshow`
-        x, y : string
+            plotting method such as xarray.plot.imshow
+        x, y : str
             Names of the coordinates to plot on x, y axes
         **kwargs
             additional keyword arguments to func
 
         Returns
         -------
-        self : FacetGrid object
+        xarray.plot.facetgrid.FacetGrid
+            FacetGrid object
 
         """
         if kwargs.get("cbar_ax", None) is not None:
@@ -477,9 +478,9 @@ class CartopyFacetGrid(CustomFacetGrid):
 
         Parameters
         ----------
-        data : `xarray.DataArray` or `xarray.Dataset`
+        data : xarray.DataArray or xarray.Dataset
             xarray object to be plotted.
-        projection: `cartopy.crs.CRS`
+        projection: cartopy.crs.CRS
             Cartopy projection.
         row, col : str
             Dimension names that define subsets of the data, which will be drawn
@@ -498,7 +499,7 @@ class CartopyFacetGrid(CustomFacetGrid):
             The ``pad`` argument controls the space between the image axes and the colorbar axes.
             The ``pad`` default is 0.2.
             The ``size`` argument control the colorbar size. The default value is ``'3%'``.
-            For other arguments, see `matplotlib.figure.Figure.colorbar`.
+            For other arguments, see :py:class:`matplotlib.figure.Figure.colorbar`.
         facet_height: float, optional
             Height (in inches) of each facet. The default is 3.
             This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
@@ -603,7 +604,7 @@ class ImageFacetGrid(CustomFacetGrid):
 
         Parameters
         ----------
-        data : `xarray.DataArray` or `xarray.Dataset`
+        data : xarray.DataArray or xarray.Dataset
             xarray object to be plotted.
         row, col : str
             Dimension names that define subsets of the data, which will be drawn
@@ -625,7 +626,7 @@ class ImageFacetGrid(CustomFacetGrid):
             The ``pad`` argument controls the space between the image axes and the colorbar axes.
             The ``pad`` default is 0.2.
             The ``size`` argument control the colorbar size. The default value is ``'3%'``.
-            For other arguments, see `matplotlib.figure.Figure.colorbar`.
+            For other arguments, see :py:class:`matplotlib.figure.Figure.colorbar`.
         facet_height: float, optional
             Height (in inches) of each facet. The default is 3.
             This parameter is used only if the ``figsize`` argument is not specified in ``fig_kwargs``.
@@ -638,7 +639,7 @@ class ImageFacetGrid(CustomFacetGrid):
              Typical arguments include ``figsize`` and ``dpi``.
              ``figsize`` is a tuple (width, height) of the figure in inches.
              If ``figsize`` is specified, it overrides ``facet_size`` and ``facet_aspect`` arguments.
-             (see `matplotlib.figure.Figure`).
+             (see :py:class:`matplotlib.figure.Figure`).
 
         """
         super().__init__(

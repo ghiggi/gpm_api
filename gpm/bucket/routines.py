@@ -67,7 +67,7 @@ def write_granule_bucket(
         File path of the granule to store in the bucket archive.
     bucket_dir: str
         Base directory of the per-granule bucket archive.
-    partitioning: `gpm.bucket.SpatialPartitioning`
+    partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
     granule_to_df_func : Callable
         Function taking a granule filepath, opening it and returning a pandas or dask dataframe.
@@ -143,7 +143,7 @@ def write_granules_bucket(
         File paths of the GPM granules to store in the bucket archive.
     bucket_dir: str
         Base directory of the per-granule bucket archive.
-    partitioning: `gpm.bucket.SpatialPartitioning`
+    partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
         Carefully consider the size of the partitions.
         Earth partitioning by:
@@ -243,11 +243,11 @@ def write_bucket(
 
     Parameters
     ----------
-    ds : `pandas.DataFrame` or `dask.DataFrame`
+    ds : pandas.DataFrame or dask.DataFrame
         Pandas or Dask dataframe to be written into a geographic bucket.
     bucket_dir: str
         Base directory of the geographic bucket archive.
-    partitioning: `gpm.bucket.SpatialPartitioning`
+    partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
         Carefully consider the size of the partitions.
         Earth partitioning by:

@@ -443,7 +443,7 @@ def retrieve_SHI(
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM L2 RADAR Dataset.
     variable : str, optional
         Reflectivity field. The default is "zFactorFinal".
@@ -456,7 +456,7 @@ def retrieve_SHI(
 
     Returns
     -------
-    da_shi : `xarray.DataArray`
+    da_shi : xarray.DataArray
         Severe Hail Index (SHI)
 
     """

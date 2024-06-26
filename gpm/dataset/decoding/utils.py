@@ -30,7 +30,7 @@ import numpy as np
 
 
 def is_dataarray_decoded(da):
-    """Check if a `xarray.DataArray` has been decoded by GPM-API."""
+    """Check if a xarray.DataArray has been decoded by GPM-API."""
     return da.attrs.get("gpm_api_decoded", "no") == "yes"
 
 
@@ -75,7 +75,7 @@ def remap_numeric_array(arr, remapping_dict, fill_value=np.nan):
 
 
 def ceil_dataarray(da):
-    """Ceil a `xarray.DataArray`."""
+    """Ceil a xarray.DataArray."""
     data = da.data
     data = np.ceil(data) if hasattr(data, "chunks") else dask.array.ceil(data)
     da.data = data

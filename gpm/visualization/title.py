@@ -55,12 +55,12 @@ def get_dataset_title(
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM xarray Dataset.
     add_timestep : bool, optional
         Whether to add time information to the title. The default is ``True``.
         For GRID objects (like IMERG), the timestep is added only if
-        the `xarray.DataArray` has 1 timestep.
+        the xarray.DataArray has 1 timestep.
     time_idx : int, optional
         Index of timestep to select, instead of selecting the middle.
         The default is ``None``.
@@ -106,11 +106,11 @@ def get_dataarray_title(
     resolution="m",
     timezone="UTC",
 ):
-    """Generate the plot title for a GPM `xarray.DataArray`.
+    """Generate the plot title for a GPM xarray.DataArray.
 
     Parameters
     ----------
-    da : `xr.DataArray`
+    da : xarray.DataArray
         GPM xarray DataArray.
     prefix_product : bool, optional
         Whether to add the GPM product as prefix.
@@ -118,7 +118,7 @@ def get_dataarray_title(
     add_timestep : bool, optional
         Whether to add time information to the title. The default is ``True``.
         For GRID objects (like IMERG), the timestep is added only if
-        the `xarray.DataArray` has 1 timestep.
+        the xarray.DataArray has 1 timestep.
     time_idx : int, optional
         Index of timestep to select, instead of selecting the middle.
         The default is ``None``.
@@ -132,7 +132,7 @@ def get_dataarray_title(
     Returns
     -------
     title_str : str
-        Title of the `xarray.DataArray`.
+        Title of the xarray.DataArray.
 
     """
     from gpm.checks import is_orbit

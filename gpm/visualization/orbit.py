@@ -544,7 +544,7 @@ def plot_orbit_map(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot `xarray.DataArray` 2D field with cartopy."""
+    """Plot xarray.DataArray 2D field with cartopy."""
     # Check inputs
     da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_has_spatial_dim, strict=True)
     # Plot FacetGrid

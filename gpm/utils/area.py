@@ -24,7 +24,7 @@ def _infer_interval_breaks(coord, axis=0):
 
     Parameters
     ----------
-    coord : `numpy.ndarray`
+    coord :  numpy.ndarray
         Coordinate array of shape [N,M].
     axis : int, optional
         Axis over which to infer the midpoint.

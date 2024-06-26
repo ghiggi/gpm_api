@@ -51,7 +51,7 @@ def drop_undesired_columns(df):
 
 
 def to_pandas_dataframe(ds):
-    """Convert an `xarray.Dataset` to a `pandas.DataFrame`."""
+    """Convert an xarray.Dataset to a :py:class:`pandas.DataFrame`."""
     # Drop unrelevant coordinates
     ds = remove_unused_var_dims(ds)
 
@@ -70,7 +70,7 @@ def to_pandas_dataframe(ds):
 
 
 def to_dask_dataframe(ds):
-    """Convert an `xarray.Dataset` to a `dask.Dataframe`."""
+    """Convert an xarray.Dataset to a :py:class:`dask.dataframe.Dataframe`."""
     # Drop unrelevant coordinates
     ds = remove_unused_var_dims(ds)
 

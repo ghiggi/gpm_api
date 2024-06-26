@@ -431,7 +431,7 @@ def resample_hs_to_fs(ds_hs, smooth=True, except_vars=["echoCount", "sampling_ty
 
     Parameters
     ----------
-    ds_hs : `xarray.Dataset`
+    ds_hs : xarray.Dataset
         L1B or L2 Ka-band Dataset with HS scan mode.
     smooth : bool, optional
         If ``smooth=True``, applies averaging as presented in the L2 DPR ATBD.
@@ -443,7 +443,7 @@ def resample_hs_to_fs(ds_hs, smooth=True, except_vars=["echoCount", "sampling_ty
 
     Returns
     -------
-    ds_r : `xarray.Dataset`
+    ds_r : xarray.Dataset
         L1B or L2 Ka-band Dataset with resampled range gates (as in FS/NS/MS scan modes).
     """
     from gpm.utils.manipulations import get_vertical_coords_and_vars
