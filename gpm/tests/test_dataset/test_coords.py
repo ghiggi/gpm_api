@@ -95,9 +95,14 @@ def test_get_orbit_coords():
     returned_coords = {k: (list(da.dims), da.data) for k, da in returned_coords.items()}
 
     # Ensure same integer for gpm_granule_id
-    expected_coords["gpm_granule_id"][1] = expected_coords["gpm_granule_id"][1].astype(int)
-    returned_coords["gpm_granule_id"][1] = returned_coords["gpm_granule_id"][1].astype(int)
-
+    expected_coords["gpm_granule_id"] = (
+        expected_coords["gpm_granule_id"][0],
+        expected_coords["gpm_granule_id"][1].astype(int),
+    )
+    returned_coords["gpm_granule_id"] = (
+        returned_coords["gpm_granule_id"][0],
+        returned_coords["gpm_granule_id"][1].astype(int),
+    )
     # Compare same type
     diff = DeepDiff(expected_coords, returned_coords)
     assert diff == {}, f"Dictionaries are not equal: {diff}"
