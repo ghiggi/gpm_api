@@ -49,6 +49,7 @@ from gpm.utils.geospatial import (
     get_geographic_extent_around_point,
 )
 
+pd.options.mode.copy_on_write = True
 # Future methods:
 # to_shapely
 # to_spherically (geographic)
