@@ -69,7 +69,7 @@ from gpm.utils.xarray import (
 
 def retrieve_dfrMeasured(ds):
     """Retrieve measured DFR."""
-    da_z = ds["zFactorMeasured"]
+    da_z = get_xarray_variable(ds, variable="zFactorMeasured")
     da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
     da_dfr.name = "dfrMeasured"
     return da_dfr
@@ -77,7 +77,7 @@ def retrieve_dfrMeasured(ds):
 
 def retrieve_dfrFinal(ds):
     """Retrieve final DFR."""
-    da_z = ds["zFactorFinal"]
+    da_z = get_xarray_variable(ds, variable="zFactorFinal")
     da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
     da_dfr.name = "dfrFinal"
     return da_dfr
@@ -85,7 +85,7 @@ def retrieve_dfrFinal(ds):
 
 def retrieve_dfrFinalNearSurface(ds):
     """Retrieve final DFR near the surface."""
-    da_z = ds["zFactorFinalNearSurface"]
+    da_z = get_xarray_variable(ds, variable="zFactorFinalNearSurface")
     da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
     da_dfr.name = "dfrFinalNearSurface"
     return da_dfr
@@ -215,6 +215,7 @@ def retrieve_EchoDepth(
     if "radar_frequency" in da.dims:
         da = da.sel({"radar_frequency": radar_frequency})
     da_height = ds["height"].copy()
+    
     # Mask height bin where not raining
     da_mask_3d_rain = da > min_threshold
     da_height = da_height.where(da_mask_3d_rain)
@@ -579,12 +580,12 @@ def retrieve_POH(ds, method="Foote2005"):
     # TODO: add utility to set 0 where rainy area (instead of nan value)
     variable = "zFactorFinal"
     radar_frequency = "Ku"
+    # Compute POH
     da_echo_depth_45_solid = retrieve_EchoDepth(
         ds,
         threshold=45,
         variable=variable,
         radar_frequency=radar_frequency,
-        min_threshold=0,
         mask_liquid_phase=True,
     )
     if method == "Foote2005":
@@ -605,3 +606,42 @@ def retrieve_POH(ds, method="Foote2005"):
     da_poh.attrs["units"] = "%"
 
     return da_poh
+
+
+def retrieve_MESHS(ds):
+    """The Maximum Expected Severe Hail Size at the surface.
+
+    Based on EchoTop50dBZ.
+
+    No hail if EchoDepth50dBZ above melting layer < 1.65 km.
+    100% hail if EchoDepth45dBZ above melting layer > 5.5 / 5.8 km.
+    to 100% (hail; Δz > 5.5 km)
+    """
+    variable = "zFactorFinal"
+    radar_frequency = "Ku"
+    h0 = get_xarray_variable(ds, variable="heightZeroDeg")
+    # Compute MESHS
+    et_50_2cm = 1.5 * h0 + 1700
+    et_50_4cm = 1.7824 * h0 + 2544.1
+    et_50_6cm = 1.933 * h0 + 4040
+
+    et50 = retrieve_EchoTopHeight(
+        ds,
+        threshold=50,
+        variable=variable,
+        radar_frequency=radar_frequency,
+    )
+    meshs4 = 4 + ((2 * (et50 - et_50_4cm))/(et_50_6cm - et_50_4cm))
+    meshs2 = 2 + (2 * (et50 - et_50_2cm)/(et_50_4cm - et_50_2cm))
+    mask_between_2_4 = np.logical_and(et50 > et_50_2cm, et50 < et_50_4cm)
+    mask_above_4 = et50 > et_50_4cm
+    meshs2 = meshs2.where(mask_between_2_4,0) 
+    meshs4 = meshs4.where(mask_above_4, 0) 
+    da_meshs = meshs2 + meshs4
+    
+    # Add attributes
+    da_meshs.name = "MESHS"
+    da_meshs.attrs["description"] = "Maximum Expected Severe Hail Size "
+    da_meshs.attrs["units"] = "cm"
+
+    return da_meshs
