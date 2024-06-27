@@ -215,7 +215,7 @@ def retrieve_EchoDepth(
     if "radar_frequency" in da.dims:
         da = da.sel({"radar_frequency": radar_frequency})
     da_height = ds["height"].copy()
-    
+
     # Mask height bin where not raining
     da_mask_3d_rain = da > min_threshold
     da_height = da_height.where(da_mask_3d_rain)
@@ -631,14 +631,14 @@ def retrieve_MESHS(ds):
         variable=variable,
         radar_frequency=radar_frequency,
     )
-    meshs4 = 4 + ((2 * (et50 - et_50_4cm))/(et_50_6cm - et_50_4cm))
-    meshs2 = 2 + (2 * (et50 - et_50_2cm)/(et_50_4cm - et_50_2cm))
+    meshs4 = 4 + ((2 * (et50 - et_50_4cm)) / (et_50_6cm - et_50_4cm))
+    meshs2 = 2 + (2 * (et50 - et_50_2cm) / (et_50_4cm - et_50_2cm))
     mask_between_2_4 = np.logical_and(et50 > et_50_2cm, et50 < et_50_4cm)
     mask_above_4 = et50 > et_50_4cm
-    meshs2 = meshs2.where(mask_between_2_4,0) 
-    meshs4 = meshs4.where(mask_above_4, 0) 
+    meshs2 = meshs2.where(mask_between_2_4, 0)
+    meshs4 = meshs4.where(mask_above_4, 0)
     da_meshs = meshs2 + meshs4
-    
+
     # Add attributes
     da_meshs.name = "MESHS"
     da_meshs.attrs["description"] = "Maximum Expected Severe Hail Size "
