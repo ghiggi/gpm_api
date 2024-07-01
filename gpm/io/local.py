@@ -31,7 +31,7 @@ import re
 from gpm.configs import get_base_dir
 from gpm.io.checks import check_base_dir
 from gpm.io.products import get_product_category
-from gpm.utils.directories import list_files
+from gpm.utils.directories import search_leaf_files
 
 ####--------------------------------------------------------------------------.
 #####################
@@ -319,7 +319,7 @@ def get_local_filepaths(product, version=7, product_type="RS", base_dir=None, gr
         return []
 
     # Retrieve the filepaths
-    filepaths = list_files(product_dir, glob_pattern="*", recursive=True)
+    filepaths = search_leaf_files(base_dir=product_dir, parallel=True)
     filepaths = sorted(filepaths)
 
     # Group filepaths if groups is not None

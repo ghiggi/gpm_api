@@ -35,8 +35,8 @@ from gpm.bucket.filters import apply_spatial_filters
 from gpm.bucket.io import (
     get_bucket_partitioning,
     get_filepaths,
-    get_filepaths_within_paths,
 )
+from gpm.utils.directories import get_filepaths_within_paths
 from gpm.utils.geospatial import (
     get_continent_extent,
     get_country_extent,
