@@ -53,7 +53,7 @@ def test_construct_curl_pps_cmd(
     # Use datetime as path as to be unique to every test
     local_filepath = os.path.join(
         tmpdir,
-        datetime.datetime.utcnow().isoformat().replace(":", "-"),
+        datetime.datetime.now(datetime.UTC).isoformat().replace(":", "-"),
         "CURL",
         "output_file.hdf5",
     )
@@ -109,7 +109,7 @@ def test_construct_wget_pps_cmd(
     # Use datetime as path as to be unique to every test
     local_filepath = os.path.join(
         tmpdir,
-        datetime.datetime.utcnow().isoformat().replace(":", "-"),
+        datetime.datetime.now(datetime.UTC).isoformat().replace(":", "-"),
         "WGET",
         "output_file.hdf5",
     )

@@ -195,7 +195,7 @@ def get_granule_attrs(dt):
 
 def add_history(ds):
     """Add the history attribute to the xarray.Dataset."""
-    current_time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    current_time = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M:%S")
     history = f"Created by ghiggi/gpm_api software on {current_time}"
     ds.attrs["history"] = history
     return ds

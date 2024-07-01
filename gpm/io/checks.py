@@ -263,9 +263,9 @@ def check_start_end_time(start_time, end_time):
     if start_time > end_time:
         raise ValueError("Provide 'start_time' occurring before of 'end_time'.")
     # Check start_time and end_time are in the past
-    if start_time > datetime.datetime.utcnow():
+    if start_time > datetime.datetime.now(datetime.UTC):
         raise ValueError("Provide a 'start_time' occurring in the past.")
-    if end_time > datetime.datetime.utcnow():
+    if end_time > datetime.datetime.now(datetime.UTC):
         raise ValueError("Provide a 'end_time' occurring in the past.")
     return (start_time, end_time)
 

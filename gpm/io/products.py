@@ -175,7 +175,7 @@ def filter_info_dict_by_time(info_dict, start_time, end_time):
     if start_time is None:
         start_time = datetime.datetime(1987, 7, 9, 0, 0, 0)
     if end_time is None:
-        end_time = datetime.datetime.utcnow()
+        end_time = datetime.datetime.now(datetime.UTC)
 
     start_time = check_time(start_time)
     end_time = check_time(end_time)
@@ -185,7 +185,7 @@ def filter_info_dict_by_time(info_dict, start_time, end_time):
         sensor_start_time = product_info["start_time"]
         sensor_end_time = product_info["end_time"]
         if sensor_end_time is None:
-            sensor_end_time = datetime.datetime.utcnow()
+            sensor_end_time = datetime.datetime.now(datetime.UTC)
         if is_granule_within_time(
             start_time=start_time,
             end_time=end_time,
@@ -229,7 +229,7 @@ def get_product_end_time(product):
     """Provide the product ``end_time``."""
     end_time = get_info_dict()[product]["end_time"]
     if end_time is None:
-        end_time = datetime.datetime.utcnow()
+        end_time = datetime.datetime.now(datetime.UTC)
     return end_time
 
 
