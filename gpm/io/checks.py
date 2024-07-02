@@ -235,7 +235,6 @@ def check_time(time):
             time = datetime.datetime.fromisoformat(time)
         except ValueError:
             raise ValueError("The time string must have format 'YYYY-MM-DD hh:mm:ss'")
-
     # If datetime object carries timezone that is not UTC, raise error
     if time.tzinfo is not None:
         if str(time.tzinfo) != "UTC":
@@ -263,9 +262,9 @@ def check_start_end_time(start_time, end_time):
     if start_time > end_time:
         raise ValueError("Provide 'start_time' occurring before of 'end_time'.")
     # Check start_time and end_time are in the past
-    if start_time > datetime.datetime.now(datetime.UTC):
+    if start_time > datetime.datetime.now(datetime.UTC).replace(tzinfo=None):
         raise ValueError("Provide a 'start_time' occurring in the past.")
-    if end_time > datetime.datetime.now(datetime.UTC):
+    if end_time > datetime.datetime.now(datetime.UTC).replace(tzinfo=None):
         raise ValueError("Provide a 'end_time' occurring in the past.")
     return (start_time, end_time)
 
