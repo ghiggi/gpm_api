@@ -653,7 +653,7 @@ def test_check_start_end_time() -> None:
     # behind the current time tested in the function
     checks.check_start_end_time(
         datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
-        datetime.datetime.now(datetime.UTC),
+        checks.get_current_utc_time(),
     )
 
 
