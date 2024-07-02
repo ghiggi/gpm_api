@@ -1180,7 +1180,7 @@ class TestTilePartitioning:
 
     def test_justified_labels_single_level(self):
         """Test labels justification of single-level 2D TilePartitioning."""
-        size = (10, 10)  #
+        size = (10, 10)
         extent = [-180, 180, -90, 90]
         n_levels = 1
         origin = "bottom"
