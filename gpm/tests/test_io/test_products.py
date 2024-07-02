@@ -176,18 +176,18 @@ def test_get_sensor_satellite_names():
         },
     }
 
-    assert ["SSMIS"] == _get_sensor_satellite_names(info_dict, key="sensor", combine_with=None)
-    assert ["F18"] == _get_sensor_satellite_names(info_dict, key="satellite", combine_with=None)
-    assert ["SSMIS-F18"] == _get_sensor_satellite_names(
+    assert _get_sensor_satellite_names(info_dict, key="sensor", combine_with=None) == ["SSMIS"]
+    assert _get_sensor_satellite_names(info_dict, key="satellite", combine_with=None) == ["F18"]
+    assert _get_sensor_satellite_names(
         info_dict,
         key="satellite",
         combine_with="sensor",
-    )
-    assert ["SSMIS-F18"] == _get_sensor_satellite_names(
+    ) == ["SSMIS-F18"]
+    assert _get_sensor_satellite_names(
         info_dict,
         key="sensor",
         combine_with="satellite",
-    )
+    ) == ["SSMIS-F18"]
 
 
 @pytest.mark.parametrize("full", [True, False])
