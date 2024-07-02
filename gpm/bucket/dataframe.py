@@ -32,6 +32,8 @@ import pandas as pd
 import polars as pl
 import pyarrow as pa
 
+pd.options.mode.copy_on_write = True
+
 
 def check_valid_dataframe(df):
     """Check the dataframe class."""

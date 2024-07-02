@@ -80,7 +80,7 @@ def get_spatial_dimensions(xr_obj):
 
 
 def _has_spatial_dim_dataarray(da, strict):
-    """Check if the `xarray.DataArray` has spatial horizontal dimensions."""
+    """Check if the xarray.DataArray has spatial horizontal dimensions."""
     spatial_dims = get_spatial_dimensions(da)
     if not spatial_dims:
         return False
@@ -90,7 +90,7 @@ def _has_spatial_dim_dataarray(da, strict):
 
 
 def _has_vertical_dim_dataarray(da, strict):
-    """Check if the `xarray.DataArray` has a vertical dimension."""
+    """Check if the xarray.DataArray has a vertical dimension."""
     vertical_dims = list(get_vertical_dimension(da))
     if not vertical_dims:
         return False
@@ -100,7 +100,7 @@ def _has_vertical_dim_dataarray(da, strict):
 
 
 def _has_frequency_dim_dataarray(da, strict):
-    """Check if the `xarray.DataArray` has a frequency dimension."""
+    """Check if the xarray.DataArray has a frequency dimension."""
     frequency_dims = list(get_frequency_dimension(da))
     if not frequency_dims:
         return False
@@ -110,7 +110,7 @@ def _has_frequency_dim_dataarray(da, strict):
 
 
 def _has_vertical_dim_dataset(ds, strict):
-    """Check if at least one `xarray.DataArray`s of a `xarray.Dataset` have a vertical dimension."""
+    """Check if at least one xarray.DataArrays of a xarray.Dataset have a vertical dimension."""
     has_vertical = np.any(
         [_has_vertical_dim_dataarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
@@ -120,7 +120,7 @@ def _has_vertical_dim_dataset(ds, strict):
 
 
 def _has_spatial_dim_dataset(ds, strict):
-    """Check if at least one `xarray.DataArray`s of a `xarray.Dataset` have at least one spatial dimension."""
+    """Check if at least one xarray.DataArrays of a xarray.Dataset have at least one spatial dimension."""
     has_spatial = np.any(
         [_has_spatial_dim_dataarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
@@ -130,7 +130,7 @@ def _has_spatial_dim_dataset(ds, strict):
 
 
 def _has_frequency_dim_dataset(ds, strict):
-    """Check if at least one `xarray.DataArray`s of a `xarray.Dataset` have a frequency dimension."""
+    """Check if at least one xarray.DataArrays of a xarray.Dataset have a frequency dimension."""
     has_spatial = np.any(
         [_has_frequency_dim_dataarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
@@ -149,11 +149,11 @@ def _check_xarray_conditions(da_condition, ds_condition, xr_obj, strict, squeeze
 
 
 def has_spatial_dim(xr_obj, strict=False, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` have a spatial dimension.
+    """Check if the xarray.DataArray or xarray.Dataset have a spatial dimension.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True`` , the `xarray.DataArray` can have only spatial dimensions.
-    If ``strict=False`` (default), the `xarray.DataArray` can also have other dimensions.
+    If ``strict=True`` , the xarray.DataArray can have only spatial dimensions.
+    If ``strict=False`` (default), the xarray.DataArray can also have other dimensions.
     """
     return _check_xarray_conditions(
         _has_spatial_dim_dataarray,
@@ -165,11 +165,11 @@ def has_spatial_dim(xr_obj, strict=False, squeeze=True):
 
 
 def has_vertical_dim(xr_obj, strict=False, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` have a vertical dimension.
+    """Check if the xarray.DataArray or xarray.Dataset have a vertical dimension.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True``  , the `xarray.DataArray` must have just the vertical dimension.
-    If ``strict=False`` (default), the `xarray.DataArray` can also have additional dimensions.
+    If ``strict=True``  , the xarray.DataArray must have just the vertical dimension.
+    If ``strict=False`` (default), the xarray.DataArray can also have additional dimensions.
     """
     return _check_xarray_conditions(
         _has_vertical_dim_dataarray,
@@ -181,11 +181,11 @@ def has_vertical_dim(xr_obj, strict=False, squeeze=True):
 
 
 def has_frequency_dim(xr_obj, strict=False, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` have a frequency dimension.
+    """Check if the xarray.DataArray or xarray.Dataset have a frequency dimension.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True`` , the `xarray.DataArray` must have just the frequency dimension.
-    If ``strict=False`` (default), the `xarray.DataArray` can also have additional dimensions.
+    If ``strict=True`` , the xarray.DataArray must have just the frequency dimension.
+    If ``strict=False`` (default), the xarray.DataArray can also have additional dimensions.
     """
     return _check_xarray_conditions(
         _has_frequency_dim_dataarray,
@@ -290,7 +290,7 @@ def is_grid(xr_obj):
 
 
 def _is_spatial_2d_dataarray(da, strict):
-    """Check if the `xarray.DataArray` is a spatial 2D array."""
+    """Check if the xarray.DataArray is a spatial 2D array."""
     spatial_dims = get_spatial_dimensions(da)
     if not _is_expected_spatial_dims(spatial_dims) or len(spatial_dims) != 2:
         return False
@@ -305,7 +305,7 @@ def _is_spatial_2d_dataarray(da, strict):
 
 
 def _is_spatial_3d_dataarray(da, strict):
-    """Check if the `xarray.DataArray` is a spatial 3D array."""
+    """Check if the xarray.DataArray is a spatial 3D array."""
     spatial_dims = get_spatial_dimensions(da)
     if not _is_expected_spatial_dims(spatial_dims) or len(spatial_dims) != 2:
         return False
@@ -320,7 +320,7 @@ def _is_spatial_3d_dataarray(da, strict):
 
 
 def _is_transect_dataarray(da, strict):
-    """Check if the `xarray.DataArray` is a spatial 3D array."""
+    """Check if the xarray.DataArray is a spatial 3D array."""
     spatial_dims = list(get_spatial_dimensions(da))
     if len(spatial_dims) != 1:
         return False
@@ -347,26 +347,26 @@ def _check_dataarrays_condition(condition, ds, strict):
 
 
 def _is_spatial_2d_dataset(ds, strict):
-    """Check if all `xarray.DataArray`s of a `xarray.Dataset` are spatial 2D objects."""
+    """Check if all xarray.DataArrays of a xarray.Dataset are spatial 2D objects."""
     return _check_dataarrays_condition(_is_spatial_2d_dataarray, ds=ds, strict=strict)
 
 
 def _is_spatial_3d_dataset(ds, strict):
-    """Check if all `xarray.DataArray`s of a `xarray.Dataset` are spatial 3D objects."""
+    """Check if all xarray.DataArrays of a xarray.Dataset are spatial 3D objects."""
     return _check_dataarrays_condition(_is_spatial_3d_dataarray, ds=ds, strict=strict)
 
 
 def _is_transect_dataset(ds, strict):
-    """Check if all `xarray.DataArray`s of a `xarray.Dataset` are transect objects."""
+    """Check if all xarray.DataArrays of a xarray.Dataset are transect objects."""
     return _check_dataarrays_condition(_is_transect_dataarray, ds=ds, strict=strict)
 
 
 def is_spatial_2d(xr_obj, strict=True, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` is a spatial 2D object.
+    """Check if the xarray.DataArray or xarray.Dataset is a spatial 2D object.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True``  (default), the `xarray.DataArray` must have just the 2D spatial dimensions.
-    If ``strict=False`` , the `xarray.DataArray` can have additional dimensions (except vertical).
+    If ``strict=True``  (default), the xarray.DataArray must have just the 2D spatial dimensions.
+    If ``strict=False`` , the xarray.DataArray can have additional dimensions (except vertical).
     """
     return _check_xarray_conditions(
         _is_spatial_2d_dataarray,
@@ -378,11 +378,11 @@ def is_spatial_2d(xr_obj, strict=True, squeeze=True):
 
 
 def is_spatial_3d(xr_obj, strict=True, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` i as spatial 3d object.
+    """Check if the xarray.DataArray or xarray.Dataset i as spatial 3d object.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True``  (default), the `xarray.DataArray` must have just the 3D spatial dimensions.
-    If ``strict=False`` , the `xarray.DataArray` can also have additional dimensions.
+    If ``strict=True``  (default), the xarray.DataArray must have just the 3D spatial dimensions.
+    If ``strict=False`` , the xarray.DataArray can also have additional dimensions.
     """
     return _check_xarray_conditions(
         _is_spatial_3d_dataarray,
@@ -394,12 +394,12 @@ def is_spatial_3d(xr_obj, strict=True, squeeze=True):
 
 
 def is_transect(xr_obj, strict=True, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` is a transect object.
+    """Check if the xarray.DataArray or xarray.Dataset is a transect object.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True``  (default), the `xarray.DataArray` must have just the
+    If ``strict=True``  (default), the xarray.DataArray must have just the
     vertical dimension and a horizontal dimension.
-    If ``strict=False`` , the `xarray.DataArray` can also have additional dimensions.
+    If ``strict=False`` , the xarray.DataArray can also have additional dimensions.
     """
     return _check_xarray_conditions(
         _is_transect_dataarray,
@@ -445,45 +445,45 @@ def check_has_along_track_dim(xr_obj, dim="along_track"):
 
 
 def check_is_spatial_2d(xr_obj, strict=True, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` is a spatial 2D field.
+    """Check if the xarray.DataArray or xarray.Dataset is a spatial 2D field.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True``  (default), the `xarray.DataArray` must have just the 2D spatial dimensions.
-    If ``strict=False`` , the `xarray.DataArray` can also have additional dimensions (except vertical).
+    If ``strict=True``  (default), the xarray.DataArray must have just the 2D spatial dimensions.
+    If ``strict=False`` , the xarray.DataArray can also have additional dimensions (except vertical).
     """
     if not is_spatial_2d(xr_obj, strict=strict, squeeze=squeeze):
         raise ValueError("Expecting a 2D GPM field.")
 
 
 def check_is_spatial_3d(xr_obj, strict=True, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` is a spatial 3D field.
+    """Check if the xarray.DataArray or xarray.Dataset is a spatial 3D field.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True``  (default), the `xarray.DataArray` must have just the 3D spatial dimensions.
-    If ``strict=False`` , the `xarray.DataArray` can also have additional dimensions.
+    If ``strict=True``  (default), the xarray.DataArray must have just the 3D spatial dimensions.
+    If ``strict=False`` , the xarray.DataArray can also have additional dimensions.
     """
     if not is_spatial_3d(xr_obj, strict=strict, squeeze=squeeze):
         raise ValueError("Expecting a 3D GPM field.")
 
 
 def check_is_transect(xr_obj, strict=True, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` is a transect.
+    """Check if the xarray.DataArray or xarray.Dataset is a transect.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=True``  (default), the `xarray.DataArray` must have just the
+    If ``strict=True``  (default), the xarray.DataArray must have just the
     vertical dimension and a horizontal dimension.
-    If ``strict=False`` , the `xarray.DataArray` can also have additional dimensions.
+    If ``strict=False`` , the xarray.DataArray can also have additional dimensions.
     """
     if not is_transect(xr_obj, strict=strict, squeeze=squeeze):
         raise ValueError("Expecting a transect of a 3D GPM field.")
 
 
 def check_has_vertical_dim(xr_obj, strict=False, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` have a vertical dimension.
+    """Check if the xarray.DataArray or xarray.Dataset have a vertical dimension.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=False`` (default), the `xarray.DataArray` can also have additional dimensions.
-    If ``strict=True`` , the `xarray.DataArray` must have just the vertical dimension.
+    If ``strict=False`` (default), the xarray.DataArray can also have additional dimensions.
+    If ``strict=True`` , the xarray.DataArray must have just the vertical dimension.
     """
     if not has_vertical_dim(xr_obj, strict=strict, squeeze=squeeze):
         only = "only " if strict else ""
@@ -491,11 +491,11 @@ def check_has_vertical_dim(xr_obj, strict=False, squeeze=True):
 
 
 def check_has_spatial_dim(xr_obj, strict=False, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` has at least one spatial horizontal dimension.
+    """Check if the xarray.DataArray or xarray.Dataset has at least one spatial horizontal dimension.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=False`` (default), the `xarray.DataArray` can also have additional dimensions.
-    If ``strict=True`` , the `xarray.DataArray` must have just the spatial dimensions.
+    If ``strict=False`` (default), the xarray.DataArray can also have additional dimensions.
+    If ``strict=True`` , the xarray.DataArray must have just the spatial dimensions.
     """
     if not has_spatial_dim(xr_obj, strict=strict, squeeze=squeeze):
         only = "only " if strict else ""
@@ -503,11 +503,11 @@ def check_has_spatial_dim(xr_obj, strict=False, squeeze=True):
 
 
 def check_has_frequency_dim(xr_obj, strict=False, squeeze=True):
-    """Check if the `xarray.DataArray` or `xarray.Dataset` has a frequency dimension.
+    """Check if the xarray.DataArray or xarray.Dataset has a frequency dimension.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
-    If ``strict=False`` (default), the `xarray.DataArray` can also have additional dimensions.
-    If ``strict=True`` , the `xarray.DataArray` must have just the spatial dimensions.
+    If ``strict=False`` (default), the xarray.DataArray can also have additional dimensions.
+    If ``strict=True`` , the xarray.DataArray must have just the spatial dimensions.
     """
     if not has_frequency_dim(xr_obj, strict=strict, squeeze=squeeze):
         only = "only " if strict else ""
@@ -521,7 +521,7 @@ def check_has_frequency_dim(xr_obj, strict=False, squeeze=True):
 
 
 def get_spatial_2d_variables(ds, strict=False, squeeze=True):
-    """Get list of `xarray.Dataset` 2D spatial variables.
+    """Get list of xarray.Dataset 2D spatial variables.
 
     If ``strict=False`` (default), the potential variables for which a 2D spatial field can be derived.
     If ``strict=True``, the variables that are already a 2D spatial field.
@@ -531,7 +531,7 @@ def get_spatial_2d_variables(ds, strict=False, squeeze=True):
 
 
 def get_spatial_3d_variables(ds, strict=False, squeeze=True):
-    """Get list of `xarray.Dataset` 3D spatial variables.
+    """Get list of xarray.Dataset 3D spatial variables.
 
     If ``strict=False`` (default), the potential variables for which a 3D spatial field can be derived.
     If ``strict=True``, the variables that are already a 3D spatial field.
@@ -541,7 +541,7 @@ def get_spatial_3d_variables(ds, strict=False, squeeze=True):
 
 
 def get_transect_variables(ds, strict=False, squeeze=True):
-    """Get list of `xarray.Dataset` trasect variables.
+    """Get list of xarray.Dataset trasect variables.
 
     If ``strict=False`` (default), the potential variables for which a transect can be derived.
     If ``strict=True``, the variables that are already provide a transect.
@@ -551,19 +551,19 @@ def get_transect_variables(ds, strict=False, squeeze=True):
 
 
 def get_vertical_variables(ds):
-    """Get list of `xarray.Dataset` variables with vertical dimension."""
+    """Get list of xarray.Dataset variables with vertical dimension."""
     variables = [var for var in get_dataset_variables(ds) if has_vertical_dim(ds[var], strict=False, squeeze=True)]
     return sorted(variables)
 
 
 def get_frequency_variables(ds):
-    """Get list of `xarray.Dataset` variables with frequency-related dimension."""
+    """Get list of xarray.Dataset variables with frequency-related dimension."""
     variables = [var for var in get_dataset_variables(ds) if has_frequency_dim(ds[var], strict=False, squeeze=True)]
     return sorted(variables)
 
 
 def get_bin_variables(ds):
-    """Get list of `xarray.Dataset` radar product variables with name starting with `bin` or ending with `Bin`.
+    """Get list of xarray.Dataset radar product variables with name starting with `bin` or ending with `Bin`.
 
     In CMB products, bin variables end with the `Bin`  suffix.
     In L1 and L2 RADAR products, bin variables starts with the `bin`  prefix.

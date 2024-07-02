@@ -316,9 +316,10 @@ def test_ensure_time_validity():
 
 def get_sample_orbit_dataset():
     # Return a default dataset
-    da = xr.DataArray(np.random.rand(1, 2, 2), dims=("other", "along_track", "cross_track"))
-    lon = xr.DataArray(np.random.rand(2, 2), dims=("cross_track", "along_track"))
-    lat = xr.DataArray(np.random.rand(2, 2), dims=("cross_track", "along_track"))
+    rng = np.random.default_rng()
+    da = xr.DataArray(rng.random((1, 2, 2)), dims=("other", "along_track", "cross_track"))
+    lon = xr.DataArray(rng.random((2, 2)), dims=("cross_track", "along_track"))
+    lat = xr.DataArray(rng.random((2, 2)), dims=("cross_track", "along_track"))
     start_time = datetime(2018, 1, 1, 12, 30, 0)
     end_time = datetime(2018, 1, 1, 12, 32, 0)
     time = [start_time, end_time]
@@ -328,7 +329,8 @@ def get_sample_orbit_dataset():
 
 def get_sample_grid_dataset():
     # Return a default dataset
-    da = xr.DataArray(np.random.rand(1, 1, 1, 1), dims=("lat", "lon", "time", "other"))
+    rng = np.random.default_rng()
+    da = xr.DataArray(rng.random((1, 1, 1, 1)), dims=("lat", "lon", "time", "other"))
     lon = xr.DataArray([1], dims=("lon"))
     lat = xr.DataArray([2], dims=("lat"))
     time = [0]

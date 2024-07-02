@@ -61,7 +61,7 @@ def _plot_grid_map_cartopy(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot `xarray.DataArray` 2D field (with optional RGB dimension) with cartopy."""
+    """Plot xarray.DataArray 2D field (with optional RGB dimension) with cartopy."""
     # - Initialize figure if necessary
     ax = initialize_cartopy_plot(
         ax=ax,
@@ -206,7 +206,7 @@ def plot_grid_map(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot `xarray.DataArray` 2D field with cartopy."""
+    """Plot xarray.DataArray 2D field with cartopy."""
     # Check inputs
     da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_spatial_2d, strict=True)
     # Plot FacetGrid with xarray imshow
@@ -269,7 +269,7 @@ def plot_grid_mesh(
     # Infer x and y
     x, y = infer_xy_labels(xr_obj, x=x, y=y, rgb=plot_kwargs.get("rgb", None))
 
-    # Create 2D mesh `xarray.DataArray`
+    # Create 2D mesh xarray.DataArray
     da = create_grid_mesh_data_array(xr_obj, x=x, y=y)
 
     # Define plot_kwargs to display only the mesh

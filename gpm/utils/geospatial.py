@@ -364,7 +364,7 @@ def get_geographic_extent_from_xarray(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     padding : int, float, tuple, list
         The number of degrees to extend the extent in each direction.
@@ -602,7 +602,7 @@ def crop(xr_obj, extent):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     extent : list or tuple
         The bounding box over which to crop the xarray object.
@@ -611,7 +611,7 @@ def crop(xr_obj, extent):
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -637,14 +637,14 @@ def crop_by_country(xr_obj, name: str):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     name : str
         Country name.
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -657,14 +657,14 @@ def crop_by_continent(xr_obj, name: str):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     name : str
         Continent name.
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -677,7 +677,7 @@ def crop_around_point(xr_obj, lon: float, lat: float, distance=None, size=None):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     lon : float
         Longitude of the point.
@@ -694,7 +694,7 @@ def crop_around_point(xr_obj, lon: float, lat: float, distance=None, size=None):
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -711,7 +711,7 @@ def get_crop_slices_by_extent(xr_obj, extent):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     extent : list or tuple
         The extent over which to crop the xarray object.
@@ -753,7 +753,7 @@ def get_crop_slices_by_continent(xr_obj, name):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     name : str
         Continent name.
@@ -771,7 +771,7 @@ def get_crop_slices_by_country(xr_obj, name):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     name : str
         Country name.
@@ -789,7 +789,7 @@ def get_crop_slices_around_point(xr_obj, lon: float, lat: float, distance=None, 
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     lon : float
         Longitude of the point.
@@ -806,7 +806,7 @@ def get_crop_slices_around_point(xr_obj, lon: float, lat: float, distance=None, 
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -841,9 +841,9 @@ def get_circle_coordinates_around_point(lon, lat, radius, num_vertices=360):
 
     Returns
     -------
-    lons : `numpy.ndarray`
+    lons :  numpy.ndarray
         Longitude vertices of the circle around the point.
-    lats : `numpy.ndarray`
+    lats :  numpy.ndarray
         Latitude vertices of the circle around the point.
 
     """

@@ -161,7 +161,7 @@ def get_transect_slices(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         DESCRIPTION.
     direction : str, optional
         DESCRIPTION. The default is "cross_track".

@@ -391,7 +391,7 @@ def test_is_orbit(
     n_y = 20
     x = np.arange(n_x)
     y = np.arange(n_y)
-    data = np.random.rand(n_x, n_y)
+    data = np.random.default_rng().random((n_x, n_y))
     invalid_da = xr.DataArray(data, coords={"x": x, "y": y})
     assert not is_orbit(invalid_da)
 

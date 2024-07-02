@@ -120,6 +120,15 @@ class TestXYPartitioning:
         assert partitioning.labels[0, -1, :].tolist() == ["9.5", "1.0"]
         assert partitioning.labels[-1, -1, :].tolist() == ["9.5", "9.0"]
 
+    def test_labels_zero_decimals(self):
+        """Test labels property."""
+        partitioning = XYPartitioning(size=(2, 2), extent=[0, 10, 0, 10], labels_decimals=0)
+        assert partitioning.labels.shape == (5, 5, 2)
+        assert partitioning.labels[0, 0, :].tolist() == ["1", "1"]
+        assert partitioning.labels[-1, 0, :].tolist() == ["1", "9"]
+        assert partitioning.labels[0, -1, :].tolist() == ["9", "1"]
+        assert partitioning.labels[-1, -1, :].tolist() == ["9", "9"]
+
     def test_centroids(self):
         """Test centroids property."""
         size = (120, 90)  # 3x2 partitions

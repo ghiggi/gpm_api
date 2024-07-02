@@ -16,4 +16,3 @@ dependencies:
   - sphinx==7.2.6
   - sphinxcontrib-youtube
   - ximage
-  - pip: [pycolorbar]

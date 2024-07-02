@@ -31,7 +31,7 @@ import re
 from gpm.configs import get_base_dir
 from gpm.io.checks import check_base_dir
 from gpm.io.products import get_product_category
-from gpm.utils.directories import list_files
+from gpm.utils.directories import search_leaf_files
 
 ####--------------------------------------------------------------------------.
 #####################
@@ -119,7 +119,7 @@ def _get_local_directory_tree(product, product_type, date, version):
         GPM product name. See ``gpm.available_products()``.
     product_type : str
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve.
@@ -151,7 +151,7 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
 
     Returns
@@ -189,7 +189,7 @@ def get_local_daily_filepaths(product, product_type, date, version, base_dir=Non
         GPM product acronym. See ``gpm.available_products()``.
     product_type : str
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
@@ -319,7 +319,7 @@ def get_local_filepaths(product, version=7, product_type="RS", base_dir=None, gr
         return []
 
     # Retrieve the filepaths
-    filepaths = list_files(product_dir, glob_pattern="*", recursive=True)
+    filepaths = search_leaf_files(base_dir=product_dir, parallel=True)
     filepaths = sorted(filepaths)
 
     # Group filepaths if groups is not None

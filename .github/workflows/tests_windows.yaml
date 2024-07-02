@@ -1,5 +1,5 @@
 ---
-name: Tests Windows
+name: Tests
 on: [push, pull_request, workflow_dispatch]
 jobs:
   tests:
@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
         experimental: [false]
     steps:
       - uses: actions/checkout@v4

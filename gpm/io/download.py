@@ -932,11 +932,11 @@ def download_archive(
     ----------
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    start_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    start_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         Start time.
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
-    end_time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    end_time : datetime.datetime, datetime.date, numpy.datetime64 or str
         End time.
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.

@@ -149,13 +149,13 @@ def find_daily_filepaths(
 
     Parameters
     ----------
-    date : `datetime.date`
+    date : datetime.date
         Single date for which to retrieve the data.
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    start_time : `datetime.datetime`
+    start_time : datetime.datetime
         Filtering start time.
-    end_time : `datetime.datetime`
+    end_time : datetime.datetime
         Filtering end time.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).
@@ -235,9 +235,9 @@ def find_filepaths(
     ----------
     product : str
         GPM product acronym. See ``gpm.available_products()``.
-    start_time : `datetime.datetime`
+    start_time : datetime.datetime
         Start time.
-    end_time : `datetime.datetime`
+    end_time : datetime.datetime
         End time.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).

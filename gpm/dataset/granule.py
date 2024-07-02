@@ -61,10 +61,10 @@ def _remove_dummy_variables(ds):
 
 
 def _subset_dataset_variables(ds, variables):
-    """Select `xarray.Dataset` variables included in the variables list.
+    """Select xarray.Dataset variables included in the variables list.
 
-    'variables' can contain variables not present in the `xarray.Dataset`.
-    If variables=None, does not subset the `xarray.Dataset`.
+    'variables' can contain variables not present in the xarray.Dataset.
+    If variables=None, does not subset the xarray.Dataset.
     """
     if variables is not None:
         variables_subset = np.array(variables)[np.isin(variables, list(ds.data_vars))].tolist()
@@ -121,7 +121,7 @@ def _get_scan_mode_dataset(
     groups=None,
     prefix_group=False,
 ):
-    """Retrieve scan mode `xarray.Dataset`."""
+    """Retrieve scan mode xarray.Dataset."""
     # Retrieve granule info
     coords, attrs, groups, variables = _get_scan_mode_info(
         dt=dt,
@@ -160,7 +160,7 @@ def get_variables(ds):
 
 
 def get_variables_dims(ds):
-    """Retrieve the dimensions used by the `xarray.Dataset` variables."""
+    """Retrieve the dimensions used by the xarray.Dataset variables."""
     variables = get_variables(ds)
     if len(variables) == 0:
         return []
@@ -168,7 +168,7 @@ def get_variables_dims(ds):
 
 
 def unused_var_dims(ds):
-    """Retrieve the dimensions not used by the the `xarray.Dataset` variables."""
+    """Retrieve the dimensions not used by the the xarray.Dataset variables."""
     var_dims = set(get_variables_dims(ds))
     ds_dims = set(ds.dims)
     unused_dims = ds_dims.difference(var_dims)
@@ -176,7 +176,7 @@ def unused_var_dims(ds):
 
 
 def remove_unused_var_dims(ds):
-    """Remove coordinates and dimensions not used by the `xarray.Dataset` variables."""
+    """Remove coordinates and dimensions not used by the xarray.Dataset variables."""
     if len(ds.data_vars) >= 1:
         unused_dims = unused_var_dims(ds)
         unused_dims = [dim for dim in unused_dims if dim not in ["latv", "lonv", "nv"]]
@@ -231,7 +231,7 @@ def open_granule(
     chunks={},
     prefix_group=False,
 ):
-    """Create a lazy ``xarray.Dataset`` with relevant GPM data and attributes for a specific granule.
+    """Create a lazy xarray.Dataset with relevant GPM data and attributes for a specific granule.
 
     Parameters
     ----------

@@ -376,8 +376,9 @@ def test_get_along_track_scan_distance() -> None:
     lon = np.array([0, 45, 90])
 
     # Stack values for cross track dimension
-    lat = np.stack((np.random.rand(3), lat, np.random.rand(3)))
-    lon = np.stack((np.random.rand(3), lon, np.random.rand(3)))
+    rng = np.random.default_rng()
+    lat = np.stack((rng.random(3), lat, rng.random(3)))
+    lon = np.stack((rng.random(3), lon, rng.random(3)))
 
     # Create dataset
     ds = xr.Dataset()

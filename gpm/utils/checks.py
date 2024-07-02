@@ -91,7 +91,7 @@ def get_slices_contiguous_granules(xr_obj, min_size=2):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
     min_size : int
         Minimum size for a slice to be returned.
@@ -139,7 +139,7 @@ def check_missing_granules(xr_obj):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
 
     """
@@ -157,7 +157,7 @@ def check_contiguous_granules(xr_obj):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
 
     """
@@ -199,7 +199,7 @@ def has_missing_granules(xr_obj):
 
 
 def _get_timesteps(xr_obj):
-    """Get timesteps with second precision from `xarray.DataArray` or `xarray.Dataset`."""
+    """Get timesteps with second precision from xarray.DataArray or xarray.Dataset."""
     timesteps = xr_obj["time"].to_numpy()
     return timesteps.astype("M8[s]")
 
@@ -240,9 +240,9 @@ def get_slices_regular_time(xr_obj, tolerance=None, min_size=1):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
-    tolerance : `numpy.timedelta64`, optional
+    tolerance : numpy.timedelta64, optional
         The timedelta tolerance to define regular vs. non-regular timesteps.
         The default is ``None``.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
@@ -294,9 +294,9 @@ def get_slices_non_regular_time(xr_obj, tolerance=None):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
-    tolerance : `numpy.timedelta64`, optional
+    tolerance : numpy.timedelta64, optional
         The timedelta tolerance to define regular vs. non-regular timesteps.
         The default is ``None``.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
@@ -340,9 +340,9 @@ def check_regular_time(xr_obj, tolerance=None, verbose=True):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
-    tolerance : `numpy.timedelta64`, optional
+    tolerance : numpy.timedelta64, optional
         The timedelta tolerance to define regular vs. non-regular timesteps.
         The default is ``None``.
         If GPM GRID object, it uses the first 2 timesteps to derive the tolerance timedelta.
@@ -474,7 +474,7 @@ def get_slices_contiguous_scans(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
     min_size : int
         Minimum size for a slice to be returned.
@@ -535,7 +535,7 @@ def get_slices_non_contiguous_scans(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
 
     Returns
@@ -597,7 +597,7 @@ def check_contiguous_scans(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     verbose : bool
         If ``True``, it prints the time interval when the non contiguous scans occurs.
@@ -693,7 +693,7 @@ def get_slices_valid_geolocation(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM ORBIT xarray object.
     min_size : int
         Minimum size for a slice to be returned.
@@ -747,7 +747,7 @@ def get_slices_non_valid_geolocation(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
     min_size : int
         Minimum size for a slice to be returned.
@@ -784,7 +784,7 @@ def check_valid_geolocation(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
 
     """
@@ -999,7 +999,7 @@ def get_slices_regular(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
     min_size : int
         Minimum size for a slice to be returned.
@@ -1070,7 +1070,7 @@ def get_slices_var_equals(da, dim, values, union=True, criteria="all"):
     """Return a list of slices along the `dim` dimension where `values` occurs.
 
     The function is applied recursively to each value in `values`.
-    If the `xarray.DataArray` has additional dimensions, the "criteria" parameter is
+    If the xarray.DataArray has additional dimensions, the "criteria" parameter is
     used to determine whether all values within each slice index must be equal
     to value (if set to ``"all"``) or if at least one value within the slice index
     must be equal to value (if set to ``"any"``).
@@ -1083,7 +1083,7 @@ def get_slices_var_equals(da, dim, values, union=True, criteria="all"):
     If ``union=True`` [0,0, 1, 1] with ``values=[0,1]`` will return ``[slice(0,4)]``
 
     `union` matters when multiple values are specified
-    `criteria` matters when the `xarray.DataArray` has multiple dimensions.
+    `criteria` matters when the xarray.DataArray has multiple dimensions.
     """
     criteria = _check_criteria(criteria)
     # Get data array and dimensions
@@ -1102,7 +1102,7 @@ def get_slices_var_equals(da, dim, values, union=True, criteria="all"):
 def get_slices_var_between(da, dim, vmin=-np.inf, vmax=np.inf, criteria="all"):
     """Return a list of slices along the `dim` dimension where values are between the interval.
 
-    If the `xarray.DataArray` has additional dimensions, the ``criteria`` parameter is
+    If the xarray.DataArray has additional dimensions, the ``criteria`` parameter is
     used to determine whether all values within each slice index must be between
     the interval (if set to ``"all"``) or if at least one value within the slice index
     must be between the interval (if set to ``"any"``).

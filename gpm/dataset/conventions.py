@@ -125,7 +125,7 @@ def reshape_dataset(ds):
 
 
 def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_time=None):
-    """Finalize GPM `xarray.Dataset` object."""
+    """Finalize GPM xarray.Dataset object."""
     import pyproj
 
     from gpm import config

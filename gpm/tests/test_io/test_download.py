@@ -38,6 +38,7 @@ from pytest_mock.plugin import MockerFixture
 import gpm.configs
 from gpm.io import download as dl
 from gpm.io import find
+from gpm.io.checks import get_current_utc_time
 from gpm.io.products import available_products, get_product_start_time
 from gpm.utils.warnings import GPMDownloadWarning
 
@@ -51,9 +52,10 @@ def test_construct_curl_pps_cmd(
     `local_filepath` relates to a file on the disk
     """
     # Use datetime as path as to be unique to every test
+    current_time = get_current_utc_time()
     local_filepath = os.path.join(
         tmpdir,
-        datetime.datetime.utcnow().isoformat().replace(":", "-"),
+        current_time.isoformat().replace(":", "-"),
         "CURL",
         "output_file.hdf5",
     )
@@ -107,9 +109,10 @@ def test_construct_wget_pps_cmd(
     `local_filepath` relates to a file on the disk
     """
     # Use datetime as path as to be unique to every test
+    current_time = get_current_utc_time()
     local_filepath = os.path.join(
         tmpdir,
-        datetime.datetime.utcnow().isoformat().replace(":", "-"),
+        current_time.isoformat().replace(":", "-"),
         "WGET",
         "output_file.hdf5",
     )
