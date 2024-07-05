@@ -300,6 +300,7 @@ def write_bucket(
 def merge_granule_buckets(
     src_bucket_dir,
     dst_bucket_dir,
+    force=False,
     row_group_size="400MB",
     max_file_size="1GB",
     compression="snappy",
@@ -426,6 +427,10 @@ def merge_granule_buckets(
     n_partitions = len(dict_partition_files)
     for partition_label, filepaths in tqdm(dict_partition_files.items(), total=n_partitions):
         partition_dir = os.path.join(dst_bucket_dir, partition_label)
+        # Choose if too skip
+        # - TODO: search which year already there and only add remainings
+        if not force and os.path.exists(partition_dir):
+            continue
         year_dict = group_filepaths(filepaths, groups="year")
         for year, year_filepaths in year_dict.items():
             basename_template = f"{year}_" + "{i}.parquet"

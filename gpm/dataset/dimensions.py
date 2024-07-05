@@ -90,6 +90,7 @@ DIM_DICT = {
 }
 
 SPATIAL_DIMS = [
+    ["transect"],
     ["along_track", "cross_track"],
     ["lat", "lon"],  # choose whether to use instead latitude/longitude
     ["latitude", "longitude"],

@@ -38,7 +38,7 @@ from gpm.tests.test_visualization.utils import (
     skip_tests_if_no_data,
 )
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray
-from gpm.visualization.profile import plot_transect, plot_transect_line
+from gpm.visualization.cross_section import plot_transect, plot_transect_line
 
 
 @pytest.fixture()

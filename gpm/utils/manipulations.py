@@ -25,15 +25,21 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions for manipulating GPM-API Datasets."""
+import importlib
+
 import numpy as np
 import xarray as xr
+import xoak  # noqa (accessor)
 
 from gpm.checks import (
     check_has_vertical_dim,
     get_vertical_variables,
     has_spatial_dim,
     has_vertical_dim,
+    is_grid,
 )
+from gpm.utils.decorators import check_is_gpm_object
+from gpm.utils.geospatial import get_geodesic_line, get_great_circle_arc_endpoints
 from gpm.utils.xarray import (
     check_variable_availabilty,
     get_xarray_variable,
@@ -895,3 +901,274 @@ def extract_l2_dataset(
         if var in ds_new:
             ds_new = ds_new.drop_vars(var)
     return ds_new
+
+
+####------------------------------------------------------------------------------------------------------------------.
+#############################
+#### Transect Extraction ####
+#############################
+
+
+@check_is_gpm_object
+def extract_transect_along_trajectory(xr_obj, points, method="linear"):
+    """Obtain an interpolated transect through a series of points.
+
+    It allows to extract data along a custom curvilinear track / trajectory.
+
+    Parameters
+    ----------
+    xr_obj: xarray.DataArray or xarray.Dataset
+        Three- (or higher) dimensional field(s) to interpolate.
+    points: numpy.ndarray
+        An array of shape (N, 2) with the lon, lat points at which to interpolate the data.
+    method: str, optional
+        The interpolation method, either ``'linear'`` or ``'nearest'``.
+        If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
+        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        See :py:class:`xarray.DataArray.interp()` for other methods.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The interpolated transect object, with the 'transect' dimension (of size N).
+
+    See Also
+    --------
+    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+
+    """
+    if is_grid(xr_obj):
+        # Regular grid
+        xr_obj_sliced = xr_obj.interp(
+            {
+                "lon": xr.DataArray(points[:, 0], dims="transect"),
+                "lat": xr.DataArray(points[:, 1], dims="transect"),
+            },
+            method=method,
+        )
+        return xr_obj_sliced
+    # Orbit case
+    # - Use sklearn_geo_balltree to exploit haversine distance (kdtree does not support haversine distance)
+    # - Not tested for cases at the antimeridian !
+    xr_obj.xoak.set_index(["lat", "lon"], index_type="sklearn_geo_balltree")
+
+    xr_obj_slice = xr_obj.xoak.sel(
+        {
+            "lon": xr.DataArray(points[:, 0], dims="transect"),
+            "lat": xr.DataArray(points[:, 1], dims="transect"),
+        },
+    )
+    return xr_obj_slice
+
+
+@check_is_gpm_object
+def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, method="linear"):
+    """Extract an interpolated transect between two points on a sphere.
+
+    Parameters
+    ----------
+    xr_obj: `xarray.DataArray` or `xarray.Dataset`
+        Three- (or higher) dimensional field(s) to interpolate.
+    start_point: tuple
+        A longitude-latitude pair designating the start point of the cross section (units are
+        degrees east and degrees north).
+    end_point: tuple
+        A longitude-latitude pair designating the end point of the cross section (units are
+        degrees east and degrees north).
+    steps: int, optional
+        The number of points along the geodesic between the start and the end point
+        (including the end points) to use in the cross section. Defaults to 100.
+    method: str, optional
+        The interpolation method, either ``'linear'`` or ``'nearest'``.
+        If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
+        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        See :py:class:`xarray.DataArray.interp()` for other methods.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The interpolated transect object, with the 'transect' dimension.
+
+    See Also
+    --------
+    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+
+    """
+    if importlib.util.find_spec("sklearn") is None:
+        raise ImportError(
+            "The 'sklearn' package required to extract cross-sections is not installed. \n"
+            "Please install it using the following command:  conda install -c conda-forge scikit-learn",
+        )
+    # Get the points along the geodesic line
+    points = get_geodesic_line(start_point=start_point, end_point=end_point, steps=steps)
+
+    # Return the interpolated data
+    return extract_transect_along_trajectory(xr_obj, points=points, method=method)
+
+
+def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, method="linear"):
+    """
+    Extract a transect following the great circle arc centered on the specified point.
+
+    Parameters
+    ----------
+    xr_obj : TYPE
+        DESCRIPTION.
+
+    point : tuple of float
+        A tuple representing the middle point (longitude, latitude) of the great circle arc.
+    azimuth : float
+        The azimuth (in degrees) from the starting point. 0 correspond to the North. 180 to the South.
+        The opposite direction will be automatically calculated as (azimuth + 180) % 360.
+    distance : float
+        The distance (in meters) to the points from the center point.
+    steps: int, optional
+        The number of points along the geodesic between the start and the end point
+        (including the end points) to use in the cross section. Defaults to 100.
+    method: str, optional
+        The interpolation method, either ``'linear'`` or ``'nearest'``.
+        If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
+        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        See :py:class:`xarray.DataArray.interp()` for other methods.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The interpolated transect object with the 'transect' dimension.
+
+    See Also
+    --------
+    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+
+    """
+    start_point, end_point = get_great_circle_arc_endpoints(point=point, azimuth=azimuth, distance=distance)
+    return extract_transect_between_points(
+        xr_obj,
+        start_point=start_point,
+        end_point=end_point,
+        steps=steps,
+        method=method,
+    )
+
+
+####------------------------------------------------------------------------------------------------------------------.
+#############################
+#### Location Utilities  ####
+#############################
+
+
+def get_max_value_isel_dict(da):
+    """Find the dimension indices where the maximum value occur in the data array..
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary with dimension names as keys and indices where the maximum value occurs as values.
+    """
+    da = da.compute()
+    dict_argmax = da.argmax(da.dims)
+    isel_dict = {k: v.data.item() for k, v in dict_argmax.items()}
+    return isel_dict
+
+
+def get_max_value_spatial_isel_dict(da):
+    """Find the spatial dimensions indices where the maximum value occur in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary with spatial dimension names as keys and indices where the maximum value occurs as values.
+    """
+    isel_dict = get_max_value_isel_dict(da)
+    spatial_dims = da.gpm.spatial_dimensions
+    isel_dict = {k: isel_dict[k] for k in spatial_dims}
+    return isel_dict
+
+
+def get_max_value_point(da):
+    """Find the geographic point where the maximum value occur in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    tuple
+        A tuple representing the longitude and latitude of the point where the maximum value occurs.
+    """
+    isel_dict = get_max_value_spatial_isel_dict(da)
+    da_point = da.isel(isel_dict)
+    point = (da_point["lon"].data.item(), da_point["lat"].data.item())
+    return point
+
+
+def get_min_value_isel_dict(da):
+    """
+    Find the dimension indices where the minimum value occurs in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary with dimension names as keys and indices where the minimum value occurs as values.
+    """
+    da = da.compute()
+    dict_argmin = da.argmin(da.dims)
+    isel_dict = {k: v.data.item() for k, v in dict_argmin.items()}
+    return isel_dict
+
+
+def get_min_value_spatial_isel_dict(da):
+    """
+    Find the spatial dimension indices where the minimum value occurs in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary with spatial dimension names as keys and indices where the minimum value occurs as values.
+    """
+    isel_dict = get_min_value_isel_dict(da)
+    spatial_dims = da.gpm.spatial_dimensions
+    isel_dict = {k: isel_dict[k] for k in spatial_dims}
+    return isel_dict
+
+
+def get_min_value_point(da):
+    """
+    Find the geographic point where the minimum value occurs in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    tuple
+        A tuple representing the longitude and latitude of the point where the minimum value occurs.
+    """
+    isel_dict = get_min_value_spatial_isel_dict(da)
+    da_point = da.isel(isel_dict)
+    point = (da_point["lon"].data.item(), da_point["lat"].data.item())
+    return point

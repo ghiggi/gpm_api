@@ -190,48 +190,58 @@ class GPM_Base_Accessor:
 
     #### Transect utility
     @auto_wrap_docstring
-    def define_transect_slices(
+    def extract_transect_between_points(
         self,
-        direction="cross_track",
-        lon=None,
-        lat=None,
-        variable=None,
-        transect_kwargs={},
+        start_point,
+        end_point,
+        steps=100,
+        method="linear",
     ):
-        from gpm.visualization.profile import get_transect_slices
+        from gpm.utils.manipulations import extract_transect_between_points
 
-        return get_transect_slices(
+        return extract_transect_between_points(
             self._obj,
-            direction=direction,
-            variable=variable,
-            lon=lon,
-            lat=lat,
-            transect_kwargs=transect_kwargs,
+            start_point=start_point,
+            end_point=end_point,
+            steps=steps,
+            method=method,
         )
 
     @auto_wrap_docstring
-    def select_transect(
+    def extract_transect_around_point(
         self,
-        direction="cross_track",
-        lon=None,
-        lat=None,
-        variable=None,
-        transect_kwargs={},
-        keep_only_valid_variables=True,
+        point,
+        azimuth,
+        distance,
+        steps=100,
+        method="linear",
     ):
-        from gpm.visualization.profile import select_transect
+        from gpm.utils.manipulations import extract_transect_around_point
 
-        return select_transect(
+        return extract_transect_around_point(
             self._obj,
-            direction=direction,
-            variable=variable,
-            lon=lon,
-            lat=lat,
-            transect_kwargs=transect_kwargs,
-            keep_only_valid_variables=keep_only_valid_variables,
+            point=point,
+            azimuth=azimuth,
+            distance=distance,
+            steps=steps,
+            method=method,
         )
 
-    #### Profile utility
+    @auto_wrap_docstring
+    def extract_transect_along_trajectory(
+        self,
+        points,
+        method="linear",
+    ):
+        from gpm.utils.manipulations import extract_transect_along_trajectory
+
+        return extract_transect_along_trajectory(
+            self._obj,
+            points=points,
+            method=method,
+        )
+
+    #### Range subset utility
     @auto_wrap_docstring
     def slice_range_at_bin(self, bins):
         from gpm.utils.manipulations import slice_range_at_bin
@@ -474,7 +484,7 @@ class GPM_Base_Accessor:
         line_kwargs=None,
         **common_kwargs,
     ):
-        from gpm.visualization.profile import plot_transect_line
+        from gpm.visualization.cross_section import plot_transect_line
 
         return plot_transect_line(
             self._obj,
@@ -768,7 +778,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         cbar_kwargs=None,
         **plot_kwargs,
     ):
-        from gpm.visualization.profile import plot_transect
+        from gpm.visualization.cross_section import plot_transect
 
         return plot_transect(
             self._obj[variable],
@@ -967,7 +977,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         cbar_kwargs=None,
         **plot_kwargs,
     ):
-        from gpm.visualization.profile import plot_transect
+        from gpm.visualization.cross_section import plot_transect
 
         return plot_transect(
             self._obj,
