@@ -111,6 +111,7 @@ def retrieve_range_distance_from_ellipsoid(ds, mask_below_ellipsoid=False):
 def retrieve_height(ds, mask_below_ellipsoid=False):
     """Retrieve (normal) height from the the ellipsoid.
 
+    From GPM DPR ATBD Level 2.
     Requires: scLocalZenith, ellipsoidBinOffset, rangeBinSize, binEllipsoid
     """
     # Retrieve required DataArrays

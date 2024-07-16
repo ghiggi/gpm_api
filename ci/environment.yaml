@@ -23,6 +23,7 @@ dependencies:
   - pyvista
   - pyvista
   - scipy
+  - scikit-learn
   - shapely
   - tqdm
   - trame
@@ -31,4 +32,5 @@ dependencies:
   - trollsift
   - xarray-datatree
   - xarray<=2024.2.0
+  - xoak
   - ximage

@@ -428,13 +428,16 @@ def get_height_dataarray(xr_obj):
     elif isinstance(xr_obj, xr.Dataset):
         da_height = get_xarray_variable(xr_obj, variable="height")
     else:
-        raise ValueError("Expecting a xarray.DataArray with the 'height' coordinate.")
+        raise ValueError("Expecting an xarray object with the 'height' coordinate.")
     return da_height
 
 
 def slice_range_at_height(xr_obj, value):
     """Slice the 3D array at a given height."""
-    return slice_range_at_value(xr_obj, variable="height", value=value)
+    da_heigth = get_height_dataarray(xr_obj)
+    vertical_dim = _get_vertical_dim(xr_obj)
+    idx = get_range_index_at_value(da_heigth, value=value)
+    return xr_obj.isel({vertical_dim: idx})
 
 
 def get_height_at_temperature(da_height, da_temperature, temperature):

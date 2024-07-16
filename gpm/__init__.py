@@ -34,7 +34,8 @@ from importlib.metadata import PackageNotFoundError, version
 import pycolorbar
 from pycolorbar import get_plot_kwargs  # noqa
 
-import gpm.accessor  # noqa
+import gpm.accessor
+import gpm.xradar  # noqa
 from gpm._config import config  # noqa
 from gpm.configs import (  # noqa
     define_configs,
