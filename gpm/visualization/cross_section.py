@@ -69,6 +69,8 @@ def get_cross_track_horizontal_distance(xr_obj):
 
 
 def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
+    # Ensure coords dimensions are aligned with data array
+    da = da.transpose(*da.dims)
     # Get 2D x and y coordinates
     da = da.copy()
     da_template = da.isel({da.dims[-1]: 0}) if rgb else da
@@ -240,7 +242,6 @@ def plot_transect(
             **plot_kwargs,
         )
     else:
-
         # Infill invalid coordinates and add mask to data if necessary
         # - This occur when extracting L2 dataset from L1B and use y = "height/rangeDist"
         da = _ensure_valid_pcolormesh_coords(da, x=x, y=y, rgb=plot_kwargs.get("rgb", False))

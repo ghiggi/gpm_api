@@ -64,11 +64,12 @@ def test_to_pandas_dataframe():
         "gpm_cross_track_id",
         "gpm_along_track_id",
         "gpm_id",
+        "time",
         "height",
         "dummy_var",
     ]
     assert list(df.columns) == expected_columns
-    assert df.shape == (100, 9)
+    assert df.shape == (100, 10)
     assert df["gpm_id"].dtype.name == "string"
 
 
@@ -107,10 +108,11 @@ def test_to_dask_dataframe():
         "gpm_cross_track_id",
         "gpm_along_track_id",
         "gpm_id",
+        "time",
         "height",
         "dummy_var",
     ]
     assert list(df.columns) == expected_columns
     assert df["gpm_id"].dtype.name == "string"
 
-    assert df.compute().shape == (100, 9)
+    assert df.compute().shape == (100, 10)

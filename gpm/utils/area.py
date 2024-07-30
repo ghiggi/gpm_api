@@ -1,4 +1,31 @@
-#!/usr/bin/env python3
+# -----------------------------------------------------------------------------.
+# MIT License
+
+# Copyright (c) 2024 GPM-API developers
+#
+# This file is part of GPM-API.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# -----------------------------------------------------------------------------.
+"""This module contains tools for quadmesh computations."""
+
 # Utility to compute corners and cell vertices from centroid 2D coordinates.
 # In future, the code in this file will be added to pyresample !
 import dask.array
@@ -13,54 +40,25 @@ from dask.array import map_blocks
 # get_lonlat_corners
 # get_projection_corners
 
+# bounds /general case of quad_mesh_vertices
 
-def _infer_interval_breaks(coord, axis=0):
-    """Infer the outer and inner midpoints of 2D coordinate arrays.
+# 1D case
+# x = _infer_interval_breaks(x, axis=1)
+# corners_x = _infer_interval_breaks(x, axis=0)
+# y = _infer_interval_breaks(y, axis=1)
+# corners_y = _infer_interval_breaks(y, axis=0)
 
-    An [N,M] array
+# gpm.vertices and gpm.quadmesh
+# --> imerg
+# --> swath
 
-    The outer points are defined by taking half-distance of the closest centroid.
-    The implementation is inspired from xarray.plot.utils._infer_interval_breaks
+# --> cross_section vertices ... reuse code ...
 
-    Parameters
-    ----------
-    coord :  numpy.ndarray
-        Coordinate array of shape [N,M].
-    axis : int, optional
-        Axis over which to infer the midpoint.
-        axis = 0 infer midpoints along the vertical direction.
-        axis = 1 infer midpoints along the horizontal direction.
-        The default is 0.
+# TODO: retrieve vertices from dataset (1D or 2D, or 1D + 2D (i.e. transect))
+# --> area.py. bucket.partitioning code, wradlib grid_to_polyvert
 
-    Returns
-    -------
-    breaks : numpy.ndarray
-        If axis = 0, it returns an array of shape [N+1, M]
-        If axis = 0, it returns an array of shape [N, M+1]
-
-    """
-    # Determine the half-distance between coordinates
-    coord = np.asarray(coord)
-    deltas = 0.5 * np.diff(coord, axis=axis)
-    # Infer outer position of first and last
-    first = np.take(coord, [0], axis=axis) - np.take(deltas, [0], axis=axis)
-    last = np.take(coord, [-1], axis=axis) + np.take(deltas, [-1], axis=axis)
-    # Infer position of internal points
-    trim_last = tuple(slice(None, -1) if n == axis else slice(None) for n in range(coord.ndim))
-    offsets = coord[trim_last] + deltas
-    # Compute the breaks
-    return np.concatenate([first, offsets, last], axis=axis)
-
-
-def _get_corners_from_centroids(centroids):
-    """Get the coordinate corners 2D array from the centroids 2D array.
-
-    The corners are guessed assuming equal spacing on either side of the coordinate.
-    """
-    # Identify breaks along columns
-    breaks = _infer_interval_breaks(centroids, axis=1)
-    # Identify breaks along rows
-    return _infer_interval_breaks(breaks, axis=0)
+####------------------------------------------------------------------------------.
+#### CRS transformations
 
 
 def _do_transform(src_proj, dst_proj, lons, lats, alt):
@@ -134,6 +132,69 @@ def _geographic_to_geocentric(lons, lats, compute=True):
     y = res[:, :, 1]
     z = res[:, :, 2]
     return x, y, z
+
+
+####------------------------------------------------------------------------------.
+#### Utility
+
+
+def _infer_interval_breaks(coord, axis=0):
+    """Infer the outer and inner midpoints of 2D coordinate arrays.
+
+    An [N,M] array
+
+    The outer points are defined by taking half-distance of the closest centroid.
+    The implementation is inspired from xarray.plot.utils._infer_interval_breaks
+
+    Parameters
+    ----------
+    coord :  numpy.ndarray
+        Coordinate array of shape [N,M].
+    axis : int, optional
+        Axis over which to infer the midpoint.
+        axis = 0 infer midpoints along the vertical direction.
+        axis = 1 infer midpoints along the horizontal direction.
+        The default is 0.
+
+    Returns
+    -------
+    breaks : numpy.ndarray
+        If axis = 0, it returns an array of shape [N+1, M]
+        If axis = 0, it returns an array of shape [N, M+1]
+
+    """
+    # Determine the half-distance between coordinates
+    coord = np.asarray(coord)
+    deltas = 0.5 * np.diff(coord, axis=axis)
+    # Infer outer position of first and last
+    first = np.take(coord, [0], axis=axis) - np.take(deltas, [0], axis=axis)
+    last = np.take(coord, [-1], axis=axis) + np.take(deltas, [-1], axis=axis)
+    # Infer position of internal points
+    trim_last = tuple(slice(None, -1) if n == axis else slice(None) for n in range(coord.ndim))
+    offsets = coord[trim_last] + deltas
+    # Compute the breaks
+    return np.concatenate([first, offsets, last], axis=axis)
+
+
+####------------------------------------------------------------------------------.
+#### Geographic Quadmesh
+# - 2D geographic coordinates
+
+
+####------------------------------------------------------------------------------.
+#### Planar Quadmesh
+# - 1D coordinates (geographic or planar)
+
+
+def _get_corners_from_centroids(centroids):
+    """Get the coordinate corners 2D array from the centroids 2D array.
+
+    The corners are guessed assuming equal spacing on either side of the coordinate.
+    """
+    # Identify breaks along columns
+    breaks = _infer_interval_breaks(centroids, axis=1)
+    # Identify breaks along rows
+    return _infer_interval_breaks(breaks, axis=0)
 
 
 def _get_lonlat_corners(lons, lats):

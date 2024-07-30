@@ -61,7 +61,7 @@ dev = ["pre-commit", "loghub",
        "pytest", "pytest-cov", "pytest-mock", "pytest-check", "pytest-sugar",
        "pytest-watcher", "deepdiff",
        "pip-tools", "bumpver", "twine", "wheel", "build", "setuptools>=61.0.0",
-       "ximage", "pyvista", "polars", "pyarrow", "pyresample", "h5py", "scikit-learn",
+       "ximage", "pyvista", "polars", "pyarrow", "pyresample", "h5py", "xoak", "scikit-learn",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]
 
 [project.urls]

@@ -40,7 +40,7 @@ class Xradar_Dev_Base_Accessor:
         return get_vertices(self._obj, ccw=ccw)
 
     @property
-    def crs(self):
+    def pyproj_crs(self):
         from xradar.georeference.projection import get_crs
 
         return get_crs(self._obj)

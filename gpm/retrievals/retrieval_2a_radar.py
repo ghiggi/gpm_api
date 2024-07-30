@@ -292,12 +292,12 @@ def retrieve_gate_resolution(ds, beam_width, range_distance=None, scan_angle=Non
 
     # Horizontal gate spacing
     # --> TODO: should use crossBeamWidth and alongTrackBeamWidth instead?
-    h_res = (1 + np.cos(np.radians(alpha))) * range_distance * np.tan(np.radians(beam_width / 2.0))
+    h_res = (1 + np.cos(np.radians(alpha))) * range_distance * np.tan(np.deg2rad(beam_width / 2.0))
 
     # Vertical gate spacing
     # - wradlib, Crisologo and Warren et al., 2018 (Eq. A5) use " range_resolution / np.cos(alpha) "
     # - Should be * ! And then it match with GPM product height difference !
-    v_res = range_resolution * np.cos(np.radians(alpha))
+    v_res = range_resolution * np.cos(np.deg2rad(alpha))
 
     # Add units and name
     h_res.name = "h_res"
@@ -365,6 +365,7 @@ def retrieve_flagPrecipitationType(xr_obj, method="major_rain_type"):
     da.attrs["flag_values"] = [0, 1, 2, 3]
     da.attrs["flag_meanings"] = ["no rain", "stratiform", "convective", "other"]
     da.attrs["description"] = "Precipitation type"
+    da.name = "flagPrecipitationType"
     return da
 
 
@@ -384,38 +385,16 @@ def retrieve_bright_band_ratio(ds, return_bb_mask=True):
     Returns
     -------
     xarray.DataArray
-        BB Ratio and boolean array containing the indices of SR bins connected to the BB.
-
+        BB Ratio (3D) and BB (2D) mask.
     """
-    ### NOTES --> TODO: Improve attrs in decoding !
-    ## qualityBB
-    # A larger qualityBB values indicates lower confidence in detection
-    # 3 Smeared bright band
-    # 2 Not so clear bright band
-    # 1 Clear bright band
-    # 0 BB not detected in the case of rain
-    # -1111 No rain value --> # set to NaN in decoding?
-    # -9999 Missing value
-    ## qualityTypePrecip
-    # 1 Good
-    # 0 ????
-    # -1111 No rain value
-    # -9999 Missing value
-    # ---------------------------------------------------------------.
     quality = get_xarray_variable(ds, variable="qualityBB")
-    # qtype = get_xarray_variable(ds, variable="qualityTypePrecip")
     height = get_xarray_variable(ds, variable="height")
     bb_height = get_xarray_variable(ds, variable="heightBB")
     bb_width = get_xarray_variable(ds, variable="widthBB")
 
-    # TOCHECK: (quality == 0) is bb not detected ... set to 1 as detected? why?
-    # if only_for_clear_bb:
-    #      quality = xr.where(((quality == 0) | (quality == 1)) & (qtype == 1), 1, quality)
-    #      quality = xr.where(((quality > 1) | (quality > 2)), 2, quality)
-    #      quality = xr.where(((quality == 1) | (quality == 2)), quality, 0)
-
     # Identify column with BB
     has_bb = (bb_height > 0) & (bb_width > 0) & (quality == 1)
+    has_bb.name = "qualityBB"
 
     # Set columns without BB to np.nan
     bb_height_m = bb_height.where(has_bb)
@@ -432,15 +411,78 @@ def retrieve_bright_band_ratio(ds, return_bb_mask=True):
     # Get Bright Band (BB) Ratio (3D DataArray)
     bb_ratio = (height - zmlb) / (zmlt - zmlb)
 
-    # if only_clear_bb:
-    #     ibb0 = (bb_height == 0) & (bb_width == 0) & (quality == 1)
-    #     bb_ratio = xr.where(ibb0, 0, bb_ratio)
     if return_bb_mask:
         return bb_ratio, has_bb
     return bb_ratio
 
 
-def retrieve_s_band_cao2013(ds, bb_ratio=None, precip_type=None):
+def retrieve_flagHydroClass(ds, reflectivity="zFactorFinal", bb_ratio=None, precip_type=None):
+    """Classify reflectivity profile into rain, snow, hail and melting layer."""
+    # Retrieve precip type and BB ratio
+    if precip_type is None:
+        precip_type = ds.gpm.retrieve("flagPrecipitationType", method="major_rain_type")
+
+    if bb_ratio is None:
+        bb_ratio = ds.gpm.retrieve("bright_band_ratio", return_bb_mask=False)
+
+    # Retrieve clutter mask
+    da_bin_clutter_free = get_xarray_variable(ds, variable="binClutterFreeBottom")
+    da_mask_clutter = ds["range"] > da_bin_clutter_free
+    da_mask_clutter = da_mask_clutter.transpose(..., "range")
+
+    # Retrieve Ku reflectivity
+    da_z = get_xarray_variable(ds, variable=reflectivity)
+
+    # Initialize DataArray for hydrometeor class
+    da_class = get_vertical_datarray_prototype(ds, fill_value=0)
+
+    # Infer masks for melting layer
+    da_above_ml_mask = bb_ratio >= 1  # above ML mask
+    da_below_ml_mask = bb_ratio <= 0  # below ML mask
+    da_ml_mask = (bb_ratio > 0) & (bb_ratio < 1)  # ML mask
+
+    # Assign class to 3D array
+    # - Below melting layer
+    da_class = xr.where(
+        da_below_ml_mask & precip_type.isin([1, 2, 3]),
+        1,  # rain
+        da_class,
+    )
+    # - Above melting layer
+    da_class = xr.where(
+        da_above_ml_mask & precip_type.isin([1, 3]),
+        2,  # snow
+        da_class,
+    )
+    da_class = xr.where(
+        da_above_ml_mask & precip_type == 2,
+        3,  # hail
+        da_class,
+    )
+    # - Melting layer
+    da_class = xr.where(
+        da_ml_mask & precip_type.isin([1]),
+        4,  # melting layer
+        da_class,
+    )
+    # - Mask DataArray where precipitating
+    da_class = da_class.where(da_z > 8, 0)
+
+    # - Clutter
+    da_class = xr.where(
+        da_mask_clutter,
+        5,  # clutter
+        da_class,
+    )
+
+    # Add attributes
+    da_class.attrs["flag_values"] = [0, 1, 2, 3, 4, 5]
+    da_class.attrs["flag_meanings"] = ["no precipitation", "rain", "snow", "hail", "melting layer", "clutter"]
+    da_class.name = "flagHydroClass"
+    return da_class
+
+
+def retrieve_s_band_cao2013(ds, reflectivity="zFactorFinal", bb_ratio=None, precip_type=None):
     r"""Retrieve S-band reflectivity from Ku-band reflectivity.
 
     Cao et al., 2013 provides coefficients to compute DFR (S-Ku) using the following polynomial:
@@ -465,6 +507,8 @@ def retrieve_s_band_cao2013(ds, bb_ratio=None, precip_type=None):
     ----------
     ds : xr.Dataset
         GPM Radar dataset.
+    reflectivity: xr.DataArray or str
+        3D reflectivity array or dataset variable name. The default is "zFactorFinal".
     bb_ratio : xr.DataArray, optional
         Bright Band Ratio. If not specified, ``gpm.retrieve("bright_band_ratio")`` is called.
     precip_type : xr.DataArray, optional
@@ -473,17 +517,21 @@ def retrieve_s_band_cao2013(ds, bb_ratio=None, precip_type=None):
 
     Returns
     -------
-    xr.DataArray.
+    xr.DataArray
         S band reflectivity.
     """
     import wradlib as wrl
 
+    # Retrieve precip type and BB ratio
     if precip_type is None:
         precip_type = ds.gpm.retrieve("flagPrecipitationType", method="major_rain_type")
 
     if bb_ratio is None:
         bb_ratio, bb_mask = ds.gpm.retrieve("bright_band_ratio", return_bb_mask=True)
-        bb_ratio = bb_ratio.where(bb_mask)
+        # bb_ratio = bb_ratio.where(bb_mask)
+
+    # Retrieve Ku reflectivity
+    da_z_ku = get_xarray_variable(ds, variable=reflectivity)
 
     # Infer masks for melting layer
     da_above_ml_mask = bb_ratio >= 1  # above ML mask
@@ -493,9 +541,6 @@ def retrieve_s_band_cao2013(ds, bb_ratio=None, precip_type=None):
     # Define index from bottom to top of ML varying from 0 to 10
     # --> This is used to select the appropriate coefficients columns
     ind = xr.where(da_ml_mask, np.round(bb_ratio * 10), 0).astype("int")
-
-    # Retrieve Ku reflectivity
-    da_z_ku = get_xarray_variable(ds, variable="zFactorFinal")
 
     # Retrieve coefficients for reflectivity conversion from Cao et al., 2013
     a_s = wrl.trafo.KuBandToS.snow  # (5, 11) Columns represents transition from 100 % rain to 100% snow
@@ -549,19 +594,19 @@ def retrieve_s_band_cao2013(ds, bb_ratio=None, precip_type=None):
     return da_z_s
 
 
-def retrieve_c_band_tan(ds, bb_ratio=None, precip_type=None):
+def retrieve_c_band_tan(ds, reflectivity="zFactorFinal", bb_ratio=None, precip_type=None):
     """Retrieve C-band reflectivity from Ku-band reflectivity."""
     # TODO: reference? tan year?
-    da_z_ku = get_xarray_variable(ds, variable="zFactorFinal")
+    da_z_ku = get_xarray_variable(ds, variable=reflectivity)
     da_z_s = retrieve_s_band_cao2013(ds=ds, bb_ratio=bb_ratio, precip_type=precip_type)
     da_dfr_s_ku = da_z_s - da_z_ku
     da_z_x = da_z_ku + da_dfr_s_ku * 0.53
     return da_z_x.where(da_z_ku >= 0)
 
 
-def retrieve_x_band_tan(ds, bb_ratio=None, precip_type=None):
+def retrieve_x_band_tan(ds, reflectivity="zFactorFinal", bb_ratio=None, precip_type=None):
     """Retrieve X-band reflectivity from Ku-band reflectivity."""
-    da_z_ku = get_xarray_variable(ds, variable="zFactorFinal")
+    da_z_ku = get_xarray_variable(ds, variable=reflectivity)
     da_z_s = retrieve_s_band_cao2013(ds=ds, bb_ratio=bb_ratio, precip_type=precip_type)
     da_dfr_s_ku = da_z_s - da_z_ku
     da_z_x = da_z_ku + da_dfr_s_ku * 0.32

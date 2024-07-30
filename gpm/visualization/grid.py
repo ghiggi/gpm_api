@@ -36,6 +36,7 @@ from gpm.visualization.plot import (
     add_optimize_layout_method,
     check_object_format,
     create_grid_mesh_data_array,
+    infer_map_xy_coords,
     infer_xy_labels,
     initialize_cartopy_plot,
     plot_cartopy_imshow,
@@ -209,6 +210,7 @@ def plot_grid_map(
     """Plot xarray.DataArray 2D field with cartopy."""
     # Check inputs
     da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_spatial_2d, strict=True)
+    x, y = infer_map_xy_coords(da, x=x, y=y)
     # Plot FacetGrid with xarray imshow
     if "col" in plot_kwargs or "row" in plot_kwargs:
         p = _plot_grid_map_facetgrid(

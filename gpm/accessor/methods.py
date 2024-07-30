@@ -84,6 +84,12 @@ class GPM_Base_Accessor:
         self._obj = xarray_obj
 
     @auto_wrap_docstring
+    def isel(self, indexers=None, drop=False, **indexers_kwargs):
+        from gpm.utils.subsetting import isel
+
+        return isel(self._obj, indexers=indexers, drop=drop, **indexers_kwargs)
+
+    @auto_wrap_docstring
     def sel(self, indexers=None, drop=False, **indexers_kwargs):
         from gpm.utils.subsetting import sel
 
@@ -142,6 +148,12 @@ class GPM_Base_Accessor:
         from gpm.utils.geospatial import get_crop_slices_around_point
 
         return get_crop_slices_around_point(self._obj, lon=lon, lat=lat, distance=distance, size=size)
+
+    @property
+    def pyproj_crs(self):
+        from gpm.dataset.crs import get_pyproj_crs
+
+        return get_pyproj_crs(self._obj)
 
     @property
     def pyresample_area(self):
@@ -289,6 +301,31 @@ class GPM_Base_Accessor:
         from gpm.utils.manipulations import slice_range_at_min_value
 
         return slice_range_at_min_value(self._obj, variable=variable)
+
+    #### Masking utility
+    @auto_wrap_docstring
+    def mask_between_bins(self, bottom_bins, top_bins, strict=True, fillvalue=np.nan):
+        from gpm.utils.manipulations import mask_between_bins
+
+        return mask_between_bins(
+            self._obj,
+            bottom_bins=bottom_bins,
+            top_bins=top_bins,
+            strict=strict,
+            fillvalue=fillvalue,
+        )
+
+    @auto_wrap_docstring
+    def mask_below_bin(self, bins, strict=True, fillvalue=np.nan):
+        from gpm.utils.manipulations import mask_below_bin
+
+        return mask_below_bin(self._obj, bins=bins, strict=strict, fillvalue=fillvalue)
+
+    @auto_wrap_docstring
+    def mask_above_bin(self, bins, strict=True, fillvalue=np.nan):
+        from gpm.utils.manipulations import mask_above_bin
+
+        return mask_above_bin(self._obj, bins=bins, strict=strict, fillvalue=fillvalue)
 
     #### Dataset utility
     @property
@@ -867,6 +904,18 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 class GPM_DataArray_Accessor(GPM_Base_Accessor):
     def __init__(self, xarray_obj):
         super().__init__(xarray_obj)
+
+    @property
+    def idecibel(self):
+        from gpm.utils.manipulations import convert_from_decibel
+
+        return convert_from_decibel(self._obj)
+
+    @property
+    def decibel(self):
+        from gpm.utils.manipulations import convert_to_decibel
+
+        return convert_to_decibel(self._obj)
 
     @auto_wrap_docstring
     def get_slices_var_equals(self, dim, values, union=True, criteria="all"):

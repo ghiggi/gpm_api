@@ -78,6 +78,9 @@ intersphinx_mapping = {
     "pyvista": ("https://docs.pyvista.org/version/stable/", None),
     "pyresample": ("https://pyresample.readthedocs.io/en/stable/", None),
     "dask": ("https://docs.dask.org/en/stable/", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
+    "geopandas": ("https://geopandas.org/en/stable/", None),
+    "xvec": ("https://xvec.readthedocs.io/en/stable/", None),
     # "polars": ("https://docs.pola.rs/", None),
 }
 always_document_param_types = True

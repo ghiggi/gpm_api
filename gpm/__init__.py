@@ -68,6 +68,9 @@ from gpm.utils.checks import (  # noqa
     check_regular_time,
     check_valid_geolocation,
 )
+
+# from gpm.utils.manipulations import convert_from_decibel as idecibel
+# from gpm.utils.manipulations import convert_to_decibel as decibel
 from gpm.utils.subsetting import align_along_track, align_cross_track  # noqa
 from gpm.visualization.plot import plot_labels, plot_patches  # noqa
 

@@ -124,7 +124,7 @@ Equipped with advanced instruments such as the :ref:`Dual-frequency Precipitatio
 :ref:`GPM Microwave Imager (GMI) <gpm_gmi>`, the GPM Core Observatory can accurately measure a wide range of precipitation types,
 from light rain and snowfall to heavy tropical rainstorm.
 
-Operating in a non-sun-synchronous orbit at a 65° inclination, the GPM Core Observatory is strategically positioned like :ref:`TRMM <_trmm_satellite>`
+Operating in a non-sun-synchronous orbit at a 65° inclination, the GPM Core Observatory is strategically positioned like :ref:`TRMM <trmm_satellite>`
 to sample the diurnal cycle of precipitation over a wide geographic area, a capability not shared by most of the
 :ref:`GPM constellation <gpm_constellation>` polar-orbiting sensors which typically acquire observations at fixed local times.
 
@@ -419,7 +419,7 @@ The following links provide access to the data archives:
 - PPS Near-Real-Time Data: `<https://jsimpsonhttps.pps.eosdis.nasa.gov/text/>`_
 
 Please note that the Near-Real-Time (``NRT``) products are available only on the PPS and for a limited time period, typically 5-6 days.
-An exception occurs for the :ref:`IMERG Early Run and Late Run products <imerg_precipitation>`` which are available over
+An exception occurs for the :ref:`IMERG Early Run and Late Run products <imerg_precipitation>` which are available over
 the entire TRMM/GPM timespan both on PPS and GES DISC data archives.
 The Research (``RS``) products are instead available on both the PPS and GES DISC with a delay of 2-3 days from NRT.
 

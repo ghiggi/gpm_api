@@ -504,6 +504,46 @@ def infer_xy_labels(da, x=None, y=None, rgb=None):
     return x, y
 
 
+def infer_map_xy_coords(da, x=None, y=None):
+    """
+    Infer possible map x and y coordinates for the given DataArray.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The input DataArray.
+    x : str, optional
+        The name of the x (i.e. longitude) coordinate. If None, it will be inferred.
+    y : str, optional
+        The name of the y (i.e. latitude) coordinate. If None, it will be inferred.
+
+    Returns
+    -------
+    tuple
+        The inferred (x, y) coordinates.
+    """
+    possible_x_coords = ["x", "lon", "longitude"]
+    possible_y_coords = ["y", "lat", "latitude"]
+
+    if x is None:
+        for coord in possible_x_coords:
+            if coord in da.coords:
+                x = coord
+                break
+        else:
+            raise ValueError("Cannot infer x coordinate. Please provide the x coordinate.")
+
+    if y is None:
+        for coord in possible_y_coords:
+            if coord in da.coords:
+                y = coord
+                break
+        else:
+            raise ValueError("Cannot infer y coordinate. Please provide the y coordinate.")
+
+    return x, y
+
+
 def initialize_cartopy_plot(
     ax,
     fig_kwargs,
@@ -1266,11 +1306,11 @@ def plot_map_mesh(
 ):
     from gpm.checks import is_grid, is_orbit
     from gpm.visualization.grid import plot_grid_mesh
-    from gpm.visualization.orbit import infer_orbit_xy_coords, plot_orbit_mesh
+    from gpm.visualization.orbit import plot_orbit_mesh
 
     # Plot orbit
     if is_orbit(xr_obj):
-        x, y = infer_orbit_xy_coords(xr_obj, x=x, y=y)
+        x, y = infer_map_xy_coords(xr_obj, x=x, y=y)
         p = plot_orbit_mesh(
             da=xr_obj[y],
             ax=ax,
@@ -1316,7 +1356,6 @@ def plot_map_mesh_centroids(
 ):
     """Plot GPM orbit granule mesh centroids in a cartographic map."""
     from gpm.checks import is_grid, is_orbit
-    from gpm.visualization.orbit import infer_orbit_xy_coords
 
     # Initialize figure if necessary
     ax = initialize_cartopy_plot(
@@ -1328,7 +1367,7 @@ def plot_map_mesh_centroids(
 
     # Retrieve orbits lon, lat coordinates
     if is_orbit(xr_obj):
-        x, y = infer_orbit_xy_coords(xr_obj, x=x, y=y)
+        x, y = infer_map_xy_coords(xr_obj, x=x, y=y)
 
     # Retrieve grid centroids mesh
     if is_grid(xr_obj):

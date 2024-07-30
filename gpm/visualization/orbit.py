@@ -42,6 +42,7 @@ from gpm.visualization.facetgrid import (
 from gpm.visualization.plot import (
     add_optimize_layout_method,
     check_object_format,
+    infer_map_xy_coords,
     infill_invalid_coords,
     initialize_cartopy_plot,
     plot_cartopy_pcolormesh,
@@ -53,46 +54,6 @@ from gpm.visualization.plot import (
 
 ####----------------------------------------------------------------------------
 #### ORBIT utilities
-
-
-def infer_orbit_xy_coords(da, x=None, y=None):
-    """
-    Infer possible x and y coordinates for the given DataArray.
-
-    Parameters
-    ----------
-    da : xarray.DataArray
-        The input DataArray.
-    x : str, optional
-        The name of the x (longitude) coordinate. If None, it will be inferred.
-    y : str, optional
-        The name of the y (latitude) coordinate. If None, it will be inferred.
-
-    Returns
-    -------
-    tuple
-        The inferred (x, y) coordinates.
-    """
-    possible_x_coords = ["x", "lon", "longitude"]
-    possible_y_coords = ["y", "lat", "latitude"]
-
-    if x is None:
-        for coord in possible_x_coords:
-            if coord in da.coords:
-                x = coord
-                break
-        else:
-            raise ValueError("Cannot infer x coordinate. Please provide the x coordinate.")
-
-    if y is None:
-        for coord in possible_y_coords:
-            if coord in da.coords:
-                y = coord
-                break
-        else:
-            raise ValueError("Cannot infer y coordinate. Please provide the y coordinate.")
-
-    return x, y
 
 
 def infer_orbit_xy_dim(da, x, y):
@@ -206,7 +167,7 @@ def call_over_contiguous_scans(function):
         ax = args[1] if len(args) > 1 else kwargs.get("ax")
 
         # Define dimensions and coordinates
-        x, y = infer_orbit_xy_coords(da, x=kwargs.get("x", None), y=kwargs.get("y", None))
+        x, y = infer_map_xy_coords(da, x=kwargs.get("x", None), y=kwargs.get("y", None))
         along_track_dim, cross_track_dim = infer_orbit_xy_dim(da, x=x, y=y)
 
         # Define kwargs
@@ -501,7 +462,7 @@ def _plot_orbit_map_facetgrid(
     )
 
     # Plot the maps
-    x, y = infer_orbit_xy_coords(da, x=x, y=y)
+    x, y = infer_map_xy_coords(da, x=x, y=y)
     fc = fc.map_dataarray(
         _plot_orbit_map_cartopy,
         x=x,
@@ -549,7 +510,7 @@ def plot_orbit_map(
     da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_has_spatial_dim, strict=True)
     # Plot FacetGrid
     if "col" in plot_kwargs or "row" in plot_kwargs:
-        x, y = infer_orbit_xy_coords(da, x=x, y=y)
+        x, y = infer_map_xy_coords(da, x=x, y=y)
         p = _plot_orbit_map_facetgrid(
             da=da,
             x=x,

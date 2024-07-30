@@ -2,7 +2,6 @@ import numpy as np
 import pyproj
 import xarray as xr
 from pyproj import Transformer
-from xradar.georeference.projection import get_earth_radius
 
 from gpm.utils.manipulations import (
     conversion_factors_degree_to_meter,
@@ -127,6 +126,8 @@ def xyz_to_antenna_coordinates(x, y, z, site_altitude, crs, effective_radius_fra
     elevation: array-like
         Array containing the elevation angles.
     """
+    from xradar.georeference.projection import get_earth_radius
+
     if effective_radius_fraction is None:
         effective_radius_fraction = 4.0 / 3.0
 
@@ -232,6 +233,8 @@ def antenna_to_cartesian(
     .. [1] Doviak and Zrnić, Doppler Radar and Weather Observations, Second
         Edition, 1993, p. 21.
     """
+    from xradar.georeference.projection import get_earth_radius
+
     if effective_radius_fraction is None:
         effective_radius_fraction = 4.0 / 3.0
 

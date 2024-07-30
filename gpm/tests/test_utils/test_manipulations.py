@@ -26,30 +26,45 @@
 # -----------------------------------------------------------------------------.
 """This module test the manipulation utilities."""
 
+import warnings
+
 import numpy as np
 import pytest
 import xarray as xr
 
 from gpm.dataset.dimensions import VERTICAL_DIMS
+from gpm.tests.utils.fake_datasets import get_grid_dataarray, get_orbit_dataarray
 from gpm.utils.manipulations import (
     _get_vertical_dim,
+    convert_from_decibel,
+    convert_to_decibel,
+    # conversion_factors_degree_to_meter,
     extract_dataset_above_bin,
     extract_dataset_below_bin,
     extract_l2_dataset,
+    extract_transect_along_trajectory,
+    extract_transect_around_point,
+    extract_transect_between_points,
     get_bin_dataarray,
     get_bright_band_mask,
     get_height_at_bin,
     get_height_at_temperature,
     get_height_dataarray,
     get_liquid_phase_mask,
+    get_max_value_point,
+    get_min_value_point,
     get_range_axis,
     get_solid_phase_mask,
     integrate_profile_concentration,
+    mask_above_bin,
+    mask_below_bin,
+    mask_between_bins,
     select_bin_variables,
     select_frequency_variables,
     select_spatial_2d_variables,
     select_spatial_3d_variables,
     select_transect_variables,
+    select_vertical_variables,
     slice_range_at_bin,
     slice_range_at_height,
     slice_range_at_max_value,
@@ -107,6 +122,38 @@ def dataarray_3d() -> xr.DataArray:
 
 
 # Public functions #############################################################
+
+
+# Test cases
+class TestDecibelConversion:
+    """Test conversion from/to decibels."""
+
+    def test_convert_from_decibel(self):
+        data = xr.DataArray([-10, 0, 10, 20, 30], dims="test_dim")
+        expected_output = xr.DataArray([0.1, 1, 10, 100, 1000], dims="test_dim")
+        result = convert_from_decibel(data)
+        xr.testing.assert_allclose(result, expected_output, rtol=1e-5)
+
+        result = data.gpm.idecibel
+        xr.testing.assert_allclose(result, expected_output, rtol=1e-5)
+
+    def test_convert_to_decibel(self):
+        data = xr.DataArray([-1, 0, 1, 10, 100, 1000], dims="test_dim")
+        expected_output = xr.DataArray([np.nan, -np.inf, 0, 10, 20, 30], dims="test_dim")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            result = convert_to_decibel(data)
+        xr.testing.assert_allclose(result, expected_output, rtol=1e-5)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            result = data.gpm.decibel
+        xr.testing.assert_allclose(result, expected_output, rtol=1e-5)
+
+    def test_round_trip_conversion(self):
+        data = xr.DataArray([0, 10, 20, 30], dims="test_dim")
+        result = convert_to_decibel(convert_from_decibel(data))
+        xr.testing.assert_allclose(result, data, rtol=1e-5)
 
 
 def test_integrate_profile_concentration(
@@ -584,8 +631,8 @@ def test_get_height_dataarray():
     )
     dataarray_3d = dataarray_3d.drop_vars("height")
     ds = xr.Dataset()
-    ds["var_3d"] = dataarray_3d
-    ds["height"] = dataarray_3d.copy()
+    ds["var_3d"] = dataarray_3d  # var3d values different from height value !
+    ds["height"] = dataarray_3d.copy() * 2
 
     # Test height extraction from Dataset variable
     xr.testing.assert_identical(ds["height"], get_height_dataarray(ds))
@@ -601,7 +648,7 @@ def test_get_height_dataarray():
     da = ds["var_3d"].drop_vars("height")
     with pytest.raises(ValueError) as excinfo:
         get_height_dataarray(da)
-    assert "Expecting a xarray.DataArray with the 'height' coordinate" in str(excinfo.value)
+    assert "Expecting an xarray object with the 'height' coordinate." in str(excinfo.value)
 
 
 def test_get_height_at_bin() -> None:
@@ -734,6 +781,284 @@ def test_get_height_at_temperature(
     np.testing.assert_allclose(returned_da.data, expected_data)
 
 
+def test_mask_above_bin() -> None:
+    """Test mask_above_bin function."""
+    # Create data
+    dataarray_3d = create_3d_dataarray(cross_track_size=2, along_track_size=2, range_size=3)
+    da_bins = create_bins_dataarray(value=2, cross_track_size=2, along_track_size=2)
+
+    # Test with a data array (default)
+    results = mask_above_bin(dataarray_3d, bins=da_bins)  # strict=True (default)
+    expected_data = dataarray_3d.copy().data
+
+    # Assert correct masking
+    expected_data[:, :, 0:2] = np.nan
+    np.testing.assert_allclose(results.to_numpy(), expected_data)
+
+    # Test with a dataset (and non-defaults arguments)
+    variable = "variable"
+    bins_name = "bins"
+    fillvalue = -1
+    ds = xr.Dataset({variable: dataarray_3d})
+    ds[bins_name] = da_bins
+    ds["dummy_2d_var"] = dataarray_3d.copy().isel(range=0)
+    returned_ds = mask_above_bin(ds, bins=bins_name, strict=False, fillvalue=fillvalue)
+
+    # Assert correct masking
+    expected_data = dataarray_3d.copy().data
+    expected_data[:, :, 0:1] = fillvalue
+    np.testing.assert_allclose(returned_ds[variable].to_numpy(), expected_data)
+    # Assert non vertical variables are intact
+    xr.testing.assert_allclose(ds["dummy_2d_var"], returned_ds["dummy_2d_var"])
+
+
+def test_mask_below_bin() -> None:
+    """Test mask_below_bin function."""
+    # Create data
+    dataarray_3d = create_3d_dataarray(cross_track_size=2, along_track_size=2, range_size=3)
+    da_bins = create_bins_dataarray(value=2, cross_track_size=2, along_track_size=2)
+
+    # Test with a data array (default)
+    results = mask_below_bin(dataarray_3d, bins=da_bins)  # strict=True (default)
+    expected_data = dataarray_3d.copy().data
+
+    # Assert correct masking
+    expected_data[:, :, 1:] = np.nan
+    np.testing.assert_allclose(results.to_numpy(), expected_data)
+
+    # Test with a dataset (and non-defaults arguments)
+    variable = "variable"
+    bins_name = "bins"
+    fillvalue = -1
+    ds = xr.Dataset({variable: dataarray_3d})
+    ds[bins_name] = da_bins
+    ds["dummy_2d_var"] = dataarray_3d.copy().isel(range=0)
+    returned_ds = mask_below_bin(ds, bins=bins_name, strict=False, fillvalue=fillvalue)
+
+    # Assert correct masking
+    expected_data = dataarray_3d.copy().data
+    expected_data[:, :, 2:] = fillvalue
+    np.testing.assert_allclose(returned_ds[variable].to_numpy(), expected_data)
+    # Assert non vertical variables are intact
+    xr.testing.assert_allclose(ds["dummy_2d_var"], returned_ds["dummy_2d_var"])
+
+
+def test_mask_between_bins() -> None:
+    """Test mask_below_bin function."""
+    # Create data
+    dataarray_3d = create_3d_dataarray(cross_track_size=2, along_track_size=2, range_size=5)
+    da_bottom_bins = create_bins_dataarray(value=4, cross_track_size=2, along_track_size=2)
+    da_top_bins = create_bins_dataarray(value=2, cross_track_size=2, along_track_size=2)
+    # Test with a data array (default)
+    results = mask_between_bins(dataarray_3d, bottom_bins=da_bottom_bins, top_bins=da_top_bins)  # strict=True (default)
+    expected_data = dataarray_3d.copy().data
+    # Assert correct masking
+    expected_data[:, :, 1:4] = np.nan
+    np.testing.assert_allclose(results.to_numpy(), expected_data)
+
+    # Test with a dataset (and non-defaults arguments)
+    variable = "variable"
+    fillvalue = -1
+    ds = xr.Dataset({variable: dataarray_3d})
+    ds["top"] = da_top_bins
+    ds["bottom"] = da_bottom_bins
+    ds["dummy_2d_var"] = dataarray_3d.copy().isel(range=0)
+    returned_ds = mask_between_bins(ds, bottom_bins="bottom", top_bins="top", strict=False, fillvalue=fillvalue)
+
+    # Assert correct masking
+    expected_data = dataarray_3d.copy().data
+    expected_data[:, :, 2:3] = fillvalue
+    np.testing.assert_allclose(returned_ds[variable].to_numpy(), expected_data)
+    # Assert non vertical variables are intact
+    xr.testing.assert_allclose(ds["dummy_2d_var"], returned_ds["dummy_2d_var"])
+
+
+def test_get_min_value_point():
+    """Test get_min_value_point."""
+    # Grid
+    da = get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+    da.data[:] = 1
+    da.data[1, 1] = 0
+    assert get_min_value_point(da) == (da["lon"].data[1], da["lat"].data[1])
+
+    # Orbit
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+    da.data[:] = 1
+    da.data[1, 1] = 0
+    assert get_min_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+
+    # If more than 1, always return first point
+    da.data[1, 1:3] = 0
+    assert get_min_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+
+
+def test_get_max_value_point():
+    """Test get_max_value_point."""
+    # Grid
+    da = get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+    da.data[:] = 0
+    da.data[1, 1] = 1
+    assert get_max_value_point(da) == (da["lon"].data[1], da["lat"].data[1])
+    # Orbit
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+    da.data[:] = 0
+    da.data[1, 1] = 1
+    assert get_max_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+
+    # If more than 1, always return first point
+    da.data[1, 1:3] = 1
+    assert get_max_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+
+
+def test_extract_transect_along_trajectory():
+    """Test extracting transect along trajectory."""
+    # GRID 3D
+    da = xr.DataArray(np.arange(0, 100).reshape(10, 10), dims=["lat", "lon"])
+    da.coords["lon"] = np.linspace(-180, 180, 10)
+    da.coords["lat"] = np.linspace(-90, 90, 10)
+    da = da.expand_dims(dim={"height": 3})
+    points = np.array([[0, 0], [10, 10]])
+    da_transect = extract_transect_along_trajectory(da, points=points)  # method="linear"
+
+    assert da_transect.dims == ("height", "transect")
+    assert da_transect.sizes["transect"] == 2
+    np.testing.assert_allclose(da_transect.isel({"height": 0}).data, [49.5, 54.75])
+
+    # ORBIT 3D
+    n_along_track = 10
+    n_cross_track = 5
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=n_along_track,
+        n_cross_track=n_cross_track,
+    )
+    da.data[:] = np.arange(0, n_along_track * n_cross_track).reshape(n_cross_track, n_along_track)
+    da = da.expand_dims(dim={"range": 3})
+    points = np.array([[0, 0], [10, 10]])
+
+    da_transect = extract_transect_along_trajectory(da, points=points, method="nearest")
+    assert da_transect.dims == ("range", "transect")
+    assert da_transect.sizes["transect"] == 2
+    np.testing.assert_allclose(da_transect.isel({"range": 0}).data, [20.0, 15.0])
+
+
+def test_extract_transect_between_points():
+    """Test extracting transect between points."""
+    # GRID 3D
+    da = xr.DataArray(np.arange(0, 100).reshape(10, 10), dims=["lat", "lon"])
+    da.coords["lon"] = np.linspace(0, 10, 10)
+    da.coords["lat"] = np.linspace(0, 10, 10)
+    da = da.expand_dims(dim={"height": 3})
+
+    start_point = (5, 2)
+    end_point = (8, 6)
+    steps = 4
+    da_transect = extract_transect_between_points(da, start_point, end_point, steps=steps)
+    assert da_transect.dims == ("height", "transect")
+    assert da_transect.sizes["transect"] == steps
+    np.testing.assert_allclose(da_transect.isel({"height": 0}).data, [22.5, 35.4080, 48.3089, 61.2], atol=1e-04)
+
+    # ORBIT 3D
+    n_along_track = 10
+    n_cross_track = 5
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=n_along_track,
+        n_cross_track=n_cross_track,
+    )
+    da.data[:] = np.arange(0, n_along_track * n_cross_track).reshape(n_cross_track, n_along_track)
+    da = da.expand_dims(dim={"range": 3})
+
+    start_point = (5, 2)
+    end_point = (8, 6)
+    steps = 4
+    da_transect = extract_transect_between_points(da, start_point, end_point, steps=steps)
+    assert da_transect.dims == ("range", "transect")
+    assert da_transect.sizes["transect"] == steps
+    np.testing.assert_allclose(da_transect.isel({"range": 0}).data, [32.0, 22.0, 23.0, 24.0], atol=1e-04)
+
+
+def test_extract_transect_around_point():
+    """Test extracting transect around a point."""
+    # GRID 3D
+    da = xr.DataArray(np.arange(0, 100).reshape(10, 10), dims=["lat", "lon"])
+    da.coords["lon"] = np.linspace(0, 10, 10)
+    da.coords["lat"] = np.linspace(0, 10, 10)
+    da = da.expand_dims(dim={"height": 3})
+    point = (5, 5)
+    azimuth = 0
+    distance = 200_000
+    steps = 3
+    da_transect = extract_transect_around_point(da, point, azimuth, distance, steps=steps)
+    assert da_transect.dims == ("height", "transect")
+    assert da_transect.sizes["transect"] == steps
+    np.testing.assert_allclose(da_transect.isel({"height": 0}).data, [65.7769, 49.5, 33.2221], atol=1e-04)
+    np.testing.assert_allclose(da_transect["lon"].data, [5.0, 5.0, 5.0], atol=1e-04)
+    np.testing.assert_allclose(da_transect["lat"].data, [6.8085, 5.0, 3.1913], atol=1e-04)
+
+    # ORBIT 3D
+    n_along_track = 10
+    n_cross_track = 5
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=n_along_track,
+        n_cross_track=n_cross_track,
+    )
+    da.data[:] = np.arange(0, n_along_track * n_cross_track).reshape(n_cross_track, n_along_track)
+    da = da.expand_dims(dim={"range": 3})
+
+    point = (5, 5)
+    azimuth = 0
+    distance = 200_000
+    steps = 3
+    da_transect = extract_transect_around_point(da, point, azimuth, distance, steps=steps)
+    assert da_transect.dims == ("range", "transect")
+    assert da_transect.sizes["transect"] == steps
+    np.testing.assert_allclose(da_transect.isel({"range": 0}).data, [13.0, 23.0, 22.0])
+
+
 def test_get_range_axis(
     dataarray_3d: xr.DataArray,
 ) -> None:
@@ -864,6 +1189,22 @@ class TestSelectVariables:
         """Test select_frequency_variables function."""
         returned_ds = select_frequency_variables(orbit_dataset_collection)
         expected_ds = orbit_dataset_collection[["variable_frequency"]]
+        xr.testing.assert_identical(returned_ds, expected_ds)
+
+    def test_vertical_variables(
+        self,
+        orbit_dataset_collection: xr.Dataset,
+        grid_dataset_collection: xr.Dataset,
+    ) -> None:
+        """Test select_vertical_variables function."""
+        # Orbit
+        returned_ds = select_vertical_variables(orbit_dataset_collection)
+        expected_ds = orbit_dataset_collection[["variable_3d"]]
+        xr.testing.assert_identical(returned_ds, expected_ds)
+
+        # Grid
+        returned_ds = select_vertical_variables(grid_dataset_collection)
+        expected_ds = grid_dataset_collection[["variable_3d"]]
         xr.testing.assert_identical(returned_ds, expected_ds)
 
 

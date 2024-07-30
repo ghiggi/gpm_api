@@ -51,12 +51,16 @@ def get_quadmesh(ds):
         Quadmesh array of shape (M+1, N+1, 2)
     """
     x = ds["x"]
+    # 2D Case
     for i in reversed(range(x.ndim)):
         x = xr.plot.utils._infer_interval_breaks(x, axis=i)
     y = ds["y"]
     for i in reversed(range(y.ndim)):
         y = xr.plot.utils._infer_interval_breaks(y, axis=i)
     corners = np.stack([x, y], axis=-1)
+
+    # 1D case
+    # TODO:
     return corners
 
 
@@ -88,14 +92,19 @@ def get_vertices(ds, ccw=True):
 def to_geopandas(ds, dim_order=None):
     """Convert xradar dataset to geopandas object."""
     import geopandas as gpd
-    from shapely import Polygon
+    from shapely import polygons
 
     # Retrieve radar gates polygons on the range-azimuth plane
     poly_vertices = get_vertices(ds, ccw=True)
     poly_flat = poly_vertices[..., 0:2].reshape(-1, 4, 2)
-    polygons = [Polygon(poly_flat[i]) for i in range(poly_flat.shape[0])]
+    polygons = polygons(poly_flat)
+    # Create pandas DataFrame
     df = ds.to_dataframe()
-    gdf = gpd.GeoDataFrame(df, crs=ds.xradar_dev.crs, geometry=polygons)
+    # Copy range and azimuth also as column
+    df["range"] = df.index.get_level_values("range")
+    df["azimuth"] = df.index.get_level_values("azimuth")
+    # Create geopandas DataFrame
+    gdf = gpd.GeoDataFrame(df, crs=ds.xradar_dev.pyproj_crs, geometry=polygons)
     if dim_order is not None:
         gdf = gdf.reorder_levels(dim_order)
     return gdf
@@ -109,13 +118,16 @@ def get_radius_polygon(xr_obj, distance, crs=None):
     if crs is None:
         crs = pyproj.CRS.from_epsg(4326)
     coords = np.array(Point(0, 0).buffer(distance).exterior.xy).T
-    lon_r, lat_r = reproject(x=coords[:, 0], y=coords[:, 1], src_crs=xr_obj.xradar_dev.crs, dst_crs=crs)
+    lon_r, lat_r = reproject(x=coords[:, 0], y=coords[:, 1], src_crs=xr_obj.xradar_dev.pyproj_crs, dst_crs=crs)
     polygon = Polygon(np.stack((lon_r, lat_r)).T)
     return polygon
 
 
 def get_extent(xr_obj, max_distance=None, crs=None):
-    """Get extent , restricted to max_distance from radar location if specified."""
+    """Get extent , restricted to max_distance from radar location if specified.
+
+    If the CRS is not specified, it returns extent in WGS84 CRS.
+    """
     if max_distance is None:
         max_distance = xr_obj["range"].max().item()
     polygon = get_radius_polygon(xr_obj, distance=max_distance, crs=crs)

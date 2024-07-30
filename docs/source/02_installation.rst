@@ -83,12 +83,6 @@ Please install the package in the virtual environment you created before!
 
    conda install -c conda-forge gpm-api
 
-To unlock the full functionalities offered by GPM-API, it is recommended to already install the following packages:
-
-.. code-block:: bash
-
-   conda install -c conda-forge ximage polars pyarrow pyresample shapely jupyter spyder pyvista trame trame-vuetify trame-vtk
-
 .. note::
    In an alternative to conda, if you are looking for a lightweight package manager you could use `micromamba <https://micromamba.readthedocs.io/en/latest/>`__.
 
@@ -100,7 +94,6 @@ Then, install GPM-API with:
 .. code-block:: bash
 
    pip install gpm-api
-
 
 .. _installation_contributor:
 
@@ -183,6 +176,117 @@ Then, from the within the ``gpm_api`` directory, run:
 .. code-block:: bash
 
    git submodule update --init --recursive
+
+
+Optional dependencies
+=======================
+
+Specific functionality in GPM-API may require additional optional dependencies.
+To unlock the full functionalities offered by GPM-API, it is recommended to install also the packages detailed here below.
+
+The following bash code allow to install all optional dependencies:
+
+.. code-block:: bash
+
+   conda install -c conda-forge jupyter spyder flox numbagg bottleneck opt-einsum python-graphviz ximage pyresample shapely geopandas xvec xoak scikit-learn pyvista trame trame-vuetify trame-vtk polars pyarrow xradar wradlib pyart
+
+
+IDE Tools
+..............
+
+For an improved development experience, consider installing the intuitive `Jupyter <https://jupyter.org/>`_ and
+`Spyder <https://www.spyder-ide.org/>`_ Python Integrated Development Environments (IDEs):
+
+.. code-block:: bash
+
+   conda install -c conda-forge jupyter spyder
+
+Speed Up Xarray Computations
+..........................................
+
+To speed up arrays computations with xarray, install
+`flox <https://flox.readthedocs.io/en/latest/>`_,
+`numbagg <https://github.com/numbagg/numbagg>`_,
+`bottleneck <https://bottleneck.readthedocs.io/en/latest/intro.html>`_ and
+`opt-einsum <https://optimized-einsum.readthedocs.io/en/stable/>`_:
+
+.. code-block:: bash
+
+   conda install -c conda-forge flox numbagg bottleneck opt-einsum
+
+Dask Operations
+......................
+
+To visualize `Dask Task Graphs  <https://docs.dask.org/en/stable/10-minutes-to-dask.html>`_ and monitor
+computations through the `Dask Dashboard <https://docs.dask.org/en/stable/dashboard.html>`_, please install:
+
+.. code-block:: bash
+
+   conda install -c conda-forge python-graphviz bokeh
+
+Image Analysis
+....................
+
+To perform advanced image/volume manipulations, install `ximage <https://x-image.readthedocs.io/en/latest/index.html>`_:
+
+.. code-block:: bash
+
+   conda install -c conda-forge ximage
+
+Geospatial Manipulation
+.............................
+
+To perform advanced geospatial manipulations, we recommend to install
+`shapely <https://shapely.readthedocs.io/en/stable/manual.html>`_,
+`geopandas  <https://geopandas.org/en/stable/>`_,
+`xvec <https://xvec.readthedocs.io/en/stable/>`_ and
+`pyresample <https://pyresample.readthedocs.io/en/latest/>`_:
+
+.. code-block:: bash
+
+   conda install -c conda-forge shapely geopandas xvec pyresample
+
+Cross-Section and Trajectories
+.................................
+
+To be able to extract radar cross-sections with gpm-api, install:
+
+.. code-block:: bash
+
+   conda install -c conda-forge xoak scikit-learn
+
+3D Radar Visualization
+...........................
+
+To create interactive 3D radar visualization with gpm-api, please install
+`pyvista  <https://docs.pyvista.org/>`_ and the associated dependencies:
+
+.. code-block:: bash
+
+      ``conda install -c conda-forge pyvista trame trame-vuetify trame-vtk``
+
+Geographic Bucket Archives
+............................
+
+To create and analyse efficiently GPM satellite bucket archives with gpm-api, install
+`polars <https://pola.rs/>`_ and
+`pyarrow <https://arrow.apache.org/docs/python/index.html>`_:
+
+.. code-block:: bash
+
+      conda install -c conda-forge polars pyarrow
+
+Spaceborne/Ground Radar Analysis
+...................................
+
+To perform spaceborne-ground radar calibration and validation, install
+`xradar < https://docs.openradarscience.org/projects/xradar/en/stable/>`_,
+`wradlib <https://docs.wradlib.org/en/latest/>`_ and
+`pyart <https://arm-doe.github.io/pyart/>`_:
+
+.. code-block:: bash
+
+   conda install -c conda-forge xradar wradlib pyart
 
 
 Run GPM-API on Jupyter Notebooks

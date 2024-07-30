@@ -704,6 +704,8 @@ def get_pyproj_crs(xr_obj):
 
     If a geographic and projected CRS are present, it returns the projected.
 
+    This method is also available as property through the xarray accessor ``gpm.pyproj_crs``.
+
     Parameters
     ----------
     xr_obj : xarray.DataArray or xarray.Dataset

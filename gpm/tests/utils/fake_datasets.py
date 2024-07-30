@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pyproj
 import xarray as xr
 
@@ -82,10 +83,12 @@ def get_orbit_dataarray(
     """Create orbit data array on geodesic band."""
     rng = np.random.default_rng(seed=0)
     data = rng.random((n_cross_track, n_along_track))
-    granule_id = np.zeros(n_along_track)
+    granule_id = np.zeros(n_along_track, dtype=int)
     cross_track_id = np.arange(0, n_cross_track)
     along_track_id = np.arange(0, n_along_track)
     gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, along_track_id)]
+    timesteps = pd.date_range("2000-01-01", periods=n_along_track, freq="s")
+
     # Coordinates
     lon, lat = get_geodesic_band(
         start_lon=start_lon,
@@ -96,7 +99,6 @@ def get_orbit_dataarray(
         n_along_track=n_along_track,
         n_cross_track=n_cross_track,
     )
-
     # Create data array
     da = xr.DataArray(data, dims=["cross_track", "along_track"])
     da.coords["lat"] = (("cross_track", "along_track"), lat)
@@ -105,6 +107,7 @@ def get_orbit_dataarray(
     da.coords["gpm_cross_track_id"] = ("cross_track", cross_track_id)
     da.coords["gpm_along_track_id"] = ("along_track", along_track_id)
     da.coords["gpm_id"] = ("along_track", gpm_id)
+    da.coords["time"] = ("along_track", timesteps)
 
     # Add range dimension if n_range not zero
     if n_range != 0:
