@@ -11,6 +11,17 @@ from gpm.utils.xarray import get_xarray_variable
 # Issues:
 # - xyz_to_antenna_coordinates SR GR range estimation. Which to choose?
 
+# reproject_dataset
+# get_active_crs()   # gpm.crs (crs.active, crs.availables)
+#
+# names = ['x','y','z']
+# ds = xr.Dataset({names[i]: xr.DataArray(result[i], dims=dims) for i in range(0, len(result))})
+# # Add crs coordinates
+# ds = add_crs(ds=ds, crs=kwargs.get("dst_crs"))
+# return ds
+
+# TODO RENAME: reproject_coordinates
+
 
 def reproject(x, y, z=None, **kwargs):
     """
@@ -56,11 +67,6 @@ def reproject(x, y, z=None, **kwargs):
         dims = x.dims
         inputs = [x, y, z]
         result = tuple([xr.DataArray(result[i], coords=inputs[i].coords, dims=dims) for i in range(0, len(result))])
-        # names = ['x','y','z']
-        # ds = xr.Dataset({names[i]: xr.DataArray(result[i], dims=dims) for i in range(0, len(result))})
-        # # Add crs coordinates
-        # ds = add_crs(ds=ds, crs=kwargs.get("dst_crs"))
-        # return ds
     return result
 
 

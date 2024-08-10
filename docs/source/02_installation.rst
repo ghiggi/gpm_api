@@ -280,7 +280,7 @@ Spaceborne/Ground Radar Analysis
 ...................................
 
 To perform spaceborne-ground radar calibration and validation, install
-`xradar < https://docs.openradarscience.org/projects/xradar/en/stable/>`_,
+`xradar <https://docs.openradarscience.org/projects/xradar/en/stable/>`_,
 `wradlib <https://docs.wradlib.org/en/latest/>`_ and
 `pyart <https://arm-doe.github.io/pyart/>`_:
 

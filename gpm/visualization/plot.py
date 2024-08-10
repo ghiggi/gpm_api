@@ -395,12 +395,12 @@ def compute_lon_lat_corners_for_1d_swath(lon, lat):
 
 
 def get_lon_lat_corners(lon, lat):
-    from gpm.utils.area import _get_lonlat_corners
+    from gpm.utils.area import get_lonlat_corners_from_centroids
 
     if lon.ndim == 1:
         lon, lat = compute_lon_lat_corners_for_1d_swath(lon, lat)
     else:
-        lon, lat = _get_lonlat_corners(lon, lat)
+        lon, lat = get_lonlat_corners_from_centroids(lon, lat)
     return lon, lat
 
 

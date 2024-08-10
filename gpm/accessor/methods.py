@@ -162,6 +162,44 @@ class GPM_Base_Accessor:
         return get_pyresample_area(self._obj)
 
     @auto_wrap_docstring
+    def quadmesh_centroids(self, crs=None, origin="bottom"):
+        from gpm.utils.area import get_quadmesh_centroids
+
+        return get_quadmesh_centroids(
+            self._obj,
+            crs=crs,
+            origin=origin,
+        )
+
+    @auto_wrap_docstring
+    def quadmesh_corners(self, crs=None):
+        from gpm.utils.area import get_quadmesh_corners
+
+        return get_quadmesh_corners(
+            self._obj,
+            crs=crs,
+        )
+
+    @auto_wrap_docstring
+    def quadmesh_vertices(self, crs=None, ccw=True):
+        from gpm.utils.area import get_quadmesh_vertices
+
+        return get_quadmesh_vertices(
+            self._obj,
+            crs=crs,
+            ccw=ccw,
+        )
+
+    @auto_wrap_docstring
+    def quadmesh_polygons(self, crs=None):
+        from gpm.utils.area import get_quadmesh_polygons
+
+        return get_quadmesh_polygons(
+            self._obj,
+            crs=crs,
+        )
+
+    @auto_wrap_docstring
     def remap_on(self, dst_ds, radius_of_influence=20000, fill_value=np.nan):
         from gpm.utils.pyresample import remap
 

@@ -588,7 +588,7 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
         Dataset with CF-compliant CRS information.
 
     """
-    # Get dataset copy if inplace=False
+    # Get xarray object copy if inplace=False
     ds = _get_obj(ds=ds, inplace=inplace)
 
     # Add coordinate with CRS information

@@ -250,13 +250,13 @@ def call_over_contiguous_scans(function):
 
 def _get_swath_line_sides(lon, lat):
     """Compute the top and bottom swath sides."""
-    from gpm.utils.area import _get_lonlat_corners
+    from gpm.utils.area import get_lonlat_corners_from_centroids
 
-    lon_top, lat_top = _get_lonlat_corners(lon[0:2], lat[0:2])
+    lon_top, lat_top = get_lonlat_corners_from_centroids(lon[0:2], lat[0:2])
     lon_top = lon_top[0, :]
     lat_top = lat_top[0, :]
 
-    lon_bottom, lat_bottom = _get_lonlat_corners(lon[-2:], lat[-2:])
+    lon_bottom, lat_bottom = get_lonlat_corners_from_centroids(lon[-2:], lat[-2:])
     lon_bottom = lon_bottom[-1, :]
     lat_bottom = lat_bottom[-1, :]
     return (lon_top, lat_top), (lon_bottom, lat_bottom)
