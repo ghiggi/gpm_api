@@ -30,10 +30,10 @@ import dask.array as da
 import numpy as np
 import pytest
 
+from gpm.tests.utils.fake_datasets import get_grid_dataarray, get_orbit_dataarray
 from gpm.utils.area import (
     _from_bounds_to_corners,
     _from_corners_to_bounds,
-    # _do_transform,
     geocentric_to_geographic,
     geographic_to_geocentric,
     get_centroids_from_corners,
@@ -44,59 +44,10 @@ from gpm.utils.area import (
     get_projection_corners_from_1d_centroids,
     get_projection_corners_from_centroids,
     get_projection_quadmesh_vertices,
-    # _get_numpy_quadmesh,
-    # _get_dask_quadmesh,
     get_quadmesh_from_corners,
-    # _infer_interval_breaks_numpy,
-    # _infer_interval_breaks_dask,
     infer_interval_breaks,
     is_clockwise,
 )
-
-
-# TODO: check with z = None or zeros ...
-def test_geographic_to_geocentric():
-    """Test conversion from geographic to geocentric coordinates."""
-    lons = np.array([[0, 10]])
-    lats = np.array([[0, 10]])
-
-    # Check results with numpy
-    x, y, z = geographic_to_geocentric(lons, lats)
-    assert x.shape == y.shape == z.shape, "Shape mismatch among x, y, z"
-    assert x.shape == (1, 2)
-    np.testing.assert_allclose(x[0, 0], 6378137.0)
-    np.testing.assert_allclose(y[0, 0], 0)
-    np.testing.assert_allclose(z[0, 0], 0)
-
-    # Check results with dask
-    x_dask, y_dask, z_dask = geographic_to_geocentric(dask.array.asarray(lons), dask.array.asarray(lats))
-    np.testing.assert_allclose(x, x_dask.compute())
-    np.testing.assert_allclose(y, y_dask.compute())
-    np.testing.assert_allclose(z, z_dask.compute())
-
-
-def test_geocentric_to_geographic():
-    """Test conversion from geocentric to geographic coordinates."""
-    x = np.array([[6378137.0, 0]])
-    y = np.array([[0, 6378137.0]])
-    z = np.array([[0, 0]])
-
-    # Check results with numpy
-    lons, lats, z1 = geocentric_to_geographic(x, y, z)
-    assert lons.shape == lats.shape == z1.shape, "Shape mismatch between lons and lats"
-    np.testing.assert_allclose(lons, np.array([[0.0, 90.0]]))
-    np.testing.assert_allclose(lats, np.array([[0.0, 0.0]]))
-    np.testing.assert_allclose(z1, np.array([[0.0, 0.0]]))
-
-    # Check results with dask
-    lons_dask, lats_dask, z1_dask = geocentric_to_geographic(
-        dask.array.asarray(x),
-        dask.array.asarray(y),
-        dask.array.asarray(z),
-    )
-    np.testing.assert_allclose(lons, lons_dask.compute())
-    np.testing.assert_allclose(lats, lats_dask.compute())
-    np.testing.assert_allclose(z1, z1_dask.compute())
 
 
 def test_is_clockwise():
@@ -151,17 +102,17 @@ def test_from_corners_to_bounds():
     """Test conversion from cell corners to cell vertices."""
     corners = np.array([[0, 10, 20], [30, 40, 50], [60, 70, 80]])
     # Check counterclockwise order
-    bounds = _from_corners_to_bounds(corners)  # order = counterclockwise
+    bounds = _from_corners_to_bounds(corners)  # ccw = True
     assert bounds.shape == (2, 2, 4), "Shape mismatch for bounds from corners"
     np.testing.assert_allclose(bounds[0, 0], np.array([0, 30, 40, 10]))
 
     # Check clockwise order
-    bounds = _from_corners_to_bounds(corners, order="clockwise")
+    bounds = _from_corners_to_bounds(corners, ccw=False)
     assert bounds.shape == (2, 2, 4), "Shape mismatch for bounds from corners"
     np.testing.assert_allclose(bounds[0, 0], np.array([0, 10, 40, 30]))
 
     # Check with dask
-    bounds_dask = _from_corners_to_bounds(da.from_array(corners, chunks=2), order="clockwise")
+    bounds_dask = _from_corners_to_bounds(da.from_array(corners, chunks=2), ccw=False)
     assert bounds_dask.shape == (2, 2, 4), "Shape mismatch for bounds from corners"
     np.testing.assert_allclose(bounds, bounds_dask)
 
@@ -175,14 +126,14 @@ def test_from_bounds_to_corners():
     np.testing.assert_allclose(corners, corners_res)
 
     # Check clockwise order
-    bounds = _from_corners_to_bounds(corners, order="clockwise")
-    corners_res = _from_bounds_to_corners(bounds, order="clockwise")
+    bounds = _from_corners_to_bounds(corners, ccw=False)
+    corners_res = _from_bounds_to_corners(bounds, ccw=False)
     np.testing.assert_allclose(corners, corners_res)
 
     # Check dask
     corners_dask = da.from_array(corners, chunks=2)
-    bounds = _from_corners_to_bounds(corners_dask, order="clockwise")
-    corners_res_dask = _from_bounds_to_corners(bounds, order="clockwise")
+    bounds = _from_corners_to_bounds(corners_dask, ccw=False)
+    corners_res_dask = _from_bounds_to_corners(bounds, ccw=False)
     np.testing.assert_allclose(corners, corners_res_dask.compute())
 
     # TODO: Chunks differ !
@@ -202,7 +153,7 @@ def test_get_quadmesh_from_corners():
     np.testing.assert_allclose(quadmesh[:, :, :, 1], np.array([[[4, 2, 1, 3]]]))
 
     # Check clockwise ordered
-    quadmesh = get_quadmesh_from_corners(x_corners, y_corners, order="clockwise")  # default is counterclockwise
+    quadmesh = get_quadmesh_from_corners(x_corners, y_corners, ccw=False)  # default is counterclockwise
     assert quadmesh.shape == (1, 1, 4, 2), "Shape mismatch for quadmesh from corners"
     np.testing.assert_allclose(quadmesh[:, :, :, 0], np.array([[[0, 10, 5, -5]]]))
     np.testing.assert_allclose(quadmesh[:, :, :, 1], np.array([[[4, 3, 1, 2]]]))
@@ -211,7 +162,7 @@ def test_get_quadmesh_from_corners():
     quadmesh_dask = get_quadmesh_from_corners(
         da.from_array(x_corners, chunks=2),
         da.from_array(y_corners, chunks=2),
-        order="clockwise",
+        ccw=False,
     )
     np.testing.assert_allclose(quadmesh, quadmesh_dask)
 
@@ -237,8 +188,53 @@ def test_get_corners_from_quadmesh():
     np.testing.assert_allclose(y_corners, y_corners_dask_res.compute())
 
 
+def test_geographic_to_geocentric():
+    """Test conversion from geographic to geocentric coordinates."""
+    lons = np.array([[0, 10]])
+    lats = np.array([[0, 10]])
+
+    # Check results with numpy
+    x, y, z = geographic_to_geocentric(lons, lats)
+    assert x.shape == y.shape == z.shape, "Shape mismatch among x, y, z"
+    assert x.shape == (1, 2)
+    np.testing.assert_allclose(x[0, 0], 6378137.0)
+    np.testing.assert_allclose(y[0, 0], 0)
+    np.testing.assert_allclose(z[0, 0], 0)
+
+    # Check results with dask
+    x_dask, y_dask, z_dask = geographic_to_geocentric(dask.array.asarray(lons), dask.array.asarray(lats))
+    np.testing.assert_allclose(x, x_dask.compute())
+    np.testing.assert_allclose(y, y_dask.compute())
+    np.testing.assert_allclose(z, z_dask.compute())
+
+
+def test_geocentric_to_geographic():
+    """Test conversion from geocentric to geographic coordinates."""
+    x = np.array([[6378137.0, 0]])
+    y = np.array([[0, 6378137.0]])
+    z = np.array([[0, 0]])
+
+    # Check results with numpy
+    lons, lats, z1 = geocentric_to_geographic(x, y, z)
+    assert lons.shape == lats.shape == z1.shape, "Shape mismatch between lons and lats"
+    np.testing.assert_allclose(lons, np.array([[0.0, 90.0]]))
+    np.testing.assert_allclose(lats, np.array([[0.0, 0.0]]))
+    np.testing.assert_allclose(z1, np.array([[0.0, 0.0]]))
+
+    # Check results with dask
+    lons_dask, lats_dask, z1_dask = geocentric_to_geographic(
+        dask.array.asarray(x),
+        dask.array.asarray(y),
+        dask.array.asarray(z),
+    )
+    np.testing.assert_allclose(lons, lons_dask.compute())
+    np.testing.assert_allclose(lats, lats_dask.compute())
+    np.testing.assert_allclose(z1, z1_dask.compute())
+
+
 def test_get_lonlat_corners_from_centroids():
     """Test getting lon/lat corners from centroids."""
+    # 2D array
     lons = np.array([[0, 10], [20, 30]])
     lats = np.array([[10, 15], [0, 5]])
     lon_corners, lat_corners = get_lonlat_corners_from_centroids(lons, lats)
@@ -289,7 +285,7 @@ def test_get_lonlat_quadmesh_vertices():
     lats = np.array([[10, 15], [0, 5]])  # ordered upward
 
     # Get quadmesh vertices (counterclockwise)
-    quadmesh_vertices = get_lonlat_quadmesh_vertices(lons, lats)  #  order="counterclockwise"
+    quadmesh_vertices = get_lonlat_quadmesh_vertices(lons, lats)  #  ccw=True
     assert quadmesh_vertices.shape == (2, 2, 4, 2), "Shape mismatch for quadmesh vertices"
     np.testing.assert_allclose(
         quadmesh_vertices[0, 0, :, 0],
@@ -299,7 +295,7 @@ def test_get_lonlat_quadmesh_vertices():
     np.testing.assert_allclose(quadmesh_vertices[0, 0, :, 1], np.array([11.7915, 2.5197, 7.6452, 16.7494]), atol=1e-4)
 
     # Get quadmesh vertices (clockwise)
-    quadmesh_vertices = get_lonlat_quadmesh_vertices(lons, lats, order="clockwise")
+    quadmesh_vertices = get_lonlat_quadmesh_vertices(lons, lats, ccw=False)
     assert quadmesh_vertices.shape == (2, 2, 4, 2), "Shape mismatch for quadmesh vertices"
     np.testing.assert_allclose(
         quadmesh_vertices[0, 0, :, 0],
@@ -315,7 +311,7 @@ def test_get_lonlat_quadmesh_vertices_at_antimeridian():
     lons = np.array([[-175.0, 175.0], [-175.0, 175.0]])
     lats = np.array([[10.0, 10.0], [-10.0, -10.0]])
 
-    quadmesh_vertices = get_lonlat_quadmesh_vertices(lons, lats, order="counterclockwise")
+    quadmesh_vertices = get_lonlat_quadmesh_vertices(lons, lats, ccw=True)
     assert quadmesh_vertices.shape == (2, 2, 4, 2), "Shape mismatch for quadmesh vertices"
 
     # TODO: not implemented yet special case for antimeridian !
@@ -427,74 +423,131 @@ def test_get_projection_quadmesh_vertices():
     np.testing.assert_allclose(quadmesh_vertices[0, 0, :, 1], np.array([-10.0, 0.0, 10.0, 0.0]))
 
 
-####---------------------------------------------------------------------------.
-# TEST WRAPPERS
-# TODO:
-# get_quadmesh_centroids # gpm.quadmesh_centroids(crs=None)
-# get_quadmesh_corners   # gpm.quadmesh_corners(crs=None)
-# - get_projection_corners_from_centroids
-# - get_lonlat_corners_from_centroids
-# get_quadmesh_vertices  # gpm.quadmesh_vertices(crs=None, ccw=True)
-# - get_lonlat_quadmesh_vertices
-# - get_projection_quadmesh_vertices
-# get_quadmesh_polygons  # gpm.quadmesh_polygons(crs=None)
+def test_quadmesh_centroids():
+    # ORBIT
+    n_along_track = 10
+    n_cross_track = 5
+    xr_obj = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=n_along_track,
+        n_cross_track=n_cross_track,
+    )
+    lon, lat = xr_obj.gpm.quadmesh_centroids()
+    assert isinstance(lon, np.ndarray)
+    assert lon.shape == xr_obj["lon"].shape
+    np.testing.assert_allclose(lon, xr_obj["lon"].data)
+
+    # GRID
+    n_lon = 3
+    n_lat = 2
+    xr_obj = get_grid_dataarray(
+        start_lon=0,
+        start_lat=20,
+        end_lon=10,
+        end_lat=30,
+        n_lon=n_lon,
+        n_lat=n_lat,
+    )
+    x, y = xr_obj.gpm.quadmesh_centroids()
+    assert isinstance(x, np.ndarray)
+    assert xr_obj["lon"].shape == (3,)
+    assert x.shape == (n_lat, n_lon)
+
+
+def test_quadmesh_corners():
+    # ORBIT
+    n_along_track = 10
+    n_cross_track = 5
+    xr_obj = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=n_along_track,
+        n_cross_track=n_cross_track,
+    )
+    lon, lat = xr_obj.gpm.quadmesh_corners()
+    assert isinstance(lon, np.ndarray)
+    assert lon.shape == (n_cross_track + 1, n_along_track + 1)
+
+    # GRID
+    n_lon = 3
+    n_lat = 2
+    xr_obj = get_grid_dataarray(
+        start_lon=0,
+        start_lat=20,
+        end_lon=10,
+        end_lat=30,
+        n_lon=n_lon,
+        n_lat=n_lat,
+    )
+    x, y = xr_obj.gpm.quadmesh_corners()
+    assert isinstance(x, np.ndarray)
+    assert x.shape == (n_lat + 1, n_lon + 1)
+
+
+@pytest.mark.parametrize("n_cross_track", [1, 5])
+def test_quadmesh_vertices_orbit(n_cross_track):
+    # ORBIT
+    n_along_track = 10
+    xr_obj = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=n_along_track,
+        n_cross_track=n_cross_track,
+    )
+    vertices = xr_obj.gpm.quadmesh_vertices(ccw=True, origin="bottom")
+    assert isinstance(vertices, np.ndarray)
+    assert vertices.shape == (n_cross_track, n_along_track, 4, 2)
+
+
+@pytest.mark.parametrize("n_lon", [1, 5])
+def test_quadmesh_vertices_grid(n_lon):
+    n_lat = 5
+    xr_obj = get_grid_dataarray(
+        start_lon=0,
+        start_lat=20,
+        end_lon=10,
+        end_lat=30,
+        n_lon=n_lon,
+        n_lat=n_lat,
+    )
+    vertices = xr_obj.gpm.quadmesh_vertices(ccw=True, origin="bottom")
+    assert isinstance(vertices, np.ndarray)
+    assert vertices.shape == (n_lat, n_lon, 4, 2)
+
+
+def test_quadmesh_polygons():
+    import shapely
+
+    # ORBIT
+    n_along_track = 10
+    n_cross_track = 5
+    xr_obj = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=n_along_track,
+        n_cross_track=n_cross_track,
+    )
+    polygons = xr_obj.gpm.quadmesh_polygons()
+    assert isinstance(polygons, np.ndarray)
+    assert polygons.shape == (n_cross_track, n_along_track)
+    assert isinstance(polygons[0, 0], shapely.Polygon)
 
 
 ####---------------------------------------------------------------------------.
-#### Test get_quad mesh
-# TODO: test corners output is always shape 2D
+
+# TODO: test shape is conserved (1,2) remains (1,2,4,2)
+# TODO: test corners output is always shape 2D with minimum input size allowed
 # TODO: test vertices output is always shape 4D (N,M,4,2)
-
-
-# np_array = np.arange(10 * 10 * 2).reshape((10, 10, 2))
-
-# order = "counterclockwise"
-# vertices_np = _get_numpy_quad_mesh(np_array, order=order)
-
-
-# da_array = da.from_array(np_array, chunks=(5, 5, 2))
-# vertices_dask = get_quadmesh(da_array, order=order)
-
-# assert vertices_dask.shape == vertices_np.shape
-# np.allclose(vertices_dask.compute(), vertices_np)
-
-
-# # 1D case
-
-# # Extract cell vertices
-# import numpy as np
-# import xarray as xr
-# import shapely
-
-# x = da_dem_src["x"].data
-# y = da_dem_src["y"].data
-
-# x.shape
-# y.shape
-
-# #### Compute quadmesh
-# x_bounds = xr.plot.utils._infer_interval_breaks(x)
-# y_bounds = xr.plot.utils._infer_interval_breaks(y)
-# x_bounds.shape
-# y_bounds.shape
-
-
-# x_corners, y_corners = np.meshgrid(x_bounds, y_bounds)
-# # Quadmesh
-# corners = np.stack((x_corners, y_corners), axis=2)
-# corners.shape
-
-# #### Compute Vertices
-# ccw = True
-# top_left = corners[:-1, :-1]
-# top_right = corners[:-1, 1:]
-# bottom_right = corners[1:, 1:]
-# bottom_left = corners[1:, :-1]
-# if ccw:
-#     list_vertices = [top_left, bottom_left, bottom_right, top_right]
-# else:
-#     list_vertices = [top_left, top_right, bottom_right, bottom_left]
-# vertices = np.stack(list_vertices, axis=2)
-# vertices.shape
-# vertices_flat = vertices.reshape(-1, 4, 2)
-# vertices_flat.nbytes/1024/1024/1024 # 6GB

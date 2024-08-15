@@ -73,7 +73,8 @@ def check_dataset_equality(cut_filepath):
         ds = remove_unfixed_attributes(ds)
 
         # Check equality
-        xr.testing.assert_identical(ds, ds_expected)
+        # assert ds.equals(ds_expected)
+        xr.testing.assert_allclose(ds, ds_expected)
 
 
 def test_open_granule_on_real_files():

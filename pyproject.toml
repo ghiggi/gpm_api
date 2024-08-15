@@ -36,7 +36,7 @@ classifiers = [
 ]
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
-    "xarray<=2024.2.0", # ongoing xarray datatree migration
+    "xarray",
     "xarray-datatree",  # to be deprecated as soon datatree in xarray is working
     "xoak",
     "netcdf4",

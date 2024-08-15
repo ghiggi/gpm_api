@@ -50,8 +50,8 @@ from gpm.utils.geospatial import (
 )
 
 pd.options.mode.copy_on_write = True
+
 # Future methods:
-# to_shapely
 # to_spherically (geographic)
 # to_geopandas [lat_bin, lon_bin, geometry]
 
@@ -436,8 +436,8 @@ class Base2DPartitioning:
         """Return the partitions bounds."""
         return self.x_bounds, self.y_bounds
 
-    def quadmesh(self, origin="bottom"):
-        """Return the quadrilateral mesh.
+    def quadmesh_corners(self, origin="bottom"):
+        """Return the quadrilateral mesh corners.
 
         A quadrilateral mesh is a grid of M by N adjacent quadrilaterals that are defined via a (M+1, N+1)
         grid of vertices.
@@ -453,46 +453,42 @@ class Base2DPartitioning:
 
         Return
         --------
-        numpy.ndarray
-            Quadmesh array of shape (M+1, N+1, 2)
+        (x_corners, y_corners)
+            Numpy array of shape (M+1, N+1)
         """
         x_corners, y_corners = np.meshgrid(self.x_bounds, self.y_bounds)
         if origin == "bottom":
             y_corners = y_corners[::-1, :]
-        return np.stack((x_corners, y_corners), axis=2)
+        return x_corners, y_corners
 
-    def vertices(self, origin="bottom", ccw=True):
+    def vertices(self, ccw=True, origin="bottom"):
         """Return the partitions vertices in an array of shape (N, M, 4, 2).
 
-        The output vertices, once the first 2 dimension are flattened,
+        The output vertices, once the first 2 dimensions are flattened,
         can be passed directly to a :py:class:`matplotlib.PolyCollection`.
-        For plotting with cartopy, the polygon order must be "counterclockwise".
+        For plotting with cartopy, the polygon order must be counterclockwise ordered.
 
         Parameters
         ----------
-        origin : str
-            Origin of the y axis.
-            The default is ``bottom``.
         ccw : bool, optional
             If ``True``, vertices are ordered counterclockwise.
             If ``False``, vertices are ordered clockwise.
             The default is ``True``.
+        origin : str
+            Origin of the y axis.
+            The default is ``bottom``.
         """
-        # Retrieve corners
-        corners = self.quadmesh(origin=origin)
-        top_left = corners[:-1, :-1]
-        top_right = corners[:-1, 1:]
-        bottom_right = corners[1:, 1:]
-        bottom_left = corners[1:, :-1]
-        if ccw:
-            list_vertices = [top_left, bottom_left, bottom_right, top_right]
-        else:
-            list_vertices = [top_left, top_right, bottom_right, bottom_left]
-        if origin == "top":
-            list_vertices = list_vertices[::-1]
-            list_vertices = [list_vertices[i] for i in [2, 3, 0, 1]]
-        vertices = np.stack(list_vertices, axis=2)
+        from gpm.utils.area import get_quadmesh_from_corners
+
+        x_corners, y_corners = self.quadmesh_corners(origin=origin)
+        vertices = get_quadmesh_from_corners(x_corners, y_corners, ccw=ccw, origin=origin)
         return vertices
+
+    def to_shapely(self):
+        """Return an array with shapely polygons."""
+        import shapely
+
+        return shapely.polygons(self.vertices(ccw=True))
 
     @flatten_indices_arrays
     @mask_invalid_indices(flag_value=np.nan)

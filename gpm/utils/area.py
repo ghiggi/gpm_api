@@ -36,54 +36,35 @@
 # get_footprint_vertices  # gpm.footprint_vertices(crs=None)
 # get_footprint_polygons  # gpm.footprint_polygons(crs=None)
 
+# Quadmesh vertices (N, M, 4, 2)
+# - Output is always 4D array !
+# - Order matters and must be checked with both coordinates
+# - After CRS conversion it might be necessary to further check vertices order in some edge cases
+#   like when the CRS y axis is flipped !
+
 # -----------------------------------------------------------------.
 # In future, the code in this file will be added also to pyresample !
 # - SwathDefinition --> geographic coordinates --> computation in ECEF (xyz)
 # - AreaDefinition --> proj coordinates --> computation in projection space !
 
-# -----------------------------------------------------------------------------.
-import dask.array
+# -----------------------------------------------------------------.
+# Improvements
+# - When inferring 2D coords might require estimate in 4 directions and averaging to
+#   be more accurate for very curvilinear grids --> Check what cf_xarray does
+
+# -------------------------------------------------------------------.
 import dask.array as da
 import numpy as np
 import pyproj
-from dask.array import map_blocks
-from pyproj import (
-    Geod,
-    Transformer,  # pyproj >= 3.1 to be thread safe
-)
+from pyproj import Geod
 
 from gpm.utils.decorators import check_is_gpm_object
 
 # -----------------------------------------------------------------.
-### Quadmesh vertices (N, M, 4, 2)
-# - Output is always 4D array !
-# - Order matters and must be checked with both coordinates
-# - After CRS conversion it might be necessary to further check order in some edge cases !
-
-# -----------------------------------------------------------------.
-# When inferring 2D coords might require estimate in 4 directions and averaging to be more accurate
-# --> Check what cf_xarray does
-
-# -----------------------------------------------------------------.
 # TODO
-# - update plot code of get_lonlat_corners_from_1d_centroids with new one of this module !
-# - Simplify get_lon_lat_corners in gpm/visualization/plot ... )
-
-
-# Test speed transform: dask vs non dask !
-# - geographic_to_geocentric and geocentric_to_geographic!
-# --> Maybe use dask only if dask array provided in
-
-# Check usage of map_overlap !
-
-# Adapt to use CRS ... and test CRS accessor
-# - xr_obj.gpm.x, xr_obj.gpm.y, xr_obj.gpm.z, xr_obj.gpm.crs
-
-# TODO:
-# - 1D + 2D (i.e. transect))
-# --> cross_section vertices ... reuse code
-# --> bucket.partitioning code, wradlib grid_to_polyvert
-
+# Check usage of map_overlap for quadmesh functions!
+# Adapt wrapper to use crs
+# Adapt to use xr_obj.gpm.x, xr_obj.gpm.y, xr_obj.gpm.z, xr_obj.gpm.crs
 
 ####------------------------------------------------------------------------------.
 #### Checks
@@ -194,101 +175,6 @@ def is_clockwise(vertices):
 
 
 ####------------------------------------------------------------------------------.
-#### CRS transformations
-
-
-def _do_transform(src_proj, dst_proj, x, y, z):
-    """Perform pyproj transformation and stack the results.
-
-    If using pyproj >= 3.1, it employs thread-safe pyproj.transformer.Transformer.
-    If using pyproj < 3.1, it employs pyproj.transform.
-    Docs: https://pyproj4.github.io/pyproj/stable/advanced_examples.html#multithreading
-    """
-    transformer = Transformer.from_crs(src_proj.crs, dst_proj.crs)
-    return np.dstack(transformer.transform(x, y, z, radians=False))
-
-
-def _geocentric_to_geographic_numpy(x, y, z):
-    """Map from geocentric cartesian to geographic coordinate system."""
-    # Define geocentric cartesian and geographic projection
-    geocentric_proj = pyproj.Proj(proj="geocent")
-    geographic_proj = pyproj.Proj(proj="latlong")
-    return _do_transform(src_proj=geocentric_proj, dst_proj=geographic_proj, x=x, y=y, z=z)
-
-
-def _geographic_to_geocentric_numpy(lons, lats, z=None):
-    """Map from geographic to geocentric cartesian coordinate system."""
-    # Define geocentric cartesian and geographic projection
-    geocentric_proj = pyproj.Proj(proj="geocent")
-    geographic_proj = pyproj.Proj(proj="latlong")
-    # If z not specified, set to 0 (ellipsoid surface)
-    if z is None:
-        z = np.zeros_like(lons)
-    return _do_transform(src_proj=geographic_proj, dst_proj=geocentric_proj, x=lons, y=lats, z=z)
-
-
-def _geographic_to_geocentric_dask(lons, lats, z=None):
-    """Map from geographic to geocentric cartesian coordinate system."""
-    # Ensure dask array
-    lons = dask.array.asarray(lons)
-    lats = dask.array.asarray(lats)
-    # If z not specified, set to 0 (ellipsoid surface)
-    if z is None:
-        z = dask.array.zeros_like(lons)
-    # Conversion from geographic coordinate system to geocentric cartesian
-    res = map_blocks(
-        _geographic_to_geocentric_numpy,
-        lons,
-        lats,
-        z,
-        new_axis=[2],
-        chunks=(lons.chunks[0], lons.chunks[1], 3),
-    )
-    return res
-
-
-def _geocentric_to_geographic_dask(x, y, z):
-    """Map from geocentric cartesian to geographic coordinate system."""
-    # Ensure dask array
-    x = dask.array.asarray(x)
-    y = dask.array.asarray(y)
-    z = dask.array.asarray(z)
-    # Conversion from geocentric cartesian to geographic coordinate system
-    res = map_blocks(
-        _geocentric_to_geographic_numpy,
-        x,
-        y,
-        z,
-        new_axis=[2],
-        chunks=(x.chunks[0], x.chunks[1], 3),
-    )
-    return res
-
-
-def geocentric_to_geographic(x, y, z):
-    if hasattr(x, "chunks"):
-        res = _geocentric_to_geographic_dask(x, y, z)
-    else:
-        res = _geocentric_to_geographic_numpy(x, y, z)
-    lons = res[:, :, 0]
-    lats = res[:, :, 1]
-    z1 = res[:, :, 2]
-    return lons, lats, z1
-
-
-def geographic_to_geocentric(lons, lats, z=None):
-    if hasattr(lons, "chunks"):
-        res = _geographic_to_geocentric_dask(lons, lats, z)
-    else:
-        res = _geographic_to_geocentric_numpy(lons, lats, z)
-    # Retrieve x, y and z
-    x = res[:, :, 0]
-    y = res[:, :, 1]
-    z1 = res[:, :, 2]
-    return x, y, z1
-
-
-####------------------------------------------------------------------------------.
 #### Utilities for 2D coordinates array
 # - These methods require only 1 coordinate
 
@@ -375,11 +261,11 @@ def get_centroids_from_corners(corners):
     return centroids
 
 
-def _from_corners_to_bounds(corners, order="counterclockwise"):
+def _from_corners_to_bounds(corners, ccw=True, origin="bottom"):
     """Convert the cells corners coordinate 2D array (N+1,M+1) to the cell coordinate vertices 3D array (N,M,4).
 
     Counterclockwise and clockwise bounds are defined from the top left corner, assuming
-    that the first axis (0) y is directed upward and the x axis (1) is directed rightward.
+    that the first axis (0) y is directed upward (origin="bottom") and the x axis (1) is directed rightward.
 
     Counterclockwise: [top_left, bottom_left, bottom_right, top_right]
     Clockwise: [bottom_left, top_left, top_right, bottom_right]
@@ -391,15 +277,23 @@ def _from_corners_to_bounds(corners, order="counterclockwise"):
 
     Inspired from https://github.com/xarray-contrib/cf-xarray/blob/main/cf_xarray/helpers.py#L113
     """
-    # TODO: Is this dask efficient? Or map_overlap and take neighbour values to avoid rechunking?
+    # FIXME: Likely not dask efficient
+    # - Use map_overlap and take neighbour values to avoid rechunking?
     top_left = corners[:-1, :-1]
     top_right = corners[:-1, 1:]
     bottom_right = corners[1:, 1:]
     bottom_left = corners[1:, :-1]
-    if order == "clockwise":
-        list_vertices = [top_left, top_right, bottom_right, bottom_left]
-    else:  # counterclockwise
+
+    # Retrieve vertices in correct order
+    if ccw:  # counterclockwise
         list_vertices = [top_left, bottom_left, bottom_right, top_right]
+    else:
+        list_vertices = [top_left, top_right, bottom_right, bottom_left]
+
+    if origin != "bottom":
+        list_vertices = list_vertices[::-1]
+        list_vertices = [list_vertices[i] for i in [2, 3, 0, 1]]
+    # Stack
     if hasattr(corners, "chunks"):
         bounds = da.stack(list_vertices, axis=2)
         # Rechunking over the vertices dimension is required !!!
@@ -409,14 +303,14 @@ def _from_corners_to_bounds(corners, order="counterclockwise"):
     return bounds
 
 
-def _from_bounds_to_corners(bounds, order="counterclockwise"):
+def _from_bounds_to_corners(bounds, ccw=True):
     """Convert from bounds 3D array (N,M, 4) to corner 2D array (N+1,M+1).
 
     Assume x axis is rightward an y axis is upward.
 
     Inspired from https://github.com/xarray-contrib/cf-xarray/blob/main/cf_xarray/helpers.py#L86.
     """
-    if order == "clockwise":
+    if not ccw:
         top_left_position = 0
         top_right_position = 1
         bottom_right_position = 2
@@ -447,10 +341,10 @@ def _from_bounds_to_corners(bounds, order="counterclockwise"):
 # - These methods requires both x and y coordinates
 
 
-def get_quadmesh_from_corners(x_corners, y_corners, order="counterclockwise"):
+def get_quadmesh_from_corners(x_corners, y_corners, ccw=True, origin="bottom"):
     # Retrieve QuadMesh bounds # (N, M, 4)
-    x_bounds = _from_corners_to_bounds(x_corners, order=order)
-    y_bounds = _from_corners_to_bounds(y_corners, order=order)
+    x_bounds = _from_corners_to_bounds(x_corners, ccw=ccw, origin=origin)
+    y_bounds = _from_corners_to_bounds(y_corners, ccw=ccw, origin=origin)
     # Retrieve QuadMesh vertices # (N, M, 4, 2)
     quadmesh = np.stack((x_bounds, y_bounds), axis=3)
     # Determine sample fraction of vertices with clockwise order
@@ -462,20 +356,18 @@ def get_quadmesh_from_corners(x_corners, y_corners, order="counterclockwise"):
     #     sample_vertices = sample_vertices.compute()
     fraction_clockwise = np.sum([is_clockwise(vertices) for vertices in sample_vertices]) / len(x_indices)
     # Ensure correct order
-    if (fraction_clockwise >= 0.5 and order == "counterclockwise") or (
-        fraction_clockwise <= 0.5 and order == "clockwise"
-    ):
+    if (fraction_clockwise >= 0.5 and ccw) or (fraction_clockwise <= 0.5 and not ccw):
         quadmesh = quadmesh[:, :, ::-1, :]
     return quadmesh
 
 
-def get_corners_from_quadmesh(quadmesh, order="counterclockwise"):
+def get_corners_from_quadmesh(quadmesh, ccw=True):
     # - Retrieve QuadMesh bounds # (N, M, 4)
     x_bounds = quadmesh[:, :, :, 0]
     y_bounds = quadmesh[:, :, :, 1]
     # - Retrieve QuadMesh corners # (N+1, M+1)
-    x_corners = _from_bounds_to_corners(x_bounds, order=order)
-    y_corners = _from_bounds_to_corners(y_bounds, order=order)
+    x_corners = _from_bounds_to_corners(x_bounds, ccw=ccw)
+    y_corners = _from_bounds_to_corners(y_bounds, ccw=ccw)
     # - Retrieve QuadMesh vertices # (N, M, 4, 2)
     return x_corners, y_corners
 
@@ -603,6 +495,22 @@ def get_lonlat_corners_from_1d_centroids(lon, lat):
     return lon_corners, lat_corners
 
 
+def geocentric_to_geographic(x, y, z, parallel=True):
+    from gpm.utils.remapping import reproject_coords
+
+    geocentric_proj = pyproj.Proj(proj="geocent")
+    geographic_proj = pyproj.Proj(proj="latlong")
+    return reproject_coords(x, y, z, parallel=parallel, src_crs=geocentric_proj.crs, dst_crs=geographic_proj.crs)
+
+
+def geographic_to_geocentric(lons, lats, z=None, parallel=True):
+    from gpm.utils.remapping import reproject_coords
+
+    geocentric_proj = pyproj.Proj(proj="geocent")
+    geographic_proj = pyproj.Proj(proj="latlong")
+    return reproject_coords(lons, lats, z, parallel=parallel, src_crs=geographic_proj.crs, dst_crs=geocentric_proj.crs)
+
+
 def get_lonlat_corners_from_centroids(lons, lats):
     """Compute the corners of lon lat 2D pixel centroid coordinate arrays.
 
@@ -625,18 +533,18 @@ def get_lonlat_corners_from_centroids(lons, lats):
     raise NotImplementedError(f"lons is a {lons.ndim}D array, lats is a {lats.ndim}D array.")
 
 
-def get_lonlat_quadmesh_vertices(lons, lats, order="counterclockwise"):  # from partitioning code
+def get_lonlat_quadmesh_vertices(lons, lats, ccw=True, origin="bottom"):  # from partitioning code
     """Convert (x, y) 2D centroid coordinates array to (N, M, 4, 2) QuadMesh vertices.
 
     The output vertices can be passed directly to a matplotlib.PolyCollection.
-    For plotting with cartopy, the polygon order must be "counterclockwise".
+    For plotting with cartopy, the polygon order must be counterclockwise.
 
     Vertices are defined from the top left corner.
     """
     # - Retrieve QuadMesh corners  # (N+1, M+1)
     x_corners, y_corners = get_lonlat_corners_from_centroids(lons, lats)
     # - Retrieve QuadMesh vertices # (N, M, 4, 2)
-    return get_quadmesh_from_corners(x_corners, y_corners, order=order)
+    return get_quadmesh_from_corners(x_corners, y_corners, ccw=ccw, origin=origin)
 
 
 ####------------------------------------------------------------------------------.
@@ -648,9 +556,9 @@ def get_lonlat_quadmesh_vertices(lons, lats, order="counterclockwise"):  # from 
 # --> odc.GeoBox, pyresample.AreaDefinition
 
 
-# TODO: ensure that if input is DataArray, output is DataArray (same for dask)
 def get_projection_centroids(x, y, origin="bottom"):
     """Return 2D centroids arrays."""
+    # FIXME: 1D returns always numpy, 2D return as it is currently
     if x.ndim == 1 and y.ndim == 1:
         x, y = np.meshgrid(x, y)
         if origin == "bottom":
@@ -695,6 +603,7 @@ def get_projection_corners_from_centroids(x, y, origin="bottom"):
     if x.ndim == 1 and y.ndim == 1:
         return get_projection_corners_from_1d_centroids(x, y, origin=origin)
     # Retrieve 2D corners from 2D centroids
+    # - FIXME: case where size 1 one dimension
     if x.ndim == 2 and y.ndim == 2:
         x, y = _check_2d_coords(x, y)
         x_corners = get_corners_from_centroids(x)
@@ -703,112 +612,18 @@ def get_projection_corners_from_centroids(x, y, origin="bottom"):
     raise NotImplementedError(f"x is a {x.ndim}D array, y is a {y.ndim}D array.")
 
 
-def get_projection_quadmesh_vertices(x, y, order="counterclockwise"):  # from partitioning code
+def get_projection_quadmesh_vertices(x, y, ccw=True):  # from partitioning code
     """Convert (x, y) 2D centroid coordinates array to (N, M, 4, 2) QuadMesh vertices.
 
     The output vertices can be passed directly to a matplotlib.PolyCollection.
-    For plotting with cartopy, the polygon order must be "counterclockwise".
+    For plotting with cartopy, the polygon order must be counterclockwise.
 
     Vertices are defined from the top left corner.
     """
     # - Retrieve QuadMesh corners  # (N+1, M+1)
     x_corners, y_corners = get_projection_corners_from_centroids(x, y)
     # - Retrieve QuadMesh vertices # (N, M, 4, 2)
-    return get_quadmesh_from_corners(x_corners, y_corners, order=order)
-
-
-####------------------------------------------------------------------------------.
-#### General Quadmesh Based on Xarray
-
-
-def _get_numpy_quadmesh(arr, order="counterclockwise"):
-    """This functions returns the QuadMesh vertices from a centroids array.
-
-    The centroid array should have shape (N,M, <n_dims>),
-    <n_dims> can be whatever number of dimensions.
-    If the surface is on a 2D plane --> n_dims = 2 (x,y)
-    If the surface is on a sphere -->   n_dims = 3 (x,y,z)
-    """
-    n_dims = arr.shape[2]
-    list_coords = [arr[:, :, dim] for dim in range(0, n_dims)]  # (N,M)
-    list_corners = [get_corners_from_centroids(centroids) for centroids in list_coords]  # (N+1, M+1)
-    list_vertices = [_from_corners_to_bounds(corners, order=order) for corners in list_corners]  # (N,M 4)
-    vertices = np.stack(list_vertices, axis=3)  # (N, M, 4, <n_dims>)
-    return vertices
-
-
-def _get_dask_quadmesh(arr, order="counterclockwise"):
-    """This functions returns the QuadMesh vertices from a centroids array.
-
-    The centroid array should have shape (N,M, <n_dims>),
-    <n_dims> can be whatever number of dimensions.
-    If the surface is on a 2D plane --> n_dims = 2 (x,y)
-    If the surface is on a sphere -->   n_dims = 3 (x,y,z)
-    """
-    # Determine number of dimensions
-    n_dims = arr.shape[2]
-
-    # Determine output chunks
-    input_chunks = arr.chunks
-    output_chunks = (input_chunks[0], input_chunks[1], (4,), (n_dims,))
-
-    # Sanitize output_chunks to take into account depth and trim !
-    trim = True
-    depth = {0: 1, 1: 1}
-    boundary = "none"
-    if trim:
-        list_output_chunks = []
-        for i, chunks in enumerate(output_chunks):
-            if i in depth:
-                list_chunk = []
-                for j, chunk in enumerate(chunks):
-                    if j == 0 or j == len(chunks) - 1:
-                        list_chunk.append(chunk + depth[i])
-                    else:
-                        list_chunk.append(chunk + depth[i] * 2)
-                chunks = tuple(list_chunk)
-            list_output_chunks.append(chunks)
-        # Convert to tuple
-        output_chunks = tuple(list_output_chunks)
-
-    # Perform computations
-    vertices = da.map_overlap(
-        _get_numpy_quadmesh,
-        arr,
-        depth=depth,
-        trim=trim,
-        boundary=boundary,
-        drop_axis=2,
-        new_axis=[2, 3],
-        chunks=output_chunks,
-        dtype=np.float64,
-        # Function kwargs
-        order=order,
-    )
-    return vertices
-
-
-def get_quadmesh(arr, order="counterclockwise"):
-    """This functions returns the QuadMesh vertices from a centroids array.
-
-    The centroid array should have shape (N,M, <n_dims>),
-    <n_dims> can be whatever number of dimensions.
-    If the surface is on a 2D plane --> n_dims = 2 (x,y)
-    If the surface is on a sphere -->   n_dims = 3 (x,y,z)
-
-    Counterclockwise order is expected by pcolormesh and shapely
-    Clockwise order is expected for spherical computations.
-
-    Counterclockwise: [top_left, bottom_left, bottom_right, top_right]
-    Clockwise: [bottom_left, top_left, top_right, bottom_right]
-
-    It output an array of shape (N, M, 4, n_dims)
-    """
-    if hasattr(arr, "chunks"):
-        vertices = _get_dask_quadmesh(arr, order=order)
-    else:
-        vertices = _get_numpy_quadmesh(arr, order=order)
-    return vertices
+    return get_quadmesh_from_corners(x_corners, y_corners, ccw=ccw)
 
 
 ####------------------------------------------------------------------------------.
@@ -820,71 +635,67 @@ def get_quadmesh(arr, order="counterclockwise"):
 # ds.<accessor>.quadmesh_polygons
 # --> In future these methods could be adapted to return xr.DataArrays
 
-# from gpm.tests.utils.fake_datasets import get_grid_dataarray, get_orbit_dataarray
-# n_along_track = 10
-# n_cross_track = 5
-# xr_obj = get_orbit_dataarray(
-#     start_lon=0,
-#     start_lat=0,
-#     end_lon=20,
-#     end_lat=15,
-#     width=1e6,
-#     n_along_track=n_along_track,
-#     n_cross_track=n_cross_track,
-# ).to_dataset(name="dummy")
-# # TODO: adapt CRS code to work also with DataArray ! (once tested with Dataset)
-# from gpm.dataset.crs import set_dataset_crs
-# crs = pyproj.CRS(proj="longlat", ellps="WGS84")
-# xr_obj = set_dataset_crs(xr_obj, crs=crs, grid_mapping_name="crsWGS84", inplace=False)
-
-
-def reproject_coordinates(x, y, src_crs, dst_crs):
-    # TODO: TAKE CODE FROM GV AND ADAPT. Maybe move to another module
-    raise NotImplementedError
-
 
 @check_is_gpm_object
 def get_quadmesh_centroids(xr_obj, crs=None, origin="bottom"):
     """Return quadmesh x and y centroids of shaope (N,M)."""
+    from gpm.utils.remapping import reproject_coords
+
     # TODO: IMPLEMENT
     # check_valid_crs
-    # infert_x_y_coords or xr_obj.gpm.x, xr_obj.gpm.y, xr_obj.gpm.z, xr_obj.gpm.crs
+    # get_coords/set_index à la xoak/metpy:
+    # --> xr_obj.gpm.x, xr_obj.gpm.y, xr_obj.gpm.z, xr_obj.gpm.crs
+    # add test for crs-conversion
     x = "lon"
     y = "lat"
-    x = xr_obj[x]
-    y = xr_obj[y]
+    x = xr_obj[x].data
+    y = xr_obj[y].data
     src_crs = None  # xr_obj.gpm.crs
     if xr_obj.gpm.is_grid:
         x, y = get_projection_centroids(x, y, origin=origin)
     if crs is not None:
-        x, y = reproject_coordinates(x, y, src_crs=src_crs, dst_crs=crs)
+        x, y = reproject_coords(x, y, src_crs=src_crs, dst_crs=crs)
     return x, y
 
 
 @check_is_gpm_object
 def get_quadmesh_corners(xr_obj, crs=None):
     """Return quadmesh x and y corners of shape (N+1, M+1)."""
+    from gpm.utils.remapping import reproject_coords
+
     # TODO: IMPLEMENT
     # check_valid_crs
     # infert_x_y_coords or xr_obj.gpm.x, xr_obj.gpm.y, xr_obj.gpm.z, xr_obj.gpm.crs
+    # add test for crs-conversion
     x = "lon"
     y = "lat"
     src_crs = None  # xr_obj.gpm.crs
-    if xr_obj.gpm.is_orbit:
-        x, y = get_lonlat_corners_from_centroids(lons=xr_obj[x], lats=xr_obj[y])
-    else:  # xr_obj.gpm.is_gridt:
-        x, y = get_projection_corners_from_centroids(lons=xr_obj[x], lats=xr_obj[y])
+    x = xr_obj[x].data
+    y = xr_obj[y].data
     if crs is not None:
-        x, y = reproject_coordinates(x, y, src_crs=src_crs, dst_crs=crs)
-    return x, y
+        x, y = reproject_coords(x, y, src_crs=src_crs, dst_crs=crs)
+    if xr_obj.gpm.is_orbit:
+        return get_lonlat_corners_from_centroids(lons=x, lats=y)
+    # xr_obj.gpm.is_grid
+    return get_projection_corners_from_centroids(x=x, y=y)
 
 
 @check_is_gpm_object
-def get_quadmesh_vertices(xr_obj, crs=None, ccw=True):
-    """Return the quadmesh vertices array with shape (N, M, 4, 2)."""
-    order = "counterclockwise" if True else "clockwise"
+def get_quadmesh_vertices(xr_obj, crs=None, ccw=True, origin="bottom"):
+    """Return the quadmesh vertices array with shape (N, M, 4, 2).
+
+    Parameters
+    ----------
+    origin : str
+        Origin of the y axis.
+        The default is ``bottom``.
+    ccw : bool, optional
+        If ``True``, vertices are ordered counterclockwise.
+        If ``False``, vertices are ordered clockwise.
+        The default is ``True``.
+    """
     x_corners, y_corners = get_quadmesh_corners(xr_obj, crs=crs)
-    vertices = get_quadmesh_from_corners(x_corners, y_corners, order=order)
+    vertices = get_quadmesh_from_corners(x_corners, y_corners, ccw=ccw, origin=origin)
     return vertices
 
 
@@ -893,5 +704,5 @@ def get_quadmesh_polygons(xr_obj, crs=None):
     """Return an array with quadmesh shapely polygons."""
     import shapely
 
-    vertices = get_quadmesh_vertices(xr_obj, crs=None, ccw=True)
+    vertices = get_quadmesh_vertices(xr_obj, crs=crs, ccw=True)
     return shapely.polygons(vertices)

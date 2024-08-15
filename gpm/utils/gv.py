@@ -1,73 +1,15 @@
 import numpy as np
 import pyproj
 import xarray as xr
-from pyproj import Transformer
 
 from gpm.utils.manipulations import (
     conversion_factors_degree_to_meter,
 )
+from gpm.utils.remapping import reproject_coords
 from gpm.utils.xarray import get_xarray_variable
 
 # Issues:
 # - xyz_to_antenna_coordinates SR GR range estimation. Which to choose?
-
-# reproject_dataset
-# get_active_crs()   # gpm.crs (crs.active, crs.availables)
-#
-# names = ['x','y','z']
-# ds = xr.Dataset({names[i]: xr.DataArray(result[i], dims=dims) for i in range(0, len(result))})
-# # Add crs coordinates
-# ds = add_crs(ds=ds, crs=kwargs.get("dst_crs"))
-# return ds
-
-# TODO RENAME: reproject_coordinates
-
-
-def reproject(x, y, z=None, **kwargs):
-    """
-    Transform coordinates from a source projection to a target projection.
-
-    Longitude coordinates should be provided as x, latitude as y.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        Array of x coordinates.
-    y : numpy.ndarray
-        Array of y coordinates.
-    z : numpy.ndarray, optional
-        Array of z coordinates.
-
-    Keyword Arguments
-    -----------------
-    src_crs : pyproj.CRS
-        Source CRS
-    dst_crs : pyproj.CRS
-        Destination CRS
-
-    Returns
-    -------
-    trans : tuple of numpy.ndarray or xr.DataArray
-        Arrays of reprojected coordinates (X, Y) or (X, Y, Z) depending on input.
-    """
-    # Retrieve src and dst CRS
-    if "src_crs" not in kwargs:
-        raise ValueError("'src_crs' argument not specified !")
-    if "dst_crs" not in kwargs:
-        raise ValueError("'dst_crs' argument not specified !")
-    src_crs = kwargs.get("src_crs")
-    dst_crs = kwargs.get("dst_crs")
-    # Check if input is xarray
-    is_xarray_input = isinstance(x, xr.DataArray) & isinstance(y, xr.DataArray)
-    # Transform coordinates
-    transformer = Transformer.from_crs(src_crs, dst_crs, always_xy=True)
-    result = transformer.transform(x, y, z)
-    # Return xarray object if input is xarray
-    if is_xarray_input:
-        dims = x.dims
-        inputs = [x, y, z]
-        result = tuple([xr.DataArray(result[i], coords=inputs[i].coords, dims=dims) for i in range(0, len(result))])
-    return result
 
 
 def get_crs_center_latitude(crs):
@@ -302,7 +244,7 @@ def retrieve_gates_projection_coordinates(ds, dst_crs):
 
     # Get x,y, z coordinates in GR CRS
     crs_src = pyproj.CRS.from_epsg(4326)  # ds.gpm.crs
-    x_sr, y_sr = reproject(x=ds["lon"], y=ds["lat"], src_crs=crs_src, dst_crs=dst_crs)
+    x_sr, y_sr = reproject_coords(x=ds["lon"], y=ds["lat"], src_crs=crs_src, dst_crs=dst_crs)
 
     # Retrieve local zenith angle
     alpha = get_xarray_variable(ds, variable="localZenithAngle")

@@ -330,8 +330,8 @@ def test_align_along_track():
     assert "No common gpm_id." in str(excinfo.value)
 
     # Check case when gpm_id is not present
-    ds_subset = ds.drop("gpm_id")
-    da_subset = da.drop("gpm_id")
+    ds_subset = ds.drop_vars("gpm_id")
+    da_subset = da.drop_vars("gpm_id")
     with pytest.raises(ValueError) as excinfo:
         list_objs = align_along_track(da_subset, da, ds, ds_subset)
     assert "The xarray objects does not have the 'gpm_id' coordinate. Impossible to align." in str(excinfo.value)
@@ -375,8 +375,8 @@ def test_align_cross_track():
     assert "No common gpm_cross_track_id." in str(excinfo.value)
 
     # Check case when gpm_id is not present
-    ds_subset = ds.drop("gpm_cross_track_id")
-    da_subset = da.drop("gpm_cross_track_id")
+    ds_subset = ds.drop_vars("gpm_cross_track_id")
+    da_subset = da.drop_vars("gpm_cross_track_id")
     with pytest.raises(ValueError) as excinfo:
         list_objs = align_cross_track(da_subset, da, ds, ds_subset)
     assert "The xarray objects does not have the 'gpm_cross_track_id' coordinate. Impossible to align." in str(

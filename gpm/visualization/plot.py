@@ -34,11 +34,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from pyproj import Geod
 from scipy.interpolate import griddata
 
 import gpm
 from gpm import get_plot_kwargs
+from gpm.utils.area import get_lonlat_corners_from_centroids
 
 
 def is_generator(obj):
@@ -121,26 +121,6 @@ def adapt_fig_size(ax, nrow=1, ncol=1):
 
 
 ####--------------------------------------------------------------------------.
-
-
-def get_antimeridian_mask(lons):
-    """Get mask of longitude coordinates neighbors crossing the antimeridian."""
-    from scipy.ndimage import binary_dilation
-
-    # Initialize mask
-    n_y, n_x = lons.shape
-    mask = np.zeros((n_y - 1, n_x - 1))
-    # Check vertical edges
-    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
-    col_idx = np.clip(col_idx - 1, 0, n_x - 1)
-    mask[row_idx, col_idx] = 1
-    # Check horizontal edges
-    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=1)) > 180)
-    row_idx = np.clip(row_idx - 1, 0, n_y - 1)
-    mask[row_idx, col_idx] = 1
-    # Buffer by 1 in all directions to avoid plotting cells neighbour to those crossing the antimeridian
-    # --> This should not be needed, but it's needed to avoid cartopy bugs !
-    return binary_dilation(mask)
 
 
 def infill_invalid_coords(xr_obj, x="lon", y="lat"):
@@ -282,128 +262,6 @@ def _interpolate_2d_coord(arr, method="linear"):
     return arr_new
 
 
-def _predict_forward_point(lon1, lat1, lon2, lat2, geod):
-    """
-    Predict a point in the forward direction at the same distance as between two given vertices.
-
-    Parameters
-    ----------
-    lon1, lat1 : Longitude and latitude of the starting vertex.
-    lon2, lat2 : Longitude and latitude of the ending vertex.
-    geod       : Pyproj Geod object for geodesic calculations.
-
-    Returns
-    -------
-    (lon3, lat3): Longitude and latitude of the predicted point in the forward direction.
-    """
-    # Calculate the forward azimuth and distance between the start and end vertices
-    fwd_azimuth, _, distance = geod.inv(lon1, lat1, lon2, lat2)
-
-    # Predict the point in the forward direction from the end vertex
-    lon3, lat3, _ = geod.fwd(lon2, lat2, fwd_azimuth, distance)
-
-    return lon3, lat3
-
-
-def compute_lon_lat_corners_for_1d_swath(lon, lat):
-    """Compute lon/lat corners from 1D swath.
-
-    It infer the footprint size based on the spacing between footprints.
-    """
-    geod = Geod(ellps="WGS84")
-    # Define corners between centroids
-    ortho_line1_lon = []
-    ortho_line1_lat = []
-    ortho_line2_lon = []
-    ortho_line2_lat = []
-
-    # Process each segment of the original line
-    for i in range(len(lon) - 1):
-        lon1, lat1 = lon[i], lat[i]
-        lon2, lat2 = lon[i + 1], lat[i + 1]
-
-        # Calculate the forward azimuth and distance between consecutive vertices
-        fwd_azimuth, _, distance = geod.inv(lon1, lat1, lon2, lat2, radians=False)
-
-        # Calculate the half distance for the orthogonal projection
-        half_distance = distance / 2
-
-        # Orthogonal azimuths, +90 degrees and -90 degrees
-        ortho_azimuth1 = (fwd_azimuth + 90) % 360
-        ortho_azimuth2 = (fwd_azimuth - 90) % 360
-
-        # Calculate the orthogonal points from the midpoint of the segment
-        mid_lon, mid_lat, _ = geod.fwd((lon1 + lon2) / 2, (lat1 + lat2) / 2, fwd_azimuth, distance / 2)
-
-        # Project the orthogonal points
-        lon_ortho1, lat_ortho1, _ = geod.fwd(mid_lon, mid_lat, ortho_azimuth1, half_distance)
-        lon_ortho2, lat_ortho2, _ = geod.fwd(mid_lon, mid_lat, ortho_azimuth2, half_distance)
-
-        # Append the calculated orthogonal points to the lines
-        ortho_line1_lon.append(lon_ortho1)
-        ortho_line1_lat.append(lat_ortho1)
-        ortho_line2_lon.append(lon_ortho2)
-        ortho_line2_lat.append(lat_ortho2)
-
-    # Extend at the extremities to define the corners
-    # - Extend the start of ortho_line1
-    start_ext_lon1, start_ext_lat1 = _predict_forward_point(
-        ortho_line1_lon[1],
-        ortho_line1_lat[1],
-        ortho_line1_lon[0],
-        ortho_line1_lat[0],
-        geod=geod,
-    )
-    # - Extend the end of ortho_line1
-    end_ext_lon1, end_ext_lat1 = _predict_forward_point(
-        ortho_line1_lon[-2],
-        ortho_line1_lat[-2],
-        ortho_line1_lon[-1],
-        ortho_line1_lat[-1],
-        geod=geod,
-    )
-
-    # - Extend the start of ortho_line2
-    start_ext_lon2, start_ext_lat2 = _predict_forward_point(
-        ortho_line2_lon[1],
-        ortho_line2_lat[1],
-        ortho_line2_lon[0],
-        ortho_line2_lat[0],
-        geod=geod,
-    )
-    # - Extend the end of ortho_line2
-    end_ext_lon2, end_ext_lat2 = _predict_forward_point(
-        ortho_line2_lon[-2],
-        ortho_line2_lat[-2],
-        ortho_line2_lon[-1],
-        ortho_line2_lat[-1],
-        geod=geod,
-    )
-
-    # Define corners
-    lon_corners1 = np.array([start_ext_lon1, *ortho_line1_lon, end_ext_lon1])
-    lat_corners1 = np.array([start_ext_lat1, *ortho_line1_lat, end_ext_lat1])
-
-    lat_corners2 = np.array([start_ext_lat2, *ortho_line2_lat, end_ext_lat2])
-    lon_corners2 = np.array([start_ext_lon2, *ortho_line2_lon, end_ext_lon2])
-
-    lon_corners = np.vstack((lon_corners1, lon_corners2)).T
-    lat_corners = np.vstack((lat_corners1, lat_corners2)).T
-
-    # Define lon lat corners
-    return lon_corners, lat_corners
-
-
-def get_lon_lat_corners(lon, lat):
-    from gpm.utils.area import get_lonlat_corners_from_centroids
-
-    if lon.ndim == 1:
-        lon, lat = compute_lon_lat_corners_for_1d_swath(lon, lat)
-    else:
-        lon, lat = get_lonlat_corners_from_centroids(lon, lat)
-    return lon, lat
-
-
 def _mask_antimeridian_crossing_arr(arr, antimeridian_mask, rgb):
     if np.ma.is_masked(arr):
         if rgb:
@@ -440,6 +298,26 @@ def mask_antimeridian_crossing_array(arr, lon, rgb, plot_kwargs):
         if gpm.config.get("viz_hide_antimeridian_data"):  # default is True
             arr = _mask_antimeridian_crossing_arr(arr, antimeridian_mask=antimeridian_mask, rgb=rgb)
     return arr, plot_kwargs
+
+
+def get_antimeridian_mask(lons):
+    """Get mask of longitude coordinates neighbors crossing the antimeridian."""
+    from scipy.ndimage import binary_dilation
+
+    # Initialize mask
+    n_y, n_x = lons.shape
+    mask = np.zeros((n_y - 1, n_x - 1))
+    # Check vertical edges
+    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
+    col_idx = np.clip(col_idx - 1, 0, n_x - 1)
+    mask[row_idx, col_idx] = 1
+    # Check horizontal edges
+    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=1)) > 180)
+    row_idx = np.clip(row_idx - 1, 0, n_y - 1)
+    mask[row_idx, col_idx] = 1
+    # Buffer by 1 in all directions to avoid plotting cells neighbour to those crossing the antimeridian
+    # --> This should not be needed, but it's needed to avoid cartopy bugs !
+    return binary_dilation(mask)
 
 
 ####--------------------------------------------------------------------------.
@@ -831,7 +709,7 @@ def plot_cartopy_pcolormesh(
 
     # Compute coordinates of cell corners for pcolormesh quadrilateral mesh
     # - This enable correct masking of cells crossing the antimeridian
-    lon, lat = get_lon_lat_corners(lon, lat)
+    lon, lat = get_lonlat_corners_from_centroids(lon, lat)
 
     # Mask cells crossing the antimeridian
     # - with gpm.config.set({"viz_hide_antimeridian_data": False}): can be used to modify the masking behaviour

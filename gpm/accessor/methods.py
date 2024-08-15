@@ -181,13 +181,14 @@ class GPM_Base_Accessor:
         )
 
     @auto_wrap_docstring
-    def quadmesh_vertices(self, crs=None, ccw=True):
+    def quadmesh_vertices(self, crs=None, ccw=True, origin="bottom"):
         from gpm.utils.area import get_quadmesh_vertices
 
         return get_quadmesh_vertices(
             self._obj,
             crs=crs,
             ccw=ccw,
+            origin=origin,
         )
 
     @auto_wrap_docstring

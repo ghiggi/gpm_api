@@ -720,23 +720,27 @@ class TestXYPartitioning:
         directories = partitioning.directories_around_point(x=3, y=3, distance=1)
         assert directories.tolist() == [f"1.75{os.sep}1.875"]
 
-    def test_quadmesh(self):
+    def test_quadmesh_corners(self):
         """Test quadmesh."""
         size = (1, 1)
         extent = [0, 2, 1, 3]
         partitioning = XYPartitioning(size=size, extent=extent)
+
+        x_corners, y_corners = partitioning.quadmesh_corners()  # origin="bottom"
+        x_corners_top, y_corners_top = partitioning.quadmesh_corners(origin="top")
+
         # Test shape
-        assert partitioning.quadmesh(origin="bottom").shape == (3, 3, 2)
-        assert partitioning.quadmesh(origin="top").shape == (3, 3, 2)
+        assert x_corners.shape == (3, 3)
+        assert y_corners.shape == (3, 3)
+
         # Test values
-        x_mesh = np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]])
-        y_mesh = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
-        quadmesh = partitioning.quadmesh()  # origin="bottom"
-        quadmesh_top = partitioning.quadmesh(origin="top")
-        np.testing.assert_allclose(quadmesh_top[:, :, 0], x_mesh)
-        np.testing.assert_allclose(quadmesh_top[:, :, 1], y_mesh)
-        np.testing.assert_allclose(quadmesh[:, :, 0], x_mesh)
-        np.testing.assert_allclose(quadmesh[::-1, :, 1], y_mesh)
+        expected_x_corners = np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]])
+        expected_y_corners = np.array([[3, 3, 3], [2, 2, 2], [1, 1, 1]])
+
+        np.testing.assert_allclose(x_corners, expected_x_corners)
+        np.testing.assert_allclose(y_corners, expected_y_corners)
+        np.testing.assert_allclose(x_corners_top, expected_x_corners)
+        np.testing.assert_allclose(y_corners_top, expected_y_corners[::-1, :])
 
     def test_to_dict(self):
         # Create partitioning
@@ -881,18 +885,19 @@ class TestLonLatPartitioning:
         directories = partitioning.directories_around_point(lon=3, lat=3, distance=150_000)  # 150 km
         assert directories.tolist() == [f"lon_bin=1.75{os.sep}lat_bin=1.625", f"lon_bin=1.75{os.sep}lat_bin=1.875"]
 
-    def test_quadmesh(self):
+    def test_quadmesh_corners(self):
         # Create partitioning
         size = (20, 10)
         extent = [0, 60, 60, 80]
         partitioning = LonLatPartitioning(size=size, extent=extent)
-        # Test quadmesh array (M+1, N+1, 2)
-        quadmesh = partitioning.quadmesh()
-        assert quadmesh.shape == (3, 4, 2)
-        x_mesh = np.array([[0, 20, 40, 60], [0, 20, 40, 60], [0, 20, 40, 60]])
-        y_mesh = np.array([[80, 80, 80, 80], [70, 70, 70, 70], [60, 60, 60, 60]])
-        np.testing.assert_allclose(quadmesh[:, :, 0], x_mesh)
-        np.testing.assert_allclose(quadmesh[:, :, 1], y_mesh)
+        # Test quadmesh corners array (M+1, N+1)
+        x_corners, y_corners = partitioning.quadmesh_corners()
+        assert x_corners.shape == y_corners.shape == (3, 4)
+
+        expected_x_corners = np.array([[0, 20, 40, 60], [0, 20, 40, 60], [0, 20, 40, 60]])
+        expected_y_corners = np.array([[80, 80, 80, 80], [70, 70, 70, 70], [60, 60, 60, 60]])
+        np.testing.assert_allclose(x_corners, expected_x_corners)
+        np.testing.assert_allclose(y_corners, expected_y_corners)
 
     def test_vertices_origin_bottom(self):
         # Create partitioning
@@ -923,12 +928,28 @@ class TestLonLatPartitioning:
         # Test bottom left cell (geographic top left)
         expected_vertices = np.array([[0, 70], [0, 60], [20, 60], [20, 70]])
         np.testing.assert_allclose(vertices[0, 0, :, :], expected_vertices)
+
         # Test clockwise order
         vertices = partitioning.vertices(origin="top", ccw=False)
         assert vertices.shape == (2, 3, 4, 2)
         # Test bottom left cell (geographic top left)
         expected_vertices = np.array([[20, 60], [0, 60], [0, 70], [20, 70]])
         np.testing.assert_allclose(vertices[0, 0, :, :], expected_vertices)
+
+    def test_to_shapely(self):
+        import shapely
+
+        # Create partitioning
+        size = (20, 10)
+        extent = [0, 60, 60, 80]
+        partitioning = LonLatPartitioning(size=size, extent=extent)
+        # Retrieve shapely array
+        polygons = partitioning.to_shapely()
+        # Check type, clockwise by default
+        assert isinstance(polygons[0, 0], shapely.Polygon)
+        assert polygons[0, 0].exterior.is_ccw
+        expected_vertices = np.array([[0, 80], [0, 70], [20, 70], [20, 80], [0, 80]])
+        np.testing.assert_allclose(np.array(polygons[0, 0].exterior.coords), expected_vertices)
 
     def test_query_vertices_by_indices_flat(self):
         # Create partitioning
