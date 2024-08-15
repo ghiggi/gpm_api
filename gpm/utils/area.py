@@ -73,14 +73,18 @@ from gpm.utils.decorators import check_is_gpm_object
 def _check_xy_inputs(x, y):
     """Check coordinates type, values and dimensionality."""
     # Check same array type
-    if type(x) != type(y):
+    if not isinstance(x, type(y)):
         raise TypeError(f"x is of {type(x)}, y is of {type(y)}")
     # Check valid inputs
     if x.size == 0 or y.size == 0:
         raise ValueError("Please provide x and y coordinates with values.")
+    if x.size == 1 and y.size == 1:
+        raise ValueError("Coordinates represents a single cell.")
+    if x.ndim > 2 or y.ndim > 2:
+        raise ValueError("Expecting 1D or 2D x and y arrays.")
     # Ensure 1D dimension array (at least)
-    x = np.atleast_1d(x.squeeze())  # TODO: this convert xarray objects to numpy !
-    y = np.atleast_1d(y.squeeze())
+    x = np.atleast_1d(x)  # TODO: this convert xarray objects to numpy !
+    y = np.atleast_1d(y)
     return x, y
 
 
@@ -337,6 +341,34 @@ def _from_bounds_to_corners(bounds, ccw=True):
 
 
 ####------------------------------------------------------------------------------.
+#### Utilities for 1D arrays
+
+
+def preserve_dimension_order(func):
+    """
+    A decorator that preserves the original dimensions order of the input arrays in the output.
+
+    The decorator works by squeezing the input arrays, applying the function,
+    and then ensuring the original input dimension order.
+    """
+
+    def wrapper(x, y, *args, **kwargs):
+        # Squeeze arrays to 1D if 2D arrays have singleton dimensions
+        x_squeezed = np.atleast_1d(x.squeeze())
+        y_squeezed = np.atleast_1d(y.squeeze())
+        # Call the decorated function with squeezed inputs
+        result = func(x_squeezed, y_squeezed, *args, **kwargs)
+        # Reorder dimensions if necessary
+        if x.shape != x_squeezed.shape or y.shape != y_squeezed.shape:
+            squeezed_axis = np.where(np.array(x.shape) == 1)[0].item()
+            if squeezed_axis == 0:
+                return result[0].T, result[1].T
+        return result
+
+    return wrapper
+
+
+####------------------------------------------------------------------------------.
 #### Utilities for QuadMesh creation
 # - These methods requires both x and y coordinates
 
@@ -403,6 +435,7 @@ def _predict_forward_point(lon1, lat1, lon2, lat2, geod):
     return lon3, lat3
 
 
+@preserve_dimension_order
 def get_lonlat_corners_from_1d_centroids(lon, lat):
     """Compute lon/lat corners from 1D coordinate array.
 
@@ -518,7 +551,7 @@ def get_lonlat_corners_from_centroids(lons, lats):
     It compute corners on geocentric cartesian coordinate system (ECEF).
     """
     lons, lats = _check_xy_inputs(lons, lats)
-    if lons.ndim == 1 and lats.ndim == 1:
+    if lons.squeeze().ndim <= 1 and lats.squeeze().ndim <= 1:
         return get_lonlat_corners_from_1d_centroids(lons, lats)
     if lons.ndim == 2 and lats.ndim == 2:
         lons, lats = _check_2d_coords(lons, lats)
@@ -570,6 +603,7 @@ def get_projection_centroids(x, y, origin="bottom"):
     raise NotImplementedError(f"x is a {x.ndim}D array, y is a {y.ndim}D array.")
 
 
+@preserve_dimension_order
 def get_projection_corners_from_1d_centroids(x, y, origin="bottom"):
     # Check size of arrays
     is_x_scalar = x.size < 2
@@ -600,7 +634,7 @@ def get_projection_corners_from_centroids(x, y, origin="bottom"):
     """Compute the corners of x and y 2D pixel centroid coordinate arrays."""
     x, y = _check_xy_inputs(x, y)
     # Retrieve 2D corners from 1D centroids
-    if x.ndim == 1 and y.ndim == 1:
+    if x.squeeze().ndim <= 1 and y.squeeze().ndim <= 1:
         return get_projection_corners_from_1d_centroids(x, y, origin=origin)
     # Retrieve 2D corners from 2D centroids
     # - FIXME: case where size 1 one dimension

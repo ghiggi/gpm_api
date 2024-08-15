@@ -260,22 +260,27 @@ def test_get_lonlat_corners_from_centroids():
 def test_get_lonlat_corners_from_nadir_swath():
     """Test getting lon/lat corners from centroids."""
     lons = np.array([[0, 10, 20, 30]])  # (1, 4)
-    lats = np.array([[0, 0, 0, 0]])  # squeeze make it 1D # TODO: do not change shape !
+    lats = np.array([[0, 0, 0, 0]])
     lon_corners, lat_corners = get_lonlat_corners_from_centroids(lons, lats)
-    assert lon_corners.shape == (5, 2)
+    assert lon_corners.shape == (2, 5)
     assert lon_corners.shape == lat_corners.shape, "Shape mismatch between lon and lat corners"
-    expected_lon_corners = np.array([[-5.0, -5.0], [5.0, 5.0], [15.0, 15.0], [25.0, 25.0], [35.0, 35.0]])
+    expected_lon_corners = np.array([[-5.0, 5.0, 15.0, 25.0, 35.0], [-5.0, 5.0, 15.0, 25.0, 35.0]])
     expected_lat_corners = np.array(
         [
-            [-5.03356764, 5.03356764],
-            [-5.03356764, 5.03356764],
-            [-5.03356764, 5.03356764],
-            [-5.03356764, 5.03356764],
-            [-5.03356764, 5.03356764],
+            [-5.03356764, -5.03356764, -5.03356764, -5.03356764, -5.03356764],
+            [5.03356764, 5.03356764, 5.03356764, 5.03356764, 5.03356764],
         ],
     )
     np.testing.assert_allclose(lon_corners, expected_lon_corners)
     np.testing.assert_allclose(lat_corners, expected_lat_corners)
+
+    lons = np.array([[0, 10, 20, 30]]).T  # (4,1)
+    lats = np.array([[0, 0, 0, 0]]).T
+    lon_corners, lat_corners = get_lonlat_corners_from_centroids(lons, lats)
+    assert lon_corners.shape == (5, 2)
+    assert lon_corners.shape == lat_corners.shape, "Shape mismatch between lon and lat corners"
+    np.testing.assert_allclose(lon_corners, expected_lon_corners.T)
+    np.testing.assert_allclose(lat_corners, expected_lat_corners.T)
 
 
 def test_get_lonlat_quadmesh_vertices():
@@ -319,7 +324,7 @@ def test_get_lonlat_quadmesh_vertices_at_antimeridian():
     # np.testing.assert_allclose(quadmesh_vertices[0, 0, :, 1], np.array([19.21762561, 0.0, 0.0, 19.48929974]))
 
 
-def test_get_projection_corners_from_centroids():
+def test_get_projection_corners_from_2d_centroids():
     """Test getting projection corners from 2D centroids arrays."""
     x = np.array([[0, 10], [10, 20]])
     y = np.array([[0, 10], [10, 20]])
@@ -389,6 +394,18 @@ def test_get_projection_corners_from_1d_centroids():
     np.testing.assert_allclose(x_corners, expected_x_corners)
     np.testing.assert_allclose(y_corners, expected_y_corners)
 
+    # Case with only 1 dimension of size > 1
+    x = np.array([0])
+    y = np.array([0, 10, 20])
+    x_corners, y_corners = get_projection_corners_from_1d_centroids(x, y)
+    assert x_corners.shape == (4, 2), "Incorrect shape of corners"
+    assert x_corners.shape == y_corners.shape, "Shape mismatch between x and y corners"
+    expected_x_corners = np.array([[-5.0, 5.0], [-5.0, 5.0], [-5.0, 5.0], [-5.0, 5.0]])
+    expected_y_corners = np.array([[25.0, 25.0], [15.0, 15.0], [5.0, 5.0], [-5.0, -5.0]])
+
+    np.testing.assert_allclose(x_corners, expected_x_corners)
+    np.testing.assert_allclose(y_corners, expected_y_corners)
+
     # Check case with only 1 dimension of size > 1 with dask array
     x = dask.array.from_array(np.array([0]))
     y = dask.array.from_array(np.array([0, 10, 20]))
@@ -439,6 +456,7 @@ def test_quadmesh_centroids():
     lon, lat = xr_obj.gpm.quadmesh_centroids()
     assert isinstance(lon, np.ndarray)
     assert lon.shape == xr_obj["lon"].shape
+    assert lat.shape == xr_obj["lat"].shape
     np.testing.assert_allclose(lon, xr_obj["lon"].data)
 
     # GRID
@@ -456,6 +474,7 @@ def test_quadmesh_centroids():
     assert isinstance(x, np.ndarray)
     assert xr_obj["lon"].shape == (3,)
     assert x.shape == (n_lat, n_lon)
+    assert y.shape == (n_lat, n_lon)
 
 
 def test_quadmesh_corners():
@@ -474,6 +493,7 @@ def test_quadmesh_corners():
     lon, lat = xr_obj.gpm.quadmesh_corners()
     assert isinstance(lon, np.ndarray)
     assert lon.shape == (n_cross_track + 1, n_along_track + 1)
+    assert lat.shape == (n_cross_track + 1, n_along_track + 1)
 
     # GRID
     n_lon = 3
@@ -489,6 +509,7 @@ def test_quadmesh_corners():
     x, y = xr_obj.gpm.quadmesh_corners()
     assert isinstance(x, np.ndarray)
     assert x.shape == (n_lat + 1, n_lon + 1)
+    assert y.shape == (n_lat + 1, n_lon + 1)
 
 
 @pytest.mark.parametrize("n_cross_track", [1, 5])
@@ -547,7 +568,3 @@ def test_quadmesh_polygons():
 
 
 ####---------------------------------------------------------------------------.
-
-# TODO: test shape is conserved (1,2) remains (1,2,4,2)
-# TODO: test corners output is always shape 2D with minimum input size allowed
-# TODO: test vertices output is always shape 4D (N,M,4,2)

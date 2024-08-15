@@ -178,7 +178,7 @@ def reproject_coords(x, y, z=None, parallel=False, **kwargs):
         raise TypeError("'src_crs' and 'dst_crs' must be instances of pyproj.CRS")
 
     # Check x and y are of the same type
-    if type(x) != type(y):
+    if not isinstance(x, type(y)):
         raise TypeError("x and y must be of the same type.")
 
     # Check x and y have the same shape
