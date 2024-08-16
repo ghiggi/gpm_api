@@ -29,6 +29,7 @@ import os
 import time
 
 import dask
+import numpy as np
 import pyarrow as pa
 import pyarrow.dataset
 import pyarrow.parquet as pq
@@ -398,8 +399,12 @@ def merge_granule_buckets(
 
     # -----------------------------------------------------------------------------------------------.
     # Retrieve table schema
+    # - partitioning.levels are read by pq.read_table as dictionaries (depending on pyarrow version)
+    # - partitioning.levels columns must be dropped by the table if present
     template_filepath = dict_partition_files[list_partitions[0]][0]
     template_table = pq.read_table(template_filepath)
+    if np.all(np.isin(partitioning.levels, template_table.column_names)):
+        template_table = template_table.drop_columns(partitioning.levels)
     schema = template_table.schema
 
     # Define writer_kwargs
