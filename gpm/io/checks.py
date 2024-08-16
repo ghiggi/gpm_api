@@ -285,7 +285,7 @@ def check_valid_time_request(start_time, end_time, product):
     if start_time < product_start_time:
         raise ValueError(f"{product} production started the {product_start_time}.")
     if end_time > product_end_time:
-        raise ValueError(f"{product} production ended the {get_product_end_time}.")
+        raise ValueError(f"{product} production ended the {product_end_time}.")
     return start_time, end_time
 
 

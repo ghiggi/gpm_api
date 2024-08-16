@@ -118,7 +118,12 @@ def get_radius_polygon(xr_obj, distance, crs=None):
     if crs is None:
         crs = pyproj.CRS.from_epsg(4326)
     coords = np.array(Point(0, 0).buffer(distance).exterior.xy).T
-    lon_r, lat_r = reproject_coords(x=coords[:, 0], y=coords[:, 1], src_crs=xr_obj.xradar_dev.pyproj_crs, dst_crs=crs)
+    lon_r, lat_r, _ = reproject_coords(
+        x=coords[:, 0],
+        y=coords[:, 1],
+        src_crs=xr_obj.xradar_dev.pyproj_crs,
+        dst_crs=crs,
+    )
     polygon = Polygon(np.stack((lon_r, lat_r)).T)
     return polygon
 
