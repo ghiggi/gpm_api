@@ -12,7 +12,7 @@ from gpm.utils.timing import print_task_elapsed_time
 from gpm.utils.xarray import get_xarray_variable
 
 # Issues:
-# - xyz_to_antenna_coordinates SR GR range estimation. Which to choose?
+# - xyz_to_antenna_coordinates SR GR range estimation. Which to choose ?
 
 
 def get_crs_center_latitude(crs):
