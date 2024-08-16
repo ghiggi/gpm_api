@@ -64,7 +64,6 @@ precipitationQualityIndex:
     label: Precipitation Quality Index
   auxiliary:
     category: [GPM, IMERG]
-    comment: 0.001 is set to display the 0s transparently
 IRinfluence:
   cmap:
     name: OrRd
@@ -142,7 +141,6 @@ MWobservationTime:
     label: PMW observation time lag [$minutes$]
   auxiliary:
     category: [probability, IMERG]
-    comment: 0.1 is set to display the 0s transparently
 IMERG_Solid:
   cmap:
     name: IMERG_Solid

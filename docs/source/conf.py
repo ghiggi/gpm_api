@@ -35,6 +35,8 @@ filenames = [
     "tutorial_02_PMW_1C.ipynb",
     "tutorial_02_PMW_2A.ipynb",
     "tutorial_02_RADAR_2A.ipynb",
+    "tutorial_03_SR_GR_Matching.ipynb",
+    "tutorial_03_SR_GR_Calibration.ipynb",
 ]
 for filename in filenames:
     in_path = os.path.join(root_path, "tutorials", filename)
@@ -78,6 +80,9 @@ intersphinx_mapping = {
     "pyvista": ("https://docs.pyvista.org/version/stable/", None),
     "pyresample": ("https://pyresample.readthedocs.io/en/stable/", None),
     "dask": ("https://docs.dask.org/en/stable/", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
+    "geopandas": ("https://geopandas.org/en/stable/", None),
+    "xvec": ("https://xvec.readthedocs.io/en/stable/", None),
     # "polars": ("https://docs.pola.rs/", None),
 }
 always_document_param_types = True

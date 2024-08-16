@@ -33,7 +33,7 @@ import xarray as xr
 
 
 def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
-    """Remap data from one dataset to another one."""
+    """Remap dataset to another one using nearest-neighbour."""
     try:
         from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
     except ImportError:

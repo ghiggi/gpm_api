@@ -36,8 +36,9 @@ classifiers = [
 ]
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
-    "xarray<=2024.2.0", # ongoing xarray datatree migration
+    "xarray",
     "xarray-datatree",  # to be deprecated as soon datatree in xarray is working
+    "xoak",
     "netcdf4",
     "dask",
     "distributed",
@@ -60,7 +61,7 @@ dev = ["pre-commit", "loghub",
        "pytest", "pytest-cov", "pytest-mock", "pytest-check", "pytest-sugar",
        "pytest-watcher", "deepdiff",
        "pip-tools", "bumpver", "twine", "wheel", "build", "setuptools>=61.0.0",
-       "ximage", "pyvista", "polars", "pyarrow", "pyresample", "h5py",
+       "ximage", "pyvista", "polars", "pyarrow", "pyresample", "h5py", "xoak", "scikit-learn",
        "sphinx", "sphinx-gallery", "sphinx-book-theme", "nbsphinx", "sphinx_mdinclude"]
 
 [project.urls]
@@ -180,14 +181,13 @@ select = [
     # flake8-comprehensions
     "C4",
     # Ruff custom rules
-    "RUF"
-
+    "RUF",
+    # NumPy-specific rules  (for 2.0)
+    "NPY",
     #---------------------
     #### Future rules ####
     # flake8-use-pathlib
     # "PTH",
-    # NumPy-specific rules  (for 2.0)
-    # "NPY",
     # refurb
     # "FURB", # require preview
 
@@ -198,6 +198,7 @@ ignore = [
     "B006", # {} defaults in function arguments
     "PT011", # pytest raised error must be checked if match the expected error msg
     "PERF203",
+    # "PD011", # suggest values --> to_numpy
     "PD901",
     "PLW2901",
     "PLW0603",
@@ -232,11 +233,6 @@ convention = "numpy"
 ]
 "setup.py" = ["D100"]
 "*__init__.py" = ["D104"]
-
-[tool.yamlfix]
-allow_duplicate_keys = false
-line_length = 100
-none_representation = "null"
 
 [tool.doc8]
 ignore-path = [

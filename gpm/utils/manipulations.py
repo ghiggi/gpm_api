@@ -25,15 +25,21 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions for manipulating GPM-API Datasets."""
+import importlib
+
 import numpy as np
 import xarray as xr
+import xoak  # noqa (accessor)
 
 from gpm.checks import (
     check_has_vertical_dim,
     get_vertical_variables,
     has_spatial_dim,
     has_vertical_dim,
+    is_grid,
 )
+from gpm.utils.decorators import check_is_gpm_object
+from gpm.utils.geospatial import get_geodesic_line, get_great_circle_arc_endpoints
 from gpm.utils.xarray import (
     check_variable_availabilty,
     get_xarray_variable,
@@ -118,7 +124,7 @@ def convert_to_decibel(da):
     return 10 * np.log10(da)
 
 
-def conversion_factors_degree_to_meter(latitude):
+def conversion_factors_degree_to_meter(latitude, earth_radius=None):
     """
     Calculate conversion factors from degrees to meters as a function of latitude.
 
@@ -133,10 +139,12 @@ def conversion_factors_degree_to_meter(latitude):
         Tuple containing conversion factors for longitude and latitude
     """
     # Earth's radius at the equator (in meters)
-    R = 6378137
+    if earth_radius is None:
+        earth_radius = 6378137
+        # TODO: retrieve as function of latitude?
 
     # Calculate the conversion factor for latitude (constant per degree latitude)
-    cy = np.pi * R / 180.0
+    cy = np.pi * earth_radius / 180.0
 
     # Calculate the conversion factor for longitude (changes with latitude)
     cx = cy * np.cos(np.deg2rad(latitude))
@@ -151,7 +159,7 @@ def conversion_factors_degree_to_meter(latitude):
 
 
 def get_bin_dataarray(xr_obj, bins, mask_first_bin=False, mask_last_bin=False, fillvalue=None):
-    """Get bin `xarray.DataArray`."""
+    """Get bin xarray.DataArray."""
     # Retrieve bins DataArray
     da_bin = _get_bin_dataarray(xr_obj, bins=bins)
 
@@ -191,7 +199,7 @@ def _get_bin_dataarray(xr_obj, bins):
 
 
 def _get_valid_da_bin(xr_obj, da_bin, mask_first_bin=False, mask_last_bin=False, fillvalue=None):
-    """Return a valid bin `xarray.DataArray` with a mask for the invalid/unavailable bins."""
+    """Return a valid bin xarray.DataArray with a mask for the invalid/unavailable bins."""
     # Retrieve minimum and maximum available range indices
     vmin = xr_obj["range"].data.min()
     vmax = xr_obj["range"].data.max()
@@ -241,7 +249,7 @@ def _select_range_slice(da, da_bin, da_mask):
 def slice_range_at_bin(xr_obj, bins):
     """Extract values at the range bins specified by ``bin_variable``.
 
-    ``bin_variable`` can be a bin `xarray.DataArray` or the name of a bin variable of the input `xarray.Dataset`.
+    ``bin_variable`` can be a bin xarray.DataArray or the name of a bin variable of the input xarray.Dataset.
 
     The function extract the gates based on the 'range' coordinate values.
     Bin values are assumed to start at 1, not 0 !
@@ -250,15 +258,15 @@ def slice_range_at_bin(xr_obj, bins):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object with the 'range' dimension (and coordinate).
-    bins : str or `xarray.DataArray`
-        Either a `xarray.DataArray` or a string pointing to the dataset variable with the range bins to extract.
+    bins : str or xarray.DataArray
+        Either a xarray.DataArray or a string pointing to the dataset variable with the range bins to extract.
         Bin values are assumed to start at 1, not 0 !
 
     Returns
     -------
-    xr_out : `xarray.Dataset` or `xarray.DataArray`
+    xr_out : xarray.Dataset or xarray.DataArray
         xarray object with values at the specified range bins.
 
     """
@@ -293,19 +301,19 @@ def slice_range_at_bin(xr_obj, bins):
 
 
 def get_range_index_at_value(da, value):
-    """Retrieve index along the range dimension where the `xarray.DataArray` values is closest to value."""
+    """Retrieve index along the range dimension where the xarray.DataArray values is closest to value."""
     vertical_dim = _get_vertical_dim(da)
     return np.abs(da - value).argmin(dim=vertical_dim).compute()
 
 
 def get_range_index_at_min(da):
-    """Retrieve index along the range dimension where the `xarray.DataArray` has minimum values."""
+    """Retrieve index along the range dimension where the xarray.DataArray has minimum values."""
     vertical_dim = _get_vertical_dim(da)
     return da.argmin(dim=vertical_dim).compute()
 
 
 def get_range_index_at_max(da):
-    """Retrieve index along the range dimension where the `xarray.DataArray` has maximum values."""
+    """Retrieve index along the range dimension where the xarray.DataArray has maximum values."""
     vertical_dim = _get_vertical_dim(da)
     return da.argmax(dim=vertical_dim).compute()
 
@@ -422,13 +430,16 @@ def get_height_dataarray(xr_obj):
     elif isinstance(xr_obj, xr.Dataset):
         da_height = get_xarray_variable(xr_obj, variable="height")
     else:
-        raise ValueError("Expecting a xarray.DataArray with the 'height' coordinate.")
+        raise ValueError("Expecting an xarray object with the 'height' coordinate.")
     return da_height
 
 
 def slice_range_at_height(xr_obj, value):
     """Slice the 3D array at a given height."""
-    return slice_range_at_value(xr_obj, variable="height", value=value)
+    da_heigth = get_height_dataarray(xr_obj)
+    vertical_dim = _get_vertical_dim(xr_obj)
+    idx = get_range_index_at_value(da_heigth, value=value)
+    return xr_obj.isel({vertical_dim: idx})
 
 
 def get_height_at_temperature(da_height, da_temperature, temperature):
@@ -489,7 +500,7 @@ def get_solid_phase_mask(ds):
 
 
 def select_spatial_3d_variables(ds, strict=False, squeeze=True):
-    """Return `xarray.Dataset` with only 3D spatial variables."""
+    """Return xarray.Dataset with only 3D spatial variables."""
     from gpm.checks import get_spatial_3d_variables
 
     variables = get_spatial_3d_variables(ds, strict=strict, squeeze=squeeze)
@@ -497,7 +508,7 @@ def select_spatial_3d_variables(ds, strict=False, squeeze=True):
 
 
 def select_spatial_2d_variables(ds, strict=False, squeeze=True):
-    """Return `xarray.Dataset` with only 2D spatial variables."""
+    """Return xarray.Dataset with only 2D spatial variables."""
     from gpm.checks import get_spatial_2d_variables
 
     variables = get_spatial_2d_variables(ds, strict=strict, squeeze=squeeze)
@@ -505,7 +516,7 @@ def select_spatial_2d_variables(ds, strict=False, squeeze=True):
 
 
 def select_transect_variables(ds, strict=False, squeeze=True):
-    """Return `xarray.Dataset` with only transect variables."""
+    """Return xarray.Dataset with only transect variables."""
     from gpm.checks import get_transect_variables
 
     variables = get_transect_variables(ds, strict=strict, squeeze=squeeze)
@@ -513,13 +524,13 @@ def select_transect_variables(ds, strict=False, squeeze=True):
 
 
 def select_vertical_variables(ds):
-    """Return `xarray.Dataset` with only variables with vertical dimension."""
+    """Return xarray.Dataset with only variables with vertical dimension."""
     variables = get_vertical_variables(ds)
     return ds[variables]
 
 
 def select_frequency_variables(ds):
-    """Return `xarray.Dataset` with only multifrequency variables."""
+    """Return xarray.Dataset with only multifrequency variables."""
     from gpm.checks import get_frequency_variables
 
     variables = get_frequency_variables(ds)
@@ -527,7 +538,7 @@ def select_frequency_variables(ds):
 
 
 def select_bin_variables(ds):
-    """Return `xarray.Dataset` with only bin variables."""
+    """Return xarray.Dataset with only bin variables."""
     from gpm.checks import get_bin_variables
 
     variables = get_bin_variables(ds)
@@ -594,7 +605,7 @@ def get_vertical_coords_and_vars(ds):
 
 
 def get_vertical_datarray_prototype(ds, fill_value=np.nan):
-    """Return a `xarray.DataArray` 'prototype' with only spatial and vertical dimensions."""
+    """Return a xarray.DataArray 'prototype' with only spatial and vertical dimensions."""
     vertical_variables = get_vertical_coords_and_vars(ds)
     da = ds[vertical_variables[0]]
     da = xr.full_like(da, fill_value=fill_value).compute()
@@ -603,7 +614,7 @@ def get_vertical_datarray_prototype(ds, fill_value=np.nan):
 
 
 def ensure_vertical_datarray_prototype(da):
-    """Return a `xarray.DataArray` with only spatial and vertical dimensions."""
+    """Return a xarray.DataArray with only spatial and vertical dimensions."""
     valid_dims = da.gpm.spatial_dimensions + da.gpm.vertical_dimension
     invalid_dims = set(da.dims) - set(valid_dims)
     if invalid_dims:
@@ -637,7 +648,7 @@ def extract_dataset_above_bin(ds, bins, new_range_size=None, strict=False, rever
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM RADAR xarray dataset.
     bin_variable : str
         The variable name containing the radar gate bin index of interest.
@@ -656,7 +667,7 @@ def extract_dataset_above_bin(ds, bins, new_range_size=None, strict=False, rever
 
     Returns
     -------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         xarray dataset with the range bins above the specified bin.
 
     """
@@ -741,7 +752,7 @@ def extract_dataset_below_bin(ds, bins, new_range_size=None, strict=False, rever
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM RADAR xarray dataset.
     bins : str
         The variable name containing the radar gate bin index of interest.
@@ -760,7 +771,7 @@ def extract_dataset_below_bin(ds, bins, new_range_size=None, strict=False, rever
 
     Returns
     -------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         xarray dataset with the range bins below the specified bin.
 
     """
@@ -860,7 +871,7 @@ def extract_l2_dataset(
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM RADAR L1B xarray dataset.
     bin_ellipsoid : str, optional
         The variable name containing the bin index of the ellipsoid.
@@ -879,7 +890,7 @@ def extract_l2_dataset(
 
     Returns
     -------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         xarray dataset with the last range bin corresponding to the ellipsoid.
 
     """
@@ -890,8 +901,416 @@ def extract_l2_dataset(
     # Extract L2 dataset
     ds_new = extract_dataset_above_bin(ds, bins=bin_ellipsoid, new_range_size=new_range_size, strict=False)
 
-    # Drop not meaningful variables
+    # Drop non meaningful variables
     for var in ["echoLowResBinNumber", "echoHighResBinNumber"]:
         if var in ds_new:
             ds_new = ds_new.drop_vars(var)
     return ds_new
+
+
+####------------------------------------------------------------------------------------------------------------------.
+#############################
+#### Mask below/above bin ###
+#############################
+
+
+def mask_vertical_variables(ds, mask, fillvalue):
+    vertical_variables = get_vertical_variables(ds)  # do not include coords !
+    ds = ds.copy()
+    for var in vertical_variables:
+        ds[var] = ds[var].where(mask, fillvalue)
+    return ds
+
+
+def mask_above_bin(xr_obj, bins, strict=True, fillvalue=np.nan):
+    """
+    Mask the xarray object below the ``<bins>`` index.
+
+    The method does not mask where bins values are NaN or invalid.
+
+    Parameters
+    ----------
+    xr_obj : xarray.Dataset or xr.DataArray
+        GPM RADAR xarray object.
+    bins : str or xarray.DataArray
+        Either a xarray.DataArray or a string pointing to the dataset variable
+        with the range bins above which to mask.
+        GPM bin variables are assumed to start at 1, not 0!
+    strict: bool, optional
+        If ``False``, it masks only radar gates above the bin index.
+        If ``True``, it masks also the radar gate at the bin index.
+        The default is `True`.
+
+    Returns
+    -------
+    xarray.Dataset or xr.DataArray
+        Masked GPM RADAR xarray object.
+
+    """
+    # Get bin DataArray
+    # - Invalid bin values are set to the minimum available range (to not mask)
+    da_bin, _ = get_bin_dataarray(xr_obj, bins=bins, fillvalue=xr_obj["range"].data.min())
+    # Define mask
+    mask = xr_obj["range"] > da_bin if strict else xr_obj["range"] >= da_bin
+    # If DataArray, mask the DataArray
+    if isinstance(xr_obj, xr.DataArray):
+        return xr_obj.where(mask, fillvalue)
+    # If Dataset, mask vertical variables (do not mask coordinates !)
+    return mask_vertical_variables(xr_obj, mask=mask, fillvalue=fillvalue)
+
+
+def mask_below_bin(xr_obj, bins, strict=True, fillvalue=np.nan):
+    """
+    Mask the xarray object below the ``<bins>`` index.
+
+    The method does not mask where bins values are NaN or invalid.
+
+    Parameters
+    ----------
+    xr_obj : xarray.Dataset or xr.DataArray
+        GPM RADAR xarray object.
+    bins : str or xarray.DataArray
+        Either a xarray.DataArray or a string pointing to the dataset variable
+        with the range bins below which to mask.
+        GPM bin variables are assumed to start at 1, not 0!
+    strict: bool, optional
+        If ``False``, it masks only radar gates below the bin index.
+        If ``True``, it masks also the radar gate at the bin index.
+        The default is `True`.
+
+    Returns
+    -------
+    xarray.Dataset or xr.DataArray
+        Masked GPM RADAR xarray object.
+
+    """
+    # Get bin DataArray
+    # - Invalid bin values are set to the maximum available range (to not mask)
+    da_bin, _ = get_bin_dataarray(xr_obj, bins=bins, fillvalue=xr_obj["range"].data.max())
+    # Define mask
+    mask = xr_obj["range"] < da_bin if strict else xr_obj["range"] <= da_bin
+    # If DataArray, mask the DataArray
+    if isinstance(xr_obj, xr.DataArray):
+        return xr_obj.where(mask, fillvalue)
+    # If Dataset, mask vertical variables (do not mask coordinates !)
+    return mask_vertical_variables(xr_obj, mask=mask, fillvalue=fillvalue)
+
+
+def mask_between_bins(xr_obj, bottom_bins, top_bins, strict=True, fillvalue=np.nan):
+    """
+    Mask the xarray object between bottom and top ``<bins>`` indices.
+
+    The method does not mask where bins values are NaN or invalid.
+
+    Parameters
+    ----------
+    xr_obj : xarray.Dataset or xr.DataArray
+        GPM RADAR xarray object.
+    bottom_bins : str or xarray.DataArray
+        Either a xarray.DataArray or a string pointing to the dataset variable
+        with the bottom range bins.
+        GPM bin variables are assumed to start at 1, not 0!
+    top_bins : str or xarray.DataArray
+        Either a xarray.DataArray or a string pointing to the dataset variable
+        with the top range bins.
+        GPM bin variables are assumed to start at 1, not 0!
+    strict: bool, optional
+        If ``False``, it masks only radar gates between the bin indices.
+        If ``True``, it masks also the radar gates at the bin indices.
+        The default is `True`.
+
+    Returns
+    -------
+    xarray.Dataset or xr.DataArray
+        Masked GPM RADAR xarray object.
+
+    """
+    xr_obj = xr_obj.copy()
+    da_bottom_bin, _ = get_bin_dataarray(xr_obj, bins=bottom_bins, fillvalue=xr_obj["range"].data.min())
+    da_top_bin, _ = get_bin_dataarray(xr_obj, bins=top_bins, fillvalue=xr_obj["range"].data.max())
+    # Define mask
+    mask = (
+        (xr_obj["range"] > da_bottom_bin) | (xr_obj["range"] < da_top_bin)
+        if strict
+        else (xr_obj["range"] >= da_bottom_bin) | (xr_obj["range"] <= da_top_bin)
+    )
+    # If DataArray, mask the DataArray
+    if isinstance(xr_obj, xr.DataArray):
+        return xr_obj.where(mask, fillvalue)
+    # If Dataset, mask vertical variables (do not mask coordinates !)
+    return mask_vertical_variables(xr_obj, mask=mask, fillvalue=fillvalue)
+
+
+####------------------------------------------------------------------------------------------------------------------.
+#############################
+#### Transect Extraction ####
+#############################
+
+
+@check_is_gpm_object
+def extract_transect_along_trajectory(xr_obj, points, method="linear"):
+    """Obtain an interpolated transect through a series of points.
+
+    It allows to extract data along a custom curvilinear track / trajectory.
+
+    Parameters
+    ----------
+    xr_obj: xarray.DataArray or xarray.Dataset
+        Dataset or DataArray from which extract a transect.
+    points: numpy.ndarray
+        An array of shape (N, 2) with the lon, lat points at which to interpolate the data.
+    method: str, optional
+        The interpolation method, either ``'linear'`` or ``'nearest'``.
+        If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
+        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        See :py:class:`xarray.DataArray.interp` for other methods.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The interpolated transect object, with the 'transect' dimension (of size N).
+
+    See Also
+    --------
+    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+
+    """
+    if is_grid(xr_obj):
+        # Regular grid
+        xr_obj_sliced = xr_obj.interp(
+            {
+                "lon": xr.DataArray(points[:, 0], dims="transect"),
+                "lat": xr.DataArray(points[:, 1], dims="transect"),
+            },
+            method=method,
+        )
+        return xr_obj_sliced
+    # Orbit case
+    # - Use sklearn_geo_balltree to exploit haversine distance (kdtree does not support haversine distance)
+    # - Not tested for cases at the antimeridian !
+    xr_obj.xoak.set_index(["lat", "lon"], index_type="sklearn_geo_balltree")
+
+    xr_obj_slice = xr_obj.xoak.sel(
+        {
+            "lon": xr.DataArray(points[:, 0], dims="transect"),
+            "lat": xr.DataArray(points[:, 1], dims="transect"),
+        },
+    )
+    return xr_obj_slice
+
+
+@check_is_gpm_object
+def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, method="linear"):
+    """Extract an interpolated transect between two points on a sphere.
+
+    Parameters
+    ----------
+    xr_obj: xarray.DataArray or xarray.Dataset
+        Dataset or DataArray from which extract a transect.
+    start_point: tuple
+        A longitude-latitude pair designating the start point of the cross section (units are
+        degrees east and degrees north).
+    end_point: tuple
+        A longitude-latitude pair designating the end point of the cross section (units are
+        degrees east and degrees north).
+    steps: int, optional
+        The number of points along the geodesic between the start and the end point
+        (including the end points) to use in the cross section. Defaults to 100.
+    method: str, optional
+        The interpolation method, either ``'linear'`` or ``'nearest'``.
+        If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
+        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        See :py:class:`xarray.DataArray.interp` for other methods.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The interpolated transect object, with the 'transect' dimension.
+
+    See Also
+    --------
+    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+
+    """
+    if importlib.util.find_spec("sklearn") is None:
+        raise ImportError(
+            "The 'sklearn' package required to extract cross-sections is not installed. \n"
+            "Please install it using the following command:  conda install -c conda-forge scikit-learn",
+        )
+    # Get the points along the geodesic line
+    points = get_geodesic_line(start_point=start_point, end_point=end_point, steps=steps)
+
+    # Return the interpolated data
+    return extract_transect_along_trajectory(xr_obj, points=points, method=method)
+
+
+def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, method="linear"):
+    """
+    Extract a transect following the great circle arc centered on the specified point.
+
+    Parameters
+    ----------
+    xr_obj : xr.DataArray or xr.Dataset
+        Dataset or DataArray from which extract a transect.
+    point : tuple of float
+        A tuple representing the middle point (longitude, latitude) of the great circle arc.
+    azimuth : float
+        The azimuth (in degrees) from the starting point. 0 correspond to the North. 180 to the South.
+        The opposite direction will be automatically calculated as (azimuth + 180) % 360.
+    distance : float
+        The distance (in meters) to the points from the center point.
+    steps: int, optional
+        The number of points along the geodesic between the start and the end point
+        (including the end points) to use in the cross section. Defaults to 100.
+    method: str, optional
+        The interpolation method, either ``'linear'`` or ``'nearest'``.
+        If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
+        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        See :py:class:`xarray.DataArray.interp` for other methods.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The interpolated transect object with the 'transect' dimension.
+
+    See Also
+    --------
+    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+
+    """
+    start_point, end_point = get_great_circle_arc_endpoints(point=point, azimuth=azimuth, distance=distance)
+    return extract_transect_between_points(
+        xr_obj,
+        start_point=start_point,
+        end_point=end_point,
+        steps=steps,
+        method=method,
+    )
+
+
+####------------------------------------------------------------------------------------------------------------------.
+#############################
+#### Location Utilities  ####
+#############################
+# gpm.locate.<....>
+# get_location_max_value (s)
+# get_location_min_value (s)
+# get_location_at_mask
+# extract_transect_ordered_values
+
+
+def get_max_value_point(da):
+    """Find the geographic point where the maximum value occur in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    tuple
+        A tuple representing the longitude and latitude of the point where the maximum value occurs.
+    """
+    isel_dict = _get_max_value_spatial_isel_dict(da)
+    da_point = da.isel(isel_dict)
+    point = (da_point["lon"].data.item(), da_point["lat"].data.item())
+    return point
+
+
+def get_min_value_point(da):
+    """
+    Find the geographic point where the minimum value occurs in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    tuple
+        A tuple representing the longitude and latitude of the point where the minimum value occurs.
+    """
+    isel_dict = _get_min_value_spatial_isel_dict(da)
+    da_point = da.isel(isel_dict)
+    point = (da_point["lon"].data.item(), da_point["lat"].data.item())
+    return point
+
+
+def _get_max_value_isel_dict(da):
+    """Find the dimension indices where the maximum value occur in the data array..
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary with dimension names as keys and indices where the maximum value occurs as values.
+    """
+    da = da.compute()
+    dict_argmax = da.argmax(da.dims)
+    isel_dict = {k: v.data.item() for k, v in dict_argmax.items()}
+    return isel_dict
+
+
+def _get_max_value_spatial_isel_dict(da):
+    """Find the spatial dimensions indices where the maximum value occur in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary with spatial dimension names as keys and indices where the maximum value occurs as values.
+    """
+    isel_dict = _get_max_value_isel_dict(da)
+    spatial_dims = da.gpm.spatial_dimensions
+    isel_dict = {k: isel_dict[k] for k in spatial_dims}
+    return isel_dict
+
+
+def _get_min_value_isel_dict(da):
+    """
+    Find the dimension indices where the minimum value occurs in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary with dimension names as keys and indices where the minimum value occurs as values.
+    """
+    da = da.compute()
+    dict_argmin = da.argmin(da.dims)
+    isel_dict = {k: v.data.item() for k, v in dict_argmin.items()}
+    return isel_dict
+
+
+def _get_min_value_spatial_isel_dict(da):
+    """
+    Find the spatial dimension indices where the minimum value occurs in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+
+    Returns
+    -------
+    dict
+        A dictionary with spatial dimension names as keys and indices where the minimum value occurs as values.
+    """
+    isel_dict = _get_min_value_isel_dict(da)
+    spatial_dims = da.gpm.spatial_dimensions
+    isel_dict = {k: isel_dict[k] for k in spatial_dims}
+    return isel_dict

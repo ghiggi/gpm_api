@@ -28,12 +28,15 @@
 import numpy as np
 import xarray as xr
 
+import gpm
+from gpm.checks import check_has_vertical_dim
 from gpm.utils.manipulations import (
     get_bright_band_mask,
     get_height_at_temperature,
     get_liquid_phase_mask,
     get_range_axis,
     get_solid_phase_mask,
+    get_vertical_datarray_prototype,
 )
 from gpm.utils.xarray import (
     get_dimensions_without,
@@ -41,9 +44,143 @@ from gpm.utils.xarray import (
 )
 
 ### TODO: requirements Ku, Ka band ...
+# check single_frequency
+# isel(radar_frequency=freq, missing_dims="ignore")
 
 
-# def retrieve_range_distance(ds):
+def get_range_resolution(ds):
+    """Return the range bin size."""
+    ds = ds.isel(cross_track=0, along_track=0, radar_frequency=0, range=slice(-2, None), missing_dims="ignore")
+    try:
+        range_resolution = retrieve_range_resolution(ds).to_numpy()[0]
+    except Exception:
+        product = ds.attrs.get("gpm_api_product")
+        scan_mode = ds.attrs.get("ScanMode")
+        # TODO: Make more accurate and depending on scan mode and satellite !
+        if product in gpm.available_products(product_levels="2A", product_categories="RADAR"):
+            range_resolution = 125 if scan_mode in ["FS", "NS", "MS"] else 250
+        else:
+            raise ValueError("Expecting a radar product.")
+    return range_resolution
+
+
+def get_nrange(ds):
+    """Return the number of radar gates in L2 products."""
+    product = ds.attrs.get("gpm_api_product")
+    scan_mode = ds.attrs.get("ScanMode")
+    # TODO: Make more accurate and depending on scan mode and satellite !
+    if product in gpm.available_products(product_levels="2A", product_categories="RADAR"):
+        if scan_mode in ["FS", "NS", "MS"]:
+            return 176
+        return 88
+    raise ValueError("Expecting a radar product.")
+
+
+def retrieve_range_resolution(ds):
+    """Retrieve range resolution."""
+    # Retrieve required DataArrays
+    check_has_vertical_dim(ds)
+    range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # start at 1
+    height = get_xarray_variable(ds, variable="height")
+    alpha = get_xarray_variable(ds, variable="localZenithAngle")
+    ellipsoidBinOffset = get_xarray_variable(ds, variable="ellipsoidBinOffset")
+    n_gates = get_nrange(ds)
+    range_distance_from_ellipsoid = height / np.cos(np.deg2rad(alpha))
+    range_distance_from_gate_at_ellipsoid = range_distance_from_ellipsoid - ellipsoidBinOffset
+    range_resolution = range_distance_from_gate_at_ellipsoid / (n_gates - range_bin)
+    return range_resolution
+
+
+def retrieve_range_distance_from_ellipsoid(ds):
+    """Retrieve distance from the ellipsoid along the radar beam.
+
+    Accurate range resolution is provided by 'rangeBinSize' in the L1B product.
+    Requires: ellipsoidBinOffset, height, localZenithAngle.
+    """
+    # ---------------------------------------------------------------------------.
+    # Alternative code
+
+    # height = get_xarray_variable(ds, variable="height")
+    # alpha = get_xarray_variable(ds, variable="localZenithAngle")
+    # ellipsoidBinOffset = get_xarray_variable(ds, variable="ellipsoidBinOffset")
+    # range_distance_from_ellipsoid = height / np.cos(np.deg2rad(alpha))
+
+    # import matplotlib.pyplot as plt
+    # alpha = get_xarray_variable(ds, variable="localZenithAngle")
+    # z_sr1 = np.cos(np.deg2rad(alpha)) * range_distance_from_ellipsoid
+    # diff = ds["height"] - z_sr1
+    # _ = plt.hist(diff.data.flatten()) # [-60, 60]
+    # ---------------------------------------------------------------------------.
+
+    # Retrieve required DataArrays
+    check_has_vertical_dim(ds)
+    range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # start at 1
+    ellipsoidBinOffset = get_xarray_variable(ds, variable="ellipsoidBinOffset")
+    range_resolution = get_range_resolution(ds)
+
+    # Compute range_distance_from_ellipsoid
+    n_gates = get_nrange(ds)
+    range_distance_from_ellipsoid = ellipsoidBinOffset + (n_gates - range_bin) * range_resolution
+
+    # Name the DataArray
+    range_distance_from_ellipsoid.name = "range_distance_from_ellipsoid"
+    return range_distance_from_ellipsoid
+
+
+def retrieve_range_distance_from_satellite(ds, scan_angle=None, earth_radius=6371000):
+    """Retrieve range distance in meters (at bin center) from the satellite.
+
+    This is a rough approximation took from wradlib dist_from_orbit function.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        GPM radar dataset.
+    scan_angle : xr.DataArray, optional
+        Cross-track scan angle in degree.
+        If not specified, assumes ``np.abs(np.linspace(-17.04, 17.04, 49))`` for Ku.
+    earth_radius: float, optional
+        Earth radius.
+
+    Returns
+    -------
+    da : xarray.DataArray
+        Range distances from the satellite.
+
+    """
+    # TODO: check is dataset, single frequency
+
+    # Retrieve local zenith angle
+    alpha = get_xarray_variable(ds, variable="localZenithAngle")
+
+    # Retrieve satellite altitude
+    if "dprAlt" in ds:
+        sat_alt = get_xarray_variable(ds, variable="dprAlt")  # only available in 2A-DPR !
+    else:
+        sat_alt = get_xarray_variable(ds, variable="scAlt")
+
+    # Retrieve distance from ellipsoid toward the satellite along the radar beam
+    range_distance_from_ellipsoid = ds.gpm.retrieve("range_distance_from_ellipsoid")
+
+    # Define off-nadir scan angle
+    # --> TODO: Add scan_angle from dataset: 17 for Ku, 8.5 for Ka in MS?
+    if scan_angle is None:
+        scan_angle_template = np.abs(np.linspace(-17.04, 17.04, 49))  # assuming Ku swath of size 49
+        scan_angle = xr.DataArray(scan_angle_template[ds["gpm_cross_track_id"].data], dims="cross_track")
+    scan_angle = np.abs(scan_angle)  # ensure absolute values
+
+    # Compute radial distance (along the radar beam ) from satellite to the Earth surface
+    # - WRADLIB: https://github.com/wradlib/wradlib/blob/main/wradlib/georef/satellite.py#L203C6-L203C28
+    range_distance_at_ellipsoid = (
+        (earth_radius + sat_alt) * np.cos(np.radians(alpha - scan_angle)) - earth_radius
+    ) / np.cos(np.radians(alpha))
+
+    # Compute range distance to the satellite
+    range_distance_from_satellite = range_distance_at_ellipsoid - range_distance_from_ellipsoid
+    return range_distance_from_satellite
+
+
+# def retrieve_range_distance_from_satellite(ds):
 #     """Retrieve range distance in L2 RADAR Products.
 
 #     Not possible because scRangeEllipsoid is not provided !
@@ -67,9 +204,112 @@ from gpm.utils.xarray import (
 #     return range_distance
 
 
+def retrieve_gate_volume(ds, beam_width=None, range_distance=None, scan_angle=None):
+    r"""Calculates the sampling volume of the radar beam.
+
+    We assume a cone frustum which has the volume :math:`V=(\\pi/3) \\cdot h \\cdot (R^2 + R \\cdot r + r^2)`.
+    R and r are the radii of the two frustum surface circles.
+    Assuming that the pulse width is small compared to the range, we get
+    :math:`R=r= \\tan ( 0.5 \\cdot \\theta \\cdot \\pi/180 ) \\cdot range`,
+    with theta being the aperture angle (beam width).
+    Thus, the radar gate volume simply becomes the volume of a cylinder with
+    :math:`V=\\pi \\cdot h \\cdot range^2 \\cdot \\tan(0.5 \\cdot \\theta \\cdot \\pi/180)^2`
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        GPM radar dataset.
+    beam_width : float
+        The cross-track aperture angle of the radar beam [degree].
+        The accurate cross-track aperture angle is provided by 'crossTrackBeamWidth' in the L1B product.
+    range_distance: xr.DataArray
+        DataArray with range distance from each satellite at each radar gate.
+        If not specified, is computed using a rough approximation.
+    scan_angle: xr.DataArray
+        Used to estimate range_distance if not specified.
+        Cross-track scan angle in degree.
+        If not specified, assumes ``np.abs(np.linspace(-17.04, 17.04, 49))`` for Ku.
+
+    Returns
+    -------
+    xr.DataArray
+        Volume of radar gates in cubic meters.
+    """
+    if beam_width is None:
+        beam_width = 0.71
+    if range_distance is None:
+        range_distance = retrieve_range_distance_from_satellite(ds, scan_angle=scan_angle)  # earth radius
+    range_resolution = get_range_resolution(ds)
+    # cross_section_radius = range_distance * np.tan(np.radians(beam_width / 2.0))
+    # cross_section_area = np.pi * (range_distance**2) * (np.tan(np.radians(beam_width / 2.0)) ** 2)
+    # gate_volume = range_resolution * cross_section_area
+    gate_volume = np.pi * range_resolution * (range_distance**2) * (np.tan(np.radians(beam_width / 2.0)) ** 2)
+    gate_volume.name = "gate_volume"
+    gate_volume.attrs["units"] = "m3"
+    return gate_volume
+
+
+def retrieve_gate_resolution(ds, beam_width, range_distance=None, scan_angle=None):
+    """
+    Retrieve the horizontal and vertical 'resolution' of each radar gates.
+
+    The gate horizontal resolution is computed by projecting the radius of the radar gate
+    onto the horizontal plane, averaging the projected radii in the along-track and cross-track directions.
+
+    The gate vertical resolution is computed by projecting the radar gate range resolution onto the vertical plane.
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        GPM radar dataset.
+    beam_width : float
+        The cross-track aperture angle of the radar beam [degree].
+        The accurate cross-track aperture angle is provided by 'crossTrackBeamWidth' in the L1B product.
+    range_distance: xr.DataArray
+        DataArray with range distance from each satellite at each radar gate.
+        If not specified, is computed using a rough approximation.
+    scan_angle: xr.DataArray
+        Used to estimate range_distance if not specified.
+        Cross-track scan angle in degree.
+        If not specified, assumes ``np.abs(np.linspace(-17.04, 17.04, 49))`` for Ku.
+
+    Returns
+    -------
+    tuple
+        Tuple with (h_res, v_res).
+
+    """
+    # Retrieve local zenith angle
+    alpha = get_xarray_variable(ds, variable="localZenithAngle")
+    # Retrieve beamwidth
+    if beam_width is None:
+        beam_width = 0.71
+    # Retrieve range resolution
+    range_resolution = get_range_resolution(ds)
+    # Retrieve range distance
+    if range_distance is None:
+        range_distance = retrieve_range_distance_from_satellite(ds, scan_angle=scan_angle)  # earth radius
+
+    # Horizontal gate spacing
+    # --> TODO: should use crossBeamWidth and alongTrackBeamWidth instead?
+    h_res = (1 + np.cos(np.radians(alpha))) * range_distance * np.tan(np.deg2rad(beam_width / 2.0))
+
+    # Vertical gate spacing
+    # - wradlib, Crisologo and Warren et al., 2018 (Eq. A5) use " range_resolution / np.cos(alpha) "
+    # - Should be * ! And then it match with GPM product height difference !
+    v_res = range_resolution * np.cos(np.deg2rad(alpha))
+
+    # Add units and name
+    h_res.name = "h_res"
+    h_res.attrs["units"] = "m"
+    v_res.name = "v_res"
+    v_res.attrs["units"] = "m"
+    return h_res, v_res
+
+
 def retrieve_dfrMeasured(ds):
     """Retrieve measured DFR."""
-    da_z = ds["zFactorMeasured"]
+    da_z = get_xarray_variable(ds, variable="zFactorMeasured")
     da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
     da_dfr.name = "dfrMeasured"
     return da_dfr
@@ -77,7 +317,7 @@ def retrieve_dfrMeasured(ds):
 
 def retrieve_dfrFinal(ds):
     """Retrieve final DFR."""
-    da_z = ds["zFactorFinal"]
+    da_z = get_xarray_variable(ds, variable="zFactorFinal")
     da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
     da_dfr.name = "dfrFinal"
     return da_dfr
@@ -85,7 +325,7 @@ def retrieve_dfrFinal(ds):
 
 def retrieve_dfrFinalNearSurface(ds):
     """Retrieve final DFR near the surface."""
-    da_z = ds["zFactorFinalNearSurface"]
+    da_z = get_xarray_variable(ds, variable="zFactorFinalNearSurface")
     da_dfr = da_z.sel(radar_frequency="Ku") - da_z.sel(radar_frequency="Ka")
     da_dfr.name = "dfrFinalNearSurface"
     return da_dfr
@@ -125,7 +365,252 @@ def retrieve_flagPrecipitationType(xr_obj, method="major_rain_type"):
     da.attrs["flag_values"] = [0, 1, 2, 3]
     da.attrs["flag_meanings"] = ["no rain", "stratiform", "convective", "other"]
     da.attrs["description"] = "Precipitation type"
+    da.name = "flagPrecipitationType"
     return da
+
+
+def retrieve_bright_band_ratio(ds, return_bb_mask=True):
+    """Returns the Bright Band (BB) Ratio.
+
+    A BB ratio of < 0 indicates that a bin is located below the melting layer (ML).
+    A BB ratio of > 0 indicates that a bin is located above the ML.
+    A BB ratio with values in between 0 and 1 indicates that the radar is inside the ML.
+
+    This function has been ported as it is from wradlib.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+
+    Returns
+    -------
+    xarray.DataArray
+        BB Ratio (3D) and BB (2D) mask.
+    """
+    quality = get_xarray_variable(ds, variable="qualityBB")
+    height = get_xarray_variable(ds, variable="height")
+    bb_height = get_xarray_variable(ds, variable="heightBB")
+    bb_width = get_xarray_variable(ds, variable="widthBB")
+
+    # Identify column with BB
+    has_bb = (bb_height > 0) & (bb_width > 0) & (quality == 1)
+    has_bb.name = "qualityBB"
+
+    # Set columns without BB to np.nan
+    bb_height_m = bb_height.where(has_bb)
+    bb_width_m = bb_width.where(has_bb)
+
+    # Get median bright band height and width
+    bb_height_m = bb_height_m.median(skipna=True)
+    bb_width_m = bb_width_m.median(skipna=True)
+
+    # Estimate the bottom/top melting layer height
+    zmlt = bb_height_m + bb_width_m / 2.0
+    zmlb = bb_height_m - bb_width_m / 2.0
+
+    # Get Bright Band (BB) Ratio (3D DataArray)
+    bb_ratio = (height - zmlb) / (zmlt - zmlb)
+
+    if return_bb_mask:
+        return bb_ratio, has_bb
+    return bb_ratio
+
+
+def retrieve_flagHydroClass(ds, reflectivity="zFactorFinal", bb_ratio=None, precip_type=None):
+    """Classify reflectivity profile into rain, snow, hail and melting layer."""
+    # Retrieve precip type and BB ratio
+    if precip_type is None:
+        precip_type = ds.gpm.retrieve("flagPrecipitationType", method="major_rain_type")
+
+    if bb_ratio is None:
+        bb_ratio = ds.gpm.retrieve("bright_band_ratio", return_bb_mask=False)
+
+    # Retrieve clutter mask
+    da_bin_clutter_free = get_xarray_variable(ds, variable="binClutterFreeBottom")
+    da_mask_clutter = ds["range"] > da_bin_clutter_free
+    da_mask_clutter = da_mask_clutter.transpose(..., "range")
+
+    # Retrieve Ku reflectivity
+    da_z = get_xarray_variable(ds, variable=reflectivity)
+
+    # Initialize DataArray for hydrometeor class
+    da_class = get_vertical_datarray_prototype(ds, fill_value=0)
+
+    # Infer masks for melting layer
+    da_above_ml_mask = bb_ratio >= 1  # above ML mask
+    da_below_ml_mask = bb_ratio <= 0  # below ML mask
+    da_ml_mask = (bb_ratio > 0) & (bb_ratio < 1)  # ML mask
+
+    # Assign class to 3D array
+    # - Below melting layer
+    da_class = xr.where(
+        da_below_ml_mask & precip_type.isin([1, 2, 3]),
+        1,  # rain
+        da_class,
+    )
+    # - Above melting layer
+    da_class = xr.where(
+        da_above_ml_mask & precip_type.isin([1, 3]),
+        2,  # snow
+        da_class,
+    )
+    da_class = xr.where(
+        da_above_ml_mask & precip_type == 2,
+        3,  # hail
+        da_class,
+    )
+    # - Melting layer
+    da_class = xr.where(
+        da_ml_mask & precip_type.isin([1]),
+        4,  # melting layer
+        da_class,
+    )
+    # - Mask DataArray where precipitating
+    da_class = da_class.where(da_z > 8, 0)
+
+    # - Clutter
+    da_class = xr.where(
+        da_mask_clutter,
+        5,  # clutter
+        da_class,
+    )
+
+    # Add attributes
+    da_class.attrs["flag_values"] = [0, 1, 2, 3, 4, 5]
+    da_class.attrs["flag_meanings"] = ["no precipitation", "rain", "snow", "hail", "melting layer", "clutter"]
+    da_class.name = "flagHydroClass"
+    return da_class
+
+
+def retrieve_s_band_cao2013(ds, reflectivity="zFactorFinal", bb_ratio=None, precip_type=None):
+    r"""Retrieve S-band reflectivity from Ku-band reflectivity.
+
+    Cao et al., 2013 provides coefficients to compute DFR (S-Ku) using the following polynomial:
+
+    .. math::
+        \text{DFR (S-Ku)} = a_0 + a_1 Z(\text{Ku})^1 + a_2 Z(\text{Ku})^2 + a_3 Z(\text{Ku})^3 + a_4 Z(\text{Ku})^4
+
+    S-band reflectivity is derived by summing Ku-reflectivity to DFR (S-Ku).
+
+    The Bright Band Ratio and the Precipitation Type are used to discriminate between
+    rain, snow, hail, mixed phase gates, and use the adequate coefficients.
+
+    The method :
+    - uses snow coefficients if precipitation type is assumed to be stratiform (precip_type=1)
+    - uses hail coefficients if precipitation type is assumed to be convective (precip_type=2)
+    - assumes no mixed-phase (either snow or hail) above the melting layer
+    - assumes no mixed-phase (either rain or full hail) below the melting layer
+
+    Please ensure precip_type to have values 0, 1 or 2. precip type = 0 means no rain.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        GPM Radar dataset.
+    reflectivity: xr.DataArray or str
+        3D reflectivity array or dataset variable name. The default is "zFactorFinal".
+    bb_ratio : xr.DataArray, optional
+        Bright Band Ratio. If not specified, ``gpm.retrieve("bright_band_ratio")`` is called.
+    precip_type : xr.DataArray, optional
+        DataArray indicating the precipitation class.
+        Please ensure ``precip_type`` to have values 0, 1 or 2. ``precip type = 0`` means no rain.
+
+    Returns
+    -------
+    xr.DataArray
+        S band reflectivity.
+    """
+    import wradlib as wrl
+
+    # Retrieve precip type and BB ratio
+    if precip_type is None:
+        precip_type = ds.gpm.retrieve("flagPrecipitationType", method="major_rain_type")
+
+    if bb_ratio is None:
+        bb_ratio, bb_mask = ds.gpm.retrieve("bright_band_ratio", return_bb_mask=True)
+        # bb_ratio = bb_ratio.where(bb_mask)
+
+    # Retrieve Ku reflectivity
+    da_z_ku = get_xarray_variable(ds, variable=reflectivity)
+
+    # Infer masks for melting layer
+    da_above_ml_mask = bb_ratio >= 1  # above ML mask
+    da_below_ml_mask = bb_ratio <= 0  # below ML mask
+    da_ml_mask = (bb_ratio > 0) & (bb_ratio < 1)  # ML mask
+
+    # Define index from bottom to top of ML varying from 0 to 10
+    # --> This is used to select the appropriate coefficients columns
+    ind = xr.where(da_ml_mask, np.round(bb_ratio * 10), 0).astype("int")
+
+    # Retrieve coefficients for reflectivity conversion from Cao et al., 2013
+    a_s = wrl.trafo.KuBandToS.snow  # (5, 11) Columns represents transition from 100 % rain to 100% snow
+    a_h = wrl.trafo.KuBandToS.hail  # (5, 11) Columns represents transition from 100 % rain to 100% hail
+
+    # Initialize DataArray for coefficients
+    ndegree = a_s.shape[0]
+    da_coeff = xr.zeros_like(da_z_ku.expand_dims(dim={"degree": ndegree})) * np.nan
+
+    # Assign coefficients to 3D array
+    # - Above melting layer
+    da_coeff = xr.where(
+        da_above_ml_mask & precip_type == 1,
+        a_s[:, 10],
+        da_coeff,
+    )
+    da_coeff = xr.where(
+        da_above_ml_mask & precip_type == 2,
+        a_h[:, 10],
+        da_coeff,
+    )
+    # - Below melting layer
+    da_coeff = xr.where(
+        da_below_ml_mask & precip_type == 1,
+        a_s[:, 0],
+        da_coeff,
+    )
+    da_coeff = xr.where(
+        da_below_ml_mask & precip_type == 2,
+        a_h[:, 0],
+        da_coeff,
+    )
+    # - Inside the melting layer
+    da_coeff = xr.where(
+        da_ml_mask & precip_type == 1,
+        xr.DataArray(a_s[:, ind], dims=["degree", *ind.dims]),
+        da_coeff,
+    )
+    da_coeff = xr.where(
+        da_ml_mask & precip_type == 2,
+        xr.DataArray(a_h[:, ind], dims=["degree", *ind.dims]),
+        da_coeff,
+    )
+
+    # Compute DFR S-Ku
+    dfr_s_ku = (xr.concat([da_z_ku**i for i in range(ndegree)], dim="degree") * da_coeff).sum(dim="degree")
+
+    # Compute S band
+    da_z_s = da_z_ku + dfr_s_ku
+    da_z_s.name = da_z_ku.name
+    return da_z_s
+
+
+def retrieve_c_band_tan(ds, reflectivity="zFactorFinal", bb_ratio=None, precip_type=None):
+    """Retrieve C-band reflectivity from Ku-band reflectivity."""
+    # TODO: reference? tan year?
+    da_z_ku = get_xarray_variable(ds, variable=reflectivity)
+    da_z_s = retrieve_s_band_cao2013(ds=ds, bb_ratio=bb_ratio, precip_type=precip_type)
+    da_dfr_s_ku = da_z_s - da_z_ku
+    da_z_x = da_z_ku + da_dfr_s_ku * 0.53
+    return da_z_x.where(da_z_ku >= 0)
+
+
+def retrieve_x_band_tan(ds, reflectivity="zFactorFinal", bb_ratio=None, precip_type=None):
+    """Retrieve X-band reflectivity from Ku-band reflectivity."""
+    da_z_ku = get_xarray_variable(ds, variable=reflectivity)
+    da_z_s = retrieve_s_band_cao2013(ds=ds, bb_ratio=bb_ratio, precip_type=precip_type)
+    da_dfr_s_ku = da_z_s - da_z_ku
+    da_z_x = da_z_ku + da_dfr_s_ku * 0.32
+    return da_z_x.where(da_z_ku >= 0)
 
 
 def retrieve_REFC(
@@ -215,6 +700,7 @@ def retrieve_EchoDepth(
     if "radar_frequency" in da.dims:
         da = da.sel({"radar_frequency": radar_frequency})
     da_height = ds["height"].copy()
+
     # Mask height bin where not raining
     da_mask_3d_rain = da > min_threshold
     da_height = da_height.where(da_mask_3d_rain)
@@ -443,7 +929,7 @@ def retrieve_SHI(
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         GPM L2 RADAR Dataset.
     variable : str, optional
         Reflectivity field. The default is "zFactorFinal".
@@ -456,7 +942,7 @@ def retrieve_SHI(
 
     Returns
     -------
-    da_shi : `xarray.DataArray`
+    da_shi : xarray.DataArray
         Severe Hail Index (SHI)
 
     """
@@ -579,12 +1065,12 @@ def retrieve_POH(ds, method="Foote2005"):
     # TODO: add utility to set 0 where rainy area (instead of nan value)
     variable = "zFactorFinal"
     radar_frequency = "Ku"
+    # Compute POH
     da_echo_depth_45_solid = retrieve_EchoDepth(
         ds,
         threshold=45,
         variable=variable,
         radar_frequency=radar_frequency,
-        min_threshold=0,
         mask_liquid_phase=True,
     )
     if method == "Foote2005":
@@ -605,3 +1091,42 @@ def retrieve_POH(ds, method="Foote2005"):
     da_poh.attrs["units"] = "%"
 
     return da_poh
+
+
+def retrieve_MESHS(ds):
+    """The Maximum Expected Severe Hail Size at the surface.
+
+    Based on EchoTop50dBZ.
+
+    No hail if EchoDepth50dBZ above melting layer < 1.65 km.
+    100% hail if EchoDepth45dBZ above melting layer > 5.5 / 5.8 km.
+    to 100% (hail; Δz > 5.5 km)
+    """
+    variable = "zFactorFinal"
+    radar_frequency = "Ku"
+    h0 = get_xarray_variable(ds, variable="heightZeroDeg")
+    # Compute MESHS
+    et_50_2cm = 1.5 * h0 + 1700
+    et_50_4cm = 1.7824 * h0 + 2544.1
+    et_50_6cm = 1.933 * h0 + 4040
+
+    et50 = retrieve_EchoTopHeight(
+        ds,
+        threshold=50,
+        variable=variable,
+        radar_frequency=radar_frequency,
+    )
+    meshs4 = 4 + ((2 * (et50 - et_50_4cm)) / (et_50_6cm - et_50_4cm))
+    meshs2 = 2 + (2 * (et50 - et_50_2cm) / (et_50_4cm - et_50_2cm))
+    mask_between_2_4 = np.logical_and(et50 > et_50_2cm, et50 < et_50_4cm)
+    mask_above_4 = et50 > et_50_4cm
+    meshs2 = meshs2.where(mask_between_2_4, 0)
+    meshs4 = meshs4.where(mask_above_4, 0)
+    da_meshs = meshs2 + meshs4
+
+    # Add attributes
+    da_meshs.name = "MESHS"
+    da_meshs.attrs["description"] = "Maximum Expected Severe Hail Size "
+    da_meshs.attrs["units"] = "cm"
+
+    return da_meshs

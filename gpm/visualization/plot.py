@@ -34,11 +34,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from pyproj import Geod
 from scipy.interpolate import griddata
 
 import gpm
 from gpm import get_plot_kwargs
+from gpm.utils.area import get_lonlat_corners_from_centroids
 
 
 def is_generator(obj):
@@ -121,26 +121,6 @@ def adapt_fig_size(ax, nrow=1, ncol=1):
 
 
 ####--------------------------------------------------------------------------.
-
-
-def get_antimeridian_mask(lons):
-    """Get mask of longitude coordinates neighbors crossing the antimeridian."""
-    from scipy.ndimage import binary_dilation
-
-    # Initialize mask
-    n_y, n_x = lons.shape
-    mask = np.zeros((n_y - 1, n_x - 1))
-    # Check vertical edges
-    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
-    col_idx = np.clip(col_idx - 1, 0, n_x - 1)
-    mask[row_idx, col_idx] = 1
-    # Check horizontal edges
-    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=1)) > 180)
-    row_idx = np.clip(row_idx - 1, 0, n_y - 1)
-    mask[row_idx, col_idx] = 1
-    # Buffer by 1 in all directions to avoid plotting cells neighbour to those crossing the antimeridian
-    # --> This should not be needed, but it's needed to avoid cartopy bugs !
-    return binary_dilation(mask)
 
 
 def infill_invalid_coords(xr_obj, x="lon", y="lat"):
@@ -282,128 +262,6 @@ def _interpolate_2d_coord(arr, method="linear"):
     return arr_new
 
 
-def _predict_forward_point(lon1, lat1, lon2, lat2, geod):
-    """
-    Predict a point in the forward direction at the same distance as between two given vertices.
-
-    Parameters
-    ----------
-    lon1, lat1 : Longitude and latitude of the starting vertex.
-    lon2, lat2 : Longitude and latitude of the ending vertex.
-    geod       : Pyproj Geod object for geodesic calculations.
-
-    Returns
-    -------
-    (lon3, lat3): Longitude and latitude of the predicted point in the forward direction.
-    """
-    # Calculate the forward azimuth and distance between the start and end vertices
-    fwd_azimuth, _, distance = geod.inv(lon1, lat1, lon2, lat2)
-
-    # Predict the point in the forward direction from the end vertex
-    lon3, lat3, _ = geod.fwd(lon2, lat2, fwd_azimuth, distance)
-
-    return lon3, lat3
-
-
-def compute_lon_lat_corners_for_1d_swath(lon, lat):
-    """Compute lon/lat corners from 1D swath.
-
-    It infer the footprint size based on the spacing between footprints.
-    """
-    geod = Geod(ellps="WGS84")
-    # Define corners between centroids
-    ortho_line1_lon = []
-    ortho_line1_lat = []
-    ortho_line2_lon = []
-    ortho_line2_lat = []
-
-    # Process each segment of the original line
-    for i in range(len(lon) - 1):
-        lon1, lat1 = lon[i], lat[i]
-        lon2, lat2 = lon[i + 1], lat[i + 1]
-
-        # Calculate the forward azimuth and distance between consecutive vertices
-        fwd_azimuth, _, distance = geod.inv(lon1, lat1, lon2, lat2, radians=False)
-
-        # Calculate the half distance for the orthogonal projection
-        half_distance = distance / 2
-
-        # Orthogonal azimuths, +90 degrees and -90 degrees
-        ortho_azimuth1 = (fwd_azimuth + 90) % 360
-        ortho_azimuth2 = (fwd_azimuth - 90) % 360
-
-        # Calculate the orthogonal points from the midpoint of the segment
-        mid_lon, mid_lat, _ = geod.fwd((lon1 + lon2) / 2, (lat1 + lat2) / 2, fwd_azimuth, distance / 2)
-
-        # Project the orthogonal points
-        lon_ortho1, lat_ortho1, _ = geod.fwd(mid_lon, mid_lat, ortho_azimuth1, half_distance)
-        lon_ortho2, lat_ortho2, _ = geod.fwd(mid_lon, mid_lat, ortho_azimuth2, half_distance)
-
-        # Append the calculated orthogonal points to the lines
-        ortho_line1_lon.append(lon_ortho1)
-        ortho_line1_lat.append(lat_ortho1)
-        ortho_line2_lon.append(lon_ortho2)
-        ortho_line2_lat.append(lat_ortho2)
-
-    # Extend at the extremities to define the corners
-    # - Extend the start of ortho_line1
-    start_ext_lon1, start_ext_lat1 = _predict_forward_point(
-        ortho_line1_lon[1],
-        ortho_line1_lat[1],
-        ortho_line1_lon[0],
-        ortho_line1_lat[0],
-        geod=geod,
-    )
-    # - Extend the end of ortho_line1
-    end_ext_lon1, end_ext_lat1 = _predict_forward_point(
-        ortho_line1_lon[-2],
-        ortho_line1_lat[-2],
-        ortho_line1_lon[-1],
-        ortho_line1_lat[-1],
-        geod=geod,
-    )
-
-    # - Extend the start of ortho_line2
-    start_ext_lon2, start_ext_lat2 = _predict_forward_point(
-        ortho_line2_lon[1],
-        ortho_line2_lat[1],
-        ortho_line2_lon[0],
-        ortho_line2_lat[0],
-        geod=geod,
-    )
-    # - Extend the end of ortho_line2
-    end_ext_lon2, end_ext_lat2 = _predict_forward_point(
-        ortho_line2_lon[-2],
-        ortho_line2_lat[-2],
-        ortho_line2_lon[-1],
-        ortho_line2_lat[-1],
-        geod=geod,
-    )
-
-    # Define corners
-    lon_corners1 = np.array([start_ext_lon1, *ortho_line1_lon, end_ext_lon1])
-    lat_corners1 = np.array([start_ext_lat1, *ortho_line1_lat, end_ext_lat1])
-
-    lat_corners2 = np.array([start_ext_lat2, *ortho_line2_lat, end_ext_lat2])
-    lon_corners2 = np.array([start_ext_lon2, *ortho_line2_lon, end_ext_lon2])
-
-    lon_corners = np.vstack((lon_corners1, lon_corners2)).T
-    lat_corners = np.vstack((lat_corners1, lat_corners2)).T
-
-    # Define lon lat corners
-    return lon_corners, lat_corners
-
-
-def get_lon_lat_corners(lon, lat):
-    from gpm.utils.area import _get_lonlat_corners
-
-    if lon.ndim == 1:
-        lon, lat = compute_lon_lat_corners_for_1d_swath(lon, lat)
-    else:
-        lon, lat = _get_lonlat_corners(lon, lat)
-    return lon, lat
-
-
 def _mask_antimeridian_crossing_arr(arr, antimeridian_mask, rgb):
     if np.ma.is_masked(arr):
         if rgb:
@@ -440,6 +298,26 @@ def mask_antimeridian_crossing_array(arr, lon, rgb, plot_kwargs):
         if gpm.config.get("viz_hide_antimeridian_data"):  # default is True
             arr = _mask_antimeridian_crossing_arr(arr, antimeridian_mask=antimeridian_mask, rgb=rgb)
     return arr, plot_kwargs
+
+
+def get_antimeridian_mask(lons):
+    """Get mask of longitude coordinates neighbors crossing the antimeridian."""
+    from scipy.ndimage import binary_dilation
+
+    # Initialize mask
+    n_y, n_x = lons.shape
+    mask = np.zeros((n_y - 1, n_x - 1))
+    # Check vertical edges
+    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=0)) > 180)
+    col_idx = np.clip(col_idx - 1, 0, n_x - 1)
+    mask[row_idx, col_idx] = 1
+    # Check horizontal edges
+    row_idx, col_idx = np.where(np.abs(np.diff(lons, axis=1)) > 180)
+    row_idx = np.clip(row_idx - 1, 0, n_y - 1)
+    mask[row_idx, col_idx] = 1
+    # Buffer by 1 in all directions to avoid plotting cells neighbour to those crossing the antimeridian
+    # --> This should not be needed, but it's needed to avoid cartopy bugs !
+    return binary_dilation(mask)
 
 
 ####--------------------------------------------------------------------------.
@@ -501,6 +379,46 @@ def infer_xy_labels(da, x=None, y=None, rgb=None):
 
     # Infer dimensions
     x, y = _infer_xy_labels(da, x=x, y=y, imshow=True, rgb=rgb)  # dummy flag for rgb
+    return x, y
+
+
+def infer_map_xy_coords(da, x=None, y=None):
+    """
+    Infer possible map x and y coordinates for the given DataArray.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The input DataArray.
+    x : str, optional
+        The name of the x (i.e. longitude) coordinate. If None, it will be inferred.
+    y : str, optional
+        The name of the y (i.e. latitude) coordinate. If None, it will be inferred.
+
+    Returns
+    -------
+    tuple
+        The inferred (x, y) coordinates.
+    """
+    possible_x_coords = ["x", "lon", "longitude"]
+    possible_y_coords = ["y", "lat", "latitude"]
+
+    if x is None:
+        for coord in possible_x_coords:
+            if coord in da.coords:
+                x = coord
+                break
+        else:
+            raise ValueError("Cannot infer x coordinate. Please provide the x coordinate.")
+
+    if y is None:
+        for coord in possible_y_coords:
+            if coord in da.coords:
+                y = coord
+                break
+        else:
+            raise ValueError("Cannot infer y coordinate. Please provide the y coordinate.")
+
     return x, y
 
 
@@ -605,8 +523,8 @@ def plot_colorbar(p, ax, cbar_kwargs=None):
     cbar_kwargs 'size' and 'pad' controls the size of the colorbar.
     and the padding between the plot and the colorbar.
 
-    p: `matplotlib.image.AxesImage`
-    ax:  `cartopy.mpl.geoaxes.GeoAxesSubplot`
+    p: matplotlib.image.AxesImage
+    ax:  cartopy.mpl.geoaxes.GeoAxesSubplot
     """
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
     cbar_kwargs = cbar_kwargs.copy()  # otherwise pop ticklabels outside the function
@@ -791,7 +709,7 @@ def plot_cartopy_pcolormesh(
 
     # Compute coordinates of cell corners for pcolormesh quadrilateral mesh
     # - This enable correct masking of cells crossing the antimeridian
-    lon, lat = get_lon_lat_corners(lon, lat)
+    lon, lat = get_lonlat_corners_from_centroids(lon, lat)
 
     # Mask cells crossing the antimeridian
     # - with gpm.config.set({"viz_hide_antimeridian_data": False}): can be used to modify the masking behaviour
@@ -1065,7 +983,7 @@ def plot_image(
 
     Parameters
     ----------
-    da : `xr.DataArray`
+    da : xarray.DataArray
         xarray DataArray.
     x : str, optional
         X dimension name.
@@ -1075,7 +993,7 @@ def plot_image(
         Y dimension name.
         If ``None``, takes the first dimension.
         The default is ``None``.
-    ax : `cartopy.GeoAxes`, optional
+    ax : cartopy.GeoAxes, optional
         The matplotlib axes where to plot the image.
         If ``None``, a figure is initialized using the
         specified ``fig_kwargs``.
@@ -1086,11 +1004,11 @@ def plot_image(
         Argument to be passed to imshow.
         The default is ``"nearest"``.
     fig_kwargs : dict, optional
-        Figure options to be passed to `matplotlib.pyplot.subplots``.
+        Figure options to be passed to :py:class:`matplotlib.pyplot.subplots``.
         The default is ``None``.
         Only used if ``ax`` is ``None``.
     subplot_kwargs : dict, optional
-        Subplot options to be passed to `matplotlib.pyplot.subplots`.
+        Subplot options to be passed to :py:class:`matplotlib.pyplot.subplots`.
         The default is ``None``.
         Only used if ```ax``` is ``None``.
     cbar_kwargs : dict, optional
@@ -1099,7 +1017,7 @@ def plot_image(
         Additional arguments to be passed to the plotting function.
         Examples include ``cmap``, ``norm``, ``vmin``, ``vmax``, ``levels``, ...
         For FacetGrid plots, specify ``row``, ``col`` and ``col_wrap``.
-        With ``rgb`` you can specify the name of the `xarray.DataArray` RGB dimension.
+        With ``rgb`` you can specify the name of the xarray.DataArray RGB dimension.
 
 
     """
@@ -1166,7 +1084,7 @@ def plot_map(
 
     Parameters
     ----------
-    da : `xr.DataArray`
+    da : xarray.DataArray
         xarray DataArray.
     x : str, optional
         Longitude coordinate name.
@@ -1176,7 +1094,7 @@ def plot_map(
         Latitude coordinate name.
         If ``None``, takes the first dimension.
         The default is ``None``.
-    ax : `cartopy.GeoAxes`, optional
+    ax : cartopy.GeoAxes, optional
         The cartopy GeoAxes where to plot the map.
         If ``None``, a figure is initialized using the
         specified ``fig_kwargs`` and ``subplot_kwargs``.
@@ -1189,15 +1107,15 @@ def plot_map(
     add_background : bool, optional
         Whether to add the map background. The default is ``True``.
     interpolation : str, optional
-        Argument to be passed to `matplotlib.pyplot.imshow`. Only applies for GRID objects.
+        Argument to be passed to :py:class:`matplotlib.pyplot.imshow`. Only applies for GRID objects.
         The default is ``"nearest"``.
     fig_kwargs : dict, optional
         Figure options to be passed to `matplotlib.pyplot.subplots`.
         The default is ``None``.
         Only used if ``ax`` is ``None``.
     subplot_kwargs : dict, optional
-        Dictionary of keyword arguments for `matplotlib.pyplot.subplots`.
-        Must contain the Cartopy CRS `'projection'` key if specified.
+        Dictionary of keyword arguments for :py:class:`matplotlib.pyplot.subplots`.
+        Must contain the Cartopy CRS ` ``projection`` key if specified.
         The default is ``None``.
         Only used if ``ax`` is ``None``.
     cbar_kwargs : dict, optional
@@ -1206,7 +1124,7 @@ def plot_map(
         Additional arguments to be passed to the plotting function.
         Examples include ``cmap``, ``norm``, ``vmin``, ``vmax``, ``levels``, ...
         For FacetGrid plots, specify ``row``, ``col`` and ``col_wrap``.
-        With ``rgb`` you can specify the name of the `xarray.DataArray` RGB dimension.
+        With ``rgb`` you can specify the name of the xarray.DataArray RGB dimension.
 
 
     """
@@ -1266,11 +1184,11 @@ def plot_map_mesh(
 ):
     from gpm.checks import is_grid, is_orbit
     from gpm.visualization.grid import plot_grid_mesh
-    from gpm.visualization.orbit import infer_orbit_xy_coords, plot_orbit_mesh
+    from gpm.visualization.orbit import plot_orbit_mesh
 
     # Plot orbit
     if is_orbit(xr_obj):
-        x, y = infer_orbit_xy_coords(xr_obj, x=x, y=y)
+        x, y = infer_map_xy_coords(xr_obj, x=x, y=y)
         p = plot_orbit_mesh(
             da=xr_obj[y],
             ax=ax,
@@ -1316,7 +1234,6 @@ def plot_map_mesh_centroids(
 ):
     """Plot GPM orbit granule mesh centroids in a cartographic map."""
     from gpm.checks import is_grid, is_orbit
-    from gpm.visualization.orbit import infer_orbit_xy_coords
 
     # Initialize figure if necessary
     ax = initialize_cartopy_plot(
@@ -1328,7 +1245,7 @@ def plot_map_mesh_centroids(
 
     # Retrieve orbits lon, lat coordinates
     if is_orbit(xr_obj):
-        x, y = infer_orbit_xy_coords(xr_obj, x=x, y=y)
+        x, y = infer_map_xy_coords(xr_obj, x=x, y=y)
 
     # Retrieve grid centroids mesh
     if is_grid(xr_obj):
@@ -1349,14 +1266,14 @@ def plot_map_mesh_centroids(
 def create_grid_mesh_data_array(xr_obj, x, y):
     """Create a 2D mesh coordinates DataArray.
 
-    Takes as input the 1D coordinate arrays from an existing `xarray.DataArray` or `xarray.Dataset` object.
+    Takes as input the 1D coordinate arrays from an existing xarray.DataArray or xarray.Dataset object.
 
     The function creates a 2D grid (mesh) of x and y coordinates and initializes
     the data values to NaN.
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         The input xarray object containing the 1D coordinate arrays.
     x : str
         The name of the x-coordinate in `xr_obj`.
@@ -1365,12 +1282,12 @@ def create_grid_mesh_data_array(xr_obj, x, y):
 
     Returns
     -------
-    da_mesh : `xarray.DataArray`
-        A 2D `xarray.DataArray` with mesh coordinates for `x` and `y`, and NaN values for data points.
+    da_mesh : xarray.DataArray
+        A 2D xarray.DataArray with mesh coordinates for `x` and `y`, and NaN values for data points.
 
     Notes
     -----
-    The resulting `xarray.DataArray` has dimensions named 'y' and 'x', corresponding to the
+    The resulting xarray.DataArray has dimensions named 'y' and 'x', corresponding to the
     y and x coordinates respectively.
     The coordinate values are taken directly from the input 1D coordinate arrays,
     and the data values are set to NaN.
@@ -1597,7 +1514,7 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
 
     Parameters
     ----------
-    ax : `matplotlib.axes.Axes` or `cartopy.mpl.geoaxes.GeoAxes`
+    ax : matplotlib.axes.Axes or cartopy.mpl.geoaxes.GeoAxes
         The main matplotlib or cartopy axis object where the geographic data is plotted.
     loc : str, optional
         The location of the inset map within the main plot.
@@ -1611,12 +1528,12 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
         Determines whether the inset is constrained to be fully inside the figure bounds. If ``True`` (default),
         the inset is placed fully within the figure. If ``False``, the inset can extend beyond the figure's edges,
         allowing for a half-outside placement.
-    projection: `cartopy.crs.Projection`, optional
+    projection: cartopy.crs.Projection, optional
         A cartopy projection. If ``None``, am Orthographic projection centered on the extent center is used.
 
     Returns
     -------
-    ax2 : `cartopy.mpl.geoaxes.GeoAxes`
+    ax2 : cartopy.mpl.geoaxes.GeoAxes
         The Cartopy GeoAxesSubplot object for the inset map.
 
     Notes

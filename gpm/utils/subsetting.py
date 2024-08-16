@@ -35,38 +35,15 @@ def is_1d_non_dimensional_coord(xr_obj, coord):
         return False
     if xr_obj[coord].ndim != 1:
         return False
-    if xr_obj[coord].dims[0] == coord:
+    if xr_obj[coord].dims[0] == coord:  # 1D dimension coordinate
         return False
     return True
-
-
-def is_dimensional_coord(xr_obj, coord):
-    """Checks if a coordinate is a dimensional coordinate."""
-    if coord not in xr_obj.coords:
-        return False
-    if coord not in xr_obj.dims:
-        return False
-    return True
-
-
-def _get_isel_indices_from_sel_indices(xr_obj, coord, sel_indices):
-    """Get isel_indices corresponding to sel_indices."""
-    da_coord = xr_obj[coord]
-    dim = da_coord.dims[0]
-    da_coord = da_coord.assign_coords({"isel_indices": (dim, np.arange(0, da_coord.size))})
-    da_subset = da_coord.swap_dims({dim: coord}).sel({coord: sel_indices})
-    isel_indices = da_subset["isel_indices"].data
-    # isel_indices = xr_obj[coord].isin(sel_indices) # this was not keep the ordering of sel_indices !
-    # isel_indices = np.where(isel_indices.data)[0]
-    # if len(isel_indices) == 0: # return empty instead
-    #     raise ValueError(f"The coordinate {coord} does not have matching values.")
-    return isel_indices
 
 
 def _get_dim_of_1d_non_dimensional_coord(xr_obj, coord):
     """Get the dimension of a 1D non-dimension coordinate."""
     if not is_1d_non_dimensional_coord(xr_obj, coord):
-        raise ValueError(f"{coord} is not a 1D non-dimensional coordinate.")
+        raise ValueError(f"'{coord}' is not a 1D non-dimensional coordinate.")
     dim = xr_obj[coord].dims[0]
     return dim
 
@@ -94,6 +71,24 @@ def _get_dim_isel_on_non_dim_coord_from_isel(xr_obj, coord, isel_indices):
     return dim, isel_indices
 
 
+def _get_dim_isel_indices_from_isel_indices(xr_obj, key, indices):
+    """Return the dimension and isel_indices related to the dimension position indices of a coordinate."""
+    # Non-dimensional coordinate case
+    if key not in xr_obj.dims:
+        key, indices = _get_dim_isel_on_non_dim_coord_from_isel(xr_obj, coord=key, isel_indices=indices)
+    return key, indices
+
+
+def _get_isel_indices_from_sel_indices(xr_obj, coord, sel_indices):
+    """Get isel_indices corresponding to sel_indices."""
+    da_coord = xr_obj[coord]
+    dim = da_coord.dims[0]
+    da_coord = da_coord.assign_coords({"isel_indices": (dim, np.arange(0, da_coord.size))})
+    da_subset = da_coord.swap_dims({dim: coord}).sel({coord: sel_indices})
+    isel_indices = da_subset["isel_indices"].data
+    return isel_indices
+
+
 def _get_dim_isel_on_non_dim_coord_from_sel(xr_obj, coord, sel_indices):
     """
     Return the dimension and isel_indices related to a 1D non-dimension coordinate.
@@ -119,52 +114,39 @@ def _get_dim_isel_on_non_dim_coord_from_sel(xr_obj, coord, sel_indices):
     return dim, isel_indices
 
 
-def get_dim_isel_indices_from_isel_indices(xr_obj, key, isel_indices):
-    """Return the dimension and isel_indices related to isel_indices of a coordinate."""
-    # Non-dimensional coordinate case
-    if key not in xr_obj.dims:
-        key, isel_indices = _get_dim_isel_on_non_dim_coord_from_isel(xr_obj, coord=key, isel_indices=isel_indices)
-    return key, isel_indices
-
-
-def get_dim_isel_indices_from_sel_indices(xr_obj, key, sel_indices):
-    """Return the dimension and isel_indices related to sel_indices of a coordinate."""
+def _get_dim_isel_indices_from_sel_indices(xr_obj, key, indices):
+    """Return the dimension and isel_indices related to values of a coordinate."""
     # Dimension case
     if key in xr_obj.dims:
         if key not in xr_obj.coords:
-            raise ValueError("Can not subset with sel a dimension if it is not also a coordinate.")
-        isel_indices = _get_isel_indices_from_sel_indices(xr_obj, coord=key, sel_indices=sel_indices)
-
+            raise ValueError(f"Can not subset with gpm.sel the dimension '{key}' if it is not also a coordinate.")
+        isel_indices = _get_isel_indices_from_sel_indices(xr_obj, coord=key, sel_indices=indices)
     # Non-dimensional coordinate case
     else:
-        key, isel_indices = _get_dim_isel_on_non_dim_coord_from_sel(xr_obj, coord=key, sel_indices=sel_indices)
+        key, isel_indices = _get_dim_isel_on_non_dim_coord_from_sel(xr_obj, coord=key, sel_indices=indices)
     return key, isel_indices
 
 
-def get_dim_isel_indices(xr_obj, key, indices, func="isel"):
-    if func == "sel":
-        key, isel_indices = get_dim_isel_indices_from_sel_indices(xr_obj, key=key, sel_indices=indices)
-    elif func == "isel":
-        key, isel_indices = get_dim_isel_indices_from_isel_indices(xr_obj, key=key, isel_indices=indices)
-    return key, isel_indices
+def _get_dim_isel_indices_function(func):
+    func_dict = {
+        "sel": _get_dim_isel_indices_from_sel_indices,
+        "isel": _get_dim_isel_indices_from_isel_indices,
+    }
+    return func_dict[func]
 
 
 def _subset(xr_obj, indexers=None, func="isel", drop=False, **indexers_kwargs):
     """Perform selection with isel or isel."""
-    # Check valid func
-    valid_func = ["isel", "sel"]
-    if func not in valid_func:
-        raise ValueError(f"Valid 'func' values are {valid_func}")
-
     # Retrieve indexers
     indexers = either_dict_or_kwargs(indexers, indexers_kwargs, func)
-
+    # Get function returning isel_indices
+    get_dim_isel_indices = _get_dim_isel_indices_function(func)
     # Define isel_dict
     isel_dict = {}
     for key, indices in indexers.items():
-        key, isel_indices = get_dim_isel_indices(xr_obj, key=key, indices=indices, func=func)
+        key, isel_indices = get_dim_isel_indices(xr_obj, key=key, indices=indices)
         if key in isel_dict:
-            raise ValueError(f"Multiple indexers point to {key} dimension.")
+            raise ValueError(f"Multiple indexers point to the '{key}' dimension.")
         isel_dict[key] = isel_indices
 
     # Subset and update area
@@ -173,12 +155,21 @@ def _subset(xr_obj, indexers=None, func="isel", drop=False, **indexers_kwargs):
 
 
 def isel(xr_obj, indexers=None, drop=False, **indexers_kwargs):
-    """Perform index-based selection."""
+    """Perform index-based dimension selection."""
     return _subset(xr_obj, indexers=indexers, func="isel", drop=drop, **indexers_kwargs)
 
 
 def sel(xr_obj, indexers=None, drop=False, **indexers_kwargs):
-    """Perform value-based selection."""
+    """Perform value-based coordinate selection.
+
+    Slices are treated as inclusive of both the start and stop values, unlike normal Python indexing.
+    The gpm `sel` method is empowered to:
+
+    - slice by gpm-id strings !
+    - slice by any xarray coordinate value !
+
+    You can use string shortcuts for datetime coordinates (e.g., '2000-01' to select all values in January 2000).
+    """
     return _subset(xr_obj, indexers=indexers, func="sel", drop=drop, **indexers_kwargs)
 
 
@@ -186,21 +177,9 @@ def sel(xr_obj, indexers=None, drop=False, **indexers_kwargs):
 #### Alignment
 
 
-def check_gpm_id(xr_obj):
-    if "gpm_id" not in xr_obj.coords:
-        msg = "The dataset does not have the 'gpm_id' coordinate. Impossible to align."
-        raise ValueError(msg)
-
-
-def check_gpm_cross_track_id(xr_obj):
-    if "gpm_cross_track_id" not in xr_obj.coords:
-        msg = "The dataset does not have the 'gpm_cross_track_id' coordinate. Impossible to align."
-        raise ValueError(msg)
-
-
 def _check_coord_exist(xr_obj, coord):
     if coord not in xr_obj.coords:
-        msg = f"The dataset does not have the '{coord}' coordinate. Impossible to align."
+        msg = f"The xarray objects does not have the '{coord}' coordinate. Impossible to align."
         raise ValueError(msg)
 
 
@@ -216,7 +195,7 @@ def _align_spatial_coord(coord, *args):
     Parameters
     ----------
     coords: str
-        Coordinate name
+        Coordinate name.
     args : list
         A list of GPM / GPM-GEO xr.Dataset or xr.DataArray.
 
@@ -232,7 +211,7 @@ def _align_spatial_coord(coord, *args):
     # Check the coordinate is always available
     _ = [_check_coord_exist(xr_obj, coord) for xr_obj in list_xr_obj]
     # Retrieve list of coordinate values
-    list_id = [xr_obj[coord].data.astype(str) for xr_obj in list_xr_obj]
+    list_id = [xr_obj[coord].data for xr_obj in list_xr_obj]
     # Retrieve intersection of coordinates values
     # - np.atleast_1d ensure that the dimension is not dropped if only 1 value
     # - np.intersect1d returns the sorted array of common unique elements
@@ -240,6 +219,7 @@ def _align_spatial_coord(coord, *args):
     sel_indices = np.atleast_1d(reduce(np.intersect1d, list_id))
     if len(sel_indices) == 0:
         raise ValueError(f"No common {coord}.")
+    # Reorder if gpm_id
     if coord == "gpm_id":
         sel_indices = np.array(sorted(sel_indices, key=_split_gpm_id_key))
     # Subset datasets

@@ -26,9 +26,10 @@
 # -----------------------------------------------------------------------------.
 """This module contains functions to parse GPM granule attributes."""
 import ast
-import datetime
 
 import numpy as np
+
+from gpm.io.checks import get_current_utc_time
 
 STATIC_GLOBAL_ATTRS = (
     ## FileHeader
@@ -194,8 +195,8 @@ def get_granule_attrs(dt):
 
 
 def add_history(ds):
-    """Add the history attribute to the `xarray.Dataset`."""
-    current_time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    """Add the history attribute to the xarray.Dataset."""
+    current_time = get_current_utc_time().strftime("%Y-%m-%d %H:%M:%S")
     history = f"Created by ghiggi/gpm_api software on {current_time}"
     ds.attrs["history"] = history
     return ds

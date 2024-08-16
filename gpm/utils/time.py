@@ -50,16 +50,16 @@ def subset_by_time(xr_obj, start_time=None, end_time=None):
     ----------
     xr_obj :
         A xarray object.
-    start_time : `datetime.datetime`
+    start_time : datetime.datetime
         Start time.
         By default is ``None``
-    end_time : `datetime.datetime`
+    end_time : datetime.datetime
         End time.
         By default is ``None``
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object
 
     """
@@ -133,7 +133,7 @@ def has_nat(timesteps):
 def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, limit_area=None):
     """Fill NaT values using an interpolation method.
 
-    For further information refers to `pandas.DataFrame.interpolate`.
+    For further information refers to :py:class:`pandas.DataFrame.interpolate`.
 
     Parameters
     ----------
@@ -155,11 +155,11 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
     Notes
     -----
     Depending on the interpolation method (i.e. linear) the infilled values could have ns resolution.
-    For further information refers to `pandas.DataFrame.interpolate`.
+    For further information refers to :py:class:`pandas.DataFrame.interpolate`.
 
     Returns
     -------
-    timesteps: `numpy.ndarray`
+    timesteps:  numpy.ndarray
         Timesteps array of type datetime64[ns].
 
     """
@@ -209,12 +209,12 @@ def ensure_time_validity(xr_obj, limit=10):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         GPM xarray object.
 
     """
@@ -237,7 +237,7 @@ def get_dataset_start_end_time(ds: xr.Dataset, time_dim="time"):
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         Input dataset
     time_dim: str
         Name of the time dimension.
@@ -265,23 +265,23 @@ def regularize_dataset(
 
     Parameters
     ----------
-    ds : `xarray.Dataset`
+    ds : xarray.Dataset
         xarray Dataset.
     time_dim : str, optional
-        The time dimension in the `xarray.Dataset`. The default is ``"time"``.
+        The time dimension in the xarray.Dataset. The default is ``"time"``.
     freq : str
         The ``freq`` string to pass to `pd.date_range()` to define the new time coordinates.
         Examples: ``freq="2min"``.
     method : str, optional
         Method to use for filling missing timesteps.
         If ``None``, fill with ``fill_value``. The default is ``None``.
-        For other possible methods, see `xarray.Dataset.reindex()`
+        For other possible methods, see xarray.Dataset.reindex()`
     fill_value : float, optional
         Fill value to fill missing timesteps. The default is ``dtypes.NA``.
 
     Returns
     -------
-    ds_reindexed : `xarray.Dataset`
+    ds_reindexed : xarray.Dataset
         Regularized dataset.
 
     """

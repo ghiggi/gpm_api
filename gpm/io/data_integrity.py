@@ -116,9 +116,9 @@ def check_archive_integrity(
     ----------
     product : str
         GPM product acronym.
-    start_time : `datetime.datetime`
+    start_time : datetime.datetime
         Start time.
-    end_time : `datetime.datetime`
+    end_time : datetime.datetime
         End time.
     product_type : str, optional
         GPM product type. Either ``RS`` (Research) or ``NRT`` (Near-Real-Time).

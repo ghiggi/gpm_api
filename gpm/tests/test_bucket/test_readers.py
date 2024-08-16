@@ -78,7 +78,7 @@ def create_bucket_archive(bucket_dir):
     )
 
 
-NUM_COLUMNS = 7
+NUM_COLUMNS = 8
 
 # import pathlib
 # tmp_path = pathlib.Path("/tmp/bucket14")

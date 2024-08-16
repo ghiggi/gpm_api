@@ -284,4 +284,8 @@ The following example shows how to download and open a dataset over a specific t
 
 You are now ready to explore the various :ref:`tutorials <tutorials>` available in the documentation and learn more about the GPM-API functionalities.
 
-If you are not familiar with xarray, it is highly suggested to first have a look also at the `xarray documentation <http://xarray.pydata.org/en/stable/>`__.
+If you are not familiar with `xarray <http://xarray.pydata.org/en/stable/>`_,
+`numpy <https://numpy.org/doc/stable/index.html>`_,
+`pandas <https://pandas.pydata.org/>`_, and
+`dask <https://docs.dask.org/en/stable/array.html>`_,
+it is highly suggested to first have a look also at the documentation of these software.

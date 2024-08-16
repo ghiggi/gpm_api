@@ -40,9 +40,30 @@ def decode_landSurfaceType(da):
     da = da.where(da >= 0)  # < 0 set to np.nan
     da = da / 100
     da = ceil_dataarray(da)
-    da.attrs["flag_values"] = [0, 1, 2, 3]
-    da.attrs["flag_meanings"] = ["Ocean", "Land", "Coast", "Inland Water"]
-    da.attrs["description"] = "Land Surface type"
+    value_dict = {
+        0: "Ocean",
+        1: "Land",
+        2: "Coast",
+        3: "Inland Water",
+    }
+    da.attrs["flag_values"] = list(value_dict)
+    da.attrs["flag_meanings"] = list(value_dict.values())
+    da.attrs["description"] = "Land Surface Type"
+    return da
+
+
+def decode_snowIceCover(da):
+    """Decode the 2A-<RADAR> variable snowIceCover."""
+    da = da.where(da >= 0)  # -99 is set to np.nan
+    value_dict = {
+        0: "Open water",
+        1: "Snow-free land",
+        2: "Snow-covered land",
+        3: "Sea ice",
+    }
+    da.attrs["flag_values"] = list(value_dict)
+    da.attrs["flag_meanings"] = list(value_dict.values())
+    da.attrs["description"] = "Snow/Ice Cover"
     return da
 
 
@@ -53,7 +74,7 @@ def decode_phase(da):
     da = da.where(da >= 0)  # < 0 set to np.nan
     da.attrs["flag_values"] = [0, 1, 2]
     da.attrs["flag_meanings"] = ["solid", "mixed_phase", "liquid"]
-    da.attrs["description"] = "Precipitation phase state"
+    da.attrs["description"] = "Precipitation Phase State"
     return da
 
 
@@ -119,6 +140,24 @@ def decode_qualityTypePrecip(da):
     da.attrs["flag_values"] = [0, 1]
     da.attrs["flag_meanings"] = ["no rain", "good"]
     da.attrs["description"] = "Quality of the precipitation type"
+    return da
+
+
+def decode_qualityBB(da):
+    """Decode the 2A-<RADAR> variable qualityBB."""
+    da = da.where(da >= 0)  # < -1111 and -9999 set to np.nan
+    da.attrs["flag_values"] = [0, 1]
+    da.attrs["flag_meanings"] = ["BB not detected", "BB detected"]
+    da.attrs["description"] = "Quality of Bright-Band Detection"
+    return da
+
+
+def decode_reliabFlag(da):
+    """Decode the 2A-<RADAR> variable reliabFlag."""
+    da = da.where(da >= 0)
+    da.attrs["flag_values"] = [1, 2, 3, 4]
+    da.attrs["flag_meanings"] = ["reliable", "marginally reliable", "unreliable", "lower-bound"]
+    da.attrs["description"] = "Reliability flag for the effective PIA estimate (pathAtten)"
     return da
 
 
@@ -247,10 +286,13 @@ def decode_product(ds):
         "heightBB",
         "qualityFlag",
         "qualityTypePrecip",
+        "qualityBB",
         "flagPrecip",
         "phaseNearSurface",
         "phase",
+        "reliabFlag",
         "landSurfaceType",
+        "snowIceCover",
         "attenuationNP",
         "zFactorMeasured",
     ]

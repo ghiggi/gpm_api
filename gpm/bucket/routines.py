@@ -29,6 +29,7 @@ import os
 import time
 
 import dask
+import numpy as np
 import pyarrow as pa
 import pyarrow.dataset
 import pyarrow.parquet as pq
@@ -67,7 +68,7 @@ def write_granule_bucket(
         File path of the granule to store in the bucket archive.
     bucket_dir: str
         Base directory of the per-granule bucket archive.
-    partitioning: `gpm.bucket.SpatialPartitioning`
+    partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
     granule_to_df_func : Callable
         Function taking a granule filepath, opening it and returning a pandas or dask dataframe.
@@ -143,7 +144,7 @@ def write_granules_bucket(
         File paths of the GPM granules to store in the bucket archive.
     bucket_dir: str
         Base directory of the per-granule bucket archive.
-    partitioning: `gpm.bucket.SpatialPartitioning`
+    partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
         Carefully consider the size of the partitions.
         Earth partitioning by:
@@ -243,11 +244,11 @@ def write_bucket(
 
     Parameters
     ----------
-    ds : `pandas.DataFrame` or `dask.DataFrame`
+    ds : pandas.DataFrame or dask.DataFrame
         Pandas or Dask dataframe to be written into a geographic bucket.
     bucket_dir: str
         Base directory of the geographic bucket archive.
-    partitioning: `gpm.bucket.SpatialPartitioning`
+    partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
         Carefully consider the size of the partitions.
         Earth partitioning by:
@@ -300,6 +301,7 @@ def write_bucket(
 def merge_granule_buckets(
     src_bucket_dir,
     dst_bucket_dir,
+    force=False,
     row_group_size="400MB",
     max_file_size="1GB",
     compression="snappy",
@@ -397,8 +399,12 @@ def merge_granule_buckets(
 
     # -----------------------------------------------------------------------------------------------.
     # Retrieve table schema
+    # - partitioning.levels are read by pq.read_table as dictionaries (depending on pyarrow version)
+    # - partitioning.levels columns must be dropped by the table if present
     template_filepath = dict_partition_files[list_partitions[0]][0]
     template_table = pq.read_table(template_filepath)
+    if np.all(np.isin(partitioning.levels, template_table.column_names)):
+        template_table = template_table.drop_columns(partitioning.levels)
     schema = template_table.schema
 
     # Define writer_kwargs
@@ -426,6 +432,10 @@ def merge_granule_buckets(
     n_partitions = len(dict_partition_files)
     for partition_label, filepaths in tqdm(dict_partition_files.items(), total=n_partitions):
         partition_dir = os.path.join(dst_bucket_dir, partition_label)
+        # Choose if too skip
+        # - TODO: search which year already there and only add remainings
+        if not force and os.path.exists(partition_dir):
+            continue
         year_dict = group_filepaths(filepaths, groups="year")
         for year, year_filepaths in year_dict.items():
             basename_template = f"{year}_" + "{i}.parquet"

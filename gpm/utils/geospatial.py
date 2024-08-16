@@ -364,7 +364,7 @@ def get_geographic_extent_from_xarray(
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     padding : int, float, tuple, list
         The number of degrees to extend the extent in each direction.
@@ -602,7 +602,7 @@ def crop(xr_obj, extent):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     extent : list or tuple
         The bounding box over which to crop the xarray object.
@@ -611,7 +611,7 @@ def crop(xr_obj, extent):
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -637,14 +637,14 @@ def crop_by_country(xr_obj, name: str):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     name : str
         Country name.
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -657,14 +657,14 @@ def crop_by_continent(xr_obj, name: str):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     name : str
         Continent name.
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -677,7 +677,7 @@ def crop_around_point(xr_obj, lon: float, lat: float, distance=None, size=None):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     lon : float
         Longitude of the point.
@@ -694,7 +694,7 @@ def crop_around_point(xr_obj, lon: float, lat: float, distance=None, size=None):
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -711,7 +711,7 @@ def get_crop_slices_by_extent(xr_obj, extent):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     extent : list or tuple
         The extent over which to crop the xarray object.
@@ -753,7 +753,7 @@ def get_crop_slices_by_continent(xr_obj, name):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     name : str
         Continent name.
@@ -771,7 +771,7 @@ def get_crop_slices_by_country(xr_obj, name):
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     name : str
         Country name.
@@ -789,7 +789,7 @@ def get_crop_slices_around_point(xr_obj, lon: float, lat: float, distance=None, 
 
     Parameters
     ----------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         xarray object.
     lon : float
         Longitude of the point.
@@ -806,7 +806,7 @@ def get_crop_slices_around_point(xr_obj, lon: float, lat: float, distance=None, 
 
     Returns
     -------
-    xr_obj : `xarray.DataArray` or `xarray.Dataset`
+    xr_obj : xarray.DataArray or xarray.Dataset
         Cropped xarray object.
 
     """
@@ -841,9 +841,9 @@ def get_circle_coordinates_around_point(lon, lat, radius, num_vertices=360):
 
     Returns
     -------
-    lons : `numpy.ndarray`
+    lons :  numpy.ndarray
         Longitude vertices of the circle around the point.
-    lats : `numpy.ndarray`
+    lats :  numpy.ndarray
         Latitude vertices of the circle around the point.
 
     """
@@ -861,3 +861,87 @@ def get_circle_coordinates_around_point(lon, lat, radius, num_vertices=360):
         radians=False,
     )
     return lons, lats
+
+
+def get_great_circle_arc_endpoints(point, azimuth, distance):
+    """Get great circle arc vertices.
+
+    Calculate two points at a given distance from a central point in both the specified
+    azimuth direction and its opposite direction along the great circle path.
+
+    Parameters
+    ----------
+    point : tuple of float
+        A tuple representing the middle point (longitude, latitude) of the great circle arc.
+    azimuth : float
+        The azimuth (in degrees) from the starting point. 0 correspond to the North. 180 to the South.
+        The opposite direction will be automatically calculated as (azimuth + 180) % 360.
+    distance : float
+        The distance (in meters) to the points from the center point.
+
+    Returns
+    -------
+    start_point : tuple of float
+        The point (longitude, latitude) at the specified distance in the given azimuth direction.
+    end_point : tuple of float
+        The point (longitude, latitude) at the specified distance in the opposite azimuth direction.
+
+    Examples
+    --------
+    >>> point = (-74.0060, 40.7128)  # New York City
+    >>> azimuth = 90  # East
+    >>> distance = 100000  # 100 km
+    >>> get_great_circle_arc_endpoints(point, azimuth, distance)
+    ((-72.54170804504108, 40.65355582184445), (-75.47074533517052, 40.77179828472569))
+    """
+    # Define the Geod object using the WGS84 ellipsoid (default)
+    geod = pyproj.Geod(ellps="WGS84")
+    opposite_azimuth = (azimuth + 180) % 360
+    # Calculate the destination point
+    lon, lat = point
+    lon1, lat1, _ = geod.fwd(lon, lat, az=azimuth, dist=distance, radians=False)
+    lon2, lat2, _ = geod.fwd(lon, lat, az=opposite_azimuth, dist=distance, radians=False)
+    start_point = (lon1, lat1)
+    end_point = (lon2, lat2)
+    return start_point, end_point
+
+
+def get_geodesic_line(start_point, end_point, steps, geod=None):
+    """Construct a geodesic path between two points.
+
+    This function acts as a wrapper for the geodesic construction available in ``pyproj``.
+
+    Parameters
+    ----------
+    start_point: tuple
+       A longitude-latitude pair designating the start point of the cross section (units are
+       degrees east and degrees north).
+    end_point: tuple
+       A longitude-latitude pair designating the end point of the cross section (units are
+       degrees east and degrees north).
+    steps: int, optional
+       The number of points along the geodesic between the start and the end point
+       (including the end points) to use in the cross section.
+
+    Returns
+    -------
+    numpy.ndarray
+        The list of x, y points in the given CRS of length `steps` along the geodesic.
+
+    See Also
+    --------
+    gpm.utils.manipulations.extract_transect
+
+    """
+    if geod is None:
+        geod = pyproj.Geod(ellps="WGS84")
+
+    # Geod.npts only gives points *in between* the start_point and end_point
+    vertices = np.concatenate(
+        [
+            np.array(start_point)[None],
+            np.array(geod.npts(start_point[0], start_point[1], end_point[0], end_point[1], steps - 2)),
+            np.array(end_point)[None],
+        ],
+    )
+    return vertices

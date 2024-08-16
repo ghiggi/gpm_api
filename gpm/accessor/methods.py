@@ -84,6 +84,12 @@ class GPM_Base_Accessor:
         self._obj = xarray_obj
 
     @auto_wrap_docstring
+    def isel(self, indexers=None, drop=False, **indexers_kwargs):
+        from gpm.utils.subsetting import isel
+
+        return isel(self._obj, indexers=indexers, drop=drop, **indexers_kwargs)
+
+    @auto_wrap_docstring
     def sel(self, indexers=None, drop=False, **indexers_kwargs):
         from gpm.utils.subsetting import sel
 
@@ -144,10 +150,55 @@ class GPM_Base_Accessor:
         return get_crop_slices_around_point(self._obj, lon=lon, lat=lat, distance=distance, size=size)
 
     @property
+    def pyproj_crs(self):
+        from gpm.dataset.crs import get_pyproj_crs
+
+        return get_pyproj_crs(self._obj)
+
+    @property
     def pyresample_area(self):
         from gpm.utils.pyresample import get_pyresample_area
 
         return get_pyresample_area(self._obj)
+
+    @auto_wrap_docstring
+    def quadmesh_centroids(self, crs=None, origin="bottom"):
+        from gpm.utils.area import get_quadmesh_centroids
+
+        return get_quadmesh_centroids(
+            self._obj,
+            crs=crs,
+            origin=origin,
+        )
+
+    @auto_wrap_docstring
+    def quadmesh_corners(self, crs=None):
+        from gpm.utils.area import get_quadmesh_corners
+
+        return get_quadmesh_corners(
+            self._obj,
+            crs=crs,
+        )
+
+    @auto_wrap_docstring
+    def quadmesh_vertices(self, crs=None, ccw=True, origin="bottom"):
+        from gpm.utils.area import get_quadmesh_vertices
+
+        return get_quadmesh_vertices(
+            self._obj,
+            crs=crs,
+            ccw=ccw,
+            origin=origin,
+        )
+
+    @auto_wrap_docstring
+    def quadmesh_polygons(self, crs=None):
+        from gpm.utils.area import get_quadmesh_polygons
+
+        return get_quadmesh_polygons(
+            self._obj,
+            crs=crs,
+        )
 
     @auto_wrap_docstring
     def remap_on(self, dst_ds, radius_of_influence=20000, fill_value=np.nan):
@@ -190,48 +241,58 @@ class GPM_Base_Accessor:
 
     #### Transect utility
     @auto_wrap_docstring
-    def define_transect_slices(
+    def extract_transect_between_points(
         self,
-        direction="cross_track",
-        lon=None,
-        lat=None,
-        variable=None,
-        transect_kwargs={},
+        start_point,
+        end_point,
+        steps=100,
+        method="linear",
     ):
-        from gpm.visualization.profile import get_transect_slices
+        from gpm.utils.manipulations import extract_transect_between_points
 
-        return get_transect_slices(
+        return extract_transect_between_points(
             self._obj,
-            direction=direction,
-            variable=variable,
-            lon=lon,
-            lat=lat,
-            transect_kwargs=transect_kwargs,
+            start_point=start_point,
+            end_point=end_point,
+            steps=steps,
+            method=method,
         )
 
     @auto_wrap_docstring
-    def select_transect(
+    def extract_transect_around_point(
         self,
-        direction="cross_track",
-        lon=None,
-        lat=None,
-        variable=None,
-        transect_kwargs={},
-        keep_only_valid_variables=True,
+        point,
+        azimuth,
+        distance,
+        steps=100,
+        method="linear",
     ):
-        from gpm.visualization.profile import select_transect
+        from gpm.utils.manipulations import extract_transect_around_point
 
-        return select_transect(
+        return extract_transect_around_point(
             self._obj,
-            direction=direction,
-            variable=variable,
-            lon=lon,
-            lat=lat,
-            transect_kwargs=transect_kwargs,
-            keep_only_valid_variables=keep_only_valid_variables,
+            point=point,
+            azimuth=azimuth,
+            distance=distance,
+            steps=steps,
+            method=method,
         )
 
-    #### Profile utility
+    @auto_wrap_docstring
+    def extract_transect_along_trajectory(
+        self,
+        points,
+        method="linear",
+    ):
+        from gpm.utils.manipulations import extract_transect_along_trajectory
+
+        return extract_transect_along_trajectory(
+            self._obj,
+            points=points,
+            method=method,
+        )
+
+    #### Range subset utility
     @auto_wrap_docstring
     def slice_range_at_bin(self, bins):
         from gpm.utils.manipulations import slice_range_at_bin
@@ -279,6 +340,31 @@ class GPM_Base_Accessor:
         from gpm.utils.manipulations import slice_range_at_min_value
 
         return slice_range_at_min_value(self._obj, variable=variable)
+
+    #### Masking utility
+    @auto_wrap_docstring
+    def mask_between_bins(self, bottom_bins, top_bins, strict=True, fillvalue=np.nan):
+        from gpm.utils.manipulations import mask_between_bins
+
+        return mask_between_bins(
+            self._obj,
+            bottom_bins=bottom_bins,
+            top_bins=top_bins,
+            strict=strict,
+            fillvalue=fillvalue,
+        )
+
+    @auto_wrap_docstring
+    def mask_below_bin(self, bins, strict=True, fillvalue=np.nan):
+        from gpm.utils.manipulations import mask_below_bin
+
+        return mask_below_bin(self._obj, bins=bins, strict=strict, fillvalue=fillvalue)
+
+    @auto_wrap_docstring
+    def mask_above_bin(self, bins, strict=True, fillvalue=np.nan):
+        from gpm.utils.manipulations import mask_above_bin
+
+        return mask_above_bin(self._obj, bins=bins, strict=strict, fillvalue=fillvalue)
 
     #### Dataset utility
     @property
@@ -474,7 +560,7 @@ class GPM_Base_Accessor:
         line_kwargs=None,
         **common_kwargs,
     ):
-        from gpm.visualization.profile import plot_transect_line
+        from gpm.visualization.cross_section import plot_transect_line
 
         return plot_transect_line(
             self._obj,
@@ -768,7 +854,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         cbar_kwargs=None,
         **plot_kwargs,
     ):
-        from gpm.visualization.profile import plot_transect
+        from gpm.visualization.cross_section import plot_transect
 
         return plot_transect(
             self._obj[variable],
@@ -857,6 +943,18 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
 class GPM_DataArray_Accessor(GPM_Base_Accessor):
     def __init__(self, xarray_obj):
         super().__init__(xarray_obj)
+
+    @property
+    def idecibel(self):
+        from gpm.utils.manipulations import convert_from_decibel
+
+        return convert_from_decibel(self._obj)
+
+    @property
+    def decibel(self):
+        from gpm.utils.manipulations import convert_to_decibel
+
+        return convert_to_decibel(self._obj)
 
     @auto_wrap_docstring
     def get_slices_var_equals(self, dim, values, union=True, criteria="all"):
@@ -967,7 +1065,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         cbar_kwargs=None,
         **plot_kwargs,
     ):
-        from gpm.visualization.profile import plot_transect
+        from gpm.visualization.cross_section import plot_transect
 
         return plot_transect(
             self._obj,

@@ -35,7 +35,7 @@ import numpy as np
 
 
 def create_pyvista_2d_surface(data_array, spacing=(1, 1, 1), origin=(0, 0, 0)):
-    """Create a `pyvista.ImageData` object from a 2D `xarray.DataArray`."""
+    """Create a :py:class:`pyvista.ImageData` object from a 2D xarray.DataArray."""
     import pyvista as pv
 
     dimensions = (data_array.shape[0], data_array.shape[1], 1)
@@ -52,7 +52,7 @@ def create_pyvista_2d_surface(data_array, spacing=(1, 1, 1), origin=(0, 0, 0)):
 
 
 def create_pyvista_3d_volume(data_array, spacing=(1, 1, 0.25), origin=(0, 0, 0)):
-    """Create a `pyvista.ImageData` object from a 3D `xarray.DataArray`."""
+    """Create a :py:class:`pyvista.ImageData` object from a 3D xarray.DataArray."""
     import pyvista as pv
 
     # Remove vertical areas without values

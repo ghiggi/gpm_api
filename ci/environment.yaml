@@ -11,6 +11,7 @@ dependencies:
   - jupyter
   - matplotlib>=3.8.3
   - netcdf4
+  - numpy<=1.26.4
   - polars
   - pyarrow
   - pycolorbar
@@ -23,6 +24,7 @@ dependencies:
   - pyvista
   - pyvista
   - scipy
+  - scikit-learn
   - shapely
   - tqdm
   - trame
@@ -30,5 +32,6 @@ dependencies:
   - trame-vuetify
   - trollsift
   - xarray-datatree
-  - xarray<=2024.2.0
+  - xarray
+  - xoak
   - ximage

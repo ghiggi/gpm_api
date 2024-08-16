@@ -28,8 +28,15 @@
 import datetime
 import os
 import subprocess
+import sys
 
 import numpy as np
+
+
+def get_current_utc_time():
+    if sys.version_info >= (3, 11):
+        return datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    return datetime.datetime.utcnow()
 
 
 def check_base_dir(base_dir):
@@ -195,18 +202,18 @@ def check_product_validity(product, product_type=None):
 def check_time(time):
     """Check time validity.
 
-    It returns a `datetime.datetime` object to seconds precision.
+    It returns a :py:class:`datetime.datetime` object to seconds precision.
 
     Parameters
     ----------
-    time : `datetime.datetime`, `datetime.date`, `numpy.datetime64` or str
+    time : datetime.datetime, datetime.date, numpy.datetime64 or str
         Time object.
         Accepted types: ``datetime.datetime``, ``datetime.date``, ``numpy.datetime64`` or ``str``.
         If string type, it expects the isoformat ``YYYY-MM-DD hh:mm:ss``.
 
     Returns
     -------
-    time : `datetime.datetime`
+    time: datetime.datetime
 
     """
     if not isinstance(time, (datetime.datetime, datetime.date, np.datetime64, np.ndarray, str)):
@@ -235,7 +242,6 @@ def check_time(time):
             time = datetime.datetime.fromisoformat(time)
         except ValueError:
             raise ValueError("The time string must have format 'YYYY-MM-DD hh:mm:ss'")
-
     # If datetime object carries timezone that is not UTC, raise error
     if time.tzinfo is not None:
         if str(time.tzinfo) != "UTC":
@@ -246,7 +252,7 @@ def check_time(time):
 
 
 def check_date(date):
-    """Check is a `datetime.date` object."""
+    """Check is a :py:class:`datetime.date` object."""
     if date is None:
         raise ValueError("date cannot be None")
     # Use check_time to convert to datetime.datetime
@@ -263,9 +269,9 @@ def check_start_end_time(start_time, end_time):
     if start_time > end_time:
         raise ValueError("Provide 'start_time' occurring before of 'end_time'.")
     # Check start_time and end_time are in the past
-    if start_time > datetime.datetime.utcnow():
+    if start_time > get_current_utc_time():
         raise ValueError("Provide a 'start_time' occurring in the past.")
-    if end_time > datetime.datetime.utcnow():
+    if end_time > get_current_utc_time():
         raise ValueError("Provide a 'end_time' occurring in the past.")
     return (start_time, end_time)
 
@@ -279,7 +285,7 @@ def check_valid_time_request(start_time, end_time, product):
     if start_time < product_start_time:
         raise ValueError(f"{product} production started the {product_start_time}.")
     if end_time > product_end_time:
-        raise ValueError(f"{product} production ended the {get_product_end_time}.")
+        raise ValueError(f"{product} production ended the {product_end_time}.")
     return start_time, end_time
 
 

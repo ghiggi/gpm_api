@@ -10,6 +10,7 @@ omit =
 	gpm/retrievals/*
 	gpm/visualization/animation.py
 	gpm/utils/pyresample.py
+	gpm/utils/collocation.py
 	gpm/_version.py
 
 [report]

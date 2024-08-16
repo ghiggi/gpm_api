@@ -90,6 +90,7 @@ DIM_DICT = {
 }
 
 SPATIAL_DIMS = [
+    ["transect"],
     ["along_track", "cross_track"],
     ["lat", "lon"],  # choose whether to use instead latitude/longitude
     ["latitude", "longitude"],
@@ -107,7 +108,7 @@ def _has_a_phony_dim(xr_obj):
 
 
 def _get_dataarray_dim_dict(da):
-    """Return a dictionary mapping each `xarray.DataArray` phony_dim to the actual dimension name."""
+    """Return a dictionary mapping each xarray.DataArray phony_dim to the actual dimension name."""
     dim_dict = {}
     dim_names_str = da.attrs.get("DimensionNames", None)
     if dim_names_str is not None:
@@ -151,16 +152,16 @@ def _get_gpm_api_dims_dict(ds):
 
 
 def _rename_dataarray_dimensions(da):
-    """Rename `xarray.DataArray` dimensions."""
+    """Rename xarray.DataArray dimensions."""
     if _has_a_phony_dim(da):
         da = da.rename(_get_dataarray_dim_dict(da))
     return da
 
 
 def _rename_dataset_dimensions(ds, use_api_defaults=True):
-    """Rename `xarray.Dataset` dimension to the actual dimension names.
+    """Rename xarray.Dataset dimension to the actual dimension names.
 
-    The actual dimensions names are retrieved from the `xarray.DataArray`s DimensionNames attribute.
+    The actual dimensions names are retrieved from the xarray.DataArrays DimensionNames attribute.
     The dimension renaming is performed at each Dataset level.
     If use_api_defaults is True (the default), it sets the GPM-API dimension names.
     """
@@ -172,11 +173,11 @@ def _rename_dataset_dimensions(ds, use_api_defaults=True):
 
 
 def _rename_datatree_dimensions(dt, use_api_defaults=True):
-    """Rename `xarray.DataTree` dimension to the actual dimension names.
+    """Rename xarray.DataTree dimension to the actual dimension names.
 
-    The actual dimensions names are retrieved from the `xarray.DataArray`s DimensionNames attribute.
-    The renaming is performed at the `xarray.DataArray` level because DataArrays sharing same dimension
-    size (but semantic different dimension) are given the same phony_dim_number within `xarray.Dataset` !
+    The actual dimensions names are retrieved from the xarray.DataArrays DimensionNames attribute.
+    The renaming is performed at the xarray.DataArray level because DataArrays sharing same dimension
+    size (but semantic different dimension) are given the same phony_dim_number within xarray.Dataset !
 
     The dimension renaming is performed at each Dataset level.
     If ``use_api_defaults`` is ``True`` (the default), it sets the GPM-API dimension names.

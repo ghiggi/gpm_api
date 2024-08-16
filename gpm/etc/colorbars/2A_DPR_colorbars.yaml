@@ -73,3 +73,123 @@ Nw:
   cbar:
     extend: both
     label: $N_w$ [$mm^{-1} \ m^{-3}$]
+flagPrecipitationType:
+  cmap:
+    name: tab20c
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    labels: [No Precipitation, Stratiform, Convective, Other]
+    first_value: 0
+  cbar:
+    label: ""
+flagHydroClass:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    labels: [No Precipitation, Rain, Snow, Hail, Melting Layer, Clutter]
+    first_value: 0
+  cbar:
+    label: ""
+qualityBB:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    labels: [BB not detected, BB detected]
+    first_value: 0
+  cbar:
+    label: ""
+landSurfaceType:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    labels: [Ocean, Land, Coast, Inland Water]
+    first_value: 0
+  cbar:
+    label: ""
+snowIceCover:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    labels: [Open Water, Snow-Free Land, Snow-Covered Land, Sea Ice]
+    first_value: 0
+  cbar:
+    label: ""
+reliabFlag:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    labels: [Reliable, Fair, Unreliable, Lower Bound]
+    first_value: 1
+  cbar:
+    label: "Reliability flag for the effective PIA"
+flagPrecip:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries: [0, 1, 2, 10, 11, 12, 20, 21, 22, 23]
+    ncolors: 9
+  cbar:
+    extend: neither
+    label: Precipitation Detection Flag
+pathAtten:
+  cmap:
+    name: RdPu
+    bad_alpha: 1
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 8
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Path Integrated Attenuation ($PIA_{\text{eff}}$) [dB]
+piaFinal:
+  cmap:
+    name: RdPu
+    bad_alpha: 1
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 8
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Path Integrated Attenuation ($PIA$) [dB]

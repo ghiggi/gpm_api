@@ -30,7 +30,7 @@ The reference sensors for the GPM mission are the:
 - :ref:`GPM Microwave Imager (GMI) <gpm_gmi>`
 
 The :ref:`GPM Data Archive <gpm_data_archive>` currently includes satellite data records that extend back to 1987.
-This extensive archive is the result of contributions from two spaceborne radars and a fleet of 35 passive microwave (PMW) sensors that forms the so-called GPM constellation.
+This extensive archive is the result of contributions from two spaceborne radars and a fleet of 26 passive microwave (PMW) sensors that forms the so-called GPM constellation.
 
 The data are organized into various :ref:` product levels <gpm_product_levels>`,
 encompassing raw and calibrated observations (Level 1), intermediate geophysical retrieval products (Level 2),
@@ -63,6 +63,15 @@ the `Visible and Infrared Scanner (VIRS) imager <https://gpm.nasa.gov/missions/T
 and the `Lightning Imaging Sensor (LIS) <https://ghrc.nsstc.nasa.gov/lightning/overview_lis_instrument.html>`_,
 TRMM aimed to revolutionize rainfall observation.
 
+Operating in a non-sun-synchronous orbit at a 35° inclination, the TRMM satellite has been strategically positioned
+to sample the diurnal cycle of precipitation over a wide geographic area, a capability not shared by most of the
+:ref:`GPM constellation <gpm_constellation>` polar-orbiting sensors which typically acquire observations at fixed local times.
+
+Moreover, this orbit enables to obtain coincident measurements with other PMW sensors within the GPM Constellation.
+Consequently, this allows for the use of the TMI as a common radiometric reference standard for intersensor calibration
+across the full range of microwave frequencies present in the GPM Constellation of microwave radiometers during the TRMM era.
+This calibration process improves the consistency and quality of derived precipitation estimates.
+
 The combined use of PR and TMI significantly enhanced rainfall estimation accuracy over the tropics and subtropics.
 Moreover, PR provided unprecedented insights into the three-dimensional structure of cyclones over the ocean,
 as well as rainfall characteristics of the Madden-Julian Oscillation and other climate phenomena such as El Niño and La Niña.
@@ -81,6 +90,9 @@ The PR accurately quantifies heavier rainfall in the tropics and the subtropics,
 If you plan to use PR measurements, it's essential to consider the satellite orbit boost (from 350 km to 402.5 km) occurred in August 2011 to extend the satellite lifetime.
 Following the boost, the swath coverage has widened to 220 km but the spatial resolution of PR footprints has increased from 4.3 km to 5 km
 and the PR sensitivity has reduced by more than 1 dBZ.
+
+Please note that PR routine operations has ended on October 7th, 2014, although PR data are still available till January 15th, 2015
+while TRMM descended to the decommissioning altitude of 335 km.
 
 
 .. _trmm_tmi:
@@ -112,13 +124,13 @@ Equipped with advanced instruments such as the :ref:`Dual-frequency Precipitatio
 :ref:`GPM Microwave Imager (GMI) <gpm_gmi>`, the GPM Core Observatory can accurately measure a wide range of precipitation types,
 from light rain and snowfall to heavy tropical rainstorm.
 
-Operating in a non-sun-synchronous orbit at a 65° inclination, the GPM Core Observatory is strategically positioned
+Operating in a non-sun-synchronous orbit at a 65° inclination, the GPM Core Observatory is strategically positioned like :ref:`TRMM <trmm_satellite>`
 to sample the diurnal cycle of precipitation over a wide geographic area, a capability not shared by most of the
 :ref:`GPM constellation <gpm_constellation>` polar-orbiting sensors which typically acquire observations at fixed local times.
 
 Moreover, this orbit enables to obtain coincident measurements with other PMW sensors within the GPM Constellation.
 Consequently, this allows for the use of the GMI as a common radiometric reference standard for intersensor calibration
-across the full range of microwave frequencies present in the GPM Constellation microwave radiometers.
+across the full range of microwave frequencies present in the GPM Constellation of microwave radiometers.
 This calibration process improves the consistency and quality of derived precipitation estimates.
 
 The video here below provides an nice overview of the GPM Core Observatory satellite.
@@ -407,6 +419,8 @@ The following links provide access to the data archives:
 - PPS Near-Real-Time Data: `<https://jsimpsonhttps.pps.eosdis.nasa.gov/text/>`_
 
 Please note that the Near-Real-Time (``NRT``) products are available only on the PPS and for a limited time period, typically 5-6 days.
+An exception occurs for the :ref:`IMERG Early Run and Late Run products <imerg_precipitation>` which are available over
+the entire TRMM/GPM timespan both on PPS and GES DISC data archives.
 The Research (``RS``) products are instead available on both the PPS and GES DISC with a delay of 2-3 days from NRT.
 
 The Japanese `JAXA G-Portal <https://gportal.jaxa.jp/gpr/?lang=en>`_ facilitates the retrieval of additional data,
@@ -439,7 +453,7 @@ Satellite data are available in different levels of processing.
 
 Currently, the GPM-API provide access to the IMERG products and all L1 and L2 GPM products.
 L3 products are currently not available via GPM-API, but can be manually computed using the
-Geographic Binning Toolbox provided by the software.
+Geographic Bucket Toolbox provided by the software.
 
 You can retrieve the list of products available through the GPM-API using the ``gpm.available_products()`` function.
 For a comprehensive online list of GPM products, refer to `this page <https://gpm.nasa.gov/data/directory>`_
@@ -447,6 +461,9 @@ and `the STORM page <https://storm.pps.eosdis.nasa.gov/storm/>`_.
 
 It's important to note that GPM products are available in different versions.
 Currently, GPM-API offers access to versions 5, 6, and 7. Version 7 is the latest and is recommended for most applications.
+
+The Level 1A and 1B products are computed by each sensor’s provider, while Level 1C PMW products are computed at PPS.
+Currently, only Level 1A and 1B products for TRMM and GPM sensors are available.
 
 While analyzing a GPM product, it is recommended to consult the corresponding Algorithm Theoretical Basis Document (ATBD) and the
 `GPM Products File Specification <https://gpm.nasa.gov/resources/documents/file-specification-gpm-products>`_,
@@ -582,9 +599,9 @@ The 3.5-month delay for the Final product enables the incorporation of rain gaug
 and the application of bias correction to refine the satellite-based precipitation estimates.
 
 In the design of IMERG, a significant challenge is the scarcity of direct measurements from the GPM constellation in most grid cells within any 30-minute period.
-To fill these spatial and temporal gaps left by PMW satellites, IMERG exploits precipitation estimates derived from GEO IR measurements and cloud-motion vectors.
+To fill these spatial and temporal gaps left by PMW satellites, IMERG exploits storm system motion vectors and precipitation estimates derived from GEO IR measurements.
 
-Cloud-motion vectors enables the backward and forward propagation, or "morphing," of available PMW-derived precipitation measurements across the grid.
+Storm system motion vectors enables the backward and forward propagation, or "morphing," of available PMW-derived precipitation measurements across the grid.
 While IMERG Early uses only forward propagation in time (extrapolation in time), IMERG Late benefits form from both forward and backward propagation (interpolation in time).
 
 When PMW data are too sparse, IMERG incorporates precipitation estimates derived from GEO IR imagery through a weighted Kalman filter.
@@ -600,10 +617,10 @@ the `PDIR-NOW algorithm <https://journals.ametsoc.org/view/journals/hydr/21/12/j
 However, these estimates have lower accuracy compared to PMW measurement due to the indirect relationship between infrared cloud top temperature (sensed by the IR imagers)
 and surface precipitation.
 
-It's worth noting that the source of cloud-motion vectors has evolved across different IMERG versions:
+It's worth noting that the source of storm system motion vectors has evolved across different IMERG versions:
 V5 derived motion vectors from the sequence of GEO IR imagery,
-V6 transitioned to using NWP/reanalysis-based total precipitable water vapor fields,
-and V7 employs a combination of precipitation, total precipitable liquid water, and water vapor.
+V6 transitioned to using NWP/reanalysis-based total precipitable water vapor (TPWWV) fields,
+and V7 employs a combination of NWP/reanalysis-based precipitation, total precipitable liquid water (TPLW) and TPWWV.
 
 For more information on IMERG, including theoretical and algorithmic details, please refer to the ATBD of
 `IMERG version 6 <https://gpm.nasa.gov/resources/documents/algorithm-information/IMERG-V06-ATBD>`_ and
@@ -713,7 +730,7 @@ For detailed information on the TRMM/GPM-CloudSat Coincidence dataset, please
 refer to the corresponding `journal article <https://www.mdpi.com/2072-4292/13/12/2264>`_
 and the `Algorithm Theoretical Basis Document (ATBD) <https://gpm.nasa.gov/resources/documents/cloudsat-gpm-coincidence-dataset-version-1c>`_.
 
-The coincidence dataset can be download with GPM-API using the ``2B-GPM-CSAT`` and ``2B-TRMM-CSAT`` product acronyms.
+The coincidence dataset can be downloaded with GPM-API using the ``2B-GPM-CSAT`` and ``2B-TRMM-CSAT`` product acronyms.
 
 The figure below displays a quick-look radar time-height profile imagery from the GPM - CloudSat Coincidence dataset.
 
@@ -897,6 +914,8 @@ THe following table summarizes some high-quality global precipitation products.
 +------------+---------------------------------------------------------------------------------+---------------------+--------------------+--------------------------------------------------------------------------------------------------+
 | GSMaP      | Global Satellite Mapping of Precipitation                                       | 30 minutes          | 0.1°               | `JAXA <https://sharaku.eorc.jaxa.jp/GSMaP/guide.html>`_                                          |
 +------------+---------------------------------------------------------------------------------+---------------------+--------------------+--------------------------------------------------------------------------------------------------+
+| CMORPH2    | Climate Prediction Center MORPHing Precipitation Analysis                       | 30 minutes          | 0.05°              | `NOAA <https://www.star.nesdis.noaa.gov/data/mapper/Blend/CMORPH/CMORPH2/>`_                     |
++------------+---------------------------------------------------------------------------------+---------------------+--------------------+--------------------------------------------------------------------------------------------------+
 | PERSIANN   | Precipitation Estimation from Remotely Sensed Information using Artificial NNs  | 1 hour              | 0.04°              | `CHRS <https://chrsdata.eng.uci.edu/>`_                                                          |
 +------------+---------------------------------------------------------------------------------+---------------------+--------------------+--------------------------------------------------------------------------------------------------+
 | MSWEP      | Multi-Source Weighted-Ensemble Precipitation                                    | 3 hour              | 0.1°               | `GloH2O <https://www.gloh2o.org/mswep/>`_                                                        |
@@ -912,8 +931,9 @@ Please also note that on Google Earth Engine are available the version 6 of `GSM
 and `IMERG <https://developers.google.com/earth-engine/datasets/catalog/NASA_GPM_L3_IMERG_V06>`_.
 
 GSMaP can be visualized on the `JAXA Global Rainfall Watch <https://sharaku.eorc.jaxa.jp/GSMaP/index.htm>`_,
-while IMERG on the `GPM IMERG Global Viewer <https://gpm.nasa.gov/data/visualization/global-viewer>`_ or the
-`EOSDIS WorldView Portal <https://worldview.earthdata.nasa.gov/?v=-235.13866988428558,-76.35016978404038,104.5800850894752,96.99821113230026&l=Reference_Labels_15m(hidden),Reference_Features_15m(hidden),Coastlines_15m,IMERG_Precipitation_Rate,VIIRS_NOAA20_CorrectedReflectance_TrueColor(hidden),VIIRS_SNPP_CorrectedReflectance_TrueColor(hidden),MODIS_Aqua_CorrectedReflectance_TrueColor(hidden),MODIS_Terra_CorrectedReflectance_TrueColor&lg=true&t=2024-02-08-T03%3A43%3A10Z>`_.
+while IMERG on the `GPM IMERG Global Viewer <https://gpm.nasa.gov/data/visualization/global-viewer>`_ and the `EOSDIS WorldView Portal <https://worldview.earthdata.nasa.gov/?v=-235.13866988428558,-76.35016978404038,104.5800850894752,96.99821113230026&l=Reference_Labels_15m(hidden),Reference_Features_15m(hidden),Coastlines_15m,IMERG_Precipitation_Rate,VIIRS_NOAA20_CorrectedReflectance_TrueColor(hidden),VIIRS_SNPP_CorrectedReflectance_TrueColor(hidden),MODIS_Aqua_CorrectedReflectance_TrueColor(hidden),MODIS_Terra_CorrectedReflectance_TrueColor&lg=true&t=2024-02-08-T03%3A43%3A10Z>`_.
+
+The `GES DISC Interactive Online Visualization ANd aNalysis Infrastructure (Giovanni) <https://giovanni.gsfc.nasa.gov/giovanni/>`_ also provides quick access to analysis of IMERG products.
 
 .. _useful_resources:
 
