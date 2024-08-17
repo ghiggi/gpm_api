@@ -11,6 +11,9 @@ omit =
 	gpm/visualization/animation.py
 	gpm/utils/pyresample.py
 	gpm/utils/collocation.py
+	gpm/utils/gv.py
+	gpm/utils/zonal_stats.py
+	gpm/xradar/*
 	gpm/_version.py
 
 [report]
