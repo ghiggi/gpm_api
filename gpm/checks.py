@@ -94,7 +94,8 @@ def _has_vertical_dim_dataarray(da, strict):
     vertical_dims = list(get_vertical_dimension(da))
     if not vertical_dims:
         return False
-    if strict and len(da.dims) != 1:  # only the vertical dim
+    only_vertical_dim = len(da.dims) == 1
+    if strict and not only_vertical_dim:  # noqa
         return False
     return True
 
@@ -104,7 +105,8 @@ def _has_frequency_dim_dataarray(da, strict):
     frequency_dims = list(get_frequency_dimension(da))
     if not frequency_dims:
         return False
-    if strict and len(da.dims) != 1:  # only the frequency dimension
+    only_frequency_dim = len(da.dims) == 1
+    if strict and not only_frequency_dim:  # noqa
         return False
     return True
 
@@ -281,7 +283,7 @@ def _is_spatial_2d_dataarray(da, strict):
     vertical_dims = get_vertical_dimension(da)
     if vertical_dims:
         return False
-    if strict and len(da.dims) != 2:
+    if strict and len(da.dims) != 2:  # noqa
         return False
 
     return True
@@ -296,7 +298,7 @@ def _is_spatial_3d_dataarray(da, strict):
     vertical_dims = get_vertical_dimension(da)
     if not vertical_dims:
         return False
-    if strict and len(da.dims) != 3:
+    if strict and len(da.dims) != 3:  # noqa
         return False
 
     return True
@@ -312,7 +314,7 @@ def _is_transect_dataarray(da, strict):
     if not vertical_dims:
         return False
 
-    if strict and len(da.dims) != 2:
+    if strict and len(da.dims) != 2:  # noqa
         return False
 
     return True
