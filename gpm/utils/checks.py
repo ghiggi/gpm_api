@@ -830,9 +830,7 @@ def has_valid_geolocation(
         )
         n_invalid_scan_slices = len(list_invalid_slices)
         return n_invalid_scan_slices == 0
-    if is_grid(xr_obj):
-        return True
-    return False
+    return bool(is_grid(xr_obj))
 
 
 def apply_on_valid_geolocation(function):

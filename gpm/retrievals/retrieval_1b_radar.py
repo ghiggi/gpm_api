@@ -285,7 +285,7 @@ def get_dielectric_constant(ds, dielectric_constant=None):
         if value == -9999.9:
             value = 0.9255
     else:
-        ValueError("Expecting a radar product.")
+        raise ValueError("Expecting a radar product.")
     return value
 
 
@@ -306,7 +306,7 @@ def get_radar_wavelength(ds):
         elif "PR" in product:
             eqvWavelength = default_dict["PR"]
         else:
-            ValueError("Expecting a radar product.")
+            raise ValueError("Expecting a radar product.")
     return eqvWavelength
 
 

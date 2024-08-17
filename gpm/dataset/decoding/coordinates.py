@@ -57,7 +57,7 @@ def add_lh_height(ds):
     # Fixed heights for 2HSLH and 2HCSH
     # - FileSpec v7: p.2395, 2463
     # NOTE: In SLH/CSH, the first row of the array correspond to the surface
-    # Instead, for the other GPM RADAR prodcuts, is the last row that correspond to the surface !!!
+    # Instead, for the other GPM RADAR products, is the last row that correspond to the surface !!!
     height = np.linspace(0.25 / 2, 20 - 0.25 / 2, 80) * 1000  # in meters
     ds = ds.assign_coords({"height": ("range", height)})
     ds["height"].attrs["units"] = "m a.s.l"
