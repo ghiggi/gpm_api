@@ -373,9 +373,7 @@ def has_regular_time(xr_obj):
     """Return True if all timesteps are regular. False otherwise."""
     list_discontinuous_slices = get_slices_non_regular_time(xr_obj)
     n_discontinuous = len(list_discontinuous_slices)
-    if n_discontinuous > 0:
-        return False
-    return True
+    return n_discontinuous == 0
 
 
 ####--------------------------------------------------------------------------.
@@ -648,9 +646,7 @@ def has_contiguous_scans(
         cross_track_dim=cross_track_dim,
     )
     n_discontinuous = len(list_discontinuous_slices)
-    if n_discontinuous > 0:
-        return False
-    return True
+    return n_discontinuous == 0
 
 
 ####--------------------------------------------------------------------------.
@@ -830,9 +826,7 @@ def has_valid_geolocation(
         )
         n_invalid_scan_slices = len(list_invalid_slices)
         return n_invalid_scan_slices == 0
-    if is_grid(xr_obj):
-        return True
-    return False
+    return bool(is_grid(xr_obj))
 
 
 def apply_on_valid_geolocation(function):

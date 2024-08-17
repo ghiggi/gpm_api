@@ -35,9 +35,8 @@ def is_1d_non_dimensional_coord(xr_obj, coord):
         return False
     if xr_obj[coord].ndim != 1:
         return False
-    if xr_obj[coord].dims[0] == coord:  # 1D dimension coordinate
-        return False
-    return True
+    is_1d_dim_coord = xr_obj[coord].dims[0] == coord
+    return not is_1d_dim_coord
 
 
 def _get_dim_of_1d_non_dimensional_coord(xr_obj, coord):

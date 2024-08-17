@@ -27,7 +27,9 @@
 """This module contains functions to CF-decoding the GPM files."""
 import warnings
 
+import numpy as np
 import xarray as xr
+from packaging import version
 
 
 def apply_cf_decoding(ds):
@@ -36,6 +38,13 @@ def apply_cf_decoding(ds):
     For more information on CF-decoding, read:
         https://docs.xarray.dev/en/stable/generated/xarray.decode_cf.html
     """
+    # Take care of numpy 2.0 FillValue CF Decoding issue
+    if version.parse(np.__version__) >= version.parse("2.0.0"):
+        vars_and_coords = list(ds.data_vars) + list(ds.coords)
+        for var in vars_and_coords:
+            if "_FillValue" in ds[var].attrs:
+                ds[var].attrs["_FillValue"] = ds[var].data.dtype.type(ds[var].attrs["_FillValue"])
+
     # Decode with xr.decode_cf
     with warnings.catch_warnings():
         warnings.simplefilter(action="ignore", category=FutureWarning)

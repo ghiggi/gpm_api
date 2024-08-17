@@ -49,6 +49,8 @@ dependencies = [
     "matplotlib>=3.8.3", # introduce pcolormesh rgb
     "cartopy>=0.22.0",
     "pyproj",
+    "numpy",
+    "pandas",
     "scipy",
     "pycolorbar",
 ]

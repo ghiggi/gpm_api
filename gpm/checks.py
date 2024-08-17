@@ -94,7 +94,8 @@ def _has_vertical_dim_dataarray(da, strict):
     vertical_dims = list(get_vertical_dimension(da))
     if not vertical_dims:
         return False
-    if strict and len(da.dims) != 1:  # only the vertical dim
+    only_vertical_dim = len(da.dims) == 1
+    if strict and not only_vertical_dim:  # noqa
         return False
     return True
 
@@ -104,7 +105,8 @@ def _has_frequency_dim_dataarray(da, strict):
     frequency_dims = list(get_frequency_dimension(da))
     if not frequency_dims:
         return False
-    if strict and len(da.dims) != 1:  # only the frequency dimension
+    only_frequency_dim = len(da.dims) == 1
+    if strict and not only_frequency_dim:  # noqa
         return False
     return True
 
@@ -114,9 +116,7 @@ def _has_vertical_dim_dataset(ds, strict):
     has_vertical = np.any(
         [_has_vertical_dim_dataarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
-    if has_vertical:
-        return True
-    return False
+    return bool(has_vertical)
 
 
 def _has_spatial_dim_dataset(ds, strict):
@@ -124,9 +124,7 @@ def _has_spatial_dim_dataset(ds, strict):
     has_spatial = np.any(
         [_has_spatial_dim_dataarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
-    if has_spatial:
-        return True
-    return False
+    return bool(has_spatial)
 
 
 def _has_frequency_dim_dataset(ds, strict):
@@ -134,9 +132,7 @@ def _has_frequency_dim_dataset(ds, strict):
     has_spatial = np.any(
         [_has_frequency_dim_dataarray(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     ).item()
-    if has_spatial:
-        return True
-    return False
+    return bool(has_spatial)
 
 
 def _check_xarray_conditions(da_condition, ds_condition, xr_obj, strict, squeeze):
@@ -207,9 +203,7 @@ def _is_grid_expected_spatial_dims(spatial_dims):
     is_grid = set(spatial_dims) == set(GRID_SPATIAL_DIMS)
     is_lonlat = set(spatial_dims) == {"latitude", "longitude"}
     is_xy = set(spatial_dims) == {"y", "x"}
-    if is_grid or is_lonlat or is_xy:
-        return True
-    return False
+    return bool(is_grid or is_lonlat or is_xy)
 
 
 def _is_orbit_expected_spatial_dims(spatial_dims):
@@ -223,19 +217,14 @@ def _is_orbit_expected_spatial_dims(spatial_dims):
     # Check if spatial_dims is a non-empty subset of ORBIT_SPATIAL_DIMS
     is_orbit = set(spatial_dims).issubset(ORBIT_SPATIAL_DIMS) and bool(spatial_dims)
     is_xy = set(spatial_dims).issubset({"y", "x"}) and bool(spatial_dims)
-
-    if is_orbit or is_xy:
-        return True
-    return False
+    return bool(is_orbit or is_xy)
 
 
 def _is_expected_spatial_dims(spatial_dims):
     """Check that the spatial_dims are the expected two."""
     is_orbit = _is_orbit_expected_spatial_dims(spatial_dims)
     is_grid = _is_grid_expected_spatial_dims(spatial_dims)
-    if is_orbit or is_grid:
-        return True
-    return False
+    return bool(is_orbit or is_grid)
 
 
 def is_orbit(xr_obj):
@@ -255,9 +244,7 @@ def is_orbit(xr_obj):
     # Check that swath coords exists
     # - Swath objects are determined by 1D (nadir looking) and 2D coordinates
     x_coord, y_coord = _get_swath_dim_coords(xr_obj)
-    if x_coord is not None and y_coord is not None:
-        return True
-    return False
+    return bool(x_coord is not None and y_coord is not None)
 
 
 def is_grid(xr_obj):
@@ -278,9 +265,7 @@ def is_grid(xr_obj):
     # - 1D coordinates: projection coordinates
     # - 2D coordinates: lon/lat coordinates of each pixel
     x_coord, y_coord = _get_proj_dim_coords(xr_obj)
-    if x_coord is not None and y_coord is not None:
-        return True
-    return False
+    return bool(x_coord is not None and y_coord is not None)
 
 
 ####-------------------------------------------------------------------------------------
@@ -298,7 +283,7 @@ def _is_spatial_2d_dataarray(da, strict):
     vertical_dims = get_vertical_dimension(da)
     if vertical_dims:
         return False
-    if strict and len(da.dims) != 2:
+    if strict and len(da.dims) != 2:  # noqa
         return False
 
     return True
@@ -313,7 +298,7 @@ def _is_spatial_3d_dataarray(da, strict):
     vertical_dims = get_vertical_dimension(da)
     if not vertical_dims:
         return False
-    if strict and len(da.dims) != 3:
+    if strict and len(da.dims) != 3:  # noqa
         return False
 
     return True
@@ -329,7 +314,7 @@ def _is_transect_dataarray(da, strict):
     if not vertical_dims:
         return False
 
-    if strict and len(da.dims) != 2:
+    if strict and len(da.dims) != 2:  # noqa
         return False
 
     return True
@@ -341,9 +326,7 @@ def _check_dataarrays_condition(condition, ds, strict):
     all_valid = np.all(
         [condition(ds[var], strict=strict) for var in get_dataset_variables(ds)],
     )
-    if all_valid.item():
-        return True
-    return False
+    return bool(all_valid)
 
 
 def _is_spatial_2d_dataset(ds, strict):

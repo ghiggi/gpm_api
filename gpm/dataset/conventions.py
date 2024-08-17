@@ -148,6 +148,7 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
 
     ##------------------------------------------------------------------------.
     # Decode dataset
+    # - With numpy > 2.0, the _FillValue attribute must be a numpy scalar so that CF decoding is applied
     # - _FillValue is moved from attrs to encoding !
     if decode_cf:
         ds = apply_cf_decoding(ds)
