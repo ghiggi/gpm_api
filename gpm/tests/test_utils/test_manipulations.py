@@ -112,7 +112,7 @@ def create_3d_dataarray(cross_track_size=5, along_track_size=6, range_size=8, th
     return da.transpose("cross_track", "along_track", "range")
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataarray_3d() -> xr.DataArray:
     da = create_3d_dataarray()
     # Reorder to classical order
@@ -1088,7 +1088,7 @@ class TestGetPhaseMask:
     height_zero_deg = rng.integers(3, 6, size=(5, 6)) * 8
     da_height_zero_deg = xr.DataArray(height_zero_deg, dims=["cross_track", "along_track"])
 
-    @pytest.fixture()
+    @pytest.fixture
     def phase_dataarray(
         self,
         dataarray_3d: xr.DataArray,

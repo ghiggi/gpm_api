@@ -41,7 +41,7 @@ from gpm.tests.utils.fake_datasets import get_orbit_dataarray
 from gpm.visualization.cross_section import plot_transect, plot_transect_line
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_spatial_3d_dataarray() -> xr.DataArray:
     """Return a 3D orbit dataset."""
     orbit_dataarray_3d = get_orbit_dataarray(

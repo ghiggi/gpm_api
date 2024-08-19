@@ -58,7 +58,7 @@ ExtentDictionary = dict[str, tuple[float, float, float, float]]
 # Fixtures #####################################################################
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_dataarray() -> xr.DataArray:
     return get_orbit_dataarray(
         start_lon=-50,
@@ -71,7 +71,7 @@ def orbit_dataarray() -> xr.DataArray:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_dataarray_multiple_prime_meridian_crossings() -> xr.DataArray:
     """Orbit dataset that crosses the prime meridian multiple times."""
     da = get_orbit_dataarray(
@@ -102,7 +102,7 @@ def orbit_dataarray_multiple_prime_meridian_crossings() -> xr.DataArray:
     return da_tiled
 
 
-@pytest.fixture()
+@pytest.fixture
 def grid_dataarray() -> xr.DataArray:
     return get_grid_dataarray(
         start_lon=-50,
