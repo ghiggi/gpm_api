@@ -682,8 +682,8 @@ def test_subset_range_with_valid_data(
     dataarray_3d.data[:, :, 0] = np.nan  # Fully removes this height level
     dataarray_3d.data[:2, :3, 1] = np.nan  # These are kept
     returned_da = subset_range_with_valid_data(dataarray_3d)
-    expected_data = dataarray_3d.data[:, :, 1:]
-    np.testing.assert_allclose(returned_da.to_numpy(), expected_data)
+    expected_arr = dataarray_3d.data[:, :, 1:]
+    np.testing.assert_allclose(returned_da.data, expected_arr)
 
     # Test fully nan
     dataarray_3d.data[:, :, :] = np.nan
@@ -700,7 +700,7 @@ def test_subset_range_where_values(
     vmin = 10
     vmax = 20
     with pytest.raises(ValueError):
-        returned_da = subset_range_where_values(
+        subset_range_where_values(
             dataarray_3d,
             vmin=vmin,
             vmax=vmax,
@@ -715,8 +715,8 @@ def test_subset_range_where_values(
         vmin=vmin,
         vmax=vmax,
     )
-    expected_data = dataarray_3d.data[:, :, 1:3]
-    np.testing.assert_allclose(returned_da.data, expected_data)
+    expected_arr = dataarray_3d.data[:, :, 1:3]
+    np.testing.assert_allclose(returned_da.data, expected_arr)
 
 
 def test_slice_range_at_value(
@@ -724,28 +724,38 @@ def test_slice_range_at_value(
 ) -> None:
     """Test slice_range_at_value function."""
     value = 100
+    dataarray_3d.data[0, 0, :] = np.nan  # set all np.nan along range at one pixel to test does not raise error
     returned_slice = slice_range_at_value(dataarray_3d, value)
-    vertical_indices = np.abs(dataarray_3d - value).argmin(dim="range")
-    expected_slice = dataarray_3d.isel({"range": vertical_indices}).data
-    np.testing.assert_allclose(returned_slice.data, expected_slice)
+    expected_arr = np.array(
+        [
+            [np.nan, 91.0, 92.0, 93.0, 94.0, 95.0],
+            [96.0, 97.0, 98.0, 99.0, 100.0, 101.0],
+            [102.0, 103.0, 104.0, 105.0, 106.0, 107.0],
+            [108.0, 109.0, 110.0, 111.0, 112.0, 113.0],
+            [114.0, 85.0, 86.0, 87.0, 88.0, 89.0],
+        ],
+    )
+    np.testing.assert_allclose(returned_slice.data, expected_arr)
 
 
 def test_slice_range_at_max_value(
     dataarray_3d: xr.DataArray,
 ) -> None:
     """Test slice_range_at_max_value function."""
+    dataarray_3d.data[0, 0, :] = np.nan  # set all np.nan along range at one pixel to test does not raise error
     returned_slice = slice_range_at_max_value(dataarray_3d)
-    expected_slice = dataarray_3d.isel({"range": -1}).data
-    np.testing.assert_allclose(returned_slice.data, expected_slice)
+    expected_slice = dataarray_3d.isel({"range": -1})
+    np.testing.assert_allclose(returned_slice.data, expected_slice.data)
 
 
 def test_slice_range_at_min_value(
     dataarray_3d: xr.DataArray,
 ) -> None:
     """Test slice_range_at_min_value function."""
+    dataarray_3d.data[0, 0, :] = np.nan  # set all np.nan along range at one pixel to test does not raise error
     returned_slice = slice_range_at_min_value(dataarray_3d)
-    expected_slice = dataarray_3d.isel({"range": 0}).data
-    np.testing.assert_allclose(returned_slice.data, expected_slice)
+    expected_slice = dataarray_3d.isel({"range": 0})
+    np.testing.assert_allclose(returned_slice.data, expected_slice.data)
 
 
 @pytest.mark.parametrize("variable", ["airTemperature", "height"])

@@ -53,6 +53,8 @@ def check_is_xarray_dataset(x):
 
 def check_variable_availabilty(ds, variable, argname):
     """Check variable availability in an xarray Dataset."""
+    if variable is None:
+        raise ValueError("Please specify a dataset variable.")
     if variable not in ds:
         raise ValueError(
             f"{variable} is not a variable of the xarray.Dataset. Invalid {argname} argument.",

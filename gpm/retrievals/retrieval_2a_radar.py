@@ -401,8 +401,10 @@ def retrieve_bright_band_ratio(ds, return_bb_mask=True):
     bb_width_m = bb_width.where(has_bb)
 
     # Get median bright band height and width
-    bb_height_m = bb_height_m.median(skipna=True)
-    bb_width_m = bb_width_m.median(skipna=True)
+    # - Need to compute because dask.array.nanmedian does not support reductions with axis=None (dim=None)
+    # - https://github.com/dask/dask/pull/5684/files
+    bb_height_m = bb_height_m.compute().median(skipna=True)
+    bb_width_m = bb_width_m.compute().median(skipna=True)
 
     # Estimate the bottom/top melting layer height
     zmlt = bb_height_m + bb_width_m / 2.0
@@ -785,7 +787,9 @@ def retrieve_VIL(ds, variable="zFactorFinal", radar_frequency="Ku"):
         Mon. Wea. Rev., 100, 548-552.
         Amburn and Wolf (1997)
     """
-    da = ds[variable].sel({"radar_frequency": radar_frequency})
+    da = get_xarray_variable(ds, variable=variable).squeeze()
+    if "radar_frequency" in da.dims:
+        da = da.sel({"radar_frequency": radar_frequency})
     heights_arr = np.asanyarray(da["range"].data)
     da_mask = np.isnan(da).all(dim="range")
 
@@ -892,7 +896,9 @@ def retrieve_HailKineticEnergy(
     most of the lower reflectivities typically associated with liquid water.
     """
     # Retrieve required DataArrays
-    da_z = ds[variable].sel({"radar_frequency": radar_frequency})
+    da_z = get_xarray_variable(ds, variable=variable).squeeze()
+    if "radar_frequency" in da_z.dims:
+        da_z = da_z.sel({"radar_frequency": radar_frequency})
 
     # Compute W(Z)
     # - Used to define a transition zone between rain and hail reflectivities

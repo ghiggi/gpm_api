@@ -302,44 +302,66 @@ def slice_range_at_bin(xr_obj, bins):
 
 def get_range_index_at_value(da, value):
     """Retrieve index along the range dimension where the xarray.DataArray values is closest to value."""
-    vertical_dim = _get_vertical_dim(da)
-    return np.abs(da - value).argmin(dim=vertical_dim).compute()
+    da_diff = np.abs(da - value)
+    idx, mask_all_nan = get_range_index_at_min(da_diff)
+    return idx, mask_all_nan
 
 
 def get_range_index_at_min(da):
     """Retrieve index along the range dimension where the xarray.DataArray has minimum values."""
+    # Retrieve vertical dimension
     vertical_dim = _get_vertical_dim(da)
-    return da.argmin(dim=vertical_dim).compute()
+    # Put DataArray in memory
+    da = da.compute()
+    # Retrieve mask where all values are NaN
+    mask_all_nan = np.isnan(da).all(dim=vertical_dim)
+    # Add dummy 0 value where all NaN values to avoid 'All-NaN slice encountered' error in da.argmax(dim=vertical_dim)
+    da = da.where(~mask_all_nan, 0)
+    # Retrieve range index
+    idx = da.argmin(dim=vertical_dim)
+    return idx, mask_all_nan
 
 
 def get_range_index_at_max(da):
     """Retrieve index along the range dimension where the xarray.DataArray has maximum values."""
+    # Retrieve vertical dimension
     vertical_dim = _get_vertical_dim(da)
-    return da.argmax(dim=vertical_dim).compute()
+    # Put DataArray in memory
+    da = da.compute()
+    # Retrieve mask where all values are NaN
+    mask_all_nan = np.isnan(da).all(dim=vertical_dim)
+    # Add dummy 0 value where all NaN values to avoid 'All-NaN slice encountered' error in da.argmax(dim=vertical_dim)
+    da = da.where(~mask_all_nan, 0)
+    # Retrieve range index
+    idx = da.argmax(dim=vertical_dim)
+    return idx, mask_all_nan
 
 
 def slice_range_at_value(xr_obj, value, variable=None):
     """Slice the 3D arrays where the variable values are close to value."""
     da = get_xarray_variable(xr_obj, variable=variable)
     vertical_dim = _get_vertical_dim(da)
-    idx = get_range_index_at_value(da=da, value=value)
-    return xr_obj.isel({vertical_dim: idx})
+    idx, mask_all_nan = get_range_index_at_value(da=da, value=value)
+    xr_obj_sliced = xr_obj.isel({vertical_dim: idx})
+    return xr_obj_sliced.where(~mask_all_nan)
 
 
 def slice_range_at_max_value(xr_obj, variable=None):
     """Slice the 3D arrays where the variable values are at maximum."""
     da = get_xarray_variable(xr_obj, variable=variable)
     vertical_dim = _get_vertical_dim(da)
-    idx = get_range_index_at_max(da=da)
-    return xr_obj.isel({vertical_dim: idx})
+    idx, mask_all_nan = get_range_index_at_max(da=da)
+    xr_obj_sliced = xr_obj.isel({vertical_dim: idx})
+    return xr_obj_sliced.where(~mask_all_nan)
 
 
 def slice_range_at_min_value(xr_obj, variable=None):
     """Slice the 3D arrays where the variable values are at minimum."""
     da = get_xarray_variable(xr_obj, variable=variable)
     vertical_dim = _get_vertical_dim(da)
-    idx = get_range_index_at_min(da=da)
-    return xr_obj.isel({vertical_dim: idx})
+    idx, mask_all_nan = get_range_index_at_min(da=da)
+    xr_obj_sliced = xr_obj.isel({vertical_dim: idx})
+    return xr_obj_sliced.where(~mask_all_nan)
 
 
 def slice_range_at_temperature(ds, temperature, variable_temperature="airTemperature"):
@@ -366,17 +388,21 @@ def get_range_slices_with_valid_data(xr_obj, variable=None):
     dims = list(da.dims)
     dims.remove(vertical_dim)
 
-    # Get bool array where there are some data (not all nan)
-    has_data = ~np.isnan(da).all(dim=dims)
-    has_data_arr = has_data.data
-    if not has_data_arr.any():
+    # Identify which range indices has valid values
+    range_has_valid_values = ~np.isnan(da).all(dim=dims)
+    valid_range_indices = np.where(range_has_valid_values > 0)[0]
+
+    # Check there are valid data
+    if valid_range_indices.size == 0:
         raise ValueError(f"No valid data for variable {variable}.")
 
     # Identify first and last True occurrence
-    n_bins = len(has_data)
-    first_true_index = np.argwhere(has_data_arr)[0]
-    last_true_index = n_bins - np.argwhere(has_data_arr[::-1])[0] - 1
-    return {vertical_dim: slice(first_true_index.item(), last_true_index.item() + 1)}
+    first_index = valid_range_indices[0]
+    last_index = valid_range_indices[-1]
+
+    # Return isel dictionary
+    isel_dict = {vertical_dim: slice(first_index, last_index + 1)}
+    return isel_dict
 
 
 def get_range_slices_within_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.inf):
@@ -392,17 +418,21 @@ def get_range_slices_within_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.
     dims = list(da.dims)
     dims.remove(vertical_dim)
 
-    # Get bool array indicating where data are in the value interval
-    is_within_interval = np.logical_and(da >= vmin, da <= vmax)
-    if not is_within_interval.any():
+    # Identify which range indices has values falling in the desired interval
+    range_has_values_within_interval = np.logical_and(da >= vmin, da <= vmax).sum(dim=dims)
+    valid_range_indices = np.where(range_has_values_within_interval > 0)[0]
+
+    # Check there are data for requested value interval
+    if valid_range_indices.size == 0:
         raise ValueError(f"No data within the requested value interval for variable {variable}.")
 
     # Identify first and last True occurrence
-    n_bins = len(da[vertical_dim])
-    first_true_index = is_within_interval.argmax(dim=vertical_dim).min().item()
-    axis_idx = np.where(np.isin(list(da.dims), vertical_dim))[0]
-    last_true_index = n_bins - 1 - np.flip(is_within_interval, axis=axis_idx).argmax(dim=vertical_dim).min().item()
-    return {vertical_dim: slice(first_true_index, last_true_index + 1)}
+    first_index = valid_range_indices[0]
+    last_index = valid_range_indices[-1]
+
+    # Return isel dictionary
+    isel_dict = {vertical_dim: slice(first_index, last_index + 1)}
+    return isel_dict
 
 
 def subset_range_with_valid_data(xr_obj, variable=None):
@@ -438,15 +468,17 @@ def slice_range_at_height(xr_obj, value):
     """Slice the 3D array at a given height."""
     da_heigth = get_height_dataarray(xr_obj)
     vertical_dim = _get_vertical_dim(xr_obj)
-    idx = get_range_index_at_value(da_heigth, value=value)
-    return xr_obj.isel({vertical_dim: idx})
+    idx, mask_all_nan = get_range_index_at_value(da_heigth, value=value)
+    xr_obj_sliced = xr_obj.isel({vertical_dim: idx})
+    return xr_obj_sliced.where(~mask_all_nan)
 
 
 def get_height_at_temperature(da_height, da_temperature, temperature):
     """Retrieve height at a specific temperature."""
     vertical_dim = _get_vertical_dim(da_height)
-    idx_desired_temperature = get_range_index_at_value(da_temperature, temperature)
-    return da_height.isel({vertical_dim: idx_desired_temperature})
+    idx_desired_temperature, mask_all_nan = get_range_index_at_value(da_temperature, temperature)
+    xr_obj_sliced = da_height.isel({vertical_dim: idx_desired_temperature})
+    return xr_obj_sliced.where(~mask_all_nan)
 
 
 def get_height_at_bin(xr_obj, bins):

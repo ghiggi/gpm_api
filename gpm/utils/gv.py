@@ -4,6 +4,7 @@ import numpy as np
 import pyproj
 import xarray as xr
 
+import gpm
 from gpm.utils.manipulations import (
     conversion_factors_degree_to_meter,
 )
@@ -440,127 +441,9 @@ def plot_quicklook(ds_sr, ds_gr, min_gr_range, max_gr_range, z_min_threshold_gr,
     return fig
 
 
-@print_task_elapsed_time(prefix="SR/GR Matching")
-def volume_matching(
-    ds_gr,
-    radar_band,
-    beamwidth_gr: float = 1.0,
-    z_min_threshold_gr=0,
-    z_min_threshold_sr=10,
-    min_gr_range=0,
-    max_gr_range=150_000,
-    gr_sensitivity_thresholds=None,
-    sr_sensitivity_thresholds=None,
-    download_sr=True,
-    display_quicklook=True,
-):
-    """
-    Performs the volume matching of GPM Spaceborne Radar (SR) data to Ground Radar (GR).
-
-    Parameters
-    ----------
-    ds_gr : xr.Dataset
-        Xradar Dataset corresponding to a GR sweep.
-    radar_band : str
-        The GR band. Valid values are "Ku", "S", "C", "X".
-    beamwidth_gr : float, optional
-        The GR beamwidth. The default is 1.0.
-    z_min_threshold_gr : float, optional
-        The minimum reflectivity threshold (in dBZ) for GR. The default is 0.
-        Values below this threshold are set to np.nan before matching SR/GR gates.
-    z_min_threshold_sr : float, optional
-        The minimum reflectivity threshold (in dBZ) for SR. The default is 10.
-        Values below this threshold are set to np.nan before matching SR/GR gates.
-    min_gr_range : float, optional
-        The minimum GR range distance (in meters) to select for matching SR/GR gates. The default is 0.
-    max_gr_range : float, optional
-        The maximum GR range distance (in meters) to select for matching SR/GR gates. The default is 150_000.
-    gr_sensitivity_thresholds : list, optional
-        The GR sensitivity thresholds to verify NUBF. The default is [6,8,10,12].
-    sr_sensitivity_thresholds : list, optional
-        The SR sensitivity thresholds to verify NUBF. The default is [10,12,14,16,18].
-    download_sr : bool, optional
-        Whether to attempt download SR data on-the-fly. The default is True.
-
-
-    -------
-    gdf_match : geopandas.DataFrame
-        Dataframe containing the matched SR/GR reflectivities and relevant aggregation statistics.
-    ds_sr : xr.Dataset
-        The SR dataset matched to GR data.
-
-    """
-    import warnings
-
-    warnings.filterwarnings("ignore")
-    import geopandas as gpd
-    import numpy as np
-    import pandas as pd
-    import pyproj
-    import wradlib as wrl
-    import xarray as xr
-    from shapely import Point
-
-    import gpm
-    from gpm.utils.remapping import reproject_coords
-    from gpm.utils.zonal_stats import PolyAggregator
-
-    # Define GR beamwidth
-    elevation_beamwidth_gr = beamwidth_gr
-    azimuth_beamwidth_gr = beamwidth_gr
-
-    # Check radar band
-    radar_band = radar_band.upper()
-    accepted_radar_bands = ["S", "C", "X", "Ku"]
-    if radar_band not in accepted_radar_bands:
-        raise ValueError(f"Accepted 'radar_band' are {accepted_radar_bands}.")
-
-    # Define SR and GR sensitivity_thresholds
-    if gr_sensitivity_thresholds is None:
-        gr_sensitivity_thresholds = [6, 8, 10, 12]
-    if sr_sensitivity_thresholds is None:
-        sr_sensitivity_thresholds = [10, 12, 14, 16, 18]
-
-    # Define SR CRS
-    crs_sr = pyproj.CRS.from_epsg(4326)
-    # TODO: derive same from ds_sr.gpm.pyproj_crs
-
-    ####-----------------------------------------------------------------------------.
-    #### Preprocess GR
-    #### - Set auxiliary info as coordinates
-    # - To avoid broadcasting i.e. when masking
-    possible_coords = ["sweep_mode", "sweep_number", "prt_mode", "follow_mode", "sweep_fixed_angle"]
-    extra_coords = [coord for coord in possible_coords if coord in ds_gr]
-    ds_gr = ds_gr.set_coords(extra_coords)
-
-    #### - Georeference the data on a azimuthal_equidistant projection centered on the radar
-    ds_gr = ds_gr.xradar.georeference()
-
-    #### - Get the GR CRS
-    crs_gr = ds_gr.xradar_dev.pyproj_crs
-
-    #### - Retrieve GR (lon, lat) coordinates
-    lon_gr, lat_gr, height_gr = reproject_coords(
-        x=ds_gr["x"],
-        y=ds_gr["y"],
-        z=ds_gr["z"],
-        src_crs=crs_gr,
-        dst_crs=crs_sr,
-    )
-    #### - Add lon/lat coordinates to ds_gr
-    ds_gr["lon"] = lon_gr
-    ds_gr["lat"] = lat_gr
-    ds_gr = ds_gr.set_coords(["lon", "lat"])
-
-    #### - Set GR gates with Z < 0 to NaN
-    # - Following Morris and Schwaller 2011 recommendation
-    ds_gr = ds_gr.where(ds_gr["DBZH"] >= z_min_threshold_sr)
-
-    #### - Retrieve GR extent (in WGS84)
+def retrieve_ds_sr(ds_gr, download_sr=False):
+    # Retrieve GR extent (in WGS84)
     extent_gr = ds_gr.xradar_dev.extent(max_distance=None, crs=None)
-
-    ####-----------------------------------------------------------------------------.
-    #### Retrieve SR data
 
     # Retrieve GR scan time (assumed to be in UTC)
     gr_min_time = ds_gr["time"].min().to_numpy()
@@ -625,11 +508,179 @@ def volume_matching(
 
     # Retrieve important info from L1B
     ds_l1b_sr = ds_l1b_sr.compute()
-    beam_width_sr = ds_l1b_sr["crossTrackBeamWidth"]  # alongTrackBeamWidth
+    ds_sr["crossTrackBeamWidth"] = ds_l1b_sr["crossTrackBeamWidth"]
+    ds_sr["alongTrackBeamWidth"] = ds_l1b_sr["alongTrackBeamWidth"]
+
+    # Retrieve SR range distance
+    ds_l1b_sr["range_distance_from_satellite"] = ds_l1b_sr.gpm.retrieve("range_distance_from_satellite")
+    ds_sr["range_distance_from_satellite"] = ds_l1b_sr.gpm.extract_l2_dataset()["range_distance_from_satellite"]
+    return ds_sr
+
+
+@print_task_elapsed_time(prefix="SR/GR Matching")
+def volume_matching(
+    ds_gr,
+    radar_band,
+    ds_sr=None,
+    beamwidth_gr: float = 1.0,
+    z_min_threshold_gr=0,
+    z_min_threshold_sr=10,
+    min_gr_range=0,
+    max_gr_range=150_000,
+    gr_sensitivity_thresholds=None,
+    sr_sensitivity_thresholds=None,
+    download_sr=True,
+    display_quicklook=True,
+):
+    """
+    Performs the volume matching of GPM Spaceborne Radar (SR) data to Ground Radar (GR).
+
+    Parameters
+    ----------
+    ds_gr : xr.Dataset
+        Xradar Dataset corresponding to a GR sweep.
+    ds_sr : xr.Dataset, optional
+        Coincident GPM Dataset with the relevant L1 and L2 product variables.
+        If not specified (the default), it automatically load the relevant data from disk.
+        If you provide the dataset, please be sure to include in the dataset also the L1B ``crossTrackBeamWidth``
+        ``alongTrackBeamWidth`` and the retrievable ``range_distance_from_satellite`` variables.
+    radar_band : str
+        The GR band. Valid values are "Ku", "S", "C", "X".
+    beamwidth_gr : float, optional
+        The GR beamwidth. The default is 1.0.
+    z_min_threshold_gr : float, optional
+        The minimum reflectivity threshold (in dBZ) for GR. The default is 0.
+        Values below this threshold are set to np.nan before matching SR/GR gates.
+    z_min_threshold_sr : float, optional
+        The minimum reflectivity threshold (in dBZ) for SR. The default is 10.
+        Values below this threshold are set to np.nan before matching SR/GR gates.
+    min_gr_range : float, optional
+        The minimum GR range distance (in meters) to select for matching SR/GR gates. The default is 0.
+    max_gr_range : float, optional
+        The maximum GR range distance (in meters) to select for matching SR/GR gates. The default is 150_000.
+    gr_sensitivity_thresholds : list, optional
+        The GR sensitivity thresholds to verify NUBF. The default is [6,8,10,12].
+    sr_sensitivity_thresholds : list, optional
+        The SR sensitivity thresholds to verify NUBF. The default is [10,12,14,16,18].
+    download_sr : bool, optional
+        Whether to attempt download SR data on-the-fly. The default is True.
+
+
+    -------
+    gdf_match : geopandas.DataFrame
+        Dataframe containing the matched SR/GR reflectivities and relevant aggregation statistics.
+    ds_sr : xr.Dataset
+        The SR dataset matched to GR data.
+
+    """
+    import warnings
+
+    warnings.filterwarnings("ignore")
+    import geopandas as gpd
+    import numpy as np
+    import pandas as pd
+    import pyproj
+    import wradlib as wrl
+    import xarray as xr
+    from shapely import Point
+
+    from gpm.utils.remapping import reproject_coords
+    from gpm.utils.zonal_stats import PolyAggregator
+
+    # Define GR beamwidth
+    elevation_beamwidth_gr = beamwidth_gr
+    azimuth_beamwidth_gr = beamwidth_gr
+
+    # Check radar band
+    radar_band = radar_band.upper()
+    accepted_radar_bands = ["S", "C", "X", "Ku"]
+    if radar_band not in accepted_radar_bands:
+        raise ValueError(f"Accepted 'radar_band' are {accepted_radar_bands}.")
+
+    # Define SR and GR sensitivity_thresholds
+    if gr_sensitivity_thresholds is None:
+        gr_sensitivity_thresholds = [6, 8, 10, 12]
+    if sr_sensitivity_thresholds is None:
+        sr_sensitivity_thresholds = [10, 12, 14, 16, 18]
+
+    # Define SR CRS
+    crs_sr = pyproj.CRS.from_epsg(4326)
+    # TODO: derive same from ds_sr.gpm.pyproj_crs
+
+    ####-----------------------------------------------------------------------------.
+    #### Preprocess GR
+    #### Put GR data into memory
+    ds_gr = ds_gr.compute()
+
+    #### - Set auxiliary info as coordinates
+    # - To avoid broadcasting i.e. when masking
+    possible_coords = ["sweep_mode", "sweep_number", "prt_mode", "follow_mode", "sweep_fixed_angle"]
+    extra_coords = [coord for coord in possible_coords if coord in ds_gr]
+    ds_gr = ds_gr.set_coords(extra_coords)
+
+    #### - Georeference the data on a azimuthal_equidistant projection centered on the radar
+    ds_gr = ds_gr.xradar.georeference()
+
+    #### - Get the GR CRS
+    crs_gr = ds_gr.xradar_dev.pyproj_crs
+
+    #### - Retrieve GR (lon, lat) coordinates
+    lon_gr, lat_gr, height_gr = reproject_coords(
+        x=ds_gr["x"],
+        y=ds_gr["y"],
+        z=ds_gr["z"],
+        src_crs=crs_gr,
+        dst_crs=crs_sr,
+    )
+    #### - Add lon/lat coordinates to ds_gr
+    ds_gr["lon"] = lon_gr
+    ds_gr["lat"] = lat_gr
+    ds_gr = ds_gr.set_coords(["lon", "lat"])
+
+    #### - Set GR gates with Z < 0 to NaN
+    # - Following Morris and Schwaller 2011 recommendation
+    ds_gr = ds_gr.where(ds_gr["DBZH"] >= z_min_threshold_sr)
+
+    #### - Retrieve GR extent (in WGS84)
+    extent_gr = ds_gr.xradar_dev.extent(max_distance=None, crs=None)
+
+    ####-----------------------------------------------------------------------------.
+    #### Retrieve SR data
+    if ds_sr is None:  # noqa
+        ds_sr = retrieve_ds_sr(ds_gr, download_sr=download_sr)
+    else:
+        ds_sr = ds_sr.gpm.crop(extent=extent_gr)
+
+    # Check required SR variables
+    required_sr_variables = [
+        # L1B variables
+        "crossTrackBeamWidth",
+        "range_distance_from_satellite",
+        # L2 variables
+        "localZenithAngle",  #  gate projection coordinates
+        "ellipsoidBinOffset",  #  range_distance_from_ellipsoid
+        "binClutterFreeBottom",
+        "dataQuality",
+        "flagPrecip",
+        "qualityBB",
+        "heightBB",
+        "widthBB",
+        "typePrecip",
+        "precipRate",
+        "airTemperature",
+        "zFactorFinal",
+        "zFactorMeasured",
+    ]
+    missing_vars = [var for var in required_sr_variables if var not in ds_sr]
+    if len(missing_vars) != 0:
+        raise ValueError(f"The following variables are missing in the SR dataset: {missing_vars}")
 
     # Select only Ku-band
     if "radar_frequency" in ds_sr.dims:
         ds_sr = ds_sr.sel(radar_frequency="Ku")
+
+    # Put SR data into memory
+    ds_sr = ds_sr.compute()
 
     # Compute SR attenuation correction
     ds_sr["zFactorCorrection"] = ds_sr["zFactorFinal"] - ds_sr["zFactorMeasured"]
@@ -646,6 +697,7 @@ def volume_matching(
             z_min_threshold_sr=z_min_threshold_sr,
         )
         plt.show()
+
     ####-----------------------------------------------------------------------------.
     #### Retrieve SR/GR gate resolution, volume and coordinates
     #### - Retrieve GR gate resolution
@@ -676,14 +728,10 @@ def volume_matching(
         effective_radius_fraction=None,
     )
 
-    #### - Retrieve SR range distance
-    ds_l1b_sr["range_distance_from_satellite"] = ds_l1b_sr.gpm.retrieve("range_distance_from_satellite")
-    ds_sr["range_distance_from_satellite"] = ds_l1b_sr.gpm.extract_l2_dataset()["range_distance_from_satellite"]
-
     #### - Retrieve SR gates volumes
     vol_sr = ds_sr.gpm.retrieve(
         "gate_volume",
-        beam_width=beam_width_sr,
+        beam_width=ds_sr["crossTrackBeamWidth"],
         range_distance=ds_sr["range_distance_from_satellite"],
     )
 
@@ -699,7 +747,7 @@ def volume_matching(
     #### - Retrieve SR gate resolution
     h_res_sr, v_res_sr = ds_sr.gpm.retrieve(
         "gate_resolution",
-        beam_width=beam_width_sr,
+        beam_width=ds_sr["crossTrackBeamWidth"],
         range_distance=ds_sr["range_distance_from_satellite"],
     )
 
@@ -924,7 +972,8 @@ def volume_matching(
         "reliabFlag",
     ]
     for var in var_l2:
-        ds_sr_match_ppi[f"SR_{var}"] = ds_sr[var]
+        if var in ds_sr:
+            ds_sr_match_ppi[f"SR_{var}"] = ds_sr[var]
 
     # Add SR time
     ds_sr_match_ppi["SR_time"] = ds_sr_match_ppi["time"]

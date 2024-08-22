@@ -44,6 +44,7 @@ dependencies = [
     "distributed",
     "tqdm",
     "click",
+    "pyyaml",
     "donfig",
     "trollsift",
     "matplotlib>=3.8.3", # introduce pcolormesh rgb

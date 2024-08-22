@@ -39,6 +39,7 @@ def apply_cf_decoding(ds):
         https://docs.xarray.dev/en/stable/generated/xarray.decode_cf.html
     """
     # Take care of numpy 2.0 FillValue CF Decoding issue
+    # - https://github.com/pydata/xarray/issues/9381
     if version.parse(np.__version__) >= version.parse("2.0.0"):
         vars_and_coords = list(ds.data_vars) + list(ds.coords)
         for var in vars_and_coords:
