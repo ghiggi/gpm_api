@@ -92,9 +92,11 @@ DIM_DICT = {
 SPATIAL_DIMS = [
     ["transect"],
     ["along_track", "cross_track"],
-    ["lat", "lon"],  # choose whether to use instead latitude/longitude
+    ["lat", "lon"],
     ["latitude", "longitude"],
     ["x", "y"],  # compatibility with satpy/gpm_geo i.e.
+    ["beam"],  # when stacking 2D spatial dims
+    ["pixel"],  # when stacking 2D spatial dims
 ]
 VERTICAL_DIMS = ["range", "height"]  #  ORBIT --> "range", "GRID" --> "height"  (nBnEnv" in CORRA)
 FREQUENCY_DIMS = ["radar_frequency", "pmw_frequency"]

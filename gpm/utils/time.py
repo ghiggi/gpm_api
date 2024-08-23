@@ -254,12 +254,35 @@ def get_dataset_start_end_time(ds: xr.Dataset, time_dim="time"):
     return (starting_time, ending_time)
 
 
+def _define_fill_value(ds, fill_value):
+    fill_value = {}
+    for var in ds.data_vars:
+        if np.issubdtype(ds[var].dtype, np.floating):
+            fill_value[var] = dtypes.NA
+        elif np.issubdtype(ds[var].dtype, np.integer):
+            if "_FillValue" in ds[var].attrs:
+                fill_value[var] = ds[var].attrs["_FillValue"]
+            else:
+                fill_value[var] = np.iinfo(ds[var].dtype).max
+    return fill_value
+
+
+def _check_time_sorted(ds, time_dim):
+    time_diff = np.diff(ds[time_dim].data.astype(int))
+    if np.any(time_diff == 0):
+        raise ValueError(f"In the {time_dim} dimension there are duplicated timesteps !")
+    if not np.all(time_diff > 0):
+        print(f"The {time_dim} dimension was not sorted. Sorting it now !")
+        ds = ds.sortby(time_dim)
+    return ds
+
+
 def regularize_dataset(
     ds: xr.Dataset,
     freq: str,
     time_dim: str = "time",
     method: Optional[str] = None,
-    fill_value=dtypes.NA,
+    fill_value=None,
 ):
     """Regularize a dataset across time dimension with uniform resolution.
 
@@ -275,9 +298,12 @@ def regularize_dataset(
     method : str, optional
         Method to use for filling missing timesteps.
         If ``None``, fill with ``fill_value``. The default is ``None``.
-        For other possible methods, see xarray.Dataset.reindex()`
-    fill_value : float, optional
-        Fill value to fill missing timesteps. The default is ``dtypes.NA``.
+        For other possible methods, see xarray.Dataset.reindex()`.
+    fill_value : (float, dict), optional
+        Fill value to fill missing timesteps.
+        If not specified, for float variables it uses ``dtypes.NA`` while for
+        for integers variables it uses the maximum allowed integer value or,
+        in case of undecoded variables, the ``_FillValue`` DataArray attribute..
 
     Returns
     -------
@@ -285,6 +311,7 @@ def regularize_dataset(
         Regularized dataset.
 
     """
+    ds = _check_time_sorted(ds, time_dim=time_dim)
     start_time, end_time = get_dataset_start_end_time(ds, time_dim=time_dim)
     new_time_index = pd.date_range(
         start=pd.to_datetime(start_time),
@@ -292,10 +319,15 @@ def regularize_dataset(
         freq=freq,
     )
 
+    # Define fill_value dictionary
+    if fill_value is None:
+        fill_value = _define_fill_value(ds, fill_value)
+
     # Regularize dataset and fill with NA values
-    return ds.reindex(
-        {"time": new_time_index},
+    ds = ds.reindex(
+        {time_dim: new_time_index},
         method=method,  # do not fill gaps
         # tolerance=tolerance,  # mismatch in seconds
         fill_value=fill_value,
     )
+    return ds

@@ -47,6 +47,9 @@ from gpm.utils.xarray import (
 # check single_frequency
 # isel(radar_frequency=freq, missing_dims="ignore")
 
+# Add retrieval decorators specifying variables
+# Add retrieval decorators specifying if 2D spatial dimensions required (otherwise assume no)
+
 
 def get_range_resolution(ds):
     """Return the range bin size."""
@@ -697,6 +700,10 @@ def retrieve_EchoDepth(
 
     Common thresholds are 18, 30, 50, 60 dbZ.
     """
+    # Ensure thresholds is a list
+    # if isinstance(threshold, (int, float)):
+    #     threshold = [threshold]
+
     # Retrieve required DataArrays
     da = get_xarray_variable(ds, variable=variable).squeeze()
     if "radar_frequency" in da.dims:
@@ -708,6 +715,8 @@ def retrieve_EchoDepth(
     da_height = da_height.where(da_mask_3d_rain)
 
     # Mask heights where Z is not above threshold
+    # da_threshold = xr.DataArray(threshold, coords={"threshold": threshold}, dims="threshold")
+    # da_mask_3d = da > da_threshold
     da_mask_3d = da > threshold
     da_height_masked = da_height.where(da_mask_3d)
 
@@ -790,17 +799,17 @@ def retrieve_VIL(ds, variable="zFactorFinal", radar_frequency="Ku"):
     da = get_xarray_variable(ds, variable=variable).squeeze()
     if "radar_frequency" in da.dims:
         da = da.sel({"radar_frequency": radar_frequency})
-    heights_arr = np.asanyarray(da["range"].data)
+    da_height = get_xarray_variable(ds, variable="height")
     da_mask = np.isnan(da).all(dim="range")
 
     # Compute the thickness of each level (difference between adjacent heights)
-    thickness_arr = np.diff(heights_arr)
+    thickness_arr = -da_height.diff(dim="range").data
 
     # Compute average Z between range bins [in mm^6/m-3]
     da_z = 10 ** (da / 10)  # Takes 2.5 seconds per granule
     n_ranges = len(da["range"])
-    z_below = da_z.isel(range=slice(0, n_ranges - 1)).data
-    z_above = da_z.isel(range=slice(1, n_ranges)).data
+    z_below = da_z.isel({"range": slice(0, n_ranges - 1)}).data
+    z_above = da_z.isel({"range": slice(1, n_ranges)}).data
     z_avg_arr = (z_below + z_above) / 2
 
     # Clip reflectivity values at 56 dBZ
@@ -956,8 +965,8 @@ def retrieve_SHI(
     da_z = get_xarray_variable(ds, variable=variable).squeeze()
     if "radar_frequency" in da_z.dims:
         da_z = da_z.sel({"radar_frequency": radar_frequency})
-    da_t = ds["airTemperature"]
-    da_height = ds["height"]
+    da_t = get_xarray_variable(ds, variable="airTemperature").squeeze()
+    da_height = get_xarray_variable(ds, variable="height").squeeze()
     da_mask = np.isnan(da_z).all(dim="range")
 
     # Compute W(T)
@@ -974,7 +983,6 @@ def retrieve_SHI(
         da_temperature=da_t,
         temperature=273.15 - 20,
     )  # 2.5 s per granule
-
     da_t_weighted = _get_weights(
         da_height,
         lower_threshold=da_height_zero_deg,
@@ -991,13 +999,12 @@ def retrieve_SHI(
     )  # 12 s per granule
 
     # Define thickness array (difference between adjacent heights)
-    heights_arr = np.asanyarray(ds["range"].data)
-    thickness_arr = np.diff(heights_arr)
-    thickness_arr = np.append(thickness_arr, thickness_arr[-1])
-    thickness_arr = np.broadcast_to(thickness_arr, da_e.shape)
+    da_thickness = -da_height.diff(dim="range")
+    da_thickness = xr.concat([da_thickness, da_thickness.isel({"range": -1})], dim="range")
+    da_thickness["range"] = da_e["range"]
 
     # Compute SHI
-    da_shi_profile = da_e * da_t_weighted * thickness_arr  # 3.45 s per granule
+    da_shi_profile = da_e * da_t_weighted * da_thickness  # 3.45 s per granule
     da_shi_profile = da_shi_profile.where(da_height > da_height_zero_deg)  # 4.5 s per granule
     da_shi = 0.1 * da_shi_profile.sum("range")  # 4.3 s (< 1s with numpy.sum !)
 
@@ -1038,13 +1045,17 @@ def retrieve_POSH(ds):
     Output probabilities are rounded off to the nearest 10%, to avoid conveying an unrealistic degree of precision.
     """
     # Retrieve zero-degree height
-    da_height_0 = ds["heightZeroDeg"]
+    da_height_0 = get_xarray_variable(ds, variable="heightZeroDeg").squeeze()
     # Retrieve warning threshold
     da_wt = 57.5 * da_height_0 - 121
+    da_wt = da_wt.clip(min=20)
     # Retrieve SHI
     da_shi = retrieve_SHI(ds)
+    mask_below_0 = da_shi <= 0
+    da_shi = da_shi.where(~mask_below_0)
     # Retrieve POSH
     da_posh = 29 * np.log(da_shi / da_wt) + 50
+    da_posh = da_posh.where(~mask_below_0, 0)
     da_posh = da_shi.clip(min=0, max=1).round(1) * 100
     # Add attributes
     da_posh.name = "POSH"

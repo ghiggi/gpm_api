@@ -63,7 +63,7 @@ def to_pandas_dataframe(ds):
     df = ensure_pyarrow_string_columns(df)
 
     # Remove MultiIndex
-    df = df.reset_index()
+    df = df.reset_index(drop=True)
 
     # Drop unrequired columns (previous dataset dimensions)
     return drop_undesired_columns(df)
