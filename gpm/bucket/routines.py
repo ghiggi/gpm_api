@@ -133,6 +133,7 @@ def write_granules_bucket(
     max_concurrent_tasks=None,
     max_dask_total_tasks=500,
     # Writer kwargs
+    use_threads=False,
     row_group_size="500MB",
     **writer_kwargs,
 ):
@@ -164,6 +165,11 @@ def write_granules_bucket(
     max_dask_total_tasks : int
         The maximum number of Dask tasks to be scheduled.
         The default is 500.
+    use_threads : bool
+        Whether to write Parquet files with multiple threads.
+        If bucketing granules in a multiprocessing environment, it's better to
+        set it to ``False``.
+        The default is ``False``.
     row_group_size : int or str, optional
         Maximum number of rows in each written Parquet row group.
         If specified as a string (i.e. "500 MB"), the equivalent row group size
@@ -178,6 +184,7 @@ def write_granules_bucket(
     """
     # Define flavor of directory partitioning
     writer_kwargs["row_group_size"] = row_group_size
+    writer_kwargs["use_threads"] = use_threads
 
     # Write down the information of the bucket
     write_bucket_info(bucket_dir=bucket_dir, partitioning=partitioning)
