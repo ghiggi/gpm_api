@@ -53,7 +53,7 @@ VARIABLE = "variable"
 # Fixtures #####################################################################
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_dataset(
     orbit_dataarray: xr.DataArray,
 ) -> xr.Dataset:

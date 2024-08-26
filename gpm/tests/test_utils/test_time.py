@@ -58,7 +58,7 @@ class TestSubsetByTime:
     time = get_time_range(0, 24)
     datetime_type_wrappers = [lambda x: x, str, np.datetime64]
 
-    @pytest.fixture()
+    @pytest.fixture
     def data_array(self) -> xr.DataArray:
         rng = np.random.default_rng()
         return xr.DataArray(rng.random(len(self.time)), coords={"time": self.time})
