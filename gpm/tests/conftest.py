@@ -511,8 +511,8 @@ def orbit_spatial_3d_dataarray() -> xr.DataArray:
 
 
 @pytest.fixture
-def orbit_transect_dataarray() -> xr.DataArray:
-    """Return a transect orbit data array."""
+def orbit_cross_section_dataarray() -> xr.DataArray:
+    """Return a cross-section orbit data array."""
     orbit_dataarray_3d = get_orbit_dataarray(
         start_lon=0,
         start_lat=0,
@@ -635,8 +635,8 @@ def grid_spatial_3d_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
 
 
 @pytest.fixture
-def grid_transect_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
-    """Return a transect grid data array."""
+def grid_cross_section_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
+    """Return a cross-section grid data array."""
     grid_dataarray = grid_dataarray.expand_dims(dim={"height": 2})
     return grid_dataarray.isel(lat=0)
 

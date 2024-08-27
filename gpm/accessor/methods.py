@@ -239,7 +239,24 @@ class GPM_Base_Accessor:
             decode_cf=decode_cf,
         )
 
-    #### Transect utility
+    #### Transect/Trajectory utility
+
+    @auto_wrap_docstring
+    def extract_at_points(
+        self,
+        points,
+        method="nearest",
+        new_dim="points",
+    ):
+        from gpm.utils.manipulations import extract_at_points
+
+        return extract_at_points(
+            self._obj,
+            points=points,
+            method=method,
+            new_dim=new_dim,
+        )
+
     @auto_wrap_docstring
     def extract_transect_between_points(
         self,
@@ -247,6 +264,7 @@ class GPM_Base_Accessor:
         end_point,
         steps=100,
         method="linear",
+        new_dim="transect",
     ):
         from gpm.utils.manipulations import extract_transect_between_points
 
@@ -256,6 +274,7 @@ class GPM_Base_Accessor:
             end_point=end_point,
             steps=steps,
             method=method,
+            new_dim=new_dim,
         )
 
     @auto_wrap_docstring
@@ -266,6 +285,7 @@ class GPM_Base_Accessor:
         distance,
         steps=100,
         method="linear",
+        new_dim="transect",
     ):
         from gpm.utils.manipulations import extract_transect_around_point
 
@@ -276,20 +296,23 @@ class GPM_Base_Accessor:
             distance=distance,
             steps=steps,
             method=method,
+            new_dim=new_dim,
         )
 
     @auto_wrap_docstring
-    def extract_transect_along_trajectory(
+    def extract_transect_at_points(
         self,
         points,
         method="linear",
+        new_dim="transect",
     ):
-        from gpm.utils.manipulations import extract_transect_along_trajectory
+        from gpm.utils.manipulations import extract_transect_at_points
 
-        return extract_transect_along_trajectory(
+        return extract_transect_at_points(
             self._obj,
             points=points,
             method=method,
+            new_dim=new_dim,
         )
 
     #### Range subset utility

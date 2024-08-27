@@ -135,7 +135,7 @@ def remove_invalid_outer_cross_track(
 def _get_contiguous_slices(da, x="lon", y="lat", along_track_dim="along_track", cross_track_dim="cross_track"):
     # NOTE: Using get_slices_regular would split when there is any NaN coordinate
     if along_track_dim not in da.dims:
-        list_slices = [None]  # case: cross-track transect
+        list_slices = [None]  # case: cross-track nadir-view / cross-section
     else:
         list_slices = get_slices_contiguous_scans(
             da,
@@ -191,7 +191,7 @@ def call_over_contiguous_scans(function):
         # - Call the function over each slice
         for i, slc in enumerate(list_slices):
             # Retrieve contiguous data array
-            # - slc=None when cross-track transect
+            # - slc=None when cross-track cross-section
             tmp_da = da.isel({along_track_dim: slc}) if slc is not None else da
 
             # Adapt for alpha
@@ -199,7 +199,7 @@ def call_over_contiguous_scans(function):
 
             # Remove outer cross-track indices if all without coordinates
             # - Infill of coordinates is done separately with infill_invalid_coordins
-            # - If along_track transect, return as it is
+            # - If along_track cross-section (or nadir-view), return as it is
             tmp_da, tmp_alpha = remove_invalid_outer_cross_track(
                 tmp_da,
                 alpha=tmp_alpha,

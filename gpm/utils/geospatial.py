@@ -930,7 +930,8 @@ def get_geodesic_line(start_point, end_point, steps, geod=None):
 
     See Also
     --------
-    gpm.utils.manipulations.extract_transect
+    :py:class:`gpm.utils.manipulations.extract_transect_at_points` and
+    :py:class:`gpm.utils.manipulations.extract_transect_between_points`.
 
     """
     if geod is None:

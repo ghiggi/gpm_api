@@ -69,14 +69,20 @@ def get_frequency_dimension(xr_obj):
 
 def get_vertical_dimension(xr_obj):
     """Return the name of the available vertical dimension."""
-    return np.array(VERTICAL_DIMS)[np.isin(VERTICAL_DIMS, list(xr_obj.dims))].tolist()
+    vertical_dim = np.array(VERTICAL_DIMS)[np.isin(VERTICAL_DIMS, list(xr_obj.dims))].tolist()
+    if len(vertical_dim) > 1:
+        raise ValueError(f"Only one vertical dimension is allowed. Got {vertical_dim}.")
+    return vertical_dim
 
 
 def get_spatial_dimensions(xr_obj):
     """Return the name of the available spatial dimensions."""
     dims = list(xr_obj.dims)
     flattened_spatial_dims = list(chain.from_iterable(SPATIAL_DIMS))
-    return np.array(flattened_spatial_dims)[np.isin(flattened_spatial_dims, dims)].tolist()
+    spatial_dimensions = np.array(flattened_spatial_dims)[np.isin(flattened_spatial_dims, dims)].tolist()
+    if len(spatial_dimensions) > 2:
+        raise ValueError(f"Only two horizontal spatial dimensions are allowed. Got {spatial_dimensions}.")
+    return spatial_dimensions
 
 
 def _has_spatial_dim_dataarray(da, strict):
@@ -230,9 +236,8 @@ def _is_expected_spatial_dims(spatial_dims):
 def is_orbit(xr_obj):
     """Check whether the xarray object is a GPM ORBIT.
 
-    An ORBIT transect or nadir view is considered ORBIT.
-    An ORBIT object must have the coordinates available !
-
+    An ORBIT cross-section (nadir view) or transect is considered ORBIT.
+    An ORBIT object must have the coordinates available.
     """
     from gpm.dataset.crs import _get_swath_dim_coords
 
@@ -304,8 +309,8 @@ def _is_spatial_3d_dataarray(da, strict):
     return True
 
 
-def _is_transect_dataarray(da, strict):
-    """Check if the xarray.DataArray is a spatial 3D array."""
+def _is_cross_section_dataarray(da, strict):
+    """Check if the xarray.DataArray is a cross-section array."""
     spatial_dims = list(get_spatial_dimensions(da))
     if len(spatial_dims) != 1:
         return False
@@ -317,6 +322,16 @@ def _is_transect_dataarray(da, strict):
     if strict and len(da.dims) != 2:  # noqa
         return False
 
+    return True
+
+
+def _is_transect_dataarray(da, strict):
+    """Check if the xarray.DataArray is a transect array."""
+    spatial_dims = list(get_spatial_dimensions(da))
+    if len(spatial_dims) != 1:
+        return False
+    if strict and len(da.dims) != 1:  # noqa
+        return False
     return True
 
 
@@ -339,8 +354,13 @@ def _is_spatial_3d_dataset(ds, strict):
     return _check_dataarrays_condition(_is_spatial_3d_dataarray, ds=ds, strict=strict)
 
 
+def _is_cross_section_dataset(ds, strict):
+    """Check if all xarray.DataArrays of a xarray.Dataset are cross-section objects."""
+    return _check_dataarrays_condition(_is_cross_section_dataarray, ds=ds, strict=strict)
+
+
 def _is_transect_dataset(ds, strict):
-    """Check if all xarray.DataArrays of a xarray.Dataset are transect objects."""
+    """Check if all xarray.DataArrays of a xarray.Dataset are transects objects."""
     return _check_dataarrays_condition(_is_transect_dataarray, ds=ds, strict=strict)
 
 
@@ -376,13 +396,31 @@ def is_spatial_3d(xr_obj, strict=True, squeeze=True):
     )
 
 
-def is_transect(xr_obj, strict=True, squeeze=True):
-    """Check if the xarray.DataArray or xarray.Dataset is a transect object.
+def is_cross_section(xr_obj, strict=True, squeeze=True):
+    """Check if the xarray.DataArray or xarray.Dataset is a cross-section object.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
     If ``strict=True``  (default), the xarray.DataArray must have just the
     vertical dimension and a horizontal dimension.
-    If ``strict=False`` , the xarray.DataArray can also have additional dimensions.
+    If ``strict=False`` , the xarray.DataArray can have additional dimensions but only
+    a single horizontal and vertical dimension.
+    """
+    return _check_xarray_conditions(
+        _is_cross_section_dataarray,
+        _is_cross_section_dataset,
+        xr_obj=xr_obj,
+        strict=strict,
+        squeeze=squeeze,
+    )
+
+
+def is_transect(xr_obj, strict=True, squeeze=True):
+    """Check if the xarray.DataArray or xarray.Dataset is a transect object.
+
+    If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
+    If ``strict=True``  (default), the xarray.DataArray must have just an horizontal dimension.
+    If ``strict=False`` , the xarray.DataArray can have additional dimensions but only a single
+    horizontal dimension.
     """
     return _check_xarray_conditions(
         _is_transect_dataarray,
@@ -449,16 +487,29 @@ def check_is_spatial_3d(xr_obj, strict=True, squeeze=True):
         raise ValueError("Expecting a 3D GPM field.")
 
 
-def check_is_transect(xr_obj, strict=True, squeeze=True):
-    """Check if the xarray.DataArray or xarray.Dataset is a transect.
+def check_is_cross_section(xr_obj, strict=True, squeeze=True):
+    """Check if the xarray.DataArray or xarray.Dataset is a cross-section.
 
     If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
     If ``strict=True``  (default), the xarray.DataArray must have just the
     vertical dimension and a horizontal dimension.
-    If ``strict=False`` , the xarray.DataArray can also have additional dimensions.
+    If ``strict=False`` , the xarray.DataArray can also have additional dimensions,
+    but only a single vertical and horizontal dimension.
     """
-    if not is_transect(xr_obj, strict=strict, squeeze=squeeze):
-        raise ValueError("Expecting a transect of a 3D GPM field.")
+    if not is_cross_section(xr_obj, strict=strict, squeeze=squeeze):
+        raise ValueError("Expecting a cross-section extracted from a 3D GPM field.")
+
+
+def check_is_transect(xr_obj, strict=True, squeeze=True):
+    """Check if the xarray.DataArray or xarray.Dataset is a transect.
+
+    If ``squeeze=True`` (default), dimensions of size=1 are removed prior testing.
+    If ``strict=True``  (default), the xarray.DataArray must have just an horizontal dimension.
+    If ``strict=False`` , the xarray.DataArray can also have additional dimensions,
+    but only an horizontal dimension.
+    """
+    if not is_cross_section(xr_obj, strict=strict, squeeze=squeeze):
+        raise ValueError("Expecting a cross-section extracted from a 3D GPM field.")
 
 
 def check_has_vertical_dim(xr_obj, strict=False, squeeze=True):
@@ -523,14 +574,24 @@ def get_spatial_3d_variables(ds, strict=False, squeeze=True):
     return sorted(variables)
 
 
-def get_transect_variables(ds, strict=False, squeeze=True):
-    """Get list of xarray.Dataset trasect variables.
+def get_cross_section_variables(ds, strict=False, squeeze=True):
+    """Get list of xarray.Dataset cross-section variables.
 
-    If ``strict=False`` (default), the potential variables for which a transect can be derived.
-    If ``strict=True``, the variables that are already provide a transect.
+    If ``strict=False`` (default), the potential variables for which a strict cross-section can be derived.
+    If ``strict=True``, the variables that are already a cross-section.
     """
-    variables = [var for var in get_dataset_variables(ds) if is_transect(ds[var], strict=strict, squeeze=squeeze)]
+    variables = [var for var in get_dataset_variables(ds) if is_cross_section(ds[var], strict=strict, squeeze=squeeze)]
     return sorted(variables)
+
+
+# def get_transect_variables(ds, strict=False, squeeze=True):
+#     """Get list of xarray.Dataset transect variables.
+
+#     If ``strict=False`` (default), the potential variables for which a strict transect can be derived.
+#     If ``strict=True``, the variables that are already a transect.
+#     """
+#     variables = [var for var in get_dataset_variables(ds) if is_transect(ds[var], strict=strict, squeeze=squeeze)]
+#     return sorted(variables)
 
 
 def get_vertical_variables(ds):

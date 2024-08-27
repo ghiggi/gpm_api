@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains functions to visualize cross-sections and transects."""
+"""This module contains functions to visualize cross-sections."""
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,7 +33,7 @@ import xarray as xr
 from pyproj import Geod
 
 from gpm import get_plot_kwargs
-from gpm.checks import check_has_cross_track_dim, check_is_transect
+from gpm.checks import check_has_cross_track_dim, check_is_cross_section, check_is_transect
 from gpm.utils.checks import check_contiguous_scans
 from gpm.utils.xarray import get_dimensions_without
 from gpm.visualization.plot import (
@@ -49,7 +49,7 @@ from gpm.visualization.plot import (
 def get_cross_track_horizontal_distance(xr_obj):
     """Retrieve the horizontal_distance from the nadir.
 
-    Requires a transect with cross_track dimension !
+    Requires a cross-section with cross_track as horizontal spatial dimension !
     """
     check_is_transect(xr_obj)
     check_has_cross_track_dim(xr_obj)
@@ -169,7 +169,7 @@ def _get_y_axis_options(da, y, origin):
 
 def _get_default_y(y, da, possible_defaults):
     """Define default y."""
-    # Define default "y" (at least "range" is available since check_is_transect() called before
+    # Define default "y" (at least "range" is available since check_is_cross_section() called before
     if y is None:
         candidate_y = list(set(da.dims) | set(da.coords))
         expected_y = np.array(possible_defaults)
@@ -196,11 +196,11 @@ def plot_cross_section(
     cbar_kwargs=None,
     **plot_kwargs,
 ):
-    """Plot GPM transect.
+    """Plot GPM cross-section.
 
     If RGB DataArray, all other plot_kwargs are ignored !
     """
-    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_transect, strict=True)
+    da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_cross_section, strict=True)
 
     # - Check for contiguous along-track scans
     if "along_track" in da.dims:
@@ -246,7 +246,7 @@ def plot_cross_section(
         # - This occur when extracting L2 dataset from L1B and use y = "height/rangeDist"
         da = _ensure_valid_pcolormesh_coords(da, x=x, y=y, rgb=plot_kwargs.get("rgb", False))
 
-        # Plot transect
+        # Plot cross-section
         p = plot_xr_pcolormesh(
             ax=ax,
             da=da,
@@ -274,7 +274,7 @@ def plot_transect_line(
     **common_kwargs,
 ):
     # - Check is transect
-    check_is_transect(xr_obj, strict=False)  # allow i.e. radar_frequency
+    check_is_transect(xr_obj, strict=False)  # allow i.e. radar_frequency, vertical dimension etc.
 
     # - Set defaults
     text_kwargs = {} if text_kwargs is None else text_kwargs
@@ -297,15 +297,15 @@ def plot_transect_line(
     # Draw line
     p = ax.plot(lon_startend, lat_startend, transform=ccrs.Geodetic(), **line_kwargs, **common_kwargs)
 
-    # Add transect left and right side (when plotting transect)
+    # Add transect start (Left) and End (Right) (i.e. when plotting cross-section)
     if add_direction:
         g = pyproj.Geod(ellps="WGS84")
         fwd_az, back_az, dist = g.inv(*start_lonlat, *end_lonlat, radians=False)
         lon_r, lat_r, _ = g.fwd(*start_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
         fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)
         lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
-        ax.text(lon_r, lat_r, "R", **text_kwargs, **common_kwargs)
-        ax.text(lon_l, lat_l, "L", **text_kwargs, **common_kwargs)
+        ax.text(lon_r, lat_r, "S", **text_kwargs, **common_kwargs)
+        ax.text(lon_l, lat_l, "E", **text_kwargs, **common_kwargs)
 
     # - Return mappable
     return p[0]

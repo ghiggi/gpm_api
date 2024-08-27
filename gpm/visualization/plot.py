@@ -694,7 +694,7 @@ def plot_cartopy_pcolormesh(
     lat = da[y].data.copy()
     arr = da.data
 
-    # Check if 1D coordinate (nadir-looking / transect / cross-section case)
+    # Check if 1D coordinate (orbit nadir-view / transect / cross-section case)
     is_1d_case = lon.ndim == 1
 
     # Infill invalid value and mask data at invalid coordinates

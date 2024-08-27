@@ -547,11 +547,14 @@ def select_spatial_2d_variables(ds, strict=False, squeeze=True):
     return ds[variables]
 
 
-def select_transect_variables(ds, strict=False, squeeze=True):
-    """Return xarray.Dataset with only transect variables."""
-    from gpm.checks import get_transect_variables
+def select_cross_section_variables(ds, strict=False, squeeze=True):
+    """Return xarray.Dataset with only cross-section variables.
 
-    variables = get_transect_variables(ds, strict=strict, squeeze=squeeze)
+    It select variables with only a single horizontal and vertical dimension.
+    """
+    from gpm.checks import get_cross_section_variables
+
+    variables = get_cross_section_variables(ds, strict=strict, squeeze=squeeze)
     return ds[variables]
 
 
@@ -1080,8 +1083,61 @@ def mask_between_bins(xr_obj, bottom_bins, top_bins, strict=True, fillvalue=np.n
 
 
 @check_is_gpm_object
-def extract_transect_along_trajectory(xr_obj, points, method="linear"):
-    """Obtain an interpolated transect through a series of points.
+def extract_at_points(xr_obj, points, method="nearest", new_dim="points"):
+    """Extract values at a set of points.
+
+    This routine is useful particularly useful to extract values observed close
+    to meteorological stations or along a trajectory.
+
+    You could also exploit this function to "nearest-neighbour" remapping values to another
+    2D grid/orbit if you stack such object, pass the coordinates to this function and then unstack.
+    However for this last application, it is better to use the `remap` function.
+
+    Parameters
+    ----------
+    xr_obj: xarray.DataArray or xarray.Dataset
+        Dataset or DataArray from which to extract values at points.
+    points: numpy.ndarray
+        An array of shape (N, 2) with the lon, lat points at which to interpolate the data.
+    method: str, optional
+        The interpolation method. The default method is ``'nearest'``.
+        If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
+        If input data have 1D-coordinates,  See :py:class:`xarray.DataArray.interp` for other methods.
+    new_dim: str, optional
+        The name of the new points dimension. Defaults to "points".
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The values at the specified points.
+    """
+    if is_grid(xr_obj):
+        # Regular grid
+        xr_obj_sliced = xr_obj.interp(
+            {
+                "lon": xr.DataArray(points[:, 0], dims=new_dim),
+                "lat": xr.DataArray(points[:, 1], dims=new_dim),
+            },
+            method=method,
+        )
+        return xr_obj_sliced
+    # Orbit case
+    # - Use sklearn_geo_balltree to exploit haversine distance (kdtree does not support haversine distance)
+    # - Not tested for cases at the antimeridian !
+    xr_obj.xoak.set_index(["lat", "lon"], index_type="sklearn_geo_balltree")
+
+    xr_obj_slice = xr_obj.xoak.sel(
+        {
+            "lon": xr.DataArray(points[:, 0], dims=new_dim),
+            "lat": xr.DataArray(points[:, 1], dims=new_dim),
+        },
+    )
+    return xr_obj_slice
+
+
+@check_is_gpm_object
+def extract_transect_at_points(xr_obj, points, method="linear", new_dim="transect"):
+    """Obtain an transect through a series of points.
 
     It allows to extract data along a custom curvilinear track / trajectory.
 
@@ -1094,45 +1150,27 @@ def extract_transect_along_trajectory(xr_obj, points, method="linear"):
     method: str, optional
         The interpolation method, either ``'linear'`` or ``'nearest'``.
         If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
-        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        If input data have 1D-coordinates, the default method is ``'linear'``.
         See :py:class:`xarray.DataArray.interp` for other methods.
+    new_dim: str, optional
+        The name of the new transect dimension. Defaults to "transect".
 
     Returns
     -------
     xarray.DataArray or xarray.Dataset
-        The interpolated transect object, with the 'transect' dimension (of size N).
+        The transect object, with the ``new_dim`` dimension (of size N).
 
     See Also
     --------
-    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+    :py:class:`gpm.utils.manipulations.extract_transect_between_points` and
+    :py:class:`gpm.utils.manipulations.extract_transect_around_point`.
 
     """
-    if is_grid(xr_obj):
-        # Regular grid
-        xr_obj_sliced = xr_obj.interp(
-            {
-                "lon": xr.DataArray(points[:, 0], dims="transect"),
-                "lat": xr.DataArray(points[:, 1], dims="transect"),
-            },
-            method=method,
-        )
-        return xr_obj_sliced
-    # Orbit case
-    # - Use sklearn_geo_balltree to exploit haversine distance (kdtree does not support haversine distance)
-    # - Not tested for cases at the antimeridian !
-    xr_obj.xoak.set_index(["lat", "lon"], index_type="sklearn_geo_balltree")
-
-    xr_obj_slice = xr_obj.xoak.sel(
-        {
-            "lon": xr.DataArray(points[:, 0], dims="transect"),
-            "lat": xr.DataArray(points[:, 1], dims="transect"),
-        },
-    )
-    return xr_obj_slice
+    return extract_at_points(xr_obj, points=points, method=method, new_dim=new_dim)
 
 
 @check_is_gpm_object
-def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, method="linear"):
+def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, method="linear", new_dim="transect"):
     """Extract an interpolated transect between two points on a sphere.
 
     Parameters
@@ -1151,17 +1189,20 @@ def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, m
     method: str, optional
         The interpolation method, either ``'linear'`` or ``'nearest'``.
         If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
-        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        If input data have 1D-coordinates, the default method is ``'linear'``.
         See :py:class:`xarray.DataArray.interp` for other methods.
+    new_dim: str, optional
+        The name of the new transect dimension. Defaults to "transect".
 
     Returns
     -------
     xarray.DataArray or xarray.Dataset
-        The interpolated transect object, with the 'transect' dimension.
+        The transect object, with the ``new_dim`` dimension (of size ``steps``).
 
     See Also
     --------
-    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+    :py:class:`gpm.utils.manipulations.extract_transect_at_points` and
+    :py:class:`gpm.utils.manipulations.extract_transect_around_point`.
 
     """
     if importlib.util.find_spec("sklearn") is None:
@@ -1173,10 +1214,10 @@ def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, m
     points = get_geodesic_line(start_point=start_point, end_point=end_point, steps=steps)
 
     # Return the interpolated data
-    return extract_transect_along_trajectory(xr_obj, points=points, method=method)
+    return extract_transect_at_points(xr_obj, points=points, method=method, new_dim=new_dim)
 
 
-def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, method="linear"):
+def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, method="linear", new_dim="transect"):
     """
     Extract a transect following the great circle arc centered on the specified point.
 
@@ -1197,17 +1238,20 @@ def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, m
     method: str, optional
         The interpolation method, either ``'linear'`` or ``'nearest'``.
         If input data have 2D-coordinates, only ``'nearest'`` method is implemented.
-        If input data have 1D-coordinates, the default interp_type is ``'linear'``.
+        If input data have 1D-coordinates, the default method is ``'linear'``.
         See :py:class:`xarray.DataArray.interp` for other methods.
+    new_dim: str, optional
+        The name of the new transect dimension. Defaults to "transect".
 
     Returns
     -------
     xarray.DataArray or xarray.Dataset
-        The interpolated transect object with the 'transect' dimension.
+        The transect object, with the ``new_dim`` dimension (of size ``steps``).
 
     See Also
     --------
-    extract_transect_along_trajectory, extract_transect_between_points, extract_transect_around_point
+    :py:class:`gpm.utils.manipulations.extract_transect_at_points` and
+    :py:class:`gpm.utils.manipulations.extract_transect_between_points`.
 
     """
     start_point, end_point = get_great_circle_arc_endpoints(point=point, azimuth=azimuth, distance=distance)
@@ -1217,6 +1261,7 @@ def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, m
         end_point=end_point,
         steps=steps,
         method=method,
+        new_dim=new_dim,
     )
 
 
