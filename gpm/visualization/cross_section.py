@@ -184,7 +184,7 @@ def _get_default_y(y, da, possible_defaults):
     return y
 
 
-def plot_transect(
+def plot_cross_section(
     da,
     x=None,
     y=None,

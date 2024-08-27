@@ -400,7 +400,7 @@ class TestContinuousScans:
     n_along_track = 10
     cut_idx = 5
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_contiguous(self) -> xr.Dataset:
         # Values along track
         lat = np.array([60] * self.n_along_track)
@@ -422,7 +422,7 @@ class TestContinuousScans:
         ds = ds.assign_coords({"time": ("along_track", time)})
         return ds
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_contiguous_two_scans(
         self,
         ds_contiguous: xr.Dataset,
@@ -430,7 +430,7 @@ class TestContinuousScans:
         ds = ds_contiguous.copy(deep=True)
         return ds.isel({"along_track": slice(0, 2)})
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_contiguous_three_scans(
         self,
         ds_contiguous: xr.Dataset,
@@ -438,7 +438,7 @@ class TestContinuousScans:
         ds = ds_contiguous.copy(deep=True)
         return ds.isel({"along_track": slice(0, 3)})
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_non_contiguous_lon(
         self,
         ds_contiguous: xr.Dataset,
@@ -450,7 +450,7 @@ class TestContinuousScans:
 
         return ds
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_non_contiguous_granule_id(
         self,
         ds_contiguous: xr.Dataset,
@@ -464,7 +464,7 @@ class TestContinuousScans:
 
         return ds
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_non_contiguous_both(
         self,
         ds_non_contiguous_granule_id: xr.Dataset,
@@ -584,7 +584,7 @@ class TestValidGeolocation:
     n_along_track = 10
     invalid_idx = 5
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_orbit_valid(self) -> xr.Dataset:
         # Values along track
         lon = np.arange(self.n_along_track, dtype=float)
@@ -601,13 +601,13 @@ class TestValidGeolocation:
         ds = ds.assign_coords({"time": ("along_track", time)})
         return ds
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_orbit_valid_with_one_cross_track_nan(self, ds_orbit_valid) -> xr.Dataset:
         ds = ds_orbit_valid.copy(deep=True)
         ds["lon"].data[0] = np.nan
         return ds
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_orbit_invalid(
         self,
         ds_orbit_valid: xr.Dataset,
@@ -616,7 +616,7 @@ class TestValidGeolocation:
         ds["lon"][0, self.invalid_idx] = np.nan
         return ds
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_orbit_all_invalid(
         self,
         ds_orbit_valid: xr.Dataset,
@@ -765,7 +765,7 @@ class TestIsRegular:
 
 
 class TestGetSlicesRegular:
-    @pytest.fixture()
+    @pytest.fixture
     def ds_orbit(self) -> xr.Dataset:
         # Values along track
         n_along_track = 10
@@ -781,7 +781,7 @@ class TestGetSlicesRegular:
         ds = ds.assign_coords({"gpm_granule_id": ("along_track", granule_ids)})
         return ds
 
-    @pytest.fixture()
+    @pytest.fixture
     def ds_grid(self) -> xr.Dataset:
         lon = np.arange(10, dtype=float)
         lat = np.arange(10, dtype=float)

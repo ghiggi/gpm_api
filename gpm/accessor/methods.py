@@ -841,7 +841,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
 
     @auto_wrap_docstring
-    def plot_transect(
+    def plot_cross_section(
         self,
         variable,
         ax=None,
@@ -854,9 +854,9 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         cbar_kwargs=None,
         **plot_kwargs,
     ):
-        from gpm.visualization.cross_section import plot_transect
+        from gpm.visualization.cross_section import plot_cross_section
 
-        return plot_transect(
+        return plot_cross_section(
             self._obj[variable],
             ax=ax,
             x=x,
@@ -1053,7 +1053,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         )
 
     @auto_wrap_docstring
-    def plot_transect(
+    def plot_cross_section(
         self,
         ax=None,
         x=None,
@@ -1065,9 +1065,9 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         cbar_kwargs=None,
         **plot_kwargs,
     ):
-        from gpm.visualization.cross_section import plot_transect
+        from gpm.visualization.cross_section import plot_cross_section
 
-        return plot_transect(
+        return plot_cross_section(
             self._obj,
             ax=ax,
             x=x,

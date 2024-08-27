@@ -37,7 +37,7 @@ from gpm.visualization.title import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def time_data():
     """Provide time data for tests."""
     return np.array(["2024-01-01T12:00:00", "2024-01-02T12:00:00", "2024-01-03T12:00:00"], dtype="datetime64")

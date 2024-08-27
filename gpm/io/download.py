@@ -264,8 +264,7 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
     """
     from tqdm import tqdm
 
-    if n_threads < 1:
-        n_threads = 1
+    n_threads = max(n_threads, 1)
     n_threads = min(n_threads, 10)
     n_cmds = len(commands)
 
