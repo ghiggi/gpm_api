@@ -54,13 +54,10 @@ precipitationQualityIndex:
     over_color: none
     under_color: none
   norm:
-    name: BoundaryNorm
+    name: CategorizeNorm
     boundaries: [0, 0.5, 0.75, 1]
-    ncolors: 3
+    labels: [Highly Uncertain, Uncertain, Reliable]
   cbar:
-    ticks: [0.25, 0.625, 0.875]
-    ticklabels: [Highly Uncertain, Uncertain, Reliable]
-    extend: neither
     label: Precipitation Quality Index
   auxiliary:
     category: [GPM, IMERG]
@@ -125,6 +122,33 @@ randomError:
   auxiliary:
     comment: RandomError smallest values is 0.24 mm/hr
     category: [IMERG, precipitation]
+MWprecipSource:
+  cmap:
+    name: Spectral
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      1: "TMI"
+      3: "AMSR-2"
+      4: "SSMI (F13, F14, F15)"
+      5: "SSMIS (F16, F17, F18, F19)"
+      6: "AMSU-B"
+      7: "MHS"
+      9: "GMI"
+      11: "ATMS (NOAA20, NPP)"
+      12: "AIRS"
+      13: "TOVS"
+      14: "CRIS"
+      15: "AMSR-E"
+      16: "SSMI (F11)"
+      20: "SAPHIR"
+      21: "ATMS (NOAA21)"
+  cbar:
+    label: PMW Sensor
+  auxiliary:
+    category: [IMERG, PMW]
 MWobservationTime:
   cmap:
     name: Spectral

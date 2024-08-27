@@ -53,7 +53,7 @@ dependencies = [
     "numpy",
     "pandas",
     "scipy",
-    "pycolorbar",
+    "pycolorbar>=0.0.14",
 ]
 requires-python = ">=3.9"
 dynamic = ["version"]

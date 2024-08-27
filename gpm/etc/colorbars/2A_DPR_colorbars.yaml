@@ -82,8 +82,11 @@ flagPrecipitationType:
     under_color: none
   norm:
     name: CategoryNorm
-    labels: [No Precipitation, Stratiform, Convective, Other]
-    first_value: 0
+    categories:
+      0: No Precipitation
+      1: Stratiform
+      2: Convective
+      3: Other
   cbar:
     label: ""
 flagHydroClass:
@@ -95,8 +98,13 @@ flagHydroClass:
     under_color: none
   norm:
     name: CategoryNorm
-    labels: [No Precipitation, Rain, Snow, Hail, Melting Layer, Clutter]
-    first_value: 0
+    categories:
+      0: No Precipitation
+      1: Rain
+      2: Snow
+      3: Hail
+      4: Melting Layer
+      5: Clutter
   cbar:
     label: ""
 qualityBB:
@@ -108,8 +116,9 @@ qualityBB:
     under_color: none
   norm:
     name: CategoryNorm
-    labels: [BB not detected, BB detected]
-    first_value: 0
+    categories:
+      0: BB not detected
+      1: BB detected
   cbar:
     label: ""
 landSurfaceType:
@@ -121,8 +130,11 @@ landSurfaceType:
     under_color: none
   norm:
     name: CategoryNorm
-    labels: [Ocean, Land, Coast, Inland Water]
-    first_value: 0
+    categories:
+      0: Ocean
+      1: Land
+      2: Coast
+      3: Inland Water
   cbar:
     label: ""
 snowIceCover:
@@ -134,8 +146,11 @@ snowIceCover:
     under_color: none
   norm:
     name: CategoryNorm
-    labels: [Open Water, Snow-Free Land, Snow-Covered Land, Sea Ice]
-    first_value: 0
+    categories:
+      0: Open Water
+      1: Snow-Free Land
+      2: Snow-Covered Land
+      3: Sea Ice
   cbar:
     label: ""
 reliabFlag:
@@ -147,8 +162,11 @@ reliabFlag:
     under_color: none
   norm:
     name: CategoryNorm
-    labels: [Reliable, Fair, Unreliable, Lower Bound]
-    first_value: 1
+    categories:
+      1: Reliable
+      2: Fair
+      3: Unreliable
+      4: Lower Bound
   cbar:
     label: "Reliability flag for the effective PIA"
 flagPrecip:
