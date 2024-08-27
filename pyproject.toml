@@ -203,6 +203,7 @@ ignore = [
     "PERF203",
     # "PD011", # suggest values --> to_numpy
     "PD901",
+    "PD013", # suggest melt instead of stack
     "PLW2901",
     "PLW0603",
     "RUF012",

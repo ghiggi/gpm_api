@@ -45,7 +45,7 @@ def ensure_pyarrow_string_columns(df):
 
 def drop_undesired_columns(df):
     """Drop undesired columns like dataset dimensions without coordinates."""
-    undesired_columns = ["cross_track", "along_track", "crsWGS84"]
+    undesired_columns = ["cross_track", "along_track", "range", "beam", "pixel", "crsWGS84"]
     undesired_columns = [column for column in undesired_columns if column in df.columns]
     return df.drop(columns=undesired_columns)
 

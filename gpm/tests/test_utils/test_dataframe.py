@@ -55,20 +55,29 @@ def test_to_pandas_dataframe():
     df = to_pandas_dataframe(ds)
 
     # Check results
-    # - cross-track, along_track, crsWGS84 are not in the columns !
+    # - cross-track, along_track, range and crsWGS84 are not in the columns !
     expected_columns = [
-        "range",
+        "dummy_var",
+        "gpm_along_track_id",
+        "gpm_cross_track_id",
+        "gpm_granule_id",
+        "gpm_id",
+        "gpm_range_id",
+        "height",
         "lat",
         "lon",
-        "gpm_granule_id",
-        "gpm_cross_track_id",
-        "gpm_along_track_id",
-        "gpm_id",
         "time",
-        "height",
-        "dummy_var",
     ]
-    assert list(df.columns) == expected_columns
+    assert sorted(df.columns) == expected_columns
+    assert df.shape == (100, 10)
+    assert df["gpm_id"].dtype.name == "string"
+
+    # Test stacked orbit
+    ds_beam = ds.stack(dim={"beam": ["cross_track", "along_track"]})
+    # Write to pandas
+    df = to_pandas_dataframe(ds_beam)
+    # Check results
+    assert sorted(df.columns) == expected_columns
     assert df.shape == (100, 10)
     assert df["gpm_id"].dtype.name == "string"
 
@@ -101,18 +110,26 @@ def test_to_dask_dataframe():
     # Check results
     # - cross-track, along_track, crsWGS84 are not in the columns !
     expected_columns = [
-        "range",
+        "dummy_var",
+        "gpm_along_track_id",
+        "gpm_cross_track_id",
+        "gpm_granule_id",
+        "gpm_id",
+        "gpm_range_id",
+        "height",
         "lat",
         "lon",
-        "gpm_granule_id",
-        "gpm_cross_track_id",
-        "gpm_along_track_id",
-        "gpm_id",
         "time",
-        "height",
-        "dummy_var",
     ]
-    assert list(df.columns) == expected_columns
+    assert sorted(df.columns) == expected_columns
     assert df["gpm_id"].dtype.name == "string"
+    assert df.compute().shape == (100, 10)
 
+    # Test stacked orbit
+    ds_beam = ds.stack(dim={"beam": ["cross_track", "along_track"]})
+    # Write to pandas
+    df = to_dask_dataframe(ds_beam)
+    # Check results
+    assert sorted(df.columns) == expected_columns
+    assert df["gpm_id"].dtype.name == "string"
     assert df.compute().shape == (100, 10)

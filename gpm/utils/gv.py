@@ -1005,8 +1005,8 @@ def volume_matching(
             mask_matched_ppi_2d = mask_matched_ppi_2d.drop(coord)
 
     # Stack aggregated dataset to beam dimension index
-    ds_sr_stack = ds_sr_match_ppi.stack(sr_beam_index=("along_track", "cross_track"))  # noqa
-    da_mask_matched_ppi_stack = mask_matched_ppi_2d.stack(sr_beam_index=("along_track", "cross_track"))  # noqa
+    ds_sr_stack = ds_sr_match_ppi.stack(sr_beam_index=("along_track", "cross_track"))
+    da_mask_matched_ppi_stack = mask_matched_ppi_2d.stack(sr_beam_index=("along_track", "cross_track"))
 
     # Drop beams not matching the GR PPI
     ds_sr_match = ds_sr_stack.isel(sr_beam_index=da_mask_matched_ppi_stack)

@@ -114,6 +114,7 @@ def get_orbit_dataarray(
         da = da.expand_dims(dim={"range": n_range})
         # - Add range coordinate
         da.coords["range"] = ("range", np.arange(1, n_range + 1))
+        da.coords["gpm_range_id"] = ("range", np.arange(0, n_range))
         # - Add height
         height1d = xr.DataArray(np.arange(n_range)[::-1] * 1000, dims="range")
         height_3d = xr.ones_like(da) * height1d
