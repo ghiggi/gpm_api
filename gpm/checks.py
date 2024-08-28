@@ -508,8 +508,8 @@ def check_is_transect(xr_obj, strict=True, squeeze=True):
     If ``strict=False`` , the xarray.DataArray can also have additional dimensions,
     but only an horizontal dimension.
     """
-    if not is_cross_section(xr_obj, strict=strict, squeeze=squeeze):
-        raise ValueError("Expecting a cross-section extracted from a 3D GPM field.")
+    if not is_transect(xr_obj, strict=strict, squeeze=squeeze):
+        raise ValueError("Expecting a transect object.")
 
 
 def check_has_vertical_dim(xr_obj, strict=False, squeeze=True):

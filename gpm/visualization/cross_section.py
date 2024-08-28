@@ -51,7 +51,7 @@ def get_cross_track_horizontal_distance(xr_obj):
 
     Requires a cross-section with cross_track as horizontal spatial dimension !
     """
-    check_is_transect(xr_obj)
+    check_is_transect(xr_obj, strict=False)
     check_has_cross_track_dim(xr_obj)
 
     # Retrieve required DataArrays
@@ -201,6 +201,7 @@ def plot_cross_section(
     If RGB DataArray, all other plot_kwargs are ignored !
     """
     da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_cross_section, strict=True)
+    is_facetgrid = "col" in plot_kwargs or "row" in plot_kwargs
 
     # - Check for contiguous along-track scans
     if "along_track" in da.dims:
@@ -208,7 +209,7 @@ def plot_cross_section(
 
     # - Initialize figure
     fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
-    if ax is None:
+    if ax is None and not is_facetgrid:
         _, ax = plt.subplots(**fig_kwargs)
 
     # - If not specified, retrieve/update plot_kwargs and cbar_kwargs as function of product name
@@ -256,8 +257,10 @@ def plot_cross_section(
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
         )
-    p.axes.set_xlabel(xlabel)
-    p.axes.set_ylabel(ylabel)
+    if not is_facetgrid:
+        p.axes.set_xlabel(xlabel)
+        p.axes.set_ylabel(ylabel)
+
     # - Return mappable
     return p
 
@@ -291,11 +294,13 @@ def plot_transect_line(
     # Retrieve start and end coordinates
     start_lonlat = (xr_obj["lon"].data[0], xr_obj["lat"].data[0])
     end_lonlat = (xr_obj["lon"].data[-1], xr_obj["lat"].data[-1])
-    lon_startend = (start_lonlat[0], end_lonlat[0])
-    lat_startend = (start_lonlat[1], end_lonlat[1])
+    # lon_startend = (start_lonlat[0], end_lonlat[0])
+    # lat_startend = (start_lonlat[1], end_lonlat[1])
+    # # Draw line
+    # p = ax.plot(lon_startend, lat_startend, transform=ccrs.Geodetic(), **line_kwargs, **common_kwargs)
 
     # Draw line
-    p = ax.plot(lon_startend, lat_startend, transform=ccrs.Geodetic(), **line_kwargs, **common_kwargs)
+    p = ax.plot(xr_obj["lon"].data, xr_obj["lat"].data, transform=ccrs.Geodetic(), **line_kwargs, **common_kwargs)
 
     # Add transect start (Left) and End (Right) (i.e. when plotting cross-section)
     if add_direction:

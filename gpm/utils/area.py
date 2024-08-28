@@ -443,6 +443,17 @@ def get_lonlat_corners_from_1d_centroids(lon, lat):
 
     It infer spacing from the available dimension and assume equal spacing on the other dimension.
     """
+    # Ensure same size (for GRID slice case where one is scalar and other is array)
+    lon = np.atleast_1d(lon)
+    lat = np.atleast_1d(lat)
+    if len(lon) != len(lat):
+        if len(lat) == 1:
+            lat = np.ones(lon.shape) * lat
+        elif len(lon) == 1:
+            lon = np.ones(lat.shape) * lon
+        else:
+            raise ValueError(f"Shape mismatch between lon and lat arrays: {len(lon)} vs. {len(lat)} ")
+
     geod = Geod(ellps="WGS84")
 
     # Define corners between centroids
