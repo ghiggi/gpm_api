@@ -90,11 +90,12 @@ DIM_DICT = {
 }
 
 SPATIAL_DIMS = [
-    ["transect"],
     ["along_track", "cross_track"],
     ["lat", "lon"],
     ["latitude", "longitude"],
     ["x", "y"],  # compatibility with satpy/gpm_geo i.e.
+    ["transect"],
+    ["trajectory"],
     ["beam"],  # when stacking 2D spatial dims
     ["pixel"],  # when stacking 2D spatial dims
 ]

@@ -40,7 +40,7 @@ from gpm.tests.utils.fake_datasets import get_grid_dataarray, get_orbit_dataarra
 from gpm.utils import geospatial
 
 
-@pytest.fixture()
+@pytest.fixture
 def product_types() -> list[str]:
     """Return a list of all product types from the info dict."""
     from gpm.io.products import get_available_product_types
@@ -48,7 +48,7 @@ def product_types() -> list[str]:
     return get_available_product_types()
 
 
-@pytest.fixture()
+@pytest.fixture
 def product_categories() -> list[str]:
     """Return a list of product categories from the info dict."""
     from gpm.io.products import get_available_product_categories
@@ -56,7 +56,7 @@ def product_categories() -> list[str]:
     return get_available_product_categories()
 
 
-@pytest.fixture()
+@pytest.fixture
 def product_levels() -> list[str]:
     """Return a list of product levels from the info dict."""
     from gpm.io.products import get_available_product_levels
@@ -64,7 +64,7 @@ def product_levels() -> list[str]:
     return get_available_product_levels(full=False)  #  ["1A", "1B", "1C", "2A", "2B", "3B"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def full_product_levels() -> list[str]:
     """Return a list of full product levels from the info dict."""
     from gpm.io.products import get_available_product_levels
@@ -74,7 +74,7 @@ def full_product_levels() -> list[str]:
     )  # ["1A", "1B", "1C", "2A", "2A-CLIM", "2A-ENV", "2B", "3B-HHR""]
 
 
-@pytest.fixture()
+@pytest.fixture
 def sensors() -> list[str]:
     """Return a list of sensors from the info dict."""
     from gpm.io.products import get_available_sensors
@@ -82,7 +82,7 @@ def sensors() -> list[str]:
     return get_available_sensors()  # ['AMSR2', 'AMSRE', 'AMSUB', 'ATMS', 'DPR', ...]
 
 
-@pytest.fixture()
+@pytest.fixture
 def satellites() -> list[str]:
     """Return a list of satellites from the info dict."""
     from gpm.io.products import get_available_satellites
@@ -90,7 +90,7 @@ def satellites() -> list[str]:
     return get_available_satellites()  # ['GCOMW1', 'GPM', 'METOPA', 'METOPB',  'METOPC', ...]
 
 
-@pytest.fixture()
+@pytest.fixture
 def versions() -> list[int]:
     """Return a list of versions."""
     from gpm.io.products import get_available_versions
@@ -98,7 +98,7 @@ def versions() -> list[int]:
     return get_available_versions()
 
 
-@pytest.fixture()
+@pytest.fixture
 def products() -> list[str]:
     """Return a list of all products regardless of type."""
     from gpm.io.products import get_available_products
@@ -106,13 +106,13 @@ def products() -> list[str]:
     return get_available_products()
 
 
-@pytest.fixture()
+@pytest.fixture
 def product_info() -> dict[str, dict]:
     """Return a dictionary of product info."""
     return get_info_dict()
 
 
-@pytest.fixture()
+@pytest.fixture
 def remote_filepaths() -> dict[str, dict[str, Any]]:
     """Return a list of probable GPM server paths."""
     # Not validated to be real paths but follow the structure
@@ -268,7 +268,7 @@ def remote_filepaths() -> dict[str, dict[str, Any]]:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def local_filepaths() -> list[tuple[str, ...]]:
     """Returns a list of probable local filepath structures as a list."""
     return [
@@ -395,19 +395,19 @@ def local_filepaths() -> list[tuple[str, ...]]:
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def local_filepaths_unix(local_filepaths) -> list[str]:
     """Return the local filepath list as unix paths."""
     return [pxp.join(*path) for path in local_filepaths]
 
 
-@pytest.fixture()
+@pytest.fixture
 def local_filepaths_windows(local_filepaths) -> list[str]:
     """Return the local filepath list as windows paths."""
     return [ntp.join(*path) for path in local_filepaths]
 
 
-@pytest.fixture()
+@pytest.fixture
 def _set_is_orbit_to_true(
     mocker: MockerFixture,
 ) -> None:
@@ -417,7 +417,7 @@ def _set_is_orbit_to_true(
     mocker.patch("gpm.utils.checks.is_grid", return_value=False)
 
 
-@pytest.fixture()
+@pytest.fixture
 def _set_is_grid_to_true(
     mocker: MockerFixture,
 ) -> None:
@@ -430,17 +430,17 @@ def _set_is_grid_to_true(
 ExtentDictionary = dict[str, tuple[float, float, float, float]]
 
 
-@pytest.fixture()
+@pytest.fixture
 def country_extent_dictionary() -> ExtentDictionary:
     return geospatial.read_countries_extent_dictionary()
 
 
-@pytest.fixture()
+@pytest.fixture
 def continent_extent_dictionary() -> ExtentDictionary:
     return geospatial.read_continents_extent_dictionary()
 
 
-@pytest.fixture()
+@pytest.fixture
 def _prevent_pyplot_show(
     mocker: MockerFixture,
 ) -> None:
@@ -451,7 +451,7 @@ def _prevent_pyplot_show(
 #### Orbit Data Array
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_dataarray() -> xr.DataArray:
     """Create orbit data array near 0 longitude and latitude."""
     return get_orbit_dataarray(
@@ -465,7 +465,7 @@ def orbit_dataarray() -> xr.DataArray:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_antimeridian_dataarray() -> xr.DataArray:
     """Create orbit data array going over the antimeridian."""
     return get_orbit_dataarray(
@@ -479,7 +479,7 @@ def orbit_antimeridian_dataarray() -> xr.DataArray:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_pole_dataarray() -> xr.DataArray:
     """Create orbit data array going over the south pole."""
     return get_orbit_dataarray(
@@ -493,7 +493,7 @@ def orbit_pole_dataarray() -> xr.DataArray:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_spatial_3d_dataarray() -> xr.DataArray:
     """Return a 3D orbit data array."""
     # Add a vertical dimension with shape larger than 1 to prevent squeezing
@@ -510,9 +510,9 @@ def orbit_spatial_3d_dataarray() -> xr.DataArray:
     return orbit_dataarray_3d
 
 
-@pytest.fixture()
-def orbit_transect_dataarray() -> xr.DataArray:
-    """Return a transect orbit data array."""
+@pytest.fixture
+def orbit_cross_section_dataarray() -> xr.DataArray:
+    """Return a cross-section orbit data array."""
     orbit_dataarray_3d = get_orbit_dataarray(
         start_lon=0,
         start_lat=0,
@@ -529,7 +529,7 @@ def orbit_transect_dataarray() -> xr.DataArray:
 #### Orbit Data Array with NaN values
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_data_nan_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
     """Create orbit data array near 0 longitude and latitude with NaN data in outer cross-track."""
     padding_size = 2
@@ -541,7 +541,7 @@ def orbit_data_nan_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
     return orbit_dataarray
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_data_nan_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
     """Create orbit data array near 0 longitude and latitude with NaN data at along-track edges."""
     padding_size = 2
@@ -556,7 +556,7 @@ def orbit_data_nan_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
 #### Orbit Data Array with NaN coordinates
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_nan_slice_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
     """Create orbit data array with missing coordinates over some along-track indices."""
     along_track_index = 5
@@ -568,7 +568,7 @@ def orbit_nan_slice_along_track_dataarray(orbit_dataarray) -> xr.DataArray:
     return orbit_dataarray
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_nan_outer_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
     """Create orbit data array with all NaN coordinates in outer cross-track indices."""
     padding_size = 1
@@ -584,7 +584,7 @@ def orbit_nan_outer_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
     return orbit_dataarray
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_nan_inner_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
     """Create orbit data array with all NaN coordinates in some inner cross-track indices."""
     lon = orbit_dataarray["lon"]
@@ -601,7 +601,7 @@ def orbit_nan_inner_cross_track_dataarray(orbit_dataarray) -> xr.DataArray:
 #### Grid Data Array
 
 
-@pytest.fixture()
+@pytest.fixture
 def grid_dataarray() -> xr.DataArray:
     """Create grid data array near 0 longitude and latitude."""
     return get_grid_dataarray(
@@ -614,7 +614,7 @@ def grid_dataarray() -> xr.DataArray:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def grid_nan_lon_dataarray(grid_dataarray) -> xr.DataArray:
     """Create grid data array near 0 longitude and latitude with some NaN longitudes."""
     lon_index = 5
@@ -627,16 +627,16 @@ def grid_nan_lon_dataarray(grid_dataarray) -> xr.DataArray:
     return grid_dataarray
 
 
-@pytest.fixture()
+@pytest.fixture
 def grid_spatial_3d_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
     """Return a 3D grid data array."""
     # Add a vertical dimension with shape larger than 1 to prevent squeezing
     return grid_dataarray.expand_dims(dim={"height": 2})
 
 
-@pytest.fixture()
-def grid_transect_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
-    """Return a transect grid data array."""
+@pytest.fixture
+def grid_cross_section_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
+    """Return a cross-section grid data array."""
     grid_dataarray = grid_dataarray.expand_dims(dim={"height": 2})
     return grid_dataarray.isel(lat=0)
 
@@ -644,7 +644,7 @@ def grid_transect_dataarray(grid_dataarray: xr.DataArray) -> xr.DataArray:
 #### Datasets
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_dataset_collection(
     orbit_dataarray: xr.DataArray,
     orbit_spatial_3d_dataarray: xr.DataArray,
@@ -662,7 +662,7 @@ def orbit_dataset_collection(
     return xr.Dataset(dict_da)
 
 
-@pytest.fixture()
+@pytest.fixture
 def grid_dataset_collection(
     grid_dataarray: xr.DataArray,
     grid_spatial_3d_dataarray: xr.DataArray,

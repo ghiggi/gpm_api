@@ -42,8 +42,8 @@ from gpm.utils.manipulations import (
     extract_dataset_above_bin,
     extract_dataset_below_bin,
     extract_l2_dataset,
-    extract_transect_along_trajectory,
     extract_transect_around_point,
+    extract_transect_at_points,
     extract_transect_between_points,
     get_bin_dataarray,
     get_bright_band_mask,
@@ -60,10 +60,10 @@ from gpm.utils.manipulations import (
     mask_below_bin,
     mask_between_bins,
     select_bin_variables,
+    select_cross_section_variables,
     select_frequency_variables,
     select_spatial_2d_variables,
     select_spatial_3d_variables,
-    select_transect_variables,
     select_vertical_variables,
     slice_range_at_bin,
     slice_range_at_height,
@@ -112,7 +112,7 @@ def create_3d_dataarray(cross_track_size=5, along_track_size=6, range_size=8, th
     return da.transpose("cross_track", "along_track", "range")
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataarray_3d() -> xr.DataArray:
     da = create_3d_dataarray()
     # Reorder to classical order
@@ -950,7 +950,7 @@ def test_get_max_value_point():
     assert get_max_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
 
-def test_extract_transect_along_trajectory():
+def test_extract_transect_at_points():
     """Test extracting transect along trajectory."""
     # GRID 3D
     da = xr.DataArray(np.arange(0, 100).reshape(10, 10), dims=["lat", "lon"])
@@ -958,11 +958,11 @@ def test_extract_transect_along_trajectory():
     da.coords["lat"] = np.linspace(-90, 90, 10)
     da = da.expand_dims(dim={"height": 3})
     points = np.array([[0, 0], [10, 10]])
-    da_transect = extract_transect_along_trajectory(da, points=points)  # method="linear"
+    da_cross_section = extract_transect_at_points(da, points=points)  # method="linear"
 
-    assert da_transect.dims == ("height", "transect")
-    assert da_transect.sizes["transect"] == 2
-    np.testing.assert_allclose(da_transect.isel({"height": 0}).data, [49.5, 54.75])
+    assert da_cross_section.dims == ("height", "transect")
+    assert da_cross_section.sizes["transect"] == 2
+    np.testing.assert_allclose(da_cross_section.isel({"height": 0}).data, [49.5, 54.75])
 
     # ORBIT 3D
     n_along_track = 10
@@ -980,10 +980,10 @@ def test_extract_transect_along_trajectory():
     da = da.expand_dims(dim={"range": 3})
     points = np.array([[0, 0], [10, 10]])
 
-    da_transect = extract_transect_along_trajectory(da, points=points, method="nearest")
-    assert da_transect.dims == ("range", "transect")
-    assert da_transect.sizes["transect"] == 2
-    np.testing.assert_allclose(da_transect.isel({"range": 0}).data, [20.0, 15.0])
+    da_cross_section = extract_transect_at_points(da, points=points, method="nearest")
+    assert da_cross_section.dims == ("range", "transect")
+    assert da_cross_section.sizes["transect"] == 2
+    np.testing.assert_allclose(da_cross_section.isel({"range": 0}).data, [20.0, 15.0])
 
 
 def test_extract_transect_between_points():
@@ -997,10 +997,10 @@ def test_extract_transect_between_points():
     start_point = (5, 2)
     end_point = (8, 6)
     steps = 4
-    da_transect = extract_transect_between_points(da, start_point, end_point, steps=steps)
-    assert da_transect.dims == ("height", "transect")
-    assert da_transect.sizes["transect"] == steps
-    np.testing.assert_allclose(da_transect.isel({"height": 0}).data, [22.5, 35.4080, 48.3089, 61.2], atol=1e-04)
+    da_cross_section = extract_transect_between_points(da, start_point, end_point, steps=steps)
+    assert da_cross_section.dims == ("height", "transect")
+    assert da_cross_section.sizes["transect"] == steps
+    np.testing.assert_allclose(da_cross_section.isel({"height": 0}).data, [22.5, 35.4080, 48.3089, 61.2], atol=1e-04)
 
     # ORBIT 3D
     n_along_track = 10
@@ -1020,10 +1020,10 @@ def test_extract_transect_between_points():
     start_point = (5, 2)
     end_point = (8, 6)
     steps = 4
-    da_transect = extract_transect_between_points(da, start_point, end_point, steps=steps)
-    assert da_transect.dims == ("range", "transect")
-    assert da_transect.sizes["transect"] == steps
-    np.testing.assert_allclose(da_transect.isel({"range": 0}).data, [32.0, 22.0, 23.0, 24.0], atol=1e-04)
+    da_cross_section = extract_transect_between_points(da, start_point, end_point, steps=steps)
+    assert da_cross_section.dims == ("range", "transect")
+    assert da_cross_section.sizes["transect"] == steps
+    np.testing.assert_allclose(da_cross_section.isel({"range": 0}).data, [32.0, 22.0, 23.0, 24.0], atol=1e-04)
 
 
 def test_extract_transect_around_point():
@@ -1037,12 +1037,12 @@ def test_extract_transect_around_point():
     azimuth = 0
     distance = 200_000
     steps = 3
-    da_transect = extract_transect_around_point(da, point, azimuth, distance, steps=steps)
-    assert da_transect.dims == ("height", "transect")
-    assert da_transect.sizes["transect"] == steps
-    np.testing.assert_allclose(da_transect.isel({"height": 0}).data, [65.7769, 49.5, 33.2221], atol=1e-04)
-    np.testing.assert_allclose(da_transect["lon"].data, [5.0, 5.0, 5.0], atol=1e-04)
-    np.testing.assert_allclose(da_transect["lat"].data, [6.8085, 5.0, 3.1913], atol=1e-04)
+    da_cross_section = extract_transect_around_point(da, point, azimuth, distance, steps=steps)
+    assert da_cross_section.dims == ("height", "transect")
+    assert da_cross_section.sizes["transect"] == steps
+    np.testing.assert_allclose(da_cross_section.isel({"height": 0}).data, [65.7769, 49.5, 33.2221], atol=1e-04)
+    np.testing.assert_allclose(da_cross_section["lon"].data, [5.0, 5.0, 5.0], atol=1e-04)
+    np.testing.assert_allclose(da_cross_section["lat"].data, [6.8085, 5.0, 3.1913], atol=1e-04)
 
     # ORBIT 3D
     n_along_track = 10
@@ -1063,10 +1063,10 @@ def test_extract_transect_around_point():
     azimuth = 0
     distance = 200_000
     steps = 3
-    da_transect = extract_transect_around_point(da, point, azimuth, distance, steps=steps)
-    assert da_transect.dims == ("range", "transect")
-    assert da_transect.sizes["transect"] == steps
-    np.testing.assert_allclose(da_transect.isel({"range": 0}).data, [13.0, 23.0, 22.0])
+    da_cross_section = extract_transect_around_point(da, point, azimuth, distance, steps=steps)
+    assert da_cross_section.dims == ("range", "transect")
+    assert da_cross_section.sizes["transect"] == steps
+    np.testing.assert_allclose(da_cross_section.isel({"range": 0}).data, [13.0, 23.0, 22.0])
 
 
 def test_get_range_axis(
@@ -1098,7 +1098,7 @@ class TestGetPhaseMask:
     height_zero_deg = rng.integers(3, 6, size=(5, 6)) * 8
     da_height_zero_deg = xr.DataArray(height_zero_deg, dims=["cross_track", "along_track"])
 
-    @pytest.fixture()
+    @pytest.fixture
     def phase_dataarray(
         self,
         dataarray_3d: xr.DataArray,
@@ -1164,21 +1164,21 @@ class TestSelectVariables:
         expected_ds = grid_dataset_collection[["variable_2d"]]
         xr.testing.assert_identical(returned_ds, expected_ds)
 
-    def test_transect(
+    def test_cross_section(
         self,
         orbit_dataset_collection: xr.Dataset,
         grid_dataset_collection: xr.Dataset,
     ) -> None:
-        """Test select_transect_variables function."""
+        """Test select_cross_section_variables function."""
         # Orbit
         orbit_dataset = orbit_dataset_collection.isel(along_track=0)
-        returned_ds = select_transect_variables(orbit_dataset)
+        returned_ds = select_cross_section_variables(orbit_dataset)
         expected_ds = orbit_dataset[["variable_3d"]]
         xr.testing.assert_identical(returned_ds, expected_ds)
 
         # Grid
         grid_dataset = grid_dataset_collection.isel(lon=0)
-        returned_ds = select_transect_variables(grid_dataset)
+        returned_ds = select_cross_section_variables(grid_dataset)
         expected_ds = grid_dataset[["variable_3d"]]
         xr.testing.assert_identical(returned_ds, expected_ds)
 

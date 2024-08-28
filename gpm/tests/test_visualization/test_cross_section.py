@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module test the visualization transect utilities."""
+"""This module test the visualization cross-section utilities."""
 
 import platform
 
@@ -38,10 +38,10 @@ from gpm.tests.test_visualization.utils import (
     skip_tests_if_no_data,
 )
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray
-from gpm.visualization.cross_section import plot_transect, plot_transect_line
+from gpm.visualization.cross_section import plot_cross_section, plot_transect_line
 
 
-@pytest.fixture()
+@pytest.fixture
 def orbit_spatial_3d_dataarray() -> xr.DataArray:
     """Return a 3D orbit dataset."""
     orbit_dataarray_3d = get_orbit_dataarray(
@@ -65,58 +65,58 @@ skip_tests_if_no_data()
 
 
 class TestPlotTransect:
-    """Test the plot_transect function."""
+    """Test the plot_cross_section function."""
 
     def test_cross_track(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting cross-track transect."""
-        p = plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0))
+        """Test plotting cross-track cross-section."""
+        p = plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0))
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_along_track(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting along-track transect."""
-        p = plot_transect(orbit_spatial_3d_dataarray.isel(cross_track=0))
+        """Test plotting along-track cross-section."""
+        p = plot_cross_section(orbit_spatial_3d_dataarray.isel(cross_track=0))
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_with_height(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting transect with height on y axis."""
-        p = plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="height", x="lon")
+        """Test plotting cross-section with height on y axis."""
+        p = plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0), y="height", x="lon")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_with_height_on_x(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting transect with height on y axis."""
-        p = plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="lon", x="height")
+        """Test plotting cross-section with height on y axis."""
+        p = plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0), y="lon", x="height")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_with_alpha_array(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting transect with alpha array."""
+        """Test plotting cross-section with alpha array."""
         da = orbit_spatial_3d_dataarray.isel(along_track=0)
         alpha = np.ones(da.shape) * 0.5
-        p = plot_transect(da, y="height", x="lon", alpha=alpha)
+        p = plot_cross_section(da, y="height", x="lon", alpha=alpha)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_with_rgb_imshow(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting RGB transect (with imshow)."""
+        """Test plotting RGB cross-section (with imshow)."""
         da_rgb_3d = orbit_spatial_3d_dataarray.expand_dims({"rgb": 3}).transpose(..., "rgb")
         da_rgb = da_rgb_3d.isel(along_track=0)
-        p = plot_transect(da_rgb, y="range", rgb="rgb")
+        p = plot_cross_section(da_rgb, y="range", rgb="rgb")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     # TODO: implement RGB for pcolormesh
@@ -126,46 +126,46 @@ class TestPlotTransect:
     #     self,
     #     orbit_spatial_3d_dataarray: xr.DataArray,
     # ) -> None:
-    #     """Test plotting RGB transect (with pcolormesh)."""
+    #     """Test plotting RGB cross-section (with pcolormesh)."""
     #     orbit_spatial_3d_dataarray = orbit_spatial_3d_dataarray.expand_dims({"rgb": 3}).transpose(...,"rgb")
-    #     p = plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="height", x="lon")
+    #     p = plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0), y="height", x="lon")
     #     save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_with_nan_coordinates(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting transect with nan coordinates."""
-        da_transect = orbit_spatial_3d_dataarray.isel(along_track=0)
-        da_transect["height"].data[0:2, 0:2] = np.nan
-        p = plot_transect(da_transect, y="height", x="lon")
+        """Test plotting cross-section with nan coordinates."""
+        da_cross_section = orbit_spatial_3d_dataarray.isel(along_track=0)
+        da_cross_section["height"].data[0:2, 0:2] = np.nan
+        p = plot_cross_section(da_cross_section, y="height", x="lon")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_with_nan_coordinates_alpha_array(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting transect with nan coordinates and alpha array."""
-        da_transect = orbit_spatial_3d_dataarray.isel(along_track=0)
-        da_transect["height"].data[0:2, 0:2] = np.nan
-        alpha = np.ones(da_transect.shape) * 0.5
-        p = plot_transect(da_transect, y="height", x="lon", alpha=alpha)
+        """Test plotting cross-section with nan coordinates and alpha array."""
+        da_cross_section = orbit_spatial_3d_dataarray.isel(along_track=0)
+        da_cross_section["height"].data[0:2, 0:2] = np.nan
+        alpha = np.ones(da_cross_section.shape) * 0.5
+        p = plot_cross_section(da_cross_section, y="height", x="lon", alpha=alpha)
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_with_height_km(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting transect with height in kilometers on y axis."""
-        p = plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="height_km", x="lat")
+        """Test plotting cross-section with height in kilometers on y axis."""
+        p = plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0), y="height_km", x="lat")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_with_horizontal_distance(
         self,
         orbit_spatial_3d_dataarray: xr.DataArray,
     ) -> None:
-        """Test plotting cross-track transect with horizontal distance on x axis."""
-        p = plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="range", x="horizontal_distance")
+        """Test plotting cross-track cross-section with horizontal distance on x axis."""
+        p = plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0), y="range", x="horizontal_distance")
         save_and_check_figure(figure=p.figure, name=get_test_name())
 
     def test_raise_error_with_invalid_coordinates(
@@ -175,15 +175,15 @@ class TestPlotTransect:
         """Test invalid y axis options."""
         # Not existing y coordinate
         with pytest.raises(ValueError):
-            plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="inexisting")
+            plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0), y="inexisting")
 
         # No pre-computed y coordinate
         with pytest.raises(ValueError):
-            plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), y="range_distance_from_satellite_km")
+            plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0), y="range_distance_from_satellite_km")
 
         # No pre-computed y coordinate
         with pytest.raises(ValueError):
-            plot_transect(orbit_spatial_3d_dataarray.isel(along_track=0), x="inexisting")
+            plot_cross_section(orbit_spatial_3d_dataarray.isel(along_track=0), x="inexisting")
 
 
 def test_plot_transect_line(

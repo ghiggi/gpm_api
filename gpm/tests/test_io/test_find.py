@@ -126,7 +126,7 @@ class TestGetDailyFilepaths:
                     with check:
                         assert returned_filepaths == expected_filepaths
 
-    @pytest.fixture()
+    @pytest.fixture
     def _mock_get_pps_file_list(
         self,
         mocker: MockerFixture,
@@ -290,7 +290,7 @@ class TestGetDailyFilepaths:
                     verbose=True,
                 )
 
-    @pytest.fixture()
+    @pytest.fixture
     def _mock_get_ges_disc_list_path(
         self,
         mocker: MockerFixture,

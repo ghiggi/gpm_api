@@ -239,7 +239,24 @@ class GPM_Base_Accessor:
             decode_cf=decode_cf,
         )
 
-    #### Transect utility
+    #### Transect/Trajectory utility
+
+    @auto_wrap_docstring
+    def extract_at_points(
+        self,
+        points,
+        method="nearest",
+        new_dim="points",
+    ):
+        from gpm.utils.manipulations import extract_at_points
+
+        return extract_at_points(
+            self._obj,
+            points=points,
+            method=method,
+            new_dim=new_dim,
+        )
+
     @auto_wrap_docstring
     def extract_transect_between_points(
         self,
@@ -247,6 +264,7 @@ class GPM_Base_Accessor:
         end_point,
         steps=100,
         method="linear",
+        new_dim="transect",
     ):
         from gpm.utils.manipulations import extract_transect_between_points
 
@@ -256,6 +274,7 @@ class GPM_Base_Accessor:
             end_point=end_point,
             steps=steps,
             method=method,
+            new_dim=new_dim,
         )
 
     @auto_wrap_docstring
@@ -266,6 +285,7 @@ class GPM_Base_Accessor:
         distance,
         steps=100,
         method="linear",
+        new_dim="transect",
     ):
         from gpm.utils.manipulations import extract_transect_around_point
 
@@ -276,20 +296,23 @@ class GPM_Base_Accessor:
             distance=distance,
             steps=steps,
             method=method,
+            new_dim=new_dim,
         )
 
     @auto_wrap_docstring
-    def extract_transect_along_trajectory(
+    def extract_transect_at_points(
         self,
         points,
         method="linear",
+        new_dim="transect",
     ):
-        from gpm.utils.manipulations import extract_transect_along_trajectory
+        from gpm.utils.manipulations import extract_transect_at_points
 
-        return extract_transect_along_trajectory(
+        return extract_transect_at_points(
             self._obj,
             points=points,
             method=method,
+            new_dim=new_dim,
         )
 
     #### Range subset utility
@@ -841,7 +864,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
 
     @auto_wrap_docstring
-    def plot_transect(
+    def plot_cross_section(
         self,
         variable,
         ax=None,
@@ -854,9 +877,9 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         cbar_kwargs=None,
         **plot_kwargs,
     ):
-        from gpm.visualization.cross_section import plot_transect
+        from gpm.visualization.cross_section import plot_cross_section
 
-        return plot_transect(
+        return plot_cross_section(
             self._obj[variable],
             ax=ax,
             x=x,
@@ -1053,7 +1076,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         )
 
     @auto_wrap_docstring
-    def plot_transect(
+    def plot_cross_section(
         self,
         ax=None,
         x=None,
@@ -1065,9 +1088,9 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         cbar_kwargs=None,
         **plot_kwargs,
     ):
-        from gpm.visualization.cross_section import plot_transect
+        from gpm.visualization.cross_section import plot_cross_section
 
-        return plot_transect(
+        return plot_cross_section(
             self._obj,
             ax=ax,
             x=x,

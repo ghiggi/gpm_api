@@ -753,7 +753,7 @@ class TestPlotLabels:
 
     label_name = "label"
 
-    @pytest.fixture()
+    @pytest.fixture
     def orbit_labels_dataarray(
         self,
         orbit_dataarray: xr.DataArray,
@@ -765,7 +765,7 @@ class TestPlotLabels:
             {self.label_name: (("cross_track", "along_track"), labels)},
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def grid_labels_dataarray(
         self,
         grid_dataarray: xr.DataArray,
