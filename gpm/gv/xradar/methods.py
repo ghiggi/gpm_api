@@ -234,9 +234,24 @@ def plot_range_distance(
     return p
 
 
+def _xradar_georeference(xr_obj):
+    # FIXME: in xradar for DataArray ! Use 'crs_wkt' in ds.coords
+    if isinstance(xr_obj, xr.DataArray):
+        name = xr_obj.name
+        return xr_obj.to_dataset(name=name).xradar.georeference()[name]
+    return xr_obj.xradar.georeference()
+
+
+def _xradar_get_crs(xr_obj):
+    # FIXME: in xradar for DataArray ! Use 'crs_wkt' in ds.coords
+    if isinstance(xr_obj, xr.DataArray):
+        return xr_obj.to_dataset(name="dummy").xradar.get_crs()
+    return xr_obj.xradar.get_crs()
+
+
 def _add_lon_lat_coords(xr_obj):
     # Georeference the data on a azimuthal_equidistant projection centered on the radar
-    xr_obj = xr_obj.xradar.georeference()
+    xr_obj = _xradar_georeference(xr_obj)
 
     # Get the GR CRS
     crs_gr = xr_obj.xradar_dev.pyproj_crs
@@ -270,7 +285,7 @@ def plot_map(
     from gpm.visualization.plot import initialize_cartopy_plot, plot_colorbar
 
     # Compute geographic coordinates on-the-fly if not provided
-    if "lon" not in da:
+    if "lon" not in list(da.coords):
         da = _add_lon_lat_coords(da)
 
     # Initialize figure if necessary

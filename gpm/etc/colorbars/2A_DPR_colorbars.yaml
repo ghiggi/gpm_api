@@ -248,3 +248,9 @@ qualityTypePrecip:
       1: Good
   cbar:
     label: Reliability of precipitation type
+zFactorCorrection:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  cbar:
+    label: Attenuation Correction [dBZ]

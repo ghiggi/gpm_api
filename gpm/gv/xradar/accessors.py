@@ -46,9 +46,9 @@ class Xradar_Dev_Base_Accessor:
 
     @property
     def pyproj_crs(self):
-        from xradar.georeference.projection import get_crs
+        from gpm.gv.xradar.methods import _xradar_get_crs
 
-        return get_crs(self._obj)
+        return _xradar_get_crs(self._obj)
 
     def plot_range_distance(
         self,

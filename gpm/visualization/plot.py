@@ -1007,7 +1007,7 @@ def plot_image(
         Argument to be passed to imshow.
         The default is ``"nearest"``.
     fig_kwargs : dict, optional
-        Figure options to be passed to :py:class:`matplotlib.pyplot.subplots``.
+        Figure options to be passed to :py:class:`matplotlib.pyplot.subplots`.
         The default is ``None``.
         Only used if ``ax`` is ``None``.
     subplot_kwargs : dict, optional

@@ -60,7 +60,7 @@ def _transform_fun(x, y, z, src_crs, dst_crs):
     If using pyproj < 3.1, it employs pyproj.transform.
     Docs: https://pyproj4.github.io/pyproj/stable/advanced_examples.html#multithreading
     """
-    transformer = Transformer.from_crs(src_crs, dst_crs)
+    transformer = Transformer.from_crs(src_crs, dst_crs, always_xy=True)
     return np.stack(transformer.transform(x, y, z, radians=False), axis=-1)
 
 
