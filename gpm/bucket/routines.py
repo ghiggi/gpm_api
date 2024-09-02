@@ -251,7 +251,7 @@ def write_bucket(
 
     Parameters
     ----------
-    ds : pandas.DataFrame or dask.DataFrame
+    df : pandas.DataFrame or dask.dataframe.DataFrame
         Pandas or Dask dataframe to be written into a geographic bucket.
     bucket_dir: str
         Base directory of the geographic bucket archive.

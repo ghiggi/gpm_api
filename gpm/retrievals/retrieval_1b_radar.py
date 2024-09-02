@@ -34,8 +34,6 @@ import gpm
 from gpm.checks import check_has_vertical_dim
 from gpm.utils.manipulations import (
     conversion_factors_degree_to_meter,
-    convert_from_decibel,
-    convert_to_decibel,
     get_vertical_datarray_prototype,
 )
 from gpm.utils.xarray import get_xarray_variable
@@ -243,7 +241,7 @@ def retrieve_Psignal(ds, echoPower_variable="echoPower"):
     echoPower = get_xarray_variable(ds, variable=echoPower_variable)
     noisePower = get_xarray_variable(ds, variable="noisePower")
     # Compute Psignal
-    Psignal = convert_from_decibel(echoPower) - convert_from_decibel(noisePower)
+    Psignal = echoPower.gpm.idecibel - noisePower.gpm.idecibel
     Psignal = Psignal.where(Psignal > 0)  #  Psignal negative set as np.nan
     # Name the DataArray
     Psignal.name = "Psignal"
@@ -261,7 +259,7 @@ def retrieve_signalPower(ds, echoPower_variable="echoPower"):
     # Retrieve required DataArrays
     Psignal = retrieve_Psignal(ds, echoPower_variable=echoPower_variable)
     # Compute echoSignalPower
-    echoSignalPower = convert_to_decibel(Psignal)
+    echoSignalPower = Psignal.gpm.decibel
     # Name the DataArray
     echoSignalPower.name = "echoSignalPower"
     echoSignalPower.attrs["units"] = "dBm"
@@ -328,10 +326,10 @@ def retrieve_zMeasured(ds, signal_variable, dielectric_constant=None):
     speed_light = 299_792_458  # m/s
 
     # Compute reflectivity
-    Psignal = convert_from_decibel(signalPower)
-    Ptransmitted = convert_from_decibel(radarTransPower)
-    txAntGain = convert_from_decibel(txAntGain)
-    rxAntGain = convert_from_decibel(rxAntGain)
+    Psignal = signalPower.gpm.idecibel
+    Ptransmitted = radarTransPower.gpm.idecibel
+    txAntGain = txAntGain.gpm.idecibel
+    rxAntGain = rxAntGain.gpm.idecibel
     constant = 2**10 * 10**18 * np.log(2) / (np.pi**3 * speed_light) * eqvWavelength**2
     z = (
         constant
@@ -351,7 +349,7 @@ def retrieve_zMeasured(ds, signal_variable, dielectric_constant=None):
     )
 
     # Convert back to decibel
-    zMeasured = convert_to_decibel(z)
+    zMeasured = z.gpm.decibel
 
     # Name the DataArray
     zMeasured.name = "zMeasured"
@@ -382,10 +380,10 @@ def retrieve_sigmaMeasured(ds, signal_variable="signalPower", local_zenith_angle
     lza_rad = np.deg2rad(lza)
 
     # Convert from decibels
-    Psignal = convert_from_decibel(signalPower)
-    Ptransmitted = convert_from_decibel(radarTransPower)
-    txAntGain = convert_from_decibel(txAntGain)
-    rxAntGain = convert_from_decibel(rxAntGain)
+    Psignal = signalPower.gpm.idecibel
+    Ptransmitted = radarTransPower.gpm.idecibel
+    txAntGain = txAntGain.gpm.idecibel
+    rxAntGain = rxAntGain.gpm.idecibel
 
     # Compute Normalized Radar Cross Section
     constant = 512 * np.pi**2 * np.log(2) / eqvWavelength**2
@@ -401,7 +399,7 @@ def retrieve_sigmaMeasured(ds, signal_variable="signalPower", local_zenith_angle
     )
 
     # Convert back to decibel
-    sigmaMeasured = convert_to_decibel(sigma)
+    sigmaMeasured = sigma.gpm.decibel
 
     # Name the DataArray
     sigmaMeasured.name = "sigmaMeasured"
@@ -415,8 +413,8 @@ def retrieve_snRatio(ds, echo_variable="echoPower", noise_variable="noisePower")
     noisePower = get_xarray_variable(ds, variable=noise_variable)  # dBm
 
     # Compute SNR
-    ratio = convert_from_decibel(echoPower) / convert_from_decibel(noisePower)  # [mW/mW]
-    snRatio = convert_to_decibel(ratio)
+    ratio = echoPower.gpm.idecibel / noisePower.gpm.idecibel  # [mW/mW]
+    snRatio = ratio.gpm.decibel
 
     # Name the DataArray
     snRatio.name = "snRatio"

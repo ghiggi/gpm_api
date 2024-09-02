@@ -540,6 +540,7 @@ def plot_colorbar(p, ax, cbar_kwargs=None):
         size = cbar_kwargs.get("size", "5%")
         pad = cbar_kwargs.get("pad", 0.25)
         cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
+
     p.figure.add_axes(cax)
     # Add colorbar
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
@@ -929,6 +930,8 @@ def _plot_image_facetgrid(
     )
 
     # Disable colorbar if rgb
+    # - Move this to pycolorbar !
+    # - Also remove cmap, norm, vmin and vmax in plot_kwargs
     if plot_kwargs.get("rgb", False):
         add_colorbar = False
         cbar_kwargs = {}
@@ -993,7 +996,7 @@ def plot_image(
         Y dimension name.
         If ``None``, takes the first dimension.
         The default is ``None``.
-    ax : cartopy.GeoAxes, optional
+    ax : cartopy.mpl.geoaxes.GeoAxes, optional
         The matplotlib axes where to plot the image.
         If ``None``, a figure is initialized using the
         specified ``fig_kwargs``.
@@ -1004,7 +1007,7 @@ def plot_image(
         Argument to be passed to imshow.
         The default is ``"nearest"``.
     fig_kwargs : dict, optional
-        Figure options to be passed to :py:class:`matplotlib.pyplot.subplots``.
+        Figure options to be passed to :py:class:`matplotlib.pyplot.subplots`.
         The default is ``None``.
         Only used if ``ax`` is ``None``.
     subplot_kwargs : dict, optional
@@ -1094,7 +1097,7 @@ def plot_map(
         Latitude coordinate name.
         If ``None``, takes the first dimension.
         The default is ``None``.
-    ax : cartopy.GeoAxes, optional
+    ax : cartopy.mpl.geoaxes.GeoAxes, optional
         The cartopy GeoAxes where to plot the map.
         If ``None``, a figure is initialized using the
         specified ``fig_kwargs`` and ``subplot_kwargs``.
@@ -1107,7 +1110,7 @@ def plot_map(
     add_background : bool, optional
         Whether to add the map background. The default is ``True``.
     interpolation : str, optional
-        Argument to be passed to :py:class:`matplotlib.pyplot.imshow`. Only applies for GRID objects.
+        Argument to be passed to :py:class:`matplotlib.axes.Axes.imshow`. Only applies for GRID objects.
         The default is ``"nearest"``.
     fig_kwargs : dict, optional
         Figure options to be passed to `matplotlib.pyplot.subplots`.

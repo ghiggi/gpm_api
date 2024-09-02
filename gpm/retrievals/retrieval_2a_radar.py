@@ -139,7 +139,7 @@ def retrieve_range_distance_from_satellite(ds, scan_angle=None, earth_radius=637
     ----------
     ds : xarray.Dataset
         GPM radar dataset.
-    scan_angle : xr.DataArray, optional
+    scan_angle : xarray.DataArray, optional
         Cross-track scan angle in degree.
         If not specified, assumes ``np.abs(np.linspace(-17.04, 17.04, 49))`` for Ku.
     earth_radius: float, optional
@@ -225,17 +225,17 @@ def retrieve_gate_volume(ds, beam_width=None, range_distance=None, scan_angle=No
     beam_width : float
         The cross-track aperture angle of the radar beam [degree].
         The accurate cross-track aperture angle is provided by 'crossTrackBeamWidth' in the L1B product.
-    range_distance: xr.DataArray
+    range_distance: xarray.DataArray
         DataArray with range distance from each satellite at each radar gate.
         If not specified, is computed using a rough approximation.
-    scan_angle: xr.DataArray
+    scan_angle: xarray.DataArray
         Used to estimate range_distance if not specified.
         Cross-track scan angle in degree.
         If not specified, assumes ``np.abs(np.linspace(-17.04, 17.04, 49))`` for Ku.
 
     Returns
     -------
-    xr.DataArray
+    xarray.DataArray
         Volume of radar gates in cubic meters.
     """
     if beam_width is None:
@@ -268,10 +268,10 @@ def retrieve_gate_resolution(ds, beam_width, range_distance=None, scan_angle=Non
     beam_width : float
         The cross-track aperture angle of the radar beam [degree].
         The accurate cross-track aperture angle is provided by 'crossTrackBeamWidth' in the L1B product.
-    range_distance: xr.DataArray
+    range_distance: xarray.DataArray
         DataArray with range distance from each satellite at each radar gate.
         If not specified, is computed using a rough approximation.
-    scan_angle: xr.DataArray
+    scan_angle: xarray.DataArray
         Used to estimate range_distance if not specified.
         Cross-track scan angle in degree.
         If not specified, assumes ``np.abs(np.linspace(-17.04, 17.04, 49))`` for Ku.
@@ -510,19 +510,19 @@ def retrieve_s_band_cao2013(ds, reflectivity="zFactorFinal", bb_ratio=None, prec
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         GPM Radar dataset.
-    reflectivity: xr.DataArray or str
+    reflectivity: xarray.DataArray or str
         3D reflectivity array or dataset variable name. The default is "zFactorFinal".
-    bb_ratio : xr.DataArray, optional
+    bb_ratio : xarray.DataArray, optional
         Bright Band Ratio. If not specified, ``gpm.retrieve("bright_band_ratio")`` is called.
-    precip_type : xr.DataArray, optional
+    precip_type : xarray.DataArray, optional
         DataArray indicating the precipitation class.
         Please ensure ``precip_type`` to have values 0, 1 or 2. ``precip type = 0`` means no rain.
 
     Returns
     -------
-    xr.DataArray
+    xarray.DataArray
         S band reflectivity.
     """
     import wradlib as wrl

@@ -965,7 +965,7 @@ def mask_above_bin(xr_obj, bins, strict=True, fillvalue=np.nan):
 
     Parameters
     ----------
-    xr_obj : xarray.Dataset or xr.DataArray
+    xr_obj : xarray.Dataset or xarray.DataArray
         GPM RADAR xarray object.
     bins : str or xarray.DataArray
         Either a xarray.DataArray or a string pointing to the dataset variable
@@ -978,7 +978,7 @@ def mask_above_bin(xr_obj, bins, strict=True, fillvalue=np.nan):
 
     Returns
     -------
-    xarray.Dataset or xr.DataArray
+    xarray.Dataset or xarray.DataArray
         Masked GPM RADAR xarray object.
 
     """
@@ -1002,7 +1002,7 @@ def mask_below_bin(xr_obj, bins, strict=True, fillvalue=np.nan):
 
     Parameters
     ----------
-    xr_obj : xarray.Dataset or xr.DataArray
+    xr_obj : xarray.Dataset or xarray.DataArray
         GPM RADAR xarray object.
     bins : str or xarray.DataArray
         Either a xarray.DataArray or a string pointing to the dataset variable
@@ -1015,7 +1015,7 @@ def mask_below_bin(xr_obj, bins, strict=True, fillvalue=np.nan):
 
     Returns
     -------
-    xarray.Dataset or xr.DataArray
+    xarray.Dataset or xarray.DataArray
         Masked GPM RADAR xarray object.
 
     """
@@ -1039,7 +1039,7 @@ def mask_between_bins(xr_obj, bottom_bins, top_bins, strict=True, fillvalue=np.n
 
     Parameters
     ----------
-    xr_obj : xarray.Dataset or xr.DataArray
+    xr_obj : xarray.Dataset or xarray.DataArray
         GPM RADAR xarray object.
     bottom_bins : str or xarray.DataArray
         Either a xarray.DataArray or a string pointing to the dataset variable
@@ -1056,7 +1056,7 @@ def mask_between_bins(xr_obj, bottom_bins, top_bins, strict=True, fillvalue=np.n
 
     Returns
     -------
-    xarray.Dataset or xr.DataArray
+    xarray.Dataset or xarray.DataArray
         Masked GPM RADAR xarray object.
 
     """
@@ -1223,7 +1223,7 @@ def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, m
 
     Parameters
     ----------
-    xr_obj : xr.DataArray or xr.Dataset
+    xr_obj : xarray.DataArray or xarray.Dataset
         Dataset or DataArray from which extract a transect.
     point : tuple of float
         A tuple representing the middle point (longitude, latitude) of the great circle arc.

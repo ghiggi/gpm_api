@@ -269,8 +269,9 @@ def open_dataset(
         or later remove the prefix before writing the dataset.
         The default is ``False``.
     parallel : bool
-        If ``True``, the dataset are opened in parallel using :py:class:`dask.delayed`.
-        If ``parallel=True``, ``'chunks'`` can not be ``None``. The underlying data must be :py:class:`dask.Array`.
+        If ``True``, the dataset are opened in parallel using :py:class:`dask.delayed.delayed`.
+        If ``parallel=True``, ``'chunks'`` can not be ``None``.
+        The underlying data must be :py:class:`dask.array.Array`.
         The default is ``False``.
 
     Returns

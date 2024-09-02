@@ -1,5 +1,5 @@
 ---
-reflectivity:
+reflectivity_gpm:
   cmap:
     name: Spectral_r
     bad_alpha: 0.5
@@ -14,7 +14,7 @@ reflectivity:
     label: Reflectivity [$dBZ$]
   auxiliary:
     category: [reflectivity]
-dual_frequency_ratio:
+dual_frequency_ratio_gpm:
   cmap:
     name: turbo
     bad_color: none
