@@ -168,7 +168,7 @@ reliabFlag:
       3: Unreliable
       4: Lower Bound
   cbar:
-    label: "Reliability flag for the effective PIA"
+    label: Reliability flag for the effective PIA
 flagPrecip:
   cmap:
     name: Set3
@@ -214,7 +214,7 @@ piaFinal:
 airTemperature:
   cmap:
     name: RdBu_r
-    bad_color: "gray"
+    bad_color: gray
   norm:
     name: CenteredNorm
     vcenter: 273.15
@@ -234,11 +234,11 @@ qualityFlag:
       1: Low Quality
       2: Unreliable
   cbar:
-    label: "Reliability of precipitation detection"
+    label: Reliability of precipitation detection
 qualityTypePrecip:
   cmap:
     name: Set3
-    bad_color: "gray"
+    bad_color: gray
     over_color: none
     under_color: none
   norm:
@@ -247,4 +247,4 @@ qualityTypePrecip:
       0: No rain
       1: Good
   cbar:
-    label: "Reliability of precipitation type"
+    label: Reliability of precipitation type

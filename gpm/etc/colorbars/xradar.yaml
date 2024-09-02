@@ -4,8 +4,6 @@ reflectivity:
     name: Spectral_r
     bad_alpha: 1
     bad_color: none
-    # under_color: none
-    # under_alpha: 0
   norm:
     name: Norm
     vmin: -10
@@ -18,7 +16,7 @@ reflectivity:
     category: [reflectivity, radar]
 differential_reflectivity:
   cmap:
-    name: Spectral_r # pyart_RefDiff
+    name: Spectral_r
     bad_alpha: 0.5
     bad_color: none
   norm:
@@ -33,7 +31,7 @@ differential_reflectivity:
     category: [reflectivity, radar]
 differential_phase:
   cmap:
-    name: twilight_shifted #pyart_Wild25
+    name: twilight_shifted
     bad_color: none
   norm:
     name: Norm
@@ -41,12 +39,12 @@ differential_phase:
     vmax: 180
   cbar:
     extend: neither
-    label: Differential Phase (φdp) [$°$]
+    label: Differential Phase ($\phi_{dp}$)  [$°$]
   auxiliary:
     category: [phase, radar]
 specific_differential_phase:
   cmap:
-    name: Spectral_r #pyart_Theodore16
+    name: Spectral_r
     bad_color: none
   norm:
     name: Norm
@@ -55,12 +53,12 @@ specific_differential_phase:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Specific Differential Phase (Kdp) [$°/km$]
+    label: Specific Differential Phase ($K_{dp}$) [$°/km$]
   auxiliary:
     category: [phase, radar]
 cross_correlation_ratio:
   cmap:
-    name: Spectral_r # "pyart_RefDiff"
+    name: Spectral_r
     bad_color: none
   norm:
     name: Norm
@@ -68,7 +66,7 @@ cross_correlation_ratio:
     vmax: 1
   cbar:
     extend: neither
-    label: Correlation between Zh and Zv (ρhv)
+    label: Correlation between $Z_{H}$ and $Z_{V}$ ($\rho_{hv}$)
   auxiliary:
     category: [radar]
 clutter_correction:
@@ -89,7 +87,7 @@ clutter_correction:
     category: [radar]
 specific_attenuation:
   cmap:
-    name: Spectral_r # pyart_Carbone17
+    name: Spectral_r
     bad_color: none
   norm:
     name: Norm
@@ -139,7 +137,7 @@ signal_to_noise_ratio:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Signal to Noise Ratio [dB]
+    label: Signal to Noise Ratio [$dB$]
   auxiliary:
     category: [radar]
 TH:
