@@ -142,11 +142,11 @@ def reproject_coords(x, y, z=None, parallel=False, **kwargs):
 
     Parameters
     ----------
-    x : numpy.ndarray, dask.array.Array or xr.DataArray
+    x : numpy.ndarray, dask.array.Array or xarray.DataArray
         Array of x coordinates.
-    y : numpy.ndarray, dask.array.Array or xr.DataArray
+    y : numpy.ndarray, dask.array.Array or xarray.DataArray
         Array of y coordinates.
-    z : numpy.ndarray, dask.array.Array or xr.DataArray, optional
+    z : numpy.ndarray, dask.array.Array or xarray.DataArray, optional
         Array of z coordinates.
     parallel: bool, optional
         Whether to use multiple cores to transform coordinates when
@@ -155,14 +155,14 @@ def reproject_coords(x, y, z=None, parallel=False, **kwargs):
 
     Keyword Arguments
     -----------------
-    src_crs : pyproj.CRS
+    src_crs : pyproj.crs.CRS
         Source CRS
-    dst_crs : pyproj.CRS
+    dst_crs : pyproj.crs.CRS
         Destination CRS
 
     Returns
     -------
-    trans : tuple of numpy.ndarray, dask.array.Array or xr.DataArray
+    trans : tuple of numpy.ndarray, dask.array.Array or xarray.DataArray
         Arrays of reprojected coordinates (X, Y) or (X, Y, Z) depending on input.
     """
     # Retrieve src and dst CRS

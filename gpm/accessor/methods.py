@@ -726,6 +726,12 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         return get_vertical_variables(self._obj)
 
     @property
+    def cross_section_variables(self):
+        from gpm.checks import get_cross_section_variables
+
+        return get_cross_section_variables(self._obj)
+
+    @property
     def spatial_2d_variables(self):
         from gpm.checks import get_spatial_2d_variables
 
@@ -760,6 +766,12 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         from gpm.utils.manipulations import select_spatial_2d_variables
 
         return select_spatial_2d_variables(self._obj, strict=strict, squeeze=squeeze)
+
+    @auto_wrap_docstring
+    def select_cross_section_variables(self, strict=False, squeeze=True):
+        from gpm.utils.manipulations import select_cross_section_variables
+
+        return select_cross_section_variables(self._obj, strict=strict, squeeze=squeeze)
 
     @auto_wrap_docstring
     def select_vertical_variables(self):

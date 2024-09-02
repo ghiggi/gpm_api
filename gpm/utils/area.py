@@ -66,6 +66,10 @@ from gpm.utils.decorators import check_is_gpm_object
 # Adapt wrapper to use crs
 # Adapt to use xr_obj.gpm.x, xr_obj.gpm.y, xr_obj.gpm.z, xr_obj.gpm.crs
 
+# ds_gr.gpm.is_orbit ?
+# ds_gr.gpm.is_curvilinear
+# ds_gr.gpm.crs.is_geographic
+
 ####------------------------------------------------------------------------------.
 #### Checks
 
@@ -150,7 +154,7 @@ def is_clockwise(vertices):
 
     Parameters
     ----------
-    vertices : np.array
+    vertices : numpy.ndarray
         An array of shape (N, 2) representing the vertices of the polygon.
 
     Returns
@@ -219,12 +223,12 @@ def infer_interval_breaks(coord, axis=0):
 
     An [N,M] array
 
-    The outer points are defined by taking half-distance of the closest c
-    The implementation is inspired from :py:class:`xarray.plot.utils.infer_interval_breaks`.
+    The outer points are defined by taking half-distance of the closest centroid.
+    The implementation is inspired from :py:class:`xarray.plot.utils._infer_interval_breaks`.
 
     Parameters
     ----------
-    coord : np.array or dask.array
+    coord : numpy.ndarray or dask.array.Array
         Coordinate array of shape [N,M].
     axis : int, optional
         Axis over which to infer the midpoint.
@@ -234,7 +238,7 @@ def infer_interval_breaks(coord, axis=0):
 
     Returns
     -------
-    breaks : np.array or dask.array
+    breaks : numpy.ndarray or dask.array.Array
         If axis = 0, it returns an array of shape [N+1, M]
         If axis = 0, it returns an array of shape [N, M+1]
     """
@@ -580,7 +584,7 @@ def get_lonlat_corners_from_centroids(lons, lats):
 def get_lonlat_quadmesh_vertices(lons, lats, ccw=True, origin="bottom"):  # from partitioning code
     """Convert (x, y) 2D centroid coordinates array to (N, M, 4, 2) QuadMesh vertices.
 
-    The output vertices can be passed directly to a matplotlib.PolyCollection.
+    The output vertices can be passed directly to a :py:class:`matplotlib.collections.PolyCollection`.
     For plotting with cartopy, the polygon order must be counterclockwise.
 
     Vertices are defined from the top left corner.
@@ -660,7 +664,7 @@ def get_projection_corners_from_centroids(x, y, origin="bottom"):
 def get_projection_quadmesh_vertices(x, y, ccw=True):  # from partitioning code
     """Convert (x, y) 2D centroid coordinates array to (N, M, 4, 2) QuadMesh vertices.
 
-    The output vertices can be passed directly to a matplotlib.PolyCollection.
+    The output vertices can be passed directly to a :py:class:`matplotlib.collections.PolyCollection`.
     For plotting with cartopy, the polygon order must be counterclockwise.
 
     Vertices are defined from the top left corner.
@@ -681,6 +685,14 @@ def get_projection_quadmesh_vertices(x, y, ccw=True):  # from partitioning code
 # --> In future these methods could be adapted to return xr.DataArrays
 
 
+def _try_get_crs(xr_obj):
+    try:
+        pyproj_crs = xr_obj.gpm.pyproj_crs
+    except Exception:
+        pyproj_crs = None
+    return pyproj_crs
+
+
 @check_is_gpm_object
 def get_quadmesh_centroids(xr_obj, crs=None, origin="bottom"):
     """Return quadmesh x and y centroids of shaope (N,M)."""
@@ -695,11 +707,11 @@ def get_quadmesh_centroids(xr_obj, crs=None, origin="bottom"):
     y = "lat"
     x = xr_obj[x].data
     y = xr_obj[y].data
-    src_crs = None  # xr_obj.gpm.crs
+    src_crs = _try_get_crs(xr_obj)
     if xr_obj.gpm.is_grid:
         x, y = get_projection_centroids(x, y, origin=origin)
-    if crs is not None:
-        x, y = reproject_coords(x, y, src_crs=src_crs, dst_crs=crs)
+    if crs is not None and src_crs is not None:
+        x, y, _ = reproject_coords(x, y, src_crs=src_crs, dst_crs=crs)
     return x, y
 
 
@@ -714,12 +726,12 @@ def get_quadmesh_corners(xr_obj, crs=None):
     # add test for crs-conversion
     x = "lon"
     y = "lat"
-    src_crs = None  # xr_obj.gpm.crs
+    src_crs = _try_get_crs(xr_obj)
     x = xr_obj[x].data
     y = xr_obj[y].data
-    if crs is not None:
-        x, y = reproject_coords(x, y, src_crs=src_crs, dst_crs=crs)
-    if xr_obj.gpm.is_orbit:
+    if crs is not None and src_crs is not None:
+        x, y, _ = reproject_coords(x, y, src_crs=src_crs, dst_crs=crs)
+    if xr_obj.gpm.is_orbit:  # curvilinear geographic CRS
         return get_lonlat_corners_from_centroids(lons=x, lats=y)
     # xr_obj.gpm.is_grid
     return get_projection_corners_from_centroids(x=x, y=y)

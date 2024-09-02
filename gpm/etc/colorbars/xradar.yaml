@@ -1,0 +1,174 @@
+---
+reflectivity:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 1
+    bad_color: none
+    # under_color: none
+    # under_alpha: 0
+  norm:
+    name: Norm
+    vmin: -10
+    vmax: 65
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Reflectivity [$dBZ$]
+  auxiliary:
+    category: [reflectivity, radar]
+differential_reflectivity:
+  cmap:
+    name: Spectral_r # pyart_RefDiff
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -1
+    vmax: 8
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Differential Reflectivity [$dB$]
+  auxiliary:
+    category: [reflectivity, radar]
+differential_phase:
+  cmap:
+    name: twilight_shifted #pyart_Wild25
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -180
+    vmax: 180
+  cbar:
+    extend: neither
+    label: Differential Phase (φdp) [$°$]
+  auxiliary:
+    category: [phase, radar]
+specific_differential_phase:
+  cmap:
+    name: Spectral_r #pyart_Theodore16
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -2
+    vmax: 5
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Specific Differential Phase (Kdp) [$°/km$]
+  auxiliary:
+    category: [phase, radar]
+cross_correlation_ratio:
+  cmap:
+    name: Spectral_r # "pyart_RefDiff"
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Correlation between Zh and Zv (ρhv)
+  auxiliary:
+    category: [radar]
+clutter_correction:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: -7
+    vmax: 1
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Clutter correction
+  auxiliary:
+    category: [radar]
+specific_attenuation:
+  cmap:
+    name: Spectral_r # pyart_Carbone17
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 10
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Specific_attenuation [$dB/km$]
+  auxiliary:
+    category: [radar]
+linear_depolarization_ratio:
+  cmap:
+    name: Spectral_r # pyart_SCook18
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -40
+    vmax: 0
+  cbar:
+    extend: min
+    extendfrac: 0.05
+    label: Depolarization Ratio [$dB$]
+  auxiliary:
+    category: [radar]
+normalized_coherent_power:
+  cmap:
+    name: Spectral_r # pyart_Carbone17
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Signal Quality Index [-]
+  auxiliary:
+    category: [radar]
+signal_to_noise_ratio:
+  cmap:
+    name: Spectral_r # pyart_Carbone17
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -20
+    vmax: 30
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Signal to Noise Ratio [dB]
+  auxiliary:
+    category: [radar]
+TH:
+  reference: reflectivity
+TV:
+  reference: reflectivity
+DBZH:
+  reference: reflectivity
+DBZV:
+  reference: reflectivity
+ZDR:
+  reference: differential_reflectivity
+PHIDP:
+  reference: differential_phase
+KDP:
+  reference: specific_differential_phase
+RHOHV:
+  reference: cross_correlation_ratio
+CCORH:
+  reference: clutter_correction
+CCORV:
+  reference: clutter_correction
+LDR:
+  reference: linear_depolarization_ratio
+SNRH:
+  reference: signal_to_noise_ratio
+SNRV:
+  reference: signal_to_noise_ratio
+SQIH:
+  reference: normalized_coherent_power
+SQIV:
+  reference: normalized_coherent_power

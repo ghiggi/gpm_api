@@ -1,20 +1,20 @@
 ---
 zFactorFinalNearSurface:
-  reference: reflectivity
+  reference: reflectivity_gpm
 zFactorFinalESurface:
-  reference: reflectivity
+  reference: reflectivity_gpm
 zFactorMeasured:
-  reference: reflectivity
+  reference: reflectivity_gpm
 zFactorFinal:
-  reference: reflectivity
+  reference: reflectivity_gpm
 dfrMeasured:
-  reference: dual_frequency_ratio
+  reference: dual_frequency_ratio_gpm
 dfrFinal:
-  reference: dual_frequency_ratio
+  reference: dual_frequency_ratio_gpm
 dfrFinalNearSurface:
-  reference: dual_frequency_ratio
+  reference: dual_frequency_ratio_gpm
 REFC:
-  reference: reflectivity
+  reference: reflectivity_gpm
 precipRate:
   reference: precipitation_rate
 precipRateNearSurface:
@@ -211,3 +211,40 @@ piaFinal:
     extend: max
     extendfrac: 0.05
     label: Path Integrated Attenuation ($PIA$) [dB]
+airTemperature:
+  cmap:
+    name: RdBu_r
+    bad_color: "gray"
+  norm:
+    name: CenteredNorm
+    vcenter: 273.15
+  cbar:
+    label: Air Temperature [K]
+qualityFlag:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: High Quality
+      1: Low Quality
+      2: Unreliable
+  cbar:
+    label: "Reliability of precipitation detection"
+qualityTypePrecip:
+  cmap:
+    name: Set3
+    bad_color: "gray"
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: No rain
+      1: Good
+  cbar:
+    label: "Reliability of precipitation type"

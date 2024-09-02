@@ -58,6 +58,6 @@ snRatio:
   auxiliary:
     category: [radar]
 zEcho:
-  reference: reflectivity
+  reference: reflectivity_gpm
 zSignal:
-  reference: reflectivity
+  reference: reflectivity_gpm

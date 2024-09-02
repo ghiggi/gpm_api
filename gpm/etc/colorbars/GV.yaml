@@ -1,0 +1,566 @@
+---
+SR_flagPrecip:
+  reference: flagPrecip
+SR_flagPrecipitationType:
+  reference: flagPrecipitationType
+SR_pathAtten:
+  reference: pathAtten
+SR_piaFinal:
+  reference: piaFinal
+SR_reliabFlag:
+  reference: reliabFlag
+SR_qualityBB:
+  reference: qualityBB
+SR_qualityFlag:
+  reference: qualityFlag
+SR_qualityTypePrecip:
+  reference: qualityTypePrecip
+SR_dataQuality:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: SR Data Quality Flag
+SR_airTemperature_max:
+  reference: airTemperature
+SR_airTemperature_mean:
+  reference: airTemperature
+SR_airTemperature_min:
+  reference: airTemperature
+time_difference:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Time difference [s]
+VolumeRatio:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Volume Ratio (SR/GR)
+VolumeDiff:
+  cmap:
+    name: RdBu
+    bad_color: gray
+  cbar:
+    extend: neither
+    label: Volume Difference (SR - GR) [m3]
+GR_Z_cov:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 2
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: GR Reflectivity Coefficient of Variation
+GR_Z_std:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: GR Reflectivity Standard Deviation [dBZ]
+GR_Z_range:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: GR Reflectivity Value Range [dBZ]
+GR_Z_mean:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: GR Average Reflectivity [dBZ]
+GR_Z_min:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: GR Minimum Reflectivity [dBZ]
+GR_Z_max:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: GR Maximum Reflectivity [dBZ]
+GR_Z_cumsum_max:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: GR Cumulated Beam Reflectivity [dBZ]
+GR_Z_cumsum_min:
+  reference: GR_Z_cumsum_max
+GR_Z_cumsum_mean:
+  reference: GR_Z_cumsum_max
+GR_gate_volume_sum:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+  cbar:
+    extend: neither
+    label: Total GR Gates Volume [m3]
+SR_gate_volume_min:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+  cbar:
+    extend: neither
+    label: SR Gates Minimum Volume [m3]
+SR_gate_volume_mean:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+  cbar:
+    extend: neither
+    label: SR Gates Average Volume [m3]
+SR_gate_volume_max:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+  cbar:
+    extend: neither
+    label: SR Gates Minimum Volume [m3]
+SR_gate_volume_sum:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+  cbar:
+    extend: neither
+    label: Total SR Gates Volume [m3]
+GR_fraction_covered_area:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction of SR beam covered by GR Gates
+GR_range_max:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    extend: neither
+    label: GR Range Distance [m]
+GR_range_min:
+  reference: GR_range_max
+GR_range_mean:
+  reference: GR_range_max
+GR_hres_mean:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    extend: neither
+    label: GR Gates Horizontal Resolution [m]
+GR_hres_min:
+  reference: GR_hres_mean
+GR_hres_max:
+  reference: GR_hres_mean
+GR_vres_mean:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    extend: neither
+    label: GR Gates Vertical Resolution [m]
+GR_vres_min:
+  reference: GR_vres_mean
+GR_vres_max:
+  reference: GR_vres_mean
+GR_counts:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Number of GR gates
+GR_counts_valid:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Number of valid GR gates
+SR_counts:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Number of SR gates
+SR_counts_valid:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Number of valid SR gates
+
+SR_fraction_above_isotherm:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates above isotherm
+SR_fraction_below_isotherm:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates below isotherm
+SR_fraction_clutter:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates with ground clutter
+SR_fraction_hail:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates with hail
+SR_fraction_melting_layer:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates within the melting layer
+SR_fraction_no_precip:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates with no precipitation
+SR_fraction_rain:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates with rain
+SR_fraction_snow:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates with snow
+SR_vres_mean:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    extend: neither
+    label: SR Gates Vertical Resolution [m]
+SR_vres_max:
+  reference: SR_vres_mean
+SR_vres_min:
+  reference: SR_vres_mean
+SR_vres_sum:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    extend: neither
+    label: Total SR Gates Vertical Resolution [m]
+SR_hres_mean:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: SR Gates Horizontal Resolution [m]
+SR_hres_min:
+  reference: SR_hres_mean
+SR_hres_max:
+  reference: SR_hres_mean
+SR_zFactorMeasured_Ku_fraction_above_10dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates above 10 dBZ
+SR_zFactorMeasured_Ku_fraction_above_12dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates above 12 dBZ
+SR_zFactorMeasured_Ku_fraction_above_14dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates above 14 dBZ
+SR_zFactorMeasured_Ku_fraction_above_16dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates above 16 dBZ
+SR_zFactorMeasured_Ku_fraction_above_18dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction SR gates above 18 dBZ
+SR_zFactorFinal_Ku_fraction_above_10dBZ:
+  reference: SR_zFactorMeasured_Ku_fraction_above_12dBZ
+SR_zFactorFinal_Ku_fraction_above_12dBZ:
+  reference: SR_zFactorMeasured_Ku_fraction_above_12dBZ
+SR_zFactorFinal_Ku_fraction_above_14dBZ:
+  reference: SR_zFactorMeasured_Ku_fraction_above_14dBZ
+SR_zFactorFinal_Ku_fraction_above_16dBZ:
+  reference: SR_zFactorMeasured_Ku_fraction_above_16dBZ
+SR_zFactorFinal_Ku_fraction_above_18dBZ:
+  reference: SR_zFactorMeasured_Ku_fraction_above_18dBZ
+GR_Z_fraction_above_10dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction GR gates above 10 dBZ
+GR_Z_fraction_above_12dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction GR gates above 12 dBZ
+GR_Z_fraction_above_14dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction GR gates above 14 dBZ
+GR_Z_fraction_above_16dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction GR gates above 16 dBZ
+GR_Z_fraction_above_18dBZ:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 1
+  cbar:
+    extend: neither
+    label: Fraction GR gates above 18 dBZ
+SR_zFactorFinal_Ku_cov:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 2
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: SR Reflectivity Coefficient of Variation
+SR_zFactorFinal_Ku_std:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: SR Reflectivity Standard Deviation [dBZ]
+SR_zFactorFinal_Ku_range:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: SR Reflectivity Value Range [dBZ]
+SR_zFactorFinal_Ku_mean:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: SR Average Reflectivity [dBZ]
+SR_zFactorFinal_Ku_min:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: SR Minimum Reflectivity [dBZ]
+SR_zFactorFinal_Ku_max:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: SR Maximum Reflectivity [dBZ]
+SR_zFactorMeasured_Ku_cov:
+  reference: SR_zFactorFinal_Ku_cov
+SR_zFactorMeasured_Ku_std:
+  reference: SR_zFactorFinal_Ku_std
+SR_zFactorMeasured_Ku_range:
+  reference: SR_zFactorFinal_Ku_range
+SR_zFactorMeasured_Ku_mean:
+  reference: SR_zFactorFinal_Ku_mean
+SR_zFactorMeasured_Ku_min:
+  reference: SR_zFactorFinal_Ku_min
+SR_zFactorMeasured_Ku_max:
+  reference: SR_zFactorFinal_Ku_max
+SR_zFactorCorrection_Ku_mean:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: SR Average Attenuation Correction [dBZ]
+SR_zFactorCorrection_Ku_min:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: SR Minimum Attenuation Correction [dBZ]
+SR_zFactorCorrection_Ku_max:
+  cmap:
+    name: Spectral_r
+    bad_color: gray
+  cbar:
+    label: SR Maximum Attenuation Correction [dBZ]

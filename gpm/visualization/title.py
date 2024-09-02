@@ -89,7 +89,7 @@ def get_dataset_title(
     # Add time
     if add_timestep and (is_orbit(ds) or ds["time"].size == 1):
         time_str = get_time_str(
-            timesteps=ds["time"].data,
+            timesteps=ds["time"].to_numpy(),
             time_idx=time_idx,
             resolution=resolution,
             timezone=timezone,
@@ -151,7 +151,7 @@ def get_dataarray_title(
     # Add time
     if add_timestep and (is_orbit(da) or da["time"].size == 1):
         time_str = get_time_str(
-            timesteps=da["time"].data,
+            timesteps=da["time"].to_numpy(),
             time_idx=time_idx,
             resolution=resolution,
             timezone=timezone,

@@ -453,7 +453,7 @@ class Base2DPartitioning:
 
         Return
         --------
-        (x_corners, y_corners)
+        (x_corners, y_corners): tuple
             Numpy array of shape (M+1, N+1)
         """
         x_corners, y_corners = np.meshgrid(self.x_bounds, self.y_bounds)
@@ -465,7 +465,7 @@ class Base2DPartitioning:
         """Return the partitions vertices in an array of shape (N, M, 4, 2).
 
         The output vertices, once the first 2 dimensions are flattened,
-        can be passed directly to a :py:class:`matplotlib.PolyCollection`.
+        can be passed directly to a :py:class:`matplotlib.collections.PolyCollection`.
         For plotting with cartopy, the polygon order must be counterclockwise ordered.
 
         Parameters
@@ -584,7 +584,7 @@ class Base2DPartitioning:
 
         Parameters
         ----------
-        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
+        df : pandas.DataFrame, dask.dataframe.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
             Dataframe to which add partitions centroids.
         x : str
             Column name with the x coordinate.
@@ -596,7 +596,7 @@ class Base2DPartitioning:
 
         Returns
         -------
-        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
+        df : pandas.DataFrame, dask.dataframe.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
             Dataframe with the partitions label(s) column(s).
 
         """
@@ -628,7 +628,7 @@ class Base2DPartitioning:
 
         Parameters
         ----------
-        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
+        df : pandas.DataFrame, dask.dataframe.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
             Dataframe to which add partitions centroids.
         x : str
             Column name with the x coordinate.
@@ -646,7 +646,7 @@ class Base2DPartitioning:
 
         Returns
         -------
-        df : pandas.DataFrame, dask.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
+        df : pandas.DataFrame, dask.dataframe.DataFrame, polars.DataFrame, pyarrow.Table or polars.LazyFrame
             Dataframe with the partitions centroids x and y coordinates columns.
 
         """
