@@ -225,7 +225,7 @@ def reflectivity_scatterplot(
     add_colorbar=True,
     marker="+",
     title="GR / SR Offset",
-    cbar_kwargs={},
+    cbar_kwargs=None,
     **plot_kwargs,
 ):
     """
@@ -269,7 +269,7 @@ def reflectivity_scatterplot(
     # Initialize plot if necessary
     if ax is None:
         # Create a new figure and axis
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
 
     # Define plot limits if not specified
     if gr_range is None:
@@ -453,7 +453,7 @@ def reflectivity_distribution(
     # Initialize plot if necessary
     if ax is None:
         # Create a new figure and axis
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
 
     # Default vmin/vmax
     vmin = np.nanmin([df[gr_z_column].min(), df[sr_z_column].min()])
@@ -487,7 +487,7 @@ def calibration_summary(
     gr_range=None,
     sr_range=None,
     marker="+",
-    cbar_kwargs={},
+    cbar_kwargs=None,
     # Histogram options
     bin_width=2,
     **plot_kwargs,
@@ -526,6 +526,7 @@ def calibration_summary(
         The figure object containing the calibration summary plots.
 
     """
+    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
     # Compute bias
     dz = df[gr_z_column] - df[sr_z_column]
 

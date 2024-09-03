@@ -257,7 +257,7 @@ def _add_lon_lat_coords(xr_obj):
     crs_gr = xr_obj.xradar_dev.pyproj_crs
 
     # Add lon/lat coordinates to GR
-    lon_gr, lat_gr, height_gr = reproject_coords(
+    lon_gr, lat_gr, _ = reproject_coords(
         x=xr_obj["x"],
         y=xr_obj["y"],
         z=xr_obj["z"],

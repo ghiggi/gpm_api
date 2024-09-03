@@ -667,13 +667,14 @@ def volume_matching(
     crs_gr = ds_gr.xradar_dev.pyproj_crs
 
     #### - Retrieve GR (lon, lat) coordinates
-    lon_gr, lat_gr, height_gr = reproject_coords(
+    lon_gr, lat_gr, _ = reproject_coords(
         x=ds_gr["x"],
         y=ds_gr["y"],
         z=ds_gr["z"],
         src_crs=crs_gr,
         dst_crs=crs_sr,
     )
+
     #### - Add lon/lat coordinates to ds_gr
     ds_gr["lon"] = lon_gr
     ds_gr["lat"] = lat_gr
@@ -747,15 +748,6 @@ def volume_matching(
     h_res_gr, v_res_gr = ds_gr.xradar_dev.resolution_at_range(
         azimuth_beamwidth=azimuth_beamwidth_gr,
         elevation_beamwidth=elevation_beamwidth_gr,
-    )
-
-    #### - Retrieve GR (lon, lat) coordinates
-    lon_gr, lat_gr, height_gr = reproject_coords(
-        x=ds_gr["x"],
-        y=ds_gr["y"],
-        z=ds_gr["z"],
-        src_crs=crs_gr,
-        dst_crs=crs_sr,
     )
 
     #### - Retrieve SR (x,y,z) coordinates
