@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains a mix of function to analysis bucket archives."""
+"""This module contains functions to analysis bucket archives."""
 import numpy as np
 
 
