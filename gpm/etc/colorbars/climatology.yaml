@@ -51,4 +51,3 @@ precip_monthly_400:
     label: Monthly Precipitation [$mm$]
   auxiliary:
     category: [precipitation, annual, climatology]
-
