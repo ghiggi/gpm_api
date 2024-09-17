@@ -417,9 +417,10 @@ def plot_quicklook(
 
     # Retrieve SR extent
     sr_extent = ds_sr.gpm.extent()
+    gr_extent = ds_gr.xradar_dev.extent()
 
     # Create figure
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), dpi=120, subplot_kw={"projection": ccrs.PlateCarree()})
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), dpi=300, subplot_kw={"projection": ccrs.PlateCarree()})
 
     # Plot SR
     da_sr.where(mask_sr).gpm.plot_map(
@@ -442,7 +443,10 @@ def plot_quicklook(
     # - Add the SR swath boundary
     da_sr.gpm.plot_swath_lines(ax=ax2)
     # - Restrict the extent to the SR overpass
-    ax2.set_extent(sr_extent)
+    # ax1.set_extent(sr_extent)
+    # ax2.set_extent(sr_extent)
+    ax1.set_extent(gr_extent)
+    ax2.set_extent(gr_extent)
     # - Display GR range distances
     for ax in [ax1, ax2]:
         ds_gr.xradar_dev.plot_range_distance(
@@ -568,6 +572,7 @@ def volume_matching(
     sr_sensitivity_thresholds=None,
     download_sr=True,
     display_quicklook=True,
+    quicklook_fpath=None,
 ):
     """
     Performs the volume matching of GPM Spaceborne Radar (SR) data to Ground Radar (GR).
@@ -731,7 +736,7 @@ def volume_matching(
     ####-----------------------------------------------------------------------------.
     #### Plot Quicklook
     if display_quicklook:
-        plot_quicklook(
+        fig = plot_quicklook(
             ds_sr=ds_sr,
             ds_gr=ds_gr,
             min_gr_range=min_gr_range,
@@ -740,7 +745,10 @@ def volume_matching(
             z_min_threshold_sr=z_min_threshold_sr,
             z_variable=z_variable_gr,
         )
+        if quicklook_fpath is not None:
+            fig.savefig(quicklook_fpath)
         plt.show()
+        plt.close()
 
     ####-----------------------------------------------------------------------------.
     #### Retrieve SR/GR gate resolution, volume and coordinates

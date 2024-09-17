@@ -182,6 +182,12 @@ def _plot_gdf_map(gdf, column, extent_xy, title, grid_linewidth, grid_color, add
     # Set default title
     if title is None:
         title = column
+
+    # Retrieve default plot kwargs
+    plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs(
+        name=column, user_cbar_kwargs=cbar_kwargs, user_plot_kwargs=plot_kwargs
+    )
+
     # Plot data
     p = gdf.plot(
         column=column,

@@ -391,6 +391,8 @@ def _select_lons_lats_centroids(xr_obj, x=DEFAULT_X, y=DEFAULT_Y, cross_track_di
         middle_idx = int(xr_obj[cross_track_dim].shape[0] / 2)
         lons = xr_obj[x].isel({cross_track_dim: middle_idx}).to_numpy()
         lats = xr_obj[y].isel({cross_track_dim: middle_idx}).to_numpy()
+    if np.all(np.isnan(lons)) or np.all(np.isnan(lats)):
+        raise ValueError("All coordinates are NaN.")
     return lons, lats
 
 
