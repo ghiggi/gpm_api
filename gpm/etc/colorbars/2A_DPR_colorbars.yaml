@@ -254,3 +254,5 @@ zFactorCorrection:
     bad_color: none
   cbar:
     label: Attenuation Correction [dBZ]
+zFactorCorrectionNearSurface:
+  reference: zFactorCorrection

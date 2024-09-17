@@ -64,6 +64,7 @@ def collocate_product(
     product,
     product_type="RS",
     version=None,
+    storage="GES_DISC",
     scan_modes=None,
     variables=None,
     groups=None,
@@ -95,6 +96,7 @@ def collocate_product(
         start_time=start_time,
         end_time=end_time,
         version=version,
+        storage=storage,
         force_download=False,
         verbose=verbose,
     )
