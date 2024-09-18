@@ -362,4 +362,3 @@ POSH:
     vmax: 100
   cbar:
     label: Probability of Severe Hail [%]
- 

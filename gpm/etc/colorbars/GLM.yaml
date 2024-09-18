@@ -62,7 +62,7 @@ group_extent_density:
     extendrect: false
     label: Group Extent Density [$count$]
   auxiliary:
-    category: [GLM, lightening] 
+    category: [GLM, lightening]
 event_density:
   cmap:
     name: viridis
@@ -78,7 +78,7 @@ event_density:
     extendrect: false
     label: Event Extent Density [$count$]
   auxiliary:
-    category: [GLM, lightening] 
+    category: [GLM, lightening]
 total_energy:
   cmap:
     name: magma
@@ -94,7 +94,7 @@ total_energy:
     extendrect: false
     label: Total Energy [$nJ$]
   auxiliary:
-    category: [GLM, lightening] 
+    category: [GLM, lightening]
 average_flash_area:
   cmap:
     name: viridis
@@ -102,7 +102,7 @@ average_flash_area:
     bad_color: gray
   norm:
     name: LogNorm
-    vmin: 50  # 1 
+    vmin: 50 # 1
     vmax: 1500 # 256
   cbar:
     extend: both
@@ -110,7 +110,7 @@ average_flash_area:
     extendrect: false
     label: Average Flash Area [$km^2$]
   auxiliary:
-    category: [GLM, lightening] 
+    category: [GLM, lightening]
 average_group_area:
   cmap:
     name: viridis
@@ -126,7 +126,7 @@ average_group_area:
     extendrect: false
     label: Average Group Area [$km^2$]
   auxiliary:
-    category: [GLM, lightening] 
+    category: [GLM, lightening]
 minimum_flash_area:
   cmap:
     name: viridis
@@ -134,7 +134,7 @@ minimum_flash_area:
     bad_color: gray
   norm:
     name: LogNorm
-    vmin: 64   
+    vmin: 64
     vmax: 2500
   cbar:
     extend: both
@@ -142,8 +142,4 @@ minimum_flash_area:
     extendrect: false
     label: Minimum Flash Area [$km^2$]
   auxiliary:
-    category: [GLM, lightening] 
-   
- 
- 
- 
+    category: [GLM, lightening]

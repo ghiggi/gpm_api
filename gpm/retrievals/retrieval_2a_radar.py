@@ -1121,7 +1121,7 @@ def retrieve_MESHS(ds):
     variable = "zFactorFinal"
     radar_frequency = "Ku"
     h0 = get_xarray_variable(ds, variable="heightZeroDeg")
-    
+
     # Compute MESHS
     et_50_2cm = 1.5 * h0 + 1700
     et_50_4cm = 1.7824 * h0 + 2544.1
@@ -1129,7 +1129,7 @@ def retrieve_MESHS(ds):
 
     et50 = retrieve_EchoTopHeight(
         ds,
-        threshold=45, # C --> Ku-band
+        threshold=45,  # C --> Ku-band
         variable=variable,
         radar_frequency=radar_frequency,
     )

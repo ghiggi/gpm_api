@@ -36,7 +36,7 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     """Remap dataset to another one using nearest-neighbour."""
     from gpm.checks import get_spatial_dimensions
     from gpm.dataset.crs import (
-        _get_crs_coordinates, 
+        _get_crs_coordinates,
         _get_swath_dim_coords,
         _get_proj_dim_coords,
         set_dataset_crs
@@ -53,24 +53,24 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     # Retrieve source and destination area
     src_area = src_ds.gpm.pyresample_area
     dst_area = dst_ds.gpm.pyresample_area
-    
+
     # Retrieve source and destination crs coordinate
     src_crs_coords = _get_crs_coordinates(src_ds)[0]
     dst_crs_coords = _get_crs_coordinates(dst_ds)[0]
-        
+
     # Rename dimensions to x, y for pyresample compatibility
 <<<<<<< HEAD
     x_dim, y_dim = get_spatial_dimensions(src_ds)
-    src_ds = src_ds.swap_dims({y_dim: "y", x_dim: "x"})  
-             
+    src_ds = src_ds.swap_dims({y_dim: "y", x_dim: "x"})
+
     # Define spatial coordinates of new object
     if dst_ds.gpm.is_orbit: # SwathDefinition
         x_coord, y_coord = _get_swath_dim_coords(dst_ds) # dst_ds.gpm.x, # dst_ds.gpm.y
         dst_spatial_coords = {
-            x_coord: xr.DataArray(dst_ds[x_coord].data, 
+            x_coord: xr.DataArray(dst_ds[x_coord].data,
                                  dims=list(dst_ds[x_coord].dims),
                                  attrs=dst_ds[x_coord].attrs),
-            y_coord: xr.DataArray(dst_ds[y_coord].data, 
+            y_coord: xr.DataArray(dst_ds[y_coord].data,
                                  dims=list(dst_ds[y_coord].dims),
                                  attrs=dst_ds[y_coord].attrs),
         }
@@ -78,10 +78,10 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
         x_arr, y_arr = dst_area.get_proj_coords()
         x_coord, y_coord = _get_proj_dim_coords(dst_ds) # dst_ds.gpm.x, # dst_ds.gpm.y
         dst_spatial_coords = {
-            x_coord: xr.DataArray(x_arr, 
+            x_coord: xr.DataArray(x_arr,
                                   dims=list(dst_ds[x_coord].dims),
                                   attrs=dst_ds[x_coord].attrs),
-            y_coord: xr.DataArray(y_arr,  
+            y_coord: xr.DataArray(y_arr,
                                   dims=list(dst_ds[y_coord].dims),
                                   attrs=dst_ds[y_coord].attrs),
         }
@@ -89,7 +89,7 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
         if dst_spatial_coords[x_coord].attrs.get("units", "") in ["rad", "radians"]:
             dst_spatial_coords[x_coord].attrs["units"] = "deg"
             dst_spatial_coords[y_coord].attrs["units"] = "deg"
-            
+
 =======
     if src_ds.gpm.is_orbit:
         src_ds = src_ds.swap_dims({"cross_track": "y", "along_track": "x"})
@@ -111,31 +111,31 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
 
     # Create Dataset
     ds = xr.Dataset(da_dict)
-    
+
     # Drop source crs coordinate
     ds = ds.drop(src_crs_coords)
-    
-    # Drop crs added by pyresample 
+
+    # Drop crs added by pyresample
     if "crs" in ds:
         ds = ds.drop("crs")
-        
+
     # Revert to original spatial dimensions (of destination dataset)
     x_dim, y_dim = get_spatial_dimensions(dst_ds)
     ds = ds.swap_dims({"y": y_dim, "x": x_dim })
 
     # Add spatial coordinates
-    ds = ds.assign_coords(dst_spatial_coords)        
-    
-    # Add destination crs 
-    ds = set_dataset_crs(ds, 
-                         crs=dst_area.crs, 
+    ds = ds.assign_coords(dst_spatial_coords)
+
+    # Add destination crs
+    ds = set_dataset_crs(ds,
+                         crs=dst_area.crs,
                          grid_mapping_name=dst_crs_coords,
-                         )  
-    # Coordinates specifics to gpm-api 
+                         )
+    # Coordinates specifics to gpm-api
     gpm_api_coords = ["gpm_id", "gpm_time", "gpm_granule_id", "gpm_along_track_id", "gpm_cross_track_id"]
     gpm_api_coords_dict = {c: dst_ds.reset_coords()[c] for c in gpm_api_coords if c in dst_ds.coords}
-    ds = ds.assign_coords(gpm_api_coords_dict)   
-    
+    ds = ds.assign_coords(gpm_api_coords_dict)
+
     # # Add relevant coordinates of dst_ds
     # dst_available_coords = list(dst_ds.coords)
     # useful_coords = [coord for coord in dst_available_coords if np.all(np.isin(dst_ds[coord].dims, ds.dims))]
