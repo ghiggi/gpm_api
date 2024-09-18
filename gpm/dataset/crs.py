@@ -764,31 +764,31 @@ def _compute_extent(x_coords, y_coords):
     # Calculate the pixel size assuming uniform spacing between pixels
     pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
     pixel_size_y = (y_coords[-1] - y_coords[0]) / (len(y_coords) - 1)
-    
-    # Check axis sign 
+
+    # Check axis sign
     x_sign = pixel_size_x / abs(pixel_size_x)
-    y_sign = pixel_size_y / abs(pixel_size_y) # -1 if decreasing
-    
+    y_sign = pixel_size_y / abs(pixel_size_y)  # -1 if decreasing
+
     # Define absolute pixel size
     pixel_size_x = abs(pixel_size_x)
     pixel_size_y = abs(pixel_size_y)
-    
+
     # Define centroids close to lower-left and upper left corners
     # --> Assume origin is top left (numpy convention)
     x_min, y_min = x_coords[0], y_coords[-1]
     x_max, y_max = x_coords[-1], y_coords[0]
-    
+
     # Define extent as lower-left and upper left corners
     x_min -= x_sign * 0.5 * pixel_size_x
     x_max += x_sign * 0.5 * pixel_size_x
     y_max += y_sign * 0.5 * pixel_size_y
     y_min -= y_sign * 0.5 * pixel_size_y
-   
+
     # # Adjust min and max to get the corners of the outer pixels
     # x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
     # y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
-    # 
-    # matplotlib extent: [x_min, x_max, y_min, y_max] 
+    #
+    # matplotlib extent: [x_min, x_max, y_min, y_max]
     # pyresample extent: [x_min, ymin, y_max, y_max]
     return [x_min, y_min, x_max, y_max]
 
@@ -806,22 +806,22 @@ def get_pyresample_projection(xr_obj):
     # Retrieve geographic CRS if available
     pyproj_crs = get_pyproj_crs(xr_obj)
 
-    # Ensure same units for x and y coordinates 
-    
+    # Ensure same units for x and y coordinates
+
     # Retrieve x and y projection coordinates
     x_coords = xr_obj[x].compute().data
     y_coords = xr_obj[y].compute().data
-    
+
     # Convert deg to rad if necessary (for GEO)
-        
+
     # Convert rad to meters if necessary (for GEO)
     # TODO: y origin ? if decreasing as for GOES-16?
     #  sign = delta / spacing
     if xr_obj[x].attrs.get("units", "") in ["rad", "radians"]:
         crs_coord = _get_crs_coordinates(xr_obj)[0]
         satellite_height = xr_obj[crs_coord].attrs["perspective_point_height"]
-        x_coords = x_coords * satellite_height  
-        y_coords = y_coords * satellite_height 
+        x_coords = x_coords * satellite_height
+        y_coords = y_coords * satellite_height
 
     # Retrieve shape
     shape = (y_coords.shape[0], x_coords.shape[0])

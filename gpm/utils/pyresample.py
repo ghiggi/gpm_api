@@ -59,6 +59,7 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     dst_crs_coords = _get_crs_coordinates(dst_ds)[0]
         
     # Rename dimensions to x, y for pyresample compatibility
+<<<<<<< HEAD
     x_dim, y_dim = get_spatial_dimensions(src_ds)
     src_ds = src_ds.swap_dims({y_dim: "y", x_dim: "x"})  
              
@@ -89,6 +90,14 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
             dst_spatial_coords[x_coord].attrs["units"] = "deg"
             dst_spatial_coords[y_coord].attrs["units"] = "deg"
             
+=======
+    if src_ds.gpm.is_orbit:
+        src_ds = src_ds.swap_dims({"cross_track": "y", "along_track": "x"})
+    elif not np.all(np.isin(["x", "y"], list(src_ds.dims))):
+        # TODO: GENERALIZE to allow also latitude, longitude !
+        src_ds = src_ds.swap_dims({"lat": "y", "lon": "x"})
+
+>>>>>>> e740a7b5f4b1f3d796f1207a41d1706653876c2a
     # Define resampler
     resampler = KDTreeNearestXarrayResampler(src_area, dst_area)
     resampler.precompute(radius_of_influence=radius_of_influence)
