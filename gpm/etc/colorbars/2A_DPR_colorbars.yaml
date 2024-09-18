@@ -28,17 +28,72 @@ precipRateAve24:
 precipWaterIntegrated:
   cmap:
     name: YlGnBu
-    bad_alpha: 0.5
-    bad_color: gray
+    bad_alpha: 0
+    bad_color: none
     under_color: none
   norm:
     name: Norm
     vmin: 0.1
-    vmax: 20
+    vmax: 40
   cbar:
     extend: max
     extendfrac: 0.05
     label: Total Precipitable Water [$kg \ m^{-2}$]
+precipWaterIntegrated_Liquid:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 40
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Total Liquid Precipitable Water [$kg \ m^{-2}$]
+precipWaterIntegrated_Solid:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 40
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Total Solid Precipitable Water [$kg \ m^{-2}$]
+VIL:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 40
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Vertically Integrated Liquid [$kg \ m^{-2}$]
+VILD:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 1
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: VIL Density [$g \ m^{-3}$]
 Dm:
   cmap:
     name: plasma
@@ -50,6 +105,7 @@ Dm:
     vmax: 2
   cbar:
     extend: both
+    extendfrac: 0.05
     label: $D_m$ [$mm$]
 dBNw:
   cmap:
@@ -62,6 +118,7 @@ dBNw:
     vmax: 6
   cbar:
     extend: both
+    extendfrac: 0.05
     label: $N_w$ [10$\log{(mm^{-1} \ m^{-3})}$]
 Nw:
   cmap:
@@ -253,6 +310,56 @@ zFactorCorrection:
     name: Spectral_r
     bad_color: none
   cbar:
+    extendfrac: 0.05
     label: Attenuation Correction [dBZ]
 zFactorCorrectionNearSurface:
   reference: zFactorCorrection
+MESH:
+  cmap:
+    name: Reds
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 5
+    vmax: 40
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Maximum Expected Hail Size [mm]
+MESHS:
+  cmap:
+    name: Reds
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 1
+    vmax: 5
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Maximum Expected Severe Hail Size [cm]
+POH:
+  cmap:
+    name: Reds
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 1
+    vmax: 100
+  cbar:
+    label: Probability of Hail [%]
+POSH:
+  cmap:
+    name: Reds
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 1
+    vmax: 100
+  cbar:
+    label: Probability of Severe Hail [%]
+ 

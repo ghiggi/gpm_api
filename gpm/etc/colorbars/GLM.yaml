@@ -1,0 +1,149 @@
+---
+flash_centroid_density:
+  cmap:
+    name: viridis
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 1
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Flash Centroid Density [$count$]
+  auxiliary:
+    category: [GLM, lightening]
+flash_extent_density:
+  cmap:
+    name: viridis
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 1
+    vmax: 50 # 256
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Flash Extent Density [$count$]
+  auxiliary:
+    category: [GLM, lightening]
+group_centroid_density:
+  cmap:
+    name: viridis
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 1
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Group Centroid Density [$count$]
+  auxiliary:
+    category: [GLM, lightening]
+group_extent_density:
+  cmap:
+    name: viridis
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 1
+    vmax: 500
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Group Extent Density [$count$]
+  auxiliary:
+    category: [GLM, lightening] 
+event_density:
+  cmap:
+    name: viridis
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 1
+    vmax: 500
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Event Extent Density [$count$]
+  auxiliary:
+    category: [GLM, lightening] 
+total_energy:
+  cmap:
+    name: magma
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 0.0000001
+    vmax: 0.001
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Total Energy [$nJ$]
+  auxiliary:
+    category: [GLM, lightening] 
+average_flash_area:
+  cmap:
+    name: viridis
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 50  # 1 
+    vmax: 1500 # 256
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Average Flash Area [$km^2$]
+  auxiliary:
+    category: [GLM, lightening] 
+average_group_area:
+  cmap:
+    name: viridis
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 50
+    vmax: 5000
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Average Group Area [$km^2$]
+  auxiliary:
+    category: [GLM, lightening] 
+minimum_flash_area:
+  cmap:
+    name: viridis
+    bad_alpha: 0
+    bad_color: gray
+  norm:
+    name: LogNorm
+    vmin: 64   
+    vmax: 2500
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    extendrect: false
+    label: Minimum Flash Area [$km^2$]
+  auxiliary:
+    category: [GLM, lightening] 
+   
+ 
+ 
+ 
