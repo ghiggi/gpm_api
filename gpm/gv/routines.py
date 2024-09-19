@@ -416,7 +416,7 @@ def plot_quicklook(
     mask_sr = da_sr > z_min_threshold_sr
 
     # Retrieve SR extent
-    sr_extent = ds_sr.gpm.extent()
+    sr_extent = ds_sr.gpm.extent()  # noqa
     gr_extent = ds_gr.xradar_dev.extent()
 
     # Create figure
