@@ -91,8 +91,8 @@ DIM_DICT = {
 
 SPATIAL_DIMS = [
     ["along_track", "cross_track"],
-    ["lat", "lon"],
-    ["latitude", "longitude"],
+    ["lon", "lat"],
+    ["longitude", "latitude"],
     ["x", "y"],  # compatibility with satpy/gpm_geo i.e.
     ["transect"],
     ["trajectory"],
@@ -102,7 +102,7 @@ SPATIAL_DIMS = [
 VERTICAL_DIMS = ["range", "height"]  #  ORBIT --> "range", "GRID" --> "height"  (nBnEnv" in CORRA)
 FREQUENCY_DIMS = ["radar_frequency", "pmw_frequency"]
 GRID_SPATIAL_DIMS = ("lon", "lat")
-ORBIT_SPATIAL_DIMS = ("cross_track", "along_track")
+ORBIT_SPATIAL_DIMS = ("along_track", "cross_track")
 
 
 def _has_a_phony_dim(xr_obj):

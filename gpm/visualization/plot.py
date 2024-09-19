@@ -533,11 +533,11 @@ def plot_colorbar(p, ax, cbar_kwargs=None):
     # Defne colorbar axis
     divider = make_axes_locatable(ax)
     if orientation == "vertical":
-        size = cbar_kwargs.get("size", "5%")
+        size = cbar_kwargs.pop("size", "5%")
         pad = cbar_kwargs.get("pad", 0.1)
         cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
     else:  # orientation == "horizontal":
-        size = cbar_kwargs.get("size", "5%")
+        size = cbar_kwargs.pop("size", "5%")
         pad = cbar_kwargs.get("pad", 0.25)
         cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
 
@@ -710,7 +710,7 @@ def plot_cartopy_pcolormesh(
 
     # Compute coordinates of cell corners for pcolormesh quadrilateral mesh
     # - This enable correct masking of cells crossing the antimeridian
-    lon, lat = get_lonlat_corners_from_centroids(lon, lat)
+    lon, lat = get_lonlat_corners_from_centroids(lon, lat, parallel=False)
 
     # Mask cells crossing the antimeridian
     # - with gpm.config.set({"viz_hide_antimeridian_data": False}): can be used to modify the masking behaviour

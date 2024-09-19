@@ -146,7 +146,11 @@ TV:
   reference: reflectivity
 DBZH:
   reference: reflectivity
+DBZH_c:
+  reference: reflectivity
 DBZV:
+  reference: reflectivity
+DBZV_c:
   reference: reflectivity
 ZDR:
   reference: differential_reflectivity
