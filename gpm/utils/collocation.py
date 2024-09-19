@@ -125,8 +125,8 @@ def collocate_product(
 
     # Concatenate if necessary (PMW case)
     output_ds = xr.concat(list_remapped, dim="pmw_frequency") if len(list_remapped) > 1 else list_remapped[0]
-    # Add time of dst dataset 
-    output_ds = output_ds.assign_coords({"time" : ds.reset_coords()["time"]})
+    # Add time of dst dataset
+    output_ds = output_ds.assign_coords({"time": ds.reset_coords()["time"]})
     # Assign attributes
     output_ds.attrs = list_ds[0].attrs
     output_ds.attrs["ScanMode"] = scan_modes
