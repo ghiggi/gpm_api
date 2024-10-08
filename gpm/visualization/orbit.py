@@ -167,7 +167,7 @@ def call_over_contiguous_scans(function):
         ax = args[1] if len(args) > 1 else kwargs.get("ax")
 
         # Define dimensions and coordinates
-        x, y = infer_map_xy_coords(da, x=kwargs.get("x", None), y=kwargs.get("y", None))
+        x, y = infer_map_xy_coords(da, x=kwargs.get("x"), y=kwargs.get("y"))
         along_track_dim, cross_track_dim = infer_orbit_xy_dim(da, x=x, y=y)
 
         # Define kwargs
