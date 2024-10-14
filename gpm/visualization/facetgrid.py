@@ -358,13 +358,13 @@ class CustomFacetGrid(FacetGrid, ABC):
     def _remove_bottom_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the bottom of the subplots."""
         raise NotImplementedError
-        
+
     @abstractmethod
     def _remove_left_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the left of the subplots."""
         raise NotImplementedError
-        
-    def map_to_axes(self, func, **kwargs): 
+
+    def map_to_axes(self, func, **kwargs):
         """Map a function to each axes."""
         n_rows, n_cols = self.axs.shape
         missing_bottom_plots = [not ax.has_data() for ax in self.axs[n_rows - 1]]
@@ -375,12 +375,12 @@ class CustomFacetGrid(FacetGrid, ABC):
                 if has_missing_bottom_plots and i == n_rows and j in idx_bottom_plots:
                     continue
                 # Otherwise apply function
-                func(ax=self.axs[i, j], **kwargs) 
-        
+                func(ax=self.axs[i, j], **kwargs)
+
     def remove_bottom_ticks_and_labels(self):
         """Remove the bottom ticks and labels from each subplot."""
         self.map_to_axes(func=self._remove_bottom_ticks_and_labels)
-        
+
     def remove_left_ticks_and_labels(self):
         """Remove the left ticks and labels from each subplot."""
         self.map_to_axes(func=self._remove_left_ticks_and_labels)
@@ -429,13 +429,13 @@ class CustomFacetGrid(FacetGrid, ABC):
         )
         # Add ticklabel
         if ticklabels is not None:
-            # Retrieve ticks 
+            # Retrieve ticks
             ticks = cbar_kwargs.get("ticks", None)
-            if ticks is None: 
+            if ticks is None:
                 ticks = self.cbar.get_ticks()
             # Remove existing ticklabels
             self.cbar.set_ticklabels([])
-            self.cbar.set_ticklabels([], minor=True) 
+            self.cbar.set_ticklabels([], minor=True)
             # Add custom ticklabels
             self.cbar.set_ticks(ticks, labels=ticklabels)
             # self.cbar.ax.set_yticklabels(ticklabels)
