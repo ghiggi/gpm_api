@@ -1,7 +1,7 @@
 ---
 precip_annual_3000:
   cmap:
-    name: PRECIP-CLIM-MCH
+    name: MCH_Precip_Clim
     bad_alpha: 0.2
     bad_color: gray
   norm:
@@ -27,7 +27,7 @@ precip_annual_3000:
     category: [precipitation, annual, climatology]
 precip_monthly_400:
   cmap:
-    name: PRECIP-CLIM-MCH
+    name: MCH_Precip_Clim
     bad_alpha: 0.2
     bad_color: gray
   norm:

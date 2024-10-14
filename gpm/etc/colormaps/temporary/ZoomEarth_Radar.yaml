@@ -55,5 +55,5 @@ segmentdata: null
 n: 256.0
 auxiliary:
   category:
-    - MeteoSwiss
-    - precipitation
+    - ZoomEarth
+    - reflectivity
