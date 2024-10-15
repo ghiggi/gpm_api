@@ -269,7 +269,7 @@ def plot_grid_mesh(
     )
 
     # Infer x and y
-    x, y = infer_xy_labels(xr_obj, x=x, y=y, rgb=plot_kwargs.get("rgb", None))
+    x, y = infer_xy_labels(xr_obj, x=x, y=y, rgb=plot_kwargs.get("rgb"))
 
     # Create 2D mesh xarray.DataArray
     da = create_grid_mesh_data_array(xr_obj, x=x, y=y)
