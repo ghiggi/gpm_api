@@ -533,11 +533,11 @@ def plot_colorbar(p, ax, cbar_kwargs=None):
     # Defne colorbar axis
     divider = make_axes_locatable(ax)
     if orientation == "vertical":
-        size = cbar_kwargs.get("size", "5%")
+        size = cbar_kwargs.pop("size", "5%")
         pad = cbar_kwargs.get("pad", 0.1)
         cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
     else:  # orientation == "horizontal":
-        size = cbar_kwargs.get("size", "5%")
+        size = cbar_kwargs.pop("size", "5%")
         pad = cbar_kwargs.get("pad", 0.25)
         cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
 
@@ -545,7 +545,16 @@ def plot_colorbar(p, ax, cbar_kwargs=None):
     # Add colorbar
     cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
     if ticklabels is not None:
-        _ = cbar.ax.set_yticklabels(ticklabels) if orientation == "vertical" else cbar.ax.set_xticklabels(ticklabels)
+        # Retrieve ticks
+        ticks = cbar_kwargs.get("ticks", None)
+        if ticks is None:
+            ticks = cbar.get_ticks()
+        # Remove existing ticklabels
+        cbar.set_ticklabels([])
+        cbar.set_ticklabels([], minor=True)
+        # Add custom ticklabels
+        p.colorbar.set_ticks(ticks, labels=ticklabels)
+        # _ = cbar.ax.set_yticklabels(ticklabels) if orientation == "vertical" else cbar.ax.set_xticklabels(ticklabels)
     return cbar
 
 
@@ -710,7 +719,7 @@ def plot_cartopy_pcolormesh(
 
     # Compute coordinates of cell corners for pcolormesh quadrilateral mesh
     # - This enable correct masking of cells crossing the antimeridian
-    lon, lat = get_lonlat_corners_from_centroids(lon, lat)
+    lon, lat = get_lonlat_corners_from_centroids(lon, lat, parallel=False)
 
     # Mask cells crossing the antimeridian
     # - with gpm.config.set({"viz_hide_antimeridian_data": False}): can be used to modify the masking behaviour
@@ -852,6 +861,7 @@ def _plot_image(
     y=None,
     ax=None,
     add_colorbar=True,
+    add_labels=True,
     interpolation="nearest",
     fig_kwargs=None,
     cbar_kwargs=None,
@@ -890,16 +900,18 @@ def _plot_image(
         **plot_kwargs,
     )
 
-    if is_orbit(da):
-        ax.set_xlabel("Along-Track")
-        ax.set_ylabel("Cross-Track")
-    elif is_grid(da):
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
+    # Add labels
+    if add_labels:
+        if is_orbit(da):
+            ax.set_xlabel("Along-Track")
+            ax.set_ylabel("Cross-Track")
+        elif is_grid(da):
+            ax.set_xlabel("Longitude")
+            ax.set_ylabel("Latitude")
+
     # - Monkey patch the mappable instance to add optimize_layout
     if not is_facetgrid:
         p = add_optimize_layout_method(p)
-
     # - Return mappable
     return p
 
@@ -910,6 +922,7 @@ def _plot_image_facetgrid(
     y=None,
     ax=None,
     add_colorbar=True,
+    add_labels=True,
     interpolation="nearest",
     fig_kwargs=None,
     cbar_kwargs=None,
@@ -961,8 +974,11 @@ def _plot_image_facetgrid(
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
-
+    # Remove duplicated or all labels
     fc.remove_duplicated_axis_labels()
+    if not add_labels:
+        fc.remove_left_ticks_and_labels()
+        fc.remove_bottom_ticks_and_labels()
 
     # Add colorbar
     if add_colorbar:
@@ -977,6 +993,7 @@ def plot_image(
     y=None,
     ax=None,
     add_colorbar=True,
+    add_labels=True,
     interpolation="nearest",
     fig_kwargs=None,
     cbar_kwargs=None,
@@ -1003,6 +1020,8 @@ def plot_image(
         The default is ``None``.
     add_colorbar : bool, optional
         Whether to add a colorbar. The default is ``True``.
+    add_labels : bool, optional
+        Whether to add labels to the plot. The default is ``True``.
     interpolation : str, optional
         Argument to be passed to imshow.
         The default is ``"nearest"``.
@@ -1041,6 +1060,7 @@ def plot_image(
             y=y,
             ax=ax,
             add_colorbar=add_colorbar,
+            add_labels=add_labels,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -1054,6 +1074,7 @@ def plot_image(
             y=y,
             ax=ax,
             add_colorbar=add_colorbar,
+            add_labels=add_labels,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,

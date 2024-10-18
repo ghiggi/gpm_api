@@ -1,0 +1,39 @@
+colormap_type: LinearSegmentedColormap
+color_space: hex
+color_palette:
+  - "#fef090"
+  - "#fde284"
+  - "#fbd378"
+  - "#fac56b"
+  - "#dd9257"
+  - "#bf6e4f"
+  - "#a34a47"
+  - "#85293d"
+  - "#6b0036"
+  - "#683367"
+  - "#794978"
+  - "#8d5f8c"
+  - "#9e769e"
+  - "#b18eb1"
+  - "#c4a6c4"
+  - "#d8bdd7"
+  - "#ead4ea"
+  - "#a8daf2"
+  - "#8ac3dd"
+  - "#6dabc7"
+  - "#5193b4"
+  - "#367d9e"
+  - "#1b678b"
+  - "#1c673e"
+  - "#327d55"
+  - "#4a926d"
+  - "#63a984"
+  - "#7dc09d"
+  - "#96d7b6"
+  - "#b0ecce"
+segmentdata: null
+n: 256.0
+auxiliary:
+  category:
+    - MeteoSwiss
+    - precipitation

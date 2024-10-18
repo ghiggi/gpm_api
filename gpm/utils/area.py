@@ -559,7 +559,7 @@ def geographic_to_geocentric(lons, lats, z=None, parallel=True):
     return reproject_coords(lons, lats, z, parallel=parallel, src_crs=geographic_proj.crs, dst_crs=geocentric_proj.crs)
 
 
-def get_lonlat_corners_from_centroids(lons, lats):
+def get_lonlat_corners_from_centroids(lons, lats, parallel=True):
     """Compute the corners of lon lat 2D pixel centroid coordinate arrays.
 
     It takes care of cells crossing the antimeridian.
@@ -571,12 +571,12 @@ def get_lonlat_corners_from_centroids(lons, lats):
     if lons.ndim == 2 and lats.ndim == 2:
         lons, lats = _check_2d_coords(lons, lats)
         # Map lons, lats to x, y, z centroids
-        x, y, z = geographic_to_geocentric(lons, lats)
+        x, y, z = geographic_to_geocentric(lons, lats, parallel=parallel)
         x_corners = get_corners_from_centroids(x)
         y_corners = get_corners_from_centroids(y)
         z_corners = get_corners_from_centroids(z)
         # Convert back to lons, lats, height
-        lons_corners, lat_corners, _ = geocentric_to_geographic(x_corners, y_corners, z_corners)
+        lons_corners, lat_corners, _ = geocentric_to_geographic(x_corners, y_corners, z_corners, parallel=parallel)
         return lons_corners, lat_corners
     raise NotImplementedError(f"lons is a {lons.ndim}D array, lats is a {lats.ndim}D array.")
 

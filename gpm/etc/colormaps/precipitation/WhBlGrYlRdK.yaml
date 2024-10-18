@@ -1,0 +1,20 @@
+colormap_type: LinearSegmentedColormap
+color_space: hex
+color_palette:
+  - "#ffffff"
+  - "#cbd5ee"
+  - "#a7b9df"
+  - "#7084c3"
+  - "#5262ad"
+  - "#4eb144"
+  - "#98c561"
+  - "#e0e33a"
+  - "#ca2428"
+  - "#a4262a"
+  - "#0f0f0f"
+segmentdata: null
+n: 256
+auxiliary:
+  category:
+    - rainbow
+    - precipitation
