@@ -21,7 +21,7 @@ jobs:
         with:
           submodules: recursive
       - name: Set up micromamba and install package dependencies
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ${{ matrix.experimental && 'ci/environment_latest.yaml' || 'ci/environment.yaml' }}
           create-args: >-
