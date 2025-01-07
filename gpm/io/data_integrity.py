@@ -43,9 +43,8 @@ def get_corrupted_filepaths(filepaths):
     for filepath in filepaths:
         try:
             # Try open the HDF file
-
-            # DataTree.close() does not work yet!
-            # dt = datatree.open_datatree(filepath, engine="netcdf4")
+            # TODO: use this within context manager
+            # dt = xr.open_datatree(filepath, engine="netcdf4")
             # dt.close()
 
             # h5py it's an heavy dependency !

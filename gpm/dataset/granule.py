@@ -192,12 +192,13 @@ def _open_granule(
     decode_cf,
     chunks,
     prefix_group,
+    **kwargs,
 ):
     """Open granule file into xarray Dataset."""
     from gpm.dataset.datatree import open_datatree
 
     # Open datatree
-    dt = open_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True)
+    dt = open_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True, **kwargs)
 
     # Retrieve the granule dataset (without cf decoding)
     ds = _get_scan_mode_dataset(
@@ -230,6 +231,7 @@ def open_granule(
     decode_cf=True,
     chunks={},
     prefix_group=False,
+    **kwargs,
 ):
     """Create a lazy xarray.Dataset with relevant GPM data and attributes for a specific granule.
 
@@ -271,6 +273,8 @@ def open_granule(
     prefix_group: bool, optional
         Whether to add the group as a prefix to the variable names.
         THe default is ``True``.
+    **kwargs : dict
+        Additional keyword arguments passed to :py:func:`~xarray.open_dataset` for each group.
 
     Returns
     -------
@@ -297,6 +301,7 @@ def open_granule(
         decode_cf=False,
         chunks=chunks,
         prefix_group=prefix_group,
+        **kwargs,
     )
 
     # Finalize granule

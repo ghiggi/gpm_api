@@ -586,6 +586,7 @@ IMERG Precipitation
 The Integrated Multi-satellite Retrievals for GPM (IMERG) is an advanced algorithm designed
 to generate a high resolution precipitation product every 30 minutes, covering the full globe (up to version 6,  a quasi-global area from 60°S to 60°N)
 with a spatial resolution of 0.1° x 0.1°.
+The latest IMERG product covers the time period from January 1998 to present.
 
 By leveraging measurements from Geostationary (GEO) IR imagers and the :ref:`GPM PMW sensors constellation <gpm_constellation>`,
 IMERG provides a "best-estimate" of 30-minute average precipitation rates.
@@ -606,8 +607,11 @@ While IMERG Early uses only forward propagation in time (extrapolation in time),
 
 When PMW data are too sparse, IMERG incorporates precipitation estimates derived from GEO IR imagery through a weighted Kalman filter.
 
-IR-based precipitation estimates are derived from the
-`Climate Prediction Center (CPC) Merged 4-km Global IR data product <https://disc.gsfc.nasa.gov/datasets/GPM_MERGIR_1/summary>`_.
+IR-based precipitation estimates are derived from the NOAA Climate Data Record (CDR) of Gridded Satellite Data from the ISCCP B1 (GridSat-B1) IR dataset for
+all timesteps between January 1998 and February 7, 2002, 20:00:00 UTC.
+Starting from February 7, 2002, 20:00:00 UTC, IR-based precipitation estimates
+are obtained from the `NOAA Climate Prediction Center (CPC) Merged 4-km Global IR data product <https://disc.gsfc.nasa.gov/datasets/GPM_MERGIR_1/summary>`_.
+
 This dataset composites infrared (IR) brightness temperature measurements from numerous geostationary sensors over their operational periods,
 including European (METEOSAT-5/7/8/9/10/11), Japanese (GMS-5, MTSat-1R/2, Himawari-8/9), and U.S. (GOES-8/9/10/11/12/13/14/15/16/17/18) satellites,
 every 30 minutes between 60°N/S.
@@ -931,9 +935,13 @@ Please also note that on Google Earth Engine are available the version 6 of `GSM
 and `IMERG <https://developers.google.com/earth-engine/datasets/catalog/NASA_GPM_L3_IMERG_V06>`_.
 
 GSMaP can be visualized on the `JAXA Global Rainfall Watch <https://sharaku.eorc.jaxa.jp/GSMaP/index.htm>`_,
-while IMERG on the `GPM IMERG Global Viewer <https://gpm.nasa.gov/data/visualization/global-viewer>`_ and the `EOSDIS WorldView Portal <https://worldview.earthdata.nasa.gov/?v=-235.13866988428558,-76.35016978404038,104.5800850894752,96.99821113230026&l=Reference_Labels_15m(hidden),Reference_Features_15m(hidden),Coastlines_15m,IMERG_Precipitation_Rate,VIIRS_NOAA20_CorrectedReflectance_TrueColor(hidden),VIIRS_SNPP_CorrectedReflectance_TrueColor(hidden),MODIS_Aqua_CorrectedReflectance_TrueColor(hidden),MODIS_Terra_CorrectedReflectance_TrueColor&lg=true&t=2024-02-08-T03%3A43%3A10Z>`_.
+while IMERG on
+`the RAIN-Global Viewer (Regional Animations of IMERG in Near-realtime - Global Edition) <https://storm.pps.eosdis.nasa.gov/storm/outreach/RAIN-Global.html>`_ ,
+the `GPM IMERG Global Viewer <https://gpm.nasa.gov/data/visualization/global-viewer>`_ and
+the `EOSDIS WorldView Portal <https://worldview.earthdata.nasa.gov/?v=-235.13866988428558,-76.35016978404038,104.5800850894752,96.99821113230026&l=Reference_Labels_15m(hidden),Reference_Features_15m(hidden),Coastlines_15m,IMERG_Precipitation_Rate,VIIRS_NOAA20_CorrectedReflectance_TrueColor(hidden),VIIRS_SNPP_CorrectedReflectance_TrueColor(hidden),MODIS_Aqua_CorrectedReflectance_TrueColor(hidden),MODIS_Terra_CorrectedReflectance_TrueColor&lg=true&t=2024-02-08-T03%3A43%3A10Z>`_.
 
 The `GES DISC Interactive Online Visualization ANd aNalysis Infrastructure (Giovanni) <https://giovanni.gsfc.nasa.gov/giovanni/>`_ also provides quick access to analysis of IMERG products.
+
 
 .. _useful_resources:
 

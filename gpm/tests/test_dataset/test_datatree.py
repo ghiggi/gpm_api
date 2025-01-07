@@ -24,4 +24,4 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module test the GPM-API DataTree."""
+"""This module test the GPM-API xr.DataTree."""

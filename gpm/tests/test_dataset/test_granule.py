@@ -32,7 +32,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
-from datatree import DataTree
 
 from gpm.dataset import conventions, datatree, granule
 from gpm.dataset.conventions import finalize_dataset
@@ -94,7 +93,7 @@ def test_open_granule(monkeypatch):
     scan_mode = "FS"
 
     ds = xr.Dataset()
-    dt = DataTree.from_dict({scan_mode: ds})
+    dt = xr.DataTree.from_dict({scan_mode: ds})
 
     # Mock units tested elsewhere
     monkeypatch.setattr(
@@ -223,12 +222,12 @@ def test_get_flattened_scan_mode_dataset():
 
     # Build source datatree
     scan_mode = "scan_mode"
-    dt = DataTree.from_dict(
+    dt = xr.DataTree.from_dict(
         {
-            scan_mode: DataTree.from_dict(
+            scan_mode: xr.DataTree.from_dict(
                 {
-                    "group_1": DataTree(),
-                    "group_2": DataTree(),
+                    "group_1": xr.DataTree(),
+                    "group_2": xr.DataTree(),
                 },
             ),
         },

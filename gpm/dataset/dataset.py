@@ -139,6 +139,7 @@ def _open_valid_granules(
     prefix_group,
     chunks,
     parallel=False,
+    **kwargs,
 ):
     """Open a list of HDF granules.
 
@@ -165,6 +166,7 @@ def _open_valid_granules(
         prefix_group=prefix_group,
         chunks=chunks,
         parallel=parallel,
+        **kwargs,
     )
 
     if len(list_ds) == 0:
@@ -202,6 +204,7 @@ def open_dataset(
     parallel=False,
     prefix_group=False,
     verbose=False,
+    **kwargs,
 ):
     """Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
 
@@ -273,6 +276,8 @@ def open_dataset(
         If ``parallel=True``, ``'chunks'`` can not be ``None``.
         The underlying data must be :py:class:`dask.array.Array`.
         The default is ``False``.
+    **kwargs : dict
+        Additional keyword arguments passed to :py:func:`~xarray.open_dataset` for each group.
 
     Returns
     -------
@@ -318,6 +323,7 @@ def open_dataset(
         prefix_group=prefix_group,
         parallel=parallel,
         chunks=chunks,
+        **kwargs,
     )
 
     ##-------------------------------------------------------------------------.

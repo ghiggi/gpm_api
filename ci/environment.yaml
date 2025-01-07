@@ -31,7 +31,6 @@ dependencies:
   - trame-vtk
   - trame-vuetify
   - trollsift
-  - xarray-datatree
-  - xarray
+  - xarray>=2025.01.0
   - xoak
   - ximage

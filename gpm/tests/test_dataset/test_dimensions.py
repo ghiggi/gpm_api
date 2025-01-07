@@ -28,7 +28,6 @@
 
 import numpy as np
 import xarray as xr
-from datatree import DataTree
 
 from gpm.dataset import dimensions
 
@@ -87,7 +86,7 @@ def test_get_datatree_dim_dict():
     dataarray_2.attrs["DimensionNames"] = "replaced_dim_2"
     dataset_1 = xr.Dataset(data_vars={"var_1": dataarray_1})
     dataset_2 = xr.Dataset(data_vars={"var_2": dataarray_2})
-    datatree = DataTree.from_dict({"dataset_1": dataset_1, "dataset_2": dataset_2})
+    datatree = xr.DataTree.from_dict({"dataset_1": dataset_1, "dataset_2": dataset_2})
 
     expected_dict = {
         "phony_dim_1": "replaced_dim_1",
@@ -180,7 +179,7 @@ def test_rename_datatree_dimensions(monkeypatch):
     dataarray_2.attrs["DimensionNames"] = "intermediate_2"
     dataset_1 = xr.Dataset(data_vars={"var_1": dataarray_1})
     dataset_2 = xr.Dataset(data_vars={"var_2": dataarray_2})
-    datatree = DataTree.from_dict({"dataset_1": dataset_1, "dataset_2": dataset_2})
+    datatree = xr.DataTree.from_dict({"dataset_1": dataset_1, "dataset_2": dataset_2})
 
     # With use_api_defaults=True, which replaces intermediate_2 with final_2
     returned_datatree = dimensions._rename_datatree_dimensions(datatree)
