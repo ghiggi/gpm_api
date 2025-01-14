@@ -30,7 +30,7 @@ import importlib
 import inspect
 import re
 import sys
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 import xarray as xr
@@ -317,6 +317,20 @@ class GPM_Base_Accessor:
             new_dim=new_dim,
         )
 
+    @auto_wrap_docstring
+    def extract_transect_along_dimension(
+        self,
+        point,
+        dim,
+    ):
+        from gpm.utils.manipulations import extract_transect_along_dimension
+
+        return extract_transect_along_dimension(
+            self._obj,
+            point=point,
+            dim=dim,
+        )
+
     #### Range subset utility
     @auto_wrap_docstring
     def slice_range_at_bin(self, bins):
@@ -579,6 +593,8 @@ class GPM_Base_Accessor:
         ax=None,
         add_direction=True,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         fig_kwargs=None,
         subplot_kwargs=None,
         text_kwargs=None,
@@ -592,6 +608,8 @@ class GPM_Base_Accessor:
             ax=ax,
             add_direction=add_direction,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             text_kwargs=text_kwargs,
@@ -609,6 +627,8 @@ class GPM_Base_Accessor:
         fig_kwargs=None,
         subplot_kwargs=None,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         **plot_kwargs,
     ):
         from gpm.visualization.orbit import plot_swath
@@ -620,6 +640,8 @@ class GPM_Base_Accessor:
             edgecolor=edgecolor,
             alpha=alpha,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -634,6 +656,8 @@ class GPM_Base_Accessor:
         linestyle="--",
         color="k",
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         fig_kwargs=None,
         subplot_kwargs=None,
         **plot_kwargs,
@@ -648,6 +672,8 @@ class GPM_Base_Accessor:
             linestyle=linestyle,
             color=color,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -662,6 +688,8 @@ class GPM_Base_Accessor:
         edgecolors="k",
         linewidth=0.1,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         fig_kwargs=None,
         subplot_kwargs=None,
         **plot_kwargs,
@@ -676,6 +704,8 @@ class GPM_Base_Accessor:
             edgecolors=edgecolors,
             linewidth=linewidth,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -690,6 +720,8 @@ class GPM_Base_Accessor:
         c="r",
         s=1,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         fig_kwargs=None,
         subplot_kwargs=None,
         **plot_kwargs,
@@ -704,6 +736,8 @@ class GPM_Base_Accessor:
             c=c,
             s=s,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -827,6 +861,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         interpolation="nearest",  # used only for GPM grid object
         fig_kwargs=None,
         subplot_kwargs=None,
@@ -843,6 +879,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
@@ -889,6 +927,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         interpolation="nearest",
         zoom=True,
+        check_contiguity=True,
         fig_kwargs=None,
         cbar_kwargs=None,
         **plot_kwargs,
@@ -903,6 +942,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             add_colorbar=add_colorbar,
             interpolation=interpolation,
             zoom=zoom,
+            check_contiguity=check_contiguity,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
@@ -1014,6 +1054,18 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         return get_slices_var_between(self._obj, dim=dim, vmin=vmin, vmax=vmax, criteria=criteria)
 
     @auto_wrap_docstring
+    def locate_max_value(self, return_isel_dict=False):
+        from gpm.utils.manipulations import locate_max_value
+
+        return locate_max_value(self._obj, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
+    def locate_min_value(self, return_isel_dict=False):
+        from gpm.utils.manipulations import locate_min_value
+
+        return locate_min_value(self._obj, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
     def title(
         self,
         prefix_product=True,
@@ -1042,6 +1094,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         interpolation="nearest",  # used only for GPM grid object
         fig_kwargs=None,
         subplot_kwargs=None,
@@ -1058,6 +1112,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
@@ -1102,6 +1158,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         interpolation="nearest",
         zoom=True,
+        check_contiguity=True,
         fig_kwargs=None,
         cbar_kwargs=None,
         **plot_kwargs,
@@ -1116,6 +1173,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             add_colorbar=add_colorbar,
             interpolation=interpolation,
             zoom=zoom,
+            check_contiguity=check_contiguity,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,

@@ -168,7 +168,7 @@ def test_check_storage() -> None:
     valid_storage = ["ges_disc", "pps", "local", "GES_DISC", "PPS", "LOCAL"]
     expected_return = ["GES_DISC", "PPS", "LOCAL", "GES_DISC", "PPS", "LOCAL"]
 
-    for storage, expected in zip(valid_storage, expected_return):
+    for storage, expected in zip(valid_storage, expected_return, strict=False):
         returned_storage = checks.check_storage(storage)
         assert (
             returned_storage == expected
@@ -188,7 +188,7 @@ def test_check_remote_storage() -> None:
     valid_storage = ["ges_disc", "pps", "GES_DISC", "PPS"]
     expected_return = ["GES_DISC", "PPS", "GES_DISC", "PPS"]
 
-    for storage, expected in zip(valid_storage, expected_return):
+    for storage, expected in zip(valid_storage, expected_return, strict=False):
         returned_storage = checks.check_remote_storage(storage)
         assert (
             returned_storage == expected

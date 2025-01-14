@@ -90,9 +90,9 @@ def _get_chunks_encodings(ds):
         chunksizes = ds[name].encoding.get("chunksizes", None)
         if preferred_chunks:
             # Use values() to remove phony_dim_* keys
-            dict_preferred_chunks[name] = dict(zip(ds[name].dims, preferred_chunks.values()))
+            dict_preferred_chunks[name] = dict(zip(ds[name].dims, preferred_chunks.values(), strict=False))
         if preferred_chunks:
-            dict_chunksizes[name] = dict(zip(ds[name].dims, chunksizes))
+            dict_chunksizes[name] = dict(zip(ds[name].dims, chunksizes, strict=False))
     return dict_chunksizes, dict_preferred_chunks
 
 

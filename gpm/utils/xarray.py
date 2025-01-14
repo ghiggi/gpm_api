@@ -110,7 +110,7 @@ def has_unique_chunking(ds):
     for var_name in ds.variables:
         if hasattr(ds[var_name].data, "chunks"):  # is dask array
             var_chunks = ds[var_name].data.chunks
-            for dim, chunks in zip(ds[var_name].dims, var_chunks):
+            for dim, chunks in zip(ds[var_name].dims, var_chunks, strict=False):
                 if dim not in unique_chunks_per_dim:
                     unique_chunks_per_dim[dim] = set()
                     unique_chunks_per_dim[dim].add(chunks)

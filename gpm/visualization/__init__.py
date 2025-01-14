@@ -25,10 +25,11 @@
 
 # -----------------------------------------------------------------------------.
 """This directory contains the GPM-API data visualization tools."""
+from pycolorbar import plot_colorbar
+
 from gpm.visualization.plot import (
     add_map_inset,
     plot_cartopy_background,
-    plot_colorbar,
     plot_image,
     plot_labels,
     plot_map,

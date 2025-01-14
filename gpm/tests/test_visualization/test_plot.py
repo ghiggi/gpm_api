@@ -894,37 +894,3 @@ class TestPlotPatches:
         ]
         generator = (t for t in invalid_list)
         plot.plot_patches(generator)  # passes without error
-
-
-class TestGetOrientationLocation:
-    """Test arguments for colorbar positioning."""
-
-    def test_defaults(self):
-        assert plot._get_orientation_location({}) == ("vertical", "right")
-
-    def test_defaults_with_valid_orientation(self):
-        assert plot._get_orientation_location({"orientation": "vertical"}) == ("vertical", "right")
-        assert plot._get_orientation_location({"orientation": "horizontal"}) == ("horizontal", "bottom")
-
-    def test_defaults_with_valid_location(self):
-        assert plot._get_orientation_location({"location": "left"}) == ("vertical", "left")
-        assert plot._get_orientation_location({"location": "bottom"}) == ("horizontal", "bottom")
-
-    def test_valid_orientation_location_combinations(self):
-        assert plot._get_orientation_location({"orientation": "horizontal", "location": "top"}) == ("horizontal", "top")
-        assert plot._get_orientation_location({"orientation": "vertical", "location": "left"}) == ("vertical", "left")
-
-    def test_invalid_orientation(self):
-        with pytest.raises(ValueError):
-            plot._get_orientation_location({"orientation": "invalid"})
-
-    def test_invalid_location(self):
-        with pytest.raises(ValueError):
-            plot._get_orientation_location({"location": "invalid"})
-
-    def test_invalid_orientation_location_combination(self):
-        with pytest.raises(ValueError):
-            plot._get_orientation_location({"orientation": "vertical", "location": "top"})
-
-        with pytest.raises(ValueError):
-            plot._get_orientation_location({"orientation": "horizontal", "location": "left"})

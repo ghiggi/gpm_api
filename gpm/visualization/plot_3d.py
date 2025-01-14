@@ -129,7 +129,7 @@ def add_3d_isosurfaces(
     # TODO: check there are values larger than max isovalues
 
     # Define opacity dictionary
-    dict_opacity = dict(zip(isovalues, opacities))
+    dict_opacity = dict(zip(isovalues, opacities, strict=False))
 
     # Precompute isosurface
     dict_isosurface = {isovalue: vol.contour([isovalue], method=method) for isovalue in isovalues}

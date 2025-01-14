@@ -29,7 +29,6 @@
 import inspect
 import os
 import tempfile
-from typing import Optional
 
 import numpy as np
 import pytest
@@ -61,7 +60,7 @@ def skip_tests_if_no_data() -> None:
 
 
 def save_and_check_figure(
-    figure: Optional[mpl_figure.Figure] = None,
+    figure: mpl_figure.Figure | None = None,
     name: str = "",
 ) -> None:
     """Save the current figure to a temporary location and compare it to the reference figure.
@@ -129,7 +128,7 @@ def expand_dims(
     dataarray: xr.DataArray,
     size: int,
     dim: str,
-    axis: Optional[int] = None,
+    axis: int | None = None,
 ) -> xr.DataArray:
     """Expand dimensions of a dataarray and fill with random data."""
     dataarray = dataarray.expand_dims(dim={dim: size}, axis=axis)

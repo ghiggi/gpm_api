@@ -51,11 +51,11 @@ from gpm.utils.manipulations import (
     get_height_at_temperature,
     get_height_dataarray,
     get_liquid_phase_mask,
-    get_max_value_point,
-    get_min_value_point,
     get_range_axis,
     get_solid_phase_mask,
     integrate_profile_concentration,
+    locate_max_value,
+    locate_min_value,
     mask_above_bin,
     mask_below_bin,
     mask_between_bins,
@@ -883,8 +883,8 @@ def test_mask_between_bins() -> None:
     xr.testing.assert_allclose(ds["dummy_2d_var"], returned_ds["dummy_2d_var"])
 
 
-def test_get_min_value_point():
-    """Test get_min_value_point."""
+def test_locate_min_value():
+    """Test locate_min_value."""
     # Grid
     da = get_grid_dataarray(
         start_lon=-5,
@@ -896,7 +896,7 @@ def test_get_min_value_point():
     )
     da.data[:] = 1
     da.data[1, 1] = 0
-    assert get_min_value_point(da) == (da["lon"].data[1], da["lat"].data[1])
+    assert locate_min_value(da) == (da["lon"].data[1], da["lat"].data[1])
 
     # Orbit
     da = get_orbit_dataarray(
@@ -910,15 +910,15 @@ def test_get_min_value_point():
     )
     da.data[:] = 1
     da.data[1, 1] = 0
-    assert get_min_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+    assert locate_min_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
     # If more than 1, always return first point
     da.data[1, 1:3] = 0
-    assert get_min_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+    assert locate_min_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
 
-def test_get_max_value_point():
-    """Test get_max_value_point."""
+def test_locate_max_value():
+    """Test locate_max_value."""
     # Grid
     da = get_grid_dataarray(
         start_lon=-5,
@@ -930,7 +930,7 @@ def test_get_max_value_point():
     )
     da.data[:] = 0
     da.data[1, 1] = 1
-    assert get_max_value_point(da) == (da["lon"].data[1], da["lat"].data[1])
+    assert locate_max_value(da) == (da["lon"].data[1], da["lat"].data[1])
     # Orbit
     da = get_orbit_dataarray(
         start_lon=0,
@@ -943,11 +943,11 @@ def test_get_max_value_point():
     )
     da.data[:] = 0
     da.data[1, 1] = 1
-    assert get_max_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+    assert locate_max_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
     # If more than 1, always return first point
     da.data[1, 1:3] = 1
-    assert get_max_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+    assert locate_max_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
 
 def test_extract_transect_at_points():

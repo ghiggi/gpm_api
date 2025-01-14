@@ -62,7 +62,7 @@ def get_cross_track_horizontal_distance(xr_obj):
     start_lat = xr_obj["lat"].isel(cross_track=idx).data
 
     geod = Geod(ellps="WGS84")
-    distances = np.array([geod.inv(start_lon, start_lat, lon, lat)[2] for lon, lat in zip(lons, lats)])
+    distances = np.array([geod.inv(start_lon, start_lat, lon, lat)[2] for lon, lat in zip(lons, lats, strict=False)])
     distances[:idx] = -distances[:idx]
     da_dist = xr.DataArray(distances, dims="cross_track")
     return da_dist
@@ -76,6 +76,7 @@ def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
     da_template = da.isel({da.dims[-1]: 0}) if rgb else da
     da_x = da[x].broadcast_like(da_template)
     da_y = da[y].broadcast_like(da_template)
+
     # Get valid coordinates
     x_coord, y_coord, data = get_valid_pcolormesh_inputs(
         x=da_x.data,
@@ -86,6 +87,7 @@ def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
     )
     # Mask data
     da.data = data
+
     # Set back validated coordinates
     # - If x or y are dimension names without coordinates, nothing to be done
     if x in da.coords:
@@ -95,7 +97,8 @@ def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
             da_x_values = da_x.isel({dim: 0 for dim in get_dimensions_without(da_x, da[x].dims)}).data
             da = da.assign_coords({x: (dim_name, da_x_values)})
         else:
-            da[x].data = x_coord
+            # da[x].data = x_coord
+            da = da.assign_coords({x: (da_x.dims, x_coord)})
     if y in da.coords:
         if da[y].ndim == 1:
             dim_name = list(da[y].dims)[0]
@@ -103,7 +106,8 @@ def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
             da_y_values = da_y.isel({dim: 0 for dim in get_dimensions_without(da_y, da[y].dims)}).data
             da = da.assign_coords({y: (dim_name, da_y_values)})
         else:
-            da[y].data = y_coord
+            da = da.assign_coords({y: (da_y.dims, y_coord)})
+            # da[y].data = y_coord
     return da
 
 
@@ -128,7 +132,14 @@ def _get_x_axis_options(da, x):
         if x not in list(set(da.dims) | set(da.coords)):
             raise ValueError(f"'{x}' is not a DataArray coordinate. Specify a valid 'x' or compute '{x}'.")
     else:  # set default (cross_track or along_track)
-        x = get_dimensions_without(da, da.gpm.vertical_dimension)[0]  # the dimension which is not vertical
+        # TODO in future use gpm.x_dims
+        candidate_dims = get_dimensions_without(da, da.gpm.vertical_dimension)
+        if "cross_track" in candidate_dims:
+            x = "cross_track"
+        elif "along_track" in candidate_dims:
+            x = "along_track"
+        else:
+            x = get_dimensions_without(da, da.gpm.vertical_dimension)[0]  # the dimension which is not vertical
     # Define xlabel
     xlabel = xlabel_dicts.get(x, x.title())
     # Return x, label and DataArray
@@ -191,6 +202,7 @@ def plot_cross_section(
     ax=None,
     add_colorbar=True,
     zoom=True,
+    check_contiguity=True,
     interpolation="nearest",
     fig_kwargs=None,
     cbar_kwargs=None,
@@ -200,15 +212,22 @@ def plot_cross_section(
 
     If RGB DataArray, all other plot_kwargs are ignored !
     """
+    # TODO: With cbar_kwargs, we currently cannot use 'size' argument colorbar directly
+    # because we use xr.imshow() and xr.pcolormesh()
+
     da = check_object_format(da, plot_kwargs=plot_kwargs, check_function=check_is_cross_section, strict=True)
     is_facetgrid = "col" in plot_kwargs or "row" in plot_kwargs
 
+    if is_facetgrid and ax is not None:
+        raise ValueError("When creating a FacetGrid plot, do not specify the 'ax'.")
+
     # - Check for contiguous along-track scans
-    if "along_track" in da.dims:
+    if "along_track" in da.dims and check_contiguity:
         check_contiguous_scans(da)
 
     # - Initialize figure
     fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs)
+
     if ax is None and not is_facetgrid:
         _, ax = plt.subplots(**fig_kwargs)
 
@@ -218,6 +237,7 @@ def plot_cross_section(
         user_plot_kwargs=plot_kwargs,
         user_cbar_kwargs=cbar_kwargs,
     )
+
     # - Select only vertical regions with data
     if zoom:
         da = da.gpm.subset_range_with_valid_data()
@@ -270,6 +290,8 @@ def plot_transect_line(
     ax=None,
     add_direction=True,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     text_kwargs=None,
@@ -289,6 +311,8 @@ def plot_transect_line(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Retrieve start and end coordinates

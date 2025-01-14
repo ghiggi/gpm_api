@@ -117,7 +117,7 @@ def _get_dataarray_dim_dict(da):
     dim_names_str = da.attrs.get("DimensionNames", None)
     if dim_names_str is not None:
         dim_names = dim_names_str.split(",")
-        for dim, new_dim in zip(list(da.dims), dim_names):
+        for dim, new_dim in zip(list(da.dims), dim_names, strict=False):
             # Deal with missing DimensionNames in
             # - sunVectorInBodyFrame variable in V5 products
             # - 1B-Ku/Ka V5 *Temp products

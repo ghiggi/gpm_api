@@ -33,7 +33,9 @@ import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from cartopy.mpl.geoaxes import GeoAxes
+from pycolorbar import plot_colorbar, set_colorbar_fully_transparent
+from pycolorbar.utils.mpl_legend import get_inset_bounds
 from scipy.interpolate import griddata
 
 import gpm
@@ -427,6 +429,8 @@ def initialize_cartopy_plot(
     fig_kwargs,
     subplot_kwargs,
     add_background,
+    add_gridlines,
+    add_labels,
 ):
     """Initialize figure for cartopy plot if necessary."""
     # - Initialize figure
@@ -442,17 +446,20 @@ def initialize_cartopy_plot(
     # - Add cartopy background
     if add_background:
         ax = plot_cartopy_background(ax)
+
+    # - Add gridlines
+    if add_gridlines:
+        _ = plot_cartopy_gridlines(ax)
+
+    # - Remove cartopy labels if add_labels=False
+    if not add_labels:
+        ax = remove_cartopy_labels(ax)
+
     return ax
 
 
-def plot_cartopy_background(ax):
-    """Plot cartopy background."""
-    # - Add coastlines
-    ax.coastlines()
-    ax.add_feature(cartopy.feature.LAND, facecolor=[0.9, 0.9, 0.9])
-    ax.add_feature(cartopy.feature.OCEAN, alpha=0.6)
-    ax.add_feature(cartopy.feature.BORDERS)  # BORDERS also draws provinces, ...
-    # - Add grid lines
+def plot_cartopy_gridlines(ax):
+    """Add cartopy gridlines."""
     gl = ax.gridlines(
         crs=ccrs.PlateCarree(),
         draw_labels=True,
@@ -465,6 +472,30 @@ def plot_cartopy_background(ax):
     gl.right_labels = False  # gl.ylabels_right = False
     gl.xlines = True
     gl.ylines = True
+    return gl
+
+
+def plot_cartopy_background(ax):
+    """Plot cartopy background."""
+    # - Add coastlines
+    ax.coastlines()
+    ax.add_feature(cartopy.feature.LAND, facecolor=[0.9, 0.9, 0.9])
+    ax.add_feature(cartopy.feature.OCEAN, alpha=0.6)
+    ax.add_feature(cartopy.feature.BORDERS)  # BORDERS also draws provinces, ...
+    return ax
+
+
+def remove_cartopy_labels(ax):
+    """Remove Cartopy bottom gridlines labels."""
+    if isinstance(ax, GeoAxes):
+        try:  # fail on empty ax of CartopyFacetGrid
+            gl = ax._gridliners[0]
+            gl.bottom_labels = False
+            gl.top_labels = False
+            gl.left_labels = False
+            gl.right_labels = False
+        except:
+            pass
     return ax
 
 
@@ -476,115 +507,6 @@ def plot_sides(sides, ax, **plot_kwargs):
     for side in sides:
         p = ax.plot(*side, transform=ccrs.Geodetic(), **plot_kwargs)
     return p[0]
-
-
-####--------------------------------------------------------------------------.
-############################
-#### Colorbar utilities ####
-############################
-
-
-def _get_orientation_location(cbar_kwargs):
-    location = cbar_kwargs.get("location", None)
-    orientation = cbar_kwargs.get("orientation", None)
-    # Set defaults
-    if location is None and orientation is None:
-        return "vertical", "right"
-    # Check orientation is horizontal or vertical
-    if orientation is not None and orientation not in ("horizontal", "vertical"):
-        raise ValueError("Invalid orientation. Choose 'horizontal' or 'vertical'.")
-    # Check location is top, left, right or bottom
-    if location is not None and location not in ("top", "left", "right", "bottom"):
-        raise ValueError("Invalid location. Choose 'top', 'left', 'right', or 'bottom'.")
-    # Check compatible arguments
-    if orientation is not None and location is not None:
-        if orientation == "vertical":
-            # Raise error if not right or left
-            if location not in ("right", "left"):
-                raise ValueError("Invalid location for vertical orientation. Choose 'right' or 'left'.")
-        elif location not in ("bottom", "top"):
-            raise ValueError("Invalid location for horizontal orientation. Choose 'bottom' or 'top'.")
-        return orientation, location
-    # Return with default location if missing
-    if orientation is not None:
-        if orientation == "vertical":
-            return "vertical", "right"
-        return "horizontal", "bottom"
-    # Return with correct orientation if missing
-    # if location is not None:
-    if location in ("right", "left"):
-        return "vertical", location
-    return "horizontal", location
-
-
-def plot_colorbar(p, ax, cbar_kwargs=None):
-    """Add a colorbar to a matplotlib/cartopy plot.
-
-    cbar_kwargs 'size' and 'pad' controls the size of the colorbar.
-    and the padding between the plot and the colorbar.
-
-    p: matplotlib.image.AxesImage
-    ax:  cartopy.mpl.geoaxes.GeoAxesSubplot
-    """
-    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
-    cbar_kwargs = cbar_kwargs.copy()  # otherwise pop ticklabels outside the function
-    ticklabels = cbar_kwargs.pop("ticklabels", None)
-    orientation, location = _get_orientation_location(cbar_kwargs)
-    # Defne colorbar axis
-    divider = make_axes_locatable(ax)
-    if orientation == "vertical":
-        size = cbar_kwargs.pop("size", "5%")
-        pad = cbar_kwargs.get("pad", 0.1)
-        cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
-    else:  # orientation == "horizontal":
-        size = cbar_kwargs.pop("size", "5%")
-        pad = cbar_kwargs.get("pad", 0.25)
-        cax = divider.append_axes(location, size=size, pad=pad, axes_class=plt.Axes)
-
-    p.figure.add_axes(cax)
-    # Add colorbar
-    cbar = plt.colorbar(p, cax=cax, ax=ax, **cbar_kwargs)
-    if ticklabels is not None:
-        # Retrieve ticks
-        ticks = cbar_kwargs.get("ticks", None)
-        if ticks is None:
-            ticks = cbar.get_ticks()
-        # Remove existing ticklabels
-        cbar.set_ticklabels([])
-        cbar.set_ticklabels([], minor=True)
-        # Add custom ticklabels
-        p.colorbar.set_ticks(ticks, labels=ticklabels)
-        # _ = cbar.ax.set_yticklabels(ticklabels) if orientation == "vertical" else cbar.ax.set_xticklabels(ticklabels)
-    return cbar
-
-
-def set_colorbar_fully_transparent(p):
-    """Add a fully transparent colorbar.
-
-    This is useful for animation where the colorbar should
-    not always in all frames but the plot area must be fixed.
-    """
-    # Get the position of the colorbar
-    cbar_pos = p.colorbar.ax.get_position()
-
-    cbar_x, cbar_y = cbar_pos.x0, cbar_pos.y0
-    cbar_width, cbar_height = cbar_pos.width, cbar_pos.height
-
-    # Remove the colorbar
-    p.colorbar.ax.set_visible(False)
-
-    # Now plot an empty rectangle
-    fig = plt.gcf()
-    rect = plt.Rectangle(
-        (cbar_x, cbar_y),
-        cbar_width,
-        cbar_height,
-        transform=fig.transFigure,
-        facecolor="none",
-        edgecolor="none",
-    )
-
-    fig.patches.append(rect)
 
 
 ####--------------------------------------------------------------------------.
@@ -669,7 +591,7 @@ def plot_cartopy_imshow(
 
     # - Add colorbar
     if add_colorbar and not rgb:
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
+        _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
     return p
 
 
@@ -734,7 +656,6 @@ def plot_cartopy_pcolormesh(
         transform=ccrs.PlateCarree(),
         **plot_kwargs,
     )
-
     # Add swath lines
     if add_swath_lines and not is_1d_case:
         sides = [(lon[0, :], lat[0, :]), (lon[-1, :], lat[-1, :])]
@@ -742,7 +663,7 @@ def plot_cartopy_pcolormesh(
 
     # Add colorbar
     if add_colorbar:
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
+        _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
     return p
 
 
@@ -759,7 +680,8 @@ def _preprocess_xr_kwargs(add_colorbar, plot_kwargs, cbar_kwargs):
     if "rgb" in plot_kwargs:
         cbar_kwargs = None
         add_colorbar = False
-        plot_kwargs = {"rgb": plot_kwargs.get("rgb")}  # alpha currently skipped if RGB
+        args_to_keep = ["rgb", "col", "row", "origin"]  # alpha currently skipped if RGB
+        plot_kwargs = {k: plot_kwargs[k] for k in args_to_keep if plot_kwargs.get(k, None) is not None}
     return add_colorbar, plot_kwargs, cbar_kwargs
 
 
@@ -773,6 +695,7 @@ def plot_xr_pcolormesh(
     **plot_kwargs,
 ):
     """Plot pcolormesh with xarray."""
+    is_facetgrid = bool("col" in plot_kwargs or "row" in plot_kwargs)
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     add_colorbar, plot_kwargs, cbar_kwargs = _preprocess_xr_kwargs(
         add_colorbar=add_colorbar,
@@ -787,7 +710,11 @@ def plot_xr_pcolormesh(
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
-    plt.title(da.name)
+
+    # Add variable name as title (if not FacetGrid)
+    if not is_facetgrid:
+        p.axes.set_title(da.name)
+
     if add_colorbar and ticklabels is not None:
         p.colorbar.ax.set_yticklabels(ticklabels)
     return p
@@ -800,6 +727,7 @@ def plot_xr_imshow(
     y,
     interpolation="nearest",
     add_colorbar=True,
+    add_labels=True,
     cbar_kwargs=None,
     visible_colorbar=True,
     **plot_kwargs,
@@ -810,22 +738,37 @@ def plot_xr_imshow(
     when calling this function multiple times on different fields with
     different colorbars.
     """
+    is_facetgrid = bool("col" in plot_kwargs or "row" in plot_kwargs)
     ticklabels = cbar_kwargs.pop("ticklabels", None)
     add_colorbar, plot_kwargs, cbar_kwargs = _preprocess_xr_kwargs(
         add_colorbar=add_colorbar,
         plot_kwargs=plot_kwargs,
         cbar_kwargs=cbar_kwargs,
     )
+    # Allow using coords as x/y axis
+    # BUG - Current bug in xarray
+    if plot_kwargs.get("rgb", None) is not None:
+        if x not in da.dims:
+            da = da.swap_dims({list(da[x].dims)[0]: x})
+        if y not in da.dims:
+            da = da.swap_dims({list(da[y].dims)[0]: y})
+
     p = da.plot.imshow(
         x=x,
         y=y,
         ax=ax,
         interpolation=interpolation,
         add_colorbar=add_colorbar,
+        add_labels=add_labels,
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
-    plt.title(da.name)
+
+    # Add variable name as title (if not FacetGrid)
+    if not is_facetgrid:
+        p.axes.set_title(da.name)
+
+    # Add colorbar ticklabels
     if add_colorbar and ticklabels is not None:
         p.colorbar.ax.set_yticklabels(ticklabels)
 
@@ -845,7 +788,7 @@ def plot_xr_imshow(
     # )
     # plt.title(da.name)
     # if add_colorbar:
-    #     _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
+    #     _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
     return p
 
 
@@ -896,11 +839,13 @@ def _plot_image(
         y=y,
         interpolation=interpolation,
         add_colorbar=add_colorbar,
+        add_labels=add_labels,
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
 
-    # Add labels
+    # Add custom labels
+    # - TODO: Improve as function of x and y please !
     if add_labels:
         if is_orbit(da):
             ax.set_xlabel("Along-Track")
@@ -970,12 +915,15 @@ def _plot_image_facetgrid(
         x=x,
         y=y,
         add_colorbar=False,
+        add_labels=add_labels,
         interpolation=interpolation,
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
+
     # Remove duplicated or all labels
     fc.remove_duplicated_axis_labels()
+
     if not add_labels:
         fc.remove_left_ticks_and_labels()
         fc.remove_bottom_ticks_and_labels()
@@ -1095,10 +1043,12 @@ def plot_map(
     x=None,
     y=None,
     ax=None,
-    add_colorbar=True,
-    add_swath_lines=True,  # used only for GPM orbit objects
-    add_background=True,
     interpolation="nearest",  # used only for GPM grid objects
+    add_colorbar=True,
+    add_background=True,
+    add_labels=True,
+    add_gridlines=True,
+    add_swath_lines=True,  # used only for GPM orbit objects
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
@@ -1125,6 +1075,10 @@ def plot_map(
         The default is ``None``.
     add_colorbar : bool, optional
         Whether to add a colorbar. The default is ``True``.
+    add_labels : bool, optional
+        Whether to add cartopy labels to the plot. The default is ``True``.
+    add_gridlines : bool, optional
+        Whether to add cartopy gridlines to the plot. The default is ``True``.
     add_swath_lines : bool, optional
         Whether to plot the swath sides with a dashed line. The default is ``True``.
         This argument only applies for ORBIT objects.
@@ -1166,8 +1120,10 @@ def plot_map(
             y=y,
             ax=ax,
             add_colorbar=add_colorbar,
-            add_swath_lines=add_swath_lines,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
+            add_swath_lines=add_swath_lines,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -1180,9 +1136,11 @@ def plot_map(
             x=x,
             y=y,
             ax=ax,
-            add_colorbar=add_colorbar,
             interpolation=interpolation,
+            add_colorbar=add_colorbar,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -1202,6 +1160,8 @@ def plot_map_mesh(
     edgecolors="k",
     linewidth=0.1,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     **plot_kwargs,
@@ -1221,6 +1181,8 @@ def plot_map_mesh(
             edgecolors=edgecolors,
             linewidth=linewidth,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -1234,6 +1196,8 @@ def plot_map_mesh(
             edgecolors=edgecolors,
             linewidth=linewidth,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -1252,6 +1216,8 @@ def plot_map_mesh_centroids(
     c="r",
     s=1,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     **plot_kwargs,
@@ -1265,6 +1231,8 @@ def plot_map_mesh_centroids(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Retrieve orbits lon, lat coordinates
@@ -1460,73 +1428,6 @@ def plot_patches(
 ####--------------------------------------------------------------------------.
 
 
-def get_inset_bounds(
-    ax,
-    loc="upper right",
-    inset_height=0.2,
-    inside_figure=True,
-    aspect_ratio=1,
-):
-    """Calculate the bounds for an inset axes in a matplotlib figure.
-
-    This function computes the normalized figure coordinates for placing an inset axes within a figure,
-    based on the specified location, size, and whether the inset should be fully inside the figure bounds.
-    It is designed to be used with matplotlib figures to facilitate the addition of insets (e.g., for maps
-    or zoomed plots) at predefined positions.
-
-    Parameters
-    ----------
-    loc : str
-        The location of the inset within the figure. Valid options are ``'lower left'``, ``'lower right'``,
-        ``'upper left'``, and ``'upper right'``. The default is ``'upper right'``.
-    inset_height : float
-        The size of the inset height, specified as a fraction of the figure's height.
-        For example, a value of 0.2 indicates that the inset's height will be 20% of the figure's height.
-        The aspect ratio will govern the ``inset_width``.
-    inside_figure : bool, optional
-        Determines whether the inset is constrained to be fully inside the figure bounds. If  ``True`` (default),
-        the inset is placed fully within the figure. If ``False``, the inset can extend beyond the figure's edges,
-        allowing for a half-outside placement.
-    aspect_ratio : float, optional
-        The width-to-height ratio of the inset figure.
-        A value greater than 1 indicates an inset figure wider than it is tall,
-        and a value less than 1 indicates an inset figure taller than it is wide.
-        The default value is 1.0, indicating a square inset figure.
-
-    Returns
-    -------
-    inset_bounds : list of float
-        The calculated bounds of the inset, in the format ``[x0, y0, width, height]``, where ``x0`` and ``y0``
-        are the normalized figure coordinates of the lower left corner of the inset, and ``width`` and
-        ``height`` are the normalized width and height of the inset, respectively.
-
-    """
-    # Get the bounding box of the parent axes in figure coordinates
-    bbox = ax.get_position()
-    parent_width = bbox.width
-    parent_height = bbox.height
-
-    # Compute the inset width percentage (relative to the parent axes)
-    # - Take into account possible different aspect ratios
-    inset_height_abs = inset_height * parent_height
-    inset_width_abs = inset_height_abs * aspect_ratio
-    inset_width = inset_width_abs / parent_width
-    loc_mapping = {
-        "upper right": (1 - inset_width, 1 - inset_height),
-        "upper left": (0, 1 - inset_height),
-        "lower right": (1 - inset_width, 0),
-        "lower left": (0, 0),
-    }
-    inset_x, inset_y = loc_mapping[loc]
-
-    # Adjust for insets that are allowed to be half outside of the figure
-    if not inside_figure:
-        inset_x += inset_width / 2 * (-1 if loc.endswith("left") else 1)
-        inset_y += inset_height / 2 * (-1 if loc.startswith("lower") else 1)
-
-    return [inset_x, inset_y, inset_width, inset_height]
-
-
 def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, inside_figure=True):
     """Adds an inset map to a matplotlib axis using Cartopy, highlighting the extent of the main plot.
 
@@ -1579,12 +1480,14 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
 
     from gpm.utils.geospatial import extend_geographic_extent
 
-    # Retrieve extent and bounds
+    # Retrieve map extent and bounds
     extent = ax.get_extent()
     extent = extend_geographic_extent(extent, padding=0.5)
     bounds = [extent[i] for i in [0, 2, 1, 3]]
+
     # Create Cartopy Polygon
     polygon = Polygon.from_bounds(*bounds)
+
     # Define Orthographic projection
     if projection is None:
         lon_min, lon_max, lat_min, lat_max = extent
@@ -1605,9 +1508,9 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
         inset_height=inset_height,
         inside_figure=inside_figure,
         aspect_ratio=aspect_ratio,
+        border_pad=0,
     )
 
-    # ax2 = plt.axes(inset_bounds, projection=projection)
     ax2 = ax.inset_axes(
         inset_bounds,
         projection=projection,
@@ -1617,6 +1520,7 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
     ax2.set_global()
     ax2.add_feature(cfeature.LAND)
     ax2.add_feature(cfeature.OCEAN)
+
     # Add extent polygon
     _ = ax2.add_geometries(
         [polygon],

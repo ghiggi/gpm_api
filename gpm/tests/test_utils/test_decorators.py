@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the function decorators."""
-from typing import Union
 
 import numpy as np
 import pytest
@@ -38,7 +37,7 @@ def test_check_has_cross_track_dimension() -> None:
     """Test check_has_cross_track_dimension decorator."""
 
     @decorators.check_has_cross_track_dimension
-    def identity(xr_obj: Union[xr.Dataset, xr.DataArray]) -> Union[xr.Dataset, xr.DataArray]:
+    def identity(xr_obj: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
         return xr_obj
 
     # Test with cross_track no error is raised
@@ -55,7 +54,7 @@ def test_check_has_along_track_dimension() -> None:
     """Test check_has_along_track_dimension decorator."""
 
     @decorators.check_has_along_track_dimension
-    def identity(xr_obj: Union[xr.Dataset, xr.DataArray]) -> Union[xr.Dataset, xr.DataArray]:
+    def identity(xr_obj: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
         return xr_obj
 
     # Test with cross_track no error is raised

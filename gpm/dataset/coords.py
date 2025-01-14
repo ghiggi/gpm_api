@@ -63,7 +63,7 @@ def get_orbit_coords(dt, scan_mode):
     granule_id = np.repeat(granule_id, n_along_track)
     along_track_id = np.arange(n_along_track)
     cross_track_id = np.arange(n_cross_track)
-    gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, along_track_id)]
+    gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, along_track_id, strict=False)]
 
     return {
         "lon": xr.DataArray(lon, dims=["along_track", "cross_track"]),

@@ -37,6 +37,10 @@ from gpm.dataset.granule import open_granule
 
 PRODUCT_TYPES = ["RS"]
 
+GRANULES_DIR_PATH = os.path.join(_root_path, "gpm", "tests", "data", "granules")
+
+ORBIT_EXAMPLE_FILEPATH = glob.glob(os.path.join(GRANULES_DIR_PATH, "cut", "RS", "V7", "2A-DPR", "*"))[0]
+GRID_EXAMPLE_FILEPATH = glob.glob(os.path.join(GRANULES_DIR_PATH, "cut", "RS", "V7", "IMERG-FR", "*"))[0]
 
 gpm.config.set(
     {
@@ -64,7 +68,7 @@ def check_dataset_equality(cut_filepath):
     processed_filenames = os.listdir(processed_dir)
     processed_filepaths = [os.path.join(processed_dir, filename) for filename in processed_filenames]
     scan_modes = [os.path.splitext(filename)[0] for filename in processed_filenames]
-    for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths):
+    for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths, strict=False):
         ds = open_granule(cut_filepath, scan_mode=scan_mode).compute()
         ds_expected = xr.open_dataset(processed_filepath).compute()
 
@@ -99,15 +103,13 @@ def test_open_granule_on_real_files():
         │    └── S5.nc
         └── ...
     """
-    granules_dir_path = os.path.join(_root_path, "gpm", "tests", "data", "granules")
-
-    if not os.path.exists(granules_dir_path):
+    if not os.path.exists(GRANULES_DIR_PATH):
         pytest.skip(
             "Test granules not found. Please run `git submodule update --init` to clone "
             "existing test data, or `python generate_test_granule_data.py` to generate new test data.",
         )
 
-    cut_dir_path = os.path.join(granules_dir_path, "cut")
+    cut_dir_path = os.path.join(GRANULES_DIR_PATH, "cut")
 
     for product_type in PRODUCT_TYPES:
         if product_type == "RS":
@@ -131,3 +133,20 @@ def test_open_granule_on_real_files():
             failed_products = [product_id for (product_id, err) in list_failed_checks]
             msg = f"Failed dataset comparison for {failed_products}. Errors are: {list_failed_checks}"
             raise ValueError(msg)
+
+
+class TestOpenMethods:
+
+    @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH, GRID_EXAMPLE_FILEPATH])
+    def test_open_granule(self, filepath):
+        """Test open granule with open_granule."""
+        ds = gpm.open_granule(filepath, cache=False, lock=False, decode_cf=True)
+        assert isinstance(ds, xr.Dataset)
+        ds.close()
+
+    @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH, GRID_EXAMPLE_FILEPATH])
+    def test_open_datatree(self, filepath):
+        """Test open granule with open_datatree."""
+        dt = gpm.open_datatree(filepath, cache=False, lock=False, decode_cf=True)
+        assert isinstance(dt, xr.DataTree)
+        dt.close()

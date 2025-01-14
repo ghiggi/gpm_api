@@ -143,7 +143,7 @@ def get_dataarray_title(
     product = da.attrs.get("gpm_api_product", "")
 
     # Create title string
-    title_str = product + " " + variable if prefix_product else da.name
+    title_str = product + " " + variable if prefix_product and product != "" else da.name
 
     # Make title in Capital Case
     title_str = " ".join([word[0].upper() + word[1:] for word in title_str.split(" ")])

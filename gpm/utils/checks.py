@@ -512,13 +512,11 @@ def get_slices_contiguous_scans(
     # Select only slices with at least 2 scans
     list_slices = list_slices_filter(list_slices, min_size=min_size)
 
-    # Also retrieve the slices with non missing granule
-    list_slices1 = get_slices_contiguous_granules(xr_obj)
-
-    # Perform list_slices intersection
-    return list_slices_intersection(list_slices, list_slices1)
-
-    # Return list of contiguous scan slices
+    # If the gpm_granule_id is available, also ensure for contiguous granules
+    if "gpm_granule_id" in xr_obj.coords:
+        list_slices1 = get_slices_contiguous_granules(xr_obj)
+        return list_slices_intersection(list_slices, list_slices1)
+    return list_slices
 
 
 @check_is_orbit

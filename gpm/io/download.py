@@ -419,7 +419,7 @@ def _download_files(
     get_single_file_cmd = _get_single_file_cmd_function(transfer_tool, storage)
     list_cmd = [
         get_single_file_cmd(remote_filepath, local_filepath, username, password)
-        for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths)
+        for remote_filepath, local_filepath in zip(remote_filepaths, local_filepaths, strict=False)
     ]
 
     ## Download the data (in parallel)

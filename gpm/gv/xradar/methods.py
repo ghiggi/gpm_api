@@ -202,6 +202,8 @@ def plot_range_distance(
     fig_kwargs=None,
     subplot_kwargs=None,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     **plot_kwargs,
 ):
     from gpm.visualization.plot import initialize_cartopy_plot
@@ -219,6 +221,8 @@ def plot_range_distance(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Retrieve circle polygon at given radius from radar
@@ -275,6 +279,8 @@ def plot_map(
     ax=None,
     add_colorbar=True,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
@@ -294,6 +300,8 @@ def plot_map(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
@@ -320,6 +328,6 @@ def plot_map(
 
     # Add colorbar
     if add_colorbar:
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
+        _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
 
     return p

@@ -33,6 +33,7 @@ import xoak  # noqa (accessor)
 
 from gpm.checks import (
     check_has_vertical_dim,
+    get_spatial_dimensions,
     get_vertical_variables,
     has_spatial_dim,
     has_vertical_dim,
@@ -1217,6 +1218,7 @@ def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, m
     return extract_transect_at_points(xr_obj, points=points, method=method, new_dim=new_dim)
 
 
+@check_is_gpm_object
 def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, method="linear", new_dim="transect"):
     """
     Extract a transect following the great circle arc centered on the specified point.
@@ -1265,37 +1267,102 @@ def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, m
     )
 
 
+def locate_points(xr_obj, points):
+    """Return a list of isel dictionary corresponding to the nearest location of the set of points."""
+    # Retrieve spatial dimensions
+    spatial_dims = get_spatial_dimensions(xr_obj)
+
+    # Define dummy coordinates with integer indices
+    dummy_coords = {f"dummy_{d}": (d, np.arange(len(xr_obj[d]))) for d in spatial_dims}
+    xr_obj = xr_obj.assign_coords(dummy_coords)
+
+    # Identify index over which to slice
+    xr_point = extract_at_points(xr_obj, points=points)
+    isel_dict = [{d: xr_point[f"dummy_{d}"].data[i].item() for d in spatial_dims} for i in range(len(points))]
+
+    # Drop dummy coordinates
+    xr_obj = xr_obj.drop_vars(list(dummy_coords))
+
+    # Return isel_dict
+    return isel_dict
+
+
+def define_transect_isel_dict(xr_obj, point, dim):
+    """Define the isel dictionary required to extract a transect along the specified dimension."""
+    # Check specified dimension
+    spatial_dims = get_spatial_dimensions(xr_obj)
+    if dim not in spatial_dims:
+        raise ValueError(f"'dim' must be one of object spatial dimensions: {spatial_dims}.")
+    if len(spatial_dims) != 2:
+        raise ValueError("The object does not have 2 spatial dimensions.")
+
+    # Define dimension over which to slice
+    subset_dim = (set(spatial_dims) - {dim}).pop()
+
+    # Identify index over which to slice
+    isel_dict = locate_points(xr_obj, points=np.atleast_2d(point))[0]
+    transect_isel_dict = {subset_dim: isel_dict[subset_dim]}
+    return transect_isel_dict
+
+
+@check_is_gpm_object
+def extract_transect_along_dimension(xr_obj, point, dim):
+    """
+    Extract a transect along the specified spatial dimension passing through the specified location.
+
+    Parameters
+    ----------
+    xr_obj : xarray.DataArray or xarray.Dataset
+        Dataset or DataArray from which extract a transect.
+    point : tuple of float
+        A tuple representing the middle point (longitude, latitude) of the great circle arc.
+    dim : str
+        The desired spatial dimension of the transect.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The transect object with spatial dimension ``dim``.
+    """
+    transect_isel_dict = define_transect_isel_dict(xr_obj, point=point, dim=dim)
+    return xr_obj.isel(transect_isel_dict)
+
+
 ####------------------------------------------------------------------------------------------------------------------.
 #############################
 #### Location Utilities  ####
 #############################
-# gpm.locate.<....>
-# get_location_max_value (s)
-# get_location_min_value (s)
-# get_location_at_mask
-# extract_transect_ordered_values
 
 
-def get_max_value_point(da):
+def locate_max_value(da, return_isel_dict=False):
     """Find the geographic point where the maximum value occur in the data array.
 
     Parameters
     ----------
     da : xarray.DataArray
         The data array to analyze.
+    return_isel_dict: bool, optional
+        If True, returns a dictionary with the spatial dimension indices corresponding to the maximum value.
+        If False (the default), returns a (lon, lat) tuple of the point where the maximum value occurs.
 
     Returns
     -------
-    tuple
-        A tuple representing the longitude and latitude of the point where the maximum value occurs.
+    tuple or dict
+        If return_isel_dict=True, returns a dictionary
+        with the spatial dimension and indices corresponding to the maximum value.
+        If return_isel_dict=False (the default), returns a (lon, lat) tuple
+        of the point where the maximum value occurs.
     """
     isel_dict = _get_max_value_spatial_isel_dict(da)
+    if return_isel_dict:
+        return isel_dict
+
     da_point = da.isel(isel_dict)
     point = (da_point["lon"].data.item(), da_point["lat"].data.item())
     return point
 
 
-def get_min_value_point(da):
+def locate_min_value(da, return_isel_dict=False):
     """
     Find the geographic point where the minimum value occurs in the data array.
 
@@ -1304,12 +1371,22 @@ def get_min_value_point(da):
     da : xarray.DataArray
         The data array to analyze.
 
+    return_isel_dict: bool, optional
+        If True, returns a dictionary with the spatial dimension indices corresponding to the minimum value.
+        If False (the default), returns a (lon, lat) tuple of the point where the minimum value occurs.
+
     Returns
     -------
-    tuple
-        A tuple representing the longitude and latitude of the point where the minimum value occurs.
+    tuple or dict
+        If return_isel_dict=True, returns a dictionary
+        with the spatial dimension and indices corresponding to the minimum value.
+        If return_isel_dict=False (the default), returns a (lon, lat) tuple
+        of the point where the minimum value occurs.
+
     """
     isel_dict = _get_min_value_spatial_isel_dict(da)
+    if return_isel_dict:
+        return isel_dict
     da_point = da.isel(isel_dict)
     point = (da_point["lon"].data.item(), da_point["lat"].data.item())
     return point

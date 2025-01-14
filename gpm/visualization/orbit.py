@@ -271,6 +271,8 @@ def plot_swath_lines(
     linestyle="--",
     color="k",
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     subplot_kwargs=None,
     fig_kwargs=None,
     **plot_kwargs,
@@ -282,6 +284,8 @@ def plot_swath_lines(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # - Sanitize coordinates
@@ -311,6 +315,8 @@ def plot_swath(
     edgecolor="black",
     alpha=0.4,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     **plot_kwargs,
@@ -331,6 +337,8 @@ def plot_swath(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Retrieve polygon
@@ -362,6 +370,8 @@ def _plot_orbit_map_cartopy(
     add_colorbar=True,
     add_swath_lines=True,
     add_background=True,
+    add_labels=True,
+    add_gridlines=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
@@ -374,6 +384,8 @@ def _plot_orbit_map_cartopy(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
@@ -418,6 +430,8 @@ def _plot_orbit_map_facetgrid(
     add_colorbar=True,
     add_swath_lines=True,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
@@ -468,8 +482,10 @@ def _plot_orbit_map_facetgrid(
         x=x,
         y=y,
         add_colorbar=False,
-        add_background=add_background,
         add_swath_lines=add_swath_lines,
+        add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
         cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
@@ -500,6 +516,8 @@ def plot_orbit_map(
     add_colorbar=True,
     add_swath_lines=True,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
@@ -519,6 +537,8 @@ def plot_orbit_map(
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -534,6 +554,8 @@ def plot_orbit_map(
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -552,6 +574,8 @@ def plot_orbit_mesh(
     edgecolors="k",
     linewidth=0.1,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     **plot_kwargs,
@@ -563,6 +587,8 @@ def plot_orbit_mesh(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Define plot_kwargs to display only the mesh

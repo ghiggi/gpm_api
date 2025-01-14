@@ -218,7 +218,7 @@ def _plot_gdf_map(gdf, column, extent_xy, title, grid_linewidth, grid_color, add
 
     # Add colorbar
     if add_colorbar:
-        plot_colorbar(p=p.collections[0], ax=p.axes, cbar_kwargs=cbar_kwargs)
+        plot_colorbar(p=p.collections[0], ax=p.axes, **cbar_kwargs)
     return p
 
 
@@ -301,7 +301,7 @@ def reflectivity_scatterplot(
     )
     # Add colorbar
     if add_colorbar:
-        plot_colorbar(p=p, ax=p.axes, cbar_kwargs=cbar_kwargs)
+        plot_colorbar(p=p, ax=p.axes, **cbar_kwargs)
     # Add 1:1 line
     ax.plot([-10, 70], [-10, 70], linestyle="solid", color="black")
     # Restrict limits

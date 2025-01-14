@@ -7,10 +7,6 @@ zFactorMeasured:
   reference: reflectivity_gpm
 zFactorFinal:
   reference: reflectivity_gpm
-dfrMeasured:
-  reference: dual_frequency_ratio_gpm
-dfrFinal:
-  reference: dual_frequency_ratio_gpm
 dfrFinalNearSurface:
   reference: dual_frequency_ratio_gpm
 REFC:
@@ -25,6 +21,138 @@ precipRateESurface2:
   reference: precipitation_rate
 precipRateAve24:
   reference: precipitation_rate
+zFactorMeasuredKa:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z{m, Ka}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+zFactorMeasuredKu:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z{m, Ku}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+zFactorFinalKa:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z{f, Ka}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+zFactorFinalKu:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z{f, Ku}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+zFactorCorrection:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Attenuation Correction [dBZ]
+zFactorCorrectionKu:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Attenuation Correction at Ku band [dBZ]
+zFactorCorrectionKa:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Attenuation Correction at Ka band [dBZ]
+dfrMeasured:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -2
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $DFR_{m, Ku-Ka}$ [$dB$]
+dfrFinal:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -2
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $DFR_{f,Ku-Ka}$ [$dB$]
+dfrMeasuredMinusPIA:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -2
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $DFR_{m, Ku-Ka}$ - $\delta$$PIA$ [$dB$]
+diffPIA:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -8
+    vmax: 2
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $\delta$$PIA_{Ku-Ka}$ [$dB$]
 precipWaterIntegrated:
   cmap:
     name: YlGnBu
@@ -305,13 +433,6 @@ qualityTypePrecip:
       1: Good
   cbar:
     label: Reliability of precipitation type
-zFactorCorrection:
-  cmap:
-    name: Spectral_r
-    bad_color: none
-  cbar:
-    extendfrac: 0.05
-    label: Attenuation Correction [dBZ]
 zFactorCorrectionNearSurface:
   reference: zFactorCorrection
 MESH:

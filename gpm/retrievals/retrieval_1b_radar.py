@@ -525,6 +525,7 @@ def open_dataset_1b_ka_fs(
     verbose=False,
     parallel=False,
     l2_format=True,
+    **kwargs,
 ):
     """Open 1B-Ka dataset in FS scan_mode format in either L1B or L2 format.
 
@@ -558,6 +559,7 @@ def open_dataset_1b_ka_fs(
         parallel=parallel,
         prefix_group=False,
         verbose=verbose,
+        **kwargs,
     ).compute()
 
     ds_l1_ka_hs = gpm.open_dataset(
@@ -574,6 +576,7 @@ def open_dataset_1b_ka_fs(
         decode_cf=True,
         parallel=parallel,
         prefix_group=False,
+        **kwargs,
     ).compute()
 
     # Ensure matched scans

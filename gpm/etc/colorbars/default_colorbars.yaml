@@ -25,7 +25,7 @@ dual_frequency_ratio_gpm:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: $DFR_{Ku-Ka}$, [$dB$]
+    label: $DFR_{Ku-Ka}$ [$dB$]
 latentHeating:
   cmap:
     name: RdBu_r

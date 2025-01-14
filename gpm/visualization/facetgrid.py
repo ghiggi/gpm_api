@@ -29,7 +29,6 @@ import itertools
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Hashable
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -73,16 +72,16 @@ class CustomFacetGrid(FacetGrid, ABC):
     def __init__(
         self,
         data,
-        col: Optional[Hashable] = None,
-        row: Optional[Hashable] = None,
-        col_wrap: Optional[int] = None,
-        axes_pad: Optional[tuple[float, float]] = None,
+        col: Hashable | None = None,
+        row: Hashable | None = None,
+        col_wrap: int | None = None,
+        axes_pad: tuple[float, float] | None = None,
         aspect: bool = True,
         add_colorbar: bool = True,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
-        cbar_kwargs: Optional[dict] = None,
-        fig_kwargs: Optional[dict] = None,
+        cbar_kwargs: dict | None = None,
+        fig_kwargs: dict | None = None,
         axes_class=None,
     ) -> None:
         """Class for xarray-based FacetGrid plots.
@@ -333,7 +332,7 @@ class CustomFacetGrid(FacetGrid, ABC):
             imshow=True,
             # rgb=kwargs.get("rgb", None),
         )
-        for d, ax in zip(self.name_dicts.flat, self.axs.flat):
+        for d, ax in zip(self.name_dicts.flat, self.axs.flat, strict=False):
             # None is the sentinel value
             if d is not None:
                 subset = self.data.loc[d]
@@ -488,13 +487,13 @@ class CartopyFacetGrid(CustomFacetGrid):
         self,
         data,
         projection,
-        col: Optional[Hashable] = None,
-        row: Optional[Hashable] = None,
-        col_wrap: Optional[int] = None,
-        axes_pad: Optional[tuple[float, float]] = None,
+        col: Hashable | None = None,
+        row: Hashable | None = None,
+        col_wrap: int | None = None,
+        axes_pad: tuple[float, float] | None = None,
         add_colorbar: bool = True,
-        cbar_kwargs: Optional[dict] = None,
-        fig_kwargs: Optional[dict] = None,
+        cbar_kwargs: dict | None = None,
+        fig_kwargs: dict | None = None,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
@@ -564,7 +563,7 @@ class CartopyFacetGrid(CustomFacetGrid):
         if not self._finalized:
             self.set_axis_labels(*axlabels)
             self.set_titles()
-            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat):
+            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat, strict=False):
                 if namedict is None:
                     ax.set_visible(False)
             self._finalized = True
@@ -613,14 +612,14 @@ class ImageFacetGrid(CustomFacetGrid):
     def __init__(
         self,
         data,
-        col: Optional[Hashable] = None,
-        row: Optional[Hashable] = None,
-        col_wrap: Optional[int] = None,
-        axes_pad: Optional[tuple[float, float]] = None,
+        col: Hashable | None = None,
+        row: Hashable | None = None,
+        col_wrap: int | None = None,
+        axes_pad: tuple[float, float] | None = None,
         aspect: bool = False,
         add_colorbar: bool = True,
-        cbar_kwargs: Optional[dict] = None,
-        fig_kwargs: Optional[dict] = None,
+        cbar_kwargs: dict | None = None,
+        fig_kwargs: dict | None = None,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
@@ -686,7 +685,7 @@ class ImageFacetGrid(CustomFacetGrid):
             # Add subplots titles
             self.set_titles()
             # Make empty subplots unvisible
-            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat):
+            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat, strict=False):
                 if namedict is None:
                     ax.set_visible(False)
             self._finalized = True

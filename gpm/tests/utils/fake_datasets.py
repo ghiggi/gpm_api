@@ -86,7 +86,7 @@ def get_orbit_dataarray(
     granule_id = np.zeros(n_along_track, dtype=int)
     cross_track_id = np.arange(0, n_cross_track)
     along_track_id = np.arange(0, n_along_track)
-    gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, along_track_id)]
+    gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, along_track_id, strict=False)]
     timesteps = pd.date_range("2000-01-01", periods=n_along_track, freq="s")
 
     # Coordinates
