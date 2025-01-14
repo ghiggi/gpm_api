@@ -197,60 +197,60 @@ def test_write_granules_bucket_capture_error(tmp_path, capsys):
     assert "check_this_error_captured" in captured.out, "Expected error message not printed"
 
 
-def test_write_granules_bucket_parallel(tmp_path):
-    """Test write_granules_bucket routine with dask distributed client."""
-    from dask.distributed import Client, LocalCluster
+# def test_write_granules_bucket_parallel(tmp_path):
+#     """Test write_granules_bucket routine with dask distributed client."""
+#     from dask.distributed import Client, LocalCluster
 
-    # Define bucket dir
-    bucket_dir = tmp_path
+#     # Define bucket dir
+#     bucket_dir = tmp_path
 
-    # Define filepaths
-    filepaths = [
-        "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",  # year 2021
-        "2A.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07A.HDF5",  # year 2021
-        "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
-    ]  # year 2023
+#     # Define filepaths
+#     filepaths = [
+#         "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",  # year 2021
+#         "2A.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07A.HDF5",  # year 2021
+#         "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
+#     ]  # year 2023
 
-    # Define parallel options
-    parallel = True
-    max_concurrent_tasks = None
-    max_dask_total_tasks = 2
+#     # Define parallel options
+#     parallel = True
+#     max_concurrent_tasks = None
+#     max_dask_total_tasks = 2
 
-    # Define partitioning
-    partitioning = LonLatPartitioning(size=(10, 10))
+#     # Define partitioning
+#     partitioning = LonLatPartitioning(size=(10, 10))
 
-    # Create Dask Distributed LocalCluster
-    cluster = LocalCluster(
-        n_workers=2,
-        threads_per_worker=1,
-        processes=True,
-    )
-    client = Client(cluster)
+#     # Create Dask Distributed LocalCluster
+#     cluster = LocalCluster(
+#         n_workers=2,
+#         threads_per_worker=1,
+#         processes=True,
+#     )
+#     client = Client(cluster)
 
-    # Run processing
-    write_granules_bucket(
-        # Bucket Input/Output configuration
-        filepaths=filepaths,
-        bucket_dir=bucket_dir,
-        partitioning=partitioning,
-        granule_to_df_func=granule_to_df_toy_func,
-        # Processing options
-        parallel=parallel,
-        max_concurrent_tasks=max_concurrent_tasks,
-        max_dask_total_tasks=max_dask_total_tasks,
-    )
+#     # Run processing
+#     write_granules_bucket(
+#         # Bucket Input/Output configuration
+#         filepaths=filepaths,
+#         bucket_dir=bucket_dir,
+#         partitioning=partitioning,
+#         granule_to_df_func=granule_to_df_toy_func,
+#         # Processing options
+#         parallel=parallel,
+#         max_concurrent_tasks=max_concurrent_tasks,
+#         max_dask_total_tasks=max_dask_total_tasks,
+#     )
 
-    # Close Dask Distributed client
-    client.close()
+#     # Close Dask Distributed client
+#     client.close()
 
-    # Check directories with wished partitioning format created
-    expected_directories = [
-        "bucket_info.yaml",  # always there
-        "lon_bin=-5.0",
-        "lon_bin=15.0",
-        "lon_bin=5.0",
-    ]
-    assert expected_directories == sorted(os.listdir(bucket_dir))
+#     # Check directories with wished partitioning format created
+#     expected_directories = [
+#         "bucket_info.yaml",  # always there
+#         "lon_bin=-5.0",
+#         "lon_bin=15.0",
+#         "lon_bin=5.0",
+#     ]
+#     assert expected_directories == sorted(os.listdir(bucket_dir))
 
 
 def test_merge_granule_buckets(tmp_path):

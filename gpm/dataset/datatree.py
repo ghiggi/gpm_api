@@ -31,16 +31,10 @@ import xarray as xr
 
 import gpm
 from gpm.dataset.attrs import decode_string
-from gpm.dataset.dimensions import _rename_datatree_dimensions
-
-# TODO:
-# --> open datatrees and concat datatrees
-# --> create datatree with option "flattened_scan_modes"
-# --> gpm.open_granule(datatree=False)  # or if multiple scan_modes provided
-# --> gpm.open_dataset(datatree=False)  # or if multiple scan_modes provided
+from gpm.dataset.dimensions import rename_datatree_dimensions
 
 
-def open_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True, **kwargs):
+def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True, **kwargs):
     """Open HDF5 in datatree object.
 
     - chunks={} --> Lazy map to dask.array
@@ -61,13 +55,17 @@ def open_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True, *
             decode_times=False,
             **kwargs,
         )
+        closer = dt._close
         check_non_empty_granule(dt, filepath)
     except Exception as e:
         check_valid_granule(filepath)
         raise ValueError(e)
 
     # Assign dimension names
-    return _rename_datatree_dimensions(dt, use_api_defaults=use_api_defaults)
+    dt = rename_datatree_dimensions(dt, use_api_defaults=use_api_defaults)
+    # Specify closer
+    dt.set_close(closer)
+    return dt
 
 
 def check_non_empty_granule(dt, filepath):

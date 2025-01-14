@@ -238,11 +238,17 @@ Open the data
 Within the GPM-API, the name *granule* is used to refer to a single file,
 while the name *dataset* is used to refer to a collection of granules.
 
-GPM-API enables to open single or multiple granules into an ``xarray.Dataset``, an object designed for working with labeled multi-dimensional arrays.
+GPM-API enables to open single or multiple granules into ``xarray.Dataset`` or ``xarray.DataTree`` objects,
+which are designed for working with labeled multi-dimensional arrays.
 
-The ``gpm.open_granule(filepath)`` opens a single file into xarray by providing the path of the file of interest.
+The ``gpm.open_granule_dataset(filepath)`` opens a single file into a ``xarray.Dataset`` object
+by providing the path of the file (granule) of interest. This function open a single sensor ``scan_mode``.
 
-The ``gpm.open_dataset`` function enables to open a collection of granules over a period of interest.
+The ``gpm.open_granule_datatree(filepath)`` opens a single file into a ``xarray.DataTree`` object
+by providing the path of the file (granule) of interest. This function open all sensors ``scan_modes``.
+
+The ``gpm.open_dataset`` and ``gpm.open_datatree`` functions enables to open a collection of granules
+ over a period of interest.
 
 The following example shows how to download and open a dataset over a specific time period:
 

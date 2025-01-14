@@ -87,8 +87,8 @@ def test_unused_var_dims_and_remove():
     assert list(returned_dataset.dims) == expected_dims
 
 
-def test_open_granule(monkeypatch):
-    """Test open_granule."""
+def test_open_granule_dataset(monkeypatch):
+    """Test open_granule_dataset."""
     filepath = "RS/V07/RADAR/2A-DPR/2022/07/06/2A.GPM.DPR.V9-20211125.20220706-S043937-E061210.047456.V07A.HDF5"
     scan_mode = "FS"
 
@@ -115,9 +115,9 @@ def test_open_granule(monkeypatch):
     monkeypatch.setattr(granule, "finalize_dataset", patch_finalize_dataset)
 
     # Mock datatree opening from filepath
-    monkeypatch.setattr(datatree, "open_datatree", lambda *args, **kwargs: dt)
+    monkeypatch.setattr(datatree, "open_raw_datatree", lambda *args, **kwargs: dt)
 
-    returned_dataset = granule.open_granule(filepath)
+    returned_dataset = granule.open_granule_dataset(filepath)
     expected_attribute_keys = ["attribute", "ScanMode", "finalized"]
     expected_coordinate_keys = ["coord"]
     assert isinstance(returned_dataset, xr.Dataset)

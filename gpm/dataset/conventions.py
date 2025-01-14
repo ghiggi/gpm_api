@@ -131,6 +131,10 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     from gpm import config
 
     ##------------------------------------------------------------------------.
+    # Retrieve closer
+    closer = ds._close
+
+    ##------------------------------------------------------------------------.
     # Clean out HDF5 attributes
     # - CodeMissingValue --> _FillValue
     # - FillValue --> _FillValue
@@ -235,4 +239,6 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
         pass
 
     ###-----------------------------------------------------------------------.
+    # Reassign closer
+    ds.set_close(closer)
     return ds

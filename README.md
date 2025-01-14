@@ -95,7 +95,9 @@ A GPM granule can be opened in python using:
 ```python
 import gpm
 
-ds = gpm.open_granule(<path_to_granule>)
+ds = gpm.open_granule_dataset(<path_to_granule>)
+# or
+dt = gpm.open_granule_datatree(<path_to_granule>)
 
 ```
 

@@ -33,7 +33,7 @@ import xarray as xr
 
 import gpm
 from gpm import _root_path
-from gpm.dataset.granule import open_granule
+from gpm.dataset.granule import open_granule_dataset
 
 PRODUCT_TYPES = ["RS"]
 
@@ -69,7 +69,7 @@ def check_dataset_equality(cut_filepath):
     processed_filepaths = [os.path.join(processed_dir, filename) for filename in processed_filenames]
     scan_modes = [os.path.splitext(filename)[0] for filename in processed_filenames]
     for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths, strict=False):
-        ds = open_granule(cut_filepath, scan_mode=scan_mode).compute()
+        ds = open_granule_dataset(cut_filepath, scan_mode=scan_mode).compute()
         ds_expected = xr.open_dataset(processed_filepath).compute()
 
         # Remove attributes that are allowed to change
@@ -82,7 +82,7 @@ def check_dataset_equality(cut_filepath):
 
 
 def test_open_granule_on_real_files():
-    """Test open_granule on real files.
+    """Test open_granule_dataset on real files.
 
     Load cut granules and check that the new file is identical to the saved reference.
 
@@ -135,18 +135,25 @@ def test_open_granule_on_real_files():
             raise ValueError(msg)
 
 
-class TestOpenMethods:
+class TestOpenGranuleMethods:
 
     @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH, GRID_EXAMPLE_FILEPATH])
-    def test_open_granule(self, filepath):
-        """Test open granule with open_granule."""
-        ds = gpm.open_granule(filepath, cache=False, lock=False, decode_cf=True)
+    def test_open_granule_dataset(self, filepath):
+        """Test open granule with open_granule_dataset."""
+        ds = gpm.open_granule_dataset(filepath, cache=False, lock=False, decode_cf=True)
         assert isinstance(ds, xr.Dataset)
         ds.close()
 
     @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH, GRID_EXAMPLE_FILEPATH])
-    def test_open_datatree(self, filepath):
-        """Test open granule with open_datatree."""
-        dt = gpm.open_datatree(filepath, cache=False, lock=False, decode_cf=True)
+    def test_open_raw_datatree(self, filepath):
+        """Test open granule with open_raw_datatree."""
+        dt = gpm.open_raw_datatree(filepath, cache=False, lock=False, decode_cf=True)
+        assert isinstance(dt, xr.DataTree)
+        dt.close()
+
+    @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH])
+    def test_open_granule_datatree(self, filepath):
+        """Test open granule with open_granule_datatree."""
+        dt = gpm.open_granule_datatree(filepath, cache=False, lock=False, decode_cf=True)
         assert isinstance(dt, xr.DataTree)
         dt.close()
