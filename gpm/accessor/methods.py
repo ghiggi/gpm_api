@@ -90,10 +90,10 @@ class GPM_Base_Accessor:
         return isel(self._obj, indexers=indexers, drop=drop, **indexers_kwargs)
 
     @auto_wrap_docstring
-    def sel(self, indexers=None, drop=False, **indexers_kwargs):
+    def sel(self, indexers=None, drop=False, method=None, **indexers_kwargs):
         from gpm.utils.subsetting import sel
 
-        return sel(self._obj, indexers=indexers, drop=drop, **indexers_kwargs)
+        return sel(self._obj, indexers=indexers, drop=drop, method=method, **indexers_kwargs)
 
     @auto_wrap_docstring
     def extent(self, padding=0, size=None):
@@ -212,6 +212,15 @@ class GPM_Base_Accessor:
         )
 
     @auto_wrap_docstring
+    def remap_era5(self, variables):
+        from gpm.utils.collocation import remap_era5
+
+        return remap_era5(
+            self._obj,
+            variables=variables,
+        )
+
+    @auto_wrap_docstring
     def collocate(
         self,
         product,
@@ -239,6 +248,18 @@ class GPM_Base_Accessor:
             verbose=verbose,
             chunks=chunks,
             decode_cf=decode_cf,
+        )
+
+    @auto_wrap_docstring
+    def unstack_dimension(self, dim, coord_handling="keep", prefix="", suffix=""):
+        from gpm.utils.xarray import unstack_dimension
+
+        return unstack_dimension(
+            self._obj,
+            dim=dim,
+            coord_handling=coord_handling,
+            prefix=prefix,
+            suffix=suffix,
         )
 
     #### Transect/Trajectory utility
@@ -742,6 +763,19 @@ class GPM_Base_Accessor:
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
+
+
+@xr.register_datatree_accessor("gpm")
+class GPM_DataTree_Accessor:
+
+    def __init__(self, xarray_obj):
+        self._obj = xarray_obj
+
+    @auto_wrap_docstring
+    def regrid_pmw_l1(self, scan_mode_reference="S1"):
+        from gpm.utils.collocation import regrid_pmw_l1
+
+        return regrid_pmw_l1(dt=self._obj, scan_mode_reference=scan_mode_reference)
 
 
 @xr.register_dataset_accessor("gpm")

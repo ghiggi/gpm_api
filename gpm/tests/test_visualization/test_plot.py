@@ -40,6 +40,7 @@ from gpm.tests.test_visualization.utils import (
     skip_tests_if_no_data,
 )
 from gpm.visualization import plot
+from gpm.visualization.plot import add_map_inset
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray
@@ -540,6 +541,21 @@ class TestPlotMap:
         da = xr.DataArray()
         with pytest.raises(ValueError):
             plot.plot_map(da)
+
+    ####------------------------------------------------------------------------
+    #### Test map inset options
+    def test_add_map_inset(self, orbit_dataarray: xr.DataArray):
+        """Test the add_map_inset function."""
+        p = plot.plot_map(orbit_dataarray)
+        add_map_inset(
+            ax=p.axes,
+            loc="upper left",
+            inset_height=0.2,
+            projection=None,
+            inside_figure=True,
+            border_pad=0.02,
+        )
+        save_and_check_figure(figure=p.figure, name=get_test_name())
 
 
 class TestPlotImage:

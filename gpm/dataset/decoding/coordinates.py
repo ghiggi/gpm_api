@@ -25,12 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to sanitize GPM-API Dataset coordinates."""
-import functools
-import os
-
 import numpy as np
-
-from gpm.utils.yaml import read_yaml
 
 
 def ensure_valid_coords(ds, raise_error=False):
@@ -140,23 +135,9 @@ def _add_radar_coordinates(ds, product, scan_mode):  # noqa ARG001
     return ds
 
 
-@functools.cache
-def get_pmw_frequency_dict():
-    """Get PMW info dictionary."""
-    from gpm import _root_path
-
-    filepath = os.path.join(_root_path, "gpm", "etc", "pmw", "frequencies.yaml")
-    return read_yaml(filepath)
-
-
-@functools.cache
-def get_pmw_frequency(sensor, scan_mode):
-    """Get product info dictionary."""
-    pmw_dict = get_pmw_frequency_dict()
-    return pmw_dict[sensor][scan_mode]
-
-
 def get_pmw_frequency_corra(product):
+    from gpm.utils.pmw import get_pmw_frequency
+
     if product == "2B-GPM-CORRA":
         return get_pmw_frequency("GMI", scan_mode="S1") + get_pmw_frequency("GMI", scan_mode="S2")
     if product == "2B-TRMM-CORRA":
@@ -183,6 +164,8 @@ def _parse_sun_local_time(ds):
 
 def _add_1c_pmw_frequency(ds, product, scan_mode):
     """Add the 'pmw_frequency' coordinates to 1C-<PMW> products."""
+    from gpm.utils.pmw import get_pmw_frequency
+
     if "pmw_frequency" in list(ds.dims):
         pmw_frequency = get_pmw_frequency(sensor=product.split("-")[1], scan_mode=scan_mode)
         ds = ds.assign_coords({"pmw_frequency": pmw_frequency})

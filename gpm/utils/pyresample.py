@@ -33,7 +33,11 @@ import xarray as xr
 
 
 def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
-    """Remap dataset to another one using nearest-neighbour."""
+    """Remap dataset to another one using nearest-neighbour.
+
+    The spatial non-dimensional coordinates of the source dataset are not remapped. !
+    The output dataset has the spatial coordinates of the destination dataset !
+    """
     from gpm.checks import get_spatial_dimensions
     from gpm.dataset.crs import _get_crs_coordinates, _get_proj_dim_coords, _get_swath_dim_coords, set_dataset_crs
 
@@ -79,14 +83,20 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
 
     # Define resampler
     resampler = KDTreeNearestXarrayResampler(src_area, dst_area)
-    resampler.precompute(radius_of_influence=radius_of_influence)
+
+    # Precompute resampler
+    # - stuffs are recomputed if radius_of_influence and other args are not equally specified in .resample()
+    # resampler.precompute(radius_of_influence=radius_of_influence)
 
     # Retrieve valid variables
     variables = [var for var in src_ds.data_vars if set(src_ds[var].dims).issuperset({"x", "y"})]
 
     # Remap DataArrays
     with warnings.catch_warnings(record=True):
-        da_dict = {var: resampler.resample(src_ds[var], fill_value=fill_value) for var in variables}
+        da_dict = {
+            var: resampler.resample(src_ds[var], radius_of_influence=radius_of_influence, fill_value=fill_value)
+            for var in variables
+        }
 
     # Create Dataset
     ds = xr.Dataset(da_dict)
@@ -111,10 +121,18 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
         crs=dst_area.crs,
         grid_mapping_name=dst_crs_coords,
     )
+
     # Coordinates specifics to gpm-api
     gpm_api_coords = ["gpm_id", "gpm_time", "gpm_granule_id", "gpm_along_track_id", "gpm_cross_track_id"]
     gpm_api_coords_dict = {c: dst_ds.reset_coords()[c] for c in gpm_api_coords if c in dst_ds.coords}
     ds = ds.assign_coords(gpm_api_coords_dict)
+
+    # Drop pyresample area attribute
+    for var in ds.data_vars:
+        ds[var].attrs.pop("area", None)
+
+    # Transpose variable back to the expected dimension
+    # TODO: ds = ds.transpose(y_dim, x_dim, ...)
 
     # # Add relevant coordinates of dst_ds
     # dst_available_coords = list(dst_ds.coords)

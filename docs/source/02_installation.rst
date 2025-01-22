@@ -286,7 +286,7 @@ To perform spaceborne-ground radar calibration and validation, install
 
 .. code-block:: bash
 
-   conda install -c conda-forge xradar wradlib pyart
+   conda install -c conda-forge xradar wradlib arm_pyart
 
 
 Run GPM-API on Jupyter Notebooks

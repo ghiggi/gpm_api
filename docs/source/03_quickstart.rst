@@ -287,6 +287,19 @@ The following example shows how to download and open a dataset over a specific t
     # Plot a specific variable of the dataset
     ds["precipRateNearSurface"].gpm.plot_map()
 
+    # As alternative you can open all scan modes into a datatree
+    dt = gpm.open_datatree(
+        product=product,
+        product_type=product_type,
+        version=version,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    # Then retrieve the dataset from the wished scan mode and plot
+    ds = dt["FS"].to_dataset()
+    ds["precipRateNearSurface"].gpm.plot_map()
+
+
 
 You are now ready to explore the various :ref:`tutorials <tutorials>` available in the documentation and learn more about the GPM-API functionalities.
 

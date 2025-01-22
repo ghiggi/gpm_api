@@ -222,10 +222,11 @@ def call_over_contiguous_scans(function):
                 tmp_kwargs["alpha"] = tmp_alpha
             if i == 0:
                 tmp_kwargs["ax"] = ax
-
             else:
-                tmp_kwargs["ax"] = p.axes
+                tmp_kwargs["ax"] = p.axes  # Pass previous iteration axis
                 tmp_kwargs["add_background"] = False
+                tmp_kwargs["add_gridlines"] = False
+                tmp_kwargs["add_labels"] = False
 
             # Set colorbar to False for all except last iteration
             # --> Avoid drawing multiple colorbars (one at each iteration)

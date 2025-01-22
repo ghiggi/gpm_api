@@ -313,8 +313,9 @@ class CustomFacetGrid(FacetGrid, ABC):
         func_kwargs = {k: v for k, v in kwargs.items() if k not in {"cmap", "colors", "cbar_kwargs", "levels"}}
         func_kwargs.update(cmap_params)
         func_kwargs["add_colorbar"] = False
-        if func.__name__ != "surface":
-            func_kwargs["add_labels"] = False
+
+        # if func.__name__ != "surface":
+        #     func_kwargs["add_labels"] = False
 
         # Get x, y labels for the first subplot
         # - Get DataArray prototype without row, col and rgb !
@@ -325,6 +326,8 @@ class CustomFacetGrid(FacetGrid, ABC):
             da_proto = da_proto.isel({self._col_var: 0})
         if kwargs.get("rgb", None):
             da_proto = da_proto.isel({kwargs.get("rgb", None): 0})
+
+        # Infer x - y labels
         x, y = _infer_xy_labels(
             darray=da_proto,
             x=x,

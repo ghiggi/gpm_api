@@ -80,7 +80,7 @@ def create_quicklooks_dataset(list_ds, spacing=2, total_size=200, concat_dim="al
         list_ds_quicklook.append(ds)
         size += len(ds[concat_dim])
         # Insert NaN data between slices
-        if i == n_slices - 1:
+        if i == n_slices - 1:  # noqa SIM108
             size_dummy = total_size - size
         else:
             size_dummy = spacing
@@ -193,7 +193,7 @@ def create_quicklooks_datasets(ds, list_slices, subplot_size=200, spacing=2, n_s
     # return list_subplots_datasets
 
 
-def get_subplot_slices(list_slices, subplot_size=100, spacing=2, n_subplots=4, split_at_border=False):
+def get_subplot_slices(list_slices, subplot_size=100, spacing=2, n_subplots=4):
     """
     Group slices into subplots, ensuring each subplot stays within a maximum size.
 

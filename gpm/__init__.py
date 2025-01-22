@@ -67,6 +67,7 @@ from gpm.utils.checks import (  # noqa
     check_regular_time,
     check_valid_geolocation,
 )
+from gpm.utils.pmw import available_pmw_frequencies  # noqa
 
 # from gpm.utils.manipulations import convert_from_decibel as idecibel
 # from gpm.utils.manipulations import convert_to_decibel as decibel

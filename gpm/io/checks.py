@@ -316,8 +316,6 @@ def check_scan_modes(scan_modes, product, version):
         scan_modes = available_scan_modes(product=product, version=version)
     if isinstance(scan_modes, str):
         scan_modes = [scan_modes]
-    if len(scan_modes) == 1:
-        raise ValueError("If you need only a scan mode, use gpm.open_granule_dataset() or gpm.open_dataset().")
     scan_modes = [check_scan_mode(scan_mode=scan_mode, product=product, version=version) for scan_mode in scan_modes]
     return scan_modes
 

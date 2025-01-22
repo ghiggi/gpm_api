@@ -33,7 +33,6 @@ import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from cartopy.mpl.geoaxes import GeoAxes
 from pycolorbar import plot_colorbar, set_colorbar_fully_transparent
 from pycolorbar.utils.mpl_legend import get_inset_bounds
 from scipy.interpolate import griddata
@@ -447,25 +446,22 @@ def initialize_cartopy_plot(
     if add_background:
         ax = plot_cartopy_background(ax)
 
-    # - Add gridlines
-    if add_gridlines:
-        _ = plot_cartopy_gridlines(ax)
-
-    # - Remove cartopy labels if add_labels=False
-    if not add_labels:
-        ax = remove_cartopy_labels(ax)
+    # - Add gridlines and labels
+    if add_gridlines or add_labels:
+        _ = plot_cartopy_gridlines_and_labels(ax, add_gridlines=add_gridlines, add_labels=add_labels)
 
     return ax
 
 
-def plot_cartopy_gridlines(ax):
-    """Add cartopy gridlines."""
+def plot_cartopy_gridlines_and_labels(ax, add_gridlines=True, add_labels=True):
+    """Add cartopy gridlines and labels."""
+    alpha = 0.1 if add_gridlines else 0
     gl = ax.gridlines(
         crs=ccrs.PlateCarree(),
-        draw_labels=True,
+        draw_labels=add_labels,
         linewidth=1,
         color="gray",
-        alpha=0.1,
+        alpha=alpha,
         linestyle="-",
     )
     gl.top_labels = False  # gl.xlabels_top = False
@@ -482,20 +478,6 @@ def plot_cartopy_background(ax):
     ax.add_feature(cartopy.feature.LAND, facecolor=[0.9, 0.9, 0.9])
     ax.add_feature(cartopy.feature.OCEAN, alpha=0.6)
     ax.add_feature(cartopy.feature.BORDERS)  # BORDERS also draws provinces, ...
-    return ax
-
-
-def remove_cartopy_labels(ax):
-    """Remove Cartopy bottom gridlines labels."""
-    if isinstance(ax, GeoAxes):
-        try:  # fail on empty ax of CartopyFacetGrid
-            gl = ax._gridliners[0]
-            gl.bottom_labels = False
-            gl.top_labels = False
-            gl.left_labels = False
-            gl.right_labels = False
-        except:
-            pass
     return ax
 
 
@@ -558,10 +540,17 @@ def plot_cartopy_imshow(
     """Plot imshow with cartopy."""
     plot_kwargs = {} if plot_kwargs is None else plot_kwargs
 
+    # Assume CRS of data
+    transform = ccrs.PlateCarree()
+
     # Infer x and y
     x, y = infer_xy_labels(da, x=x, y=y, rgb=plot_kwargs.get("rgb", None))
+
+    # Align x,y, data dimensions
     # - Ensure image with correct dimensions orders
-    da = da.transpose(y, x, ...)
+    da = da.transpose(*da[y].dims, *da[x].dims, ...)
+
+    # - Retrieve data
     arr = np.asanyarray(da.data)
 
     # - Compute coordinates
@@ -572,22 +561,36 @@ def plot_cartopy_imshow(
     extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
 
     # - Determine origin based on the orientation of da[y] values
-    # -->  If increasing, set origin="lower"
-    # -->  If decreasing, set origin="upper"
-    origin = "lower" if y_coords[1] > y_coords[0] else "upper"
+    # - On the map, the y coordinates should grow from bottom to top
+    # -->  If y coordinate is increasing, set origin="lower"
+    # -->  If y coordinate is decreasing, set origin="upper"
+    y_increasing = y_coords[1] > y_coords[0]
+    origin = "lower" if y_increasing else "upper"  # OLD CODE
+
+    # Deal with decreasing y
+    if not y_increasing:  # decreasing y coordinates
+        extent = [extent[i] for i in [0, 1, 3, 2]]
+
+    # Deal with out of limits x (PlateeCarree coordinates out of bounds when  lons are defined as 0-360)
+    set_extent = True
+
+    # Case where coordinates are defined as 0-360 with pm=0
+    if extent[1] > transform.x_limits[1] or extent[0] < transform.x_limits[0]:
+        set_extent = False
 
     # - Add variable field with cartopy
     rgb = plot_kwargs.pop("rgb", False)
     p = ax.imshow(
         arr,
-        transform=ccrs.PlateCarree(),
+        transform=transform,
         extent=extent,
         origin=origin,
         interpolation=interpolation,
         **plot_kwargs,
     )
     # - Set the extent
-    ax.set_extent(extent)
+    if set_extent:
+        ax.set_extent(extent)
 
     # - Add colorbar
     if add_colorbar and not rgb:
@@ -618,6 +621,10 @@ def plot_cartopy_pcolormesh(
 
     # Remove RGB from plot_kwargs
     rgb = plot_kwargs.pop("rgb", False)
+
+    # Align x,y, data dimensions
+    # - Ensure image with correct dimensions orders
+    da = da.transpose(*da[y].dims, ...)
 
     # Get x, y, and array to plot
     da = preprocess_rgb_dataarray(da, rgb=rgb)
@@ -1428,7 +1435,7 @@ def plot_patches(
 ####--------------------------------------------------------------------------.
 
 
-def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, inside_figure=True):
+def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, inside_figure=True, border_pad=0):
     """Adds an inset map to a matplotlib axis using Cartopy, highlighting the extent of the main plot.
 
     This function creates a smaller map inset within a larger map plot to show a global view or
@@ -1508,7 +1515,7 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
         inset_height=inset_height,
         inside_figure=inside_figure,
         aspect_ratio=aspect_ratio,
-        border_pad=0,
+        border_pad=border_pad,
     )
 
     ax2 = ax.inset_axes(

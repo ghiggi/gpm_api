@@ -71,11 +71,17 @@ def available_retrievals(ds):
     if product in available_products(product_categories="RADAR", product_levels="2A"):
         module_name = "gpm.retrievals.retrieval_2a_radar"
         return _get_available_retrievals(module_name)
+    # Define retrievals for 1B-<RADAR> products
     if product in available_products(product_categories="RADAR", product_levels="1B"):
         module_name = "gpm.retrievals.retrieval_1b_radar"
         return _get_available_retrievals(module_name)
+    # Define retrievals for 2A-<PMW> products
     if product in available_products(product_categories="PMW", product_levels="2A"):
         module_name = "gpm.retrievals.retrieval_2a_pmw"
+        return _get_available_retrievals(module_name)
+    # Define retrievals for 1B-<PMW> and 1C-<PMW> products
+    if product in available_products(product_categories="PMW", product_levels=["1B", "1C"]):
+        module_name = "gpm.retrievals.retrieval_1b_c_pmw"
         return _get_available_retrievals(module_name)
     return None
 
@@ -104,12 +110,19 @@ def get_retrieval_variable(ds, name, *args, **kwargs):
         module_name = "gpm.retrievals.retrieval_2a_radar"
         check_retrieval_validity(ds, name)
         return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
+    # Define retrievals for 1B-<RADAR> products
     if product in available_products(product_categories="RADAR", product_levels="1B"):
         module_name = "gpm.retrievals.retrieval_1b_radar"
         check_retrieval_validity(ds, name)
         return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
+    # Define retrievals for 2A-<PMW> products
     if product in available_products(product_categories="PMW", product_levels="2A"):
         module_name = "gpm.retrievals.retrieval_2a_pmw"
+        check_retrieval_validity(ds, name)
+        return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
+    # Define retrievals for 1B-<PMW> and 1C-<PMW> products
+    if product in available_products(product_categories="PMW", product_levels=["1B", "1C"]):
+        module_name = "gpm.retrievals.retrieval_1b_c_pmw"
         check_retrieval_validity(ds, name)
         return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
     return None

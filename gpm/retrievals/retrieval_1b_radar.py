@@ -560,8 +560,8 @@ def open_dataset_1b_ka_fs(
         verbose=verbose,
         **kwargs,
     )
-    ds_l1_ka_ms = dt["MS"].compute()
-    ds_l1_ka_hs = dt["HS"].compute()
+    ds_l1_ka_ms = dt["MS"].to_dataset().compute()
+    ds_l1_ka_hs = dt["HS"].to_dataset().compute()
 
     # Ensure matched scans
     idx_hs_start = np.where(ds_l1_ka_ms["gpm_id"].data[0] == ds_l1_ka_hs["gpm_id"].data)[0].item()

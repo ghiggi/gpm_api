@@ -82,6 +82,12 @@ DIM_DICT = {
     "nchannel4": "pmw_frequency",
     "nchannel5": "pmw_frequency",
     "nchannel6": "pmw_frequency",
+    "nchUIA1": "incidence_angle",
+    "nchUIA2": "incidence_angle",
+    "nchUIA3": "incidence_angle",
+    "nchUIA4": "incidence_angle",
+    "nchUIA5": "incidence_angle",
+    "nchUIA6": "incidence_angle",
     # PMW 1A-GMI (V7)
     "npixelev": "cross_track",
     "npixelht": "cross_track",

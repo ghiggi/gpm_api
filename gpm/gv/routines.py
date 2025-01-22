@@ -25,11 +25,15 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains the routine for SR/GR validation."""
+import warnings
+
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pyproj
 import xarray as xr
+from shapely import Point
 
 import gpm
 from gpm.utils.manipulations import (
@@ -38,6 +42,7 @@ from gpm.utils.manipulations import (
 from gpm.utils.remapping import reproject_coords
 from gpm.utils.timing import print_task_elapsed_time
 from gpm.utils.xarray import get_xarray_variable
+from gpm.utils.zonal_stats import PolyAggregator
 
 # Issues:
 # - xyz_to_antenna_coordinates SR GR range estimation. Which to choose ?
@@ -616,19 +621,10 @@ def volume_matching(
         The SR dataset matched to GR data.
 
     """
-    import warnings
+    import geopandas as gpd
+    import wradlib as wrl
 
     warnings.filterwarnings("ignore")
-    import geopandas as gpd
-    import numpy as np
-    import pandas as pd
-    import pyproj
-    import wradlib as wrl
-    import xarray as xr
-    from shapely import Point
-
-    from gpm.utils.remapping import reproject_coords
-    from gpm.utils.zonal_stats import PolyAggregator
 
     # Check valid Z variable
     if z_variable_gr not in ds_gr:
