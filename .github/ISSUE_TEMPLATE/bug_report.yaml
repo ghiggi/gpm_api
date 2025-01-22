@@ -41,7 +41,7 @@ body:
       description: |
         examples:
           - **OS**: Ubuntu 20.04
-          - **Python**: 3.8.2
+          - **Python**: 3.11.2
       value: |
         - OS:
         - python:
