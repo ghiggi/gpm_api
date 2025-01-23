@@ -548,6 +548,7 @@ def plot_cartopy_imshow(
 
     # Align x,y, data dimensions
     # - Ensure image with correct dimensions orders
+    # - It can happen that x/y coords does not have same dimension order of data array.
     da = da.transpose(*da[y].dims, *da[x].dims, ...)
 
     # - Retrieve data
@@ -624,6 +625,7 @@ def plot_cartopy_pcolormesh(
 
     # Align x,y, data dimensions
     # - Ensure image with correct dimensions orders
+    # - It can happen that x/y coords does not have same dimension order of data array.
     da = da.transpose(*da[y].dims, ...)
 
     # Get x, y, and array to plot
