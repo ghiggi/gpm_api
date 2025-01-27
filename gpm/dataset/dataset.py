@@ -79,7 +79,7 @@ def _try_open_granule(filepath, scan_modes, decode_cf, variables, groups, prefix
         )
     except Exception as e:
         msg = f"The following error occurred while opening the {filepath} granule: {e}"
-        warnings.warn(msg, GPM_Warning, stacklevel=3)
+        warnings.warn(msg, GPM_Warning, stacklevel=2)
         dict_ds_scan_modes = None
         dt_closer = None
     return dict_ds_scan_modes, dt_closer
@@ -117,7 +117,7 @@ def _get_scan_modes_datasets_and_closers(filepaths, parallel, scan_modes, decode
 
     # Check there are valid granules
     if len(list_dict_scan_modes) == 0:
-        raise ValueError("No valid GPM granule available for current request.")
+        raise ValueError("Impossible to open GPM granules with current request.")
 
     # Define list of dataset for each scan_mode
     dict_scan_modes_datasets = {

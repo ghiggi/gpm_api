@@ -1,3 +1,5 @@
+import re
+
 import cartopy.crs as ccrs
 import numpy as np
 import pyproj
@@ -183,13 +185,61 @@ def get_radius_polygon(xr_obj, distance, crs=None):
     return polygon
 
 
+def get_datatree_sweeps(dt):
+    """Return the datatree node names corresponding to radar sweep."""
+    # Need to exclude: sweep_group_name, sweep_fixed_angle
+    sweeps = [group for group in list(dt) if re.match(r"^sweep_\d+$", group)]  #  group.startswith("sweep_")
+    return sweeps
+
+
+def get_datatree_maximum_horizontal_distance(dt):
+    """Return the maximum horizontal distance from the radar across all sweeps."""
+    return max([get_maximum_horizontal_distance(dt[sweep].to_dataset()) for sweep in get_datatree_sweeps(dt)])
+
+
+def get_datatree_maximum_range_distance(dt):
+    """Return the maximum range distance across all sweeps."""
+    return max([get_maximum_range_distance(dt[sweep].to_dataset()) for sweep in get_datatree_sweeps(dt)])
+
+
+def get_datatree_extent(dt, max_distance=None, crs=None):
+    """Get extent, restricted to max_distance from radar location if specified.
+
+    If the CRS is not specified, it returns extent in WGS84 CRS.
+    """
+    list_extent = [
+        get_extent(dt[sweep].to_dataset(), max_distance=max_distance, crs=crs) for sweep in get_datatree_sweeps(dt)
+    ]
+    extents = np.vstack(list_extent)
+    extent = [
+        extents[:, 0].min().item(),
+        extents[:, 1].max().item(),
+        extents[:, 2].min().item(),
+        extents[:, 3].max().item(),
+    ]
+    return extent
+
+
+def get_maximum_horizontal_distance(xr_obj):
+    """Return the horizontal distance from the last gate."""
+    # TODO: currently distance to last gate centroid.
+    ds_georeferenced = xr_obj.isel(range=slice(-2, None)).xradar.georeference()
+    return np.maximum(ds_georeferenced["x"].max(), ds_georeferenced["y"].max()).item()
+
+
+def get_maximum_range_distance(xr_obj):
+    """Return the range distance from the last gate."""
+    # TODO: currently distance to last gate centroid
+    return xr_obj["range"].data[-1].item()
+
+
 def get_extent(xr_obj, max_distance=None, crs=None):
     """Get extent , restricted to max_distance from radar location if specified.
 
     If the CRS is not specified, it returns extent in WGS84 CRS.
     """
     if max_distance is None:
-        max_distance = xr_obj["range"].max().item()
+        max_distance = get_maximum_horizontal_distance(xr_obj)
     polygon = get_radius_polygon(xr_obj, distance=max_distance, crs=crs)
     extent = [polygon.bounds[i] for i in [0, 2, 1, 3]]
     return extent

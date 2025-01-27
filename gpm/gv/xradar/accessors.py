@@ -24,6 +24,18 @@ class Xradar_Dev_Base_Accessor:
             elevation_beamwidth=elevation_beamwidth,
         )
 
+    @property
+    def maximum_range_distance(self):
+        from gpm.gv.xradar.methods import get_maximum_range_distance
+
+        return get_maximum_range_distance(self._obj)
+
+    @property
+    def maximum_horizontal_distance(self):
+        from gpm.gv.xradar.methods import get_maximum_horizontal_distance
+
+        return get_maximum_horizontal_distance(self._obj)
+
     def extent(self, max_distance=None, crs=None):
         from gpm.gv.xradar.methods import get_extent
 
@@ -118,8 +130,35 @@ class Xradar_Dev_Dataset_Accessor(Xradar_Dev_Base_Accessor):
         return to_geopandas(self._obj, dim_order=dim_order)
 
 
-# @dt.register_datatree_accessor("xradar")
-# class XradarDataTreeAccessor(XradarAccessor):
+@xr.register_datatree_accessor("xradar_dev")
+class XradarDevDataTreeAccessor:
+
+    def __init__(self, xarray_obj):
+        self._obj = xarray_obj
+
+    @property
+    def sweeps(self):
+        from gpm.gv.xradar.methods import get_datatree_sweeps
+
+        return get_datatree_sweeps(self._obj)
+
+    @property
+    def maximum_range_distance(self):
+        from gpm.gv.xradar.methods import get_datatree_maximum_range_distance
+
+        return get_datatree_maximum_range_distance(self._obj)
+
+    @property
+    def maximum_horizontal_distance(self):
+        from gpm.gv.xradar.methods import get_datatree_maximum_horizontal_distance
+
+        return get_datatree_maximum_horizontal_distance(self._obj)
+
+    def extent(self, max_distance=None, crs=None):
+        from gpm.gv.xradar.methods import get_datatree_extent
+
+        return get_datatree_extent(self._obj, max_distance=max_distance, crs=crs)
+
 
 # accessor = "xradar_dev"
 # package_functions =  {"plot_map": plot_map}

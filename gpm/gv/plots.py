@@ -136,7 +136,7 @@ def compare_maps(
     fig, axes = plt.subplots(1, 2, subplot_kw=subplot_kwargs, **fig_kwargs)
 
     # Plot SR data
-    _ = _plot_gdf_map(
+    _ = plot_gdf_map(
         ax=axes[0],
         gdf=gdf,
         column=sr_column,
@@ -156,7 +156,7 @@ def compare_maps(
     )
 
     # Plot GR data
-    _ = _plot_gdf_map(
+    _ = plot_gdf_map(
         ax=axes[1],
         gdf=gdf,
         column=gr_column,
@@ -178,7 +178,20 @@ def compare_maps(
     return fig
 
 
-def _plot_gdf_map(gdf, column, extent_xy, title, grid_linewidth, grid_color, add_colorbar, cbar_kwargs, **plot_kwargs):
+def plot_gdf_map(
+    gdf,
+    column,
+    extent_xy=None,
+    title=None,
+    grid_color="grey",
+    grid_linewidth=0.25,
+    add_colorbar=True,
+    cbar_kwargs=None,
+    **plot_kwargs,
+):
+    # Set default extent_xy
+    if extent_xy is None:
+        extent_xy = gdf.total_bounds[[0, 2, 1, 3]]
     # Set default title
     if title is None:
         title = column
