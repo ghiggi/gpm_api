@@ -39,7 +39,7 @@ def get_list_overpass_time(timesteps, interval=None):
     # Check interval
     if interval is None:
         interval = np.array(60, dtype="m8[m]")
-        
+
     # Check timesteps
     # - Ensure numpy.datetime64
     timesteps = np.unique(timesteps)
@@ -48,16 +48,16 @@ def get_list_overpass_time(timesteps, interval=None):
     # Deal with edge cases
     if len(timesteps) == 0:
         raise ValueError("No timesteps available.")
-    
+
     if len(timesteps) == 1:
         return [(timesteps[0], timesteps[0])]
-    
+
     # Compute time difference
     time_diff = np.diff(timesteps)
 
     # Initialize
     list_time_periods = []
-    current_start_time = timesteps[0]    
+    current_start_time = timesteps[0]
     for i, dt in enumerate(time_diff):
         if i == 0:
             continue
@@ -66,8 +66,8 @@ def get_list_overpass_time(timesteps, interval=None):
             time_period = (current_start_time, end_time)
             list_time_periods.append(time_period)
             # Update
-            current_start_time = timesteps[i+1]
-    
+            current_start_time = timesteps[i + 1]
+
     # Add the final group
     list_time_periods.append((current_start_time, timesteps[-1]))
     return list_time_periods
