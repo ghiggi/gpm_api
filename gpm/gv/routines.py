@@ -487,18 +487,39 @@ def plot_quicklook(
     return fig
 
 
-def retrieve_ds_sr(ds_gr, download_sr=False, l2_variables=None):
-    # Retrieve GR extent (in WGS84)
-    extent_gr = ds_gr.xradar_dev.extent(max_distance=None, crs=None)
+# GPM Variables required for volume matching
+L1_VARIABLES = [
+    "crossTrackBeamWidth",
+    "range_distance_from_satellite",
+]
 
-    # Retrieve GR scan time (assumed to be in UTC)
-    gr_min_time = ds_gr["time"].min().to_numpy()
-    gr_max_time = ds_gr["time"].max().to_numpy()
-
-    # Define start_time and end_time for searching SR data
-    start_time = gr_min_time - np.timedelta64(10, "m")
-    end_time = gr_max_time + np.timedelta64(10, "m")
-
+L2_VARIABLES = [
+    "localZenithAngle",  #  gate projection coordinates
+    "ellipsoidBinOffset",  #  range_distance_from_ellipsoid
+    "binClutterFreeBottom",
+    "dataQuality",
+    "flagPrecip",
+    "qualityBB",
+    "heightBB",
+    "widthBB",
+    "typePrecip",
+    "precipRate",
+    "airTemperature",
+    "zFactorFinal",
+    "zFactorMeasured",
+    # Auxiliary
+    "qualityTypePrecip",
+    "qualityFlag",
+    "qualityBB",
+    "pathAtten",
+    "piaFinal",
+    "reliabFlag",
+    # For display
+    "zFactorFinalNearSurface",
+    "precipRateNearSurface",
+]
+    
+def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
     # Define GPM settings
     product_type = "RS"
     version = 7
@@ -544,7 +565,7 @@ def retrieve_ds_sr(ds_gr, download_sr=False, l2_variables=None):
         product=products[0],
         product_type=product_type,
         scan_mode=scan_mode,
-        variables=l2_variables,
+        variables=L2_VARIABLES,
         version=version,
         start_time=start_time,
         end_time=end_time,
@@ -708,48 +729,35 @@ def volume_matching(
 
     #### - Set GR gates with Z < 0 to NaN
     # - Following Morris and Schwaller 2011 recommendation
-    ds_gr = ds_gr.where(ds_gr[z_variable_gr] >= z_min_threshold_sr)
+    ds_gr = ds_gr.where(ds_gr[z_variable_gr] >= z_min_threshold_gr)
 
     #### - Retrieve GR extent (in WGS84)
     extent_gr = ds_gr.xradar_dev.extent(max_distance=None, crs=None)
 
     ####-----------------------------------------------------------------------------.
     #### Retrieve SR data
-    # Define required variables
-    l1_variables = [
-        "crossTrackBeamWidth",
-        "range_distance_from_satellite",
-    ]
-    l2_variables = [
-        "localZenithAngle",  #  gate projection coordinates
-        "ellipsoidBinOffset",  #  range_distance_from_ellipsoid
-        "binClutterFreeBottom",
-        "dataQuality",
-        "flagPrecip",
-        "qualityBB",
-        "heightBB",
-        "widthBB",
-        "typePrecip",
-        "precipRate",
-        "airTemperature",
-        "zFactorFinal",
-        "zFactorMeasured",
-        # Auxiliary
-        "qualityTypePrecip",
-        "qualityFlag",
-        "qualityBB",
-        "pathAtten",
-        "piaFinal",
-        "reliabFlag",
-    ]
-
     if ds_sr is None:
-        ds_sr = retrieve_ds_sr(ds_gr, download_sr=download_sr, l2_variables=l2_variables)
+        # Retrieve GR scan time (assumed to be in UTC)
+        gr_min_time = ds_gr["time"].min().to_numpy()
+        gr_max_time = ds_gr["time"].max().to_numpy()
+
+        # Define start_time and end_time for searching SR data
+        start_time = gr_min_time - np.timedelta64(10, "m")
+        end_time = gr_max_time + np.timedelta64(10, "m")
+        
+        ds_sr = retrieve_ds_sr(start_time=start_time, 
+                               end_time=end_time, 
+                               extent_gr=extent_gr,
+                               download_sr=download_sr)
     else:
-        ds_sr = ds_sr.gpm.crop(extent=extent_gr)
+        try:
+            ds_sr = ds_sr.gpm.crop(extent=extent_gr)
+        except Exception: 
+            # GR extent is not withing SR swath
+            return None
 
     # Check required SR variables
-    required_sr_variables = l1_variables + l2_variables
+    required_sr_variables = L1_VARIABLES + L2_VARIABLES
     missing_vars = [var for var in required_sr_variables if var not in ds_sr]
     if len(missing_vars) != 0:
         raise ValueError(f"The following variables are missing in the SR dataset: {missing_vars}")
@@ -1100,7 +1108,7 @@ def volume_matching(
     # --> Using zFactorFinal would results in keeping only reflectivites > 12/13 dBZ
     ds_sr_match = ds_sr_match.isel(sr_beam_index=~np.isnan(ds_sr_match["SR_zFactorMeasured_Ku_mean"]))
     ds_sr_match = ds_sr_match.isel(sr_beam_index=ds_sr_match["SR_zFactorMeasured_Ku_mean"] >= 10)
-    # ds_sr_match = ds_sr_match.isel(sr_beam_index=~np.isnan(ds_sr_match["SR_zFactorFinal_Ku_mean"]))
+    ds_sr_match = ds_sr_match.isel(sr_beam_index=~np.isnan(ds_sr_match["SR_zFactorFinal_Ku_mean"]))
 
     # If nothing to match, return None
     if ds_sr_match.sizes["sr_beam_index"] == 0:
@@ -1239,6 +1247,10 @@ def volume_matching(
     gdf_match = gdf_match[~gdf_match["GR_counts"].isna()]
     gdf_match = gdf_match[~gdf_match["GR_Z_mean"].isna()]
 
+    # Return None if nothing left 
+    if len(gdf_match) == 0:
+        return None
+    
     # Compute ratio SR/GR volume
     gdf_match["VolumeRatio"] = gdf_match["SR_gate_volume_sum"] / gdf_match["GR_gate_volume_sum"]
 
@@ -1271,7 +1283,7 @@ def volume_matching(
             cmap="Spectral_r",
             unified_color_scale=True,
             vmin=12,
-            # vmax=40
+            vmax=40,
         )
         fig.tight_layout()
         plt.show()

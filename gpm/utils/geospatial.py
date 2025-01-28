@@ -244,6 +244,18 @@ def adjust_extent(extent, size):
     return Extent(xmin, xmax, ymin, ymax)
 
 
+def merge_extents(list_extent):
+    """Return the outer extent of a list of extents."""
+    extents = np.vstack(list_extent)
+    extent = [
+        extents[:, 0].min().item(),
+        extents[:, 1].max().item(),
+        extents[:, 2].min().item(),
+        extents[:, 3].max().item(),
+    ]
+    return extent
+
+
 def extend_extent(extent, padding: int | float | tuple | list = 0):
     """Extend the extent by padding in every direction.
 

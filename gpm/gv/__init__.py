@@ -33,7 +33,7 @@ from gpm.gv.plots import (
     reflectivity_distribution,
     calibration_summary,
 )
-from gpm.gv.routines import volume_matching
+from gpm.gv.routines import volume_matching, retrieve_ds_sr
 
 __all__ = [
     "compare_maps",
@@ -41,5 +41,6 @@ __all__ = [
     "reflectivity_scatterplots",
     "reflectivity_distribution",
     "calibration_summary",
+    "retrieve_ds_sr",
     "volume_matching",
 ]
