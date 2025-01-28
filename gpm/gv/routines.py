@@ -518,7 +518,8 @@ L2_VARIABLES = [
     "zFactorFinalNearSurface",
     "precipRateNearSurface",
 ]
-    
+
+
 def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
     # Define GPM settings
     product_type = "RS"
@@ -744,15 +745,12 @@ def volume_matching(
         # Define start_time and end_time for searching SR data
         start_time = gr_min_time - np.timedelta64(10, "m")
         end_time = gr_max_time + np.timedelta64(10, "m")
-        
-        ds_sr = retrieve_ds_sr(start_time=start_time, 
-                               end_time=end_time, 
-                               extent_gr=extent_gr,
-                               download_sr=download_sr)
+
+        ds_sr = retrieve_ds_sr(start_time=start_time, end_time=end_time, extent_gr=extent_gr, download_sr=download_sr)
     else:
         try:
             ds_sr = ds_sr.gpm.crop(extent=extent_gr)
-        except Exception: 
+        except Exception:
             # GR extent is not withing SR swath
             return None
 
@@ -1247,10 +1245,10 @@ def volume_matching(
     gdf_match = gdf_match[~gdf_match["GR_counts"].isna()]
     gdf_match = gdf_match[~gdf_match["GR_Z_mean"].isna()]
 
-    # Return None if nothing left 
+    # Return None if nothing left
     if len(gdf_match) == 0:
         return None
-    
+
     # Compute ratio SR/GR volume
     gdf_match["VolumeRatio"] = gdf_match["SR_gate_volume_sum"] / gdf_match["GR_gate_volume_sum"]
 

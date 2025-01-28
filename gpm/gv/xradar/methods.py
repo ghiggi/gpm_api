@@ -9,8 +9,8 @@ from gpm.utils.area import (
     get_projection_corners_from_centroids,
     get_quadmesh_from_corners,
 )
-from gpm.utils.remapping import reproject_coords
 from gpm.utils.geospatial import merge_extents
+from gpm.utils.remapping import reproject_coords
 
 
 def resolution_at_range(xr_obj, azimuth_beamwidth, elevation_beamwidth):
@@ -212,7 +212,7 @@ def get_datatree_extent(dt, max_distance=None, crs=None):
         get_extent(dt[sweep].to_dataset(), max_distance=max_distance, crs=crs) for sweep in get_datatree_sweeps(dt)
     ]
     return merge_extents(list_extent)
-  
+
 
 def get_maximum_horizontal_distance(xr_obj):
     """Return the horizontal distance from the last gate."""
