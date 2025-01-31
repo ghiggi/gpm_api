@@ -751,7 +751,7 @@ def volume_matching(
         try:
             ds_sr = ds_sr.gpm.crop(extent=extent_gr)
         except Exception:
-            # GR extent is not withing SR swath
+            # GR extent is not within SR swath
             return None
 
     # Check required SR variables

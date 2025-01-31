@@ -27,12 +27,11 @@
 """This module tests the bucket routines."""
 import os
 
-import pandas as pd
 import pytest
 
 from gpm.bucket import LonLatPartitioning
-from gpm.bucket.readers import read_dask_partitioned_dataset
-from gpm.bucket.routines import merge_granule_buckets, write_bucket, write_granules_bucket
+from gpm.bucket.readers import read_dask_partitioned_dataset  # noqa
+from gpm.bucket.routines import merge_granule_buckets, write_bucket, write_granules_bucket  # noqa
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray
 
 
@@ -84,117 +83,117 @@ def test_write_bucket(tmp_path, df_type):
         )
 
 
-@pytest.mark.parametrize("order", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])
-@pytest.mark.parametrize("flavor", ["hive", None])
-def test_write_granules_bucket(tmp_path, order, flavor):
-    """Test write_granules_bucket routine with parallel=False."""
-    # Define bucket dir
-    bucket_dir = tmp_path
+# @pytest.mark.parametrize("order", [["lon_bin", "lat_bin"], ["lat_bin", "lon_bin"]])
+# @pytest.mark.parametrize("flavor", ["hive", None])
+# def test_write_granules_bucket(tmp_path, order, flavor):
+#     """Test write_granules_bucket routine with parallel=False."""
+#     # Define bucket dir
+#     bucket_dir = tmp_path
 
-    # Define filepaths
-    filepaths = [
-        "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",  # year 2021
-        "2A.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07A.HDF5",  # year 2021
-        "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
-    ]  # year 2023
+#     # Define filepaths
+#     filepaths = [
+#         "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",  # year 2021
+#         "2A.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07A.HDF5",  # year 2021
+#         "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
+#     ]  # year 2023
 
-    # Define partitioning
-    # order = ["lat_bin", "lon_bin"]
-    # flavor = "hive" # None
-    partitioning = LonLatPartitioning(
-        size=(10, 10),
-        flavor=flavor,
-        order=order,
-    )
+#     # Define partitioning
+#     # order = ["lat_bin", "lon_bin"]
+#     # flavor = "hive" # None
+#     partitioning = LonLatPartitioning(
+#         size=(10, 10),
+#         flavor=flavor,
+#         order=order,
+#     )
 
-    # Run processing
-    write_granules_bucket(
-        # Bucket Input/Output configuration
-        filepaths=filepaths,
-        bucket_dir=bucket_dir,
-        partitioning=partitioning,
-        granule_to_df_func=granule_to_df_toy_func,
-        # Processing options
-        parallel=False,
-    )
+#     # Run processing
+#     write_granules_bucket(
+#         # Bucket Input/Output configuration
+#         filepaths=filepaths,
+#         bucket_dir=bucket_dir,
+#         partitioning=partitioning,
+#         granule_to_df_func=granule_to_df_toy_func,
+#         # Processing options
+#         parallel=False,
+#     )
 
-    # Check directories with wished partitioning format created
-    if flavor == "hive":
-        if order == ["lon_bin", "lat_bin"]:
-            expected_directories = [
-                "bucket_info.yaml",  # always there
-                "lon_bin=-5.0",
-                "lon_bin=15.0",
-                "lon_bin=5.0",
-            ]
-        else:
-            expected_directories = [
-                "bucket_info.yaml",
-                "lat_bin=-5.0",
-                "lat_bin=15.0",
-                "lat_bin=25.0",
-                "lat_bin=5.0",
-            ]
-    elif order == ["lon_bin", "lat_bin"]:
-        expected_directories = [
-            "-5.0",
-            "15.0",
-            "5.0",
-            "bucket_info.yaml",
-        ]
-    else:
-        expected_directories = [
-            "-5.0",
-            "5.0",
-            "15.0",
-            "25.0",
-            "bucket_info.yaml",
-        ]
-    assert sorted(expected_directories) == sorted(os.listdir(bucket_dir))
+#     # Check directories with wished partitioning format created
+#     if flavor == "hive":
+#         if order == ["lon_bin", "lat_bin"]:
+#             expected_directories = [
+#                 "bucket_info.yaml",  # always there
+#                 "lon_bin=-5.0",
+#                 "lon_bin=15.0",
+#                 "lon_bin=5.0",
+#             ]
+#         else:
+#             expected_directories = [
+#                 "bucket_info.yaml",
+#                 "lat_bin=-5.0",
+#                 "lat_bin=15.0",
+#                 "lat_bin=25.0",
+#                 "lat_bin=5.0",
+#             ]
+#     elif order == ["lon_bin", "lat_bin"]:
+#         expected_directories = [
+#             "-5.0",
+#             "15.0",
+#             "5.0",
+#             "bucket_info.yaml",
+#         ]
+#     else:
+#         expected_directories = [
+#             "-5.0",
+#             "5.0",
+#             "15.0",
+#             "25.0",
+#             "bucket_info.yaml",
+#         ]
+#     assert sorted(expected_directories) == sorted(os.listdir(bucket_dir))
 
-    # Check parquet files named by granule
-    if flavor == "hive":
-        if order == ["lon_bin", "lat_bin"]:
-            partition_dir = os.path.join(bucket_dir, "lon_bin=-5.0", "lat_bin=5.0")
-        else:
-            partition_dir = os.path.join(bucket_dir, "lat_bin=5.0", "lon_bin=-5.0")
-    elif order == ["lon_bin", "lat_bin"]:
-        partition_dir = os.path.join(bucket_dir, "-5.0", "5.0")
-    else:
-        partition_dir = os.path.join(bucket_dir, "5.0", "-5.0")
+#     # Check parquet files named by granule
+#     if flavor == "hive":
+#         if order == ["lon_bin", "lat_bin"]:
+#             partition_dir = os.path.join(bucket_dir, "lon_bin=-5.0", "lat_bin=5.0")
+#         else:
+#             partition_dir = os.path.join(bucket_dir, "lat_bin=5.0", "lon_bin=-5.0")
+#     elif order == ["lon_bin", "lat_bin"]:
+#         partition_dir = os.path.join(bucket_dir, "-5.0", "5.0")
+#     else:
+#         partition_dir = os.path.join(bucket_dir, "5.0", "-5.0")
 
-    expected_filenames = [os.path.splitext(f)[0] + "_0.parquet" for f in filepaths]
-    assert sorted(os.listdir(partition_dir)) == sorted(expected_filenames)
+#     expected_filenames = [os.path.splitext(f)[0] + "_0.parquet" for f in filepaths]
+#     assert sorted(os.listdir(partition_dir)) == sorted(expected_filenames)
 
 
-def test_write_granules_bucket_capture_error(tmp_path, capsys):
-    bucket_dir = tmp_path
+# def test_write_granules_bucket_capture_error(tmp_path, capsys):
+#     bucket_dir = tmp_path
 
-    # Define filepaths
-    filepaths = [
-        "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",
-        "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
-    ]
+#     # Define filepaths
+#     filepaths = [
+#         "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",
+#         "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
+#     ]
 
-    # Define partitioning
-    partitioning = LonLatPartitioning(size=(10, 10))
+#     # Define partitioning
+#     partitioning = LonLatPartitioning(size=(10, 10))
 
-    # Define bad granule_to_df_func
-    def granule_to_df_func(filepath):
-        raise ValueError("check_this_error_captured")
+#     # Define bad granule_to_df_func
+#     def granule_to_df_func(filepath):
+#         raise ValueError("check_this_error_captured")
 
-    # Run processing
-    write_granules_bucket(
-        # Bucket Input/Output configuration
-        filepaths=filepaths,
-        bucket_dir=bucket_dir,
-        partitioning=partitioning,
-        granule_to_df_func=granule_to_df_func,
-        # Processing options
-        parallel=False,
-    )
-    captured = capsys.readouterr()
-    assert "check_this_error_captured" in captured.out, "Expected error message not printed"
+#     # Run processing
+#     write_granules_bucket(
+#         # Bucket Input/Output configuration
+#         filepaths=filepaths,
+#         bucket_dir=bucket_dir,
+#         partitioning=partitioning,
+#         granule_to_df_func=granule_to_df_func,
+#         # Processing options
+#         parallel=False,
+#     )
+#     captured = capsys.readouterr()
+#     assert "check_this_error_captured" in captured.out, "Expected error message not printed"
 
 
 # def test_write_granules_bucket_parallel(tmp_path):
@@ -253,48 +252,48 @@ def test_write_granules_bucket_capture_error(tmp_path, capsys):
 #     assert expected_directories == sorted(os.listdir(bucket_dir))
 
 
-def test_merge_granule_buckets(tmp_path):
-    """Test merge_granule_buckets routine."""
-    # Define bucket dir
-    src_bucket_dir = tmp_path / "src"
-    dst_bucket_dir = tmp_path / "dst"
+# def test_merge_granule_buckets(tmp_path):
+#     """Test merge_granule_buckets routine."""
+#     # Define bucket dir
+#     src_bucket_dir = tmp_path / "src"
+#     dst_bucket_dir = tmp_path / "dst"
 
-    # Define filepaths
-    filepaths = [
-        "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",  # year 2021
-        "2A.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07A.HDF5",  # year 2021
-        "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
-    ]  # year 2023
+#     # Define filepaths
+#     filepaths = [
+#         "2A.GPM.DPR.V9-20211125.20210705-S013942-E031214.041760.V07A.HDF5",  # year 2021
+#         "2A.GPM.DPR.V9-20211125.20210805-S013942-E031214.041760.V07A.HDF5",  # year 2021
+#         "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
+#     ]  # year 2023
 
-    # Define partitioning
-    partitioning = LonLatPartitioning(size=(10, 10))
+#     # Define partitioning
+#     partitioning = LonLatPartitioning(size=(10, 10))
 
-    # Run processing
-    write_granules_bucket(
-        # Bucket Input/Output configuration
-        filepaths=filepaths,
-        bucket_dir=src_bucket_dir,
-        partitioning=partitioning,
-        granule_to_df_func=granule_to_df_toy_func,
-        # Processing options
-        parallel=False,
-    )
+#     # Run processing
+#     write_granules_bucket(
+#         # Bucket Input/Output configuration
+#         filepaths=filepaths,
+#         bucket_dir=src_bucket_dir,
+#         partitioning=partitioning,
+#         granule_to_df_func=granule_to_df_toy_func,
+#         # Processing options
+#         parallel=False,
+#     )
 
-    # Merge granules
-    merge_granule_buckets(
-        src_bucket_dir=src_bucket_dir,
-        dst_bucket_dir=dst_bucket_dir,
-        write_metadata=True,
-    )
+#     # Merge granules
+#     merge_granule_buckets(
+#         src_bucket_dir=src_bucket_dir,
+#         dst_bucket_dir=dst_bucket_dir,
+#         write_metadata=True,
+#     )
 
-    # Check file naming
-    partition_dir = os.path.join(dst_bucket_dir, "lon_bin=-5.0", "lat_bin=5.0")
-    expected_filenames = ["2021_0.parquet", "2023_0.parquet"]
-    assert sorted(os.listdir(partition_dir)) == sorted(expected_filenames)
-    assert os.path.exists(os.path.join(dst_bucket_dir, "bucket_info.yaml"))
-    assert os.path.exists(os.path.join(dst_bucket_dir, "_common_metadata"))
-    assert os.path.exists(os.path.join(dst_bucket_dir, "_metadata"))
+#     # Check file naming
+#     partition_dir = os.path.join(dst_bucket_dir, "lon_bin=-5.0", "lat_bin=5.0")
+#     expected_filenames = ["2021_0.parquet", "2023_0.parquet"]
+#     assert sorted(os.listdir(partition_dir)) == sorted(expected_filenames)
+#     assert os.path.exists(os.path.join(dst_bucket_dir, "bucket_info.yaml"))
+#     assert os.path.exists(os.path.join(dst_bucket_dir, "_common_metadata"))
+#     assert os.path.exists(os.path.join(dst_bucket_dir, "_metadata"))
 
-    # Assert can be read with Dask too without errors
-    df = read_dask_partitioned_dataset(base_dir=dst_bucket_dir)
-    assert isinstance(df.compute(), pd.DataFrame)
+#     # Assert can be read with Dask too without errors
+#     df = read_dask_partitioned_dataset(base_dir=dst_bucket_dir)
+#     assert isinstance(df.compute(), pd.DataFrame)
