@@ -638,11 +638,11 @@ def volume_matching(
     beamwidth_gr : float, optional
         The GR beamwidth. The default is 1.0.
     z_min_threshold_gr : float, optional
-        The minimum reflectivity threshold (in dBZ) for GR. The default is 0.
-        Values below this threshold are set to np.nan before matching SR/GR gates.
+        The minimum reflectivity threshold (in dBZ) for GR. The default is 0 dBZ.
+        This is used to discard GR gates with ``z_variable_gr`` reflectivity below the threshold.
     z_min_threshold_sr : float, optional
-        The minimum reflectivity threshold (in dBZ) for SR. The default is 10.
-        Values below this threshold are set to np.nan before matching SR/GR gates.
+        The minimum reflectivity threshold (in dBZ) for SR. The default is 10 dBZ.
+        This is used to discard SR footprints with zMeasured reflectivity below the threshold.
     min_gr_range : float, optional
         The minimum GR range distance (in meters) to select for matching SR/GR gates. The default is 0.
     max_gr_range : float, optional
@@ -732,6 +732,16 @@ def volume_matching(
     # - Following Morris and Schwaller 2011 recommendation
     ds_gr = ds_gr.where(ds_gr[z_variable_gr] >= z_min_threshold_gr)
 
+    #### - Crop GR only to area with data
+    try:
+        ds_gr = ds_gr.gpm.crop_around_valid_data(variable=z_variable_gr)
+        for dim, size in ds_gr.sizes.items():
+            if size <= 1:
+                raise ValueError(f"Only a single {dim} has valid data.")
+    except Exception:
+        # No valid data for GR
+        return None
+
     #### - Retrieve GR extent (in WGS84)
     extent_gr = ds_gr.xradar_dev.extent(max_distance=None, crs=None)
 
@@ -766,12 +776,6 @@ def volume_matching(
 
     # Put SR data into memory
     ds_sr = ds_sr.compute()
-
-    # Compute SR attenuation correction
-    ds_sr["zFactorCorrection"] = ds_sr["zFactorFinal"] - ds_sr["zFactorMeasured"]
-
-    # Mask SR gates below clutter free region
-    ds_sr = ds_sr.gpm.mask_below_bin(bins=ds_sr["binClutterFreeBottom"] + 1, strict=False)
 
     ####-----------------------------------------------------------------------------.
     #### Plot Quicklook
@@ -844,6 +848,13 @@ def volume_matching(
     ds_sr["flagPrecipitationType"] = ds_sr.gpm.retrieve("flagPrecipitationType", method="major_rain_type")
     ds_sr["flagHydroClass"] = ds_sr.gpm.retrieve("flagHydroClass")
 
+    # Mask SR gates below clutter free region
+    # - flagHydroClass defines the gates affected by Clutter
+    ds_sr = ds_sr.gpm.mask_below_bin(bins=ds_sr["binClutterFreeBottom"] + 1, strict=False)
+
+    # Compute SR attenuation correction (with masked clutter)
+    ds_sr["zFactorCorrection"] = ds_sr["zFactorFinal"] - ds_sr["zFactorMeasured"]
+
     ####-----------------------------------------------------------------------------.
     #### Identify SR gates intersecting GR sweep
     # - Define mask of SR footprints within GR range
@@ -862,7 +873,7 @@ def volume_matching(
     ####-----------------------------------------------------------------------------.
     #### Define SR mask
     # Select above minimum SR reflectivity
-    # mask_sr_minimum_z = ds_sr["zFactorFinal"] > z_sr_min_threshold
+    mask_sr_minimum_z = ds_sr["zFactorMeasured"] >= z_min_threshold_sr
 
     # Select only 'high quality' data
     # - qualityFlag derived from qualityData.
@@ -882,9 +893,9 @@ def volume_matching(
 
     # Define 3D mask of SR gates matching GR PPI gates
     # - TIP: do not mask eccessively here ... but rather at final stage
-    mask_matched_ppi_3d = mask_ppi & mask_sr_precip & mask_sr_quality
+    mask_matched_ppi_3d = mask_ppi & mask_sr_precip & mask_sr_quality & mask_sr_minimum_z
 
-    # Define 2D mask of SR beams matching the GR PPI
+    # Define 2D mask of SR rainy beams matching the GR PPI
     mask_matched_ppi_2d = mask_matched_ppi_3d.any(dim="range")
 
     ####-----------------------------------------------------------------------------.
@@ -985,7 +996,7 @@ def volume_matching(
     # Initialize Dataset where to add aggregated SR gates
     ds_sr_match_ppi = xr.Dataset()
 
-    # Mask SR gates not matching the GR PPI
+    # Mask SR beams not matching the GR PPI and not rainy
     ds_sr_ppi = ds_sr[sr_variables].where(mask_matched_ppi_3d)
 
     # Compute aggregation statistics

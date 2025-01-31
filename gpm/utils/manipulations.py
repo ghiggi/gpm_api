@@ -153,7 +153,57 @@ def conversion_factors_degree_to_meter(latitude, earth_radius=None):
     return cx, cy
 
 
-####-------------------------------------------------------------------------------------------------------------------.
+####---------------------------------------------------------------------------.
+####################
+#### Subsetting ####
+####################
+
+
+def crop_around_valid_data(xr_obj, variable=None):
+    """
+    Return a sub-region of the specified DataArray containing all the non-NaN values.
+
+    Parameters
+    ----------
+    xr_obj: xarray.DataArray or xarray.Dataset
+        A xarray object to crop around valid data (of variable).
+    variable : str, optional
+        Name of the variable to use to crop the dataset.
+        Only to be specified if xr_obj is a xr.Dataset
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        Cropped DataArray such that NaN-only outer rows/columns are removed.
+    """
+    da = get_xarray_variable(xr_obj, variable=variable)
+
+    # Create a boolean mask indicating where da is not NaN
+    valid_mask = da.notnull().compute()  # noqa: PD004
+
+    # Raise error if not valid data
+    if not np.any(valid_mask).item():
+        raise ValueError("No valid data around with to crop.")
+
+    # Define the isel dictionary
+    isel_dict = {}
+    for dim in da.dims:
+        # Collapse all other dims and get a 1D boolean array along 'dim'
+        other_dims = [d for d in da.dims if d != dim]
+        valid_along_dim = valid_mask.any(dim=other_dims)
+        # Find first and last True index
+        # - argmax() gives the first True index from the start
+        start_idx = int(valid_along_dim.argmax())
+        # To get the last True, reverse the array and use argmax again
+        end_idx = len(valid_along_dim) - int(valid_along_dim[::-1].argmax())
+        # Construct the slice
+        isel_dict[dim] = slice(start_idx, end_idx)
+
+    # Apply the slice to the original object (Dataset or DataArray)
+    return xr_obj.isel(isel_dict, drop=False)
+
+
+####---------------------------------------------------------------------------.
 ##########################
 #### Range bin slicer ####
 ##########################
