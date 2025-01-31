@@ -253,8 +253,6 @@ def check_time(time):
 
 def check_date(date):
     """Check is a :py:class:`datetime.date` object."""
-    if date is None:
-        raise ValueError("date cannot be None")
     # Use check_time to convert to datetime.datetime
     datetime_obj = check_time(date)
     return datetime_obj.date()
@@ -270,9 +268,9 @@ def check_start_end_time(start_time, end_time):
         raise ValueError("Provide 'start_time' occurring before of 'end_time'.")
     # Check start_time and end_time are in the past
     if start_time > get_current_utc_time():
-        raise ValueError("Provide a 'start_time' occurring in the past.")
+        raise ValueError("Provide 'start_time' occurring in the past.")
     if end_time > get_current_utc_time():
-        raise ValueError("Provide a 'end_time' occurring in the past.")
+        raise ValueError("Provide 'end_time' occurring in the past.")
     return (start_time, end_time)
 
 

@@ -566,7 +566,7 @@ def test_check_date() -> None:
     assert isinstance(res, datetime.date)
 
     # Test None raises exception
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         checks.check_date(None)
 
 
