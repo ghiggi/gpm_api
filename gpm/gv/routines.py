@@ -440,7 +440,8 @@ def add_radar_info(ax, ds_gr, radar_size):
 def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column):
     # Define Cartopy projection
     ccrs_gr_aeqd = ccrs.AzimuthalEquidistant(
-        central_longitude=ds_gr["longitude"].item(), central_latitude=ds_gr["latitude"].item()
+        central_longitude=ds_gr["longitude"].item(),
+        central_latitude=ds_gr["latitude"].item(),
     )
     subplot_kwargs = {}
     subplot_kwargs["projection"] = ccrs_gr_aeqd
