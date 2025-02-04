@@ -36,7 +36,7 @@ import xarray as xr
 from shapely import Point
 
 import gpm
-from gpm.gv.plots import calibration_summary, compare_maps
+from gpm.gv.plots import calibration_summary, plot_gdf_map
 from gpm.utils.manipulations import (
     conversion_factors_degree_to_meter,
 )
@@ -403,87 +403,123 @@ def convert_s_to_ku_band(ds_gr, bright_band_height, z_variable="DBZH"):
     return da_ku
 
 
-def plot_quicklook(
-    ds_sr,
-    ds_gr,
-    min_gr_range,
-    max_gr_range,
-    z_min_threshold_gr,
-    z_min_threshold_sr,
-    z_variable="DBZH",
-    cmap="Spectral_r",
-):
+def add_radar_info(ax, ds_gr, radar_size):
+    # - Add radar location
+    ax.scatter(0, 0, c="black", marker="X", s=radar_size)
+    ax.scatter(0, 0, c="black", marker="X", s=radar_size)
 
-    # Display nearSurface SR reflectivity
-    da_sr = ds_sr["zFactorFinal"].gpm.slice_range_at_bin(ds_sr["binClutterFreeBottom"])
-
-    # Mask by specified sensitivity
-    mask_gr = ds_gr[z_variable] > z_min_threshold_gr
-    mask_sr = da_sr > z_min_threshold_sr
-
-    # Retrieve SR extent
-    sr_extent = ds_sr.gpm.extent()  # noqa
-    gr_extent = ds_gr.xradar_dev.extent()
-
-    # Create figure
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), dpi=300, subplot_kw={"projection": ccrs.PlateCarree()})
-
-    # Plot SR
-    da_sr.where(mask_sr).gpm.plot_map(
-        ax=ax1,
-        cmap=cmap,
-        vmin=0,
-        vmax=40,
-        cbar_kwargs={"label": "SR Surface Reflectivity (dBz)"},
-        add_colorbar=True,
+    ds_gr.xradar_dev.plot_range_distance(
+        distance=15_000,
+        ax=ax,
+        add_background=False,
+        add_gridlines=False,
+        add_labels=False,
+        linestyle="dashed",
+        edgecolor="black",
     )
-    # Plot GR
-    ds_gr[z_variable].where(mask_gr).xradar_dev.plot_map(
-        ax=ax2,
-        cmap=cmap,
-        vmin=0,
-        vmax=40,
-        cbar_kwargs={"label": "GR Sweep Reflectivity (dBz)", "extend": "both"},
-        add_colorbar=True,
+    ds_gr.xradar_dev.plot_range_distance(
+        distance=100_000,
+        ax=ax,
+        add_background=False,
+        add_gridlines=False,
+        add_labels=False,
+        linestyle="dashed",
+        edgecolor="black",
     )
-    # - Add the SR swath boundary
-    da_sr.gpm.plot_swath_lines(ax=ax2)
-    # - Restrict the extent to the SR overpass
-    # ax1.set_extent(sr_extent)
-    # ax2.set_extent(sr_extent)
-    ax1.set_extent(gr_extent)
-    ax2.set_extent(gr_extent)
-    # - Display GR range distances
-    for ax in [ax1, ax2]:
-        ds_gr.xradar_dev.plot_range_distance(
-            distance=min_gr_range,
-            ax=ax,
-            add_background=True,
-            linestyle="dashed",
-            edgecolor="black",
+    ds_gr.xradar_dev.plot_range_distance(
+        distance=150_000,
+        ax=ax,
+        add_background=False,
+        add_gridlines=False,
+        add_labels=False,
+        linestyle="dashed",
+        edgecolor="black",
+    )
+
+
+def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column):
+    # Define Cartopy projection
+    ccrs_gr_aeqd = ccrs.AzimuthalEquidistant(
+        central_longitude=ds_gr["longitude"].item(), central_latitude=ds_gr["latitude"].item()
+    )
+    subplot_kwargs = {}
+    subplot_kwargs["projection"] = ccrs_gr_aeqd
+
+    # Define geographic extent
+    extent_xy = gdf.total_bounds[[0, 2, 1, 3]]
+
+    # Retrieve plot kwargs
+    plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("zFactorFinal", user_plot_kwargs={"vmin": 15, "vmax": 45})
+
+    # Define figure settings
+    figsize = (8, 4)
+    dpi = 300
+
+    # Define radar markersize
+    radar_size = 40
+
+    # Create the figure
+    fig, axes = plt.subplots(1, 3, width_ratios=[1, 1, 1.1], subplot_kw=subplot_kwargs, figsize=figsize, dpi=dpi)
+
+    #### Plot SR data
+    axes[0].coastlines()
+    _ = plot_gdf_map(
+        ax=axes[0],
+        gdf=gdf,
+        column=sr_z_column,
+        title="SR Matched",
+        extent_xy=extent_xy,
+        # Gridline settings
+        # grid_linewidth=grid_linewidth,
+        # grid_color=grid_color,
+        # Colorbar settings
+        add_colorbar=False,
+        # Plot settings
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+    add_radar_info(ax=axes[0], ds_gr=ds_gr, radar_size=radar_size)
+
+    #### - Plot GR matched data
+    axes[1].coastlines()
+    _ = plot_gdf_map(
+        ax=axes[1],
+        gdf=gdf,
+        column=gr_z_column,
+        title="GR Matched",
+        extent_xy=extent_xy,
+        # Gridline settings
+        # grid_linewidth=grid_linewidth,
+        # grid_color=grid_color,
+        # Colorbar settings
+        add_colorbar=False,
+        # Plot settings
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+    add_radar_info(ax=axes[1], ds_gr=ds_gr, radar_size=radar_size)
+
+    #### - Plot GR sweep data
+    axes[2].coastlines()
+    p = (
+        ds_gr["DBZH"]
+        .where(ds_gr["DBZH"] > 0)
+        .xradar_dev.plot_map(
+            ax=axes[2],
+            x="x",
+            y="y",
+            add_background=False,
+            add_gridlines=False,
+            add_labels=False,
+            add_colorbar=True,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
-        ds_gr.xradar_dev.plot_range_distance(
-            distance=max_gr_range,
-            ax=ax,
-            add_background=True,
-            linestyle="dashed",
-            edgecolor="black",
-        )
-        ds_gr.xradar_dev.plot_range_distance(
-            distance=250_000,
-            ax=ax,
-            add_background=True,
-            linestyle="dashed",
-            edgecolor="black",
-        )
-    # - Add GR location
-    ax1.scatter(ds_gr["longitude"], ds_gr["latitude"], c="black", marker="X", s=4)
-    ax2.scatter(ds_gr["longitude"], ds_gr["latitude"], c="black", marker="X", s=4)
-    # - Set title
-    ax1.set_title("GPM", fontsize=12, loc="left")
-    ax2.set_title("Ground Radar", fontsize=12, loc="left")
-    # - Improve layout and display
-    plt.tight_layout()
+    )
+    p.axes.set_xlim(extent_xy[0:2])
+    p.axes.set_ylim(extent_xy[2:4])
+    p.axes.set_title("GR PPI")
+    add_radar_info(ax=axes[2], ds_gr=ds_gr, radar_size=radar_size)
     return fig
 
 
@@ -618,6 +654,7 @@ def volume_matching(
     sr_sensitivity_thresholds=None,
     download_sr=True,
     display_quicklook=True,
+    display_calibration_summary=False,
     quicklook_fpath=None,
 ):
     """
@@ -776,24 +813,6 @@ def volume_matching(
 
     # Put SR data into memory
     ds_sr = ds_sr.compute()
-
-    ####-----------------------------------------------------------------------------.
-    #### Plot Quicklook
-    # - TODO: remove because mislading
-    # --> surface vs radar sweeep scanning high into atmosphere
-    # if display_quicklook:
-    #     fig = plot_quicklook(
-    #         ds_sr=ds_sr,
-    #         ds_gr=ds_gr,
-    #         min_gr_range=min_gr_range,
-    #         max_gr_range=max_gr_range,
-    #         z_min_threshold_gr=z_min_threshold_gr,
-    #         z_min_threshold_sr=z_min_threshold_sr,
-    #         z_variable=z_variable_gr,
-    #     )
-    #     if quicklook_fpath is not None:
-    #         fig.savefig(quicklook_fpath)
-    #     plt.show()
 
     ####-----------------------------------------------------------------------------.
     #### Retrieve SR/GR gate resolution, volume and coordinates
@@ -1277,27 +1296,21 @@ def volume_matching(
     gdf_match["SR_z_lower_bound"] = gdf_match["SR_z_min"] - gdf_match["SR_vres_mean"] / 2
     gdf_match["SR_z_upper_bound"] = gdf_match["SR_z_max"] + gdf_match["SR_vres_mean"] / 2
 
-    ####-----------------------------------------------------------------------------.
-    #### Display matching results
-    if display_quicklook:
-        # Compare matched volumes
+    ####----------------------------------------------------------------------.
+    #### Create Quicklook Figure
+    if display_quicklook or quicklook_fpath:
         sr_z_column = f"SR_zFactorFinal_{radar_band}_mean"
         gr_z_column = "GR_Z_mean"
-        fig = compare_maps(
-            gdf_match,
-            sr_column=sr_z_column,
-            gr_column=gr_z_column,
-            sr_label="SR Reflectivity (dBz)",
-            gr_label="GR Reflectivity (dBz)",
-            cmap="Spectral_r",
-            unified_color_scale=True,
-            vmin=12,
-            vmax=40,
-        )
-        fig.tight_layout()
-        plt.show()
+        fig = plot_quicklook(ds_gr=ds_gr, gdf=gdf_match, sr_z_column=sr_z_column, gr_z_column=gr_z_column)
+        if quicklook_fpath is not None:
+            fig.savefig(quicklook_fpath)
+            plt.close()
+        else:
+            plt.show()
 
-        # Display raw calibration summary
+    ####----------------------------------------------------------------------.
+    #### Create Calibration Summary Figure
+    if display_calibration_summary:
         calibration_summary(
             df=gdf_match,
             gr_z_column=gr_z_column,
