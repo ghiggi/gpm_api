@@ -38,6 +38,7 @@ from gpm.utils.manipulations import (
     _get_vertical_dim,
     convert_from_decibel,
     convert_to_decibel,
+    crop_around_valid_data,
     # conversion_factors_degree_to_meter,
     extract_dataset_above_bin,
     extract_dataset_below_bin,
@@ -673,6 +674,58 @@ def test_get_height_at_bin() -> None:
     ds[bins_name] = da_bins
     returned_da = get_height_at_bin(ds, bins=bins_name)
     np.testing.assert_allclose(returned_da.to_numpy(), expected_sliced_data)
+
+
+class TestCropAroundValidData:
+
+    def test_not_to_crop_case(self):
+        """Test cropping a DataArray that should not be cropped."""
+        data = np.array([[1, 2, np.nan], [3, 4, 5], [np.nan, 6, 7]])
+        da = xr.DataArray(data, dims=["x", "y"])
+
+        da_cropped = crop_around_valid_data(da)
+
+        # Check that the cropped data does not contain NaN values on the borders
+        xr.testing.assert_allclose(da, da_cropped)
+
+        # Check dimensions sizes
+        assert da_cropped.sizes == {"x": 3, "y": 3}
+
+    def test_crop_case(self):
+        """Test cropping a Dataset around valid data."""
+        data = np.array([[1, 2, np.nan], [3, 4, np.nan], [np.nan, 6, np.nan]])
+        ds = xr.Dataset({"var": (["x", "y"], data)})
+
+        ds_cropped = crop_around_valid_data(ds, variable="var")
+        # Check dimension sizes
+        assert ds_cropped.sizes == {"x": 3, "y": 2}
+        # Check resulting array
+        expected_arr = np.array([[1.0, 2.0], [3.0, 4.0], [np.nan, 6.0]])
+        np.testing.assert_allclose(ds_cropped["var"].data, expected_arr)
+
+    def test_case_all_invalid_data(self):
+        """Test when there is no valid data (all NaN)."""
+        data = np.array([[np.nan, np.nan], [np.nan, np.nan]])
+        da = xr.DataArray(data, dims=["x", "y"])
+
+        with pytest.raises(ValueError, match="No valid data around with to crop"):
+            crop_around_valid_data(da)
+
+    def test_case_empty_array(self):
+        """Test when the DataArray is empty."""
+        data = np.array([[], []])
+        da = xr.DataArray(data, dims=["x", "y"])
+
+        with pytest.raises(ValueError, match="No valid data around with to crop"):
+            crop_around_valid_data(da)
+
+    def test_do_not_drop_dimension(self):
+        """Test dimensions of sizes 1 are not dropped."""
+        data = np.array([[1, np.nan], [np.nan, np.nan]])
+        da = xr.DataArray(data, dims=["x", "y"])
+        da_cropped = crop_around_valid_data(da)
+        # Check dimensions sizes
+        assert da_cropped.sizes == {"x": 1, "y": 1}
 
 
 def test_subset_range_with_valid_data(
