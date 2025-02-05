@@ -1040,10 +1040,10 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
 
     @auto_wrap_docstring
-    def to_pandas_dataframe(self):
+    def to_pandas_dataframe(self, drop_index=True):
         from gpm.utils.dataframe import to_pandas_dataframe
 
-        return to_pandas_dataframe(self._obj)
+        return to_pandas_dataframe(self._obj, drop_index=drop_index)
 
     @auto_wrap_docstring
     def to_dask_dataframe(self):

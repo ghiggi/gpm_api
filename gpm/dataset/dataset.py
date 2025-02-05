@@ -155,6 +155,7 @@ def open_dataset(
     parallel=False,
     prefix_group=False,
     verbose=False,
+    base_dir=None,
     **kwargs,
 ):
     """Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
@@ -261,6 +262,7 @@ def open_dataset(
         start_time=start_time,
         end_time=end_time,
         verbose=verbose,
+        base_dir=base_dir,
     )
 
     ##------------------------------------------------------------------------.
@@ -330,6 +332,7 @@ def open_datatree(
     parallel=False,
     prefix_group=False,
     verbose=False,
+    base_dir=None,
     **kwargs,
 ):
     """Lazily map HDF5 data into xarray.DataTree objects with relevant GPM data and attributes.
@@ -433,6 +436,7 @@ def open_datatree(
         start_time=start_time,
         end_time=end_time,
         verbose=verbose,
+        base_dir=base_dir,
     )
 
     ##------------------------------------------------------------------------.

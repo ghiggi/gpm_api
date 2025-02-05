@@ -55,7 +55,7 @@ from gpm.utils.warnings import GPMDownloadWarning
 VERSION_WARNING = config.get("warn_multiple_product_versions")
 
 
-def _get_all_daily_filepaths(storage, date, product, product_type, version, verbose):
+def _get_all_daily_filepaths(storage, date, product, product_type, version, verbose, base_dir=None):
     """Return the ``find_daily_filepaths_func``.
 
     This functions returns a tuple ``([filepaths],[available_version])``.
@@ -66,6 +66,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
             product_type=product_type,
             date=date,
             version=version,
+            base_dir=base_dir,
         )
     elif storage == "PPS":
         filepaths = get_pps_daily_filepaths(
@@ -144,6 +145,7 @@ def find_daily_filepaths(
     start_time=None,
     end_time=None,
     verbose=False,
+    base_dir=None,
 ):
     """Retrieve GPM data filepaths for a specific day and product.
 
@@ -185,6 +187,7 @@ def find_daily_filepaths(
         date=date,
         version=version,
         verbose=verbose,
+        base_dir=base_dir,
     )
     if len(filepaths) == 0:
         if storage == "LOCAL" and verbose:
@@ -228,6 +231,7 @@ def find_filepaths(
     groups=None,
     verbose=True,
     parallel=True,
+    base_dir=None,
 ):
     """Retrieve GPM data filepaths on local disk for a specific time period and product.
 
@@ -306,6 +310,7 @@ def find_filepaths(
                 start_time=start_time,
                 end_time=end_time,
                 verbose=verbose,
+                base_dir=base_dir,
             )
             list_delayed.append(del_op)
         # Get filepaths list for each date

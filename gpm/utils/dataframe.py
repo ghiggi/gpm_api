@@ -50,7 +50,7 @@ def drop_undesired_columns(df):
     return df.drop(columns=undesired_columns)
 
 
-def to_pandas_dataframe(ds):
+def to_pandas_dataframe(ds, drop_index=True):
     """Convert an xarray.Dataset to a :py:class:`pandas.DataFrame`."""
     # Drop unrelevant coordinates
     ds = remove_unused_var_dims(ds)
@@ -63,7 +63,8 @@ def to_pandas_dataframe(ds):
     df = ensure_pyarrow_string_columns(df)
 
     # Remove MultiIndex
-    df = df.reset_index(drop=True)
+    if drop_index:
+        df = df.reset_index(drop=True)
 
     # Drop unrequired columns (previous dataset dimensions)
     return drop_undesired_columns(df)
