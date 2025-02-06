@@ -31,24 +31,20 @@ import warnings
 import numpy as np
 import xarray as xr
 
+from gpm.utils.decorators import check_software_availability
 
+
+@check_software_availability(software="pyresample", conda_package="pyresample")
 def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     """Remap dataset to another one using nearest-neighbour.
 
     The spatial non-dimensional coordinates of the source dataset are not remapped. !
     The output dataset has the spatial coordinates of the destination dataset !
     """
+    from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
+
     from gpm.checks import get_spatial_dimensions
     from gpm.dataset.crs import _get_crs_coordinates, _get_proj_dim_coords, _get_swath_dim_coords, set_dataset_crs
-
-    try:
-        from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
-    except ImportError:
-        raise ImportError(
-            "The 'pyresample' package is required but not found. "
-            "Please install it using the following command: "
-            "conda install -c conda-forge pyresample",
-        )
 
     # Retrieve source and destination area
     src_area = src_ds.gpm.pyresample_area
@@ -143,17 +139,11 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     return ds
 
 
+@check_software_availability(software="pyresample", conda_package="pyresample")
 def get_pyresample_area(xr_obj):
     """It returns the corresponding pyresample area."""
-    try:
-        import pyresample  # noqa
-        from gpm.dataset.crs import get_pyresample_area as _get_pyresample_area
-    except ImportError:
-        raise ImportError(
-            "The 'pyresample' package is required but not found. "
-            "Please install it using the following command: "
-            "conda install -c conda-forge pyresample",
-        )
+    import pyresample  # noqa
+    from gpm.dataset.crs import get_pyresample_area as _get_pyresample_area
 
     # Ensure correct dimension order for Swath
     if "cross_track" in xr_obj.dims:

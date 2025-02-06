@@ -26,6 +26,8 @@
 # -----------------------------------------------------------------------------.
 """This module contains functions decorators checking GPM-API object type."""
 import functools
+import importlib
+from functools import wraps
 
 from gpm.checks import check_has_along_track_dim as _check_has_along_track_dim
 from gpm.checks import check_has_cross_track_dim as _check_has_cross_track_dim
@@ -104,3 +106,30 @@ def check_has_along_track_dimension(function):
         return function(*args, **kwargs)
 
     return wrapper
+
+
+def check_software_availability(software, conda_package):
+    """A decorator to ensure that a software package is installed.
+
+    Parameters
+    ----------
+    software : str
+        The package name as recognized by Python's import system.
+    conda_package : str
+        The package name as recognized by conda-forge.
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if not importlib.util.find_spec(software):
+                raise ImportError(
+                    f"The '{software}' package is required but not found.\n"
+                    "Please install it using conda:\n"
+                    f"    conda install -c conda-forge {conda_package}",
+                )
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions for manipulating GPM-API Datasets."""
-import importlib
 
 import numpy as np
 import xarray as xr
@@ -39,7 +38,7 @@ from gpm.checks import (
     has_vertical_dim,
     is_grid,
 )
-from gpm.utils.decorators import check_is_gpm_object
+from gpm.utils.decorators import check_is_gpm_object, check_software_availability
 from gpm.utils.geospatial import get_geodesic_line, get_great_circle_arc_endpoints
 from gpm.utils.xarray import (
     check_variable_availabilty,
@@ -1221,6 +1220,7 @@ def extract_transect_at_points(xr_obj, points, method="linear", new_dim="transec
 
 
 @check_is_gpm_object
+@check_software_availability(software="sklearn", conda_package="scikit-learn")
 def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, method="linear", new_dim="transect"):
     """Extract an interpolated transect between two points on a sphere.
 
@@ -1256,11 +1256,6 @@ def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, m
     :py:class:`gpm.utils.manipulations.extract_transect_around_point`.
 
     """
-    if importlib.util.find_spec("sklearn") is None:
-        raise ImportError(
-            "The 'sklearn' package required to extract cross-sections is not installed. \n"
-            "Please install it using the following command:  conda install -c conda-forge scikit-learn",
-        )
     # Get the points along the geodesic line
     points = get_geodesic_line(start_point=start_point, end_point=end_point, steps=steps)
 

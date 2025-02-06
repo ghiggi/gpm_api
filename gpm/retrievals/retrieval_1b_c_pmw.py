@@ -26,8 +26,11 @@
 # -----------------------------------------------------------------------------.
 """This module contains GPM PMW 1B and 1C products community-based retrievals."""
 import numpy as np
+import pandas as pd
 import xarray as xr
 
+from gpm.checks import check_is_spatial_2d
+from gpm.utils.decorators import check_software_availability
 from gpm.utils.pmw import (
     PMWFrequency,
     create_rgb_composite,
@@ -314,6 +317,138 @@ def retrieve_PESCA(ds, t2m="t2m"):
     da_pesca.attrs["flag_values"] = list(dict_pesca_classes)
     da_pesca.attrs["flag_meanings"] = list(dict_pesca_classes.values())
     return da_pesca
+
+
+@check_software_availability(software="sklearn", conda_package="scikit-learn")
+@check_software_availability(software="umap", conda_package="umap-learn")
+def retrieve_UMAP_RGB(ds, scaler=None, n_neighbors=10, min_dist=0.01, random_state=None, **kwargs):
+    """Create a UMAP RGB composite."""
+    import umap
+    from sklearn.preprocessing import MinMaxScaler
+
+    # Check dataset has only spatial 2D variables
+    check_is_spatial_2d(ds)
+
+    # Define variables
+    variables = list(ds.data_vars)
+
+    # Convert to dataframe
+    df = ds.gpm.to_pandas_dataframe(drop_index=False)
+
+    # Retrieve dataset coordinates which are present in the dataframe
+    coordinates = [column for column in list(ds.coords) if column in df]
+
+    # Remove rows with non finite values
+    df_valid = df[np.isfinite(df[variables]).all(axis=1) & (~np.isnan(df[variables])).all(axis=1)]
+
+    # Retrieve dataframe with only variables
+    df_data = df_valid[variables]
+
+    # Define scaler
+    if scaler is not None:
+        scaler.fit(df_data)
+        scaled_data = scaler.transform(df_data)
+    else:
+        scaled_data = df_data
+
+    # Compute 3D embedding
+    reducer = umap.UMAP(n_neighbors=n_neighbors, min_dist=min_dist, n_components=3, random_state=random_state, **kwargs)
+    embedding = reducer.fit_transform(scaled_data)
+
+    # Define RGB scaler
+    rgb_scaler = MinMaxScaler()
+    rgb_scaler = rgb_scaler.fit(embedding)
+
+    # Scale UMAP embedding between 0 and 1
+    rgb_data = rgb_scaler.transform(embedding)
+    rgb_data = np.clip(rgb_data, a_min=0, a_max=1)
+
+    # Create RGB dataframe of valid pixels
+    df_rgb_valid = pd.DataFrame(rgb_data, index=df_data.index, columns=["R", "G", "B"])
+
+    # Create original RGB dataframe
+    df_rgb = df[coordinates]
+    df_rgb = df_rgb.merge(df_rgb_valid, how="outer", left_index=True, right_index=True)
+
+    # Convert back to xarray
+    ds_rgb = df_rgb.to_xarray()
+    ds_rgb = ds_rgb.set_coords(coordinates)
+
+    # Define RGB DataArray
+    da_rgb = ds_rgb[["R", "G", "B"]].to_array(dim="rgb")
+
+    # Add missing coordinates
+    missing_coords = {coord: ds[coord] for coord in set(ds.coords) - set(da_rgb.coords)}
+    da_rgb = da_rgb.assign_coords(missing_coords)
+
+    # Return RGB DataArray
+    return da_rgb
+
+
+@check_software_availability(software="sklearn", conda_package="scikit-learn")
+def retrieve_PCA_RGB(ds, scaler=None):
+    """Create a PCA RGB composite."""
+    from sklearn.decomposition import PCA
+    from sklearn.preprocessing import MinMaxScaler
+
+    # Check dataset has only spatial 2D variables
+    check_is_spatial_2d(ds)
+
+    # Define variables
+    variables = list(ds.data_vars)
+
+    # Convert to dataframe
+    df = ds.gpm.to_pandas_dataframe(drop_index=False)
+
+    # Retrieve dataset coordinates which are present in the dataframe
+    coordinates = [column for column in list(ds.coords) if column in df]
+
+    # Remove rows with non finite values
+    df_valid = df[np.isfinite(df[variables]).all(axis=1) & (~np.isnan(df[variables])).all(axis=1)]
+
+    # Retrieve dataframe with only variables
+    df_data = df_valid[variables]
+
+    # Define scaler
+    if scaler is not None:
+        scaler.fit(df_data)
+        scaled_data = scaler.transform(df_data)
+    else:
+        scaled_data = df_data
+
+    # Compute 3D embedding
+    pca = PCA(n_components=3)
+    pca.fit(scaled_data)
+    embedding = pca.transform(scaled_data)
+
+    # Define RGB scaler
+    rgb_scaler = MinMaxScaler()
+    rgb_scaler = rgb_scaler.fit(embedding)
+
+    # Scale UMAP embedding between 0 and 1
+    rgb_data = rgb_scaler.transform(embedding)
+    rgb_data = np.clip(rgb_data, a_min=0, a_max=1)
+
+    # Create RGB dataframe of valid pixels
+    df_rgb_valid = pd.DataFrame(rgb_data, index=df_data.index, columns=["R", "G", "B"])
+
+    # Create original RGB dataframe
+    df_rgb = df[coordinates]
+    df_rgb = df_rgb.merge(df_rgb_valid, how="outer", left_index=True, right_index=True)
+
+    # Convert back to xarray
+    ds_rgb = df_rgb.to_xarray()
+    ds_rgb = ds_rgb.set_coords(coordinates)
+
+    # Define RGB DataArray
+    da_rgb = ds_rgb[["R", "G", "B"]].to_array(dim="rgb")
+
+    # Add missing coordinates
+    missing_coords = {coord: ds[coord] for coord in set(ds.coords) - set(da_rgb.coords)}
+    da_rgb = da_rgb.assign_coords(missing_coords)
+
+    # Return RGB DataArray
+    return da_rgb
 
 
 ####----------------------------------------------------------------------------------------.

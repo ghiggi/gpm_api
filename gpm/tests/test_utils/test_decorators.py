@@ -30,13 +30,17 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from gpm.utils import decorators
+from gpm.utils.decorators import (
+    check_has_along_track_dimension,
+    check_has_cross_track_dimension,
+    check_software_availability,
+)
 
 
 def test_check_has_cross_track_dimension() -> None:
     """Test check_has_cross_track_dimension decorator."""
 
-    @decorators.check_has_cross_track_dimension
+    @check_has_cross_track_dimension
     def identity(xr_obj: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
         return xr_obj
 
@@ -53,7 +57,7 @@ def test_check_has_cross_track_dimension() -> None:
 def test_check_has_along_track_dimension() -> None:
     """Test check_has_along_track_dimension decorator."""
 
-    @decorators.check_has_along_track_dimension
+    @check_has_along_track_dimension
     def identity(xr_obj: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
         return xr_obj
 
@@ -65,3 +69,20 @@ def test_check_has_along_track_dimension() -> None:
     da = xr.DataArray(np.arange(10))
     with pytest.raises(ValueError):
         identity(da)
+
+
+def test_check_software_availability_decorator():
+    """Test check_software_availability_decorator raise ImportError."""
+
+    @check_software_availability(software="dummy_package", conda_package="dummy_package")
+    def dummy_function(a, b=1):
+        return a, b
+
+    with pytest.raises(ImportError):
+        dummy_function()
+
+    @check_software_availability(software="numpy", conda_package="numpy")
+    def dummy_function(a, b=1):
+        return a, b
+
+    assert dummy_function(2, b=3) == (2, 3)
