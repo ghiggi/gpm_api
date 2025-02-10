@@ -229,12 +229,25 @@ Dm:
     bad_color: gray
   norm:
     name: Norm
-    vmin: 0
-    vmax: 2
+    vmin: 0.5
+    vmax: 3
   cbar:
     extend: both
     extendfrac: 0.05
     label: $D_m$ [$mm$]
+LogNw:
+  cmap:
+    name: plasma
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: -1
+    vmax: 8
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $N_w$ [$\log{(m^{-1} \ m^{-3})}$]
 dBNw:
   cmap:
     name: plasma
@@ -243,7 +256,7 @@ dBNw:
   norm:
     name: Norm
     vmin: -1
-    vmax: 6
+    vmax: 50
   cbar:
     extend: both
     extendfrac: 0.05
@@ -254,9 +267,11 @@ Nw:
     bad_alpha: 0.5
     bad_color: gray
   norm:
-    name: Norm
+    name: LogNorm
+    vmin: 1
   cbar:
-    extend: both
+    extend: max
+    extendfrac: 0.05
     label: $N_w$ [$mm^{-1} \ m^{-3}$]
 flagPrecipitationType:
   cmap:

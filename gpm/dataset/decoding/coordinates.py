@@ -64,13 +64,18 @@ def add_cmb_height(ds):
     from gpm.utils.manipulations import get_vertical_datarray_prototype
 
     if "ellipsoidBinOffset" in ds and "localZenithAngle" in ds and "range" in ds.dims:
-        # Retrieve required DataArrays
+        # # Retrieve required DataArrays
         range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # start at 1 !
-        ellipsoidBinOffset = ds["ellipsoidBinOffset"]
+        ellipsoidBinOffset = ds["ellipsoidBinOffset"].isel(
+            radar_frequency=0,
+            missing_dims="ignore",
+        )  # values are equal !
         localZenithAngle = ds["localZenithAngle"]
         rangeBinSize = 250  # approximation
         # Compute height
-        height = ((1 - range_bin) * rangeBinSize + ellipsoidBinOffset) * np.cos(np.deg2rad(localZenithAngle))
+        n_bins = len(ds["range"])
+        height = ((n_bins - range_bin) * rangeBinSize + ellipsoidBinOffset) * np.cos(np.deg2rad(localZenithAngle))
+        height = height.drop_vars("radar_frequency", errors="ignore")
         ds = ds.assign_coords({"height": height})
     return ds
 
@@ -106,6 +111,7 @@ def _add_cmb_coordinates(ds, product, scan_mode):
 
     if (scan_mode in ("KuKaGMI", "NS")) and "radar_frequency" in list(ds.dims):
         ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
+
     # Add height coordinate
     ds = add_cmb_height(ds)
 

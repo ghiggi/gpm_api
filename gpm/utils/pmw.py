@@ -28,6 +28,7 @@
 import functools
 import os
 import re
+from functools import total_ordering
 
 import numpy as np
 import xarray as xr
@@ -81,6 +82,7 @@ def strip_trailing_zero_decimals(num: float) -> str:
     return s
 
 
+@total_ordering
 class PMWFrequency:
     """
     Class to represent a Passive Microwave frequency channel.
@@ -249,6 +251,31 @@ class PMWFrequency:
         same_off = abs(offset_self - offset_other) < tol
         same_pol = self.polarization == other.polarization
         return same_freq and same_off and same_pol
+
+    def __lt__(self, other: object) -> bool:
+        """Return True if self is less than other by comparing center frequency, offset, and polarization.
+
+        Polarization V or QV takes precedence over H
+        """
+        if not isinstance(other, PMWFrequency):
+            return NotImplemented
+        offset_self = 0.0 if self.offset is None else self.offset
+        offset_other = 0.0 if other.offset is None else other.offset
+
+        # Compare by center frequency first.
+        if self.center_frequency != other.center_frequency:
+            return self.center_frequency < other.center_frequency
+
+        # If center frequencies are equal, compare offsets (treat None as 0.0).
+        offset_self = 0.0 if self.offset is None else self.offset
+        offset_other = 0.0 if other.offset is None else other.offset
+        if offset_self != offset_other:
+            return offset_self < offset_other
+
+        # If offsets are also equal, compare polarization.
+        # Custom order: V and QV are considered lower than H and QH
+        polarization_order = {"": 0, "V": 1, "QV": 2, "H": 3, "QH": 4}
+        return polarization_order.get(self.polarization) < polarization_order.get(other.polarization)
 
 
 def find_polarization_pairs(pmw_frequencies):

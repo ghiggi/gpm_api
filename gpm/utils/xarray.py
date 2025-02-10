@@ -78,10 +78,13 @@ def get_dataset_variables(ds, sort=False):
 def get_xarray_variable(xr_obj, variable=None):
     """Return variable DataArray from xarray object.
 
-    If the input is a xr.DataArray, it return it
-    If the input is a xr.Dataset, it return the specified variable.
+    If variable is a xr.DataArray, it returns it
+    If variable is None and the the input is a xr.DataArray, it returns it
+    If the input is a xr.Dataset, it returns the specified variable.
     """
     check_is_xarray(xr_obj)
+    if isinstance(variable, xr.DataArray):
+        return variable
     if isinstance(xr_obj, xr.Dataset):
         check_variable_availabilty(xr_obj, variable, argname="variable")
         da = xr_obj[variable]
