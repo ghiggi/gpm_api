@@ -830,7 +830,7 @@ def _download_daily_data(
     ## If no file to retrieve on NASA PPS, return None
     if len(remote_filepaths) == 0:
         if warn_missing_files:
-            msg = f"No data found on PPS on date {date} for product {product}"
+            msg = f"No data found on {storage} on date {date} for product {product}"
             warnings.warn(msg, GPMDownloadWarning, stacklevel=2)
         return [], available_version
 
