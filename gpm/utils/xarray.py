@@ -183,7 +183,7 @@ def _xr_first_data_array(da, dim):
 def xr_first(xr_obj, dim):
     """Return the first valid (non-NaN) value along the specified dimension."""
     check_is_xarray(xr_obj)
-    if isinstance(xr_obj, xr.Dataset): 
+    if isinstance(xr_obj, xr.Dataset):
         for var in xr_obj.data_vars:
             if dim in xr_obj[var]:
                 xr_obj[var] = _xr_first_data_array(xr_obj[var], dim=dim)
@@ -194,10 +194,10 @@ def xr_first(xr_obj, dim):
 def _drop_constant_dimension_datarray(da):
     """Drop DataArray dimensions over which all numeric values are equal."""
     if not np.issubdtype(da.dtype, np.number):
-       return da
-   
+        return da
+
     for dim in list(da.dims):
-        if dim not in da.dims: 
+        if dim not in da.dims:
             continue
         # If the variable is constant along this dimension, drop the other dimensions.
         if (da.diff(dim=dim).sum(dim=dim) == 0).all():
@@ -205,11 +205,10 @@ def _drop_constant_dimension_datarray(da):
     return da
 
 
-
 def xr_drop_constant_dimension(xr_obj):
     """Return the first valid (non-NaN) value along the specified dimension."""
     check_is_xarray(xr_obj)
-    if isinstance(xr_obj, xr.Dataset): 
+    if isinstance(xr_obj, xr.Dataset):
         for var in xr_obj.data_vars:
             xr_obj[var] = _drop_constant_dimension_datarray(xr_obj[var])
         return xr_obj
