@@ -186,8 +186,9 @@ def _add_pmw_coordinates(ds, product, scan_mode):
 
 
 def set_coordinates(ds, product, scan_mode):
-    # Ensure valid coordinates
+    # ORBIT objects
     if "cross_track" in list(ds.dims):
+        # Ensure valid coordinates
         ds = ensure_valid_coords(ds, raise_error=False)
 
     # Add range and gpm_range_id coordinates

@@ -268,6 +268,16 @@ class GPM_Base_Accessor:
             suffix=suffix,
         )
 
+    @auto_wrap_docstring
+    def broadcast_like(self, other, add_coords=True):
+        from gpm.utils.xarray import broadcast_like
+
+        return broadcast_like(
+            self._obj,
+            other=other,
+            add_coords=add_coords,
+        )
+
     #### Transect/Trajectory utility
 
     @auto_wrap_docstring

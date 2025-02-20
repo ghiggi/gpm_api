@@ -40,12 +40,10 @@ def plot_boxplot(
     showmeans=False,
     positions=None,
     widths=0.6,
-    linewidth=2,
     add_median_points=False,
     add_median_line=False,
-    add_mean_line=False,
-    median_points_kwargs = None,
-    median_line_kwargs = None,
+    median_points_kwargs=None,
+    median_line_kwargs=None,
     boxprops=None,
     whiskerprops=None,
     medianprops=None,
@@ -154,11 +152,11 @@ dict, optional
     # Define default properties
     medianprops = {"color": "black"} if medianprops is None else medianprops
     whiskerprops = {} if whiskerprops is None else whiskerprops
-    
+
     # Compute IQR if not already a column
-    if "iqr" not in df_stats: 
+    if "iqr" not in df_stats:
         df_stats["iqr"] = df_stats["q75"] - df_stats["q25"]
-    
+
     # Prepare data for bxp
     box_data = []
     for i in range(len(df_stats)):
@@ -169,8 +167,8 @@ dict, optional
             "q3": df_row["q75"].item(),
             # "whislo": df_row["q10"].item(),
             # "whishi": df_row["q90"].item(),
-            'whislo': np.maximum(df_row["q25"].item() - 1.5 * df_row["iqr"].item(), df_row["min"].item()),
-            'whishi': np.minimum(df_row["q75"].item() + 1.5 * df_row["iqr"].item(), df_row["max"].item()),
+            "whislo": np.maximum(df_row["q25"].item() - 1.5 * df_row["iqr"].item(), df_row["min"].item()),
+            "whishi": np.minimum(df_row["q75"].item() + 1.5 * df_row["iqr"].item(), df_row["max"].item()),
             "fliers": [df_row["min"].item(), df_row["max"].item()],
             "mean": df_row["mean"].item(),
         }
@@ -211,11 +209,11 @@ dict, optional
         **kwargs,
     )
 
-    # Add median points 
+    # Add median points
     if add_median_points:
-        median_points_kwargs = {} if median_points_kwargs is None else median_points_kwargs 
+        median_points_kwargs = {} if median_points_kwargs is None else median_points_kwargs
         ax.scatter(positions, df_stats["median"], **median_points_kwargs)
-    
+
     # Add line between median points
     if add_median_line:
         median_line_kwargs = {} if median_line_kwargs is None else median_line_kwargs

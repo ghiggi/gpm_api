@@ -28,13 +28,13 @@
 import functools
 
 import numpy as np
-import pandas as pd
 
 from gpm.checks import check_has_along_track_dim, is_grid, is_orbit
 from gpm.utils.decorators import (
     check_is_gpm_object,
     check_is_orbit,
 )
+from gpm.utils.orbit import get_orbit_direction
 from gpm.utils.slices import (
     get_list_slices_from_bool_arr,
     list_slices_difference,
@@ -866,30 +866,9 @@ def apply_on_valid_geolocation(function):
 ############################
 
 
-def _replace_0_values(x):
-    """Replace 0 values with previous left non-zero occurring values.
-
-    If the array start with 0, it take the first non-zero occurring values
-    """
-    # Check inputs
-    x = np.array(x)
-    dtype = x.dtype
-    if np.all(x == 0):
-        raise ValueError("It's a flat swath orbit.")
-    # Set 0 to NaN
-    x = x.astype(float)
-    x[x == 0] = np.nan
-    # Infill from left values, and then from right (if x start with 0)
-    x = pd.Series(x).ffill().bfill().to_numpy()
-    # Reset original dtype
-    return x.astype(dtype)
-
-
 def _get_non_wobbling_lats(lats, threshold=100):
     # Get direction (1 ascending , -1 descending)
-    directions = np.sign(np.diff(lats))
-    directions = np.append(directions[0], directions)  # include startpoint
-    directions = _replace_0_values(directions)
+    directions = get_orbit_direction(lats)
 
     # Identify index where next element change
     idxs_change = np.where(np.diff(directions) != 0)[0]

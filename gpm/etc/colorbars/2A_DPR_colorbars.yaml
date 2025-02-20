@@ -434,7 +434,7 @@ qualityFlag:
       1: Low Quality
       2: Unreliable
   cbar:
-    label: Reliability of precipitation detection
+    label: Retrieval Quality
 qualityTypePrecip:
   cmap:
     name: Set3

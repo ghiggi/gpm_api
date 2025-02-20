@@ -92,7 +92,7 @@ precipitation_rate:
   norm:
     name: BoundaryNorm
     boundaries:
-      - 0.08
+      - 0.01
       - 0.16
       - 0.25
       - 0.4

@@ -26,9 +26,11 @@
 # -----------------------------------------------------------------------------.
 """This module contains functions to analysis bucket archives."""
 import datetime
+
 import numpy as np
 import pandas as pd
-from gpm.utils.xarray import xr_first, xr_drop_constant_dimension
+
+from gpm.utils.xarray import xr_drop_constant_dimension, xr_first
 
 
 def get_list_overpass_time(timesteps, interval=None):
@@ -73,74 +75,76 @@ def get_list_overpass_time(timesteps, interval=None):
     return list_time_periods
 
 
-def split_by_overpass(df, interval=None): 
+def split_by_overpass(df, interval=None):
     """Split dataframe by overpass."""
     list_time_periods = get_list_overpass_time(timesteps=df["time"], interval=interval)
-    list_df = [df[np.logical_and(df["time"] >= start_time, df["time"] <=end_time)]
-        for start_time, end_time in list_time_periods]
+    list_df = [
+        df[np.logical_and(df["time"] >= start_time, df["time"] <= end_time)]
+        for start_time, end_time in list_time_periods
+    ]
     return list_df
 
 
 def get_swath_indices(df):
     """Retrieve orbit dimension indices.
-    
-    Assumes only two granule id might be present. 
+
+    Assumes only two granule id might be present.
     Assumes that if two granule id are present, the max along_track_id of the
     first granule is the real maximum.
-    
+
     """
     # Split gpm_id into granule_id and along_track_id (make sure they are integers)
-    df_along = df["gpm_id"].str.split('-', expand=True).astype(int)
-    df_along.columns = ['granule_id', 'along_track_id']
-    
-    # We will assign new x indices so that each granule’s along-track block is contiguous.
+    df_along = df["gpm_id"].str.split("-", expand=True).astype(int)
+    df_along.columns = ["granule_id", "along_track_id"]
+
+    # We will assign new x indices so that each granule's along-track block is contiguous.
     # We also build a full list of x indices.
     x_index_list = []
     # Allocate an array to hold the new x value for each row in df.
     x_values = np.empty(len(df), dtype=int)
-    
+
     offset = 0
     # Process granules in sorted order (you may change this ordering if needed)
-    for granule in sorted(df_along['granule_id'].unique()):
+    for granule in sorted(df_along["granule_id"].unique()):
         # Create a boolean mask for rows corresponding to this granule
-        mask = df_along['granule_id'] == granule
+        mask = df_along["granule_id"] == granule
         # Get the along-track ids for this granule
-        along_vals = df_along.loc[mask, 'along_track_id']
+        along_vals = df_along.loc[mask, "along_track_id"]
         # Determine the minimum and maximum along-track id in this granule.
         min_track = along_vals.min()
         max_track = along_vals.max()
         # The number of along-track positions in this granule
         n_tracks = max_track - min_track + 1
-        
+
         # Build the new x indices for this granule:
         # They will run from "offset" to "offset+n_tracks-1"
         new_x_indices = np.arange(offset, offset + n_tracks)
         # Append these new indices to our full list of x indices
         x_index_list.extend(new_x_indices)
-        
+
         # Now assign a new x coordinate for every row in this granule.
         # The formula subtracts the minimum (to start at 0 for that granule)
         # and then adds the current offset.
         x_values[mask] = along_vals - min_track + offset
-        
+
         # Update the offset for the next granule.
         offset += n_tracks
 
     # The complete set of x indices is just all integers from 0 to offset-1.
     x_index = np.arange(offset)
-        
+
     # Retrieve y_index and y_values from cross-track IDs
     y_min = df["gpm_cross_track_id"].min()
     y_max = df["gpm_cross_track_id"].max()
     y_index = np.arange(y_min, y_max + 1)
     y_values = df["gpm_cross_track_id"]
-   
+
     return (x_index, x_values), (y_index, y_values)
 
- 
+
 def overpass_to_dataset(df_overpass):
     """Reshape an overpass dataframe to a xr.Dataset.
-    
+
     The resulting dataset will have missing geolocation for footprints
     that are not included in the df_overpass.
     """
@@ -150,36 +154,34 @@ def overpass_to_dataset(df_overpass):
     df_overpass["y_index"] = y_values
 
     # Set index
-    df_overpass = df_overpass.set_index(['x_index', 'y_index'])
-    
+    df_overpass = df_overpass.set_index(["x_index", "y_index"])
+
     # Create MultiIndex with all possible combinations
-    full_index = pd.MultiIndex.from_product([x_index, y_index],
-                                             names=['x_index', 'y_index'])
-    
+    full_index = pd.MultiIndex.from_product([x_index, y_index], names=["x_index", "y_index"])
+
     # Reindex to include all interval combinations
     # --> Add nan to rows with inexisitng index combo
     df_swath = df_overpass.reindex(full_index)
-    
+
     # Convert to dataset
     ds_swath = df_swath.to_xarray()
     ds_swath = ds_swath.rename_dims({"x_index": "along_track", "y_index": "cross_track"})
     ds_swath["time"] = xr_first(ds_swath["time"], dim="cross_track")
     ds_swath["gpm_id"] = xr_first(ds_swath["gpm_id"], dim="cross_track")
     ds_swath["gpm_cross_track_id"] = xr_first(ds_swath["gpm_cross_track_id"], dim="along_track")
-    
+
     # Drop dimension for variables that are all equals along a dimension
     # - If all values are nan, drop dimension
     ds_swath = xr_drop_constant_dimension(ds_swath)
-    
+
     # Set coordinates
     candidate_coords = ["lon", "lat", "time", "gpm_id", "gpm_along_track_id", "gpm_cross_track_id"]
     available_coords = [coord for coord in candidate_coords if coord in ds_swath]
     ds_swath = ds_swath.set_coords(available_coords)
-    
-    # Drop dummy index 
+
+    # Drop dummy index
     ds_swath = ds_swath.drop_vars(["x_index", "y_index"])
     return ds_swath
-
 
 
 def add_overpass_id(df, interval=None, time="time"):

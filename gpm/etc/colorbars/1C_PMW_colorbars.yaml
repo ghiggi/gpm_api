@@ -47,3 +47,38 @@ PESCA:
       4: Thin Snow
   cbar:
     label: ""
+incidenceAngle:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: "Incidence Angle [°]"
+sunGlintAngle:
+  cmap:
+    name: inferno_r
+    bad_color: none
+    under_color: "gray"
+    under_alpha: 0.4
+  norm:
+    name: Norm
+    vmin: 0
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Sun Glint Angle [°]
+sunLocalTime:
+  cmap:
+    name: twilight_shifted
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 24
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Local Solar Time [hour]

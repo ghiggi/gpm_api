@@ -162,12 +162,12 @@ def open_dataset(
 
     Note:
 
-    - ``gpm.open_dataset`` does not load GPM granules with the FileHeader flag ``'EmptyGranule' != 'NOT_EMPTY'``
-    - The group ``ScanStatus`` provides relevant data flags for Swath products.
-    - The variable ``dataQuality`` provides an overall quality flag status. If ``dataQuality = 0``, no issues
-      have been detected.
-    - The variable ``SCorientation`` provides the orientation of the sensor from the forward track of the satellite.
-
+    - ``gpm.open_dataset`` does not load GPM granules with the FileHeader flag
+    ``'EmptyGranule' != 'NOT_EMPTY'``.
+    - The coordinates ``Quality`` or ``dataQuality`` provide an overall quality flag status.
+        If the flag value is 0, no issues have been detected.
+    - The coordinate ``SCorientation`` provides the orientation of the sensor
+      from the forward track of the satellite.
 
     Parameters
     ----------
@@ -339,11 +339,12 @@ def open_datatree(
 
     Note:
 
-    - ``gpm.open_datatree`` does not load GPM granules with the FileHeader flag ``'EmptyGranule' != 'NOT_EMPTY'``
-    - The group ``ScanStatus`` provides relevant data flags for Swath products.
-    - The variable ``dataQuality`` provides an overall quality flag status. If ``dataQuality = 0``, no issues
-      have been detected.
-    - The variable ``SCorientation`` provides the orientation of the sensor from the forward track of the satellite.
+    - ``gpm.open_datatree`` does not load GPM granules with the FileHeader flag
+    ``'EmptyGranule' != 'NOT_EMPTY'``.
+    - The coordinates ``Quality`` or ``dataQuality`` provide an overall quality flag status.
+        If the flag value is 0, no issues have been detected.
+    - The coordinate ``SCorientation`` provides the orientation of the sensor
+      from the forward track of the satellite.
 
     Parameters
     ----------

@@ -1243,11 +1243,11 @@ def volume_matching(
     gdf_gr_match["GR_range_max"] = aggregator.max(values=gdf_gr["range"])
     gdf_gr_match["GR_range_mean"] = aggregator.mean(values=gdf_gr["range"])
     gdf_gr_match["GR_range_min"] = aggregator.min(values=gdf_gr["range"])
-   
-    # Add GR azimuth and elevation 
+
+    # Add GR azimuth and elevation
     gdf_gr_match["GR_azimuth"] = aggregator.first(values=gdf_gr["azimuth"])
     gdf_gr_match["GR_elevation"] = aggregator.first(values=gdf_gr["elevation"])
-    
+
     # Fraction above sensitivity thresholds
     for thr in sr_sensitivity_thresholds:
         fraction = aggregator.apply(lambda x, weights: np.sum(x > thr), values=gdf_gr[z_variable_gr]) / counts  # noqa
