@@ -98,7 +98,6 @@ def get_swath_indices(df):
     df_along.columns = ["granule_id", "along_track_id"]
 
     # We will assign new x indices so that each granule's along-track block is contiguous.
-    # We also build a full list of x indices.
     x_index_list = []
     # Allocate an array to hold the new x value for each row in df.
     x_values = np.empty(len(df), dtype=int)

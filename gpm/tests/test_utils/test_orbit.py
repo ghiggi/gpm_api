@@ -27,6 +27,7 @@
 """This module tests the dataframe utilities functions."""
 import numpy as np
 import pytest
+
 from gpm.utils.orbit import adjust_short_sequences
 
 
@@ -67,14 +68,14 @@ class TestAdjustShortSequences:
         """Replace a short ending sequence with the previous sequence value."""
         # The ending sequence [2] is short (< min_size=2) and should be replaced by 1.
         arr = [1, 1, 1, 2]
-        result = adjust_short_sequences(arr, min_size=2)  
+        result = adjust_short_sequences(arr, min_size=2)
         expected = np.array([1, 1, 1, 1])
         np.testing.assert_array_equal(result, expected)
 
     def test_min_size_one(self):
         """Return unchanged array when min_size is 1 (all sequences allowed)."""
         arr = [1, 2, 3, 4]
-        result = adjust_short_sequences(arr, min_size=1)  
+        result = adjust_short_sequences(arr, min_size=1)
         np.testing.assert_array_equal(result, arr)
 
     def test_non_1d_input(self):
@@ -82,21 +83,24 @@ class TestAdjustShortSequences:
         arr = [[1, 1, 1], [2, 2, 2]]
         with pytest.raises(ValueError):
             adjust_short_sequences(arr, min_size=2)
-        
-    @pytest.mark.parametrize("arr,expected", [
-        ( 
-            [1, -1, -1, -1, 1, 1, 1, 1, -1], # Short sequences at the edges
-            [-1, -1, -1, -1, 1, 1, 1, 1, 1]
-        ), 
-        ( 
-            [1, -1, -1, -1, 1, 1, 1, 1, -1, -1], # Short sequence at start  
-            [-1, -1, -1, -1, 1, 1, 1, 1, -1, -1]
-        ),
-        (
-            [1, 1, -1, 1, 1, 1, 1, 1, -1], #Short sequence in the middle and at the end 
-            [1, 1, 1, 1, 1, 1, 1, 1, 1]
-        ),
-    ])
+
+    @pytest.mark.parametrize(
+        ("arr", "expected"),
+        [
+            (
+                [1, -1, -1, -1, 1, 1, 1, 1, -1],  # Short sequences at the edges
+                [-1, -1, -1, -1, 1, 1, 1, 1, 1],
+            ),
+            (
+                [1, -1, -1, -1, 1, 1, 1, 1, -1, -1],  # Short sequence at start
+                [-1, -1, -1, -1, 1, 1, 1, 1, -1, -1],
+            ),
+            (
+                [1, 1, -1, 1, 1, 1, 1, 1, -1],  # Short sequence in the middle and at the end
+                [1, 1, 1, 1, 1, 1, 1, 1, 1],
+            ),
+        ],
+    )
     def test_edge_cases(self, arr, expected):
         """Test various edge cases with short sequences at the edges."""
         result = adjust_short_sequences(arr, min_size=2)
