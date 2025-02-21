@@ -192,7 +192,6 @@ def preprocess_writer_kwargs(writer_kwargs, df):
         compression = writer_kwargs.pop("compression", None)
         compression_level = writer_kwargs.pop("compression_level", None)
         write_statistics = writer_kwargs.pop("write_statistics", False)
-
         file_options = {}
         file_options["compression"] = compression
         file_options["compression_level"] = compression_level

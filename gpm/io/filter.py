@@ -177,13 +177,15 @@ def filter_filepaths(
     if len(filepaths) == 0:
         return []
     # Check product validity
-    product = check_product(product=product, product_type=product_type)
+    if product is not None:
+        product = check_product(product=product, product_type=product_type)
     # Check start_time and end_time
     if start_time is not None or end_time is not None:
         if start_time is None:
             start_time = datetime.datetime(1998, 1, 1, 0, 0, 0)  # GPM start mission
         if end_time is None:
             end_time = get_current_utc_time()  # Current time
+        start_time, end_time = check_start_end_time(start_time, end_time)
     # Filter filepaths
     filepaths = [
         _filter_filepath(
@@ -285,6 +287,12 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
 
     # -------------------------------------------------------------------------.
     # Select granules with data within the start and end time
+    idx_select = is_within_time_period(l_start_time, l_end_time, start_time=start_time, end_time=end_time)
+    return list(np.array(filepaths)[idx_select])
+
+
+def is_within_time_period(l_start_time, l_end_time, start_time, end_time):
+    """Assess which files are within the start and end time."""
     # - Case 1
     #     s               e
     #     |               |
@@ -301,10 +309,8 @@ def filter_by_time(filepaths, start_time=None, end_time=None):
     #                -------------
     idx_select3 = np.logical_and(l_start_time < end_time, l_end_time > end_time)
     # - Get idx where one of the cases occur
-    idx_select = np.logical_or(idx_select1, idx_select2, idx_select3)
-    # - Select filepaths
-    return list(np.array(filepaths)[idx_select])
-    # -------------------------------------------------------------------------.
+    idx_select = np.logical_or.reduce([idx_select1, idx_select2, idx_select3])
+    return idx_select
 
 
 def filter_by_version(filepaths, version):
