@@ -30,6 +30,7 @@ import re
 
 from gpm.configs import get_base_dir
 from gpm.io.checks import check_base_dir
+from gpm.io.filter import filter_filepaths
 from gpm.io.products import get_product_category
 from gpm.utils.directories import search_leaf_files
 
@@ -278,7 +279,15 @@ def get_local_filepath_from_filename(filepath, product_type="RS", base_dir=None)
 #################
 
 
-def get_local_filepaths(product, version=7, product_type="RS", base_dir=None, groups=None):
+def get_local_filepaths(
+    product,
+    version=7,
+    product_type="RS",
+    start_time=None,
+    end_time=None,
+    base_dir=None,
+    groups=None,
+):
     """Retrieve all GPM filepaths on the local disk directory for a specific product.
 
     Parameters
@@ -320,6 +329,12 @@ def get_local_filepaths(product, version=7, product_type="RS", base_dir=None, gr
 
     # Retrieve the filepaths
     filepaths = search_leaf_files(base_dir=product_dir, parallel=True)
+
+    # Filter files by start_time and end_time
+    if start_time is not None or end_time is not None:
+        filepaths = filter_filepaths(filepaths, start_time=start_time, end_time=end_time)
+
+    # Sort the filepaths
     filepaths = sorted(filepaths)
 
     # Group filepaths if groups is not None

@@ -27,6 +27,7 @@
 """This module test the info extraction from GPM filename."""
 
 import datetime
+import os
 from typing import Any
 
 import pytest
@@ -180,6 +181,7 @@ def test_get_season():
 
 def test_group_filepaths():
     """Test group_filepaths function."""
+    # Example linux filepaths
     filepaths = [
         # RS NASA
         "/home/ghiggi/data/GPM/RS/V05/PMW/1A-GMI/2015/08/01/1A.GPM.GMI.COUNT2016.20150801-S144642-E161915.008090.V05A.HDF5",
@@ -198,7 +200,8 @@ def test_group_filepaths():
     assert group_filepaths([filepaths[0]], "year") == {"2015": [filepaths[0]]}
 
     # Test multiple groups
-    assert group_filepaths([filepaths[0]], groups=["sensor", "year", "month"]) == {"GMI/2015/8": [filepaths[0]]}
+    group_prefix = os.path.sep.join(["GMI", "2015", "8"])
+    assert group_filepaths([filepaths[0]], groups=["sensor", "year", "month"]) == {group_prefix: [filepaths[0]]}
 
     # Test all time keys pass
     assert group_filepaths(filepaths, TIME_KEYS)

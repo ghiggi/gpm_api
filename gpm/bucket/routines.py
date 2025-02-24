@@ -324,8 +324,8 @@ def merge_granule_buckets(
     src_bucket_dir,
     dst_bucket_dir,
     force=False,
-    row_group_size="400MB",
-    max_file_size="1GB",
+    row_group_size="200MB",
+    max_file_size="2GB",
     compression="snappy",
     compression_level=None,
     write_metadata=False,
@@ -418,7 +418,7 @@ def merge_granule_buckets(
     # Identify Parquet filepaths for each bin
     print("Searching of Parquet files has started.")
     t_i = time.time()
-    dict_partition_files = get_filepaths_by_partition(src_bucket_dir, parallel=True)
+    dict_partition_files = get_filepaths_by_partition(src_bucket_dir, parallel=False)
     n_geographic_bins = len(dict_partition_files)
     t_f = time.time()
     t_elapsed = round((t_f - t_i) / 60, 1)
@@ -670,8 +670,8 @@ def update_granule_buckets(
     end_time=None,
     update=False,
     # Parquet options
-    row_group_size="400MB",
-    max_file_size="1GB",
+    row_group_size="200MB",
+    max_file_size="2GB",
     compression="snappy",
     compression_level=None,
     write_metadata=False,
@@ -729,8 +729,8 @@ def update_granule_buckets(
         The default is ``False``
     row_group_size : int or str, optional
         Maximum number of rows to be written in each Parquet row group.
-        If specified as a string (i.e. ``"400 MB"``), the equivalent number of rows is estimated.
-        The default is ``"400MB"``.
+        If specified as a string (i.e. ``"200 MB"``), the equivalent number of rows is estimated.
+        The default is ``"200MB"``.
     max_file_size: str, optional
         Maximum number of rows to be written in a Parquet file.
         If specified as a string, the equivalent number of rows is estimated.
