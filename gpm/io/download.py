@@ -991,7 +991,7 @@ def download_archive(
     list_status = []
     list_versions = []
     for i, date in enumerate(dates):
-        warn_missing_files = not (i == 0 or i == len(dates) - 1 and date == end_time)
+        warn_missing_files = not (i == 0 or (i == len(dates) - 1 and date == end_time))
 
         status, available_version = _download_daily_data(
             date=date,

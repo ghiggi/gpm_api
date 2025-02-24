@@ -37,12 +37,12 @@ from gpm.visualization.plot import (
 )
 
 __all__ = [
-    "plot_labels",
-    "plot_patches",
-    "plot_map",
-    "plot_image",
-    "plot_map_mesh",
     "add_map_inset",
-    "plot_colorbar",
     "plot_cartopy_background",
+    "plot_colorbar",
+    "plot_image",
+    "plot_labels",
+    "plot_map",
+    "plot_map_mesh",
+    "plot_patches",
 ]

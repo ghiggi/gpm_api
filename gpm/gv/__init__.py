@@ -36,10 +36,10 @@ from gpm.gv.plots import (
 from gpm.gv.routines import volume_matching
 
 __all__ = [
+    "calibration_summary",
     "compare_maps",
+    "reflectivity_distribution",
     "reflectivity_scatterplot",
     "reflectivity_scatterplots",
-    "reflectivity_distribution",
-    "calibration_summary",
     "volume_matching",
 ]
