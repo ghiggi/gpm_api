@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Wed Feb 26 21:22:05 2025
 
@@ -1095,8 +1094,8 @@ SAPHIR_RECEIPTS = {
 # TROPICS Window channel composite
 # - 0, 1, 11 (vmax=300, vmin=150 for 0-1, (min=125,vmax=300 for 11)
 # - 91.655 114.50 190.31 GHz
-    
-    
+
+
 PMW_RECEIPTS = {
     "GMI": GMI_RECEIPTS,
     "TMI": TMI_RECEIPTS,
@@ -1109,6 +1108,3 @@ PMW_RECEIPTS = {
     "MHS": MHS_RECEIPTS,
     "SAPHIR": SAPHIR_RECEIPTS,
 }
-
-
- 
