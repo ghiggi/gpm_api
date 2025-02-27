@@ -33,7 +33,7 @@ zFactorMeasuredKa:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: $Z{m, Ka}$ [$dBZ$]
+    label: $Z_{m, Ka}$ [$dBZ$]
   auxiliary:
     category: [reflectivity]
 zFactorMeasuredKu:
@@ -48,7 +48,7 @@ zFactorMeasuredKu:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: $Z{m, Ku}$ [$dBZ$]
+    label: $Z_{m, Ku}$ [$dBZ$]
   auxiliary:
     category: [reflectivity]
 zFactorFinalKa:
@@ -63,7 +63,7 @@ zFactorFinalKa:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: $Z{f, Ka}$ [$dBZ$]
+    label: $Z_{f, Ka}$ [$dBZ$]
   auxiliary:
     category: [reflectivity]
 zFactorFinalKu:
@@ -78,7 +78,7 @@ zFactorFinalKu:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: $Z{f, Ku}$ [$dBZ$]
+    label: $Z_{f, Ku}$ [$dBZ$]
   auxiliary:
     category: [reflectivity]
 zFactorCorrection:

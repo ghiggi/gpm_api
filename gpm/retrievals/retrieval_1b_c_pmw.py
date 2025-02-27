@@ -34,51 +34,37 @@ from gpm.utils.decorators import check_software_availability
 from gpm.utils.pmw import (
     PMWFrequency,
     create_rgb_composite,
-    find_polarization_pairs,
-    get_rgb_composites_receipts,
+    get_available_pct_features,
+    get_available_pd_features,
+    get_available_pr_features,
+    get_pct,
+    get_pd,
+    get_pmw_rgb_receipts,
+    get_pr,
 )
 from gpm.utils.xarray import (
     get_default_variable,
     get_xarray_variable,
 )
 
-PCT_COEFFIENTS = {  # (tolerance, coef)
-    PMWFrequency(center_frequency=89): (5, 0.7),  # 91 of SSMIS, 85 of SSMI
-    PMWFrequency(center_frequency=36): (3, 1.15),  # 36.5, 37
-    PMWFrequency(center_frequency=19): (1, 1.40),  # 18.7 OK  . AVOID 21, 22, 23.8 ?
-    PMWFrequency(center_frequency=10): (3, 1.50),
-}
 
-
-def _retrieve_pct_coeff_dict(dict_pairs):
-    dict_coeff = {}
-    for f in dict_pairs:
-        for freq, (tol, coef) in PCT_COEFFIENTS.items():
-            if freq.has_same_center_frequency(PMWFrequency(center_frequency=f), tol=tol):
-                dict_coeff[f] = coef
-    return dict_coeff
-
-
-def retrieve_rgb_composites(ds, variable=None):
+def retrieve_rgb_composites(ds):
     """Retrieve the available PMW RGB composites."""
     # Retrieve sensor
     sensor = ds.attrs["InstrumentName"]
+
     # Retrieve defined RGB receipts
-    receipts = get_rgb_composites_receipts(sensor)
-    # Retrieve DataArray with brightness temperatures
-    if variable is None:
-        variable = get_default_variable(ds, possible_variables=["Tb", "Tc"])
-    da = get_xarray_variable(ds, variable=variable)
-    # Keep only receipts for which PMW channels are available
-    receipts = {
-        name: receipt
-        for name, receipt in receipts.items()
-        if np.all(np.isin(list(receipt["channels"].values()), da["pmw_frequency"].data))
-    }
+    receipts = get_pmw_rgb_receipts(sensor)
+
     # Compute RGB composites
-    list_ds_rgb = [
-        create_rgb_composite(da, receipt=receipt).to_dataset(name=name) for name, receipt in receipts.items()
-    ]
+    list_ds_rgb = []
+    for name, receipt in receipts.items():
+        try:
+            da_rgb = create_rgb_composite(ds, receipt=receipt).to_dataset(name=name)
+            list_ds_rgb.append(da_rgb)
+        except Exception as e:
+            print(f"RGB Composite {name} not available: {e!s}")
+
     ds_rgb = xr.merge(
         list_ds_rgb,
         compat="override",
@@ -86,7 +72,7 @@ def retrieve_rgb_composites(ds, variable=None):
     return ds_rgb
 
 
-def retrieve_polarization_corrected_temperature(ds, variable=None):
+def retrieve_polarization_corrected_temperature(xr_obj, variable=None):
     """Retrieve PMW Polarization-Corrected Temperature (PCT).
 
     Coefficients are taken from Cecil et al., 2018.
@@ -98,98 +84,62 @@ def retrieve_polarization_corrected_temperature(ds, variable=None):
     J. Appl. Meteor. Climatol., 57, 2249-2265, https://doi.org/10.1175/JAMC-D-18-0022.1.
     """
     # Retrieve DataArray with brightness temperatures
-    if variable is None:
-        variable = get_default_variable(ds, possible_variables=["Tb", "Tc"])
-    da = get_xarray_variable(ds, variable=variable)
-
-    # Retrieve available frequencies
-    pmw_frequencies = [PMWFrequency.from_string(freq) for freq in da["pmw_frequency"].data]
-
-    # Retrieve polarized frequencies couples
-    dict_polarization_pairs = find_polarization_pairs(pmw_frequencies)
+    if variable is None and isinstance(xr_obj, xr.Dataset):
+        variable = get_default_variable(xr_obj, possible_variables=["Tb", "Tc"])
+    da = get_xarray_variable(xr_obj, variable=variable)
 
     # If no combo, raise error
-    if len(dict_polarization_pairs) == 0:
+    pct_features = get_available_pct_features(da)
+    if len(pct_features) == 0:
+        pmw_frequencies = [PMWFrequency.from_string(freq) for freq in da["pmw_frequency"].data]
         pmw_frequencies = [freq.title() for freq in pmw_frequencies]
         raise ValueError(f"Impossible to compute polarized corrected temperature with channels: {pmw_frequencies}.")
 
-    # Unstack channels
-    ds_t = da.gpm.unstack_dimension(dim="pmw_frequency", prefix="", suffix="")
-
-    # Retrieve PCTs coefficients
-    dict_coeff = _retrieve_pct_coeff_dict(dict_polarization_pairs)
-
-    # Compute PCTs
-    dict_pct = {}
-    for center_frequency_str, coef in dict_coeff.items():
-        freq_v, freq_h = dict_polarization_pairs[center_frequency_str]
-        pct_name = f"PCT_{center_frequency_str}"
-        dict_pct[pct_name] = (1 + coef) * ds_t[f"{variable}{freq_v.to_string()}"] - coef * ds_t[
-            f"{variable}{freq_h.to_string()}"
-        ]
-
-    # Create dataset
-    ds_pct = xr.Dataset(dict_pct)
+    # Create PCTs dataset
+    dict_pct = {name: get_pct(da, name=name).rename(name) for name in pct_features}
+    ds_pct = xr.merge(dict_pct.values(), compat="minimal")
     return ds_pct
 
 
-def retrieve_polarization_difference(ds, variable=None):
+def retrieve_polarization_difference(xr_obj, variable=None):
     """Retrieve PMW Channels Polarized Difference (PD)."""
     # Retrieve DataArray with brightness temperatures
-    if variable is None:
-        variable = get_default_variable(ds, possible_variables=["Tb", "Tc"])
-    da = get_xarray_variable(ds, variable=variable)
-
-    # Retrieve available frequencies
-    pmw_frequencies = [PMWFrequency.from_string(freq) for freq in da["pmw_frequency"].data]
-
-    # Retrieve polarized frequencies couples
-    dict_polarization_pairs = find_polarization_pairs(pmw_frequencies)
+    if variable is None and isinstance(xr_obj, xr.Dataset):
+        variable = get_default_variable(xr_obj, possible_variables=["Tb", "Tc"])
+    da = get_xarray_variable(xr_obj, variable=variable)
 
     # If no combo, raise error
-    if len(dict_polarization_pairs) == 0:
+    pd_features = get_available_pd_features(da)
+    if len(pd_features) == 0:
+        pmw_frequencies = [PMWFrequency.from_string(freq) for freq in da["pmw_frequency"].data]
         pmw_frequencies = [freq.title() for freq in pmw_frequencies]
         raise ValueError(f"Impossible to compute polarized difference with channels: {pmw_frequencies}. No pairs.")
 
-    # Compute PDs
-    ds_t = da.gpm.unstack_dimension(dim="pmw_frequency", prefix="", suffix="")
-    dict_pd = {}
-    for center_frequency_str, (freq_v, freq_h) in dict_polarization_pairs.items():
-        pd_name = f"PD_{center_frequency_str}"
-        dict_pd[pd_name] = ds_t[f"{variable}{freq_v.to_string()}"] - ds_t[f"{variable}{freq_h.to_string()}"]
-
-    # Create dataset
-    ds_pd = xr.Dataset(dict_pd)
+    # Create PDs dataset
+    dict_pd = {name: get_pd(da, name=name).rename(name) for name in pd_features}
+    ds_pd = xr.merge(dict_pd.values(), compat="minimal")
     return ds_pd
 
 
-def retrieve_polarization_ratio(ds, variable=None):
+def retrieve_polarization_ratio(xr_obj, variable=None):
     """Retrieve PMW Channels Polarization Ratio (PR)."""
     # Retrieve DataArray with brightness temperatures
-    if variable is None:
-        variable = get_default_variable(ds, possible_variables=["Tb", "Tc"])
-    da = get_xarray_variable(ds, variable=variable)
-
-    # Retrieve available frequencies
-    pmw_frequencies = [PMWFrequency.from_string(freq) for freq in da["pmw_frequency"].data]
+    if variable is None and isinstance(xr_obj, xr.Dataset):
+        variable = get_default_variable(xr_obj, possible_variables=["Tb", "Tc"])
+    da = get_xarray_variable(xr_obj, variable=variable)
 
     # Retrieve polarized frequencies couples
-    dict_polarization_pairs = find_polarization_pairs(pmw_frequencies)
+    pr_features = get_available_pr_features(da)
 
     # If no combo, raise error
-    if len(dict_polarization_pairs) == 0:
+    if len(pr_features) == 0:
+        pmw_frequencies = [PMWFrequency.from_string(freq) for freq in da["pmw_frequency"].data]
         pmw_frequencies = [freq.title() for freq in pmw_frequencies]
         raise ValueError(f"Impossible to compute polarization ratio with channels: {pmw_frequencies}. No pairs.")
 
-    # Compute PRs
-    ds_t = da.gpm.unstack_dimension(dim="pmw_frequency", prefix="", suffix="")
-    dict_pr = {}
-    for center_frequency_str, (freq_v, freq_h) in dict_polarization_pairs.items():
-        pr_name = f"PR_{center_frequency_str}"
-        dict_pr[pr_name] = ds_t[f"{variable}{freq_v.to_string()}"] / ds_t[f"{variable}{freq_h.to_string()}"]
-
-    # Create dataset
-    ds_pr = xr.Dataset(dict_pr)
+    # Create PDs dataset
+    dict_pr = {name: get_pr(da, name=name).rename(name) for name in pr_features}
+    ds_pr = xr.merge(dict_pr.values(), compat="minimal")
     return ds_pr
 
 

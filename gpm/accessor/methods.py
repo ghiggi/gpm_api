@@ -442,6 +442,13 @@ class GPM_Base_Accessor:
 
         return mask_above_bin(self._obj, bins=bins, strict=strict, fillvalue=fillvalue)
 
+    #### Infill
+    @auto_wrap_docstring
+    def infill_below_bin(self, bins):
+        from gpm.utils.manipulations import infill_below_bin
+
+        return infill_below_bin(self._obj, bins=bins)
+
     #### Dataset utility
     @property
     def is_orbit(self):

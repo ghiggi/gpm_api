@@ -1374,6 +1374,103 @@ def extract_transect_along_dimension(xr_obj, point, dim):
 
 
 ####------------------------------------------------------------------------------------------------------------------.
+####################
+#### Infilling  ####
+####################
+
+
+def _infill_datarray(da, da_bin, potential_infill_mask, valid_mask):
+    # Create a copy of the input to avoid modifying the original
+    result = da.copy(deep=True)
+
+    # Get the values at the specified indices
+    values_at_indices = da.gpm.slice_range_at_bin(da_bin)
+
+    # Create a mask for points where both the index and value are valid
+    valid_values_mask = valid_mask & ~np.isnan(values_at_indices)
+
+    # Define infill mask
+    infill_mask = potential_infill_mask & valid_values_mask
+
+    # Broadcast values to apply
+    values_broadcast = values_at_indices.broadcast_like(da)
+
+    # Apply the infill operation
+    with xr.set_options(keep_attrs=True):
+        result = xr.where(infill_mask, values_broadcast, result)
+        result.name = da.name
+    return result
+
+
+def infill_below_bin(xr_obj, bins):
+    """
+    Infill values below a spatially variable range bin.
+
+    Parameters
+    ----------
+    xr_obj : xarray.Dataset or xarray.DataArray
+        GPM RADAR xarray object.
+    bins : str or xarray.DataArray
+        Either a xarray.DataArray or a string pointing to the dataset variable
+        with the range bins.
+        GPM bin variables are assumed to start at 1, not 0!
+
+    Returns
+    -------
+    xarray.Dataset or xarray.DataArray
+        Infilled GPM RADAR xarray object.
+    """
+    check_has_vertical_dim(xr_obj)
+
+    # Get the bin DataArray
+    da_bin, da_mask = get_bin_dataarray(xr_obj, bins=bins)
+
+    # Get height DataArray
+    da_height = xr_obj["height"]
+
+    # Get the name of the third dimension (range or height)
+    z_dim = xr_obj.gpm.vertical_dimension[0]
+
+    # Check if the range/height dimension is increasing or decreasing
+    other_dims = [dim for dim in xr_obj.dims if dim != z_dim]
+    pixel_isel_dict = {dim: 0 for dim in other_dims}
+    z_values = da_height.isel(pixel_isel_dict, missing_dims="ignore").to_numpy()
+    is_increasing = z_values[1] > z_values[0]
+
+    # Handle NaN values in the bin array and retrieve 0-indexing
+    # - Use 0 as placeholder for invalid indices
+    valid_mask = ~da_mask
+    idx_int = xr.where(valid_mask, da_bin, 1).astype(int) - 1
+
+    # Create a template for our mask along the z dimension
+    z_indices = xr.DataArray(np.arange(len(xr_obj[z_dim])), dims=[z_dim], coords={z_dim: xr_obj[z_dim]})
+
+    # Define potential infilling mask
+    potential_infill_mask = z_indices <= idx_int if is_increasing else z_indices >= idx_int
+
+    # Infill DataArrays
+    if isinstance(xr_obj, xr.DataArray):
+        xr_obj = _infill_datarray(
+            xr_obj,
+            da_bin=da_bin,
+            potential_infill_mask=potential_infill_mask,
+            valid_mask=valid_mask,
+        )
+    else:
+        for var in xr_obj.gpm.vertical_variables:
+            xr_obj[var] = _infill_datarray(
+                xr_obj[var],
+                da_bin=da_bin,
+                potential_infill_mask=potential_infill_mask,
+                valid_mask=valid_mask,
+            )
+
+    # Re-assign height back (because current heights inherited form valid_values_mask)
+    xr_obj = xr_obj.assign_coords({"height": da_height})
+    return xr_obj
+
+
+####------------------------------------------------------------------------------------------------------------------.
 #############################
 #### Location Utilities  ####
 #############################
