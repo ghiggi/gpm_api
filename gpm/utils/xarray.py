@@ -244,7 +244,7 @@ def xr_sorted_distribution(da, values, dim):
           - sorted_values: The provided values sorted in descending order of occurrence.
           - occurrence: The count of occurrences for each sorted value.
           - percentage: The percentage occurrence (relative to the size along `dim`).
-          
+
         For each pixel (or location), index along "rank" to retrieve, for example,
         the most frequent value at rank 0, the second most at rank 1, etc.
     """
@@ -262,11 +262,11 @@ def xr_sorted_distribution(da, values, dim):
         total = arr.size
         sorted_percentage = sorted_counts / total * 100.0
         return sorted_values, sorted_counts, sorted_percentage
-    
+
     # Define dask_gufunc_kwargs
     dask_gufunc_kwargs = {}
-    dask_gufunc_kwargs["output_sizes"] = {'rank': len(values)}
-    
+    dask_gufunc_kwargs["output_sizes"] = {"rank": len(values)}
+
     # Apply the distribution function along the specified dimension.
     sorted_vals, occurrence, percentage = xr.apply_ufunc(
         _np_sorted_distribution,
@@ -275,17 +275,20 @@ def xr_sorted_distribution(da, values, dim):
         output_core_dims=[["rank"], ["rank"], ["rank"]],
         vectorize=True,
         dask="parallelized",
-        kwargs={'values': values},
+        kwargs={"values": values},
         output_dtypes=[int, int, float],
         dask_gufunc_kwargs=dask_gufunc_kwargs,
     )
 
-    ds_out = xr.Dataset({
-        "sorted_values": sorted_vals,
-        "occurrence": occurrence,
-        "percentage": percentage
-    })
+    ds_out = xr.Dataset(
+        {
+            "sorted_values": sorted_vals,
+            "occurrence": occurrence,
+            "percentage": percentage,
+        }
+    )
     return ds_out
+
 
 ####-------------------------------------------------------------------
 #### Unstacking dimension
