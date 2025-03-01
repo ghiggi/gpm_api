@@ -30,6 +30,7 @@ from functools import partial
 
 import xarray as xr
 
+from gpm.configs import get_base_dir
 from gpm.dataset.conventions import finalize_dataset
 from gpm.dataset.granule import _multi_file_closer, get_scan_modes_datasets
 from gpm.io.checks import (
@@ -237,6 +238,7 @@ def open_dataset(
 
     """
     ## Check valid product and variables
+    base_dir = get_base_dir(base_dir=base_dir)
     product = check_product(product, product_type=product_type)
     variables = check_variables(variables)
     groups = check_groups(groups)
@@ -415,7 +417,7 @@ def open_datatree(
     product = check_product(product, product_type=product_type)
     variables = check_variables(variables)
     groups = check_groups(groups)
-
+    base_dir = get_base_dir(base_dir=base_dir)
     # Check scan_modes
     scan_modes = check_scan_modes(scan_modes=scan_modes, product=product, version=version)
 

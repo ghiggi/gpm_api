@@ -69,8 +69,13 @@ def check_dataset_equality(cut_filepath):
     processed_filepaths = [os.path.join(processed_dir, filename) for filename in processed_filenames]
     scan_modes = [os.path.splitext(filename)[0] for filename in processed_filenames]
     for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths, strict=False):
+        # Open files
         ds = open_granule_dataset(cut_filepath, scan_mode=scan_mode).compute()
         ds_expected = xr.open_dataset(processed_filepath).compute()
+
+        # Close connection to file
+        ds.close()
+        ds_expected.close()
 
         # Remove attributes that are allowed to change
         ds_expected = remove_unfixed_attributes(ds_expected)

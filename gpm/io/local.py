@@ -29,7 +29,6 @@ import os
 import re
 
 from gpm.configs import get_base_dir
-from gpm.io.checks import check_base_dir
 from gpm.io.filter import filter_filepaths
 from gpm.io.products import get_product_category
 from gpm.utils.directories import search_leaf_files
@@ -65,8 +64,8 @@ def _get_local_dir_pattern(product, product_type, version):
     pattern : str
         Directory base pattern:
 
-        - If ``product_type == "RS"``: ``GPM/RS/V<version>/<product_category>/<product>``
-        - If ``product_type == "NRT"``: ``GPM/NRT/<product_category>/<product>``
+        - If ``product_type == "RS"``: ``RS/V<version>/<product_category>/<product>``
+        - If ``product_type == "NRT"``: ``NRT/<product_category>/<product>``
 
         Valid `product_category` are ``RADAR``, ``PMW``, ``CMB``, ``IMERG``.
 
@@ -74,10 +73,10 @@ def _get_local_dir_pattern(product, product_type, version):
     # Define pattern
     product_category = get_product_category(product)
     if product_type == "NRT":
-        dir_structure = os.path.join("GPM", product_type, product_category, product)
+        dir_structure = os.path.join(product_type, product_category, product)
     else:  # product_type == "RS"
         version_str = "V0" + str(int(version))
-        dir_structure = os.path.join("GPM", product_type, version_str, product_category, product)
+        dir_structure = os.path.join(product_type, version_str, product_category, product)
     return dir_structure
 
 
@@ -101,7 +100,6 @@ def _get_local_product_base_directory(base_dir, product, product_type, version):
         Product base directory path where data are located.
 
     """
-    base_dir = check_base_dir(base_dir)
     product_dir_pattern = _get_local_dir_pattern(product, product_type, version)
     return os.path.join(base_dir, product_dir_pattern)
 
@@ -181,7 +179,7 @@ def get_local_product_directory(base_dir, product, product_type, version, date):
 ############################
 
 
-def get_local_daily_filepaths(product, product_type, date, version, base_dir=None):
+def get_local_daily_filepaths(product, product_type, date, version, base_dir):
     """Retrieve GPM data filepaths on the local disk directory of a specific day and product.
 
     Parameters
@@ -194,12 +192,9 @@ def get_local_daily_filepaths(product, product_type, date, version, base_dir=Non
         Single date for which to retrieve the data.
     version : int
         GPM version of the data to retrieve if ``product_type = "RS"``.
-
+    base_dir : str
+        The base directory where to store GPM data.
     """
-    # Retrieve the local GPM base directory
-    base_dir = get_base_dir(base_dir=base_dir)
-    base_dir = check_base_dir(base_dir)
-
     # Retrieve the directory on disk where the data are stored
     dir_path = get_local_product_directory(
         base_dir=base_dir,
@@ -227,7 +222,6 @@ def define_local_filepath(product, product_type, date, version, filename, base_d
     """
     # Retrieve the local GPM base directory
     base_dir = get_base_dir(base_dir=base_dir)
-    base_dir = check_base_dir(base_dir)
 
     # Define disk directory path
     dir_tree = get_local_product_directory(
@@ -246,7 +240,7 @@ def get_local_dir_tree_from_filename(filepath, product_type="RS", base_dir=None)
     from gpm.io.info import get_info_from_filepath
 
     base_dir = get_base_dir(base_dir=base_dir)
-    base_dir = check_base_dir(base_dir)
+
     # Retrieve file info
     info = get_info_from_filepath(filepath)
     product = info["product"]
@@ -313,7 +307,6 @@ def get_local_filepaths(
 
     # Retrieve the local GPM base directory
     base_dir = get_base_dir(base_dir=base_dir)
-    base_dir = check_base_dir(base_dir)
 
     # Retrieve the local directory where the data are stored
     product_dir = _get_local_product_base_directory(

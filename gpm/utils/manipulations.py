@@ -192,9 +192,9 @@ def crop_around_valid_data(xr_obj, variable=None):
         valid_along_dim = valid_mask.any(dim=other_dims)
         # Find first and last True index
         # - argmax() gives the first True index from the start
-        start_idx = int(valid_along_dim.argmax())
+        start_idx = int(np.argmax(valid_along_dim.data))
         # To get the last True, reverse the array and use argmax again
-        end_idx = len(valid_along_dim) - int(valid_along_dim[::-1].argmax())
+        end_idx = len(valid_along_dim) - int(np.argmax(valid_along_dim.data[::-1]))
         # Construct the slice
         isel_dict[dim] = slice(start_idx, end_idx)
 

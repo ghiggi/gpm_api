@@ -187,12 +187,14 @@ def _get_config_key(key):
 def get_base_dir(base_dir=None):
     """Return the GPM base directory."""
     import gpm
+    from gpm.io.checks import check_base_dir
 
     if base_dir is None:
         base_dir = gpm.config.get("base_dir")
     if base_dir is None:
         raise ValueError("The 'base_dir' is not specified in the GPM-API configuration file.")
-    return str(base_dir)  # convert Path to str
+    base_dir = check_base_dir(base_dir)  # convert Path to str
+    return base_dir
 
 
 def get_username_pps():

@@ -285,7 +285,7 @@ def xr_sorted_distribution(da, values, dim):
             "sorted_values": sorted_vals,
             "occurrence": occurrence,
             "percentage": percentage,
-        }
+        },
     )
     return ds_out
 

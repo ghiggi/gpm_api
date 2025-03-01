@@ -48,25 +48,25 @@ def test_check_base_dir() -> None:
     """Check path constructor for base_dir."""
     # Check text entry for Unix/Windows
     if platform.system() == "Windows":
-        res = checks.check_base_dir("C:\\Users\\user\\gpm")
+        res = checks.check_base_dir("C:\\Users\\user\\GPM")
         assert res == ntp.join(
             "C:",
             os.path.sep,
             "Users",
             "user",
-            "gpm",
+            "GPM",
         ), "Windows path is not returned"
     else:
-        res = checks.check_base_dir("/home/user/gpm")
-        assert res == ptp.join(ptp.sep, "home", "user", "gpm"), "Unix path is not returned"
+        res = checks.check_base_dir("/home/user/GPM")
+        assert res == ptp.join(ptp.sep, "home", "user", "GPM"), "Unix path is not returned"
 
     # Check final slash is removed
-    res = checks.check_base_dir(f"{os.path.join(os.path.expanduser('~'), 'gpm')}{os.path.sep}")
-    assert res == os.path.join(os.path.expanduser("~"), "gpm"), "Leading slash is not removed"
+    res = checks.check_base_dir(f"{os.path.join(os.path.expanduser('~'), 'GPM')}{os.path.sep}")
+    assert res == os.path.join(os.path.expanduser("~"), "GPM"), "Leading slash is not removed"
 
-    # Check if GPM, it is removed
-    res = checks.check_base_dir(os.path.join(os.path.join(os.path.expanduser("~"), "gpm", "GPM")))
-    assert res == os.path.join(os.path.join(os.path.expanduser("~"), "gpm")), "GPM is not removed"
+    # Check raise error if the directory is not named GPM
+    with pytest.raises(ValueError):
+        checks.check_base_dir(os.path.join(os.path.join(os.path.expanduser("~"), "no_named_GPM")))
 
 
 def test_check_filepaths() -> None:
@@ -76,13 +76,15 @@ def test_check_filepaths() -> None:
         os.path.join(
             "home",
             "user",
-            "gpm",
+            "GPM",
+            "<dir_tree>",
             "2A.GPM.DPR.V8-20180723.20141231-S003429-E020702.004384.V06A.HDF5",
         ),
         os.path.join(
             "home",
             "user",
-            "gpm",
+            "GPM",
+            "<dir_tree>",
             "2A.GPM.DPR.V8-20180723.20180603-S003429-E020702.004384.V06A.HDF5",
         ),
     ]

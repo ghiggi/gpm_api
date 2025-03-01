@@ -35,6 +35,7 @@ WISHED_COORDS = [
     "Quality",  # 1C-PMW
     "L1CqualityFlag",  # 2A-PMW --> copy of Quality
     "dataQuality",  # 2A-DPR, 1B-GMI/TMI, 2B-CMB
+    "incidenceAngleIndex",  # to deal with TMI S1 scan mode ... dropped variable !
 ]
 
 

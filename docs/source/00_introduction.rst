@@ -32,7 +32,7 @@ The reference sensors for the GPM mission are the:
 The :ref:`GPM Data Archive <gpm_data_archive>` currently includes satellite data records that extend back to 1987.
 This extensive archive is the result of contributions from two spaceborne radars and a fleet of 26 passive microwave (PMW) sensors that forms the so-called GPM constellation.
 
-The data are organized into various :ref:` product levels <gpm_product_levels>`,
+The data are organized into various :ref:`product levels <gpm_product_levels>`,
 encompassing raw and calibrated observations (Level 1), intermediate geophysical retrieval products (Level 2),
 and spatio-temporally integrated datasets from single and multiple satellites (Level 3).
 
@@ -732,9 +732,9 @@ examination of land surface effects on radar, radiometer, or combined-sensor pre
 
 For detailed information on the TRMM/GPM-CloudSat Coincidence dataset, please
 refer to the corresponding `journal article <https://www.mdpi.com/2072-4292/13/12/2264>`_
-and the `Algorithm Theoretical Basis Document (ATBD) <https://gpm.nasa.gov/resources/documents/cloudsat-gpm-coincidence-dataset-version-1c>`_.
+and the `Algorithm Theoretical Basis Document (ATBD) <https://arthurhou.pps.eosdis.nasa.gov/Documents/CSAT_TRMM_GPM_COIN_ATBD_V05.pdf>`_.
 
-The coincidence dataset can be downloaded with GPM-API using the ``2B-GPM-CSAT`` and ``2B-TRMM-CSAT`` product acronyms.
+The TRMM/GPM-CloudSat Coincidence dataset V5 can be downloaded with GPM-API using the ``2B-GPM-CSAT`` and ``2B-TRMM-CSAT`` product acronyms.
 
 The figure below displays a quick-look radar time-height profile imagery from the GPM - CloudSat Coincidence dataset.
 

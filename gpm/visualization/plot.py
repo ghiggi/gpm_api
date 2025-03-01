@@ -1506,7 +1506,7 @@ def add_map_inset(ax, loc="upper left", inset_height=0.2, projection=None, insid
         )
 
     # Define aspect ratio of the map inset
-    aspect_ratio = float(np.diff(projection.x_limits) / np.diff(projection.y_limits).item())
+    aspect_ratio = float(np.diff(projection.x_limits).item() / np.diff(projection.y_limits).item())
 
     # Define inset location relative to main plot (ax) in normalized units
     # - Lower-left corner of inset Axes, and its width and height

@@ -33,6 +33,8 @@ from functools import total_ordering
 import numpy as np
 import xarray as xr
 
+import gpm
+from gpm.io.checks import check_sensor
 from gpm.utils.list import flatten_list
 from gpm.utils.xarray import (
     get_default_variable,
@@ -706,11 +708,9 @@ def _evaluate_feature_expression(ds, expression):
 
 def get_pmw_rgb_receipts(sensor):
     """Return the RGB composite receipts available for a PMW sensor."""
-    from gpm.utils.pmw_composites_tmp import PMW_RECEIPTS
-
-    # TODO: read from YAML !
-
-    return PMW_RECEIPTS[sensor]
+    sensor = check_sensor(sensor)
+    filepath = os.path.join(gpm._root_path, "gpm", "etc", "pmw", "composites", f"{sensor}.yaml")
+    return read_yaml(filepath)
 
 
 def create_rgb_composite(ds, receipt):
@@ -749,7 +749,6 @@ def create_rgb_composite(ds, receipt):
         global_min = min(da.min() for key, da in dict_channels.items() if not receipt[key]["vmin_dynamic"])
         global_max = max(da.max() for key, da in dict_channels.items() if not receipt[key]["vmax_dynamic"])
         # Update each channel's normalization parameters
-        # --> TODO: currently specified vmin and vmax are not exploited
         for key in ["R", "G", "B"]:
             if not receipt[key]["vmin_dynamic"]:
                 if receipt[key]["vmin"] is None:

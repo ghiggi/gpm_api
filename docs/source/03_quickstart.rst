@@ -133,7 +133,7 @@ specific time periods:
 .. code-block:: python
 
     gpm.available_products(end_time="1995-01-31")  # from the start of the mission to 1995-01-31
-    gpm.available_products(start_time="2014-01-01", end_time="2016", product_categories="PMW")
+    gpm.available_products(start_time="2014-01-01", end_time="2016-01-01", product_categories="PMW")
     gpm.available_products(start_time="2019-01-01")  # from 2019-01-01 to the present
 
 

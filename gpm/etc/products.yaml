@@ -1454,11 +1454,11 @@
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: null
-  start_time: null
+  start_time: 2014-04-01 18:35:55
   end_time: null
-  available_versions: [4]
+  available_versions: [5]
   scan_modes:
-    V4: [null]
+    V5: [null]
   product_level: 2B
   full_product_level: 2B
 2B-TRMM-CSAT:
@@ -1470,11 +1470,11 @@
   pps_nrt_dir: null
   pps_rs_dir: radar
   ges_disc_dir: null
-  start_time: null
-  end_time: null
-  available_versions: [4]
+  start_time: 2006-06-15 00:57:54
+  end_time: 2014-08-09 14:52:31
+  available_versions: [5]
   scan_modes:
-    V4: [null]
+    V5: [null]
   product_level: 2B
   full_product_level: 2B
 2B-GPM-CORRA:

@@ -326,7 +326,9 @@ def regrid_pmw_l1(dt, scan_mode_reference="S1", radius_of_influence=20_000):
 
     # Expand datasets with scan mode dimension to coordinates and variables without pmw_frequency
     # - TODO: Variables without (along_track, cross-track) dimensions are currently not remapped !
-    # --> incidenceAngleIndex, SClatitude, SClongitude, SCaltitude, FractionalGranuleNumber
+    # --> SClatitude, SClongitude, SCaltitude, FractionalGranuleNumber
+    # - TODO: We should avoid to have dimension scan_mode
+    # --> We should broadcast Quality and sunLocalTime to have pmw_frequency and concat along pmw_frequency
     dict_scan_modes = {
         scan_mode: _expand_with_scan_mode(dt[scan_mode].to_dataset(), scan_mode=scan_mode) for scan_mode in list(dt)
     }

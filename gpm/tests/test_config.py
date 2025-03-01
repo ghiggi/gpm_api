@@ -30,7 +30,7 @@ import os
 import pytest
 
 CONFIGS_TEST_KWARGS = {
-    "base_dir": "test_base_dir",
+    "base_dir": "test_base_dir/GPM",
     "username_pps": "test_username_pps",
     "password_pps": "test_password_pps",
     "username_earthdata": "test_username_earthdata",
@@ -67,7 +67,7 @@ def test_read_configs(tmp_path, mocker):
     config_dict = read_configs()
     assert isinstance(config_dict, dict)
     print(config_dict)
-    assert config_dict["base_dir"] == "test_base_dir"
+    assert config_dict["base_dir"] == "test_base_dir/GPM"
 
 
 def test_update_gpm_configs(tmp_path, mocker):
@@ -85,17 +85,17 @@ def test_update_gpm_configs(tmp_path, mocker):
 
     # Read
     config_dict = read_yaml(config_filepath)
-    assert config_dict["base_dir"] == "test_base_dir"
+    assert config_dict["base_dir"] == "test_base_dir/GPM"
 
     # Update
     gpm.configs.define_configs(
-        base_dir="new_test_base_dir",
+        base_dir="new_test_base_dir/GPM",
         username_pps="new_username",
         password_pps="new_password",
     )
     assert os.path.exists(config_filepath)
     config_dict = read_yaml(config_filepath)
-    assert config_dict["base_dir"] == "new_test_base_dir"
+    assert config_dict["base_dir"] == "new_test_base_dir/GPM"
     assert config_dict["username_pps"] == "new_username"
 
 
@@ -105,22 +105,22 @@ def test_get_base_dir():
     from gpm.configs import get_base_dir
 
     # Check that if input is not None, return the specified base_dir
-    assert get_base_dir(base_dir="test/gpm") == "test/gpm"
+    assert get_base_dir(base_dir="test/GPM") == "test/GPM"
 
     # Check that if no config YAML file specified (base_dir=None), raise error
     with gpm.config.set({"base_dir": None}), pytest.raises(ValueError):
         get_base_dir()
 
     # Set base_dir in the donfig config and check it return it !
-    gpm.config.set({"base_dir": "another_test_dir/gpm"})
-    assert get_base_dir() == "another_test_dir/gpm"
+    gpm.config.set({"base_dir": "another_test_dir/GPM"})
+    assert get_base_dir() == "another_test_dir/GPM"
 
     # Now test that return the one from the temporary gpm.config donfig object
-    with gpm.config.set({"base_dir": "new_test_dir/gpm"}):
-        assert get_base_dir() == "new_test_dir/gpm"
+    with gpm.config.set({"base_dir": "new_test_dir/GPM"}):
+        assert get_base_dir() == "new_test_dir/GPM"
 
     # And check it return the default one
-    assert get_base_dir() == "another_test_dir/gpm"
+    assert get_base_dir() == "another_test_dir/GPM"
 
 
 @pytest.mark.parametrize("key_value", list(CONFIGS_TEST_KWARGS.items()))

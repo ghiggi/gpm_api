@@ -1,0 +1,92 @@
+19 + 22 GHz:
+  R:
+    name: 22V
+    vmin: 65
+    vmax: 320
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 19V
+    vmin: 65
+    vmax: 320
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  B:
+    name: 19H
+    vmin: 65
+    vmax: 320
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  global_normalization: false
+37 + 85 GHz:
+  R:
+    name: 85V
+    vmin: 65
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 85H
+    vmin: 65
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  B:
+    name: 37H
+    vmin: 65
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  global_normalization: false
+NRL_37:
+  R:
+    name: PCT_37
+    vmin: 260
+    vmax: 280
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 37V
+    vmin: 160
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: false
+  B:
+    name: 37H
+    vmin: 180
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: false
+  global_normalization: false
+NRL_85:
+  R:
+    name: PCT_85
+    vmin: 230
+    vmax: 290
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 85H
+    vmin: 255
+    vmax: 290
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: false
+  B:
+    name: 85V
+    vmin: 275
+    vmax: 290
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: false
+  global_normalization: false

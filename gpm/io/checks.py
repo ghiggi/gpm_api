@@ -56,6 +56,8 @@ def check_base_dir(base_dir):
         Base directory where the GPM directory is located.
 
     """
+    if base_dir is None:
+        raise TypeError("base_dir must be specified.")
     base_dir = str(base_dir)  # deal with PathLib path
     # Check base_dir does not end with /
     if base_dir[-1] == os.path.sep:
@@ -63,8 +65,8 @@ def check_base_dir(base_dir):
     # Retrieve last folder name
     dir_name = os.path.basename(base_dir)
     # If ends with GPM, take the parent directory path
-    if dir_name == "GPM":
-        base_dir = os.path.dirname(base_dir)
+    if dir_name != "GPM":
+        raise ValueError("The GPM-API base directory must be called GPM.")
     return base_dir
 
 

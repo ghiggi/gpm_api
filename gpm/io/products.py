@@ -40,7 +40,7 @@ from gpm.io.checks import (
     check_product_version,
     check_satellites,
     check_sensors,
-    check_time,
+    check_start_end_time,
     check_versions,
     get_current_utc_time,
 )
@@ -177,9 +177,7 @@ def filter_info_dict_by_time(info_dict, start_time, end_time):
         start_time = datetime.datetime(1987, 7, 9, 0, 0, 0)
     if end_time is None:
         end_time = get_current_utc_time()
-
-    start_time = check_time(start_time)
-    end_time = check_time(end_time)
+    start_time, end_time = check_start_end_time(start_time, end_time)
 
     new_info_dict = {}
     for product, product_info in info_dict.items():
