@@ -359,7 +359,7 @@ def find_filepaths(
     filepaths = sorted(filepaths)
 
     # Group filepaths if groups is not None
-    filepaths = group_filepaths(filepaths, groups=groups)
+    filepaths = group_filepaths(filepaths, groups=groups, sep="/")
 
     # -------------------------------------------------------------------------.
     # Check unique version

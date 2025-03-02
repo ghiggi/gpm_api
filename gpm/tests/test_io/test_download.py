@@ -231,7 +231,7 @@ class TestGetFilepathsFromFilenames:
     filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
 
     def test_local(self) -> None:
-        base_dir = "dummy/base_dir/GPM/"
+        base_dir = "dummy/base_dir/GPM"
         with gpm.config.set({"base_dir": base_dir}):
             assert dl.get_filepaths_from_filenames(
                 filepaths=[self.filename],
