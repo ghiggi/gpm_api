@@ -300,7 +300,7 @@ def test_get_country_extent(
         get_country_extent(country)
 
     # Test typo in country name
-    country = "Afghanistan"
+    country = "Afganista"  # Instead of Afghanistan
     with pytest.raises(ValueError) as exception_info:
         get_country_extent(country)
 

@@ -247,8 +247,8 @@ by providing the path of the file (granule) of interest. This function open a si
 The ``gpm.open_granule_datatree(filepath)`` opens a single file into a ``xarray.DataTree`` object
 by providing the path of the file (granule) of interest. This function open all sensors ``scan_modes``.
 
-The ``gpm.open_dataset`` and ``gpm.open_datatree`` functions enables to open a collection of granules
- over a period of interest.
+The ``gpm.open_dataset`` and ``gpm.open_datatree`` functions enable to open a collection of granules
+over a period of interest.
 
 The following example shows how to download and open a dataset over a specific time period:
 
