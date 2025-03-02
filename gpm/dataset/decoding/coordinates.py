@@ -25,27 +25,32 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to sanitize GPM-API Dataset coordinates."""
-import functools
-import os
-
 import numpy as np
-
-from gpm.utils.yaml import read_yaml
+import xarray as xr
 
 
 def ensure_valid_coords(ds, raise_error=False):
     """Ensure geographic coordinates are within expected range."""
-    invalid_coords = np.logical_or(
-        np.logical_or(ds["lon"].data < -180, ds["lon"].data > 180),
-        np.logical_or(ds["lat"].data < -90, ds["lat"].data > 90),
+    ds["lon"] = ds["lon"].compute()
+    ds["lat"] = ds["lat"].compute()
+    da_invalid_coords = np.logical_or(
+        np.logical_or(ds["lon"] < -180, ds["lon"] > 180),
+        np.logical_or(ds["lat"] < -90, ds["lat"] > 90),
     )
-    if np.any(invalid_coords):
+    if np.any(da_invalid_coords.data):
         if raise_error:
             raise ValueError("Invalid geographic coordinate in the granule.")
-        da_invalid_coords = ds["lon"].copy()
-        da_invalid_coords.data = invalid_coords
-        # For each variable, set NaN value where invalid coordinates
-        ds = ds.where(~da_invalid_coords)
+
+        # # Add valid_geolocation flag
+        # ds = ds.assign_coords({"valid_geolocation": da_invalid_coords})
+
+        # # For each variable, set NaN value where invalid coordinates
+        # # --> Only if variable has at the 2 dimensions of ds["lon"]
+        # # --> Not good practice because it might mask quality flags DataArrays !
+        # for var in ds.data_vars:
+        #     if set(ds["lon"].dims).issubset(set(ds[var].dims)):
+        #         ds[var] = ds[var].where(~da_invalid_coords)
+
         # Add NaN to longitude and latitude
         ds["lon"] = ds["lon"].where(~da_invalid_coords)
         ds["lat"] = ds["lat"].where(~da_invalid_coords)
@@ -69,13 +74,18 @@ def add_cmb_height(ds):
     from gpm.utils.manipulations import get_vertical_datarray_prototype
 
     if "ellipsoidBinOffset" in ds and "localZenithAngle" in ds and "range" in ds.dims:
-        # Retrieve required DataArrays
+        # # Retrieve required DataArrays
         range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # start at 1 !
-        ellipsoidBinOffset = ds["ellipsoidBinOffset"]
+        ellipsoidBinOffset = ds["ellipsoidBinOffset"].isel(
+            radar_frequency=0,
+            missing_dims="ignore",
+        )  # values are equal !
         localZenithAngle = ds["localZenithAngle"]
         rangeBinSize = 250  # approximation
         # Compute height
-        height = ((1 - range_bin) * rangeBinSize + ellipsoidBinOffset) * np.cos(np.deg2rad(localZenithAngle))
+        n_bins = len(ds["range"])
+        height = ((n_bins - range_bin) * rangeBinSize + ellipsoidBinOffset) * np.cos(np.deg2rad(localZenithAngle))
+        height = height.drop_vars("radar_frequency", errors="ignore")
         ds = ds.assign_coords({"height": height})
     return ds
 
@@ -111,6 +121,7 @@ def _add_cmb_coordinates(ds, product, scan_mode):
 
     if (scan_mode in ("KuKaGMI", "NS")) and "radar_frequency" in list(ds.dims):
         ds = ds.assign_coords({"radar_frequency": ["Ku", "Ka"]})
+
     # Add height coordinate
     ds = add_cmb_height(ds)
 
@@ -140,23 +151,9 @@ def _add_radar_coordinates(ds, product, scan_mode):  # noqa ARG001
     return ds
 
 
-@functools.cache
-def get_pmw_frequency_dict():
-    """Get PMW info dictionary."""
-    from gpm import _root_path
-
-    filepath = os.path.join(_root_path, "gpm", "etc", "pmw", "frequencies.yaml")
-    return read_yaml(filepath)
-
-
-@functools.cache
-def get_pmw_frequency(sensor, scan_mode):
-    """Get product info dictionary."""
-    pmw_dict = get_pmw_frequency_dict()
-    return pmw_dict[sensor][scan_mode]
-
-
 def get_pmw_frequency_corra(product):
+    from gpm.utils.pmw import get_pmw_frequency
+
     if product == "2B-GPM-CORRA":
         return get_pmw_frequency("GMI", scan_mode="S1") + get_pmw_frequency("GMI", scan_mode="S2")
     if product == "2B-TRMM-CORRA":
@@ -183,6 +180,8 @@ def _parse_sun_local_time(ds):
 
 def _add_1c_pmw_frequency(ds, product, scan_mode):
     """Add the 'pmw_frequency' coordinates to 1C-<PMW> products."""
+    from gpm.utils.pmw import get_pmw_frequency
+
     if "pmw_frequency" in list(ds.dims):
         pmw_frequency = get_pmw_frequency(sensor=product.split("-")[1], scan_mode=scan_mode)
         ds = ds.assign_coords({"pmw_frequency": pmw_frequency})
@@ -191,14 +190,40 @@ def _add_1c_pmw_frequency(ds, product, scan_mode):
 
 def _add_pmw_coordinates(ds, product, scan_mode):
     """Add coordinates to PMW products."""
-    if product.startswith("1C"):
-        ds = _add_1c_pmw_frequency(ds, product, scan_mode)
+    ds = _add_1c_pmw_frequency(ds, product, scan_mode)
+    return ds
+
+
+def _deal_with_pmw_incidence_angle_index(ds):
+    if "incidenceAngleIndex" in ds:
+        if "incidence_angle" in ds.dims and ds.sizes["incidence_angle"] > 1:
+            idx_incidence_angle = ds["incidenceAngleIndex"].isel(along_track=0).astype(int).compute() - 1
+        else:
+            # Some 1C files have bad incidenceAngleIndex values ( )
+            idx_incidence_angle = xr.zeros_like(ds["Tc"].isel(cross_track=0), dtype=int).compute()
+
+        if "incidenceAngle" in ds:
+            ds["incidenceAngle"] = ds["incidenceAngle"].isel(incidence_angle=idx_incidence_angle)
+        if "sunGlintAngle" in ds:
+            ds["sunGlintAngle"] = ds["sunGlintAngle"].isel(incidence_angle=idx_incidence_angle)
+        ds = ds.drop_vars("incidenceAngleIndex")
+
+    #     if "incidenceAngle" in ds:
+    #         ds["incidenceAngle"] = ds["incidenceAngle"].isel(incidence_angle=idx_incidence_angle)
+    #     if "sunGlintAngle" in ds:
+    #         ds["sunGlintAngle"] = ds["sunGlintAngle"].isel(incidence_angle=idx_incidence_angle)
+    # ds = ds.drop_vars("incidenceAngleIndex")
     return ds
 
 
 def set_coordinates(ds, product, scan_mode):
-    # Ensure valid coordinates
+    # Compute spatial coordinates in memory
+    ds["lon"] = ds["lon"].compute()
+    ds["lat"] = ds["lat"].compute()
+
+    # ORBIT objects
     if "cross_track" in list(ds.dims):
+        # Ensure valid coordinates
         ds = ensure_valid_coords(ds, raise_error=False)
 
     # Add range and gpm_range_id coordinates
@@ -221,10 +246,12 @@ def set_coordinates(ds, product, scan_mode):
         ds = ds.set_coords("sunLocalTime")
 
     #### PMW
-    # - 1C products
-    if product.startswith("1C"):
+    # - 1B and 1C products
+    if product.startswith("1C") or product.startswith("1B"):
         ds = _add_pmw_coordinates(ds, product, scan_mode)
-
+    # - Deal with incidenceAngleIndex in PMW 1C products
+    if product.startswith("1C"):
+        ds = _deal_with_pmw_incidence_angle_index(ds)
     #### RADAR
     if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR", "2A-ENV-DPR", "2A-ENV-PR", "2A-ENV-Ka", "2A-ENV-Ku"]:
         ds = _add_radar_coordinates(ds, product, scan_mode)

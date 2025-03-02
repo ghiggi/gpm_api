@@ -1,0 +1,69 @@
+31 + 88 + 165 GHz:
+  R:
+    name: 165.5QH
+    vmin: 65
+    vmax: 320
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 88.2QV
+    vmin: 65
+    vmax: 320
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  B:
+    name: 31.4QV
+    vmin: 65
+    vmax: 320
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  global_normalization: false
+165 + 183 GHz:
+  R:
+    name: 165.5QH
+    vmin: 50
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 183.31QH7
+    vmin: 50
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  B:
+    name: 183.31QH3
+    vmin: 50
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  global_normalization: true
+183 GHz:
+  R:
+    name: 183.31QH7
+    vmin: 100
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 183.31QH3
+    vmin: 100
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  B:
+    name: 183.31QH1
+    vmin: 100
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  global_normalization: true

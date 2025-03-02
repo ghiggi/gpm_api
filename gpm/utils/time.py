@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains utilities for time processing."""
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -281,7 +280,7 @@ def regularize_dataset(
     ds: xr.Dataset,
     freq: str,
     time_dim: str = "time",
-    method: Optional[str] = None,
+    method: str | None = None,
     fill_value=None,
 ):
     """Regularize a dataset across time dimension with uniform resolution.

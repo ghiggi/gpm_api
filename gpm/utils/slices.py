@@ -377,7 +377,7 @@ def pad_slices(list_slices, padding, valid_shape):
     # Apply padding
     return [
         pad_slice(s, padding=p, min_start=0, max_stop=valid_shape[i])
-        for i, (s, p) in enumerate(zip(list_slices, padding))
+        for i, (s, p) in enumerate(zip(list_slices, padding, strict=False))
     ]
 
 
@@ -496,5 +496,5 @@ def enlarge_slices(list_slices, min_size, valid_shape):
     # Enlarge the slice
     return [
         enlarge_slice(slc, min_size=s, min_start=0, max_stop=valid_shape[i])
-        for i, (slc, s) in enumerate(zip(list_slices, min_size))
+        for i, (slc, s) in enumerate(zip(list_slices, min_size, strict=False))
     ]

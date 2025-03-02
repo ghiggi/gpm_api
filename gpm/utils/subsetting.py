@@ -70,7 +70,7 @@ def _get_dim_isel_on_non_dim_coord_from_isel(xr_obj, coord, isel_indices):
     return dim, isel_indices
 
 
-def _get_dim_isel_indices_from_isel_indices(xr_obj, key, indices):
+def _get_dim_isel_indices_from_isel_indices(xr_obj, key, indices, method="dummy"):  # noqa
     """Return the dimension and isel_indices related to the dimension position indices of a coordinate."""
     # Non-dimensional coordinate case
     if key not in xr_obj.dims:
@@ -78,17 +78,17 @@ def _get_dim_isel_indices_from_isel_indices(xr_obj, key, indices):
     return key, indices
 
 
-def _get_isel_indices_from_sel_indices(xr_obj, coord, sel_indices):
+def _get_isel_indices_from_sel_indices(xr_obj, coord, sel_indices, method):
     """Get isel_indices corresponding to sel_indices."""
     da_coord = xr_obj[coord]
     dim = da_coord.dims[0]
     da_coord = da_coord.assign_coords({"isel_indices": (dim, np.arange(0, da_coord.size))})
-    da_subset = da_coord.swap_dims({dim: coord}).sel({coord: sel_indices})
+    da_subset = da_coord.swap_dims({dim: coord}).sel({coord: sel_indices}, method=method)
     isel_indices = da_subset["isel_indices"].data
     return isel_indices
 
 
-def _get_dim_isel_on_non_dim_coord_from_sel(xr_obj, coord, sel_indices):
+def _get_dim_isel_on_non_dim_coord_from_sel(xr_obj, coord, sel_indices, method):
     """
     Return the dimension and isel_indices related to a 1D non-dimension coordinate.
 
@@ -109,20 +109,25 @@ def _get_dim_isel_on_non_dim_coord_from_sel(xr_obj, coord, sel_indices):
         Indices for index-based selection.
     """
     dim = _get_dim_of_1d_non_dimensional_coord(xr_obj, coord)
-    isel_indices = _get_isel_indices_from_sel_indices(xr_obj, coord=coord, sel_indices=sel_indices)
+    isel_indices = _get_isel_indices_from_sel_indices(xr_obj, coord=coord, sel_indices=sel_indices, method=method)
     return dim, isel_indices
 
 
-def _get_dim_isel_indices_from_sel_indices(xr_obj, key, indices):
+def _get_dim_isel_indices_from_sel_indices(xr_obj, key, indices, method):
     """Return the dimension and isel_indices related to values of a coordinate."""
     # Dimension case
     if key in xr_obj.dims:
         if key not in xr_obj.coords:
             raise ValueError(f"Can not subset with gpm.sel the dimension '{key}' if it is not also a coordinate.")
-        isel_indices = _get_isel_indices_from_sel_indices(xr_obj, coord=key, sel_indices=indices)
+        isel_indices = _get_isel_indices_from_sel_indices(xr_obj, coord=key, sel_indices=indices, method=method)
     # Non-dimensional coordinate case
     else:
-        key, isel_indices = _get_dim_isel_on_non_dim_coord_from_sel(xr_obj, coord=key, sel_indices=indices)
+        key, isel_indices = _get_dim_isel_on_non_dim_coord_from_sel(
+            xr_obj,
+            coord=key,
+            sel_indices=indices,
+            method=method,
+        )
     return key, isel_indices
 
 
@@ -134,7 +139,7 @@ def _get_dim_isel_indices_function(func):
     return func_dict[func]
 
 
-def _subset(xr_obj, indexers=None, func="isel", drop=False, **indexers_kwargs):
+def _subset(xr_obj, indexers=None, func="isel", drop=False, method=None, **indexers_kwargs):
     """Perform selection with isel or isel."""
     # Retrieve indexers
     indexers = either_dict_or_kwargs(indexers, indexers_kwargs, func)
@@ -143,7 +148,7 @@ def _subset(xr_obj, indexers=None, func="isel", drop=False, **indexers_kwargs):
     # Define isel_dict
     isel_dict = {}
     for key, indices in indexers.items():
-        key, isel_indices = get_dim_isel_indices(xr_obj, key=key, indices=indices)
+        key, isel_indices = get_dim_isel_indices(xr_obj, key=key, indices=indices, method=method)
         if key in isel_dict:
             raise ValueError(f"Multiple indexers point to the '{key}' dimension.")
         isel_dict[key] = isel_indices
@@ -158,7 +163,7 @@ def isel(xr_obj, indexers=None, drop=False, **indexers_kwargs):
     return _subset(xr_obj, indexers=indexers, func="isel", drop=drop, **indexers_kwargs)
 
 
-def sel(xr_obj, indexers=None, drop=False, **indexers_kwargs):
+def sel(xr_obj, indexers=None, drop=False, method=None, **indexers_kwargs):
     """Perform value-based coordinate selection.
 
     Slices are treated as inclusive of both the start and stop values, unlike normal Python indexing.
@@ -169,7 +174,7 @@ def sel(xr_obj, indexers=None, drop=False, **indexers_kwargs):
 
     You can use string shortcuts for datetime coordinates (e.g., '2000-01' to select all values in January 2000).
     """
-    return _subset(xr_obj, indexers=indexers, func="sel", drop=drop, **indexers_kwargs)
+    return _subset(xr_obj, indexers=indexers, func="sel", drop=drop, method=method, **indexers_kwargs)
 
 
 ####------------------------------------------------------------------------------------------------------------------.

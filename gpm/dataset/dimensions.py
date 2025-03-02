@@ -82,6 +82,12 @@ DIM_DICT = {
     "nchannel4": "pmw_frequency",
     "nchannel5": "pmw_frequency",
     "nchannel6": "pmw_frequency",
+    "nchUIA1": "incidence_angle",
+    "nchUIA2": "incidence_angle",
+    "nchUIA3": "incidence_angle",
+    "nchUIA4": "incidence_angle",
+    "nchUIA5": "incidence_angle",
+    "nchUIA6": "incidence_angle",
     # PMW 1A-GMI (V7)
     "npixelev": "cross_track",
     "npixelht": "cross_track",
@@ -91,9 +97,10 @@ DIM_DICT = {
 
 SPATIAL_DIMS = [
     ["along_track", "cross_track"],
-    ["lat", "lon"],
-    ["latitude", "longitude"],
+    ["lon", "lat"],
+    ["longitude", "latitude"],
     ["x", "y"],  # compatibility with satpy/gpm_geo i.e.
+    ["nx", "ny"],  # compatibility with TC-PRIMED
     ["transect"],
     ["trajectory"],
     ["beam"],  # when stacking 2D spatial dims
@@ -102,7 +109,7 @@ SPATIAL_DIMS = [
 VERTICAL_DIMS = ["range", "height"]  #  ORBIT --> "range", "GRID" --> "height"  (nBnEnv" in CORRA)
 FREQUENCY_DIMS = ["radar_frequency", "pmw_frequency"]
 GRID_SPATIAL_DIMS = ("lon", "lat")
-ORBIT_SPATIAL_DIMS = ("cross_track", "along_track")
+ORBIT_SPATIAL_DIMS = ("along_track", "cross_track")
 
 
 def _has_a_phony_dim(xr_obj):
@@ -116,7 +123,7 @@ def _get_dataarray_dim_dict(da):
     dim_names_str = da.attrs.get("DimensionNames", None)
     if dim_names_str is not None:
         dim_names = dim_names_str.split(",")
-        for dim, new_dim in zip(list(da.dims), dim_names):
+        for dim, new_dim in zip(list(da.dims), dim_names, strict=False):
             # Deal with missing DimensionNames in
             # - sunVectorInBodyFrame variable in V5 products
             # - 1B-Ku/Ka V5 *Temp products
@@ -154,28 +161,28 @@ def _get_gpm_api_dims_dict(ds):
     return rename_dim_dict
 
 
-def _rename_dataarray_dimensions(da):
+def rename_dataarray_dimensions(da):
     """Rename xarray.DataArray dimensions."""
     if _has_a_phony_dim(da):
         da = da.rename(_get_dataarray_dim_dict(da))
     return da
 
 
-def _rename_dataset_dimensions(ds, use_api_defaults=True):
+def rename_dataset_dimensions(ds, use_api_defaults=True):
     """Rename xarray.Dataset dimension to the actual dimension names.
 
     The actual dimensions names are retrieved from the xarray.DataArrays DimensionNames attribute.
     The dimension renaming is performed at each Dataset level.
     If use_api_defaults is True (the default), it sets the GPM-API dimension names.
     """
-    dict_da = {var: _rename_dataarray_dimensions(ds[var]) for var in ds.data_vars}
+    dict_da = {var: rename_dataarray_dimensions(ds[var]) for var in ds.data_vars}
     ds = xr.Dataset(dict_da, attrs=ds.attrs)
     if use_api_defaults:
         ds = ds.rename_dims(_get_gpm_api_dims_dict(ds))
     return ds
 
 
-def _rename_datatree_dimensions(dt, use_api_defaults=True):
+def rename_datatree_dimensions(dt, use_api_defaults=True):
     """Rename xarray.DataTree dimension to the actual dimension names.
 
     The actual dimensions names are retrieved from the xarray.DataArrays DimensionNames attribute.
@@ -185,11 +192,18 @@ def _rename_datatree_dimensions(dt, use_api_defaults=True):
     The dimension renaming is performed at each Dataset level.
     If ``use_api_defaults`` is ``True`` (the default), it sets the GPM-API dimension names.
     """
-    # TODO: report reproducible issue on datatree repo ...
-    # --> dt[group].rename_dims(dim_dict) does not work
-    # --> dt.rename_dims(dim_dict) does work only at node level !
-    dt = dt.copy()  # otherwise rename input dt
-    for group in dt.groups:
-        dt[group].ds = _rename_dataset_dimensions(dt[group], use_api_defaults=use_api_defaults)
+    # Rename group dataset
+    dict_ds = {group: rename_dataset_dimensions(dt[group], use_api_defaults=use_api_defaults) for group in dt.groups}
 
-    return dt
+    # Recreate dt
+    new_dt = xr.DataTree.from_dict(dict_ds)
+    new_dt.attrs = dt.attrs
+
+    # Add file closers
+    new_dt.set_close(dt._close)
+
+    # Add group closers
+    for group in dt.groups:
+        new_dt[group].set_close(dt[group]._close)
+
+    return new_dt

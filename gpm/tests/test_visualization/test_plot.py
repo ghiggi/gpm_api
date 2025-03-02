@@ -40,6 +40,7 @@ from gpm.tests.test_visualization.utils import (
     skip_tests_if_no_data,
 )
 from gpm.visualization import plot
+from gpm.visualization.plot import add_map_inset
 
 # Fixtures imported from gpm.tests.conftest:
 # - orbit_dataarray
@@ -541,6 +542,21 @@ class TestPlotMap:
         with pytest.raises(ValueError):
             plot.plot_map(da)
 
+    ####------------------------------------------------------------------------
+    #### Test map inset options
+    def test_add_map_inset(self, orbit_dataarray: xr.DataArray):
+        """Test the add_map_inset function."""
+        p = plot.plot_map(orbit_dataarray)
+        add_map_inset(
+            ax=p.axes,
+            loc="upper left",
+            inset_height=0.2,
+            projection=None,
+            inside_figure=True,
+            border_pad=0.02,
+        )
+        save_and_check_figure(figure=p.figure, name=get_test_name())
+
 
 class TestPlotImage:
     """Test the plot_image function."""
@@ -894,37 +910,3 @@ class TestPlotPatches:
         ]
         generator = (t for t in invalid_list)
         plot.plot_patches(generator)  # passes without error
-
-
-class TestGetOrientationLocation:
-    """Test arguments for colorbar positioning."""
-
-    def test_defaults(self):
-        assert plot._get_orientation_location({}) == ("vertical", "right")
-
-    def test_defaults_with_valid_orientation(self):
-        assert plot._get_orientation_location({"orientation": "vertical"}) == ("vertical", "right")
-        assert plot._get_orientation_location({"orientation": "horizontal"}) == ("horizontal", "bottom")
-
-    def test_defaults_with_valid_location(self):
-        assert plot._get_orientation_location({"location": "left"}) == ("vertical", "left")
-        assert plot._get_orientation_location({"location": "bottom"}) == ("horizontal", "bottom")
-
-    def test_valid_orientation_location_combinations(self):
-        assert plot._get_orientation_location({"orientation": "horizontal", "location": "top"}) == ("horizontal", "top")
-        assert plot._get_orientation_location({"orientation": "vertical", "location": "left"}) == ("vertical", "left")
-
-    def test_invalid_orientation(self):
-        with pytest.raises(ValueError):
-            plot._get_orientation_location({"orientation": "invalid"})
-
-    def test_invalid_location(self):
-        with pytest.raises(ValueError):
-            plot._get_orientation_location({"location": "invalid"})
-
-    def test_invalid_orientation_location_combination(self):
-        with pytest.raises(ValueError):
-            plot._get_orientation_location({"orientation": "vertical", "location": "top"})
-
-        with pytest.raises(ValueError):
-            plot._get_orientation_location({"orientation": "horizontal", "location": "left"})

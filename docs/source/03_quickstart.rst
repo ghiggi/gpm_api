@@ -133,7 +133,7 @@ specific time periods:
 .. code-block:: python
 
     gpm.available_products(end_time="1995-01-31")  # from the start of the mission to 1995-01-31
-    gpm.available_products(start_time="2014-01-01", end_time="2016", product_categories="PMW")
+    gpm.available_products(start_time="2014-01-01", end_time="2016-01-01", product_categories="PMW")
     gpm.available_products(start_time="2019-01-01")  # from 2019-01-01 to the present
 
 
@@ -238,11 +238,17 @@ Open the data
 Within the GPM-API, the name *granule* is used to refer to a single file,
 while the name *dataset* is used to refer to a collection of granules.
 
-GPM-API enables to open single or multiple granules into an ``xarray.Dataset``, an object designed for working with labeled multi-dimensional arrays.
+GPM-API enables to open single or multiple granules into ``xarray.Dataset`` or ``xarray.DataTree`` objects,
+which are designed for working with labeled multi-dimensional arrays.
 
-The ``gpm.open_granule(filepath)`` opens a single file into xarray by providing the path of the file of interest.
+The ``gpm.open_granule_dataset(filepath)`` opens a single file into a ``xarray.Dataset`` object
+by providing the path of the file (granule) of interest. This function open a single sensor ``scan_mode``.
 
-The ``gpm.open_dataset`` function enables to open a collection of granules over a period of interest.
+The ``gpm.open_granule_datatree(filepath)`` opens a single file into a ``xarray.DataTree`` object
+by providing the path of the file (granule) of interest. This function open all sensors ``scan_modes``.
+
+The ``gpm.open_dataset`` and ``gpm.open_datatree`` functions enables to open a collection of granules
+ over a period of interest.
 
 The following example shows how to download and open a dataset over a specific time period:
 
@@ -280,6 +286,19 @@ The following example shows how to download and open a dataset over a specific t
 
     # Plot a specific variable of the dataset
     ds["precipRateNearSurface"].gpm.plot_map()
+
+    # As alternative you can open all scan modes into a datatree
+    dt = gpm.open_datatree(
+        product=product,
+        product_type=product_type,
+        version=version,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    # Then retrieve the dataset from the wished scan mode and plot
+    ds = dt["FS"].to_dataset()
+    ds["precipRateNearSurface"].gpm.plot_map()
+
 
 
 You are now ready to explore the various :ref:`tutorials <tutorials>` available in the documentation and learn more about the GPM-API functionalities.

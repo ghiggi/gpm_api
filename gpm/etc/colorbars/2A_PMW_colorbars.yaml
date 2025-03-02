@@ -7,6 +7,10 @@ frozenPrecipitation:
   reference: precipitation_rate
 surfacePrecipitation:
   reference: precipitation_rate
+precip2ndTertial:
+  reference: precipitation_rate
+precip1stTertial:
+  reference: precipitation_rate
 totalWaterPath:
   cmap:
     name: YlGnBu
@@ -90,3 +94,118 @@ iceWaterPath:
     extend: max
     extendfrac: 0.05
     label: Ice Water Path [$kg \ m^{-2}$]
+totalColumnWaterVaporIndex:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 78
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Total Precipitable Water [$mm$]
+pixelStatus:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: "gray"
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: Valid
+      1: Invalid geolocation
+      2: Out-of-range Tb
+      3: Histogram mismatch
+      4: Missing AUX variables
+      5: No solution found
+  cbar:
+    label: ""
+airmassLiftIndex:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: "gray"
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: Stratiform
+      1: Stratiform enhanced
+      2: Convective
+      3: Convective enhanced
+  cbar:
+    label: ""
+probabilityOfPrecip:
+  cmap:
+    name: Reds
+    bad_alpha: 0.8
+    bad_color: black
+    under_color: white
+  norm:
+    name: Norm
+    vmin: 1
+    vmax: 100
+  cbar:
+    label: "Precipitation Probability [%]"
+precipitationYesNoFlag:
+  cmap:
+    name: Set3
+    bad_alpha: 1
+    bad_color: "gray"
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: Non Raining
+      1: Raining
+  cbar:
+    label: ""
+temp2mIndex:
+  cmap:
+    name: RdYlBu_r
+    bad_alpha: 0.5
+    bad_color: gray
+    under_color: none
+  norm:
+    name: CenteredNorm
+    vcenter: 278
+  cbar:
+    label: "Surface temperature [K]"
+surfaceTypeIndex:
+  cmap:
+    name: surfaceTypeIndexPalette
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      1: "Ocean"
+      2: "Sea-Ice"
+      3: "High vegetation"
+      4: "Medium vegetation"
+      5: "Low vegetation"
+      6: "Sparse vegetation"
+      7: "Desert"
+      8: "Elevated snow cover"
+      9: "High snow cover"
+      10: "Moderate snow cover"
+      11: "Light snow cover"
+      12: "Standing Water"
+      13: "Ocean or water Coast"
+      14: "Mixed land/ocean or water coast"
+      15: "Land coast"
+      16: "Sea-ice edge"
+      17: "Mountain rain"
+      18: "Mountain snow"
+  cbar:
+    label: ""

@@ -15,3 +15,9 @@ nearSurfPrecipLiqRate:
   reference: precipitation_rate
 precipTotRate:
   reference: precipitation_rate
+correctedReflectFactor:
+  reference: reflectivity_gpm
+precipTotDm:
+  reference: Dm
+precipTotLogNw:
+  reference: LogNw

@@ -310,7 +310,7 @@ def get_time_component(time, component):
     return str(func_dict[component](time))
 
 
-def _get_groups_value(groups, filepath):
+def _get_groups_value(groups, filepath, sep=None):
     """Return the value associated to the groups keys.
 
     If multiple keys are specified, the value returned is a string of format: ``<group_value_1>/<group_value_2>/...``
@@ -318,6 +318,8 @@ def _get_groups_value(groups, filepath):
     If a single key is specified and is ``start_time`` or ``end_time``, the function
     returns a :py:class:`datetime.datetime` object.
     """
+    if sep is None:
+        sep = os.path.sep
     single_key = len(groups) == 1
     info_dict = get_info_from_filepath(filepath)
     start_time = info_dict["start_time"]
@@ -330,10 +332,10 @@ def _get_groups_value(groups, filepath):
             list_key_values.append(value if single_key else str(value))
     if single_key:
         return list_key_values[0]
-    return "/".join(list_key_values)
+    return sep.join(list_key_values)
 
 
-def group_filepaths(filepaths, groups=None):
+def group_filepaths(filepaths, groups=None, sep=None):
     """
     Group filepaths in a dictionary if groups are specified.
 
@@ -351,6 +353,9 @@ def group_filepaths(filepaths, groups=None):
         The time components are extracted from ``start_time`` !
         If groups is ``None`` returns the input filepaths list.
         The default is ``None``.
+    sep: str
+        Separator to use for multiple groups.
+        The default is os.path.sep.
 
     Returns
     -------
@@ -363,5 +368,5 @@ def group_filepaths(filepaths, groups=None):
         return filepaths
     groups = check_groups(groups)
     filepaths_dict = defaultdict(list)
-    _ = [filepaths_dict[_get_groups_value(groups, filepath)].append(filepath) for filepath in filepaths]
+    _ = [filepaths_dict[_get_groups_value(groups, filepath, sep=sep)].append(filepath) for filepath in filepaths]
     return dict(filepaths_dict)

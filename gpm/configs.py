@@ -28,7 +28,6 @@
 import os
 import platform
 from subprocess import Popen
-from typing import Optional
 
 from gpm.utils.yaml import read_yaml, write_yaml
 
@@ -81,11 +80,11 @@ def _define_config_filepath():
 
 
 def define_configs(
-    base_dir: Optional[str] = None,
-    username_pps: Optional[str] = None,
-    password_pps: Optional[str] = None,
-    username_earthdata: Optional[str] = None,
-    password_earthdata: Optional[str] = None,
+    base_dir: str | None = None,
+    username_pps: str | None = None,
+    password_pps: str | None = None,
+    username_earthdata: str | None = None,
+    password_earthdata: str | None = None,
 ):
     """Defines the GPM-API configuration file with the given credentials and base directory.
 
@@ -188,12 +187,14 @@ def _get_config_key(key):
 def get_base_dir(base_dir=None):
     """Return the GPM base directory."""
     import gpm
+    from gpm.io.checks import check_base_dir
 
     if base_dir is None:
         base_dir = gpm.config.get("base_dir")
     if base_dir is None:
         raise ValueError("The 'base_dir' is not specified in the GPM-API configuration file.")
-    return str(base_dir)  # convert Path to str
+    base_dir = check_base_dir(base_dir)  # convert Path to str
+    return base_dir
 
 
 def get_username_pps():

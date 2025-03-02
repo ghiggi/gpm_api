@@ -231,7 +231,7 @@ class TestGetFilepathsFromFilenames:
     filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
 
     def test_local(self) -> None:
-        base_dir = "dummy/base_dir/path"
+        base_dir = "dummy/base_dir/GPM"
         with gpm.config.set({"base_dir": base_dir}):
             assert dl.get_filepaths_from_filenames(
                 filepaths=[self.filename],
@@ -240,7 +240,6 @@ class TestGetFilepathsFromFilenames:
             ) == [
                 os.path.join(
                     base_dir,
-                    "GPM",
                     "RS",
                     "V07",
                     "RADAR",
@@ -348,6 +347,9 @@ def test_download_files(
     tmp_path,
 ) -> None:
     """Test download_files function."""
+    # Define base directory
+    base_dir = tmp_path / "GPM"
+
     # Mock called functions as to not download any data
     mocker.patch.object(dl, "_download_files", autospec=True, return_value=[])
     mocker.patch.object(dl, "_download_daily_data", autospec=True, return_value=([], versions))
@@ -355,11 +357,11 @@ def test_download_files(
     mocker.patch.object(dl, "check_filepaths_integrity", autospec=True, return_value=[])
 
     # Download a simple list of files
-    with gpm.config.set({"base_dir": tmp_path}):
+    with gpm.config.set({"base_dir": base_dir}):
         assert dl.download_files(filepaths=list(remote_filepaths.keys())) == []
 
     # Test that a single filepath as a string also accepted as input
-    with gpm.config.set({"base_dir": tmp_path}):
+    with gpm.config.set({"base_dir": base_dir}):
         remote_filepath = list(remote_filepaths.keys())[0]
         assert dl.download_files(filepaths=remote_filepath) == []
 
@@ -379,8 +381,9 @@ def test_download_files(
         dl.download_files(filepaths="invalid_str")
 
     # Test data already on disk (force_download=False)
-    mocker.patch.object(dl, "filter_download_list", autospec=True, return_value=([], []))
-    assert dl.download_files(filepaths=list(remote_filepaths.keys())) is None
+    with gpm.config.set({"base_dir": base_dir}):
+        mocker.patch.object(dl, "filter_download_list", autospec=True, return_value=([], []))
+        assert dl.download_files(filepaths=list(remote_filepaths.keys())) is None
 
 
 @pytest.mark.parametrize("storage", ["PPS", "GES_DISC"])

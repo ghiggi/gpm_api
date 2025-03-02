@@ -27,7 +27,6 @@
 """This module test the GPM-API Dataset attributes."""
 
 import xarray as xr
-from datatree import DataTree
 
 from gpm.dataset import attrs
 
@@ -118,7 +117,7 @@ def test_get_granule_attrs(monkeypatch):
     )
 
     # Test with non-nested dictionary
-    dt = DataTree()
+    dt = xr.DataTree()
     dt.attrs = {
         "key_1": "value_1",
         "invalid_key": "value_2",

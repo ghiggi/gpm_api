@@ -843,7 +843,7 @@ def retrieve_VILD(
     variable="zFactorFinal",
     radar_frequency="Ku",
     threshold=18,
-    use_echo_top=True,
+    use_echo_top=False,
 ):
     """Compute Vertically Integrated Liquid Density.
 
@@ -1018,7 +1018,7 @@ def retrieve_SHI(
     return da_shi
 
 
-def retrieve_MESH(ds):
+def retrieve_MESH(ds, scale_factor=2):
     """Retrieve the Maximum Estimated Size of Hail (MESH).
 
     Also known as the Maximum Expected Hail Size (MEHS).
@@ -1028,7 +1028,7 @@ def retrieve_MESH(ds):
     chosen percentile of maximum observed hail size (using a power-law)
     """
     da_shi = retrieve_SHI(ds)
-    da_mesh = 2.54 * da_shi**0.5
+    da_mesh = 2.54 * da_shi**0.5 * scale_factor
     # Add attributes
     da_mesh.name = "MESH"
     da_mesh.attrs["description"] = "Maximum Estimated Size of Hail"
@@ -1113,15 +1113,15 @@ def retrieve_POH(ds, method="Foote2005"):
 def retrieve_MESHS(ds):
     """The Maximum Expected Severe Hail Size at the surface.
 
-    Based on EchoTop50dBZ.
+    Based on EchoTop45dBZ.
 
-    No hail if EchoDepth50dBZ above melting layer < 1.65 km.
+    No hail if EchoDepth45dBZ above melting layer < 1.65 km.
     100% hail if EchoDepth45dBZ above melting layer > 5.5 / 5.8 km.
-    to 100% (hail; Δz > 5.5 km)
     """
     variable = "zFactorFinal"
     radar_frequency = "Ku"
     h0 = get_xarray_variable(ds, variable="heightZeroDeg")
+
     # Compute MESHS
     et_50_2cm = 1.5 * h0 + 1700
     et_50_4cm = 1.7824 * h0 + 2544.1
@@ -1129,7 +1129,7 @@ def retrieve_MESHS(ds):
 
     et50 = retrieve_EchoTopHeight(
         ds,
-        threshold=50,
+        threshold=45,  # C --> Ku-band
         variable=variable,
         radar_frequency=radar_frequency,
     )

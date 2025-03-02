@@ -92,7 +92,7 @@ def match_filters(filename, file_extension=None, glob_pattern=None, regex_patter
     )
 
 
-def list_and_filter_files(path, file_extension=None, glob_pattern=None, regex_pattern=None):
+def list_and_filter_files(path, file_extension=None, glob_pattern=None, regex_pattern=None, sort=True):
     """Retrieve list of files (filtered by extension and custom patterns)."""
     with os.scandir(path) as file_it:
         filepaths = [
@@ -108,6 +108,8 @@ def list_and_filter_files(path, file_extension=None, glob_pattern=None, regex_pa
                 )
             )
         ]
+    if sort:
+        filepaths = sorted(filepaths)
     return filepaths
 
 
@@ -143,6 +145,7 @@ def get_filepaths_within_paths(paths, parallel=True, file_extension=None, glob_p
             file_extension=file_extension,
             glob_pattern=glob_pattern,
             regex_pattern=regex_pattern,
+            sort=False,  # done at the end
         )
     else:
         filepaths = [
@@ -151,6 +154,7 @@ def get_filepaths_within_paths(paths, parallel=True, file_extension=None, glob_p
                 file_extension=file_extension,
                 glob_pattern=glob_pattern,
                 regex_pattern=regex_pattern,
+                sort=False,
             )
             for path in paths
         ]
@@ -169,6 +173,7 @@ def get_filepaths_by_path(paths, parallel=True, file_extension=None, glob_patter
             file_extension=file_extension,
             glob_pattern=glob_pattern,
             regex_pattern=regex_pattern,
+            sort=True,
         )
     else:
         dict_partitions = {
@@ -239,3 +244,12 @@ def search_leaf_files(base_dir, parallel=True, file_extension=None, glob_pattern
         regex_pattern=regex_pattern,
     )
     return filepaths
+
+
+def get_first_file(directory):
+    """Retrieve filepath of first file inside a directory."""
+    with os.scandir(directory) as entries:
+        for entry in entries:
+            if entry.is_file():
+                return entry.path
+    return None

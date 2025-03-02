@@ -30,7 +30,7 @@ import importlib
 import inspect
 import re
 import sys
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 import xarray as xr
@@ -90,10 +90,10 @@ class GPM_Base_Accessor:
         return isel(self._obj, indexers=indexers, drop=drop, **indexers_kwargs)
 
     @auto_wrap_docstring
-    def sel(self, indexers=None, drop=False, **indexers_kwargs):
+    def sel(self, indexers=None, drop=False, method=None, **indexers_kwargs):
         from gpm.utils.subsetting import sel
 
-        return sel(self._obj, indexers=indexers, drop=drop, **indexers_kwargs)
+        return sel(self._obj, indexers=indexers, drop=drop, method=method, **indexers_kwargs)
 
     @auto_wrap_docstring
     def extent(self, padding=0, size=None):
@@ -124,6 +124,12 @@ class GPM_Base_Accessor:
         from gpm.utils.geospatial import crop_around_point
 
         return crop_around_point(self._obj, lon=lon, lat=lat, distance=distance, size=size)
+
+    @auto_wrap_docstring
+    def crop_around_valid_data(self, variable=None):
+        from gpm.utils.manipulations import crop_around_valid_data
+
+        return crop_around_valid_data(self._obj, variable=variable)
 
     @auto_wrap_docstring
     def get_crop_slices_by_extent(self, extent):
@@ -212,11 +218,21 @@ class GPM_Base_Accessor:
         )
 
     @auto_wrap_docstring
+    def remap_era5(self, variables):
+        from gpm.utils.collocation import remap_era5
+
+        return remap_era5(
+            self._obj,
+            variables=variables,
+        )
+
+    @auto_wrap_docstring
     def collocate(
         self,
         product,
         product_type="RS",
         version=None,
+        storage="GES_DISC",
         scan_modes=None,
         variables=None,
         groups=None,
@@ -231,12 +247,35 @@ class GPM_Base_Accessor:
             product=product,
             product_type=product_type,
             version=version,
+            storage=storage,
             scan_modes=scan_modes,
             variables=variables,
             groups=groups,
             verbose=verbose,
             chunks=chunks,
             decode_cf=decode_cf,
+        )
+
+    @auto_wrap_docstring
+    def unstack_dimension(self, dim, coord_handling="keep", prefix="", suffix=""):
+        from gpm.utils.xarray import unstack_dimension
+
+        return unstack_dimension(
+            self._obj,
+            dim=dim,
+            coord_handling=coord_handling,
+            prefix=prefix,
+            suffix=suffix,
+        )
+
+    @auto_wrap_docstring
+    def broadcast_like(self, other, add_coords=True):
+        from gpm.utils.xarray import broadcast_like
+
+        return broadcast_like(
+            self._obj,
+            other=other,
+            add_coords=add_coords,
         )
 
     #### Transect/Trajectory utility
@@ -315,6 +354,20 @@ class GPM_Base_Accessor:
             new_dim=new_dim,
         )
 
+    @auto_wrap_docstring
+    def extract_transect_along_dimension(
+        self,
+        point,
+        dim,
+    ):
+        from gpm.utils.manipulations import extract_transect_along_dimension
+
+        return extract_transect_along_dimension(
+            self._obj,
+            point=point,
+            dim=dim,
+        )
+
     #### Range subset utility
     @auto_wrap_docstring
     def slice_range_at_bin(self, bins):
@@ -388,6 +441,13 @@ class GPM_Base_Accessor:
         from gpm.utils.manipulations import mask_above_bin
 
         return mask_above_bin(self._obj, bins=bins, strict=strict, fillvalue=fillvalue)
+
+    #### Infill
+    @auto_wrap_docstring
+    def infill_below_bin(self, bins):
+        from gpm.utils.manipulations import infill_below_bin
+
+        return infill_below_bin(self._obj, bins=bins)
 
     #### Dataset utility
     @property
@@ -577,6 +637,8 @@ class GPM_Base_Accessor:
         ax=None,
         add_direction=True,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         fig_kwargs=None,
         subplot_kwargs=None,
         text_kwargs=None,
@@ -590,6 +652,8 @@ class GPM_Base_Accessor:
             ax=ax,
             add_direction=add_direction,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             text_kwargs=text_kwargs,
@@ -607,6 +671,8 @@ class GPM_Base_Accessor:
         fig_kwargs=None,
         subplot_kwargs=None,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         **plot_kwargs,
     ):
         from gpm.visualization.orbit import plot_swath
@@ -618,6 +684,8 @@ class GPM_Base_Accessor:
             edgecolor=edgecolor,
             alpha=alpha,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -632,6 +700,8 @@ class GPM_Base_Accessor:
         linestyle="--",
         color="k",
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         fig_kwargs=None,
         subplot_kwargs=None,
         **plot_kwargs,
@@ -646,6 +716,8 @@ class GPM_Base_Accessor:
             linestyle=linestyle,
             color=color,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -660,6 +732,8 @@ class GPM_Base_Accessor:
         edgecolors="k",
         linewidth=0.1,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         fig_kwargs=None,
         subplot_kwargs=None,
         **plot_kwargs,
@@ -674,6 +748,8 @@ class GPM_Base_Accessor:
             edgecolors=edgecolors,
             linewidth=linewidth,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
@@ -688,6 +764,8 @@ class GPM_Base_Accessor:
         c="r",
         s=1,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         fig_kwargs=None,
         subplot_kwargs=None,
         **plot_kwargs,
@@ -702,10 +780,25 @@ class GPM_Base_Accessor:
             c=c,
             s=s,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
             **plot_kwargs,
         )
+
+
+@xr.register_datatree_accessor("gpm")
+class GPM_DataTree_Accessor:
+
+    def __init__(self, xarray_obj):
+        self._obj = xarray_obj
+
+    @auto_wrap_docstring
+    def regrid_pmw_l1(self, scan_mode_reference="S1"):
+        from gpm.utils.collocation import regrid_pmw_l1
+
+        return regrid_pmw_l1(dt=self._obj, scan_mode_reference=scan_mode_reference)
 
 
 @xr.register_dataset_accessor("gpm")
@@ -825,6 +918,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         interpolation="nearest",  # used only for GPM grid object
         fig_kwargs=None,
         subplot_kwargs=None,
@@ -841,6 +936,8 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
@@ -856,6 +953,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         x=None,
         y=None,
         add_colorbar=True,
+        add_labels=True,
         interpolation="nearest",
         fig_kwargs=None,
         cbar_kwargs=None,
@@ -869,6 +967,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             x=x,
             y=y,
             add_colorbar=add_colorbar,
+            add_labels=add_labels,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -885,6 +984,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         interpolation="nearest",
         zoom=True,
+        check_contiguity=True,
         fig_kwargs=None,
         cbar_kwargs=None,
         **plot_kwargs,
@@ -899,6 +999,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             add_colorbar=add_colorbar,
             interpolation=interpolation,
             zoom=zoom,
+            check_contiguity=check_contiguity,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,
@@ -962,10 +1063,10 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
 
     @auto_wrap_docstring
-    def to_pandas_dataframe(self):
+    def to_pandas_dataframe(self, drop_index=True):
         from gpm.utils.dataframe import to_pandas_dataframe
 
-        return to_pandas_dataframe(self._obj)
+        return to_pandas_dataframe(self._obj, drop_index=drop_index)
 
     @auto_wrap_docstring
     def to_dask_dataframe(self):
@@ -1010,6 +1111,18 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         return get_slices_var_between(self._obj, dim=dim, vmin=vmin, vmax=vmax, criteria=criteria)
 
     @auto_wrap_docstring
+    def locate_max_value(self, return_isel_dict=False):
+        from gpm.utils.manipulations import locate_max_value
+
+        return locate_max_value(self._obj, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
+    def locate_min_value(self, return_isel_dict=False):
+        from gpm.utils.manipulations import locate_min_value
+
+        return locate_min_value(self._obj, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
     def title(
         self,
         prefix_product=True,
@@ -1038,6 +1151,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         add_swath_lines=True,
         add_background=True,
+        add_gridlines=True,
+        add_labels=True,
         interpolation="nearest",  # used only for GPM grid object
         fig_kwargs=None,
         subplot_kwargs=None,
@@ -1054,6 +1169,8 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             add_colorbar=add_colorbar,
             add_swath_lines=add_swath_lines,
             add_background=add_background,
+            add_gridlines=add_gridlines,
+            add_labels=add_labels,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
@@ -1068,6 +1185,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         x=None,
         y=None,
         add_colorbar=True,
+        add_labels=True,
         interpolation="nearest",
         fig_kwargs=None,
         cbar_kwargs=None,
@@ -1081,6 +1199,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             x=x,
             y=y,
             add_colorbar=add_colorbar,
+            add_labels=add_labels,
             interpolation=interpolation,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
@@ -1096,6 +1215,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         interpolation="nearest",
         zoom=True,
+        check_contiguity=True,
         fig_kwargs=None,
         cbar_kwargs=None,
         **plot_kwargs,
@@ -1110,6 +1230,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
             add_colorbar=add_colorbar,
             interpolation=interpolation,
             zoom=zoom,
+            check_contiguity=check_contiguity,
             fig_kwargs=fig_kwargs,
             cbar_kwargs=cbar_kwargs,
             **plot_kwargs,

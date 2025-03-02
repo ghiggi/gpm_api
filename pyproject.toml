@@ -25,9 +25,10 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
     "Topic :: Scientific/Engineering :: GIS",
@@ -36,8 +37,7 @@ classifiers = [
 ]
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
-    "xarray",
-    "xarray-datatree",  # to be deprecated as soon datatree in xarray is working
+    "xarray>=2025.01.0",
     "xoak",
     "netcdf4",
     "dask",
@@ -53,9 +53,9 @@ dependencies = [
     "numpy",
     "pandas",
     "scipy",
-    "pycolorbar>=0.1.0",
+    "pycolorbar>=0.1.2",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -201,6 +201,7 @@ ignore = [
     "B006", # {} defaults in function arguments
     "PT011", # pytest raised error must be checked if match the expected error msg
     "PERF203",
+    "UP038",
     # "PD011", # suggest values --> to_numpy
     "PD901",
     "PD013", # suggest melt instead of stack

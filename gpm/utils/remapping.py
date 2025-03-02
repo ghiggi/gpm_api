@@ -131,7 +131,7 @@ def chunks_inputs(x, n_blocks=None):
     # Chunk numpy/xarray DataArray
     if isinstance(x, np.ndarray):
         return dask.array.from_array(x, chunks=chunks)
-    return x.chunk(dict(zip(x.dims, chunks)))
+    return x.chunk(dict(zip(x.dims, chunks, strict=False)))
 
 
 def reproject_coords(x, y, z=None, parallel=False, **kwargs):

@@ -78,16 +78,49 @@ def get_dataset_variables(ds, sort=False):
 def get_xarray_variable(xr_obj, variable=None):
     """Return variable DataArray from xarray object.
 
-    If the input is a xr.DataArray, it return it
-    If the input is a xr.Dataset, it return the specified variable.
+    If variable is a xr.DataArray, it returns it
+    If variable is None and the the input is a xr.DataArray, it returns it
+    If the input is a xr.Dataset, it returns the specified variable.
     """
     check_is_xarray(xr_obj)
+    if isinstance(variable, xr.DataArray):
+        return variable
     if isinstance(xr_obj, xr.Dataset):
         check_variable_availabilty(xr_obj, variable, argname="variable")
         da = xr_obj[variable]
     else:
         da = xr_obj
     return da
+
+
+def get_default_variable(ds: xr.Dataset, possible_variables) -> str:
+    """Return one of the possible default variables.
+
+    Check if one of the variables in 'possible_variables' is present in the xarray.Dataset.
+    If neither variable is present, raise an error.
+    If both are present, raise an error.
+    Return the name of the single available variable in the xarray.Dataset
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The xarray dataset to inspect.
+    possible_variables : list of str
+        The variable names to look for.
+
+    Returns
+    -------
+    str
+        The name of the variable found in the xarray.Dataset.
+    """
+    if isinstance(possible_variables, str):
+        possible_variables = [possible_variables]
+    found_vars = [v for v in possible_variables if v in ds.data_vars]
+    if len(found_vars) == 0:
+        raise ValueError(f"None of {possible_variables} variables were found in the dataset.")
+    if len(found_vars) > 1:
+        raise ValueError(f"Multiple variables found: {found_vars}. Please specify which to use.")
+    return found_vars[0]
 
 
 def get_dimensions_without(xr_obj, dims):
@@ -110,7 +143,7 @@ def has_unique_chunking(ds):
     for var_name in ds.variables:
         if hasattr(ds[var_name].data, "chunks"):  # is dask array
             var_chunks = ds[var_name].data.chunks
-            for dim, chunks in zip(ds[var_name].dims, var_chunks):
+            for dim, chunks in zip(ds[var_name].dims, var_chunks, strict=False):
                 if dim not in unique_chunks_per_dim:
                     unique_chunks_per_dim[dim] = set()
                     unique_chunks_per_dim[dim].add(chunks)
@@ -136,6 +169,288 @@ def ensure_unique_chunking(ds):
     if not has_unique_chunking(ds):
         ds = ds.unify_chunks()
     return ds
+
+
+def _xr_first_data_array(da, dim):
+    """Return first valid value of a DataArray along a dimension."""
+    mask = da.notnull()  # noqa PD004
+    first_valid_idx = mask.argmax(dim=dim)
+    first_valid_value = da.isel({dim: first_valid_idx})
+    first_valid_value = first_valid_value.where(mask.any(dim=dim))
+    return first_valid_value
+
+
+def xr_first(xr_obj, dim):
+    """Return the first valid (non-NaN) value along the specified dimension."""
+    check_is_xarray(xr_obj)
+    if isinstance(xr_obj, xr.Dataset):
+        for var in xr_obj.data_vars:
+            if dim in xr_obj[var]:
+                xr_obj[var] = _xr_first_data_array(xr_obj[var], dim=dim)
+        return xr_obj
+    return _xr_first_data_array(xr_obj, dim=dim)
+
+
+def _drop_constant_dimension_datarray(da):
+    """Drop DataArray dimensions over which all numeric values are equal."""
+    if not np.issubdtype(da.dtype, np.number):
+        return da
+
+    for dim in list(da.dims):
+        if dim not in da.dims:
+            continue
+        # If the variable is constant along this dimension, drop the other dimensions.
+        if (da.diff(dim=dim).sum(dim=dim) == 0).all():
+            da = xr_first(da, dim=dim)
+    return da
+
+
+def xr_drop_constant_dimension(xr_obj):
+    """Return the first valid (non-NaN) value along the specified dimension."""
+    check_is_xarray(xr_obj)
+    if isinstance(xr_obj, xr.Dataset):
+        for var in xr_obj.data_vars:
+            xr_obj[var] = _drop_constant_dimension_datarray(xr_obj[var])
+        return xr_obj
+    return _drop_constant_dimension_datarray(xr_obj)
+
+
+def broadcast_like(xr_obj, other, add_coords=True):
+    """Broadcast an xarray object against another one."""
+    xr_obj = xr_obj.broadcast_like(other)
+    if add_coords:
+        xr_obj = xr_obj.assign_coords(other.coords)
+    return xr_obj
+
+
+def xr_sorted_distribution(da, values, dim):
+    """
+    Compute the ranked frequency distribution of integer values along a given dimension.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The input data array containing integer values along the specified dimension.
+    values : array-like
+        An array of the expected values (e.g. np.arange(1, 13) for months,
+        np.arange(0, 24) for hours, etc.).
+    dim : str
+        The name of the dimension along which to compute the ranked distribution (e.g., "year").
+
+    Returns
+    -------
+    ds_out : xarray.Dataset
+        A dataset with three DataArrays along a new dimension "rank":
+          - sorted_values: The provided values sorted in descending order of occurrence.
+          - occurrence: The count of occurrences for each sorted value.
+          - percentage: The percentage occurrence (relative to the size along `dim`).
+
+        For each pixel (or location), index along "rank" to retrieve, for example,
+        the most frequent value at rank 0, the second most at rank 1, etc.
+    """
+    values = np.asarray(values)
+
+    def _np_sorted_distribution(arr, values):
+        # Convert to integer type if not already.
+        arr = arr.astype(np.int64)
+        # Count the occurrences for each expected value.
+        counts = np.array([np.count_nonzero(arr == v) for v in values])
+        # Sort the expected values in descending order of counts.
+        sort_idx = np.argsort(counts)[::-1]
+        sorted_values = values[sort_idx].copy()
+        sorted_counts = counts[sort_idx]
+        total = arr.size
+        sorted_percentage = sorted_counts / total * 100.0
+        return sorted_values, sorted_counts, sorted_percentage
+
+    # Define dask_gufunc_kwargs
+    dask_gufunc_kwargs = {}
+    dask_gufunc_kwargs["output_sizes"] = {"rank": len(values)}
+
+    # Apply the distribution function along the specified dimension.
+    sorted_vals, occurrence, percentage = xr.apply_ufunc(
+        _np_sorted_distribution,
+        da,
+        input_core_dims=[[dim]],
+        output_core_dims=[["rank"], ["rank"], ["rank"]],
+        vectorize=True,
+        dask="parallelized",
+        kwargs={"values": values},
+        output_dtypes=[int, int, float],
+        dask_gufunc_kwargs=dask_gufunc_kwargs,
+    )
+
+    ds_out = xr.Dataset(
+        {
+            "sorted_values": sorted_vals,
+            "occurrence": occurrence,
+            "percentage": percentage,
+        },
+    )
+    return ds_out
+
+
+####-------------------------------------------------------------------
+#### Unstacking dimension
+
+
+def _check_coord_handling(coord_handling):
+    if coord_handling not in {"keep", "drop", "unstack"}:
+        raise ValueError("coord_handling must be one of 'keep', 'drop', or 'unstack'.")
+
+
+def _unstack_coordinates(xr_obj, dim, prefix, suffix):
+    # Identify coordinates that share the target dimension
+    coords_with_dim = _get_non_dimensional_coordinates(xr_obj, dim=dim)
+    ds = xr.Dataset()
+    for coord_name in coords_with_dim:
+        coord_da = xr_obj[coord_name]
+        # Split the coordinate DataArray along the target dimension, drop coordinate and merge
+        split_ds = unstack_datarray_dimension(coord_da, coord_handling="drop", dim=dim, prefix=prefix, suffix=suffix)
+        ds.update(split_ds)
+    return ds
+
+
+def _handle_unstack_non_dim_coords(ds, source_xr_obj, coord_handling, dim, prefix, suffix):
+    # Deal with coordinates sharing the target dimension
+    if coord_handling == "keep":
+        return ds
+    if coord_handling == "unstack":
+        ds_coords = _unstack_coordinates(source_xr_obj, dim=dim, prefix=prefix, suffix=suffix)
+        ds.update(ds_coords)
+    # Remove non dimensional coordinates (unstack and drop coord_handling)
+    ds = ds.drop_vars(_get_non_dimensional_coordinates(ds, dim=dim))
+    return ds
+
+
+def _get_non_dimensional_coordinates(xr_obj, dim):
+    return [coord_name for coord_name, coord_da in xr_obj.coords.items() if dim in coord_da.dims and coord_name != dim]
+
+
+def unstack_datarray_dimension(da, dim, coord_handling="keep", prefix="", suffix=""):
+    """
+    Split a DataArray along a specified dimension into a Dataset with separate prefixed and suffixed variables.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The DataArray to split.
+    dim : str
+        The dimension along which to split the DataArray.
+    coord_handling : str, optional
+        Option to handle coordinates sharing the target dimension.
+        Choices are 'keep', 'drop', or 'unstack'. Defaults to 'keep'.
+    prefix : str, optional
+        String to prepend to each new variable name.
+    suffix : str, optional
+        String to append to each new variable name.
+
+    Returns
+    -------
+    xr.Dataset
+        A Dataset with each variable split along the specified dimension.
+        The Dataset variables are named  "{prefix}{name}{suffix}{dim_value}".
+        Coordinates sharing the target dimension are handled based on `coord_handling`.
+    """
+    # Retrieve DataArray name
+    name = da.name
+    # Unstack variables
+    ds = da.to_dataset(dim=dim)
+    rename_dict = {dim_value: f"{prefix}{name}{suffix}{dim_value}" for dim_value in list(ds.data_vars)}
+    ds = ds.rename_vars(rename_dict)
+    # Deal with coordinates sharing the target dimension
+    return _handle_unstack_non_dim_coords(
+        ds=ds,
+        source_xr_obj=da,
+        coord_handling=coord_handling,
+        dim=dim,
+        prefix=prefix,
+        suffix=suffix,
+    )
+
+
+def unstack_dataset_dimension(ds, dim, coord_handling="keep", prefix="", suffix=""):
+    """
+    Split Dataset variables with the specified dimension into separate prefixed and suffixed variables.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The DataArray to split.
+    dim : str
+        The dimension along which to split the DataArray.
+    coord_handling : str, optional
+        Option to handle coordinates sharing the target dimension.
+        Choices are 'keep', 'drop', or 'unstack'. Defaults to 'keep'.
+    prefix : str, optional
+        String to prepend to each new variable name.
+    suffix : str, optional
+        String to append to each new variable name.
+
+    Returns
+    -------
+    xr.Dataset
+        A Dataset with each variable with dimension `dim` split into new variables.
+        The new Dataset variables are named "{prefix}{name}{suffix}{dim_value}".
+        Coordinates sharing the target dimension are handled based on `coord_handling`.
+    """
+    # Identify variables that have the target dimension
+    variables_to_split = [var for var in ds.data_vars if dim in ds[var].dims]
+
+    # Identify variables that do NOT have the target dimension
+    variables_to_keep = [var for var in ds.data_vars if dim not in ds[var].dims]
+
+    # Initialize the new Dataset with variables to keep
+    ds_unstacked = ds[variables_to_keep].copy()
+
+    # Loop over DataArray
+    for var in variables_to_split:
+        ds_unstacked.update(
+            unstack_datarray_dimension(ds[var], dim=dim, coord_handling="keep", prefix=prefix, suffix=suffix),
+        )
+
+    # Deal with coordinates sharing the target dimension
+    ds_unstacked = _handle_unstack_non_dim_coords(
+        ds=ds_unstacked,
+        source_xr_obj=ds,
+        dim=dim,
+        coord_handling=coord_handling,
+        prefix=prefix,
+        suffix=suffix,
+    )
+    return ds_unstacked
+
+
+def unstack_dimension(xr_obj, dim, coord_handling="keep", prefix="", suffix=""):
+    """
+    Split xarray object with the specified dimension into separate prefixed and suffixed Dataset variables.
+
+    Parameters
+    ----------
+    xr_obj : xarray.DataArray, xarray.Dataset
+        The DataArray to split.
+    dim : str
+        The dimension along which to split the DataArray.
+    coord_handling : str, optional
+        Option to handle coordinates sharing the target dimension.
+        Choices are 'keep', 'drop', or 'unstack'. Defaults to 'keep'.
+    prefix : str, optional
+        String to prepend to each new variable name.
+    suffix : str, optional
+        String to append to each new variable name.
+
+    Returns
+    -------
+    xr.Dataset
+        A Dataset with each variable with dimension `dim` split into new variables.
+        The new Dataset variables are named "{prefix}{name}{suffix}{dim_value}".
+        Coordinates sharing the target dimension are handled based on `coord_handling`.
+    """
+    check_is_xarray(xr_obj)
+    _check_coord_handling(coord_handling)
+    if isinstance(xr_obj, xr.DataArray):
+        return unstack_datarray_dimension(xr_obj, dim=dim, coord_handling=coord_handling, prefix=prefix, suffix=suffix)
+    return unstack_dataset_dimension(xr_obj, dim=dim, coord_handling=coord_handling, prefix=prefix, suffix=suffix)
 
 
 ####-------------------------------------------------------------------

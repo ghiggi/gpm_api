@@ -525,6 +525,7 @@ def open_dataset_1b_ka_fs(
     verbose=False,
     parallel=False,
     l2_format=True,
+    **kwargs,
 ):
     """Open 1B-Ka dataset in FS scan_mode format in either L1B or L2 format.
 
@@ -544,37 +545,23 @@ def open_dataset_1b_ka_fs(
     """
     from gpm.io.checks import check_time
 
-    ds_l1_ka_ms = gpm.open_dataset(
+    dt = gpm.open_datatree(
         product="1B-Ka",
-        scan_mode="MS",
         product_type=product_type,
         version=7,
         variables=variables,
         groups=groups,
-        start_time=start_time,
-        end_time=end_time,
-        chunks=chunks,
-        decode_cf=True,
-        parallel=parallel,
-        prefix_group=False,
-        verbose=verbose,
-    ).compute()
-
-    ds_l1_ka_hs = gpm.open_dataset(
-        product="1B-Ka",
-        scan_mode="HS",
-        version=7,
-        product_type=product_type,
-        variables=variables,
         # Search also a bit around to
         start_time=check_time(start_time) - datetime.timedelta(seconds=2),
         end_time=check_time(end_time) + datetime.timedelta(seconds=2),
         chunks=chunks,
-        verbose=verbose,
         decode_cf=True,
         parallel=parallel,
-        prefix_group=False,
-    ).compute()
+        verbose=verbose,
+        **kwargs,
+    )
+    ds_l1_ka_ms = dt["MS"].to_dataset().compute()
+    ds_l1_ka_hs = dt["HS"].to_dataset().compute()
 
     # Ensure matched scans
     idx_hs_start = np.where(ds_l1_ka_ms["gpm_id"].data[0] == ds_l1_ka_hs["gpm_id"].data)[0].item()

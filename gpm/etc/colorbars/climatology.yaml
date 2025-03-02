@@ -1,0 +1,53 @@
+---
+precip_annual_3000:
+  cmap:
+    name: MCH_Precip_Clim
+    bad_alpha: 0.2
+    bad_color: gray
+  norm:
+    name: BoundaryNorm
+    boundaries:
+      - 10
+      - 500
+      - 700
+      - 900
+      - 1100
+      - 1300
+      - 1500
+      - 1700
+      - 2000
+      - 2500
+      - 3000
+    extend: both
+  cbar:
+    extend: both
+    extendrect: false
+    label: Annual Precipitation [$mm$]
+  auxiliary:
+    category: [precipitation, annual, climatology]
+precip_monthly_400:
+  cmap:
+    name: MCH_Precip_Clim
+    bad_alpha: 0.2
+    bad_color: gray
+  norm:
+    name: BoundaryNorm
+    boundaries:
+      - 1
+      - 5
+      - 10
+      - 20
+      - 40
+      - 60
+      - 80
+      - 100
+      - 200
+      - 300
+      - 400
+    extend: both
+  cbar:
+    extend: both
+    extendrect: false
+    label: Monthly Precipitation [$mm$]
+  auxiliary:
+    category: [precipitation, annual, climatology]

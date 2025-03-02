@@ -40,9 +40,9 @@ from gpm.configs import (  # noqa
     define_configs,
     read_configs,
 )
-from gpm.dataset.dataset import open_dataset  # noqa
-from gpm.dataset.datatree import open_datatree  # noqa
-from gpm.dataset.granule import open_granule  # noqa
+from gpm.dataset.dataset import open_dataset, open_datatree  # noqa
+from gpm.dataset.datatree import open_raw_datatree  # noqa
+from gpm.dataset.granule import open_granule, open_granule_dataset, open_granule_datatree  # noqa
 from gpm.io.download import download_archive as download  # noqa
 from gpm.io.download import (  # noqa
     download_daily_data,
@@ -67,6 +67,7 @@ from gpm.utils.checks import (  # noqa
     check_regular_time,
     check_valid_geolocation,
 )
+from gpm.utils.pmw import available_pmw_frequencies  # noqa
 
 # from gpm.utils.manipulations import convert_from_decibel as idecibel
 # from gpm.utils.manipulations import convert_to_decibel as decibel

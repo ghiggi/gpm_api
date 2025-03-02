@@ -38,6 +38,7 @@ from gpm.utils.manipulations import (
     _get_vertical_dim,
     convert_from_decibel,
     convert_to_decibel,
+    crop_around_valid_data,
     # conversion_factors_degree_to_meter,
     extract_dataset_above_bin,
     extract_dataset_below_bin,
@@ -51,11 +52,11 @@ from gpm.utils.manipulations import (
     get_height_at_temperature,
     get_height_dataarray,
     get_liquid_phase_mask,
-    get_max_value_point,
-    get_min_value_point,
     get_range_axis,
     get_solid_phase_mask,
     integrate_profile_concentration,
+    locate_max_value,
+    locate_min_value,
     mask_above_bin,
     mask_below_bin,
     mask_between_bins,
@@ -675,6 +676,58 @@ def test_get_height_at_bin() -> None:
     np.testing.assert_allclose(returned_da.to_numpy(), expected_sliced_data)
 
 
+class TestCropAroundValidData:
+
+    def test_not_to_crop_case(self):
+        """Test cropping a DataArray that should not be cropped."""
+        data = np.array([[1, 2, np.nan], [3, 4, 5], [np.nan, 6, 7]])
+        da = xr.DataArray(data, dims=["x", "y"])
+
+        da_cropped = crop_around_valid_data(da)
+
+        # Check that the cropped data does not contain NaN values on the borders
+        xr.testing.assert_allclose(da, da_cropped)
+
+        # Check dimensions sizes
+        assert da_cropped.sizes == {"x": 3, "y": 3}
+
+    def test_crop_case(self):
+        """Test cropping a Dataset around valid data."""
+        data = np.array([[1, 2, np.nan], [3, 4, np.nan], [np.nan, 6, np.nan]])
+        ds = xr.Dataset({"var": (["x", "y"], data)})
+
+        ds_cropped = crop_around_valid_data(ds, variable="var")
+        # Check dimension sizes
+        assert ds_cropped.sizes == {"x": 3, "y": 2}
+        # Check resulting array
+        expected_arr = np.array([[1.0, 2.0], [3.0, 4.0], [np.nan, 6.0]])
+        np.testing.assert_allclose(ds_cropped["var"].data, expected_arr)
+
+    def test_case_all_invalid_data(self):
+        """Test when there is no valid data (all NaN)."""
+        data = np.array([[np.nan, np.nan], [np.nan, np.nan]])
+        da = xr.DataArray(data, dims=["x", "y"])
+
+        with pytest.raises(ValueError, match="No valid data around with to crop"):
+            crop_around_valid_data(da)
+
+    def test_case_empty_array(self):
+        """Test when the DataArray is empty."""
+        data = np.array([[], []])
+        da = xr.DataArray(data, dims=["x", "y"])
+
+        with pytest.raises(ValueError, match="No valid data around with to crop"):
+            crop_around_valid_data(da)
+
+    def test_do_not_drop_dimension(self):
+        """Test dimensions of sizes 1 are not dropped."""
+        data = np.array([[1, np.nan], [np.nan, np.nan]])
+        da = xr.DataArray(data, dims=["x", "y"])
+        da_cropped = crop_around_valid_data(da)
+        # Check dimensions sizes
+        assert da_cropped.sizes == {"x": 1, "y": 1}
+
+
 def test_subset_range_with_valid_data(
     dataarray_3d: xr.DataArray,
 ) -> None:
@@ -883,8 +936,8 @@ def test_mask_between_bins() -> None:
     xr.testing.assert_allclose(ds["dummy_2d_var"], returned_ds["dummy_2d_var"])
 
 
-def test_get_min_value_point():
-    """Test get_min_value_point."""
+def test_locate_min_value():
+    """Test locate_min_value."""
     # Grid
     da = get_grid_dataarray(
         start_lon=-5,
@@ -896,7 +949,7 @@ def test_get_min_value_point():
     )
     da.data[:] = 1
     da.data[1, 1] = 0
-    assert get_min_value_point(da) == (da["lon"].data[1], da["lat"].data[1])
+    assert locate_min_value(da) == (da["lon"].data[1], da["lat"].data[1])
 
     # Orbit
     da = get_orbit_dataarray(
@@ -910,15 +963,15 @@ def test_get_min_value_point():
     )
     da.data[:] = 1
     da.data[1, 1] = 0
-    assert get_min_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+    assert locate_min_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
     # If more than 1, always return first point
     da.data[1, 1:3] = 0
-    assert get_min_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+    assert locate_min_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
 
-def test_get_max_value_point():
-    """Test get_max_value_point."""
+def test_locate_max_value():
+    """Test locate_max_value."""
     # Grid
     da = get_grid_dataarray(
         start_lon=-5,
@@ -930,7 +983,7 @@ def test_get_max_value_point():
     )
     da.data[:] = 0
     da.data[1, 1] = 1
-    assert get_max_value_point(da) == (da["lon"].data[1], da["lat"].data[1])
+    assert locate_max_value(da) == (da["lon"].data[1], da["lat"].data[1])
     # Orbit
     da = get_orbit_dataarray(
         start_lon=0,
@@ -943,11 +996,11 @@ def test_get_max_value_point():
     )
     da.data[:] = 0
     da.data[1, 1] = 1
-    assert get_max_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+    assert locate_max_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
     # If more than 1, always return first point
     da.data[1, 1:3] = 1
-    assert get_max_value_point(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+    assert locate_max_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
 
 
 def test_extract_transect_at_points():

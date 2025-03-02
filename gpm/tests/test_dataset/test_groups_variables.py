@@ -28,7 +28,6 @@
 
 import pytest
 import xarray as xr
-from datatree import DataTree
 
 from gpm.dataset import groups_variables
 
@@ -37,15 +36,15 @@ def test_get_available_groups():
     """Test _get_available_groups."""
     scan_mode = "S1"
     other_scan_mode = "S2"
-    dt = DataTree.from_dict(
+    dt = xr.DataTree.from_dict(
         {
-            scan_mode: DataTree.from_dict(
+            scan_mode: xr.DataTree.from_dict(
                 {
-                    "group_1": DataTree(),
-                    "group_2": DataTree(),
+                    "group_1": xr.DataTree(),
+                    "group_2": xr.DataTree(),
                 },
             ),
-            other_scan_mode: DataTree(),
+            other_scan_mode: xr.DataTree(),
         },
     )
 
@@ -65,14 +64,14 @@ def test_get_available_variables():
     da = xr.DataArray()
     scan_mode = "S1"
     other_scan_mode = "S2"
-    dt = DataTree.from_dict(
+    dt = xr.DataTree.from_dict(
         {
-            scan_mode: DataTree.from_dict(
+            scan_mode: xr.DataTree.from_dict(
                 {
-                    "group_1": DataTree(),
+                    "group_1": xr.DataTree(),
                 },
             ),
-            other_scan_mode: DataTree(),
+            other_scan_mode: xr.DataTree(),
         },
     )
     dt[scan_mode]["var_1"] = da
@@ -92,12 +91,12 @@ def test_get_relevant_groups_variables(monkeypatch):
 
     da = xr.DataArray()
     scan_mode = "S1"
-    dt = DataTree.from_dict(
+    dt = xr.DataTree.from_dict(
         {
-            scan_mode: DataTree.from_dict(
+            scan_mode: xr.DataTree.from_dict(
                 {
-                    "group_1": DataTree(),
-                    "group_2": DataTree(),
+                    "group_1": xr.DataTree(),
+                    "group_2": xr.DataTree(),
                 },
             ),
         },

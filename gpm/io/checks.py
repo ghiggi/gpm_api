@@ -56,6 +56,8 @@ def check_base_dir(base_dir):
         Base directory where the GPM directory is located.
 
     """
+    if base_dir is None:
+        raise TypeError("base_dir must be specified.")
     base_dir = str(base_dir)  # deal with PathLib path
     # Check base_dir does not end with /
     if base_dir[-1] == os.path.sep:
@@ -63,8 +65,8 @@ def check_base_dir(base_dir):
     # Retrieve last folder name
     dir_name = os.path.basename(base_dir)
     # If ends with GPM, take the parent directory path
-    if dir_name == "GPM":
-        base_dir = os.path.dirname(base_dir)
+    if dir_name != "GPM":
+        raise ValueError("The GPM-API base directory must be called GPM.")
     return base_dir
 
 
@@ -253,8 +255,6 @@ def check_time(time):
 
 def check_date(date):
     """Check is a :py:class:`datetime.date` object."""
-    if date is None:
-        raise ValueError("date cannot be None")
     # Use check_time to convert to datetime.datetime
     datetime_obj = check_time(date)
     return datetime_obj.date()
@@ -270,9 +270,9 @@ def check_start_end_time(start_time, end_time):
         raise ValueError("Provide 'start_time' occurring before of 'end_time'.")
     # Check start_time and end_time are in the past
     if start_time > get_current_utc_time():
-        raise ValueError("Provide a 'start_time' occurring in the past.")
+        raise ValueError("Provide 'start_time' occurring in the past.")
     if end_time > get_current_utc_time():
-        raise ValueError("Provide a 'end_time' occurring in the past.")
+        raise ValueError("Provide 'end_time' occurring in the past.")
     return (start_time, end_time)
 
 
@@ -306,6 +306,18 @@ def check_scan_mode(scan_mode, product, version):
     if scan_mode is not None and scan_mode not in scan_modes:
         raise ValueError(f"For {product} product, valid 'scan_modes' are {scan_modes}.")
     return scan_mode
+
+
+def check_scan_modes(scan_modes, product, version):
+    """Checks scan_modes (for DataTree loading)."""
+    from gpm.io.products import available_scan_modes
+
+    if scan_modes is None:
+        scan_modes = available_scan_modes(product=product, version=version)
+    if isinstance(scan_modes, str):
+        scan_modes = [scan_modes]
+    scan_modes = [check_scan_mode(scan_mode=scan_mode, product=product, version=version) for scan_mode in scan_modes]
+    return scan_modes
 
 
 #### Single arguments

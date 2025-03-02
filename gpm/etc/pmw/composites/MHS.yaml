@@ -1,0 +1,46 @@
+157 + 183 GHz:
+  R:
+    name: 157V
+    vmin: 100
+    vmax: 290
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 190.31V
+    vmin: 100
+    vmax: 290
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  B:
+    name: 183.31H1
+    vmin: 100
+    vmax: 290
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  global_normalization: true
+183 GHz:
+  R:
+    name: 190.31V
+    vmin: 100
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  G:
+    name: 183.31H3
+    vmin: 100
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  B:
+    name: 183.31H1
+    vmin: 100
+    vmax: 300
+    vmin_dynamic: false
+    vmax_dynamic: false
+    invert: true
+  global_normalization: true

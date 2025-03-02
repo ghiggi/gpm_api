@@ -33,7 +33,6 @@ from gpm.utils.yaml import read_yaml, write_yaml
 
 
 def read_bucket_info(bucket_dir):
-    os.makedirs(bucket_dir, exist_ok=True)
     bucket_info_filepath = os.path.join(bucket_dir, "bucket_info.yaml")
     bucket_info = read_yaml(filepath=bucket_info_filepath)
     return bucket_info
@@ -47,6 +46,11 @@ def get_bucket_partitioning(bucket_dir):
     return partitioning
 
 
+def get_bucket_temporal_partitioning(bucket_dir):
+    bucket_info = read_bucket_info(bucket_dir)
+    return bucket_info.get("temporal_partitioning")
+
+
 def write_bucket_info(bucket_dir, partitioning):
     os.makedirs(bucket_dir, exist_ok=True)
     bucket_info = partitioning.to_dict()
@@ -54,7 +58,7 @@ def write_bucket_info(bucket_dir, partitioning):
     write_yaml(bucket_info, filepath=bucket_info_filepath, sort_keys=False)
 
 
-####------------------------------------------------------------------------------------------------------------------.
+####---------------------------------------------------------------------------.
 #### Bucket partitions utilities
 
 
@@ -105,3 +109,6 @@ def get_filepaths_by_partition(bucket_dir, parallel=True, file_extension=None, g
     sep = os.path.sep
     dict_partition_files = {sep.join(k.strip(sep).split(sep)[-n_levels:]): v for k, v in dict_filepaths.items()}
     return dict_partition_files
+
+
+####---------------------------------------------------------------------------.

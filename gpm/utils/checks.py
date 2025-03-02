@@ -28,13 +28,13 @@
 import functools
 
 import numpy as np
-import pandas as pd
 
 from gpm.checks import check_has_along_track_dim, is_grid, is_orbit
 from gpm.utils.decorators import (
     check_is_gpm_object,
     check_is_orbit,
 )
+from gpm.utils.orbit import get_orbit_direction
 from gpm.utils.slices import (
     get_list_slices_from_bool_arr,
     list_slices_difference,
@@ -391,6 +391,8 @@ def _select_lons_lats_centroids(xr_obj, x=DEFAULT_X, y=DEFAULT_Y, cross_track_di
         middle_idx = int(xr_obj[cross_track_dim].shape[0] / 2)
         lons = xr_obj[x].isel({cross_track_dim: middle_idx}).to_numpy()
         lats = xr_obj[y].isel({cross_track_dim: middle_idx}).to_numpy()
+    if np.all(np.isnan(lons)) or np.all(np.isnan(lats)):
+        raise ValueError("All coordinates are NaN.")
     return lons, lats
 
 
@@ -510,13 +512,11 @@ def get_slices_contiguous_scans(
     # Select only slices with at least 2 scans
     list_slices = list_slices_filter(list_slices, min_size=min_size)
 
-    # Also retrieve the slices with non missing granule
-    list_slices1 = get_slices_contiguous_granules(xr_obj)
-
-    # Perform list_slices intersection
-    return list_slices_intersection(list_slices, list_slices1)
-
-    # Return list of contiguous scan slices
+    # If the gpm_granule_id is available, also ensure for contiguous granules
+    if "gpm_granule_id" in xr_obj.coords:
+        list_slices1 = get_slices_contiguous_granules(xr_obj)
+        return list_slices_intersection(list_slices, list_slices1)
+    return list_slices
 
 
 @check_is_orbit
@@ -866,30 +866,9 @@ def apply_on_valid_geolocation(function):
 ############################
 
 
-def _replace_0_values(x):
-    """Replace 0 values with previous left non-zero occurring values.
-
-    If the array start with 0, it take the first non-zero occurring values
-    """
-    # Check inputs
-    x = np.array(x)
-    dtype = x.dtype
-    if np.all(x == 0):
-        raise ValueError("It's a flat swath orbit.")
-    # Set 0 to NaN
-    x = x.astype(float)
-    x[x == 0] = np.nan
-    # Infill from left values, and then from right (if x start with 0)
-    x = pd.Series(x).ffill().bfill().to_numpy()
-    # Reset original dtype
-    return x.astype(dtype)
-
-
 def _get_non_wobbling_lats(lats, threshold=100):
     # Get direction (1 ascending , -1 descending)
-    directions = np.sign(np.diff(lats))
-    directions = np.append(directions[0], directions)  # include startpoint
-    directions = _replace_0_values(directions)
+    directions = get_orbit_direction(lats)
 
     # Identify index where next element change
     idxs_change = np.where(np.diff(directions) != 0)[0]

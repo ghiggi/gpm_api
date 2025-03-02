@@ -27,21 +27,14 @@
 """This module contains functions to read a GPM granule into a DataTree object."""
 import os
 
-import datatree
 import xarray as xr
 
 import gpm
 from gpm.dataset.attrs import decode_string
-from gpm.dataset.dimensions import _rename_datatree_dimensions
-
-# TODO:
-# --> open datatrees and concat datatrees
-# --> create datatree with option "flattened_scan_modes"
-# --> gpm.open_granule(datatree=False)  # or if multiple scan_modes provided
-# --> gpm.open_dataset(datatree=False)  # or if multiple scan_modes provided
+from gpm.dataset.dimensions import rename_datatree_dimensions
 
 
-def open_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True):
+def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True, **kwargs):
     """Open HDF5 in datatree object.
 
     - chunks={} --> Lazy map to dask.array
@@ -49,16 +42,30 @@ def open_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True):
       --> Maybe need to implement "auto" option manually that defaults to full shape"
     - chunks="auto" --> datatree fails. Can not estimate size of object dtype !
     - chunks=None --> lazy map to numpy.array
+
+    **kwargs : dict
+        Additional keyword arguments passed to :py:func:`~xarray.open_dataset` for each group.
     """
     try:
-        dt = datatree.open_datatree(filepath, engine="netcdf4", chunks=chunks, decode_cf=decode_cf)
+        dt = xr.open_datatree(
+            filepath,
+            engine="netcdf4",
+            chunks=chunks,
+            decode_cf=decode_cf,
+            decode_times=False,
+            **kwargs,
+        )
+        closer = dt._close
         check_non_empty_granule(dt, filepath)
     except Exception as e:
         check_valid_granule(filepath)
         raise ValueError(e)
 
     # Assign dimension names
-    return _rename_datatree_dimensions(dt, use_api_defaults=use_api_defaults)
+    dt = rename_datatree_dimensions(dt, use_api_defaults=use_api_defaults)
+    # Specify closer
+    dt.set_close(closer)
+    return dt
 
 
 def check_non_empty_granule(dt, filepath):

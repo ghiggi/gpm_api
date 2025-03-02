@@ -1,3 +1,5 @@
+import re
+
 import cartopy.crs as ccrs
 import numpy as np
 import pyproj
@@ -7,6 +9,7 @@ from gpm.utils.area import (
     get_projection_corners_from_centroids,
     get_quadmesh_from_corners,
 )
+from gpm.utils.geospatial import merge_extents
 from gpm.utils.remapping import reproject_coords
 
 
@@ -183,13 +186,54 @@ def get_radius_polygon(xr_obj, distance, crs=None):
     return polygon
 
 
+def get_datatree_sweeps(dt):
+    """Return the datatree node names corresponding to radar sweep."""
+    # Need to exclude: sweep_group_name, sweep_fixed_angle
+    sweeps = [group for group in list(dt) if re.match(r"^sweep_\d+$", group)]  #  group.startswith("sweep_")
+    return sweeps
+
+
+def get_datatree_maximum_horizontal_distance(dt):
+    """Return the maximum horizontal distance from the radar across all sweeps."""
+    return max([get_maximum_horizontal_distance(dt[sweep].to_dataset()) for sweep in get_datatree_sweeps(dt)])
+
+
+def get_datatree_maximum_range_distance(dt):
+    """Return the maximum range distance across all sweeps."""
+    return max([get_maximum_range_distance(dt[sweep].to_dataset()) for sweep in get_datatree_sweeps(dt)])
+
+
+def get_datatree_extent(dt, max_distance=None, crs=None):
+    """Get extent, restricted to max_distance from radar location if specified.
+
+    If the CRS is not specified, it returns extent in WGS84 CRS.
+    """
+    list_extent = [
+        get_extent(dt[sweep].to_dataset(), max_distance=max_distance, crs=crs) for sweep in get_datatree_sweeps(dt)
+    ]
+    return merge_extents(list_extent)
+
+
+def get_maximum_horizontal_distance(xr_obj):
+    """Return the horizontal distance from the last gate."""
+    # TODO: currently distance to last gate centroid.
+    ds_georeferenced = xr_obj.isel(range=slice(-2, None)).xradar.georeference()
+    return np.maximum(ds_georeferenced["x"].max(), ds_georeferenced["y"].max()).item()
+
+
+def get_maximum_range_distance(xr_obj):
+    """Return the range distance from the last gate."""
+    # TODO: currently distance to last gate centroid
+    return xr_obj["range"].data[-1].item()
+
+
 def get_extent(xr_obj, max_distance=None, crs=None):
     """Get extent , restricted to max_distance from radar location if specified.
 
     If the CRS is not specified, it returns extent in WGS84 CRS.
     """
     if max_distance is None:
-        max_distance = xr_obj["range"].max().item()
+        max_distance = get_maximum_horizontal_distance(xr_obj)
     polygon = get_radius_polygon(xr_obj, distance=max_distance, crs=crs)
     extent = [polygon.bounds[i] for i in [0, 2, 1, 3]]
     return extent
@@ -202,6 +246,8 @@ def plot_range_distance(
     fig_kwargs=None,
     subplot_kwargs=None,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     **plot_kwargs,
 ):
     from gpm.visualization.plot import initialize_cartopy_plot
@@ -219,6 +265,8 @@ def plot_range_distance(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Retrieve circle polygon at given radius from radar
@@ -275,6 +323,8 @@ def plot_map(
     ax=None,
     add_colorbar=True,
     add_background=True,
+    add_gridlines=True,
+    add_labels=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
@@ -294,6 +344,8 @@ def plot_map(
         fig_kwargs=fig_kwargs,
         subplot_kwargs=subplot_kwargs,
         add_background=add_background,
+        add_gridlines=add_gridlines,
+        add_labels=add_labels,
     )
 
     # Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
@@ -320,6 +372,6 @@ def plot_map(
 
     # Add colorbar
     if add_colorbar:
-        _ = plot_colorbar(p=p, ax=ax, cbar_kwargs=cbar_kwargs)
+        _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
 
     return p

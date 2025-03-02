@@ -55,3 +55,38 @@ def get_client():
     from dask.distributed import get_client
 
     return get_client()
+
+
+def get_scheduler(get=None, collection=None):
+    """Determine the dask scheduler that is being used.
+
+    None is returned if no dask scheduler is active.
+
+    See Also
+    --------
+    dask.base.get_scheduler
+
+    """
+    try:
+        import dask
+        from dask.base import get_scheduler
+
+        actual_get = get_scheduler(get, collection)
+    except ImportError:
+        return None
+
+    try:
+        from dask.distributed import Client
+
+        if isinstance(actual_get.__self__, Client):
+            return "distributed"
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        if actual_get is dask.multiprocessing.get:
+            return "multiprocessing"
+    except AttributeError:
+        pass
+
+    return "threaded"

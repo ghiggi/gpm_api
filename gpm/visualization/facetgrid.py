@@ -29,7 +29,6 @@ import itertools
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Hashable
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -73,16 +72,16 @@ class CustomFacetGrid(FacetGrid, ABC):
     def __init__(
         self,
         data,
-        col: Optional[Hashable] = None,
-        row: Optional[Hashable] = None,
-        col_wrap: Optional[int] = None,
-        axes_pad: Optional[tuple[float, float]] = None,
+        col: Hashable | None = None,
+        row: Hashable | None = None,
+        col_wrap: int | None = None,
+        axes_pad: tuple[float, float] | None = None,
         aspect: bool = True,
         add_colorbar: bool = True,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
-        cbar_kwargs: Optional[dict] = None,
-        fig_kwargs: Optional[dict] = None,
+        cbar_kwargs: dict | None = None,
+        fig_kwargs: dict | None = None,
         axes_class=None,
     ) -> None:
         """Class for xarray-based FacetGrid plots.
@@ -314,8 +313,9 @@ class CustomFacetGrid(FacetGrid, ABC):
         func_kwargs = {k: v for k, v in kwargs.items() if k not in {"cmap", "colors", "cbar_kwargs", "levels"}}
         func_kwargs.update(cmap_params)
         func_kwargs["add_colorbar"] = False
-        if func.__name__ != "surface":
-            func_kwargs["add_labels"] = False
+
+        # if func.__name__ != "surface":
+        #     func_kwargs["add_labels"] = False
 
         # Get x, y labels for the first subplot
         # - Get DataArray prototype without row, col and rgb !
@@ -326,6 +326,8 @@ class CustomFacetGrid(FacetGrid, ABC):
             da_proto = da_proto.isel({self._col_var: 0})
         if kwargs.get("rgb", None):
             da_proto = da_proto.isel({kwargs.get("rgb", None): 0})
+
+        # Infer x - y labels
         x, y = _infer_xy_labels(
             darray=da_proto,
             x=x,
@@ -333,7 +335,7 @@ class CustomFacetGrid(FacetGrid, ABC):
             imshow=True,
             # rgb=kwargs.get("rgb", None),
         )
-        for d, ax in zip(self.name_dicts.flat, self.axs.flat):
+        for d, ax in zip(self.name_dicts.flat, self.axs.flat, strict=False):
             # None is the sentinel value
             if d is not None:
                 subset = self.data.loc[d]
@@ -357,18 +359,33 @@ class CustomFacetGrid(FacetGrid, ABC):
     @abstractmethod
     def _remove_bottom_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the bottom of the subplots."""
+        raise NotImplementedError
 
     @abstractmethod
     def _remove_left_ticks_and_labels(self, ax):
         """Method removing axis ticks and labels on the left of the subplots."""
+        raise NotImplementedError
+
+    def map_to_axes(self, func, **kwargs):
+        """Map a function to each axes."""
+        n_rows, n_cols = self.axs.shape
+        missing_bottom_plots = [not ax.has_data() for ax in self.axs[n_rows - 1]]
+        idx_bottom_plots = np.where(missing_bottom_plots)[0]
+        has_missing_bottom_plots = len(idx_bottom_plots) > 0
+        for i in range(0, n_rows):
+            for j in range(0, n_cols):
+                if has_missing_bottom_plots and i == n_rows and j in idx_bottom_plots:
+                    continue
+                # Otherwise apply function
+                func(ax=self.axs[i, j], **kwargs)
 
     def remove_bottom_ticks_and_labels(self):
         """Remove the bottom ticks and labels from each subplot."""
-        self.map(lambda: self._remove_bottom_ticks_and_labels(plt.gca()))
+        self.map_to_axes(func=self._remove_bottom_ticks_and_labels)
 
     def remove_left_ticks_and_labels(self):
         """Remove the left ticks and labels from each subplot."""
-        self.map(lambda: self._remove_left_ticks_and_labels(plt.gca()))
+        self.map_to_axes(func=self._remove_left_ticks_and_labels)
 
     def remove_duplicated_axis_labels(self):
         """Remove axis labels which are not located on the left or bottom of the figure."""
@@ -414,7 +431,16 @@ class CustomFacetGrid(FacetGrid, ABC):
         )
         # Add ticklabel
         if ticklabels is not None:
-            self.cbar.ax.set_yticklabels(ticklabels)
+            # Retrieve ticks
+            ticks = cbar_kwargs.get("ticks", None)
+            if ticks is None:
+                ticks = self.cbar.get_ticks()
+            # Remove existing ticklabels
+            self.cbar.set_ticklabels([])
+            self.cbar.set_ticklabels([], minor=True)
+            # Add custom ticklabels
+            self.cbar.set_ticks(ticks, labels=ticklabels)
+            # self.cbar.ax.set_yticklabels(ticklabels)
 
     def remove_title_dimension_prefix(self, row=True, col=True):
         """Remove the dimension prefix from the subplot labels."""
@@ -464,13 +490,13 @@ class CartopyFacetGrid(CustomFacetGrid):
         self,
         data,
         projection,
-        col: Optional[Hashable] = None,
-        row: Optional[Hashable] = None,
-        col_wrap: Optional[int] = None,
-        axes_pad: Optional[tuple[float, float]] = None,
+        col: Hashable | None = None,
+        row: Hashable | None = None,
+        col_wrap: int | None = None,
+        axes_pad: tuple[float, float] | None = None,
         add_colorbar: bool = True,
-        cbar_kwargs: Optional[dict] = None,
-        fig_kwargs: Optional[dict] = None,
+        cbar_kwargs: dict | None = None,
+        fig_kwargs: dict | None = None,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
@@ -540,7 +566,7 @@ class CartopyFacetGrid(CustomFacetGrid):
         if not self._finalized:
             self.set_axis_labels(*axlabels)
             self.set_titles()
-            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat):
+            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat, strict=False):
                 if namedict is None:
                     ax.set_visible(False)
             self._finalized = True
@@ -589,14 +615,14 @@ class ImageFacetGrid(CustomFacetGrid):
     def __init__(
         self,
         data,
-        col: Optional[Hashable] = None,
-        row: Optional[Hashable] = None,
-        col_wrap: Optional[int] = None,
-        axes_pad: Optional[tuple[float, float]] = None,
+        col: Hashable | None = None,
+        row: Hashable | None = None,
+        col_wrap: int | None = None,
+        axes_pad: tuple[float, float] | None = None,
         aspect: bool = False,
         add_colorbar: bool = True,
-        cbar_kwargs: Optional[dict] = None,
-        fig_kwargs: Optional[dict] = None,
+        cbar_kwargs: dict | None = None,
+        fig_kwargs: dict | None = None,
         facet_height: float = 3.0,
         facet_aspect: float = 1.0,
     ) -> None:
@@ -662,7 +688,7 @@ class ImageFacetGrid(CustomFacetGrid):
             # Add subplots titles
             self.set_titles()
             # Make empty subplots unvisible
-            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat):
+            for ax, namedict in zip(self.axs.flat, self.name_dicts.flat, strict=False):
                 if namedict is None:
                     ax.set_visible(False)
             self._finalized = True

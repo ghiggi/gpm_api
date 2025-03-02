@@ -14,16 +14,10 @@ This section provides tutorials covering advanced GPM-API tools that can be used
 The following tutorials are in preparation:
 
 - Introduction to GPM DPR L1B
-- Introduction to GPM Radar and Combined Precipitation Estimates
+- Introduction to GPM RADAR and Combined (CMB) Precipitation Estimates
 - Interactive 3D Visualization of Radar Volumes
-- Extraction of Radar Cross-Sections
-- Storm Labelling and Patch Extraction
 - Community-based Retrievals
-
-
 - Geographic Bucketing
-- Dataset Zarrification
-
 - Storm Tracking with IMERG
 
 

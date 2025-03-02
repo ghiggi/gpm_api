@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""Created on Fri Oct 20 12:44:10 2023.
-
-@author: ghiggi
-"""
 import os
 
 import h5py
@@ -48,9 +43,9 @@ def _get_subset_shape_chunks(h5_obj, subset_size):
         # Get dimension shape
         shape = h5_obj.shape
         # Create dimension dictionary
-        dict_dims = dict(zip(dimnames, shape))
+        dict_dims = dict(zip(dimnames, shape, strict=False))
         # Create chunks dictionary
-        dict_chunks = dict(zip(dimnames, chunks))
+        dict_chunks = dict(zip(dimnames, chunks, strict=False))
         # Define subset shape and chunks
         subset_shape = []
         subset_chunks = []

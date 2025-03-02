@@ -131,7 +131,6 @@ def test__get_local_dir_pattern(
                     if product_type == "NRT":
                         assert "V0" not in dir_pattern
                         assert dir_pattern == os.path.join(
-                            "GPM",
                             product_type,
                             product_category,
                             product,
@@ -140,7 +139,6 @@ def test__get_local_dir_pattern(
                         assert str(version) in dir_pattern
                         # Literal
                         assert dir_pattern == os.path.join(
-                            "GPM",
                             product_type,
                             f"V0{version}",
                             product_category,
@@ -177,7 +175,7 @@ def test_get_local_product_base_directory(
                             assert "V0" not in dir_path
                             assert dir_path == os.path.join(
                                 base_dir,
-                                os.path.join("GPM", product_type, product_category, product),
+                                os.path.join(product_type, product_category, product),
                                 date.strftime("%Y"),
                                 date.strftime("%m"),
                                 date.strftime("%d"),
@@ -188,7 +186,6 @@ def test_get_local_product_base_directory(
                             assert dir_path == os.path.join(
                                 base_dir,
                                 os.path.join(
-                                    "GPM",
                                     product_type,
                                     f"V0{version}",
                                     product_category,

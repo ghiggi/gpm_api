@@ -8,7 +8,7 @@ dependencies:
   - pandoc
   - pip
   - polars
-  - python>=3.9
+  - python>=3.10
   - pyvista
   - sphinx-book-theme==1.1.0
   - sphinx-gallery

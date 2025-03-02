@@ -25,19 +25,25 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains the routine for SR/GR validation."""
+import warnings
+
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pyproj
 import xarray as xr
+from shapely import Point
 
 import gpm
+from gpm.gv.plots import calibration_summary, plot_gdf_map
 from gpm.utils.manipulations import (
     conversion_factors_degree_to_meter,
 )
 from gpm.utils.remapping import reproject_coords
 from gpm.utils.timing import print_task_elapsed_time
 from gpm.utils.xarray import get_xarray_variable
+from gpm.utils.zonal_stats import PolyAggregator
 
 # Issues:
 # - xyz_to_antenna_coordinates SR GR range estimation. Which to choose ?
@@ -397,108 +403,173 @@ def convert_s_to_ku_band(ds_gr, bright_band_height, z_variable="DBZH"):
     return da_ku
 
 
-def plot_quicklook(
-    ds_sr,
-    ds_gr,
-    min_gr_range,
-    max_gr_range,
-    z_min_threshold_gr,
-    z_min_threshold_sr,
-    z_variable="DBZH",
-    cmap="Spectral_r",
-):
+def add_radar_info(ax, ds_gr, radar_size):
+    # - Add radar location
+    ax.scatter(0, 0, c="black", marker="X", s=radar_size)
+    ax.scatter(0, 0, c="black", marker="X", s=radar_size)
 
-    # Display nearSurface SR reflectivity
-    da_sr = ds_sr["zFactorFinal"].gpm.slice_range_at_bin(ds_sr["binClutterFreeBottom"])
-
-    # Mask by specified sensitivity
-    mask_gr = ds_gr[z_variable] > z_min_threshold_gr
-    mask_sr = da_sr > z_min_threshold_sr
-
-    # Retrieve SR extent
-    sr_extent = ds_sr.gpm.extent()
-
-    # Create figure
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), dpi=120, subplot_kw={"projection": ccrs.PlateCarree()})
-
-    # Plot SR
-    da_sr.where(mask_sr).gpm.plot_map(
-        ax=ax1,
-        cmap=cmap,
-        vmin=0,
-        vmax=40,
-        cbar_kwargs={"label": "SR Surface Reflectivity (dBz)"},
-        add_colorbar=True,
+    ds_gr.xradar_dev.plot_range_distance(
+        distance=15_000,
+        ax=ax,
+        add_background=False,
+        add_gridlines=False,
+        add_labels=False,
+        linestyle="dashed",
+        edgecolor="black",
     )
-    # Plot GR
-    ds_gr[z_variable].where(mask_gr).xradar_dev.plot_map(
-        ax=ax2,
-        cmap=cmap,
-        vmin=0,
-        vmax=40,
-        cbar_kwargs={"label": "GR Sweep Reflectivity (dBz)", "extend": "both"},
-        add_colorbar=True,
+    ds_gr.xradar_dev.plot_range_distance(
+        distance=100_000,
+        ax=ax,
+        add_background=False,
+        add_gridlines=False,
+        add_labels=False,
+        linestyle="dashed",
+        edgecolor="black",
     )
-    # - Add the SR swath boundary
-    da_sr.gpm.plot_swath_lines(ax=ax2)
-    # - Restrict the extent to the SR overpass
-    ax2.set_extent(sr_extent)
-    # - Display GR range distances
-    for ax in [ax1, ax2]:
-        ds_gr.xradar_dev.plot_range_distance(
-            distance=min_gr_range,
-            ax=ax,
-            add_background=True,
-            linestyle="dashed",
-            edgecolor="black",
+    ds_gr.xradar_dev.plot_range_distance(
+        distance=150_000,
+        ax=ax,
+        add_background=False,
+        add_gridlines=False,
+        add_labels=False,
+        linestyle="dashed",
+        edgecolor="black",
+    )
+
+
+def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column):
+    # Define Cartopy projection
+    ccrs_gr_aeqd = ccrs.AzimuthalEquidistant(
+        central_longitude=ds_gr["longitude"].item(),
+        central_latitude=ds_gr["latitude"].item(),
+    )
+    subplot_kwargs = {}
+    subplot_kwargs["projection"] = ccrs_gr_aeqd
+
+    # Define geographic extent
+    extent_xy = gdf.total_bounds[[0, 2, 1, 3]]
+
+    # Retrieve plot kwargs
+    plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("zFactorFinal", user_plot_kwargs={"vmin": 15, "vmax": 45})
+
+    # Define figure settings
+    figsize = (8, 4)
+    dpi = 300
+
+    # Define radar markersize
+    radar_size = 40
+
+    # Create the figure
+    fig, axes = plt.subplots(1, 3, width_ratios=[1, 1, 1.1], subplot_kw=subplot_kwargs, figsize=figsize, dpi=dpi)
+
+    #### Plot SR data
+    axes[0].coastlines()
+    _ = plot_gdf_map(
+        ax=axes[0],
+        gdf=gdf,
+        column=sr_z_column,
+        title="SR Matched",
+        extent_xy=extent_xy,
+        # Gridline settings
+        # grid_linewidth=grid_linewidth,
+        # grid_color=grid_color,
+        # Colorbar settings
+        add_colorbar=False,
+        # Plot settings
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+    add_radar_info(ax=axes[0], ds_gr=ds_gr, radar_size=radar_size)
+
+    #### - Plot GR matched data
+    axes[1].coastlines()
+    _ = plot_gdf_map(
+        ax=axes[1],
+        gdf=gdf,
+        column=gr_z_column,
+        title="GR Matched",
+        extent_xy=extent_xy,
+        # Gridline settings
+        # grid_linewidth=grid_linewidth,
+        # grid_color=grid_color,
+        # Colorbar settings
+        add_colorbar=False,
+        # Plot settings
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
+    )
+    add_radar_info(ax=axes[1], ds_gr=ds_gr, radar_size=radar_size)
+
+    #### - Plot GR sweep data
+    axes[2].coastlines()
+    p = (
+        ds_gr["DBZH"]
+        .where(ds_gr["DBZH"] > 0)
+        .xradar_dev.plot_map(
+            ax=axes[2],
+            x="x",
+            y="y",
+            add_background=False,
+            add_gridlines=False,
+            add_labels=False,
+            add_colorbar=True,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
         )
-        ds_gr.xradar_dev.plot_range_distance(
-            distance=max_gr_range,
-            ax=ax,
-            add_background=True,
-            linestyle="dashed",
-            edgecolor="black",
-        )
-        ds_gr.xradar_dev.plot_range_distance(
-            distance=250_000,
-            ax=ax,
-            add_background=True,
-            linestyle="dashed",
-            edgecolor="black",
-        )
-    # - Add GR location
-    ax1.scatter(ds_gr["longitude"], ds_gr["latitude"], c="black", marker="X", s=4)
-    ax2.scatter(ds_gr["longitude"], ds_gr["latitude"], c="black", marker="X", s=4)
-    # - Set title
-    ax1.set_title("GPM", fontsize=12, loc="left")
-    ax2.set_title("Ground Radar", fontsize=12, loc="left")
-    # - Improve layout and display
-    plt.tight_layout()
+    )
+    p.axes.set_xlim(extent_xy[0:2])
+    p.axes.set_ylim(extent_xy[2:4])
+    p.axes.set_title("GR PPI")
+    add_radar_info(ax=axes[2], ds_gr=ds_gr, radar_size=radar_size)
     return fig
 
 
-def retrieve_ds_sr(ds_gr, download_sr=False):
-    # Retrieve GR extent (in WGS84)
-    extent_gr = ds_gr.xradar_dev.extent(max_distance=None, crs=None)
+# GPM Variables required for volume matching
+L1_VARIABLES = [
+    "crossTrackBeamWidth",
+    "range_distance_from_satellite",
+]
 
-    # Retrieve GR scan time (assumed to be in UTC)
-    gr_min_time = ds_gr["time"].min().to_numpy()
-    gr_max_time = ds_gr["time"].max().to_numpy()
+L2_VARIABLES = [
+    "localZenithAngle",  #  gate projection coordinates
+    "ellipsoidBinOffset",  #  range_distance_from_ellipsoid
+    "binClutterFreeBottom",
+    "dataQuality",
+    "flagPrecip",
+    "qualityBB",
+    "heightBB",
+    "widthBB",
+    "typePrecip",
+    "precipRate",
+    "airTemperature",
+    "zFactorFinal",
+    "zFactorMeasured",
+    # Auxiliary
+    "qualityTypePrecip",
+    "qualityFlag",
+    "qualityBB",
+    "pathAtten",
+    "piaFinal",
+    "reliabFlag",
+    # For display
+    "zFactorFinalNearSurface",
+    "precipRateNearSurface",
+]
 
-    # Define start_time and end_time for searching SR data
-    start_time = gr_min_time - np.timedelta64(5, "m")
-    end_time = gr_max_time + np.timedelta64(5, "m")
 
+def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
     # Define GPM settings
     product_type = "RS"
     version = 7
     storage = "GES_DISC"
+    scan_mode = "FS"
 
     # Define products
     # - Use TRMM PR before '2014-03-08'
     # - Use GPM DPR after '2014-03-08'
     if start_time >= np.array("2014-03-08 22:09:50", dtype="M8[s]"):
         products = ["2A-DPR", "1B-Ku"]
+
     else:
         products = ["2A-PR", "1B-PR"]
 
@@ -513,21 +584,37 @@ def retrieve_ds_sr(ds_gr, download_sr=False):
                 start_time=start_time,
                 end_time=end_time,
             )
+    # Define L1B product variables required
+    l1b_variables = [
+        "crossTrackBeamWidth",
+        "alongTrackBeamWidth",
+        # range_distance_from_satellite
+        "rangeBinSize",
+        "binEllipsoid",
+        "ellipsoidBinOffset",
+        "scRangeEllipsoid",
+        # vertical variable to not drop the range dimension
+        "echoCount",
+    ]
 
     # Open datasets
-    # - TODO: subset variables used !
+    # - 2A product
     ds_sr = gpm.open_dataset(
         product=products[0],
         product_type=product_type,
+        scan_mode=scan_mode,
+        variables=L2_VARIABLES,
         version=version,
         start_time=start_time,
         end_time=end_time,
         chunks={},  # only read the data needed around GR instead of full granule
     )
 
+    # - 1B product
     ds_l1b_sr = gpm.open_dataset(
         product=products[1],
         product_type=product_type,
+        variables=l1b_variables,
         version=version,
         start_time=start_time,
         end_time=end_time,
@@ -568,6 +655,8 @@ def volume_matching(
     sr_sensitivity_thresholds=None,
     download_sr=True,
     display_quicklook=True,
+    display_calibration_summary=False,
+    quicklook_fpath=None,
 ):
     """
     Performs the volume matching of GPM Spaceborne Radar (SR) data to Ground Radar (GR).
@@ -587,11 +676,11 @@ def volume_matching(
     beamwidth_gr : float, optional
         The GR beamwidth. The default is 1.0.
     z_min_threshold_gr : float, optional
-        The minimum reflectivity threshold (in dBZ) for GR. The default is 0.
-        Values below this threshold are set to np.nan before matching SR/GR gates.
+        The minimum reflectivity threshold (in dBZ) for GR. The default is 0 dBZ.
+        This is used to discard GR gates with ``z_variable_gr`` reflectivity below the threshold.
     z_min_threshold_sr : float, optional
-        The minimum reflectivity threshold (in dBZ) for SR. The default is 10.
-        Values below this threshold are set to np.nan before matching SR/GR gates.
+        The minimum reflectivity threshold (in dBZ) for SR. The default is 10 dBZ.
+        This is used to discard SR footprints with zMeasured reflectivity below the threshold.
     min_gr_range : float, optional
         The minimum GR range distance (in meters) to select for matching SR/GR gates. The default is 0.
     max_gr_range : float, optional
@@ -611,19 +700,16 @@ def volume_matching(
         The SR dataset matched to GR data.
 
     """
-    import warnings
+    import geopandas as gpd
+    import wradlib as wrl
 
     warnings.filterwarnings("ignore")
-    import geopandas as gpd
-    import numpy as np
-    import pandas as pd
-    import pyproj
-    import wradlib as wrl
-    import xarray as xr
-    from shapely import Point
 
-    from gpm.utils.remapping import reproject_coords
-    from gpm.utils.zonal_stats import PolyAggregator
+    # Check input datasets
+    if not isinstance(ds_gr, xr.Dataset):
+        raise TypeError("'ds_gr' must be a xarray.Dataset.")
+    if ds_sr is not None and not isinstance(ds_sr, xr.Dataset):
+        raise TypeError("'ds_sr' must be a xarray.Dataset.")
 
     # Check valid Z variable
     if z_variable_gr not in ds_gr:
@@ -682,38 +768,42 @@ def volume_matching(
 
     #### - Set GR gates with Z < 0 to NaN
     # - Following Morris and Schwaller 2011 recommendation
-    ds_gr = ds_gr.where(ds_gr[z_variable_gr] >= z_min_threshold_sr)
+    ds_gr = ds_gr.where(ds_gr[z_variable_gr] >= z_min_threshold_gr)
+
+    #### - Crop GR only to area with data
+    try:
+        ds_gr = ds_gr.gpm.crop_around_valid_data(variable=z_variable_gr)
+        for dim, size in ds_gr.sizes.items():
+            if size <= 1:
+                raise ValueError(f"Only a single {dim} has valid data.")
+    except Exception:
+        # No valid data for GR
+        return None
 
     #### - Retrieve GR extent (in WGS84)
     extent_gr = ds_gr.xradar_dev.extent(max_distance=None, crs=None)
 
     ####-----------------------------------------------------------------------------.
     #### Retrieve SR data
-    if ds_sr is None:  # noqa
-        ds_sr = retrieve_ds_sr(ds_gr, download_sr=download_sr)
+    if ds_sr is None:
+        # Retrieve GR scan time (assumed to be in UTC)
+        gr_min_time = ds_gr["time"].min().to_numpy()
+        gr_max_time = ds_gr["time"].max().to_numpy()
+
+        # Define start_time and end_time for searching SR data
+        start_time = gr_min_time - np.timedelta64(10, "m")
+        end_time = gr_max_time + np.timedelta64(10, "m")
+
+        ds_sr = retrieve_ds_sr(start_time=start_time, end_time=end_time, extent_gr=extent_gr, download_sr=download_sr)
     else:
-        ds_sr = ds_sr.gpm.crop(extent=extent_gr)
+        try:
+            ds_sr = ds_sr.gpm.crop(extent=extent_gr)
+        except Exception:
+            # GR extent is not within SR swath
+            return None
 
     # Check required SR variables
-    required_sr_variables = [
-        # L1B variables
-        "crossTrackBeamWidth",
-        "range_distance_from_satellite",
-        # L2 variables
-        "localZenithAngle",  #  gate projection coordinates
-        "ellipsoidBinOffset",  #  range_distance_from_ellipsoid
-        "binClutterFreeBottom",
-        "dataQuality",
-        "flagPrecip",
-        "qualityBB",
-        "heightBB",
-        "widthBB",
-        "typePrecip",
-        "precipRate",
-        "airTemperature",
-        "zFactorFinal",
-        "zFactorMeasured",
-    ]
+    required_sr_variables = L1_VARIABLES + L2_VARIABLES
     missing_vars = [var for var in required_sr_variables if var not in ds_sr]
     if len(missing_vars) != 0:
         raise ValueError(f"The following variables are missing in the SR dataset: {missing_vars}")
@@ -724,23 +814,6 @@ def volume_matching(
 
     # Put SR data into memory
     ds_sr = ds_sr.compute()
-
-    # Compute SR attenuation correction
-    ds_sr["zFactorCorrection"] = ds_sr["zFactorFinal"] - ds_sr["zFactorMeasured"]
-
-    ####-----------------------------------------------------------------------------.
-    #### Plot Quicklook
-    if display_quicklook:
-        plot_quicklook(
-            ds_sr=ds_sr,
-            ds_gr=ds_gr,
-            min_gr_range=min_gr_range,
-            max_gr_range=max_gr_range,
-            z_min_threshold_gr=z_min_threshold_gr,
-            z_min_threshold_sr=z_min_threshold_sr,
-            z_variable=z_variable_gr,
-        )
-        plt.show()
 
     ####-----------------------------------------------------------------------------.
     #### Retrieve SR/GR gate resolution, volume and coordinates
@@ -795,6 +868,13 @@ def volume_matching(
     ds_sr["flagPrecipitationType"] = ds_sr.gpm.retrieve("flagPrecipitationType", method="major_rain_type")
     ds_sr["flagHydroClass"] = ds_sr.gpm.retrieve("flagHydroClass")
 
+    # Mask SR gates below clutter free region
+    # - flagHydroClass defines the gates affected by Clutter
+    ds_sr = ds_sr.gpm.mask_below_bin(bins=ds_sr["binClutterFreeBottom"] + 1, strict=False)
+
+    # Compute SR attenuation correction (with masked clutter)
+    ds_sr["zFactorCorrection"] = ds_sr["zFactorFinal"] - ds_sr["zFactorMeasured"]
+
     ####-----------------------------------------------------------------------------.
     #### Identify SR gates intersecting GR sweep
     # - Define mask of SR footprints within GR range
@@ -813,7 +893,7 @@ def volume_matching(
     ####-----------------------------------------------------------------------------.
     #### Define SR mask
     # Select above minimum SR reflectivity
-    # mask_sr_minimum_z = ds_sr["zFactorFinal"] > z_sr_min_threshold
+    mask_sr_minimum_z = ds_sr["zFactorMeasured"] >= z_min_threshold_sr
 
     # Select only 'high quality' data
     # - qualityFlag derived from qualityData.
@@ -833,9 +913,9 @@ def volume_matching(
 
     # Define 3D mask of SR gates matching GR PPI gates
     # - TIP: do not mask eccessively here ... but rather at final stage
-    mask_matched_ppi_3d = mask_ppi & mask_sr_precip & mask_sr_quality
+    mask_matched_ppi_3d = mask_ppi & mask_sr_precip & mask_sr_quality & mask_sr_minimum_z
 
-    # Define 2D mask of SR beams matching the GR PPI
+    # Define 2D mask of SR rainy beams matching the GR PPI
     mask_matched_ppi_2d = mask_matched_ppi_3d.any(dim="range")
 
     ####-----------------------------------------------------------------------------.
@@ -936,7 +1016,7 @@ def volume_matching(
     # Initialize Dataset where to add aggregated SR gates
     ds_sr_match_ppi = xr.Dataset()
 
-    # Mask SR gates not matching the GR PPI
+    # Mask SR beams not matching the GR PPI and not rainy
     ds_sr_ppi = ds_sr[sr_variables].where(mask_matched_ppi_3d)
 
     # Compute aggregation statistics
@@ -947,12 +1027,14 @@ def volume_matching(
     ds_sr_ppi_std = ds_sr_ppi.std("range")
 
     # Aggregate reflectivities (in mm6/mm3)
+    # Z_std computed in dbZ
     for var in z_variables:
         ds_sr_ppi_mean[var] = ds_sr_ppi[var].gpm.idecibel.mean("range").gpm.decibel
-        ds_sr_ppi_std[var] = ds_sr_ppi[var].gpm.idecibel.std("range").gpm.decibel
-        # If only 1 value, std=0, log transform become -inf --> Set to 0
-        is_inf = np.isinf(ds_sr_ppi_std[var])
-        ds_sr_ppi_std[var] = ds_sr_ppi_std[var].where(~is_inf, 0)
+
+        # # If only 1 value, std=0, log transform become -inf --> Set to 0
+        # ds_sr_ppi_std[var] = ds_sr_ppi[var].gpm.idecibel.std("range").gpm.decibel
+        # is_inf = np.isinf(ds_sr_ppi_std[var])
+        # ds_sr_ppi_std[var] = ds_sr_ppi_std[var].where(~is_inf, 0)
 
     # Compute counts and fractions above sensitivity thresholds
     ds_sr_match_ppi["SR_counts"] = mask_matched_ppi_3d.sum(dim="range")
@@ -1049,6 +1131,18 @@ def volume_matching(
     # Drop beams not matching the GR PPI
     ds_sr_match = ds_sr_stack.isel(sr_beam_index=da_mask_matched_ppi_stack)
 
+    # Drop beams with NaN reflectivity (using zFactorFinal)
+    # - Masked as NaN because below clutterFree region
+    # - Masked by sensitivity threshold 10 dBZ
+    # --> Using zFactorFinal would results in keeping only reflectivites > 12/13 dBZ
+    ds_sr_match = ds_sr_match.isel(sr_beam_index=~np.isnan(ds_sr_match["SR_zFactorMeasured_Ku_mean"]))
+    ds_sr_match = ds_sr_match.isel(sr_beam_index=ds_sr_match["SR_zFactorMeasured_Ku_mean"] >= 10)
+    ds_sr_match = ds_sr_match.isel(sr_beam_index=~np.isnan(ds_sr_match["SR_zFactorFinal_Ku_mean"]))
+
+    # If nothing to match, return None
+    if ds_sr_match.sizes["sr_beam_index"] == 0:
+        return None
+
     ####-----------------------------------------------------------------------------.
     #### Retrieve the SR footprints polygons
     # Retrieve SR footprint polygons (using the footprint radius in AEQD x,y coordinates)
@@ -1083,16 +1177,26 @@ def volume_matching(
     # Retrieve geopandas dataframe
     gdf_gr = ds_gr_subset.xradar_dev.to_geopandas()  # here we currently infer the quadmesh using the x,y coordinates
 
+    # Remove gates with NaN reflectivity
+    # - This would remove lots of gates
+    # - But would not allow to compute correct statistics (counts_valid, gate_volume, ...)
+    # gdf_gr = gdf_gr[~gdf_gr[z_variable_gr].isna()]
+
     # Extract radar gate polygon on the range-azimuth axis
     gr_poly = np.array(gdf_gr.geometry)
+
+    # If nothing to match, return None
+    if len(gr_poly) == 0:
+        return None
 
     ####-----------------------------------------------------------------------------.
     #### Aggregate GR data on SR footprints
     # Define PolyAggregator
-    aggregator = PolyAggregator(source_polygons=gr_poly, target_polygons=sr_poly)
+    aggregator = PolyAggregator(source_polygons=gr_poly, target_polygons=sr_poly, parallel=False)
 
     # Aggregate GR reflecitvities and compute statistics
     # - Timestep of acquisition
+    # - NaT where no intersection with SR footprints !
     time_gr = aggregator.first(values=gdf_gr["time"])
 
     # - Total number of gates aggregated
@@ -1107,8 +1211,9 @@ def volume_matching(
 
     # - Reflectivity statistics
     z_mean = wrl.trafo.decibel(aggregator.average(values=wrl.trafo.idecibel(gdf_gr[z_variable_gr])))
-    z_std = wrl.trafo.decibel(aggregator.std(values=wrl.trafo.idecibel(gdf_gr[z_variable_gr])))
-    z_std[np.isinf(z_std)] = 0  # If only 1 value, std=0, log transform become -inf --> Set to 0
+    z_std = aggregator.std(values=gdf_gr[z_variable_gr])
+    # z_std = wrl.trafo.decibel(aggregator.std(values=wrl.trafo.idecibel(gdf_gr[z_variable_gr])))
+    # z_std[np.isinf(z_std)] = 0  # If only 1 value, std=0, log transform become -inf --> Set to 0
     z_max = aggregator.max(values=gdf_gr[z_variable_gr])
     z_min = aggregator.min(values=gdf_gr[z_variable_gr])
     z_range = z_max - z_min
@@ -1139,6 +1244,10 @@ def volume_matching(
     gdf_gr_match["GR_range_mean"] = aggregator.mean(values=gdf_gr["range"])
     gdf_gr_match["GR_range_min"] = aggregator.min(values=gdf_gr["range"])
 
+    # Add GR azimuth and elevation
+    gdf_gr_match["GR_azimuth"] = aggregator.first(values=gdf_gr["azimuth"])
+    gdf_gr_match["GR_elevation"] = aggregator.first(values=gdf_gr["elevation"])
+
     # Fraction above sensitivity thresholds
     for thr in sr_sensitivity_thresholds:
         fraction = aggregator.apply(lambda x, weights: np.sum(x > thr), values=gdf_gr[z_variable_gr]) / counts  # noqa
@@ -1167,6 +1276,14 @@ def volume_matching(
     # Create DataFrame with matched variables
     gdf_match = gdf_gr_match.merge(gdf_sr, on="geometry")
 
+    # Remove rows where no intersection between SR and GR
+    gdf_match = gdf_match[~gdf_match["GR_counts"].isna()]
+    gdf_match = gdf_match[~gdf_match["GR_Z_mean"].isna()]
+
+    # Return None if nothing left
+    if len(gdf_match) == 0:
+        return None
+
     # Compute ratio SR/GR volume
     gdf_match["VolumeRatio"] = gdf_match["SR_gate_volume_sum"] / gdf_match["GR_gate_volume_sum"]
 
@@ -1183,6 +1300,37 @@ def volume_matching(
 
     gdf_match["SR_z_lower_bound"] = gdf_match["SR_z_min"] - gdf_match["SR_vres_mean"] / 2
     gdf_match["SR_z_upper_bound"] = gdf_match["SR_z_max"] + gdf_match["SR_vres_mean"] / 2
+
+    ####----------------------------------------------------------------------.
+    #### Create Quicklook Figure
+    if display_quicklook or quicklook_fpath:
+        sr_z_column = f"SR_zFactorFinal_{radar_band}_mean"
+        gr_z_column = "GR_Z_mean"
+        fig = plot_quicklook(ds_gr=ds_gr, gdf=gdf_match, sr_z_column=sr_z_column, gr_z_column=gr_z_column)
+        if quicklook_fpath is not None:
+            fig.savefig(quicklook_fpath)
+            plt.close()
+        else:
+            plt.show()
+
+    ####----------------------------------------------------------------------.
+    #### Create Calibration Summary Figure
+    if display_calibration_summary:
+        calibration_summary(
+            df=gdf_match,
+            gr_z_column=gr_z_column,
+            sr_z_column=sr_z_column,
+            # Histogram options
+            bin_width=2,
+            # Scatterplot options
+            # hue_column="GR_gate_volume_sum",
+            hue_column="GR_range_mean",
+            # gr_range=[15, 50]
+            # sr_range=[15, 50]
+            marker="+",
+            cmap="Spectral",
+        )
+        plt.show()
 
     ####-----------------------------------------------------------------------------.
     return gdf_match

@@ -90,9 +90,9 @@ def _get_chunks_encodings(ds):
         chunksizes = ds[name].encoding.get("chunksizes", None)
         if preferred_chunks:
             # Use values() to remove phony_dim_* keys
-            dict_preferred_chunks[name] = dict(zip(ds[name].dims, preferred_chunks.values()))
+            dict_preferred_chunks[name] = dict(zip(ds[name].dims, preferred_chunks.values(), strict=False))
         if preferred_chunks:
-            dict_chunksizes[name] = dict(zip(ds[name].dims, chunksizes))
+            dict_chunksizes[name] = dict(zip(ds[name].dims, chunksizes, strict=False))
     return dict_chunksizes, dict_preferred_chunks
 
 
@@ -129,6 +129,10 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     import pyproj
 
     from gpm import config
+
+    ##------------------------------------------------------------------------.
+    # Retrieve closer
+    closer = ds._close
 
     ##------------------------------------------------------------------------.
     # Clean out HDF5 attributes
@@ -235,4 +239,6 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
         pass
 
     ###-----------------------------------------------------------------------.
+    # Reassign closer
+    ds.set_close(closer)
     return ds

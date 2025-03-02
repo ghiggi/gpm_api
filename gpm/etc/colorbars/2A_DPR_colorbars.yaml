@@ -7,10 +7,6 @@ zFactorMeasured:
   reference: reflectivity_gpm
 zFactorFinal:
   reference: reflectivity_gpm
-dfrMeasured:
-  reference: dual_frequency_ratio_gpm
-dfrFinal:
-  reference: dual_frequency_ratio_gpm
 dfrFinalNearSurface:
   reference: dual_frequency_ratio_gpm
 REFC:
@@ -25,20 +21,207 @@ precipRateESurface2:
   reference: precipitation_rate
 precipRateAve24:
   reference: precipitation_rate
+zFactorMeasuredKa:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{m, Ka}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+zFactorMeasuredKu:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{m, Ku}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+zFactorFinalKa:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{f, Ka}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+zFactorFinalKu:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{f, Ku}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+zFactorCorrection:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Attenuation Correction [dBZ]
+zFactorCorrectionKu:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Attenuation Correction at Ku band [dBZ]
+zFactorCorrectionKa:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Attenuation Correction at Ka band [dBZ]
+dfrMeasured:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -2
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $DFR_{m, Ku-Ka}$ [$dB$]
+dfrFinal:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -2
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $DFR_{f,Ku-Ka}$ [$dB$]
+dfrMeasuredMinusPIA:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -2
+    vmax: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $DFR_{m, Ku-Ka}$ - $\delta$$PIA$ [$dB$]
+diffPIA:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -8
+    vmax: 2
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $\delta$$PIA_{Ku-Ka}$ [$dB$]
 precipWaterIntegrated:
   cmap:
     name: YlGnBu
-    bad_alpha: 0.5
-    bad_color: gray
+    bad_alpha: 0
+    bad_color: none
     under_color: none
   norm:
     name: Norm
     vmin: 0.1
-    vmax: 20
+    vmax: 40
   cbar:
     extend: max
     extendfrac: 0.05
     label: Total Precipitable Water [$kg \ m^{-2}$]
+precipWaterIntegrated_Liquid:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 40
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Total Liquid Precipitable Water [$kg \ m^{-2}$]
+precipWaterIntegrated_Solid:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 40
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Total Solid Precipitable Water [$kg \ m^{-2}$]
+VIL:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 0.1
+    vmax: 40
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Vertically Integrated Liquid [$kg \ m^{-2}$]
+VILD:
+  cmap:
+    name: YlGnBu
+    bad_alpha: 0
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 1
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: VIL Density [$g \ m^{-3}$]
 Dm:
   cmap:
     name: plasma
@@ -46,11 +229,25 @@ Dm:
     bad_color: gray
   norm:
     name: Norm
-    vmin: 0
-    vmax: 2
+    vmin: 0.5
+    vmax: 3
   cbar:
     extend: both
+    extendfrac: 0.05
     label: $D_m$ [$mm$]
+LogNw:
+  cmap:
+    name: plasma
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: -1
+    vmax: 8
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $N_w$ [$\log{(m^{-1} \ m^{-3})}$]
 dBNw:
   cmap:
     name: plasma
@@ -59,9 +256,10 @@ dBNw:
   norm:
     name: Norm
     vmin: -1
-    vmax: 6
+    vmax: 50
   cbar:
     extend: both
+    extendfrac: 0.05
     label: $N_w$ [10$\log{(mm^{-1} \ m^{-3})}$]
 Nw:
   cmap:
@@ -69,9 +267,11 @@ Nw:
     bad_alpha: 0.5
     bad_color: gray
   norm:
-    name: Norm
+    name: LogNorm
+    vmin: 1
   cbar:
-    extend: both
+    extend: max
+    extendfrac: 0.05
     label: $N_w$ [$mm^{-1} \ m^{-3}$]
 flagPrecipitationType:
   cmap:
@@ -234,7 +434,7 @@ qualityFlag:
       1: Low Quality
       2: Unreliable
   cbar:
-    label: Reliability of precipitation detection
+    label: Retrieval Quality
 qualityTypePrecip:
   cmap:
     name: Set3
@@ -248,9 +448,53 @@ qualityTypePrecip:
       1: Good
   cbar:
     label: Reliability of precipitation type
-zFactorCorrection:
+zFactorCorrectionNearSurface:
+  reference: zFactorCorrection
+MESH:
   cmap:
-    name: Spectral_r
+    name: Reds
     bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 5
+    vmax: 40
   cbar:
-    label: Attenuation Correction [dBZ]
+    extend: max
+    extendfrac: 0.05
+    label: Maximum Expected Hail Size [mm]
+MESHS:
+  cmap:
+    name: Reds
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 1
+    vmax: 5
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Maximum Expected Severe Hail Size [cm]
+POH:
+  cmap:
+    name: Reds
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 1
+    vmax: 100
+  cbar:
+    label: Probability of Hail [%]
+POSH:
+  cmap:
+    name: Reds
+    bad_color: none
+    under_color: none
+  norm:
+    name: Norm
+    vmin: 1
+    vmax: 100
+  cbar:
+    label: Probability of Severe Hail [%]

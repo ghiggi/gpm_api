@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions for manipulating GPM-API Datasets."""
-import importlib
 
 import numpy as np
 import xarray as xr
@@ -33,12 +32,13 @@ import xoak  # noqa (accessor)
 
 from gpm.checks import (
     check_has_vertical_dim,
+    get_spatial_dimensions,
     get_vertical_variables,
     has_spatial_dim,
     has_vertical_dim,
     is_grid,
 )
-from gpm.utils.decorators import check_is_gpm_object
+from gpm.utils.decorators import check_is_gpm_object, check_software_availability
 from gpm.utils.geospatial import get_geodesic_line, get_great_circle_arc_endpoints
 from gpm.utils.xarray import (
     check_variable_availabilty,
@@ -152,7 +152,57 @@ def conversion_factors_degree_to_meter(latitude, earth_radius=None):
     return cx, cy
 
 
-####-------------------------------------------------------------------------------------------------------------------.
+####---------------------------------------------------------------------------.
+####################
+#### Subsetting ####
+####################
+
+
+def crop_around_valid_data(xr_obj, variable=None):
+    """
+    Return a sub-region of the specified DataArray containing all the non-NaN values.
+
+    Parameters
+    ----------
+    xr_obj: xarray.DataArray or xarray.Dataset
+        A xarray object to crop around valid data (of variable).
+    variable : str, optional
+        Name of the variable to use to crop the dataset.
+        Only to be specified if xr_obj is a xr.Dataset
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        Cropped DataArray such that NaN-only outer rows/columns are removed.
+    """
+    da = get_xarray_variable(xr_obj, variable=variable)
+
+    # Create a boolean mask indicating where da is not NaN
+    valid_mask = da.notnull().compute()  # noqa: PD004
+
+    # Raise error if not valid data
+    if not np.any(valid_mask).item():
+        raise ValueError("No valid data around with to crop.")
+
+    # Define the isel dictionary
+    isel_dict = {}
+    for dim in da.dims:
+        # Collapse all other dims and get a 1D boolean array along 'dim'
+        other_dims = [d for d in da.dims if d != dim]
+        valid_along_dim = valid_mask.any(dim=other_dims)
+        # Find first and last True index
+        # - argmax() gives the first True index from the start
+        start_idx = int(np.argmax(valid_along_dim.data))
+        # To get the last True, reverse the array and use argmax again
+        end_idx = len(valid_along_dim) - int(np.argmax(valid_along_dim.data[::-1]))
+        # Construct the slice
+        isel_dict[dim] = slice(start_idx, end_idx)
+
+    # Apply the slice to the original object (Dataset or DataArray)
+    return xr_obj.isel(isel_dict, drop=False)
+
+
+####---------------------------------------------------------------------------.
 ##########################
 #### Range bin slicer ####
 ##########################
@@ -1170,6 +1220,7 @@ def extract_transect_at_points(xr_obj, points, method="linear", new_dim="transec
 
 
 @check_is_gpm_object
+@check_software_availability(software="sklearn", conda_package="scikit-learn")
 def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, method="linear", new_dim="transect"):
     """Extract an interpolated transect between two points on a sphere.
 
@@ -1205,11 +1256,6 @@ def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, m
     :py:class:`gpm.utils.manipulations.extract_transect_around_point`.
 
     """
-    if importlib.util.find_spec("sklearn") is None:
-        raise ImportError(
-            "The 'sklearn' package required to extract cross-sections is not installed. \n"
-            "Please install it using the following command:  conda install -c conda-forge scikit-learn",
-        )
     # Get the points along the geodesic line
     points = get_geodesic_line(start_point=start_point, end_point=end_point, steps=steps)
 
@@ -1217,6 +1263,7 @@ def extract_transect_between_points(xr_obj, start_point, end_point, steps=100, m
     return extract_transect_at_points(xr_obj, points=points, method=method, new_dim=new_dim)
 
 
+@check_is_gpm_object
 def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, method="linear", new_dim="transect"):
     """
     Extract a transect following the great circle arc centered on the specified point.
@@ -1265,37 +1312,199 @@ def extract_transect_around_point(xr_obj, point, azimuth, distance, steps=100, m
     )
 
 
+def locate_points(xr_obj, points):
+    """Return a list of isel dictionary corresponding to the nearest location of the set of points."""
+    # Retrieve spatial dimensions
+    spatial_dims = get_spatial_dimensions(xr_obj)
+
+    # Define dummy coordinates with integer indices
+    dummy_coords = {f"dummy_{d}": (d, np.arange(len(xr_obj[d]))) for d in spatial_dims}
+    xr_obj = xr_obj.assign_coords(dummy_coords)
+
+    # Identify index over which to slice
+    xr_point = extract_at_points(xr_obj, points=points)
+    isel_dict = [{d: xr_point[f"dummy_{d}"].data[i].item() for d in spatial_dims} for i in range(len(points))]
+
+    # Drop dummy coordinates
+    xr_obj = xr_obj.drop_vars(list(dummy_coords))
+
+    # Return isel_dict
+    return isel_dict
+
+
+def define_transect_isel_dict(xr_obj, point, dim):
+    """Define the isel dictionary required to extract a transect along the specified dimension."""
+    # Check specified dimension
+    spatial_dims = get_spatial_dimensions(xr_obj)
+    if dim not in spatial_dims:
+        raise ValueError(f"'dim' must be one of object spatial dimensions: {spatial_dims}.")
+    if len(spatial_dims) != 2:
+        raise ValueError("The object does not have 2 spatial dimensions.")
+
+    # Define dimension over which to slice
+    subset_dim = (set(spatial_dims) - {dim}).pop()
+
+    # Identify index over which to slice
+    isel_dict = locate_points(xr_obj, points=np.atleast_2d(point))[0]
+    transect_isel_dict = {subset_dim: isel_dict[subset_dim]}
+    return transect_isel_dict
+
+
+@check_is_gpm_object
+def extract_transect_along_dimension(xr_obj, point, dim):
+    """
+    Extract a transect along the specified spatial dimension passing through the specified location.
+
+    Parameters
+    ----------
+    xr_obj : xarray.DataArray or xarray.Dataset
+        Dataset or DataArray from which extract a transect.
+    point : tuple of float
+        A tuple representing the middle point (longitude, latitude) of the great circle arc.
+    dim : str
+        The desired spatial dimension of the transect.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The transect object with spatial dimension ``dim``.
+    """
+    transect_isel_dict = define_transect_isel_dict(xr_obj, point=point, dim=dim)
+    return xr_obj.isel(transect_isel_dict)
+
+
+####------------------------------------------------------------------------------------------------------------------.
+####################
+#### Infilling  ####
+####################
+
+
+def _infill_datarray(da, da_bin, potential_infill_mask, valid_mask):
+    # Create a copy of the input to avoid modifying the original
+    result = da.copy(deep=True)
+
+    # Get the values at the specified indices
+    values_at_indices = da.gpm.slice_range_at_bin(da_bin)
+
+    # Create a mask for points where both the index and value are valid
+    valid_values_mask = valid_mask & ~np.isnan(values_at_indices)
+
+    # Define infill mask
+    infill_mask = potential_infill_mask & valid_values_mask
+
+    # Broadcast values to apply
+    values_broadcast = values_at_indices.broadcast_like(da)
+
+    # Apply the infill operation
+    with xr.set_options(keep_attrs=True):
+        result = xr.where(infill_mask, values_broadcast, result)
+        result.name = da.name
+    return result
+
+
+def infill_below_bin(xr_obj, bins):
+    """
+    Infill values below a spatially variable range bin.
+
+    Parameters
+    ----------
+    xr_obj : xarray.Dataset or xarray.DataArray
+        GPM RADAR xarray object.
+    bins : str or xarray.DataArray
+        Either a xarray.DataArray or a string pointing to the dataset variable
+        with the range bins.
+        GPM bin variables are assumed to start at 1, not 0!
+
+    Returns
+    -------
+    xarray.Dataset or xarray.DataArray
+        Infilled GPM RADAR xarray object.
+    """
+    check_has_vertical_dim(xr_obj)
+
+    # Get the bin DataArray
+    da_bin, da_mask = get_bin_dataarray(xr_obj, bins=bins)
+
+    # Get height DataArray
+    da_height = xr_obj["height"]
+
+    # Get the name of the third dimension (range or height)
+    z_dim = xr_obj.gpm.vertical_dimension[0]
+
+    # Check if the range/height dimension is increasing or decreasing
+    other_dims = [dim for dim in xr_obj.dims if dim != z_dim]
+    pixel_isel_dict = {dim: 0 for dim in other_dims}
+    z_values = da_height.isel(pixel_isel_dict, missing_dims="ignore").to_numpy()
+    is_increasing = z_values[1] > z_values[0]
+
+    # Handle NaN values in the bin array and retrieve 0-indexing
+    # - Use 0 as placeholder for invalid indices
+    valid_mask = ~da_mask
+    idx_int = xr.where(valid_mask, da_bin, 1).astype(int) - 1
+
+    # Create a template for our mask along the z dimension
+    z_indices = xr.DataArray(np.arange(len(xr_obj[z_dim])), dims=[z_dim], coords={z_dim: xr_obj[z_dim]})
+
+    # Define potential infilling mask
+    potential_infill_mask = z_indices <= idx_int if is_increasing else z_indices >= idx_int
+
+    # Infill DataArrays
+    if isinstance(xr_obj, xr.DataArray):
+        xr_obj = _infill_datarray(
+            xr_obj,
+            da_bin=da_bin,
+            potential_infill_mask=potential_infill_mask,
+            valid_mask=valid_mask,
+        )
+    else:
+        for var in xr_obj.gpm.vertical_variables:
+            xr_obj[var] = _infill_datarray(
+                xr_obj[var],
+                da_bin=da_bin,
+                potential_infill_mask=potential_infill_mask,
+                valid_mask=valid_mask,
+            )
+
+    # Re-assign height back (because current heights inherited form valid_values_mask)
+    xr_obj = xr_obj.assign_coords({"height": da_height})
+    return xr_obj
+
+
 ####------------------------------------------------------------------------------------------------------------------.
 #############################
 #### Location Utilities  ####
 #############################
-# gpm.locate.<....>
-# get_location_max_value (s)
-# get_location_min_value (s)
-# get_location_at_mask
-# extract_transect_ordered_values
 
 
-def get_max_value_point(da):
+def locate_max_value(da, return_isel_dict=False):
     """Find the geographic point where the maximum value occur in the data array.
 
     Parameters
     ----------
     da : xarray.DataArray
         The data array to analyze.
+    return_isel_dict: bool, optional
+        If True, returns a dictionary with the spatial dimension indices corresponding to the maximum value.
+        If False (the default), returns a (lon, lat) tuple of the point where the maximum value occurs.
 
     Returns
     -------
-    tuple
-        A tuple representing the longitude and latitude of the point where the maximum value occurs.
+    tuple or dict
+        If return_isel_dict=True, returns a dictionary
+        with the spatial dimension and indices corresponding to the maximum value.
+        If return_isel_dict=False (the default), returns a (lon, lat) tuple
+        of the point where the maximum value occurs.
     """
     isel_dict = _get_max_value_spatial_isel_dict(da)
+    if return_isel_dict:
+        return isel_dict
+
     da_point = da.isel(isel_dict)
     point = (da_point["lon"].data.item(), da_point["lat"].data.item())
     return point
 
 
-def get_min_value_point(da):
+def locate_min_value(da, return_isel_dict=False):
     """
     Find the geographic point where the minimum value occurs in the data array.
 
@@ -1304,12 +1513,22 @@ def get_min_value_point(da):
     da : xarray.DataArray
         The data array to analyze.
 
+    return_isel_dict: bool, optional
+        If True, returns a dictionary with the spatial dimension indices corresponding to the minimum value.
+        If False (the default), returns a (lon, lat) tuple of the point where the minimum value occurs.
+
     Returns
     -------
-    tuple
-        A tuple representing the longitude and latitude of the point where the minimum value occurs.
+    tuple or dict
+        If return_isel_dict=True, returns a dictionary
+        with the spatial dimension and indices corresponding to the minimum value.
+        If return_isel_dict=False (the default), returns a (lon, lat) tuple
+        of the point where the minimum value occurs.
+
     """
     isel_dict = _get_min_value_spatial_isel_dict(da)
+    if return_isel_dict:
+        return isel_dict
     da_point = da.isel(isel_dict)
     point = (da_point["lon"].data.item(), da_point["lat"].data.item())
     return point

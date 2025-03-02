@@ -79,9 +79,6 @@ DYNAMIC_GLOBAL_ATTRS = (
 )
 
 
-# TODO: read this dictionary from config YAML ...
-
-
 def _is_str_list(s):
     """Check if the string start and end with brackets.
 

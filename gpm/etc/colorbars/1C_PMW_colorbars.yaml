@@ -1,3 +1,84 @@
 ---
 Tc:
   reference: brightness_temperature
+PCT:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 200
+    vmax: 300
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Polarization Corrected Temperature [K]
+  auxiliary:
+    category: brightness_temperature
+PD:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: gray
+  norm:
+    name: Norm
+    vmin: 0
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Polarization Difference [K]
+  auxiliary:
+    category: brightness_temperature
+PESCA:
+  cmap:
+    name: tab20c
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: No snow
+      1: Deep Dry Snow
+      2: Polar Winter Snow
+      3: Perennial Snow
+      4: Thin Snow
+  cbar:
+    label: ""
+incidenceAngle:
+  cmap:
+    name: turbo
+    bad_color: none
+  norm:
+    name: Norm
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: "Incidence Angle [°]"
+sunGlintAngle:
+  cmap:
+    name: inferno_r
+    bad_color: none
+    under_color: "gray"
+    under_alpha: 0.4
+  norm:
+    name: Norm
+    vmin: 0
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Sun Glint Angle [°]
+sunLocalTime:
+  cmap:
+    name: twilight_shifted
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 24
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: Local Solar Time [hour]

@@ -28,7 +28,6 @@
 import difflib
 import os
 from collections import namedtuple
-from typing import Optional, Union
 
 import numpy as np
 import pyproj
@@ -49,7 +48,7 @@ from gpm.utils.yaml import read_yaml
 Extent = namedtuple("Extent", "xmin xmax ymin ymax")
 
 
-def _check_size(size: Union[int, float, tuple, list] = 0):
+def _check_size(size: int | float | tuple | list = 0):
     """Check and normalize the size input.
 
     This function accepts size defined as an integer, float, tuple, or list.
@@ -88,7 +87,7 @@ def _check_size(size: Union[int, float, tuple, list] = 0):
     return size
 
 
-def _check_padding(padding: Union[int, float, tuple, list] = 0):
+def _check_padding(padding: int | float | tuple | list = 0):
     """Check and normalize the padding input.
 
     This function accepts padding defined as an integer, float, tuple, or list.
@@ -245,7 +244,19 @@ def adjust_extent(extent, size):
     return Extent(xmin, xmax, ymin, ymax)
 
 
-def extend_extent(extent, padding: Union[int, float, tuple, list] = 0):
+def merge_extents(list_extent):
+    """Return the outer extent of a list of extents."""
+    extents = np.vstack(list_extent)
+    extent = [
+        extents[:, 0].min().item(),
+        extents[:, 1].max().item(),
+        extents[:, 2].min().item(),
+        extents[:, 3].max().item(),
+    ]
+    return extent
+
+
+def extend_extent(extent, padding: int | float | tuple | list = 0):
     """Extend the extent by padding in every direction.
 
     Parameters
@@ -279,7 +290,7 @@ def extend_extent(extent, padding: Union[int, float, tuple, list] = 0):
 #### Geographic Extent
 
 
-def extend_geographic_extent(extent, padding: Union[int, float, tuple, list] = 0):
+def extend_geographic_extent(extent, padding: int | float | tuple | list = 0):
     """Extend the lat/lon extent by x degrees in every direction.
 
     Parameters
@@ -348,7 +359,7 @@ def adjust_geographic_extent(extent, size):
     return extend_geographic_extent([new_lon_min, new_lon_max, new_lat_min, new_lat_max], padding=0)
 
 
-def _is_crossing_dateline(lon: Union[list, np.ndarray]):
+def _is_crossing_dateline(lon: list | np.ndarray):
     """Check if the longitude array is crossing the dateline."""
     lon = np.asarray(lon)
     diff = np.diff(lon)
@@ -357,8 +368,8 @@ def _is_crossing_dateline(lon: Union[list, np.ndarray]):
 
 def get_geographic_extent_from_xarray(
     xr_obj,
-    padding: Union[int, float, tuple, list] = 0,
-    size: Optional[Union[int, float, tuple, list]] = None,
+    padding: int | float | tuple | list = 0,
+    size: int | float | tuple | list | None = None,
 ):
     """Get the geographic extent from an xarray object.
 
@@ -543,7 +554,7 @@ def get_country_extent(name, padding=0.2):
     raise ValueError(f"No matching country. Maybe are you looking for '{possible_match}'?")
 
 
-def get_continent_extent(name: str, padding: Union[int, float, tuple, list] = 0):
+def get_continent_extent(name: str, padding: int | float | tuple | list = 0):
     """Retrieves the extent of a continent.
 
     Parameters

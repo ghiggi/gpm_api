@@ -32,7 +32,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
-from datatree import DataTree
 
 from gpm.dataset import conventions, datatree, granule
 from gpm.dataset.conventions import finalize_dataset
@@ -88,13 +87,13 @@ def test_unused_var_dims_and_remove():
     assert list(returned_dataset.dims) == expected_dims
 
 
-def test_open_granule(monkeypatch):
-    """Test open_granule."""
+def test_open_granule_dataset(monkeypatch):
+    """Test open_granule_dataset."""
     filepath = "RS/V07/RADAR/2A-DPR/2022/07/06/2A.GPM.DPR.V9-20211125.20220706-S043937-E061210.047456.V07A.HDF5"
     scan_mode = "FS"
 
     ds = xr.Dataset()
-    dt = DataTree.from_dict({scan_mode: ds})
+    dt = xr.DataTree.from_dict({scan_mode: ds})
 
     # Mock units tested elsewhere
     monkeypatch.setattr(
@@ -116,9 +115,9 @@ def test_open_granule(monkeypatch):
     monkeypatch.setattr(granule, "finalize_dataset", patch_finalize_dataset)
 
     # Mock datatree opening from filepath
-    monkeypatch.setattr(datatree, "open_datatree", lambda *args, **kwargs: dt)
+    monkeypatch.setattr(datatree, "open_raw_datatree", lambda *args, **kwargs: dt)
 
-    returned_dataset = granule.open_granule(filepath)
+    returned_dataset = granule.open_granule_dataset(filepath)
     expected_attribute_keys = ["attribute", "ScanMode", "finalized"]
     expected_coordinate_keys = ["coord"]
     assert isinstance(returned_dataset, xr.Dataset)
@@ -223,12 +222,12 @@ def test_get_flattened_scan_mode_dataset():
 
     # Build source datatree
     scan_mode = "scan_mode"
-    dt = DataTree.from_dict(
+    dt = xr.DataTree.from_dict(
         {
-            scan_mode: DataTree.from_dict(
+            scan_mode: xr.DataTree.from_dict(
                 {
-                    "group_1": DataTree(),
-                    "group_2": DataTree(),
+                    "group_1": xr.DataTree(),
+                    "group_2": xr.DataTree(),
                 },
             ),
         },

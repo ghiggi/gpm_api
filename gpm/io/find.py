@@ -34,6 +34,7 @@ import numpy as np
 import pandas as pd
 
 from gpm._config import config
+from gpm.configs import get_base_dir
 from gpm.io.checks import (
     check_date,
     check_product,
@@ -55,10 +56,11 @@ from gpm.utils.warnings import GPMDownloadWarning
 VERSION_WARNING = config.get("warn_multiple_product_versions")
 
 
-def _get_all_daily_filepaths(storage, date, product, product_type, version, verbose):
+def _get_all_daily_filepaths(storage, date, product, product_type, version, verbose, base_dir=None):
     """Return the ``find_daily_filepaths_func``.
 
     This functions returns a tuple ``([filepaths],[available_version])``.
+    base_dir must be specified only if storage="LOCAL".
     """
     if storage == "LOCAL":
         filepaths = get_local_daily_filepaths(
@@ -66,6 +68,7 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
             product_type=product_type,
             date=date,
             version=version,
+            base_dir=base_dir,
         )
     elif storage == "PPS":
         filepaths = get_pps_daily_filepaths(
@@ -144,6 +147,7 @@ def find_daily_filepaths(
     start_time=None,
     end_time=None,
     verbose=False,
+    base_dir=None,
 ):
     """Retrieve GPM data filepaths for a specific day and product.
 
@@ -163,6 +167,9 @@ def find_daily_filepaths(
         GPM version of the data to retrieve if ``product_type = "RS"``.
     verbose : bool, optional
         Default is ``False``.
+    base_dir : str
+        The base directory where GPM data are stored on local disk.
+        It must be specified only if storage="LOCAL".
 
     Returns
     -------
@@ -172,6 +179,10 @@ def find_daily_filepaths(
         List of available versions.
 
     """
+    # Check base_dir if storage="LOCAL" Retrieve the local GPM base directory
+    if storage == "LOCAL":
+        base_dir = get_base_dir(base_dir=base_dir)
+
     ##------------------------------------------------------------------------.
     # Check date
     date = check_date(date)
@@ -185,6 +196,7 @@ def find_daily_filepaths(
         date=date,
         version=version,
         verbose=verbose,
+        base_dir=base_dir,
     )
     if len(filepaths) == 0:
         if storage == "LOCAL" and verbose:
@@ -228,6 +240,7 @@ def find_filepaths(
     groups=None,
     verbose=True,
     parallel=True,
+    base_dir=None,
 ):
     """Retrieve GPM data filepaths on local disk for a specific time period and product.
 
@@ -274,6 +287,10 @@ def find_filepaths(
     start_time, end_time = check_start_end_time(start_time, end_time)
     start_time, end_time = check_valid_time_request(start_time, end_time, product)
 
+    # Check base_dir if storage="LOCAL" Retrieve the local GPM base directory
+    if storage == "LOCAL":
+        base_dir = get_base_dir(base_dir=base_dir)
+
     # Retrieve sequence of dates
     # - Specify start_date - 1 day to include data potentially on previous day directory
     # --> Example granules starting at 23:XX:XX in the day before and extending to 01:XX:XX
@@ -306,6 +323,7 @@ def find_filepaths(
                 start_time=start_time,
                 end_time=end_time,
                 verbose=verbose,
+                base_dir=base_dir,
             )
             list_delayed.append(del_op)
         # Get filepaths list for each date
@@ -330,6 +348,7 @@ def find_filepaths(
                 start_time=start_time,
                 end_time=end_time,
                 verbose=verbose,
+                base_dir=base_dir,
             )
             # Concatenate filepaths
             list_filepaths += filepaths
@@ -340,7 +359,7 @@ def find_filepaths(
     filepaths = sorted(filepaths)
 
     # Group filepaths if groups is not None
-    filepaths = group_filepaths(filepaths, groups=groups)
+    filepaths = group_filepaths(filepaths, groups=groups, sep="/")
 
     # -------------------------------------------------------------------------.
     # Check unique version

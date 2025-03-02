@@ -31,7 +31,6 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 import xarray as xr
-from datatree import DataTree
 from deepdiff import DeepDiff
 
 from gpm.dataset import coords
@@ -76,7 +75,7 @@ def test_get_orbit_coords():
     lat = xr.DataArray(rng.random(shape), dims=["along_track", "cross_track"])
     time_array, time_ds = get_random_datetime_array_and_dataset(shape[0])
 
-    dt = DataTree.from_dict({scan_mode: DataTree.from_dict({"ScanTime": time_ds})})
+    dt = xr.DataTree.from_dict({scan_mode: xr.DataTree.from_dict({"ScanTime": time_ds})})
     dt[scan_mode]["Longitude"] = lon
     dt[scan_mode]["Latitude"] = lat
     dt.attrs["FileHeader"] = f"GranuleNumber={granule_id}"
@@ -124,7 +123,7 @@ def test_get_grid_coords():
     ds.coords["lon"] = ("lon", lon)
     ds.coords["lat"] = ("lat", lat)
 
-    dt = DataTree.from_dict({scan_mode: ds})
+    dt = xr.DataTree.from_dict({scan_mode: ds})
     dt.attrs["FileHeader"] = f"StartGranuleDateTime={time_formated};\nTimeInterval=HALF_HOUR;"
 
     # Test get_grid_coords
@@ -151,12 +150,12 @@ def test_get_coords(monkeypatch):
 
     # Test get_coords
     scan_mode = "S1"
-    dt = DataTree()
+    dt = xr.DataTree()
     returned_coords = coords.get_coords(dt, scan_mode)
     assert returned_coords == "return from get_orbit_coords"
 
     scan_mode = "Grid"
-    dt = DataTree()
+    dt = xr.DataTree()
     returned_coords = coords.get_coords(dt, scan_mode)
     assert returned_coords == "return from get_grid_coords"
 

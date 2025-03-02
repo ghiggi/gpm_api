@@ -611,7 +611,7 @@ class Base2DPartitioning:
         if self.n_levels == 1:
             labels = [labels]
         # Add labels to dataframe
-        for partition, values in zip(self.levels, labels):
+        for partition, values in zip(self.levels, labels, strict=False):
             df = df_add_column(df=df, column=partition, values=values)
         # Check if invalid labels
         invalid_rows = labels[0] == "nan"

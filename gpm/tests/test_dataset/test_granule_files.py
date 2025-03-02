@@ -33,10 +33,14 @@ import xarray as xr
 
 import gpm
 from gpm import _root_path
-from gpm.dataset.granule import open_granule
+from gpm.dataset.granule import open_granule_dataset
 
 PRODUCT_TYPES = ["RS"]
 
+GRANULES_DIR_PATH = os.path.join(_root_path, "gpm", "tests", "data", "granules")
+
+ORBIT_EXAMPLE_FILEPATH = glob.glob(os.path.join(GRANULES_DIR_PATH, "cut", "RS", "V7", "2A-DPR", "*"))[0]
+GRID_EXAMPLE_FILEPATH = glob.glob(os.path.join(GRANULES_DIR_PATH, "cut", "RS", "V7", "IMERG-FR", "*"))[0]
 
 gpm.config.set(
     {
@@ -64,9 +68,14 @@ def check_dataset_equality(cut_filepath):
     processed_filenames = os.listdir(processed_dir)
     processed_filepaths = [os.path.join(processed_dir, filename) for filename in processed_filenames]
     scan_modes = [os.path.splitext(filename)[0] for filename in processed_filenames]
-    for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths):
-        ds = open_granule(cut_filepath, scan_mode=scan_mode).compute()
+    for scan_mode, processed_filepath in zip(scan_modes, processed_filepaths, strict=False):
+        # Open files
+        ds = open_granule_dataset(cut_filepath, scan_mode=scan_mode).compute()
         ds_expected = xr.open_dataset(processed_filepath).compute()
+
+        # Close connection to file
+        ds.close()
+        ds_expected.close()
 
         # Remove attributes that are allowed to change
         ds_expected = remove_unfixed_attributes(ds_expected)
@@ -78,7 +87,7 @@ def check_dataset_equality(cut_filepath):
 
 
 def test_open_granule_on_real_files():
-    """Test open_granule on real files.
+    """Test open_granule_dataset on real files.
 
     Load cut granules and check that the new file is identical to the saved reference.
 
@@ -99,15 +108,13 @@ def test_open_granule_on_real_files():
         │    └── S5.nc
         └── ...
     """
-    granules_dir_path = os.path.join(_root_path, "gpm", "tests", "data", "granules")
-
-    if not os.path.exists(granules_dir_path):
+    if not os.path.exists(GRANULES_DIR_PATH):
         pytest.skip(
             "Test granules not found. Please run `git submodule update --init` to clone "
             "existing test data, or `python generate_test_granule_data.py` to generate new test data.",
         )
 
-    cut_dir_path = os.path.join(granules_dir_path, "cut")
+    cut_dir_path = os.path.join(GRANULES_DIR_PATH, "cut")
 
     for product_type in PRODUCT_TYPES:
         if product_type == "RS":
@@ -131,3 +138,27 @@ def test_open_granule_on_real_files():
             failed_products = [product_id for (product_id, err) in list_failed_checks]
             msg = f"Failed dataset comparison for {failed_products}. Errors are: {list_failed_checks}"
             raise ValueError(msg)
+
+
+class TestOpenGranuleMethods:
+
+    @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH, GRID_EXAMPLE_FILEPATH])
+    def test_open_granule_dataset(self, filepath):
+        """Test open granule with open_granule_dataset."""
+        ds = gpm.open_granule_dataset(filepath, cache=False, lock=False, decode_cf=True)
+        assert isinstance(ds, xr.Dataset)
+        ds.close()
+
+    @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH, GRID_EXAMPLE_FILEPATH])
+    def test_open_raw_datatree(self, filepath):
+        """Test open granule with open_raw_datatree."""
+        dt = gpm.open_raw_datatree(filepath, cache=False, lock=False, decode_cf=True)
+        assert isinstance(dt, xr.DataTree)
+        dt.close()
+
+    @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH])
+    def test_open_granule_datatree(self, filepath):
+        """Test open granule with open_granule_datatree."""
+        dt = gpm.open_granule_datatree(filepath, cache=False, lock=False, decode_cf=True)
+        assert isinstance(dt, xr.DataTree)
+        dt.close()

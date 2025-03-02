@@ -63,7 +63,7 @@ def create_target_dictionary(target_indices, values):
     list_values = np.split(values, np.unique(target_indices, return_index=True)[1])[1:]
     target_indices_ids = np.unique(target_indices)
     # Create dict_indices {target: values}
-    dict_indices = dict(zip(target_indices_ids, list_values))
+    dict_indices = dict(zip(target_indices_ids, list_values, strict=False))
     return dict_indices
 
 
@@ -442,7 +442,8 @@ class PolyAggregator:
             )
             for target_idx, source_indices in self.dict_indices.items()
         ]
-        out = np.vstack(results).squeeze()
+        # - atleast_1d required when only 1 target_polygon
+        out = np.atleast_1d(np.vstack(results).squeeze())
 
         # Add missing values for non intersecting geometries
         if out.ndim == 1:

@@ -234,6 +234,19 @@ def test_available_products():
     assert isinstance(result, list)
     assert len(result) > 0
 
+    # Test their run (error might occur when adding a product to product.yaml without specifying the product start_time
+    result = available_products(end_time="1995-01-31")  # from the start of the mission to 1995-01-31
+    assert isinstance(result, list)
+    assert len(result) > 0
+
+    result = available_products(start_time="2014-01-01", end_time="2016-01-01", product_categories="PMW")
+    assert isinstance(result, list)
+    assert len(result) > 0
+
+    result = available_products(start_time="2019-01-01")  # from 2019-01-01 to the present
+    assert isinstance(result, list)
+    assert len(result) > 0
+
 
 def test_is_trmm_product():
     """Test is_trmm_product() function."""
