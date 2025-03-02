@@ -46,8 +46,8 @@ from gpm.bucket.routines import merge_granule_buckets, write_bucket, write_granu
 __all__ = [
     "LonLatPartitioning",
     "TilePartitioning",
-    "read",
     "merge_granule_buckets",
-    "write_granules_bucket",
+    "read",
     "write_bucket",
+    "write_granules_bucket",
 ]

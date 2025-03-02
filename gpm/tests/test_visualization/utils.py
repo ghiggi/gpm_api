@@ -81,22 +81,22 @@ def save_and_check_figure(
         )
 
     # Save current figure to temporary file
-    tmp_file = tempfile.NamedTemporaryFile(suffix=image_extension, delete=False)
-    figure.savefig(tmp_file.name)
+    with tempfile.NamedTemporaryFile(suffix=image_extension, delete=False) as tmp_file:
+        figure.savefig(tmp_file.name)
 
-    # Compare reference and temporary file
-    reference = mpl_image.imread(reference_path)
-    tmp = mpl_image.imread(tmp_file.name)
+        # Compare reference and temporary file
+        reference = mpl_image.imread(reference_path)
+        tmp = mpl_image.imread(tmp_file.name)
 
-    mse = np.mean((reference - tmp) ** 2)
-    assert (
-        mse < mse_tolerance
-    ), f"Figure {tmp_file.name} is not the same as {name}{image_extension}. MSE {mse} > {mse_tolerance}"
+        mse = np.mean((reference - tmp) ** 2)
+        assert (
+            mse < mse_tolerance
+        ), f"Figure {tmp_file.name} is not the same as {name}{image_extension}. MSE {mse} > {mse_tolerance}"
 
-    # Remove temporary file if comparison was successful
-    tmp_file.close()
-    os.remove(tmp_file.name)
-    plt.close()
+        # Remove temporary file if comparison was successful
+        tmp_file.close()
+        os.remove(tmp_file.name)
+        plt.close()
 
 
 def get_test_name() -> str:

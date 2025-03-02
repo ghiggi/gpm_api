@@ -178,7 +178,7 @@ def crop_around_valid_data(xr_obj, variable=None):
     da = get_xarray_variable(xr_obj, variable=variable)
 
     # Create a boolean mask indicating where da is not NaN
-    valid_mask = da.notnull().compute()  # noqa: PD004
+    valid_mask = da.notnull().compute()
 
     # Raise error if not valid data
     if not np.any(valid_mask).item():

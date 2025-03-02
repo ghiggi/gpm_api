@@ -298,7 +298,7 @@ class CustomFacetGrid(FacetGrid, ABC):
             FacetGrid object
 
         """
-        if kwargs.get("cbar_ax", None) is not None:
+        if kwargs.get("cbar_ax") is not None:
             raise ValueError("cbar_ax not supported by FacetGrid.")
 
         cmap_params, cbar_kwargs = _process_cmap_cbar_kwargs(
@@ -324,8 +324,8 @@ class CustomFacetGrid(FacetGrid, ABC):
             da_proto = da_proto.isel({self._row_var: 0})
         if self._col_var in list(da_proto.dims):
             da_proto = da_proto.isel({self._col_var: 0})
-        if kwargs.get("rgb", None):
-            da_proto = da_proto.isel({kwargs.get("rgb", None): 0})
+        if kwargs.get("rgb"):
+            da_proto = da_proto.isel({kwargs.get("rgb"): 0})
 
         # Infer x - y labels
         x, y = _infer_xy_labels(

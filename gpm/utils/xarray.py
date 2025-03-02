@@ -173,7 +173,7 @@ def ensure_unique_chunking(ds):
 
 def _xr_first_data_array(da, dim):
     """Return first valid value of a DataArray along a dimension."""
-    mask = da.notnull()  # noqa PD004
+    mask = da.notnull()
     first_valid_idx = mask.argmax(dim=dim)
     first_valid_value = da.isel({dim: first_valid_idx})
     first_valid_value = first_valid_value.where(mask.any(dim=dim))

@@ -69,10 +69,10 @@ def _convert_size_to_bytes(size_str):
         "yb": 1024**8,
     }
 
-    for suffix in multipliers:
+    for suffix, multiplier in multipliers.items():
         size_str = size_str.lower().strip().strip("s")
         if size_str.lower().endswith(suffix):
-            return int(float(size_str[0 : -len(suffix)]) * multipliers[suffix])
+            return int(float(size_str[0 : -len(suffix)]) * multiplier)
     if size_str.endswith("b"):
         size_str = size_str[0:-1]
     elif size_str.endswith("byte"):
