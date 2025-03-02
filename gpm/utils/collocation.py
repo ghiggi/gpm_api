@@ -143,6 +143,8 @@ def _expand_with_scan_mode(ds, scan_mode):
     variables_to_exclude = [
         "lon",
         "lat",
+        "longitude",
+        "latitude",
         "crsWGS84",
         "gpm_id",
         "gpm_time",
@@ -204,7 +206,7 @@ def _remap_pmw_datatree(dt, scan_modes, scan_mode_reference, radius_of_influence
     # Insert the template dataset as the first element in the list
     list_remapped.insert(0, ds_template)
 
-    # Concatenate variables along pmw_frequency or scan_mode
+    # Concatenate common variables along pmw_frequency or scan_mode
     vars_pmw_freq = [var for var in list_remapped[1].data_vars if "pmw_frequency" in ds_template[var].dims]
     vars_scan_mode = [var for var in list_remapped[1].data_vars if "scan_mode" in ds_template[var].dims]
     ds_pmw = xr.concat([ds[vars_pmw_freq] for ds in list_remapped], dim="pmw_frequency")
@@ -325,43 +327,62 @@ def regrid_pmw_l1(dt, scan_mode_reference="S1", radius_of_influence=20_000):
         raise ValueError("The DataTree does not contain a 1B or 1C PMW product.")
 
     # Expand datasets with scan mode dimension to coordinates and variables without pmw_frequency
+    # - Variables with (along_track, cross-track) dimensions not shared across any dataset are not expanded !
+    # - Variables  with (along_track, cross-track) dimensions shared across all dataset without pmw_frequency dimension
+    #   are expanded with a scan_mode dimension
+
     # - TODO: Variables without (along_track, cross-track) dimensions are currently not remapped !
-    # --> SClatitude, SClongitude, SCaltitude, FractionalGranuleNumber
-    # - TODO: We should avoid to have dimension scan_mode
-    # --> We should broadcast Quality and sunLocalTime to have pmw_frequency and concat along pmw_frequency
+    #   --> SClatitude, SClongitude, SCaltitude, FractionalGranuleNumber
+    #   --> We should broadcast Quality and sunLocalTime to have pmw_frequency and concatenate along pmw_frequency
+
+    # - TODO: Variables shared across only ome datasets are currently discarded (should be set as NaN)
+
+    # Prepare DataTree to remap
+    # - Expand the required variables
+    # - Infill missing variables
     dict_scan_modes = {
         scan_mode: _expand_with_scan_mode(dt[scan_mode].to_dataset(), scan_mode=scan_mode) for scan_mode in list(dt)
     }
     dt_expanded = xr.DataTree.from_dict(dict_scan_modes)
 
-    # Define time blocks over which to remap (to avoid orbit intersections)
-    time_blocks = _define_time_blocks(
-        dt_expanded,
-        scan_mode_reference=scan_mode_reference,
-        window_duration=60 * 30,
-        overlap_duration=120,
-    )
+    # If GPM product, remap by blocks to avoid orbit intersections
+    if "gpm_id" in dt[scan_mode_reference]:
+        # Define time blocks over which to remap
+        time_blocks = _define_time_blocks(
+            dt_expanded,
+            scan_mode_reference=scan_mode_reference,
+            window_duration=60 * 30,
+            overlap_duration=120,
+        )
 
-    # Loop and remap over block of time (to avoid orbit intersection)
-    list_ds = []
-    # start_time, end_time, gpm_id_start, gpm_id_stop = time_blocks[0]
-    for start_time, end_time, gpm_id_start, gpm_id_stop in time_blocks:
-        dict_subset = {
-            scan_mode: dt_expanded[scan_mode].to_dataset().gpm.sel(time=slice(start_time, end_time))
-            for scan_mode in list(dt_expanded)
-        }
-        dt_subset = xr.DataTree.from_dict(dict_subset)
-        output_ds = _remap_pmw_datatree(
-            dt_subset,
+        # Loop and remap over block of time (to avoid orbit intersection)
+        list_ds = []
+        # start_time, end_time, gpm_id_start, gpm_id_stop = time_blocks[0]
+        for start_time, end_time, gpm_id_start, gpm_id_stop in time_blocks:
+            dict_subset = {
+                scan_mode: dt_expanded[scan_mode].to_dataset().gpm.sel(time=slice(start_time, end_time))
+                for scan_mode in list(dt_expanded)
+            }
+            dt_subset = xr.DataTree.from_dict(dict_subset)
+            output_ds = _remap_pmw_datatree(
+                dt_subset,
+                scan_mode_reference=scan_mode_reference,
+                scan_modes=scan_modes,
+                radius_of_influence=radius_of_influence,
+            )
+            output_ds = output_ds.gpm.sel(gpm_id=slice(gpm_id_start, gpm_id_stop))
+            list_ds.append(output_ds)
+
+        # Concatenate dataset
+        ds = xr.concat(list_ds, dim="along_track")
+    # If i.e. TCPRIMED product, remap full datatree directly
+    else:
+        ds = _remap_pmw_datatree(
+            dt_expanded,
             scan_mode_reference=scan_mode_reference,
             scan_modes=scan_modes,
             radius_of_influence=radius_of_influence,
         )
-        output_ds = output_ds.gpm.sel(gpm_id=slice(gpm_id_start, gpm_id_stop))
-        list_ds.append(output_ds)
-
-    # Concatenate dataset
-    ds = xr.concat(list_ds, dim="along_track")
 
     # Assign attributes
     ds.attrs = attrs

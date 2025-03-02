@@ -46,6 +46,18 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     from gpm.checks import get_spatial_dimensions
     from gpm.dataset.crs import _get_crs_coordinates, _get_proj_dim_coords, _get_swath_dim_coords, set_dataset_crs
 
+    # TODO: segmentation fault occurs if input dataset to remap is a numpy array !
+
+    # Get x and y dimensions
+    x_dim, y_dim = get_spatial_dimensions(src_ds)
+
+    # Reorder dimensions to be y, x, ...
+    src_ds = src_ds.transpose(y_dim, x_dim, ...)
+    dst_ds = dst_ds.transpose(y_dim, x_dim, ...)
+
+    # Rename dimensions to x, y for pyresample compatibility
+    src_ds = src_ds.swap_dims({y_dim: "y", x_dim: "x"})
+
     # Retrieve source and destination area
     src_area = src_ds.gpm.pyresample_area
     dst_area = dst_ds.gpm.pyresample_area
@@ -54,20 +66,16 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     src_crs_coords = _get_crs_coordinates(src_ds)[0]
     dst_crs_coords = _get_crs_coordinates(dst_ds)[0]
 
-    # Rename dimensions to x, y for pyresample compatibility
-    x_dim, y_dim = get_spatial_dimensions(src_ds)
-    src_ds = src_ds.swap_dims({y_dim: "y", x_dim: "x"})
-
     # Define spatial coordinates of new object
     if dst_ds.gpm.is_orbit:  # SwathDefinition
-        x_coord, y_coord = _get_swath_dim_coords(dst_ds)  # dst_ds.gpm.x, # dst_ds.gpm.y
+        x_coord, y_coord = _get_swath_dim_coords(dst_ds)  # TODO: dst_ds.gpm.x, # dst_ds.gpm.y
         dst_spatial_coords = {
             x_coord: xr.DataArray(dst_ds[x_coord].data, dims=list(dst_ds[x_coord].dims), attrs=dst_ds[x_coord].attrs),
             y_coord: xr.DataArray(dst_ds[y_coord].data, dims=list(dst_ds[y_coord].dims), attrs=dst_ds[y_coord].attrs),
         }
     else:  # AreaDefinition
         x_arr, y_arr = dst_area.get_proj_coords()
-        x_coord, y_coord = _get_proj_dim_coords(dst_ds)  # dst_ds.gpm.x, # dst_ds.gpm.y
+        x_coord, y_coord = _get_proj_dim_coords(dst_ds)  # TODO: dst_ds.gpm.x, # dst_ds.gpm.y
         dst_spatial_coords = {
             x_coord: xr.DataArray(x_arr, dims=list(dst_ds[x_coord].dims), attrs=dst_ds[x_coord].attrs),
             y_coord: xr.DataArray(y_arr, dims=list(dst_ds[y_coord].dims), attrs=dst_ds[y_coord].attrs),
@@ -85,6 +93,7 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     # resampler.precompute(radius_of_influence=radius_of_influence)
 
     # Retrieve valid variables
+    # - Variables with at least the (x,y) dimension
     variables = [var for var in src_ds.data_vars if set(src_ds[var].dims).issuperset({"x", "y"})]
 
     # Remap DataArrays
@@ -98,11 +107,11 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     ds = xr.Dataset(da_dict)
 
     # Drop source crs coordinate
-    ds = ds.drop(src_crs_coords)
+    ds = ds.drop_vars(src_crs_coords)
 
     # Drop crs added by pyresample
     if "crs" in ds:
-        ds = ds.drop("crs")
+        ds = ds.drop_vars("crs")
 
     # Revert to original spatial dimensions (of destination dataset)
     x_dim, y_dim = get_spatial_dimensions(dst_ds)

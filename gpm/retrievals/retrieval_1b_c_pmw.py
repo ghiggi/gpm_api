@@ -51,7 +51,12 @@ from gpm.utils.xarray import (
 def retrieve_rgb_composites(ds):
     """Retrieve the available PMW RGB composites."""
     # Retrieve sensor
-    sensor = ds.attrs["InstrumentName"]
+    if "InstrumentName" in ds.attrs:
+        sensor = ds.attrs["InstrumentName"]
+    elif "instrument" in ds.attrs:  # compatibility with TC-PRIMED
+        sensor = ds.attrs["instrument"]
+    else:
+        raise ValueError("Impossible to determine instrument name.")
 
     # Retrieve defined RGB receipts
     receipts = get_pmw_rgb_receipts(sensor)
