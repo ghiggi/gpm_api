@@ -292,8 +292,9 @@ def find_polarization_pairs(pmw_frequencies):
 
     This function iterates through each PMWFrequency in the input list and
     attempts to match it with another PMWFrequency that:
-      1. Has the same center frequency.
-      2. Has the opposite polarization (e.g., V vs. H or QV vs. QH).
+
+    - Has the same center frequency.
+    - Has the opposite polarization (e.g., V vs. H or QV vs. QH).
 
     Once a valid pair is found, it is stored in a dictionary keyed by the
     shared center frequency. For consistent ordering of pairs, any item with
@@ -351,7 +352,7 @@ def normalize_channel(arr, vmin, vmax, vmin_dynamic, vmax_dynamic, invert):
 
     Parameters
     ----------
-    arr : array_like
+    arr : array-like
         Input array to be normalized.
     vmin : float
         Minimum value for normalization.
@@ -366,7 +367,7 @@ def normalize_channel(arr, vmin, vmax, vmin_dynamic, vmax_dynamic, invert):
 
     Returns
     -------
-    norm_arr : array_like
+    norm_arr : array-like
         Normalized array with values clipped between 0 and 1.
     """
     # Define dynamic vmin and vmax if asked
@@ -390,14 +391,14 @@ def get_brightness_temperature(xr_obj, variable):
 
     Parameters
     ----------
-    xr_obj : xr.Dataset or xr.DataArray
+    xr_obj : xarray.Dataset or xarray.DataArray
         Input xarray object containing brightness temperature data.
     variable : str or None
         Variable name to extract. If None, a default variable is determined based on possible options.
 
     Returns
     -------
-    dataarray : xr.DataArray
+    dataarray : xarray.DataArray
         DataArray of the brightness temperature.
     """
     if variable is None and isinstance(xr_obj, xr.Dataset):
@@ -434,7 +435,7 @@ def get_pmw_channel(xr_obj, name, variable=None):
 
     Parameters
     ----------
-    xr_obj : xr.Dataset or xr.DataArray
+    xr_obj : xarray.Dataset or xarray.DataArray
         PMW L1B or L1C product containing the brightness temperature variable.
     name : str or PMWFrequency
         PMW channel name or PMWFrequency object representing the desired frequency.
@@ -443,7 +444,7 @@ def get_pmw_channel(xr_obj, name, variable=None):
 
     Returns
     -------
-    dataarray : xr.DataArray
+    dataarray : xarray.DataArray
         DataArray corresponding to the selected PMW channel.
     """
     # Check name type
@@ -489,14 +490,14 @@ def get_pct(ds, name):
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         PMW L1C product containing the brightness temperature variable.
     name : str
         Name of the PCT feature in the format 'PCT_<center_freq>'.
 
     Returns
     -------
-    dataarray : xr.DataArray
+    dataarray : xarray.DataArray
         DataArray representing the computed PCT.
 
     """
@@ -515,14 +516,14 @@ def get_pd(ds, name):
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         PMW L1C product containing the brightness temperature variable.
     name : str
         Name of the PD feature in the format 'PD_<center_freq>'.
 
     Returns
     -------
-    dataarray : xr.DataArray
+    dataarray : xarray.DataArray
         DataArray representing the computed PD.
     """
     # Retrieve V and H Tb DataArrays
@@ -537,14 +538,14 @@ def get_pr(ds, name):
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         PMW L1C product containing the brightness temperature variable.
     name : str
         Name of the PR feature in the format 'PR_<center_freq>'.
 
     Returns
     -------
-    dataarray : xr.DataArray
+    dataarray : xarray.DataArray
         DataArray representing the computed PR.
     """
     # Retrieve V and H Tb DataArrays
@@ -561,20 +562,21 @@ def get_pmw_feature(ds, name):
     This function can handle:
       1. Simple PMW feature names such as "PCT_37", "PD_37", or direct channel names.
       2. Complex expressions using PMW feature names combined with basic arithmetic
-         operations, e.g. "PCT_37-PCT_19" or "(PCT_37+PCT_19)/(PCT_37-PCT_19)".
+         operations.
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         PMW L1C product containing the brightness temperature variable.
     name : str
-        - A single PMW feature name, e.g. "PCT_37", "PD_37", "37V", etc.
-        - Or a string expression combining multiple PMW feature names via
-          +, -, *, /, and parentheses, e.g. "(PCT_37 + PCT_19)/(PCT_37 - PCT_19)".
+        A single PMW feature name (e.g. "PCT_37", "PD_37", "37V", ...)
+        or a string expression combining multiple PMW feature names via
+        mathematical operators (+, -, *, /) and parentheses
+        (e.g. ```"(PCT_37 + PCT_19)/(PCT_37 - PCT_19)" ```).
 
     Returns
     -------
-    xr.DataArray
+    xarray.DataArray
         DataArray corresponding to the requested or computed PMW feature.
     """
     # Check if the input is a simple feature name or a compound expression
@@ -588,11 +590,9 @@ def get_pmw_feature(ds, name):
 def is_simple_feature_name(name):
     """Determine if `name` is a single PMW feature or a more complex expression.
 
-    A 'simple' feature name is assumed to:
-      - Not contain any arithmetic symbols (+, -, *, /)
-      - Not contain parentheses
+    A 'simple' feature name is assumed to not contain any arithmetic
+    symbols (+, -, *, /) nor parentheses.
 
-    You can refine this logic to suit your product naming conventions.
     """
     # If we see +, -, *, /, or parentheses, treat as an expression
     if any(symbol in name for symbol in "+-*/()"):  # noqa: SIM103
@@ -632,7 +632,7 @@ def _evaluate_feature_expression(ds, expression):
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         PMW L1C product.
     expression : str
         A string expression, for example:
@@ -714,12 +714,11 @@ def get_pmw_rgb_receipts(sensor):
 
 
 def create_rgb_composite(ds, receipt):
-    """
-    Generate an RGB composite from PMW features in the dataset using a provided receipt for channel configuration.
+    """Generate an RGB composite from a 1C PMW dataset using the provided receipt.
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         Input dataset containing PMW data.
     receipt : dict
         Dictionary containing configuration for each channel ('R', 'G', 'B') and optional global normalization.
@@ -737,7 +736,7 @@ def create_rgb_composite(ds, receipt):
 
     Returns
     -------
-    dataarray : xr.DataArray
+    dataarray : xarray.DataArray
         An RGB composite DataArray with a coordinate 'rgb' corresponding to channels ['r', 'g', 'b'].
     """
     receipt = receipt.copy()

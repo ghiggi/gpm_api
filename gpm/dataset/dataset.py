@@ -163,12 +163,9 @@ def open_dataset(
 
     Note:
 
-    - ``gpm.open_dataset`` does not load GPM granules with the FileHeader flag
-    ``'EmptyGranule' != 'NOT_EMPTY'``.
+    - ``gpm.open_dataset`` does not load GPM granules with the FileHeader flag ``'EmptyGranule' != 'NOT_EMPTY'``.
     - The coordinates ``Quality`` or ``dataQuality`` provide an overall quality flag status.
-        If the flag value is 0, no issues have been detected.
-    - The coordinate ``SCorientation`` provides the orientation of the sensor
-      from the forward track of the satellite.
+    - The coordinate ``SCorientation`` provides the orientation of the sensor from the forward track of the satellite.
 
     Parameters
     ----------

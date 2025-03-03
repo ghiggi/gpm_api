@@ -35,16 +35,32 @@ from gpm.dataset.dimensions import rename_datatree_dimensions
 
 
 def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True, **kwargs):
-    """Open HDF5 in datatree object.
+    """Open a GPM HDF5 file into a xarray.DataTree object with intuitive dimensions names.
 
-    - chunks={} --> Lazy map to dask.array
-      --> Wait for https://github.com/pydata/xarray/pull/7948
-      --> Maybe need to implement "auto" option manually that defaults to full shape"
-    - chunks="auto" --> datatree fails. Can not estimate size of object dtype !
-    - chunks=None --> lazy map to numpy.array
+    Parameters
+    ----------
+    chunks : int, dict, str or None, optional
+        Chunk size for dask array:
 
+        - ``chunks=-1`` loads the dataset with dask using a single chunk for each granule arrays.
+        - ``chunks={}`` loads the dataset with dask using the file chunks.
+        - ``chunks='auto'`` will use dask ``auto`` chunking taking into account the file chunks.
+
+        If you want to load data in memory directly, specify ``chunks=None``.
+        The default is ``auto``.
+
+        Hint: xarray's lazy loading of remote or on-disk datasets is often but not always desirable.
+        Before performing computationally intense operations, load the dataset
+        entirely into memory by invoking ``ds.compute()``.
+    decode_cf: bool, optional
+        Whether to decode the dataset. The default is ``False``.
     **kwargs : dict
         Additional keyword arguments passed to :py:func:`~xarray.open_dataset` for each group.
+
+    Returns
+    -------
+    xarray.DataTree
+
     """
     try:
         dt = xr.open_datatree(

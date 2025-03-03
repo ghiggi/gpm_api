@@ -94,47 +94,42 @@ def plot_boxplot(
     label: str, optional
        Column of the dataframe to be used as tick label for the boxplot
 
-    positions : array-like, default: [1, 2, ..., n]
+    positions : array-like, optional
        The positions of the boxes. If not specified, the ticks and limits
        are automatically set as function of the dataframe index.
 
-    widths : float or array-like, default: None
+    widths : float or array-like, optional
        The widths of the boxes.  The default is
        ``clip(0.15*(distance between extreme positions), 0.15, 0.5)``.
 
-    capwidths : float or array-like, default: None
+    capwidths : float or array-like
        Either a scalar or a vector and sets the width of each cap.
        The default is ``0.5*(width of the box)``, see *widths*.
 
-    orientation : {'vertical', 'horizontal'}, default: 'vertical'
-       If 'horizontal', plots the boxes horizontally.
-       Otherwise, plots the boxes vertically.
+    orientation : str, optional
+       Either 'vertical' or 'horizontal'.
+       If 'horizontal', plots the boxes horizontally. Otherwise, plots the boxes vertically.
+       The default is 'vertical'.
 
-    patch_artist : bool, default: False
+    patch_artist : bool, optional
        If `False` produces boxes with the `.Line2D` artist.
        If `True` produces boxes with the `~matplotlib.patches.Patch` artist.
+       The default is False.
 
     shownotches, showmeans, showcaps, showbox, showfliers : bool
        Whether to draw the CI notches, the mean value (both default to
        False), the caps, the box, and the fliers (all three default to
        True).
 
-    boxprops, whiskerprops, capprops, flierprops, medianprops, meanprops :\
-dict, optional
+    boxprops, whiskerprops, capprops, flierprops, medianprops, meanprops : dict, optional
        Artist properties for the boxes, whiskers, caps, fliers, medians, and
        means.
 
-    meanline : bool, default: False
-       If `True` (and *showmeans* is `True`), will try to render the mean
-       as a line spanning the full width of the box according to
-       *meanprops*. Not recommended if *shownotches* is also True.
-       Otherwise, means will be shown as points.
-
-    manage_ticks : bool, default: True
-       If True, the tick locations and labels will be adjusted to match the
+    manage_ticks : bool, optional
+       If True (the default), the tick locations and labels will be adjusted to match the
        boxplot positions.
 
-    zorder : float, default: ``Line2D.zorder = 2``
+    zorder : float
        The zorder of the resulting boxplot.
 
     Returns

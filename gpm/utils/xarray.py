@@ -347,7 +347,7 @@ def unstack_datarray_dimension(da, dim, coord_handling="keep", prefix="", suffix
 
     Returns
     -------
-    xr.Dataset
+    xarray.Dataset
         A Dataset with each variable split along the specified dimension.
         The Dataset variables are named  "{prefix}{name}{suffix}{dim_value}".
         Coordinates sharing the target dimension are handled based on `coord_handling`.

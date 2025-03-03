@@ -142,7 +142,7 @@ def get_swath_indices(df):
 
 
 def overpass_to_dataset(df_overpass):
-    """Reshape an overpass dataframe to a xr.Dataset.
+    """Reshape an overpass dataframe to a xarray.Dataset.
 
     The resulting dataset will have missing geolocation for footprints
     that are not included in the df_overpass.

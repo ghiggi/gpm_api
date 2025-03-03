@@ -663,9 +663,9 @@ def volume_matching(
 
     Parameters
     ----------
-    ds_gr : xr.Dataset
+    ds_gr : xarray.Dataset
         Xradar Dataset corresponding to a GR sweep.
-    ds_sr : xr.Dataset, optional
+    ds_sr : xarray.Dataset, optional
         Coincident GPM Dataset with the relevant L1 and L2 product variables.
         If not specified (the default), it automatically load the relevant data from disk.
         If you provide the dataset, please be sure to include in the dataset also the L1B ``crossTrackBeamWidth``
@@ -696,7 +696,7 @@ def volume_matching(
     -------
     gdf_match : geopandas.DataFrame
         Dataframe containing the matched SR/GR reflectivities and relevant aggregation statistics.
-    ds_sr : xr.Dataset
+    ds_sr : xarray.Dataset
         The SR dataset matched to GR data.
 
     """

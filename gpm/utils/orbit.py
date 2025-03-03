@@ -43,7 +43,7 @@ def adjust_short_sequences(arr, min_size):
 
     Parameters
     ----------
-    arr : array_like
+    arr : array-like
         The input array of values.
     min_size : int
         The minimum number of consecutive identical elements to not be modified.
@@ -124,7 +124,7 @@ def get_orbit_direction(lats, n_tol=1):
 
     Parameters
     ----------
-    lats : array_like
+    lats : array-like
         1-dimensional array of latitude values corresponding to the satellite's orbit.
     n_tol : int, optional
         The minimum number of consecutive data points required to confirm a change

@@ -41,9 +41,9 @@ def remove_isolated_indices(indices, neighbor_min_size, neighbor_interval):
 
     Parameters
     ----------
-    indices : array-like of np.datetime64
+    indices : array-like of numpy.datetime64
         Sorted or unsorted array of indices.
-    neighbor_interval : int or np.timedelta64
+    neighbor_interval : int or numpy.timedelta64
         The size of the neighborhood.
         Only indices that fall in the [index - neighbor_interval, index + neighbor_interval] are considered neighbors.
     neighbor_min_size : int, optional
@@ -55,7 +55,7 @@ def remove_isolated_indices(indices, neighbor_min_size, neighbor_interval):
 
     Returns
     -------
-    np.ndarray
+    numpy.ndarray
         Array of indices with isolated entries removed.
     """
     # Sort indices
@@ -93,14 +93,14 @@ def group_indices_into_events(indices, intra_event_max_distance):
     indices : array-like
         Sorted array of valid indices.
         Accept also datetime64 arrays.
-    intra_event_max_distance : int or np.timedelta64
+    intra_event_max_distance : int or numpy.timedelta64
         Maximum distance allowed between consecutive indices for them
         to be considered part of the same event.
-        If indices are datetime64 arrays, specify intra_event_max_distance as np.timedelta64.
+        If indices are datetime64 arrays, specify intra_event_max_distance as numpy.timedelta64.
 
     Returns
     -------
-    list of np.ndarray
+    list of numpy.ndarray
         A list of events, where each event is an array of indices.
     """
     # Deal with case with no indices
