@@ -47,7 +47,7 @@ from gpm import _root_path
 
 plots_dir_path = os.path.join(_root_path, "gpm", "tests", "data", "plots")
 image_extension = ".png"
-mse_tolerance = 5e-3
+mse_tolerance = 1e-3
 
 
 def skip_tests_if_no_data() -> None:
