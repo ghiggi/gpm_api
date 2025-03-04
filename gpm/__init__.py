@@ -43,6 +43,7 @@ from gpm.configs import (  # noqa
 from gpm.dataset.dataset import open_dataset, open_datatree  # noqa
 from gpm.dataset.datatree import open_raw_datatree  # noqa
 from gpm.dataset.granule import open_granule, open_granule_dataset, open_granule_datatree  # noqa
+from gpm.dataset.tcprimed import open_granule_tcprimed  # noqa
 from gpm.io.download import download_archive as download  # noqa
 from gpm.io.download import (  # noqa
     download_daily_data,

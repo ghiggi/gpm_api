@@ -167,6 +167,24 @@ class GPM_Base_Accessor:
 
         return get_pyresample_area(self._obj)
 
+    @property
+    def x(self):
+        from gpm.dataset.crs import get_x_coordinate
+
+        return get_x_coordinate(self._obj)
+
+    @property
+    def y(self):
+        from gpm.dataset.crs import get_y_coordinate
+
+        return get_y_coordinate(self._obj)
+
+    @property
+    def spatial_coordinates(self):
+        from gpm.dataset.crs import get_spatial_coordinates
+
+        return get_spatial_coordinates(self._obj)
+
     @auto_wrap_docstring
     def quadmesh_centroids(self, crs=None, origin="bottom"):
         from gpm.utils.area import get_quadmesh_centroids
@@ -984,7 +1002,7 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         interpolation="nearest",
         zoom=True,
-        check_contiguity=True,
+        check_contiguity=False,
         fig_kwargs=None,
         cbar_kwargs=None,
         **plot_kwargs,
@@ -1215,7 +1233,7 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         add_colorbar=True,
         interpolation="nearest",
         zoom=True,
-        check_contiguity=True,
+        check_contiguity=False,
         fig_kwargs=None,
         cbar_kwargs=None,
         **plot_kwargs,

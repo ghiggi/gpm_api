@@ -679,6 +679,31 @@ def _add_new_range_coords(ds, new_range_size):
     return ds
 
 
+def get_spatial_2d_datarray_template(ds, fill_value=np.nan):
+    """Get spatial 2D DataArray template."""
+    possible_variables = ds.gpm.spatial_2d_variables
+    if len(possible_variables) == 0:
+        raise ValueError("No spatial 2D variables available.")
+    da = ds[possible_variables[0]]
+    isel_dict = {dim: 0 for dim in da.dims if dim not in ds.gpm.spatial_dimensions}
+    da = xr.full_like(da.isel(isel_dict), fill_value=fill_value)
+    da.name = "spatial_2d_template"
+    return da
+
+
+def get_spatial_3d_datarray_template(ds, fill_value=np.nan):
+    """Get spatial 3D DataArray template."""
+    # TODO: rename get_vertical_datarray_prototype --> get_spatial_3d_template
+    possible_variables = ds.gpm.spatial_3d_variables
+    if len(possible_variables) == 0:
+        raise ValueError("No spatial 3D variables available.")
+    da = ds[possible_variables[0]]
+    isel_dict = {dim: 0 for dim in da.dims if dim not in (ds.gpm.spatial_dimensions + ds.gpm.vertical_dimension)}
+    da = xr.full_like(da.isel(isel_dict), fill_value=fill_value)
+    da.name = "spatial_3d_template"
+    return da
+
+
 def get_vertical_coords_and_vars(ds):
     """Return a 'prototype' with only spatial and vertical dimensions."""
     vertical_variables = get_vertical_variables(ds)
@@ -1161,25 +1186,29 @@ def extract_at_points(xr_obj, points, method="nearest", new_dim="points"):
     xarray.DataArray or xarray.Dataset
         The values at the specified points.
     """
+    x, y = xr_obj.gpm.spatial_coordinates
+
+    # Grid case
     if is_grid(xr_obj):
         # Regular grid
         xr_obj_sliced = xr_obj.interp(
             {
-                "lon": xr.DataArray(points[:, 0], dims=new_dim),
-                "lat": xr.DataArray(points[:, 1], dims=new_dim),
+                x: xr.DataArray(points[:, 0], dims=new_dim),
+                y: xr.DataArray(points[:, 1], dims=new_dim),
             },
             method=method,
         )
         return xr_obj_sliced
+
     # Orbit case
     # - Use sklearn_geo_balltree to exploit haversine distance (kdtree does not support haversine distance)
     # - Not tested for cases at the antimeridian !
-    xr_obj.xoak.set_index(["lat", "lon"], index_type="sklearn_geo_balltree")
+    xr_obj.xoak.set_index([y, x], index_type="sklearn_geo_balltree")
 
     xr_obj_slice = xr_obj.xoak.sel(
         {
-            "lon": xr.DataArray(points[:, 0], dims=new_dim),
-            "lat": xr.DataArray(points[:, 1], dims=new_dim),
+            x: xr.DataArray(points[:, 0], dims=new_dim),
+            y: xr.DataArray(points[:, 1], dims=new_dim),
         },
     )
     return xr_obj_slice
@@ -1500,7 +1529,7 @@ def locate_max_value(da, return_isel_dict=False):
         return isel_dict
 
     da_point = da.isel(isel_dict)
-    point = (da_point["lon"].data.item(), da_point["lat"].data.item())
+    point = (da_point[da.gpm.x].values.item(), da_point[da.gpm.y].values.item())
     return point
 
 
@@ -1530,7 +1559,7 @@ def locate_min_value(da, return_isel_dict=False):
     if return_isel_dict:
         return isel_dict
     da_point = da.isel(isel_dict)
-    point = (da_point["lon"].data.item(), da_point["lat"].data.item())
+    point = (da_point[da.gpm.x].values.item(), da_point[da.gpm.y].values.item())
     return point
 
 

@@ -666,6 +666,7 @@ def plot_cartopy_pcolormesh(
         **plot_kwargs,
     )
     # Add swath lines
+    # - TODO: currently assume that dimensions are (cross_track, along_track)
     if add_swath_lines and not is_1d_case:
         sides = [(lon[0, :], lat[0, :]), (lon[-1, :], lat[-1, :])]
         plot_sides(sides=sides, ax=ax, linestyle="--", color="black")
@@ -840,6 +841,9 @@ def _plot_image(
         user_cbar_kwargs=cbar_kwargs,
     )
 
+    # Define x and y
+    x, y = infer_xy_labels(da=da, x=x, y=y, rgb=plot_kwargs.get("rgb", None))
+
     # - Plot with xarray
     p = plot_xr_imshow(
         ax=ax,
@@ -854,14 +858,25 @@ def _plot_image(
     )
 
     # Add custom labels
-    # - TODO: Improve as function of x and y please !
+    default_labels = {
+        "orbit": {"along_track": "Along-Track", "x": "Along-Track", "cross_track": "Cross-Track", "y": "Cross-Track"},
+        "grid": {
+            "lon": "Longitude",
+            "longitude": "Longitude",
+            "x": "Longitude",
+            "lat": "Latitude",
+            "latitude": "Latitude",
+            "y": "Latitude",
+        },
+    }
+
     if add_labels:
         if is_orbit(da):
-            ax.set_xlabel("Along-Track")
-            ax.set_ylabel("Cross-Track")
+            ax.set_xlabel(default_labels["orbit"].get(x, x))
+            ax.set_ylabel(default_labels["orbit"].get(y, y))
         elif is_grid(da):
-            ax.set_xlabel("Longitude")
-            ax.set_ylabel("Latitude")
+            ax.set_xlabel(default_labels["grid"].get(x, x))
+            ax.set_ylabel(default_labels["grid"].get(y, y))
 
     # - Monkey patch the mappable instance to add optimize_layout
     if not is_facetgrid:

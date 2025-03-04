@@ -228,6 +228,20 @@ class PMWFrequency:
         """Return True if the center frequency is the same as `other` within a specified tolerance."""
         return abs(self.center_frequency - other.center_frequency) < tol
 
+    def has_same_polarization(self, other: "PMWFrequency") -> bool:
+        """Return True if the polarization is the same as `other`."""
+        return self.polarization == other.polarization
+
+    def has_same_offset(self, other: "PMWFrequency") -> bool:
+        """Return True if offset is the same as `other`."""
+        if self.offset is None and other.offset is None:
+            return True
+        if self.offset is None and other.offset is not None:
+            return False
+        if self.offset is not None and other.offset is None:
+            return False
+        return self.offset == other.offset
+
     @property
     def wavelength(self) -> float:
         """Returns the channel wavelength in meters.
@@ -452,15 +466,46 @@ def get_pmw_channel(xr_obj, name, variable=None):
         raise TypeError("Parameter 'name' must be either a string or a PMWFrequency object.")
     # Ensure to get a brightness temperature dataarray
     da = get_brightness_temperature(xr_obj, variable=variable)
-    # Retrieve available and desired PMW frequencies strings
+    # Retrieve matching frequency
     pmw_frequencies_str = da["pmw_frequency"].data
-    freq_str = name.to_string() if isinstance(name, PMWFrequency) else name
-    if freq_str not in pmw_frequencies_str:
+    pmw_frequency = PMWFrequency.from_string(name) if not isinstance(name, (PMWFrequency)) else name
+    pmw_frequencies = [PMWFrequency.from_string(s) for s in pmw_frequencies_str]
+    matched_frequency = find_closely_matching_frequency(pmw_frequency, pmw_frequencies, center_frequency_tol=2)
+    if matched_frequency is None:
         raise ValueError(
-            f"Requested PMW frequency '{freq_str}' is not available. "
+            f"Requested PMW frequency '{pmw_frequency.to_string()}' is not available. "
             f"Available frequencies: {list(pmw_frequencies_str)}.",
         )
-    return da.isel(pmw_frequency=np.where(freq_str == pmw_frequencies_str)[0][0]).squeeze()
+
+    # freq_str = name.to_string() if isinstance(name, PMWFrequency) else name
+    # if freq_str not in pmw_frequencies_str:
+    #     raise ValueError(
+    #         f"Requested PMW frequency '{freq_str}' is not available. "
+    #         f"Available frequencies: {list(pmw_frequencies_str)}.",
+    #     )
+    return da.sel(pmw_frequency=matched_frequency.to_string()).squeeze()
+
+
+def find_closely_matching_frequency(pmw_frequency, pmw_frequencies, center_frequency_tol):
+    """Find the closely matching frequency within a set of frequencies."""
+    for freq in pmw_frequencies:
+        if (
+            pmw_frequency.has_same_center_frequency(freq, tol=center_frequency_tol)
+            and pmw_frequency.has_same_polarization(freq)
+            and pmw_frequency.has_same_offset(freq)
+        ):
+            return freq
+    return None
+
+
+def find_closely_matching_center_frequency(center_frequency, center_frequencies):
+    """Find the closely matching center frequency within a set of frequencies."""
+    center_frequency = PMWFrequency(center_frequency=center_frequency)
+    center_frequencies = [PMWFrequency(center_frequency=freq) for freq in center_frequencies]
+    for freq in center_frequencies:
+        if center_frequency.has_same_center_frequency(freq, tol=2):
+            return freq.center_frequency_str
+    return None
 
 
 def _get_polarized_pairs_datarray(ds, name, feature_prefix):
@@ -475,11 +520,15 @@ def _get_polarized_pairs_datarray(ds, name, feature_prefix):
     # Retrieve available polarized frequencies couples
     dict_polarization_pairs = find_polarization_pairs(pmw_frequencies)
     # If feature not available, raise error
-    if center_frequency_str not in dict_polarization_pairs:
+    key = find_closely_matching_center_frequency(
+        center_frequency=center_frequency_str,
+        center_frequencies=list(dict_polarization_pairs),
+    )
+    if key is None:
         valid_pct = [f"{feature_prefix}_{c}" for c in list(dict_polarization_pairs)]
         raise ValueError(f"{name} is unavailable. Available {feature_prefix} are {valid_pct}.")
     # Retrieve polarization pair
-    freq_v, freq_h = dict_polarization_pairs[center_frequency_str]
+    freq_v, freq_h = dict_polarization_pairs[key]
     da_v = get_pmw_channel(ds, name=freq_v)
     da_h = get_pmw_channel(ds, name=freq_h)
     return da_v, da_h

@@ -9,6 +9,7 @@ This section provides tutorials covering advanced GPM-API tools that can be used
 
    tutorials/tutorial_03_SR_GR_Matching.ipynb
    tutorials/tutorial_03_SR_GR_Calibration.ipynb
+   tutorials/tutorial_TCPRIMED.ipynb
 
 
 The following tutorials are in preparation:
