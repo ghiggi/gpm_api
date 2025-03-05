@@ -338,10 +338,8 @@ def open_datatree(
 
     Note:
 
-    - ``gpm.open_datatree`` does not load GPM granules with the FileHeader flag
-    ``'EmptyGranule' != 'NOT_EMPTY'``.
+    - ``gpm.open_datatree`` does not load GPM granules with the FileHeader flag ``'EmptyGranule' != 'NOT_EMPTY'``.
     - The coordinates ``Quality`` or ``dataQuality`` provide an overall quality flag status.
-        If the flag value is 0, no issues have been detected.
     - The coordinate ``SCorientation`` provides the orientation of the sensor
       from the forward track of the satellite.
 
@@ -367,10 +365,12 @@ def open_datatree(
         Scan mode of the GPM product. If ``None`` (the default), loads all scan modes.
         Use ``gpm.available_scan_modes(product, version)`` to see the available scan modes for a specific product.
         The radar products have the following scan modes:
+
         - ``'FS'``: Full Scan. For Ku, Ka and DPR (since version 7 products).
         - ``'NS'``: Normal Scan. For Ku band and DPR (till version 6 products).
         - ``'MS'``: Matched Scan. For Ka band and DPR (till version 6 products).
         - ``'HS'``: High-sensitivity Scan. For Ka band and DPR.
+
     product_type : str, optional
         GPM product type. Either ``'RS'`` (Research) or ``'NRT'`` (Near-Real-Time).
         The default is ``'RS'``.
@@ -408,7 +408,6 @@ def open_datatree(
     Returns
     -------
     xarray.DataTree
-
     """
     ## Check valid product and variables
     product = check_product(product, product_type=product_type)

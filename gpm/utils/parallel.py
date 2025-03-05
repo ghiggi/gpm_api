@@ -95,7 +95,7 @@ def get_block_slices(ds, **dim_chunks_kwargs):
     ----------
     ds : xarray.Dataset
         The dataset for which slices are generated.
-    **dim_chunks_kwargs : dict of {str: int}
+    **dim_chunks_kwargs : dict
         Keyword arguments where each key is a dimension name and each value is
         the number of contiguous chunks to group together for that dimension.
 

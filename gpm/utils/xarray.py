@@ -389,7 +389,7 @@ def unstack_dataset_dimension(ds, dim, coord_handling="keep", prefix="", suffix=
 
     Returns
     -------
-    xr.Dataset
+    xarray.Dataset
         A Dataset with each variable with dimension `dim` split into new variables.
         The new Dataset variables are named "{prefix}{name}{suffix}{dim_value}".
         Coordinates sharing the target dimension are handled based on `coord_handling`.
@@ -441,7 +441,7 @@ def unstack_dimension(xr_obj, dim, coord_handling="keep", prefix="", suffix=""):
 
     Returns
     -------
-    xr.Dataset
+    xarray.Dataset
         A Dataset with each variable with dimension `dim` split into new variables.
         The new Dataset variables are named "{prefix}{name}{suffix}{dim_value}".
         Coordinates sharing the target dimension are handled based on `coord_handling`.

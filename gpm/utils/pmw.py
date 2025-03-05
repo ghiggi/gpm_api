@@ -605,13 +605,12 @@ def get_pr(ds, name):
 
 
 def get_pmw_feature(ds, name):
-    """
-    Retrieve or compute a PMW feature from an L1C PMW product.
+    """Retrieve or compute a PMW feature from an L1C PMW product.
 
     This function can handle:
-      1. Simple PMW feature names such as "PCT_37", "PD_37", or direct channel names.
-      2. Complex expressions using PMW feature names combined with basic arithmetic
-         operations.
+
+      - Simple PMW feature names such as "PCT_37", "PD_37", or direct channel names.
+      - Complex expressions using PMW feature names combined with basic arithmetic operations.
 
     Parameters
     ----------
@@ -641,7 +640,6 @@ def is_simple_feature_name(name):
 
     A 'simple' feature name is assumed to not contain any arithmetic
     symbols (+, -, *, /) nor parentheses.
-
     """
     # If we see +, -, *, /, or parentheses, treat as an expression
     if any(symbol in name for symbol in "+-*/()"):  # noqa: SIM103
@@ -772,12 +770,14 @@ def create_rgb_composite(ds, receipt):
     receipt : dict
         Dictionary containing configuration for each channel ('R', 'G', 'B') and optional global normalization.
         Each channel configuration should include the following keys:
+
             - 'name': The PMW feature name.
             - 'vmin': Minimum value for normalization.
             - 'vmax': Maximum value for normalization.
             - 'vmin_dynamic': Boolean flag for dynamic minimum adjustment.
             - 'vmax_dynamic': Boolean flag for dynamic maximum adjustment.
             - 'invert': Boolean flag to invert the channel.
+
         Optionally, the dictionary may include a 'global_normalization' key (bool).
         If True, the vmin and vmax of channels with vmin_dynamic and vmax_dynamic equal False are
         updated with the minimum and maximum values across all such channels.
@@ -785,7 +785,7 @@ def create_rgb_composite(ds, receipt):
 
     Returns
     -------
-    dataarray : xarray.DataArray
+    xarray.DataArray
         An RGB composite DataArray with a coordinate 'rgb' corresponding to channels ['r', 'g', 'b'].
     """
     receipt = receipt.copy()

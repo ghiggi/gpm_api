@@ -69,7 +69,7 @@ def plot_boxplot(
     .. note::
         This is a low-level drawing function for when you already
         have the statistical parameters. If you want a boxplot based
-        on a dataset, use `matplotlib.Axes.boxplot` instead.
+        on a dataset, use `matplotlib.axes.Axes.boxplot` instead.
 
     Parameters
     ----------
@@ -116,7 +116,7 @@ def plot_boxplot(
        If `True` produces boxes with the `~matplotlib.patches.Patch` artist.
        The default is False.
 
-    shownotches, showmeans, showcaps, showbox, showfliers : bool
+    shownotches, showmeans, showcaps, showbox, showfliers : bool, optional
        Whether to draw the CI notches, the mean value (both default to
        False), the caps, the box, and the fliers (all three default to
        True).
@@ -129,17 +129,13 @@ def plot_boxplot(
        If True (the default), the tick locations and labels will be adjusted to match the
        boxplot positions.
 
-    zorder : float
+    zorder : float, optional
        The zorder of the resulting boxplot.
 
     Returns
     -------
     matplotlib.Axes
 
-    See Also
-    --------
-    boxplot : Draw a boxplot from data instead of pre-computed statistics.
-    boxplot_stat: https://github.com/matplotlib/matplotlib/blob/b5ac96a8980fdb9e59c9fb649e0714d776e26701/lib/matplotlib/cbook/__init__.py#L1103
     """
     # Ensure sorted index
     df_stats = df_stats.sort_index()
