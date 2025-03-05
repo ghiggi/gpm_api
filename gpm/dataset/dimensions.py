@@ -100,7 +100,7 @@ SPATIAL_DIMS = [
     ["lon", "lat"],
     ["longitude", "latitude"],
     ["x", "y"],  # compatibility with satpy/gpm_geo i.e.
-    ["nx", "ny"],  # compatibility with TC-PRIMED
+    ["nx", "ny"],  # compatibility with TC PRIMED
     ["transect"],
     ["trajectory"],
     ["beam"],  # when stacking 2D spatial dims
