@@ -437,7 +437,7 @@ def add_radar_info(ax, ds_gr, radar_size):
     )
 
 
-def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column):
+def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH"):
     # Define Cartopy projection
     ccrs_gr_aeqd = ccrs.AzimuthalEquidistant(
         central_longitude=ds_gr["longitude"].item(),
@@ -503,8 +503,8 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column):
     #### - Plot GR sweep data
     axes[2].coastlines()
     p = (
-        ds_gr["DBZH"]
-        .where(ds_gr["DBZH"] > 0)
+        ds_gr[z_variable_gr]
+        .where(ds_gr[z_variable_gr] > 0)
         .xradar_dev.plot_map(
             ax=axes[2],
             x="x",
@@ -1306,7 +1306,13 @@ def volume_matching(
     if display_quicklook or quicklook_fpath:
         sr_z_column = f"SR_zFactorFinal_{radar_band}_mean"
         gr_z_column = "GR_Z_mean"
-        fig = plot_quicklook(ds_gr=ds_gr, gdf=gdf_match, sr_z_column=sr_z_column, gr_z_column=gr_z_column)
+        fig = plot_quicklook(
+            ds_gr=ds_gr,
+            gdf=gdf_match,
+            sr_z_column=sr_z_column,
+            gr_z_column=gr_z_column,
+            z_variable_gr=z_variable_gr,
+        )
         if quicklook_fpath is not None:
             fig.savefig(quicklook_fpath)
             plt.close()

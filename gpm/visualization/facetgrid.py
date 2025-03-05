@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from cartopy.mpl.geoaxes import GeoAxes
+from cartopy.mpl.gridliner import Gridliner
 from mpl_toolkits.axes_grid1 import ImageGrid
 from xarray.plot.facetgrid import FacetGrid
 from xarray.plot.utils import _infer_xy_labels, _process_cmap_cbar_kwargs, label_from_attrs
@@ -56,6 +57,13 @@ def _remove_title_dimension_prefix(ax):
 
 def _remove_title(ax):
     ax.set_title("")
+
+
+def get_cartopy_gridlines_artists(ax):
+    """Retrieve the cartopy gridline artist."""
+    # OLD approach: gl = [ax._gridliners[0]]
+    list_gridliners = [artist for artist in ax.artists if isinstance(artist, Gridliner)]
+    return list_gridliners
 
 
 def sanitize_facetgrid_plot_kwargs(plot_kwargs):
@@ -575,8 +583,8 @@ class CartopyFacetGrid(CustomFacetGrid):
         """Remove Cartopy bottom gridlines labels."""
         if isinstance(ax, GeoAxes):
             try:
-                gl = ax._gridliners[0]
-                gl.bottom_labels = False
+                for gl in get_cartopy_gridlines_artists(ax):
+                    gl.bottom_labels = False
             except Exception:
                 pass
 
@@ -584,8 +592,8 @@ class CartopyFacetGrid(CustomFacetGrid):
         """Remove Cartopy left gridlines labels."""
         if isinstance(ax, GeoAxes):
             try:
-                gl = ax._gridliners[0]
-                gl.left_labels = False
+                for gl in get_cartopy_gridlines_artists(ax):
+                    gl.left_labels = False
             except Exception:
                 pass
 

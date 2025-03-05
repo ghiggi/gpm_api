@@ -816,26 +816,26 @@ and `Database <https://sharaku.eorc.jaxa.jp/TYP_DB/index.html>`_ websites provid
 the latest and past tropical cyclones satellite acquisitions of DPR, GMI and AMSR2 sensors.
 
 
-TC-PRIMED
+TC PRIMED
 ~~~~~~~~~~~
 
 If you are interested in tropical cyclones studies using PMW data, please also have a look at the
-`TC-PRIMED dataset <https://rammb-data.cira.colostate.edu/tcprimed/>`_.
-TC-PRIMED contains over 197'000 PMW overpasses of 2'300 global tropical cyclones from 1998 to 2021.
+`TC PRIMED dataset <https://rammb-data.cira.colostate.edu/tcprimed/>`_.
+TC PRIMED contains over 197'000 PMW overpasses of 2'300 global tropical cyclones from 1998 to 2021.
 
 .. figure:: https://rammb-data.cira.colostate.edu/~cslocum/spmicrowave/img/GMI_Overpass.png
-  :alt: TC-PRIMED Overview
+  :alt: TC PRIMED Overview
   :align: center
 
   A sampling of TC PRIMED products from Typhoon Maria (2018) at 10:13 UTC on 9 July 2018 in the western Pacific. a) is GPROF,
   b) is GPM DPR precipitation rate, c) GPM DPR reflectivity, d) 36.6 GHz, e) 89 GHZ, and f) IR from Himawari-8.
 
 
-TC-PF
+TC PF
 ~~~~~~~~~~~
 
-The *Tropical Cyclone related Precipitation Feature* (TC-PF) database is a subset of the *TAMU-CC Precipitation Features* database.
-Please refer to `Jiang et al., 2011 <https://journals.ametsoc.org/view/journals/apme/50/6/2011jamc2662.1.xml>`_ for more information on the TC-PF database.
+The *Tropical Cyclone related Precipitation Feature* (TC PF) database is a subset of the *TAMU-CC Precipitation Features* database.
+Please refer to `Jiang et al., 2011 <https://journals.ametsoc.org/view/journals/apme/50/6/2011jamc2662.1.xml>`_ for more information on the TC PF database.
 Data are available at `this link <https://ghrc.nsstc.nasa.gov/pub/tcpf/tcpf-L1/data/>`_.
 
 

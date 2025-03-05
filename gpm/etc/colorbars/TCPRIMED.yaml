@@ -1,0 +1,56 @@
+---
+correctedReflectFactor_Ka:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{f, Ka}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+correctedReflectFactor_Ku:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 0.5
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 10
+    vmax: 50
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{f, Ku}$ [$dBZ$]
+  auxiliary:
+    category: [reflectivity]
+IRWIN:
+  cmap:
+    name: gray_r
+    bad_color: none
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: IR Brightness temperature [K]
+mainprecipitationType:
+  cmap:
+    name: tab20c
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: No Precipitation
+      1: Stratiform
+      2: Convective
+      3: Other
+      4: Shallow Rain
+  cbar:
+    label: ""

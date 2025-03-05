@@ -202,7 +202,7 @@ def plot_cross_section(
     ax=None,
     add_colorbar=True,
     zoom=True,
-    check_contiguity=True,
+    check_contiguity=False,
     interpolation="nearest",
     fig_kwargs=None,
     cbar_kwargs=None,

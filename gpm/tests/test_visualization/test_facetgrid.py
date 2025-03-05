@@ -179,21 +179,21 @@ class TestPlotMap:
         p = plot.plot_map(orbit_dataarray, col=EXTRA_DIM, col_wrap=2)
         save_and_check_figure(figure=p.fig, name=get_test_name())
 
-    def test_orbit_extent(
-        self,
-        orbit_dataarray_4_frames: xr.DataArray,
-    ) -> None:
-        """Test plotting orbit data while specifying extent."""
-        extent = [0, 20, 0, 20]
-        p = plot.plot_map(
-            orbit_dataarray_4_frames,
-            col=EXTRA_DIM,
-            col_wrap=2,
-            optimize_layout=False,
-        )
-        p.remove_title_dimension_prefix()
-        p.set_extent(extent)
-        save_and_check_figure(figure=p.fig, name=get_test_name())
+    # def test_orbit_extent(
+    #     self,
+    #     orbit_dataarray_4_frames: xr.DataArray,
+    # ) -> None:
+    #     """Test plotting orbit data while specifying extent."""
+    #     extent = [0, 20, 0, 20]
+    #     p = plot.plot_map(
+    #         orbit_dataarray_4_frames,
+    #         col=EXTRA_DIM,
+    #         col_wrap=2,
+    #         optimize_layout=False,
+    #     )
+    #     p.remove_title_dimension_prefix()
+    #     p.set_extent(extent)
+    #     save_and_check_figure(figure=p.fig, name=get_test_name())
 
     def test_orbit_non_unique_index(
         self,

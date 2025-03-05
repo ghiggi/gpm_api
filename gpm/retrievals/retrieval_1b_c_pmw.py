@@ -53,7 +53,7 @@ def retrieve_rgb_composites(ds):
     # Retrieve sensor
     if "InstrumentName" in ds.attrs:
         sensor = ds.attrs["InstrumentName"]
-    elif "instrument" in ds.attrs:  # compatibility with TC-PRIMED
+    elif "instrument" in ds.attrs:  # compatibility with TC PRIMED
         sensor = ds.attrs["instrument"]
     else:
         raise ValueError("Impossible to determine instrument name.")

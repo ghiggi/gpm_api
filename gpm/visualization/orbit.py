@@ -166,6 +166,9 @@ def call_over_contiguous_scans(function):
         # Get axis
         ax = args[1] if len(args) > 1 else kwargs.get("ax")
 
+        # Get DataArray in memory
+        da = da.compute()
+
         # Define dimensions and coordinates
         x, y = infer_map_xy_coords(da, x=kwargs.get("x"), y=kwargs.get("y"))
         along_track_dim, cross_track_dim = infer_orbit_xy_dim(da, x=x, y=y)
@@ -461,9 +464,10 @@ def _plot_orbit_map_facetgrid(
         cbar_kwargs = {}
 
     # Create FacetGrid
+    da = da.compute()
     optimize_layout = plot_kwargs.pop("optimize_layout", True)
     fc = CartopyFacetGrid(
-        data=da.compute(),
+        data=da,
         projection=projection,
         col=plot_kwargs.pop("col", None),
         row=plot_kwargs.pop("row", None),

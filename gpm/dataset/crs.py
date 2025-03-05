@@ -852,3 +852,24 @@ def get_pyresample_area(xr_obj):
     if has_swath_coords(xr_obj):
         return get_pyresample_swath(xr_obj)
     raise ValueError("Impossible to infer if a SwathDefinition or AreaDefinition.")
+
+
+#### GEO utilities
+
+
+def get_spatial_coordinates(xr_obj):
+    """Return the xarray object x and y spatial coordinates."""
+    x_coord, y_coord = _get_spatial_coordinates(xr_obj)
+    return x_coord, y_coord
+
+
+def get_x_coordinate(xr_obj):
+    """Return the xarray object x spatial coordinate."""
+    x_coord, _ = _get_spatial_coordinates(xr_obj)
+    return x_coord
+
+
+def get_y_coordinate(xr_obj):
+    """Return the xarray object y spatial coordinate."""
+    _, y_coord = _get_spatial_coordinates(xr_obj)
+    return y_coord
