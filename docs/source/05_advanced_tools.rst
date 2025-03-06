@@ -1,5 +1,5 @@
 =========================
-Advanced Tools
+Advanced Tutorials
 =========================
 
 This section provides tutorials covering advanced GPM-API capabilities that can be used to perform more complex analysis.

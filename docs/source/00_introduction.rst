@@ -822,6 +822,8 @@ TC PRIMED
 If you are interested in tropical cyclones studies using PMW data, please also have a look at the
 `TC PRIMED dataset <https://rammb-data.cira.colostate.edu/tcprimed/>`_.
 TC PRIMED contains over 197'000 PMW overpasses of 2'300 global tropical cyclones from 1998 to 2021.
+`This tutorial <https://gpm-api.readthedocs.io/en/latest/tutorials/tutorial_TCPRIMED.html>`_
+illustrates how to use GPM-API to analyze the TC PRIMED dataset.
 
 .. figure:: https://rammb-data.cira.colostate.edu/~cslocum/spmicrowave/img/GMI_Overpass.png
   :alt: TC PRIMED Overview
