@@ -1,4 +1,6 @@
-# 📦 Welcome to GPM-API
+<div align="center">
+
+![ ](https://github.com/ghiggi/gpm_api_gallery/blob/main/images/gpm_api_banner.gif)
 
 |                   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -15,8 +17,10 @@
 | Community         | [![Slack](https://img.shields.io/badge/Slack-gpm_api-green.svg?logo=slack&style=flat)](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) [![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-green?logo=github&style=flat)](https://github.com/ghiggi/gpm_api/discussions)                                                                                                                                                                                                                                                                                                                                                |
 | Citation          | [![DOI](https://zenodo.org/badge/286664485.svg?style=flat)](https://doi.org/10.5281/zenodo.7753488)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
-[**Slack**](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) | [**Docs**](https://gpm-api.readthedocs.io/en/latest/)
+[**Slack**](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) | [**Documentation**](https://gpm-api.readthedocs.io/en/latest/)
 
+<div align="left">
+    
 ## 🚀 Quick start
 
 GPM-API provides an easy-to-use python interface to download, read, process and visualize most
