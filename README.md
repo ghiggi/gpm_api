@@ -136,7 +136,7 @@ If you are new to GPM-API, we recommend starting with the following pages:
 - [Introduction to GPM sensors, products, theoretical and practical aspects](https://gpm-api.readthedocs.io/en/latest/00_introduction.html)
 - [Software installation](https://gpm-api.readthedocs.io/en/latest/02_installation.html)
 - [Configuration of GPM-API to start download GPM Data from NASA PPS and GES DISC servers](https://gpm-api.readthedocs.io/en/latest/03_quickstart.html)
-- [Basic tutorials on how to read, manipulate and visualize radar, passive microwave sensors and IMERG products](https://gpm-api.readthedocs.io/en/latest/04_tutorials.htmls)
+- [Basic tutorials on how to read, manipulate and visualize radar, passive microwave sensors and IMERG products](https://gpm-api.readthedocs.io/en/latest/04_tutorials.html)
 
 All GPM-API tutorials are available as Jupyter Notebooks in the [`tutorial`](https://github.com/ghiggi/gpm_api/tree/main/tutorials) directory.
 
