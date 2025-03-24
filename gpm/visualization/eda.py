@@ -147,7 +147,13 @@ def plot_boxplot(
     # Compute IQR if not already a column
     if "iqr" not in df_stats:
         df_stats["iqr"] = df_stats["q75"] - df_stats["q25"]
-
+    
+    # Compute whislo and whislo
+    df_stats["whislo"] = np.maximum(df_stats["q25"] - 1.5 * df_stats["iqr"], df_stats["min"])
+    df_stats["whishi"] = np.maximum(df_stats["q75"] + 1.5 * df_stats["iqr"], df_stats["max"])
+    # df_stats["whislo"] = df_stats["q10"]
+    # df_stats["whishi"] = df_stats["q90"]
+ 
     # Prepare data for bxp
     box_data = []
     for i in range(len(df_stats)):
@@ -156,10 +162,8 @@ def plot_boxplot(
             "q1": df_row["q25"].item(),
             "med": df_row["median"].item(),
             "q3": df_row["q75"].item(),
-            # "whislo": df_row["q10"].item(),
-            # "whishi": df_row["q90"].item(),
-            "whislo": np.maximum(df_row["q25"].item() - 1.5 * df_row["iqr"].item(), df_row["min"].item()),
-            "whishi": np.minimum(df_row["q75"].item() + 1.5 * df_row["iqr"].item(), df_row["max"].item()),
+            "whislo": df_row["whislo"].item(),
+            "whishi": df_row["whishi"].item(),
             "fliers": [df_row["min"].item(), df_row["max"].item()],
             "mean": df_row["mean"].item(),
         }
@@ -209,4 +213,8 @@ def plot_boxplot(
     if add_median_line:
         median_line_kwargs = {} if median_line_kwargs is None else median_line_kwargs
         ax.plot(positions, df_stats["median"], **median_line_kwargs)
+    
+    # Set y limits to whiskers if outliers not displayed
+    if not showwhisker and not showfliers: 
+        ax.set_ylim(np.nanmin(df_stats["q25"]), np.nanmax(df_stats["q75"]))
     return bplot
