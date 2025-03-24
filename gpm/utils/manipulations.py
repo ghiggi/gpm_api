@@ -728,7 +728,7 @@ def ensure_vertical_datarray_prototype(da):
     valid_dims = da.gpm.spatial_dimensions + da.gpm.vertical_dimension
     invalid_dims = set(da.dims) - set(valid_dims)
     if invalid_dims:
-        da = da.isel({dim: 0 for dim in invalid_dims})
+        da = da.isel(dict.fromkeys(invalid_dims, 0))
     return da
 
 
@@ -1462,7 +1462,7 @@ def infill_below_bin(xr_obj, bins):
 
     # Check if the range/height dimension is increasing or decreasing
     other_dims = [dim for dim in xr_obj.dims if dim != z_dim]
-    pixel_isel_dict = {dim: 0 for dim in other_dims}
+    pixel_isel_dict = dict.fromkeys(other_dims, 0)
     z_values = da_height.isel(pixel_isel_dict, missing_dims="ignore").to_numpy()
     is_increasing = z_values[1] > z_values[0]
 

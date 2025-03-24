@@ -94,7 +94,7 @@ def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
         if da[x].ndim == 1:
             dim_name = list(da[x].dims)[0]
             da_x.data = x_coord
-            da_x_values = da_x.isel({dim: 0 for dim in get_dimensions_without(da_x, da[x].dims)}).data
+            da_x_values = da_x.isel(dict.fromkeys(get_dimensions_without(da_x, da[x].dims), 0)).data
             da = da.assign_coords({x: (dim_name, da_x_values)})
         else:
             # da[x].data = x_coord
@@ -103,7 +103,7 @@ def _ensure_valid_pcolormesh_coords(da, x, y, rgb):
         if da[y].ndim == 1:
             dim_name = list(da[y].dims)[0]
             da_y.data = y_coord
-            da_y_values = da_y.isel({dim: 0 for dim in get_dimensions_without(da_y, da[y].dims)}).data
+            da_y_values = da_y.isel(dict.fromkeys(get_dimensions_without(da_y, da[y].dims), 0)).data
             da = da.assign_coords({y: (dim_name, da_y_values)})
         else:
             da = da.assign_coords({y: (da_y.dims, y_coord)})
