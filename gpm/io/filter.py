@@ -301,8 +301,8 @@ def is_within_time_period(l_start_time, l_end_time, start_time, end_time):
     # - Case 2
     #     s               e
     #     |               |
-    #          --------
-    idx_select2 = np.logical_and(l_start_time >= start_time, l_end_time < end_time)
+    #          ---------(-.)
+    idx_select2 = np.logical_and(l_start_time >= start_time, l_end_time <= end_time)
     # - Case 3
     #     s               e
     #     |               |

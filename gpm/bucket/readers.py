@@ -33,7 +33,7 @@ import polars as pl
 
 from gpm.bucket.filters import apply_spatial_filters
 from gpm.bucket.io import (
-    get_bucket_partitioning,
+    get_bucket_spatial_partitioning,
     get_filepaths,
 )
 from gpm.utils.directories import get_filepaths_within_paths
@@ -215,18 +215,18 @@ def read_bucket(
         raise ValueError("Specify only one between extent, country, continent, and point arguments.")
     if specified_filters:
         # Read partitioning class
-        partitioning = get_bucket_partitioning(bucket_dir)
+        spatial_partitioning = get_bucket_spatial_partitioning(bucket_dir)
         # Infer dir_tree based on the specified spatial filters
         if extent is not None:
-            dir_trees = partitioning.directories_by_extent(extent)
+            dir_trees = spatial_partitioning.directories_by_extent(extent)
             filters = {"extent": extent}
         elif country is not None:
             extent = get_country_extent(name=country, padding=padding)
-            dir_trees = partitioning.directories_by_extent(extent)
+            dir_trees = spatial_partitioning.directories_by_extent(extent)
             filters = {"extent": extent}
         elif continent is not None:
             extent = get_continent_extent(name=continent, padding=padding)
-            dir_trees = partitioning.directories_by_extent(extent)
+            dir_trees = spatial_partitioning.directories_by_extent(extent)
             filters = {"extent": extent}
         elif point is not None:
             lon, lat = point
@@ -236,7 +236,7 @@ def read_bucket(
                 distance=distance,
                 size=size,
             )
-            dir_trees = partitioning.directories_by_extent(extent)
+            dir_trees = spatial_partitioning.directories_by_extent(extent)
             filters = {"point_radius": (lon, lat, distance)} if distance else {"extent": extent}
         # Define partitions paths
         paths = [os.path.join(bucket_dir, dir_tree) for dir_tree in dir_trees]
@@ -254,8 +254,8 @@ def read_bucket(
         filters = {}
         # If no filename filtering, specify a glob pattern across all the partitioned dataset
         if file_extension is None and glob_pattern is None and regex_pattern is None:
-            partitioning = get_bucket_partitioning(bucket_dir)
-            glob_pattern = ["*" for i in range(partitioning.n_levels + 1)]
+            spatial_partitioning = get_bucket_spatial_partitioning(bucket_dir)
+            glob_pattern = ["*" for i in range(spatial_partitioning.n_levels + 1)]
             source = os.path.join(bucket_dir, *glob_pattern)
         # Alternatively search for files that match the desired criteria
         else:

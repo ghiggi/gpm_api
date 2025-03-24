@@ -26,7 +26,6 @@
 # -----------------------------------------------------------------------------.
 """This module provides the routines for the creation of GPM Geographic Buckets."""
 import os
-import time
 
 import dask
 import numpy as np
@@ -37,10 +36,9 @@ import pyarrow.parquet as pq
 from tqdm import tqdm
 
 from gpm.bucket.io import (
-    get_bucket_partitioning,
+    get_bucket_spatial_partitioning,
     get_bucket_temporal_partitioning,
     get_exisiting_partitions_paths,
-    get_filepaths_by_partition,
     get_filepaths_within_paths,
     write_bucket_info,
 )
@@ -51,7 +49,7 @@ from gpm.bucket.writers import (
 )
 from gpm.io.checks import check_start_end_time
 from gpm.io.filter import filter_filepaths, is_within_time_period
-from gpm.io.info import get_start_end_time_from_filepaths, group_filepaths
+from gpm.io.info import get_start_end_time_from_filepaths
 from gpm.utils.dask import clean_memory, get_client
 from gpm.utils.directories import get_first_file, list_and_filter_files
 from gpm.utils.parallel import compute_list_delayed
@@ -68,7 +66,7 @@ def split_list_in_blocks(values, block_size):
 def write_granule_bucket(
     src_filepath,
     bucket_dir,
-    partitioning,
+    spatial_partitioning,
     granule_to_df_func,
     x="lon",
     y="lat",
@@ -83,7 +81,7 @@ def write_granule_bucket(
         File path of the granule to store in the bucket archive.
     bucket_dir: str
         Base directory of the per-granule bucket archive.
-    partitioning: gpm.bucket.SpatialPartitioning
+    spatial_partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
     granule_to_df_func : Callable
         Function taking a granule filepath, opening it and returning a pandas or dask dataframe.
@@ -109,15 +107,15 @@ def write_granule_bucket(
     df = granule_to_df_func(src_filepath)
 
     # Add partitioning columns
-    df = partitioning.add_labels(df=df, x=x, y=y)
+    df = spatial_partitioning.add_labels(df=df, x=x, y=y)
 
     # Write partitioned dataframe
     write_partitioned_dataset(
         df=df,
         base_dir=bucket_dir,
         filename_prefix=filename_prefix,
-        partitions=partitioning.order,
-        partitioning_flavor=partitioning.flavor,
+        partitions=spatial_partitioning.order,
+        partitioning_flavor=spatial_partitioning.flavor,
         **writer_kwargs,
     )
 
@@ -141,7 +139,7 @@ def write_granules_bucket(
     filepaths,
     # Bucket configuration
     bucket_dir,
-    partitioning,
+    spatial_partitioning,
     granule_to_df_func,
     # Processing options
     parallel=True,
@@ -160,7 +158,7 @@ def write_granules_bucket(
         File paths of the GPM granules to store in the bucket archive.
     bucket_dir: str
         Base directory of the per-granule bucket archive.
-    partitioning: gpm.bucket.SpatialPartitioning
+    spatial_partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
         Carefully consider the size of the partitions.
         Earth partitioning by:
@@ -202,7 +200,7 @@ def write_granules_bucket(
     writer_kwargs["use_threads"] = use_threads
 
     # Write down the information of the bucket
-    write_bucket_info(bucket_dir=bucket_dir, partitioning=partitioning)
+    write_bucket_info(bucket_dir=bucket_dir, spatial_partitioning=spatial_partitioning)
 
     # Split long list of files in blocks
     list_blocks = split_list_in_blocks(filepaths, block_size=max_dask_total_tasks)
@@ -220,7 +218,7 @@ def write_granules_bucket(
             func(
                 src_filepath=src_filepath,
                 bucket_dir=bucket_dir,
-                partitioning=partitioning,
+                spatial_partitioning=spatial_partitioning,
                 granule_to_df_func=granule_to_df_func,
                 # Writer kwargs
                 **writer_kwargs,
@@ -253,7 +251,7 @@ def write_granules_bucket(
 def write_bucket(
     df,
     bucket_dir,
-    partitioning,
+    spatial_partitioning,
     x="lon",
     y="lat",
     # Writer arguments
@@ -270,7 +268,7 @@ def write_bucket(
         Pandas or Dask dataframe to be written into a geographic bucket.
     bucket_dir: str
         Base directory of the geographic bucket archive.
-    partitioning: gpm.bucket.SpatialPartitioning
+    spatial_partitioning: gpm.bucket.SpatialPartitioning
         A spatial partitioning class.
         Carefully consider the size of the partitions.
         Earth partitioning by:
@@ -297,19 +295,19 @@ def write_bucket(
     # Write down the information of the bucket
     write_bucket_info(
         bucket_dir=bucket_dir,
-        partitioning=partitioning,
+        spatial_partitioning=spatial_partitioning,
     )
 
     # Add partitioning columns
-    df = partitioning.add_labels(df=df, x=x, y=y)
+    df = spatial_partitioning.add_labels(df=df, x=x, y=y)
 
     # Write bucket
     writer_kwargs["row_group_size"] = row_group_size
     write_partitioned_dataset(
         df=df,
         base_dir=bucket_dir,
-        partitions=partitioning.order,
-        partitioning_flavor=partitioning.flavor,
+        partitions=spatial_partitioning.order,
+        partitioning_flavor=spatial_partitioning.flavor,
         filename_prefix=filename_prefix,
         **writer_kwargs,
     )
@@ -317,197 +315,6 @@ def write_bucket(
 
 ####--------------------------------------------------------------------------------------------------.
 #### Merge Granules
-
-
-@print_task_elapsed_time(prefix="Bucket Merging Terminated.")
-def merge_granule_buckets(
-    src_bucket_dir,
-    dst_bucket_dir,
-    force=False,
-    row_group_size="200MB",
-    max_file_size="2GB",
-    compression="snappy",
-    compression_level=None,
-    write_metadata=False,
-    write_statistics=False,
-    # Computing options
-    max_open_files=0,
-    use_threads=True,
-    # Scanner options
-    batch_size=131_072,
-    batch_readahead=10,
-    fragment_readahead=20,
-):
-    """Merge the per-granule bucket archive in a single optimized archive.
-
-    Set ulimit -n 999999 before running this routine !
-
-    Parameters
-    ----------
-    src_bucket_dir : str
-        Base directory of the per-granule bucket archive.
-    dst_bucket_dir : str
-        Directory path of the final bucket archive.
-    row_group_size : int or str, optional
-        Maximum number of rows to be written in each Parquet row group.
-        If specified as a string (i.e. ``"400 MB"``), the equivalent number of rows is estimated.
-        The default is ``"400MB"``.
-    max_file_size: str, optional
-        Maximum number of rows to be written in a Parquet file.
-        If specified as a string, the equivalent number of rows is estimated.
-        Ideally the value should be a multiple of ``row_group_size``.
-        The default is ``"2GB"``.
-    compression : str, optional
-        Specify the compression codec, either on a general basis or per-column.
-        Valid values: ``{"none", "snappy", "gzip", "brotli", "lz4", "zstd"}``.
-        The default is ``snappy``.
-    compression_level : int or dict, optional
-        Specify the compression level for a codec, either on a general basis or per-column.
-        If ``None`` is passed, arrow selects the compression level for the compression codec in use.
-        The compression level has a different meaning for each codec, so you have
-        to read the pyArrow documentation of the codec you are using at
-        https://arrow.apache.org/docs/python/generated/pyarrow.Codec.html
-        The default is ``None``.
-    max_open_files, int, optional
-        If greater than 0 then this will limit the maximum number of files that can be left open.
-        If an attempt is made to open too many files then the least recently used file will be closed.
-        If this setting is set too low you may end up fragmenting your data into many small files.
-        The default is ``0``.
-        Note that Linux has a default limit of ``1024``. Before starting the python session,
-        increase it with ``ulimit -n <new_much_higher_limit>``.
-    use_threads: bool, optional
-        If enabled, then maximum parallelism will be used to read and write files (in multithreading).
-        The number of threads is determined by the number of available CPU cores.
-        The default is ``True``.
-    batch_size : int
-        Maximum number of rows per record batch produced by the dataset scanner.
-        For concatenating small files (each typically a single fragment with one row group),
-        set batch_size larger than the number of rows of the small files so that data from multiple
-        files can be aggregated into a single batch. This helps reduce per-batch overhead.
-        If scanned record batches are overflowing memory then this value can be reduced to reduce the memory usage.
-        The default value is ``131_072``.
-    batch_readahead : int
-        The number of batches to prefetch asynchronously from an open file.
-        Increasing this number will increase RAM usage but could also improve IO utilization.
-        When each file contains a single row group (and thus only one batch), the benefit of
-        batch_readahead is limited. In such cases, a lower value is generally sufficient.
-        The default is ``10``.
-    fragment_readahead : int
-        The number of individual small files to prefetch concurrently.
-        Increasing this number will increase RAM usage but could also improve IO utilization.
-        Prefetching multiple fragments concurrently helps hide the latency of opening and reading each file.
-        The default is ``20``.
-
-    Recommendations
-    ---------------
-    - For small files with a single row group, ensure that batch_size exceeds the number of rows
-      in any individual file to allow efficient aggregation.
-    - Focus on tuning fragment_readahead to prefetch multiple files simultaneously, as this yields
-      greater performance benefits than batch_readahead in this context.
-    - Adjust these parameters based on system memory and available threads; while they operate
-      asynchronously, excessively high values may oversubscribe system resources without further gains.
-
-    Returns
-    -------
-    None.
-
-    """
-    # Retrieve partitioning class
-    partitioning = get_bucket_partitioning(bucket_dir=src_bucket_dir)
-
-    # Identify Parquet filepaths for each bin
-    print("Searching of Parquet files has started.")
-    t_i = time.time()
-    dict_partition_files = get_filepaths_by_partition(src_bucket_dir, parallel=False)
-    n_geographic_bins = len(dict_partition_files)
-    t_f = time.time()
-    t_elapsed = round((t_f - t_i) / 60, 1)
-    print(f"Searching of Parquet files ended. Elapsed time: {t_elapsed} minutes.")
-    print(f"{n_geographic_bins} geographic partitions to process.")
-
-    # Retrieve list of partitions
-    list_partitions = list(dict_partition_files.keys())
-
-    # Write the new partitioning class
-    # TODO: add option maybe to provide new partitioning to this routine !
-    # --> Will require to load data into memory inside a partition (instead of scanner) !
-    # --> Check that new partitioning is aligned and subset of original partitioning?
-    write_bucket_info(bucket_dir=dst_bucket_dir, partitioning=partitioning)
-
-    # -----------------------------------------------------------------------------------------------.
-    # Retrieve table schema
-    # - partitioning.levels are read by pq.read_table as dictionaries (depending on pyarrow version)
-    # - partitioning.levels columns must be dropped by the table if present
-    template_filepath = dict_partition_files[list_partitions[0]][0]
-    template_table = pq.read_table(template_filepath)
-    if np.all(np.isin(partitioning.levels, template_table.column_names)):
-        template_table = template_table.drop_columns(partitioning.levels)
-    schema = template_table.schema
-
-    # Define writer_kwargs
-    writer_kwargs = {}
-    writer_kwargs["row_group_size"] = row_group_size
-    writer_kwargs["max_file_size"] = max_file_size
-    writer_kwargs["compression"] = compression
-    writer_kwargs["compression_level"] = compression_level
-    writer_kwargs["max_open_files"] = max_open_files
-    writer_kwargs["use_threads"] = use_threads
-    writer_kwargs["write_metadata"] = write_metadata
-    writer_kwargs["write_statistics"] = write_statistics
-    writer_kwargs, metadata_collector = preprocess_writer_kwargs(
-        writer_kwargs=writer_kwargs,
-        df=template_table,
-    )
-
-    # -----------------------------------------------------------------------------------------------.
-    # Concatenate data within bins
-    # - Cannot rewrite directly the full pyarrow.dataset because there is no way to specify when
-    #    data from each partition have been scanned completely (and can be written to disk)
-    print("Start concatenating the granules bucket archive")
-    # partition_label = "latbin=0/lonbin=10"
-    # filepaths = dict_partition_files[partition_label]
-    n_partitions = len(dict_partition_files)
-    for partition_label, filepaths in tqdm(dict_partition_files.items(), total=n_partitions):
-        partition_dir = os.path.join(dst_bucket_dir, partition_label)
-        # Choose if too skip
-        # - TODO: search which year already there and only add remainings
-        if not force and os.path.exists(partition_dir):
-            continue
-        year_dict = group_filepaths(filepaths, groups="year")
-
-        # Save a consolidated parquet by the specified time group
-        for year, year_filepaths in year_dict.items():
-            basename_template = f"{year}_" + "{i}.parquet"
-            # Read Dataset
-            year_filepaths = sorted(year_filepaths)
-            dataset = pyarrow.dataset.dataset(year_filepaths, format="parquet")
-
-            # Define scanner
-            scanner = dataset.scanner(
-                batch_size=batch_size,
-                batch_readahead=batch_readahead,
-                fragment_readahead=fragment_readahead,
-                use_threads=use_threads,
-            )
-
-            # Rewrite dataset
-            pa.dataset.write_dataset(
-                scanner,
-                base_dir=partition_dir,
-                basename_template=basename_template,
-                # Directory options
-                create_dir=True,
-                existing_data_behavior="overwrite_or_ignore",
-                # Options
-                **writer_kwargs,
-            )
-
-    if metadata_collector:
-        write_dataset_metadata(base_dir=dst_bucket_dir, metadata_collector=metadata_collector, schema=schema)
-
-
-####--------------------------------------------------------------------------------------------------.
-#### Merge Granules (Update)
 
 
 def check_temporal_partitioning(temporal_partitioning):
@@ -520,15 +327,15 @@ def check_temporal_partitioning(temporal_partitioning):
     return temporal_partitioning
 
 
-def define_dict_partitions(src_bucket_dir, src_partitioning, dst_partitioning=None):
+def define_dict_partitions(src_bucket_dir, src_spatial_partitioning, dst_spatial_partitioning=None):
     """List source partitions directories paths for each destination partition."""
-    if dst_partitioning is not None:
+    if dst_spatial_partitioning is not None:
         raise NotImplementedError("Repartitioning not yet implemented.")
-    dst_partitioning = src_partitioning
+    dst_spatial_partitioning = src_spatial_partitioning
 
     # Retrieve path to source partitions
-    n_levels = dst_partitioning.n_levels
-    dir_trees = dst_partitioning.directories
+    n_levels = dst_spatial_partitioning.n_levels
+    dir_trees = dst_spatial_partitioning.directories
     partitions_paths = get_exisiting_partitions_paths(src_bucket_dir, dir_trees)  # on 4096 directories ...
     # Define list of destination bucket partitions and source bucket directories
     sep = os.path.sep
@@ -572,16 +379,72 @@ def get_time_prefix(timestep, temporal_partitioning):
     raise NotImplementedError(f"Invalid '{temporal_partitioning}' temporal_partitioning")
 
 
+def get_partitioning_boundaries(start_time, end_time, temporal_partitioning):
+    """Define a time prefix string from a datetime object."""
+    # --------
+    # YEAR
+    if temporal_partitioning == "year":
+        if end_time != pd.Timestamp(f"{end_time.year}-01-01 00:00:00"):
+            end_time = end_time + pd.DateOffset(years=1)
+        boundaries = pd.date_range(
+            start=pd.Timestamp(f"{start_time.year}-01-01"),
+            end=pd.Timestamp(f"{end_time.year}-01-01"),
+            freq="YS",
+        )
+        return boundaries
+
+    # --------
+    # MONTH
+    if temporal_partitioning == "month":
+        if end_time != pd.Timestamp(f"{end_time.year}-{end_time.month:02d}-01 00:00:00"):
+            end_time = end_time + pd.DateOffset(months=1)
+        boundaries = pd.date_range(
+            start=pd.Timestamp(f"{start_time.year}-{start_time.month}-01 00:00:00"),
+            end=pd.Timestamp(f"{end_time.year}-{end_time.month}-01 00:00:00"),
+            freq="MS",
+        )
+        return boundaries
+
+    # --------
+    # QUARTER
+    # Q1: Jan-Mar, Q2: Apr-Jun, Q3: Jul-Sep, Q4: Oct-Dec
+    if temporal_partitioning == "quarter":
+        # Define start time quarter month
+        start_quarter_idx = (start_time.month - 1) // 3 + 1
+        start_quarter_start_month = 3 * (start_quarter_idx - 1) + 1
+        # Define end time quarter month
+        end_quarter_idx = (end_time.month - 1) // 3 + 1
+        end_quarter_start_month = 3 * (end_quarter_idx - 1) + 1
+        # Update to next quarter if necessary
+        if end_time != pd.Timestamp(f"{end_time.year}-{end_quarter_start_month:02d}-01 00:00:00"):
+            end_time = end_time + pd.DateOffset(months=3)
+            end_quarter_idx = (end_time.month - 1) // 3 + 1
+            end_quarter_start_month = 3 * (end_quarter_idx - 1) + 1
+        boundaries = pd.date_range(
+            start=pd.Timestamp(f"{start_time.year}-{start_quarter_start_month}-01 00:00:00"),
+            end=pd.Timestamp(f"{end_time.year}-{end_quarter_start_month}-01 00:00:00"),
+            freq="QS",
+        )
+        return boundaries
+
+    # --------
+    # DAY
+    if temporal_partitioning == "day":
+        if end_time != end_time.normalize():
+            end_time = end_time.normalize() + pd.DateOffset(days=1)
+        boundaries = pd.date_range(
+            start=pd.Timestamp(f"{start_time.year}-{start_time.month}-{start_time.day} 00:00:00"),
+            end=end_time,
+            freq="D",
+        )
+        return boundaries
+    raise NotImplementedError(f"Invalid '{temporal_partitioning}' temporal_partitioning")
+
+
 def get_list_group_periods(start_time, end_time, temporal_partitioning):
+    """List group time periods."""
     # Retrieve group time boundaries
-    mapping = {
-        "year": "YS",  # Year start
-        "month": "MS",  # Month start
-        "quarter": "QS",  # Quarter start
-        "day": "D",  # Daily
-    }
-    freq = mapping[temporal_partitioning]
-    boundaries = pd.date_range(start=start_time, end=end_time, freq=freq)
+    boundaries = get_partitioning_boundaries(start_time, end_time, temporal_partitioning)
 
     # Define list with group time information
     intervals = []
@@ -612,16 +475,16 @@ def group_files_by_time(filepaths, start_time, end_time, temporal_partitioning):
 
     # Initialize start_time and end_time if None
     if start_time is None:
-        start_time = l_start_time.min()
+        start_time = pd.Timestamp(l_start_time.min())
     if end_time is None:
-        end_time = l_end_time.max()
+        end_time = pd.Timestamp(l_end_time.max())
 
     # Define possible group_start_time and group_end_time
     list_group_periods = get_list_group_periods(start_time, end_time, temporal_partitioning)
 
     # List all filepaths for each time group
     groups_dict = {}
-
+    # group_key, group_start_time, group_end_time = list_group_periods[2]
     for group_key, group_start_time, group_end_time in list_group_periods:
         is_within_group = is_within_time_period(
             l_start_time=l_start_time,
@@ -639,7 +502,7 @@ def group_files_by_time(filepaths, start_time, end_time, temporal_partitioning):
 def define_dataset_filter(
     start_time,
     end_time,
-    # dst_partitioning, partition_label or extent
+    # dst_spatial_partitioning, partition_label or extent
 ):
 
     time_filter = (pyarrow.dataset.field("time") >= start_time) & (pyarrow.dataset.field("time") < end_time)
@@ -659,12 +522,12 @@ def define_dataset_filter(
 
 
 @print_task_elapsed_time(prefix="Bucket Merging Terminated.")
-def update_granule_buckets(
+def merge_granule_buckets(
     src_bucket_dir,
     dst_bucket_dir,
     # Bucket structure
-    dst_partitioning=None,
-    temporal_partitioning=None,
+    dst_spatial_partitioning=None,
+    temporal_partitioning="year",
     # Update options
     start_time=None,
     end_time=None,
@@ -706,6 +569,7 @@ def update_granule_buckets(
         Define the temporal partitions over which to groups files together.
         Only to be defined for a new bucket archive.
         Valid values are "year", "month", "season", "quarter" or "day".
+        The default value is "year".
         If ``update=True``, use the temporal partitions of the existing bucket archive.
     update : bool
         Whether to update an existing bucket archive with new data.
@@ -803,18 +667,18 @@ def update_granule_buckets(
 
         # Check start_time and end_time
         if start_time is None or end_time is None:
-            raise ValueError("Define 'start_time' and 'end_time' if update=True.")
+            raise ValueError("Define both 'start_time' and 'end_time' if update=True.")
         start_time, end_time = check_start_end_time(start_time, end_time)
 
-    # Retrieve src partitioning
-    src_partitioning = get_bucket_partitioning(bucket_dir=src_bucket_dir)
+    # Retrieve source spatial partitioning
+    src_spatial_partitioning = get_bucket_spatial_partitioning(bucket_dir=src_bucket_dir)
 
-    # Retrieve destination partitioning
+    # Retrieve destination spatial partitioning
     if update:
-        dst_partitioning = get_bucket_partitioning(bucket_dir=dst_bucket_dir)
+        dst_spatial_partitioning = get_bucket_spatial_partitioning(bucket_dir=dst_bucket_dir)
         temporal_partitioning = get_bucket_temporal_partitioning(bucket_dir=dst_bucket_dir)
-    elif dst_partitioning is None:
-        dst_partitioning = src_partitioning
+    elif dst_spatial_partitioning is None:
+        dst_spatial_partitioning = src_spatial_partitioning
     else:
         raise NotImplementedError("Repartitioning not implemented yet.")
 
@@ -823,15 +687,15 @@ def update_granule_buckets(
 
     # Identify destination partitions
     # - Output: {dst_partition_tree: [src_partition_path, src_partition_path]}
-    # - Repartitioning is not yet implemented
     # - Currently we assume same partitioning between source and destination
     # TODO:
+    # - Spatial Repartitioning is not yet implemented
     # - group/split src partition paths for desired dst partitions
-    # - Perform filtering on lon and lat in dataset scanner by dst_partitioning bounds
+    # - Perform filtering on lon and lat in dataset scanner by dst_spatial_partitioning bounds
     dict_partitions = define_dict_partitions(
         src_bucket_dir=src_bucket_dir,
-        src_partitioning=src_partitioning,
-        dst_partitioning=None,
+        src_spatial_partitioning=src_spatial_partitioning,
+        dst_spatial_partitioning=None,
     )  # TODO: not yet implemented
 
     n_partitions = len(dict_partitions)
@@ -839,15 +703,19 @@ def update_granule_buckets(
 
     # Write bucket info
     if not update:
-        write_bucket_info(bucket_dir=dst_bucket_dir, partitioning=dst_partitioning)
+        write_bucket_info(
+            bucket_dir=dst_bucket_dir,
+            spatial_partitioning=dst_spatial_partitioning,
+            temporal_partitioning=temporal_partitioning,
+        )
 
     # -----------------------------------------------------------------------------------------------.
     # Retrieve table schema
-    # - partitioning.levels are read by pq.read_table as dictionaries (depending on pyarrow version)
-    # - partitioning.levels columns must be dropped by the table if present
+    # - spatial_partitioning.levels are read by pq.read_table as dictionaries (depending on pyarrow version)
+    # - spatial_partitioning.levels columns must be dropped by the table if present
     template_table = get_template_table(dict_partitions)
-    if np.all(np.isin(dst_partitioning.levels, template_table.column_names)):
-        template_table = template_table.drop_columns(dst_partitioning.levels)
+    if np.all(np.isin(dst_spatial_partitioning.levels, template_table.column_names)):
+        template_table = template_table.drop_columns(dst_spatial_partitioning.levels)
     schema = template_table.schema
 
     # Define writer_kwargs
@@ -886,6 +754,8 @@ def update_granule_buckets(
         # Filter by time window
         if start_time is not None and end_time is not None:
             filepaths = filter_filepaths(filepaths, start_time=start_time, end_time=end_time)
+
+        # Check file left
         if len(filepaths) == 0:
             print(f"No data to consolidate for partition {partition_label}.")
             continue
@@ -933,18 +803,16 @@ def update_granule_buckets(
             # Define filename pattern
             basename_template = f"{time_prefix}_" + "{i}.parquet"
 
-            # Define parquet filter based on time and geolocation/geometry
+            # Define pyarrow.Expression to filter rows based on time and geolocation/geometry
             # - TODO: geolocation filter when repartitioning
             dataset_filter = define_dataset_filter(
                 start_time=group_start_time,
                 end_time=group_end_time,
-                # dst_partitioning, partition_label or extent
+                # dst_spatial_partitioning, partition_label or extent
             )
 
-            # TODO: check behaviour after filter when no data left !
-
             # Read Dataset
-            dataset = pyarrow.dataset.dataset(src_filepaths, format="parquet")
+            dataset = pyarrow.dataset.dataset(list(src_filepaths), format="parquet")
 
             # Define scanner
             scanner = dataset.scanner(

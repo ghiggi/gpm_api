@@ -345,7 +345,7 @@ def test_check_has_spatial_dim(
 #######################
 
 
-def test__is_expected_spatial_dims() -> None:
+def test_is_expected_spatial_dims() -> None:
     """Test _is_expected_spatial_dims function."""
     assert _is_expected_spatial_dims(["y", "x"])
 

@@ -39,14 +39,14 @@ def read_bucket_info(bucket_dir):
     return bucket_info
 
 
-def get_bucket_partitioning(bucket_dir):
+def get_bucket_spatial_partitioning(bucket_dir):
     """Return the bucket spatial partitioning."""
     bucket_info = read_bucket_info(bucket_dir)
     partitioning_dict = bucket_info["spatial_partitioning"]
     class_name = partitioning_dict.pop("class")
     partitioning_class = getattr(importlib.import_module("gpm.bucket.partitioning"), class_name)
-    partitioning = partitioning_class(**partitioning_dict)
-    return partitioning
+    spatial_partitioning = partitioning_class(**partitioning_dict)
+    return spatial_partitioning
 
 
 def get_bucket_temporal_partitioning(bucket_dir):
@@ -55,11 +55,20 @@ def get_bucket_temporal_partitioning(bucket_dir):
     return bucket_info.get("temporal_partitioning", None)
 
 
-def write_bucket_info(bucket_dir, partitioning):
+def write_bucket_info(bucket_dir, spatial_partitioning, temporal_partitioning=None, start_time=None, end_time=None):
     """Write the bucket metadata."""
-    os.makedirs(bucket_dir, exist_ok=True)
+    # Define bucket metadata dictionary
     bucket_info = {}
-    bucket_info["spatial_partitioning"] = partitioning.to_dict()
+    # - Add spatial and temporal partitioning information
+    bucket_info["spatial_partitioning"] = spatial_partitioning.to_dict()
+    bucket_info["temporal_partitioning"] = temporal_partitioning
+    # - Update bucket temporal coverage information
+    if start_time is not None:
+        bucket_info["start_time"] = str(start_time)
+    if end_time is not None:
+        bucket_info["end_time"] = str(end_time)
+    # Write bucket metadata
+    os.makedirs(bucket_dir, exist_ok=True)
     bucket_info_filepath = os.path.join(bucket_dir, "bucket_info.yaml")
     write_yaml(bucket_info, filepath=bucket_info_filepath, sort_keys=False)
 
@@ -79,15 +88,15 @@ def get_exisiting_partitions_paths(bucket_dir, dir_trees):
 
 def get_partitions_paths(bucket_dir):
     """Get the path of the bucket partitions."""
-    partitioning = get_bucket_partitioning(bucket_dir=bucket_dir)
-    dir_trees = partitioning.directories
+    spatial_partitioning = get_bucket_spatial_partitioning(bucket_dir=bucket_dir)
+    dir_trees = spatial_partitioning.directories
     return get_exisiting_partitions_paths(bucket_dir, dir_trees)
 
 
 def get_filepaths(bucket_dir, parallel=True, file_extension=None, glob_pattern=None, regex_pattern=None):
     """Return the filepaths matching the specified filename filtering criteria."""
-    partitioning = get_bucket_partitioning(bucket_dir=bucket_dir)
-    dir_trees = partitioning.directories
+    spatial_partitioning = get_bucket_spatial_partitioning(bucket_dir=bucket_dir)
+    dir_trees = spatial_partitioning.directories
     partitions_paths = get_exisiting_partitions_paths(bucket_dir, dir_trees)
     filepaths = get_filepaths_within_paths(
         paths=partitions_paths,
@@ -101,9 +110,9 @@ def get_filepaths(bucket_dir, parallel=True, file_extension=None, glob_pattern=N
 
 def get_filepaths_by_partition(bucket_dir, parallel=True, file_extension=None, glob_pattern=None, regex_pattern=None):
     """Return a dictionary with the list of filepaths for each bucket partition."""
-    partitioning = get_bucket_partitioning(bucket_dir=bucket_dir)
-    n_levels = partitioning.n_levels
-    dir_trees = partitioning.directories
+    spatial_partitioning = get_bucket_spatial_partitioning(bucket_dir=bucket_dir)
+    n_levels = spatial_partitioning.n_levels
+    dir_trees = spatial_partitioning.directories
     partitions_paths = get_exisiting_partitions_paths(bucket_dir, dir_trees)
     dict_filepaths = get_filepaths_by_path(
         paths=partitions_paths,

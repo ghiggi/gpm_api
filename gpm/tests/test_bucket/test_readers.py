@@ -64,14 +64,14 @@ def create_bucket_archive(bucket_dir):
         "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A.HDF5",
     ]
     # Define partitioning
-    partitioning = LonLatPartitioning(size=(10, 10))
+    spatial_partitioning = LonLatPartitioning(size=(10, 10))
 
     # Run processing
     write_granules_bucket(
         # Bucket Input/Output configuration
         filepaths=filepaths,
         bucket_dir=bucket_dir,
-        partitioning=partitioning,
+        spatial_partitioning=spatial_partitioning,
         granule_to_df_func=granule_to_df_toy_func,
         # Processing options
         parallel=False,
