@@ -33,27 +33,33 @@ from gpm.utils.yaml import read_yaml, write_yaml
 
 
 def read_bucket_info(bucket_dir):
+    """Read the bucket metadata."""
     bucket_info_filepath = os.path.join(bucket_dir, "bucket_info.yaml")
     bucket_info = read_yaml(filepath=bucket_info_filepath)
     return bucket_info
 
 
 def get_bucket_partitioning(bucket_dir):
+    """Return the bucket spatial partitioning."""
     bucket_info = read_bucket_info(bucket_dir)
-    class_name = bucket_info.pop("partitioning_class")
+    partitioning_dict = bucket_info["spatial_partitioning"]
+    class_name = partitioning_dict.pop("class")
     partitioning_class = getattr(importlib.import_module("gpm.bucket.partitioning"), class_name)
-    partitioning = partitioning_class(**bucket_info)
+    partitioning = partitioning_class(**partitioning_dict)
     return partitioning
 
 
 def get_bucket_temporal_partitioning(bucket_dir):
+    """Return the bucket spatial partitioning."""
     bucket_info = read_bucket_info(bucket_dir)
-    return bucket_info.get("temporal_partitioning")
+    return bucket_info.get("temporal_partitioning", None)
 
 
 def write_bucket_info(bucket_dir, partitioning):
+    """Write the bucket metadata."""
     os.makedirs(bucket_dir, exist_ok=True)
-    bucket_info = partitioning.to_dict()
+    bucket_info = {}
+    bucket_info["spatial_partitioning"] = partitioning.to_dict()
     bucket_info_filepath = os.path.join(bucket_dir, "bucket_info.yaml")
     write_yaml(bucket_info, filepath=bucket_info_filepath, sort_keys=False)
 

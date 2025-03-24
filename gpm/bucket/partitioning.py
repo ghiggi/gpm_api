@@ -842,7 +842,7 @@ class XYPartitioning(Base2DPartitioning):
     def to_dict(self):
         """Return the partitioning settings."""
         dictionary = {
-            "partitioning_class": self.__class__.__name__,
+            "class": self.__class__.__name__,
             "extent": list(self.extent),
             "size": list(self.size),
             "levels": self.levels,
@@ -990,7 +990,7 @@ class TilePartitioning(Base2DPartitioning):
     def to_dict(self):
         """Return the partitioning settings."""
         dictionary = {
-            "partitioning_class": self.__class__.__name__,
+            "class": self.__class__.__name__,
             "extent": list(self.extent),
             "size": list(self.size),
             "n_levels": self.n_levels,
