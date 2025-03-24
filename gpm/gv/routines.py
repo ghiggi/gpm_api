@@ -437,7 +437,7 @@ def add_radar_info(ax, ds_gr, radar_size):
     )
 
 
-def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH"):
+def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", ds_sr=None):
     # Define Cartopy projection
     ccrs_gr_aeqd = ccrs.AzimuthalEquidistant(
         central_longitude=ds_gr["longitude"].item(),
@@ -450,7 +450,8 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH"):
     extent_xy = gdf.total_bounds[[0, 2, 1, 3]]
 
     # Retrieve plot kwargs
-    plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("zFactorFinal", user_plot_kwargs={"vmin": 15, "vmax": 45})
+    plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("zFactorFinal", 
+                                                   user_plot_kwargs={"vmin": 15, "vmax": 45})
 
     # Define figure settings
     figsize = (8, 4)
@@ -460,27 +461,40 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH"):
     radar_size = 40
 
     # Create the figure
-    fig, axes = plt.subplots(1, 3, width_ratios=[1, 1, 1.1], subplot_kw=subplot_kwargs, figsize=figsize, dpi=dpi)
+    fig, axes = plt.subplots(1, 3, 
+                             width_ratios=[1, 1, 1.1], 
+                             subplot_kw=subplot_kwargs, 
+                             figsize=figsize, dpi=dpi)
 
-    #### Plot SR data
+    #### - Plot GR sweep data
     axes[0].coastlines()
-    _ = plot_gdf_map(
-        ax=axes[0],
-        gdf=gdf,
-        column=sr_z_column,
-        title="SR Matched",
-        extent_xy=extent_xy,
-        # Gridline settings
-        # grid_linewidth=grid_linewidth,
-        # grid_color=grid_color,
-        # Colorbar settings
-        add_colorbar=False,
-        # Plot settings
-        cbar_kwargs=cbar_kwargs,
-        **plot_kwargs,
+    p = (
+        ds_gr[z_variable_gr]
+        .where(ds_gr[z_variable_gr] > 0)
+        .xradar_dev.plot_map(
+            ax=axes[0],
+            x="x",
+            y="y",
+            add_background=False,
+            add_gridlines=False,
+            add_labels=False,
+            add_colorbar=False,
+            cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
     )
+    p.axes.set_xlim(extent_xy[0:2])
+    p.axes.set_ylim(extent_xy[2:4])
+    p.axes.set_title("GR PPI")
     add_radar_info(ax=axes[0], ds_gr=ds_gr, radar_size=radar_size)
-
+    # - Add SR swath lines
+    if ds_sr is not None: 
+        _ = ds_sr.gpm.plot_swath_lines(ax=axes[0], 
+                                       linestyle="-",
+                                       color="black",
+                                       add_background=False,
+                                       add_gridlines=False, 
+                                       add_labels=False)
     #### - Plot GR matched data
     axes[1].coastlines()
     _ = plot_gdf_map(
@@ -499,28 +513,40 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH"):
         **plot_kwargs,
     )
     add_radar_info(ax=axes[1], ds_gr=ds_gr, radar_size=radar_size)
-
-    #### - Plot GR sweep data
+    # - Add SR swath lines
+    if ds_sr is not None: 
+        _ = ds_sr.gpm.plot_swath_lines(ax=axes[1], 
+                                       linestyle="-",
+                                       color="black",
+                                       add_background=False,
+                                       add_gridlines=False, 
+                                       add_labels=False)
+    #### Plot SR data
     axes[2].coastlines()
-    p = (
-        ds_gr[z_variable_gr]
-        .where(ds_gr[z_variable_gr] > 0)
-        .xradar_dev.plot_map(
-            ax=axes[2],
-            x="x",
-            y="y",
-            add_background=False,
-            add_gridlines=False,
-            add_labels=False,
-            add_colorbar=True,
-            cbar_kwargs=cbar_kwargs,
-            **plot_kwargs,
-        )
+    _ = plot_gdf_map(
+        ax=axes[2],
+        gdf=gdf,
+        column=sr_z_column,
+        title="SR Matched",
+        extent_xy=extent_xy,
+        # Gridline settings
+        # grid_linewidth=grid_linewidth,
+        # grid_color=grid_color,
+        # Colorbar settings
+        add_colorbar=True,
+        # Plot settings
+        cbar_kwargs=cbar_kwargs,
+        **plot_kwargs,
     )
-    p.axes.set_xlim(extent_xy[0:2])
-    p.axes.set_ylim(extent_xy[2:4])
-    p.axes.set_title("GR PPI")
     add_radar_info(ax=axes[2], ds_gr=ds_gr, radar_size=radar_size)
+    # - Add SR swath lines
+    if ds_sr is not None: 
+        _ = ds_sr.gpm.plot_swath_lines(ax=axes[2], 
+                                       linestyle="-",
+                                       color="black",
+                                       add_background=False,
+                                       add_gridlines=False, 
+                                       add_labels=False)
     return fig
 
 
@@ -1308,16 +1334,20 @@ def volume_matching(
         gr_z_column = "GR_Z_mean"
         fig = plot_quicklook(
             ds_gr=ds_gr,
+            ds_sr=ds_sr,
             gdf=gdf_match,
             sr_z_column=sr_z_column,
             gr_z_column=gr_z_column,
             z_variable_gr=z_variable_gr,
         )
+        if display_quicklook:
+            plt.show()
         if quicklook_fpath is not None:
             fig.savefig(quicklook_fpath)
-            plt.close()
-        else:
-            plt.show()
+      
+        plt.close()
+        
+            
 
     ####----------------------------------------------------------------------.
     #### Create Calibration Summary Figure
