@@ -20,7 +20,7 @@
 [**Slack**](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) | [**Documentation**](https://gpm-api.readthedocs.io/en/latest/)
 
 <div align="left">
-    
+
 ## 🚀 Quick start
 
 GPM-API provides an easy-to-use python interface to download, read, process and visualize most
