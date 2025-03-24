@@ -1,4 +1,6 @@
-# 📦 Welcome to GPM-API
+<div align="center">
+
+![ ](https://github.com/ghiggi/gpm_api_gallery/blob/main/images/gpm_api_banner.gif)
 
 |                   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -15,8 +17,10 @@
 | Community         | [![Slack](https://img.shields.io/badge/Slack-gpm_api-green.svg?logo=slack&style=flat)](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) [![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-green?logo=github&style=flat)](https://github.com/ghiggi/gpm_api/discussions)                                                                                                                                                                                                                                                                                                                                                |
 | Citation          | [![DOI](https://zenodo.org/badge/286664485.svg?style=flat)](https://doi.org/10.5281/zenodo.7753488)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
-[**Slack**](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) | [**Docs**](https://gpm-api.readthedocs.io/en/latest/)
+[**Slack**](https://join.slack.com/t/gpmapi/shared_invite/zt-28vkxzjs1-~cIYci2o3G0qEEoQJVMQRg) | [**Documentation**](https://gpm-api.readthedocs.io/en/latest/)
 
+<div align="left">
+    
 ## 🚀 Quick start
 
 GPM-API provides an easy-to-use python interface to download, read, process and visualize most
@@ -132,7 +136,7 @@ If you are new to GPM-API, we recommend starting with the following pages:
 - [Introduction to GPM sensors, products, theoretical and practical aspects](https://gpm-api.readthedocs.io/en/latest/00_introduction.html)
 - [Software installation](https://gpm-api.readthedocs.io/en/latest/02_installation.html)
 - [Configuration of GPM-API to start download GPM Data from NASA PPS and GES DISC servers](https://gpm-api.readthedocs.io/en/latest/03_quickstart.html)
-- [Basic tutorials on how to read, manipulate and visualize radar, passive microwave sensors and IMERG products](https://gpm-api.readthedocs.io/en/latest/04_tutorials.htmls)
+- [Basic tutorials on how to read, manipulate and visualize radar, passive microwave sensors and IMERG products](https://gpm-api.readthedocs.io/en/latest/04_tutorials.html)
 
 All GPM-API tutorials are available as Jupyter Notebooks in the [`tutorial`](https://github.com/ghiggi/gpm_api/tree/main/tutorials) directory.
 
