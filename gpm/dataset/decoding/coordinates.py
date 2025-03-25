@@ -74,7 +74,8 @@ def add_cmb_height(ds):
     from gpm.utils.manipulations import get_vertical_datarray_prototype
 
     if "ellipsoidBinOffset" in ds and "localZenithAngle" in ds and "range" in ds.dims:
-        # # Retrieve required DataArrays
+        # Retrieve required DataArrays
+        # - ellipsoidBinOffset is -9999.9 into KuKaGMI !
         range_bin = get_vertical_datarray_prototype(ds, fill_value=1) * ds["range"]  # start at 1 !
         ellipsoidBinOffset = ds["ellipsoidBinOffset"].isel(
             radar_frequency=0,
@@ -264,24 +265,4 @@ def set_coordinates(ds, product, scan_mode):
     if product in ["2A-GPM-SLH", "2B-GPM-CSH"] and "range" in list(ds.dims):
         ds = add_lh_height(ds)
 
-    #### IMERG
-    if "HQobservationTime" in ds:
-        da = ds["HQobservationTime"]
-        da = da.where(da >= 0)  # -9999.9 --> NaN
-        da.attrs["units"] = "minutes from the start of the current half hour"
-        da.encoding["dtype"] = "uint8"
-        da.encoding["_FillValue"] = 255
-        da.attrs.pop("_FillValue", None)
-        da.attrs.pop("CodeMissingValue", None)
-        ds["HQobservationTime"] = da
-
-    if "MWobservationTime" in ds:
-        da = ds["MWobservationTime"]
-        da = da.where(da >= 0)  # -9999.9 --> NaN
-        da.attrs["units"] = "minutes from the start of the current half hour"
-        da.attrs.pop("_FillValue", None)
-        da.attrs.pop("CodeMissingValue", None)
-        da.encoding["dtype"] = "uint8"
-        da.encoding["_FillValue"] = 255
-        ds["MWobservationTime"] = da
     return ds

@@ -39,18 +39,22 @@ def apply_cf_decoding(ds):
         https://docs.xarray.dev/en/stable/generated/xarray.decode_cf.html
     """
     # Take care of numpy 2.0 FillValue CF Decoding issue
-    # - https://github.com/pydata/xarray/issues/9381
+    # - BUG: https://github.com/pydata/xarray/issues/9381
     vars_and_coords = list(ds.data_vars) + list(ds.coords)
     if version.parse(np.__version__) >= version.parse("2.0.0"):
         for var in vars_and_coords:
             if "_FillValue" in ds[var].attrs:
-                ds[var].attrs["_FillValue"] = ds[var].data.dtype.type(ds[var].attrs["_FillValue"])
+                fillvalue = ds[var].attrs["_FillValue"]
+                ds[var].attrs["_FillValue"] = ds[var].data.dtype.type(fillvalue)
 
-    # At some point with xarray.2023.>8 currently require this
-    # --> TODO: update code in decoding attrs ...
+    # At some point with xarray.2023.>8 currently required this
+    # for var in vars_and_coords:
+    #     if "_FillValue" in ds[var].attrs:
+    #         ds[var].encoding["_FillValue"] = ds[var].attrs.pop("_FillValue")
+
     for var in vars_and_coords:
-        if "_FillValue" in ds[var].attrs:
-            ds[var].encoding["_FillValue"] = ds[var].attrs.pop("_FillValue")
+        if "_FillValue" in ds[var].encoding:
+            ds[var].attrs["_FillValue"] = ds[var].encoding.pop("_FillValue")
 
     # Decode with xr.decode_cf
     with warnings.catch_warnings():

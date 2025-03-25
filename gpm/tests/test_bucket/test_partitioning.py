@@ -750,7 +750,7 @@ class TestXYPartitioning:
         partitioning = XYPartitioning(size=size, extent=extent, levels=levels, order=levels[::-1])
         # Test results
         expected_dict = {
-            "partitioning_class": "XYPartitioning",
+            "class": "XYPartitioning",
             "extent": list(extent),
             "size": list(size),
             "levels": levels,
@@ -1275,7 +1275,7 @@ class TestTilePartitioning:
         )
         # Test results
         expected_dict = {
-            "partitioning_class": "TilePartitioning",
+            "class": "TilePartitioning",
             "extent": list(extent),
             "size": list(size),
             "n_levels": n_levels,
@@ -1310,7 +1310,7 @@ class TestTilePartitioning:
         )
         # Test results
         expected_dict = {
-            "partitioning_class": "TilePartitioning",
+            "class": "TilePartitioning",
             "extent": list(extent),
             "size": list(size),
             "n_levels": n_levels,

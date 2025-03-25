@@ -450,8 +450,7 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
     extent_xy = gdf.total_bounds[[0, 2, 1, 3]]
 
     # Retrieve plot kwargs
-    plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("zFactorFinal", 
-                                                   user_plot_kwargs={"vmin": 15, "vmax": 45})
+    plot_kwargs, cbar_kwargs = gpm.get_plot_kwargs("zFactorFinal", user_plot_kwargs={"vmin": 15, "vmax": 45})
 
     # Define figure settings
     figsize = (8, 4)
@@ -461,10 +460,7 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
     radar_size = 40
 
     # Create the figure
-    fig, axes = plt.subplots(1, 3, 
-                             width_ratios=[1, 1, 1.1], 
-                             subplot_kw=subplot_kwargs, 
-                             figsize=figsize, dpi=dpi)
+    fig, axes = plt.subplots(1, 3, width_ratios=[1, 1, 1.1], subplot_kw=subplot_kwargs, figsize=figsize, dpi=dpi)
 
     #### - Plot GR sweep data
     axes[0].coastlines()
@@ -488,13 +484,15 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
     p.axes.set_title("GR PPI")
     add_radar_info(ax=axes[0], ds_gr=ds_gr, radar_size=radar_size)
     # - Add SR swath lines
-    if ds_sr is not None: 
-        _ = ds_sr.gpm.plot_swath_lines(ax=axes[0], 
-                                       linestyle="-",
-                                       color="black",
-                                       add_background=False,
-                                       add_gridlines=False, 
-                                       add_labels=False)
+    if ds_sr is not None:
+        _ = ds_sr.gpm.plot_swath_lines(
+            ax=axes[0],
+            linestyle="-",
+            color="black",
+            add_background=False,
+            add_gridlines=False,
+            add_labels=False,
+        )
     #### - Plot GR matched data
     axes[1].coastlines()
     _ = plot_gdf_map(
@@ -514,13 +512,15 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
     )
     add_radar_info(ax=axes[1], ds_gr=ds_gr, radar_size=radar_size)
     # - Add SR swath lines
-    if ds_sr is not None: 
-        _ = ds_sr.gpm.plot_swath_lines(ax=axes[1], 
-                                       linestyle="-",
-                                       color="black",
-                                       add_background=False,
-                                       add_gridlines=False, 
-                                       add_labels=False)
+    if ds_sr is not None:
+        _ = ds_sr.gpm.plot_swath_lines(
+            ax=axes[1],
+            linestyle="-",
+            color="black",
+            add_background=False,
+            add_gridlines=False,
+            add_labels=False,
+        )
     #### Plot SR data
     axes[2].coastlines()
     _ = plot_gdf_map(
@@ -540,13 +540,15 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
     )
     add_radar_info(ax=axes[2], ds_gr=ds_gr, radar_size=radar_size)
     # - Add SR swath lines
-    if ds_sr is not None: 
-        _ = ds_sr.gpm.plot_swath_lines(ax=axes[2], 
-                                       linestyle="-",
-                                       color="black",
-                                       add_background=False,
-                                       add_gridlines=False, 
-                                       add_labels=False)
+    if ds_sr is not None:
+        _ = ds_sr.gpm.plot_swath_lines(
+            ax=axes[2],
+            linestyle="-",
+            color="black",
+            add_background=False,
+            add_gridlines=False,
+            add_labels=False,
+        )
     return fig
 
 
@@ -1344,10 +1346,8 @@ def volume_matching(
             plt.show()
         if quicklook_fpath is not None:
             fig.savefig(quicklook_fpath)
-      
+
         plt.close()
-        
-            
 
     ####----------------------------------------------------------------------.
     #### Create Calibration Summary Figure

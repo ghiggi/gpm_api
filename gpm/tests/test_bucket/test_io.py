@@ -41,8 +41,8 @@ from gpm.bucket.partitioning import LonLatPartitioning
 
 
 def create_test_bucket(bucket_dir):
-    partitioning = LonLatPartitioning(size=(10, 10), flavor="hive")
-    write_bucket_info(bucket_dir=bucket_dir, partitioning=partitioning)
+    spatial_partitioning = LonLatPartitioning(size=(10, 10), flavor="hive")
+    write_bucket_info(bucket_dir=bucket_dir, spatial_partitioning=spatial_partitioning)
     # Define test paths
     paths_components = [
         ("lon_bin=-5.0", "lat_bin=5.0", "2A.GPM.DPR.V9-20211125.20230705-S013942-E031214.041760.V07A_0.parquet"),

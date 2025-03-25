@@ -28,6 +28,14 @@
 import yaml
 
 
+class NoAliasDumper(yaml.SafeDumper):
+    """YAML Safe Dumper class avoiding use of aliases."""
+
+    def ignore_aliases(self, data):  # noqa ARG002
+        """Ignore aliases."""
+        return True
+
+
 def read_yaml(filepath: str) -> dict:
     """Read a YAML file into a dictionary.
 
@@ -56,4 +64,4 @@ def write_yaml(dictionary, filepath, sort_keys=False):
 
     """
     with open(filepath, "w") as f:
-        yaml.dump(dictionary, f, sort_keys=sort_keys)
+        yaml.dump(dictionary, f, sort_keys=sort_keys, Dumper=NoAliasDumper)
