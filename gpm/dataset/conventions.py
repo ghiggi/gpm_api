@@ -146,11 +146,6 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     ds = standardize_dataarrays_attrs(ds, product)
 
     ##------------------------------------------------------------------------.
-    # Set relevant coordinates
-    # - Add range id, radar and pmw frequencies ...
-    ds = set_coordinates(ds, product, scan_mode)
-
-    ##------------------------------------------------------------------------.
     # Decode dataset
     # - With numpy > 2.0, the _FillValue attribute must be a numpy scalar so that CF decoding is applied
     # - _FillValue is moved from attrs to encoding !
@@ -158,6 +153,11 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
         ds = apply_cf_decoding(ds)
     if "time_bnds" in ds:
         ds["time_bnds"] = ds["time_bnds"].astype("M8[ns]").compute()
+
+    ##------------------------------------------------------------------------.
+    # Set relevant coordinates
+    # - Add range id, radar and pmw frequencies ...
+    ds = set_coordinates(ds, product, scan_mode)
 
     ###-----------------------------------------------------------------------.
     ## Check swath time coordinate

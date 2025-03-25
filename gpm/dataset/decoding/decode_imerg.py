@@ -79,8 +79,14 @@ def decode_probabilityLiquidPrecipitation(da):
 
 def decode_MWobservationTime(da):
     """Decode the IMERG V7 variable MWobservationTime."""
+    da = da.where(da >= 0)  # -9999.9 --> NaN
     da.attrs["valid_min"] = 0
     da.attrs["valid_max"] = 29
+    da.attrs.pop("_FillValue", None)
+    da.attrs.pop("CodeMissingValue", None)
+    da.attrs["units"] = "minutes from the start of the current half hour"
+    da.encoding["dtype"] = "uint8"
+    da.encoding["_FillValue"] = 255
     return da
 
 

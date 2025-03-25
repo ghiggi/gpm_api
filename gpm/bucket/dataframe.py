@@ -25,7 +25,6 @@
 
 # -----------------------------------------------------------------------------.
 """This module implements manipulation wrappers for multiple DataFrame classes."""
-import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
@@ -75,13 +74,14 @@ def df_add_column(df, column, values):
         # Do not use pd.Series(values) because mess up if df has Index/Multindex
         return df.assign(**{column: values})
     if isinstance(df, dd.DataFrame):
+        df[column] = pd.Series(values)
         # 'df[column] = pd.Series(values)' conserve npartitions
         # 'df[column] = pd.Series(values)' does not work if npartitions=1
         # BUG: THIS DOES NOT WORK IF DF HAS A MULTINDEX !
-        if df.npartitions > 1:
-            df[column] = pd.Series(values)
-        else:  # npartitions=1
-            df[column] = dask.array.from_array(values)  # does not conserve npartition
+        # if df.npartitions > 1:
+        #     df[column] = pd.Series(values)
+        # else:  # npartitions=1
+        #     df[column] = dask.array.from_array(values)  # does not conserve npartition
         return df
     # else: # pyarrow.Table
     return df.append_column(column, pa.array(values))

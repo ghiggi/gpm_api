@@ -74,7 +74,6 @@ def granule_to_df_toy_func(filepath):
 # tmp_path = pathlib.Path("/tmp/bucket01")
 
 DF_TYPES = ["pandas", "dask"]
-DF_TYPES = ["pandas"]  # TODO: DEBUG DASK ERROR !
 
 
 @pytest.mark.parametrize("df_type", DF_TYPES)
