@@ -34,6 +34,30 @@ import pyarrow as pa
 pd.options.mode.copy_on_write = True
 
 
+def pl_cut(values, bounds, include_lowest=True, right=True):
+    """Polars equivalent functionality of pd.cut.
+
+    It returns integer indicators of the bins. Values outside bounds are set to np.nan.
+    """
+    labels = np.arange(-1, len(bounds)).astype(str)  # first label (-1) for out of bounds
+    indices = values.cut(
+        breaks=bounds,
+        labels=labels,
+        left_closed=not right,  # left_closed=False equivalent of pandas right=True
+        include_breaks=False,
+    )
+
+    indices = indices.cast(float)
+    # Include values of first bins (include_lowest=True of pd.cut)
+    if include_lowest:
+        indices[values == bounds[0]] = 0
+    # Replace -1 and len(bounds)
+    indices[indices == -1.0] = None
+    indices[indices == len(bounds) - 1] = None
+    indices[indices.is_nan()] = None
+    return indices
+
+
 def check_valid_dataframe(df):
     """Check the dataframe class."""
     valid_types = (pl.DataFrame, pl.LazyFrame, pa.Table, dd.DataFrame, pd.DataFrame)

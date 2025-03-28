@@ -30,6 +30,9 @@ from functools import reduce, wraps
 
 import numpy as np
 import pandas as pd
+import polars as pl
+import pyproj.crs
+import xarray as xr
 
 from gpm.bucket.dataframe import (
     check_valid_dataframe,
@@ -38,7 +41,9 @@ from gpm.bucket.dataframe import (
     df_is_column_in,
     df_select_valid_rows,
     df_to_pandas,
+    pl_cut,
 )
+from gpm.dataset.crs import set_dataset_crs
 from gpm.utils.geospatial import (
     Extent,
     _check_size,
@@ -57,6 +62,7 @@ pd.options.mode.copy_on_write = True
 
 
 def _apply_flatten_arrays(self, func, x, y, **kwargs):
+    """Flat N-dimension numpy array. Polars/Pandas Series are passed through."""
     if isinstance(x, np.ndarray) and isinstance(y, np.ndarray) and x.ndim == 2 and y.ndim == 2:
         original_shape = x.shape
         x_flat = x.flatten()
@@ -96,9 +102,36 @@ def mask_invalid_indices(flag_value=np.nan):
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
+            # -----------------------------------------------.
             # Extract arguments
             x_indices = kwargs.get("x_indices", args[0] if len(args) > 0 else None)
             y_indices = kwargs.get("y_indices", args[1] if len(args) > 1 else None)
+
+            # -----------------------------------------------.
+            # Deal with polars series
+            if isinstance(x_indices, pl.Series):
+                invalid_indices = (
+                    ~x_indices.is_finite() | ~y_indices.is_finite() | x_indices.is_null() | y_indices.is_null()
+                )
+                # Set dummy value for invalid indices
+                x_indices[invalid_indices] = 0  # dummy index
+                y_indices[invalid_indices] = 0  # dummy index
+                # Ensure indices are integers !
+                x_indices = x_indices.cast(int)
+                y_indices = y_indices.cast(int)
+                # Call the original function
+                result = func(self, x_indices, y_indices, **kwargs)
+                # Apply the mask to the result
+                if isinstance(result, tuple):
+                    list_results = []
+                    for r in result:
+                        r[invalid_indices] = flag_value
+                        list_results.append(r)
+                    return tuple(list_results)
+                result[invalid_indices] = flag_value
+                return result
+            # -----------------------------------------------.
+            ## Deal with numpy or pandas series
             # Ensure is a 1D numpy array
             x_indices = np.atleast_1d(np.asanyarray(x_indices))
             y_indices = np.atleast_1d(np.asanyarray(y_indices))
@@ -204,9 +237,16 @@ def get_centroids_from_bounds(bounds):
 def query_indices(values, bounds):
     """Return the index for the specified coordinates.
 
-    Invalid values (NaN, None) or out of bounds values returns NaN.
+    It values is a polars.Series, returns a polars.Series !
+    Otherwise it returns a numpy.array.
+    Invalid values (NaN, None) or out of bounds values returns NaN (or null in polars).
     """
-    values = np.atleast_1d(np.asanyarray(values)).astype(float)
+    if isinstance(values, pl.Series):
+        return pl_cut(values, bounds, include_lowest=True, right=True)
+    # Ensure 1d-dimensional array (convert scalars if specified)
+    values = np.atleast_1d(np.asanyarray(values))
+    # Convert to float if not yet the case
+    values = values.astype(float)
     return pd.cut(values, bins=bounds, labels=False, include_lowest=True, right=True)
 
 
@@ -261,13 +301,22 @@ def get_bounds(size, vmin, vmax):
 
 
 def justify_labels(labels, length):
+    """Right justify labels."""
+    if isinstance(labels, pl.Series):
+        return labels.str.rjust(width=length, fill_char="0")
     return np.char.rjust(labels, length, "0")
 
 
 def get_tile_xy_labels(x_indices, y_indices, origin, n_x, n_y, justify=False):
     """Return the 2D tile labels for the specified x,y indices."""
-    x_labels = x_indices.astype(str)
-    y_labels = y_indices.astype(str) if origin == "top" else (n_y - 1 - y_indices).astype(str)
+    # If input is polars series, cast with polars (much faster)
+    if isinstance(x_indices, pl.Series):
+        x_labels = x_indices.cast(str)
+        y_labels = y_indices.cast(str) if origin == "top" else (n_y - 1 - y_indices).cast(str)
+    else:
+        x_labels = x_indices.astype(str)
+        y_labels = y_indices.astype(str) if origin == "top" else (n_y - 1 - y_indices).astype(str)
+
     # Optional justify the labels
     if justify:
         x_labels = justify_labels(x_labels, length=len(str(n_x)))
@@ -277,6 +326,9 @@ def get_tile_xy_labels(x_indices, y_indices, origin, n_x, n_y, justify=False):
 
 def get_tile_id_labels(x_indices, y_indices, origin, direction, n_x, n_y, justify):
     """Return the 1D tile labels for the specified x,y indices."""
+    # TODO: Polars ad-hoc function not yet implemented
+    x_indices = np.asanyarray(x_indices)
+    y_indices = np.asanyarray(y_indices)
     if direction == "x":
         if origin == "top":
             flattened_indices = np.ravel_multi_index((y_indices, x_indices), (n_y, n_x), order="C")
@@ -398,6 +450,9 @@ class Base2DPartitioning:
         """Return the partition centroids for the specified x,y indices."""
         x_centroids = self.x_centroids[x_indices]
         y_centroids = self.y_centroids[y_indices]
+        # Return tuple
+        if isinstance(x_indices, pl.Series):
+            return pl.Series(x_centroids), pl.Series(y_centroids)
         return x_centroids, y_centroids
 
     @flatten_xy_arrays
@@ -665,11 +720,12 @@ class Base2DPartitioning:
         # Add centroids to dataframe
         df = df_add_column(df=df, column=x_coord, values=x_centroids)
         df = df_add_column(df=df, column=y_coord, values=y_centroids)
+        # Identify invalid rows
+        invalid_rows = x_centroids.is_nan() if isinstance(x_centroids, pl.Series) else np.isnan(x_centroids)
         # Check if invalid labels
-        invalid_rows = np.isnan(x_centroids)
-        invalid_rows_indices = np.where(invalid_rows)[0]
-        if invalid_rows_indices.size > 0:
+        if invalid_rows.any():
             if not remove_invalid_rows:
+                invalid_rows_indices = np.where(invalid_rows)[0]
                 raise ValueError(f"Invalid centroids at rows: {invalid_rows_indices.tolist()}")
             # Remove invalid labels if remove_invalid_rows=True
             df = df_select_valid_rows(df, valid_rows=~invalid_rows)
@@ -831,11 +887,25 @@ class XYPartitioning(Base2DPartitioning):
         """Return the partition labels as function of the specified 2D partitions indices."""
         x_labels_value = self.x_centroids[x_indices].round(self._labels_decimals[0])
         y_labels_value = self.y_centroids[y_indices].round(self._labels_decimals[1])
+
+        # If input is polars series, return polars
+        if isinstance(x_indices, pl.Series):
+            x_labels_value = pl.Series(x_labels_value)
+            y_labels_value = pl.Series(y_labels_value)
+            if self._labels_decimals[0] == 0:
+                x_labels_value = x_labels_value.cast(int)
+            if self._labels_decimals[1] == 0:
+                y_labels_value = y_labels_value.cast(int)
+            x_labels = x_labels_value.cast(str)
+            y_labels = y_labels_value.cast(str)
+            return x_labels, y_labels
+
+        # If numpy or pandas
         if self._labels_decimals[0] == 0:
             x_labels_value = x_labels_value.astype(int)
         if self._labels_decimals[1] == 0:
             y_labels_value = y_labels_value.astype(int)
-        x_labels = x_labels_value.astype(str)
+        x_labels = x_labels_value.astype(str)  # TODO: very slow for million points
         y_labels = y_labels_value.astype(str)
         return x_labels, y_labels
 
@@ -1093,3 +1163,16 @@ class LonLatPartitioning(XYPartitioning):
         """Return the directory trees with data within the distance/size from a point."""
         dict_labels = self.get_partitions_around_point(lon=lon, lat=lat, distance=distance, size=size)
         return self._directories(dict_labels=dict_labels)
+
+    @property
+    def dataset_grid(self):
+        """Return xarray Dataset grid."""
+        data = np.zeros(self.shape)
+        da = xr.DataArray(
+            data,
+            dims=("lat", "lon"),
+            coords={"lon": self.x_labels.astype(float), "lat": self.y_labels.astype(float)},
+        )
+        ds = da.to_dataset(name="data")
+        ds = set_dataset_crs(ds, crs=pyproj.CRS.from_epsg(4326))
+        return ds

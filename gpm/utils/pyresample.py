@@ -49,14 +49,16 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
     # TODO: segmentation fault occurs if input dataset to remap is a numpy array !
 
     # Get x and y dimensions
-    x_dim, y_dim = get_spatial_dimensions(src_ds)
+    src_x_dim, src_y_dim = get_spatial_dimensions(src_ds)
+    dst_x_dim, dst_y_dim = get_spatial_dimensions(dst_ds)
 
     # Reorder dimensions to be y, x, ...
-    src_ds = src_ds.transpose(y_dim, x_dim, ...)
-    dst_ds = dst_ds.transpose(y_dim, x_dim, ...)
+    src_ds = src_ds.transpose(src_y_dim, src_x_dim, ...)
+    dst_ds = dst_ds.transpose(dst_y_dim, dst_x_dim, ...)
 
     # Rename dimensions to x, y for pyresample compatibility
-    src_ds = src_ds.swap_dims({y_dim: "y", x_dim: "x"})
+    src_ds = src_ds.swap_dims({src_y_dim: "y", src_x_dim: "x"})
+    # dst_ds = dst_ds.swap_dims({dst_y_dim: "y", dst_x_dim: "x"})
 
     # Retrieve source and destination area
     src_area = src_ds.gpm.pyresample_area
@@ -74,11 +76,11 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
             y_coord: xr.DataArray(dst_ds[y_coord].data, dims=list(dst_ds[y_coord].dims), attrs=dst_ds[y_coord].attrs),
         }
     else:  # AreaDefinition
-        x_arr, y_arr = dst_area.get_proj_coords()
+        # x_arr, y_arr = dst_area.get_proj_coords()
         x_coord, y_coord = _get_proj_dim_coords(dst_ds)  # TODO: dst_ds.gpm.x, # dst_ds.gpm.y
         dst_spatial_coords = {
-            x_coord: xr.DataArray(x_arr, dims=list(dst_ds[x_coord].dims), attrs=dst_ds[x_coord].attrs),
-            y_coord: xr.DataArray(y_arr, dims=list(dst_ds[y_coord].dims), attrs=dst_ds[y_coord].attrs),
+            x_coord: xr.DataArray(dst_ds[x_coord].data, dims=list(dst_ds[x_coord].dims), attrs=dst_ds[x_coord].attrs),
+            y_coord: xr.DataArray(dst_ds[y_coord].data, dims=list(dst_ds[y_coord].dims), attrs=dst_ds[y_coord].attrs),
         }
         # Update units attribute if was rad or radians for geostationary data !
         if dst_spatial_coords[x_coord].attrs.get("units", "") in ["rad", "radians"]:
@@ -115,7 +117,7 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
 
     # Revert to original spatial dimensions (of destination dataset)
     x_dim, y_dim = get_spatial_dimensions(dst_ds)
-    ds = ds.swap_dims({"y": y_dim, "x": x_dim})
+    ds = ds.swap_dims({"y": dst_y_dim, "x": dst_x_dim})
 
     # Add spatial coordinates
     ds = ds.assign_coords(dst_spatial_coords)

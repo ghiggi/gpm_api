@@ -29,7 +29,9 @@ import datetime
 
 import numpy as np
 import pandas as pd
+import pyproj
 
+from gpm.dataset.crs import set_dataset_crs
 from gpm.utils.xarray import xr_drop_constant_dimension, xr_first
 
 
@@ -169,17 +171,25 @@ def overpass_to_dataset(df_overpass):
     ds_swath["gpm_id"] = xr_first(ds_swath["gpm_id"], dim="cross_track")
     ds_swath["gpm_cross_track_id"] = xr_first(ds_swath["gpm_cross_track_id"], dim="along_track")
 
-    # Drop dimension for variables that are all equals along a dimension
-    # - If all values are nan, drop dimension
-    ds_swath = xr_drop_constant_dimension(ds_swath)
-
-    # Set coordinates
+    # Define set coordinates
     candidate_coords = ["lon", "lat", "time", "gpm_id", "gpm_along_track_id", "gpm_cross_track_id"]
     available_coords = [coord for coord in candidate_coords if coord in ds_swath]
+
+    # Drop dimension for coordinates  that are all equals along a dimension
+    # - If all values are nan, drop dimension
+    ds_swath[available_coords] = xr_drop_constant_dimension(ds_swath[available_coords])
+
+    # Set coordinates
     ds_swath = ds_swath.set_coords(available_coords)
 
     # Drop dummy index
     ds_swath = ds_swath.drop_vars(["x_index", "y_index"])
+
+    # Reorder dimensions
+    ds_swath = ds_swath.transpose("cross_track", "along_track", ...)
+
+    # Add CRS
+    ds_swath = set_dataset_crs(ds_swath, crs=pyproj.CRS.from_epsg(4326))
     return ds_swath
 
 

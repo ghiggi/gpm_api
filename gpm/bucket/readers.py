@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module provide utilities to read GPM Geographic Buckets Apache Parquet files."""
+import inspect
 import os
 
 import dask.dataframe as dd
@@ -97,7 +98,7 @@ def _change_backend_from_polars(df, backend):
     return df
 
 
-def _read_dataframe(source, backend, filters=None, **polars_kwargs):
+def _read_dataframe(source, backend, filters=None, filter_expressions=None, **polars_kwargs):
     """Read bucket with polars and convert to backend of choice."""
     if source is None or len(source) == 0:
         raise ValueError("No files available matching your request.")
@@ -106,17 +107,42 @@ def _read_dataframe(source, backend, filters=None, **polars_kwargs):
     if "hive_partitioning" not in polars_kwargs:
         polars_kwargs["hive_partitioning"] = False
     # Read dataframe with polars
-    if "columns" not in polars_kwargs:  # backend == "polars_lazy":
+    columns = polars_kwargs.pop("columns", None)
+    if backend == "polars_lazy" or columns is None:
         is_lazy = True
+        # Get valid parameter names for pl.scan_parquet
+        valid_params = inspect.signature(pl.scan_parquet).parameters.keys()
+
+        # Filter out keys that are not valid parameters
+        filtered_polars_kwargs = {k: v for k, v in polars_kwargs.items() if k in valid_params}
+
         df = pl.scan_parquet(
             source=source,
-            **polars_kwargs,
+            # does not allow column subsetting !
+            **filtered_polars_kwargs,
         )
+
+        # Subset columns
+        if columns is not None:
+            df = df.select(columns)  # projection pushdown
+
+        # Alternative but even slower
+        # df = pl.concat([pl.scan_parquet(fpath,
+        #                                 **filtered_polars_kwargs
+        #                                 ).select(columns).filter(*filter_expressions)
+        #                 for fpath in source])
+
     else:
         df = pl.read_parquet(
             source=source,
+            columns=columns,
             **polars_kwargs,
         )
+
+    # Apply custom polars filtering (before spatial subsettings)
+    # --> Allow to specify filters which reduces the number of rows much aggressively
+    if filter_expressions is not None:
+        df = df.filter(*filter_expressions)
 
     # Apply spatial filtering to remove unrelevant data within partitions
     df = apply_spatial_filters(df, filters=filters)
@@ -150,6 +176,7 @@ def read_bucket(
     # Dataframe output
     backend="polars",
     # Reader arguments
+    filter_expressions=None,
     **polars_kwargs,
 ):
     """
@@ -267,4 +294,10 @@ def read_bucket(
                 regex_pattern=regex_pattern,
             )
     # Read the dataframe
-    return _read_dataframe(source=source, backend=backend, filters=filters, **polars_kwargs)
+    return _read_dataframe(
+        source=source,
+        backend=backend,
+        filters=filters,
+        filter_expressions=filter_expressions,
+        **polars_kwargs,
+    )

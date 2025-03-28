@@ -28,6 +28,7 @@
 import dask
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from gpm.dataset.granule import remove_unused_var_dims
 from gpm.utils.xarray import ensure_unique_chunking
@@ -121,6 +122,11 @@ def compute_2d_histogram(df, x, y, var=None, x_bins=10, y_bins=10, x_labels=None
         Dataset with dimensions corresponding to binned variables and
         data variables for each statistic
     """
+    # If polars, cast to pandas
+    if isinstance(df, pl.DataFrame):
+        df = df.to_pandas()
+
+    # Copy data
     df = df.copy()
 
     # If no var specified, create dummy variable
@@ -158,14 +164,14 @@ def compute_2d_histogram(df, x, y, var=None, x_bins=10, y_bins=10, x_labels=None
     # Define statistics to compute
     if var_specified:
         list_stats = [
-            (f"{prefix}count", "count"),
+            ("count", "count"),
             (f"{prefix}median", "median"),
             (f"{prefix}std", "std"),
             (f"{prefix}min", "min"),
             (f"{prefix}max", "max"),
         ]
     else:
-        list_stats = [(f"{prefix}count", "count")]
+        list_stats = [("count", "count")]
 
     # Compute statistics
     df_stats = df.groupby([f"{x}_binned", f"{y}_binned"])[var].agg(list_stats)

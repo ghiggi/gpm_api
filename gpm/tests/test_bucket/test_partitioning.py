@@ -42,6 +42,7 @@ from gpm.bucket.partitioning import (
     get_array_combinations,
     get_bounds,
     get_n_decimals,
+    query_indices,
 )
 
 
@@ -64,6 +65,71 @@ def test_get_array_combinations():
     x_out, y_out = get_array_combinations(x, y)
     np.testing.assert_allclose(x_out, [1, 2, 3, 1, 2, 3])
     np.testing.assert_allclose(y_out, [4, 4, 4, 5, 5, 5])
+
+
+class TestQueryIndices:
+    """Test suite for the query_indices function."""
+
+    @pytest.mark.parametrize("use_polars", [False, True])
+    def test_valid_values(self, use_polars):
+        """Test query_indices with valid values within the bounds."""
+        values = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0]
+        bounds = [0, 2, 4]
+        # With bins: [0,2] and (2,4], expected indices are:
+        # - 0.0, 0.5, 1.0, 1.5, 2.0 -> bin 0
+        # - 2.5, 3.0, 4.0 -> bin 1
+        # Note that 0.0 and 4.0 must be included in bin 0 and bin 1 !
+        expected = np.array([0, 0, 0, 0, 0, 1, 1, 1], dtype=float)
+        if use_polars:
+            values = pl.Series(values)
+        result = query_indices(values, bounds)
+        # Convert result to numpy array regardless of type.
+        result_np = result.to_numpy() if hasattr(result, "to_numpy") else np.asarray(result)
+        np.testing.assert_array_equal(result_np, expected)
+
+    @pytest.mark.parametrize("use_polars", [False, True])
+    def test_nan_input(self, use_polars):
+        """Test query_indices with np.nan input."""
+        values = [np.nan, 1.0, 3.0]
+        bounds = [0, 2, 4]
+        # np.nan should remain np.nan, others as usual.
+        expected = np.array([np.nan, 0, 1], dtype=float)
+        if use_polars:
+            values = pl.Series(values)
+        result = query_indices(values, bounds)
+        result_np = result.to_numpy() if hasattr(result, "to_numpy") else np.asarray(result)
+        np.testing.assert_array_equal(np.isnan(result_np), np.isnan(expected))
+
+    @pytest.mark.parametrize("use_polars", [False, True])
+    def test_none_input(self, use_polars):
+        """Test query_indices with None as input."""
+        values = [None, 1.5, 3.5]
+        bounds = [0, 2, 4]
+        # None converts to np.nan; expected: np.nan, 0, 1.
+        expected = np.array([np.nan, 0, 1], dtype=float)
+        if use_polars:
+            values = pl.Series(values)
+        result = query_indices(values, bounds)
+        result_np = result.to_numpy() if hasattr(result, "to_numpy") else np.asarray(result)
+        np.testing.assert_array_equal(np.isnan(result_np), np.isnan(expected))
+
+    @pytest.mark.parametrize("use_polars", [False, True])
+    def test_out_of_bounds(self, use_polars):
+        """Test query_indices with values outside the provided bounds."""
+        values = [-1, 1, 5]
+        bounds = [0, 2, 4]
+        # -1 and 5 are out of bounds so should be np.nan; 1 is within the first bin.
+        expected = np.array([np.nan, 0, np.nan], dtype=float)
+        if use_polars:
+            values = pl.Series(values)
+        result = query_indices(values, bounds)
+        result_np = result.to_numpy() if hasattr(result, "to_numpy") else np.asarray(result)
+        # Compare nan positions and non-nan equality.
+        comparison = np.isnan(result_np) == np.isnan(expected)
+        for res, exp in zip(result_np, expected, strict=False):
+            if not np.isnan(exp):
+                assert res == exp
+        assert np.all(comparison)
 
 
 class TestXYPartitioning:

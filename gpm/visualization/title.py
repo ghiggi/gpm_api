@@ -81,13 +81,12 @@ def get_dataset_title(
 
     # Get GPM product name
     product = ds.attrs.get("gpm_api_product", "")
-    title_str = product
 
     # Make title in Capital Case
-    title_str = " ".join([word[0].upper() + word[1:] for word in title_str.split(" ")])
+    title_str = " ".join([word[0].upper() + word[1:] for word in product.split(" ")]) if product != "" else ""
 
     # Add time
-    if add_timestep and (is_orbit(ds) or ds["time"].size == 1):
+    if add_timestep and "time" in ds.coords and (is_orbit(ds) or ds["time"].size == 1):
         time_str = get_time_str(
             timesteps=ds["time"].to_numpy(),
             time_idx=time_idx,
@@ -138,18 +137,20 @@ def get_dataarray_title(
     from gpm.checks import is_orbit
 
     # Get variable name
-    variable = da.name
-    # Get product name
+    variable = da.name if isinstance(da.name, str) else ""
+
+    # Get GPM product name
     product = da.attrs.get("gpm_api_product", "")
 
     # Create title string
-    title_str = product + " " + variable if prefix_product and product != "" else da.name
+    title_str = product + " " + variable if prefix_product and product != "" else variable
 
     # Make title in Capital Case
-    title_str = " ".join([word[0].upper() + word[1:] for word in title_str.split(" ")])
+    if title_str != "":
+        title_str = " ".join([word[0].upper() + word[1:] for word in title_str.split(" ")])
 
     # Add time
-    if add_timestep and (is_orbit(da) or da["time"].size == 1):
+    if add_timestep and "time" in da.coords and (is_orbit(da) or da["time"].size == 1):
         time_str = get_time_str(
             timesteps=da["time"].to_numpy(),
             time_idx=time_idx,
