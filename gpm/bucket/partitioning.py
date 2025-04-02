@@ -944,6 +944,18 @@ class XYPartitioning(Base2DPartitioning):
             self._ylabels = y_labels
         return self._ylabels
 
+    def dataset_grid(self, crs):
+        """Return xarray Dataset grid."""
+        data = np.zeros(self.shape)
+        da = xr.DataArray(
+            data,
+            dims=("y", "x"),
+            coords={"x": self.x_labels.astype(float), "y": self.y_labels.astype(float)},
+        )
+        ds = da.to_dataset(name="data")
+        ds = set_dataset_crs(ds, crs=crs)
+        return ds
+
 
 class TilePartitioning(Base2DPartitioning):
     """

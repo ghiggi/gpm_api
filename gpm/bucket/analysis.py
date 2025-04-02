@@ -29,6 +29,7 @@ import datetime
 
 import numpy as np
 import pandas as pd
+import polars as pl
 import pyproj
 
 from gpm.dataset.crs import set_dataset_crs
@@ -59,31 +60,51 @@ def get_list_overpass_time(timesteps, interval=None):
     # Compute time difference
     time_diff = np.diff(timesteps)
 
-    # Initialize
-    list_time_periods = []
-    current_start_time = timesteps[0]
-    for i, dt in enumerate(time_diff):
-        if i == 0:
-            continue
-        if dt > interval:
-            end_time = timesteps[i]
-            time_period = (current_start_time, end_time)
-            list_time_periods.append(time_period)
-            # Update
-            current_start_time = timesteps[i + 1]
+    # Identify indices where the gap exceeds the allowed interval
+    gap_indices = np.where(time_diff > interval)[0]
 
-    # Add the final group
-    list_time_periods.append((current_start_time, timesteps[-1]))
+    # Determine the start indices for each group (the first element of the group)
+    start_indices = np.concatenate(([0], gap_indices + 1))
+
+    # Determine the end indices for each group (the last element of the group)
+    end_indices = np.concatenate((gap_indices, [timesteps.size - 1]))
+
+    # Define list time periods
+    list_time_periods = [
+        (timesteps[start], timesteps[end]) for start, end in zip(start_indices, end_indices, strict=False)
+    ]
+
+    # # Initialize
+    # list_time_periods = []
+    # current_start_time = timesteps[0]
+    # for i, dt in enumerate(time_diff):
+    #     if i == 0:
+    #         continue
+    #     if dt > interval:
+    #         end_time = timesteps[i]
+    #         time_period = (current_start_time, end_time)
+    #         list_time_periods.append(time_period)
+    #         # Update
+    #         current_start_time = timesteps[i + 1]
+
+    # # Add the final group
+    # list_time_periods.append((current_start_time, timesteps[-1]))
     return list_time_periods
 
 
-def split_by_overpass(df, interval=None):
+def split_by_overpass(df, interval=None, max_overpass=np.inf):
     """Split dataframe by overpass."""
     list_time_periods = get_list_overpass_time(timesteps=df["time"], interval=interval)
-    list_df = [
-        df[np.logical_and(df["time"] >= start_time, df["time"] <= end_time)]
-        for start_time, end_time in list_time_periods
-    ]
+    list_time_periods = list_time_periods[: min(len(list_time_periods), max_overpass)]
+    if isinstance(df, pl.DataFrame):
+        list_df = [
+            df.filter(pl.col("time").is_between(start_time, end_time)) for start_time, end_time in list_time_periods
+        ]
+    else:
+        list_df = [
+            df[np.logical_and(df["time"] >= start_time, df["time"] <= end_time)]
+            for start_time, end_time in list_time_periods
+        ]
     return list_df
 
 
@@ -149,6 +170,9 @@ def overpass_to_dataset(df_overpass):
     The resulting dataset will have missing geolocation for footprints
     that are not included in the df_overpass.
     """
+    if isinstance(df_overpass, pl.DataFrame):
+        df_overpass = df_overpass.to_pandas()
+
     # Retrieve dimension indices
     (x_index, x_values), (y_index, y_values) = get_swath_indices(df_overpass)
     df_overpass["x_index"] = x_values

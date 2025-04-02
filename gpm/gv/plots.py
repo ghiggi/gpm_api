@@ -204,14 +204,17 @@ def plot_gdf_map(
     )
 
     # Plot data
-    p = gdf.plot(
+    ax = gdf.plot(
         column=column,
         legend=False,
         **plot_kwargs,
     )
-    p.axes.set_xlim(extent_xy[0:2])
-    p.axes.set_ylim(extent_xy[2:4])
-    p.axes.set_title(title)
+    ax.set_xlim(extent_xy[0:2])
+    ax.set_ylim(extent_xy[2:4])
+    ax.set_title(title)
+
+    # Retrieve mappable
+    p = ax.collections[-1]
 
     # Convert x and y axis tick labels to kilometers
     x_formatter = mticker.FuncFormatter(lambda x, pos: f"{x/1000:.0f}")  # noqa
@@ -231,7 +234,7 @@ def plot_gdf_map(
 
     # Add colorbar
     if add_colorbar:
-        plot_colorbar(p=p.collections[0], ax=p.axes, **cbar_kwargs)
+        plot_colorbar(p=p, ax=p.axes, **cbar_kwargs)
     return p
 
 

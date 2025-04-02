@@ -313,6 +313,7 @@ def plot_transect_line(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=False,
     )
 
     # Retrieve start and end coordinates

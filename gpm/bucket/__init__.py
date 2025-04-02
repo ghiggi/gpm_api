@@ -39,13 +39,14 @@ if not importlib.util.find_spec("polars"):
         "Please install it using the following command: "
         "conda install -c conda-forge polars",
     )
-from gpm.bucket.partitioning import LonLatPartitioning, TilePartitioning
+from gpm.bucket.partitioning import LonLatPartitioning, TilePartitioning, XYPartitioning
 from gpm.bucket.readers import read_bucket as read
 from gpm.bucket.routines import merge_granule_buckets, write_bucket, write_granules_bucket
 
 __all__ = [
     "LonLatPartitioning",
     "TilePartitioning",
+    "XYPartitioning",
     "merge_granule_buckets",
     "read",
     "write_bucket",

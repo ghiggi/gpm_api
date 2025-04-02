@@ -26,6 +26,7 @@
 # -----------------------------------------------------------------------------.
 """This module contains basic functions for GPM-API data visualization."""
 import inspect
+import warnings
 
 import cartopy
 import cartopy.crs as ccrs
@@ -39,6 +40,7 @@ from scipy.interpolate import griddata
 
 import gpm
 from gpm import get_plot_kwargs
+from gpm.dataset.crs import compute_extent
 from gpm.utils.area import get_lonlat_corners_from_centroids
 
 
@@ -367,11 +369,14 @@ def preprocess_figure_args(ax, fig_kwargs=None, subplot_kwargs=None, is_facetgri
     return fig_kwargs
 
 
-def preprocess_subplot_kwargs(subplot_kwargs):
+def preprocess_subplot_kwargs(subplot_kwargs, infer_crs=False, xr_obj=None):
     subplot_kwargs = {} if subplot_kwargs is None else subplot_kwargs
     subplot_kwargs = subplot_kwargs.copy()
     if "projection" not in subplot_kwargs:
-        subplot_kwargs["projection"] = ccrs.PlateCarree()
+        if infer_crs:
+            subplot_kwargs["projection"] = xr_obj.gpm.cartopy_crs
+        else:
+            subplot_kwargs["projection"] = ccrs.PlateCarree()
     return subplot_kwargs
 
 
@@ -423,6 +428,12 @@ def infer_map_xy_coords(da, x=None, y=None):
     return x, y
 
 
+def _get_proj_str(crs):
+    with warnings.catch_warnings():
+        proj_str = crs.to_dict().get("proj", "")
+    return proj_str
+
+
 def initialize_cartopy_plot(
     ax,
     fig_kwargs,
@@ -430,6 +441,8 @@ def initialize_cartopy_plot(
     add_background,
     add_gridlines,
     add_labels,
+    infer_crs=False,
+    xr_obj=None,
 ):
     """Initialize figure for cartopy plot if necessary."""
     # - Initialize figure
@@ -439,7 +452,7 @@ def initialize_cartopy_plot(
             fig_kwargs=fig_kwargs,
             subplot_kwargs=subplot_kwargs,
         )
-        subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
+        subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs, infer_crs=infer_crs, xr_obj=xr_obj)
         _, ax = plt.subplots(subplot_kw=subplot_kwargs, **fig_kwargs)
 
     # - Add cartopy background
@@ -475,8 +488,13 @@ def plot_cartopy_background(ax):
     """Plot cartopy background."""
     # - Add coastlines
     ax.coastlines()
-    ax.add_feature(cartopy.feature.LAND, facecolor=[0.9, 0.9, 0.9])
-    ax.add_feature(cartopy.feature.OCEAN, alpha=0.6)
+    # - Add land and ocean
+    # --> Raise error with some projections currently (shapely bug)
+    # --> https://github.com/SciTools/cartopy/issues/2176
+    if _get_proj_str(ax.projection) not in ["laea"]:
+        ax.add_feature(cartopy.feature.LAND, facecolor=[0.9, 0.9, 0.9])
+        ax.add_feature(cartopy.feature.OCEAN, alpha=0.6)
+    # - Add borders
     ax.add_feature(cartopy.feature.BORDERS)  # BORDERS also draws provinces, ...
     return ax
 
@@ -511,22 +529,6 @@ def _sanitize_cartopy_plot_kwargs(plot_kwargs):
     return plot_kwargs
 
 
-def _compute_extent(x_coords, y_coords):
-    """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
-
-    This function assumes that the spacing between each pixel is uniform.
-    """
-    # Calculate the pixel size assuming uniform spacing between pixels
-    pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
-    pixel_size_y = (y_coords[-1] - y_coords[0]) / (len(y_coords) - 1)
-
-    # Adjust min and max to get the corners of the outer pixels
-    x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
-    y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
-
-    return [x_min, x_max, y_min, y_max]
-
-
 def plot_cartopy_imshow(
     ax,
     da,
@@ -539,9 +541,6 @@ def plot_cartopy_imshow(
 ):
     """Plot imshow with cartopy."""
     plot_kwargs = {} if plot_kwargs is None else plot_kwargs
-
-    # Assume CRS of data
-    transform = ccrs.PlateCarree()
 
     # Infer x and y
     x, y = infer_xy_labels(da, x=x, y=y, rgb=plot_kwargs.get("rgb", None))
@@ -558,8 +557,18 @@ def plot_cartopy_imshow(
     x_coords = da[x].to_numpy()
     y_coords = da[y].to_numpy()
 
-    # - Derive extent
-    extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
+    # Compute extent
+    extent = compute_extent(x_coords=x_coords, y_coords=y_coords)
+    # area_extent = area_def.area_extent # [xmin, ymin, x_max, y_max]
+    # extent = [area_extent[i] for i in [0, 2, 1, 3]] # [x_min, x_max, y_min, y_max]
+
+    # Infer CRS of data, extent and cartopy projection
+    try:
+        area_def = da.gpm.pyresample_area
+        crs = area_def.to_cartopy_crs()
+    except Exception:
+        # Assume lon/lat CRS
+        crs = ccrs.PlateCarree()
 
     # - Determine origin based on the orientation of da[y] values
     # - On the map, the y coordinates should grow from bottom to top
@@ -572,26 +581,31 @@ def plot_cartopy_imshow(
     if not y_increasing:  # decreasing y coordinates
         extent = [extent[i] for i in [0, 1, 3, 2]]
 
-    # Deal with out of limits x (PlateeCarree coordinates out of bounds when  lons are defined as 0-360)
+    # Deal with out of limits x
+    # - PlateeCarree coordinates out of bounds when  lons are defined as 0-360)
     set_extent = True
 
     # Case where coordinates are defined as 0-360 with pm=0
-    if extent[1] > transform.x_limits[1] or extent[0] < transform.x_limits[0]:
+    if extent[1] > crs.x_limits[1] or extent[0] < crs.x_limits[0]:
         set_extent = False
 
     # - Add variable field with cartopy
+    # --> TODO: specify transform argument only if data CRS different from cartopy CRS
+    # --> GPM-API automatically create the Cartopy GeoAxes with correct CRS
     rgb = plot_kwargs.pop("rgb", False)
     p = ax.imshow(
         arr,
-        transform=transform,
+        # transform=crs, # if uncommented,  cuts away half of first and last row pixels
         extent=extent,
         origin=origin,
         interpolation=interpolation,
         **plot_kwargs,
     )
+
     # - Set the extent
+    # --> If some background is globally displayed, this zoom on the actual data region
     if set_extent:
-        ax.set_extent(extent)
+        ax.set_extent(extent, crs=crs)
 
     # - Add colorbar
     if add_colorbar and not rgb:
@@ -1257,6 +1271,8 @@ def plot_map_mesh_centroids(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=True,
+        xr_obj=xr_obj,
     )
 
     # Retrieve orbits lon, lat coordinates

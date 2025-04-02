@@ -267,6 +267,7 @@ def plot_range_distance(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=False,
     )
 
     # Retrieve circle polygon at given radius from radar
@@ -346,6 +347,7 @@ def plot_map(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=False,
     )
 
     # Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray

@@ -48,6 +48,7 @@ def create_granule_dataframe():
         n_cross_track=5,
     )
     ds = da.to_dataset(name="dummy_var")
+    ds = ds.drop_vars("spatial_ref")
     df = ds.gpm.to_pandas_dataframe()
     return df
 

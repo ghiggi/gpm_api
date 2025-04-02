@@ -39,12 +39,12 @@ def _get_orbit_scan_time(dt, scan_mode):
     """
     ds = dt[scan_mode]["ScanTime"].compute()
     dict_time = {
-        "year": ds["Year"].data,
-        "month": ds["Month"].data,
-        "day": ds["DayOfMonth"].data,
-        "hour": ds["Hour"].data,
-        "minute": ds["Minute"].data,
-        "second": ds["Second"].data,
+        "year": ds["Year"].to_numpy(),
+        "month": ds["Month"].to_numpy(),
+        "day": ds["DayOfMonth"].to_numpy(),
+        "hour": ds["Hour"].to_numpy(),
+        "minute": ds["Minute"].to_numpy(),
+        "second": ds["Second"].to_numpy(),
     }
     return pd.to_datetime(dict_time).to_numpy()
 

@@ -73,6 +73,8 @@ def _plot_grid_map_cartopy(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=True,
+        xr_obj=da,
     )
 
     # - Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
@@ -134,7 +136,7 @@ def _plot_grid_map_facetgrid(
     """Plot 2D fields with FacetGrid."""
     # Check inputs
     fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs, is_facetgrid=True)
-    subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
+    subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs, infer_crs=True, xr_obj=da)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
@@ -156,18 +158,24 @@ def _plot_grid_map_facetgrid(
 
     # Create FacetGrid
     optimize_layout = plot_kwargs.pop("optimize_layout", True)
+    col = plot_kwargs.pop("col", None)
+    row = plot_kwargs.pop("row", None)
+    col_wrap = plot_kwargs.pop("col_wrap", None)
+    axes_pad = plot_kwargs.pop("axes_pad", None)
+    facet_height = plot_kwargs.pop("facet_height", 3)
+    facet_aspect = plot_kwargs.pop("facet_aspect", 1)
     fc = CartopyFacetGrid(
         data=da.compute(),
         projection=projection,
-        col=plot_kwargs.pop("col", None),
-        row=plot_kwargs.pop("row", None),
-        col_wrap=plot_kwargs.pop("col_wrap", None),
-        axes_pad=plot_kwargs.pop("axes_pad", None),
+        col=col,
+        row=row,
+        col_wrap=col_wrap,
+        axes_pad=axes_pad,
         add_colorbar=add_colorbar,
         cbar_kwargs=cbar_kwargs,
         fig_kwargs=fig_kwargs,
-        facet_height=plot_kwargs.pop("facet_height", 3),
-        facet_aspect=plot_kwargs.pop("facet_aspect", 1),
+        facet_height=facet_height,
+        facet_aspect=facet_aspect,
     )
 
     # Plot the maps
@@ -284,6 +292,8 @@ def plot_grid_mesh(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=True,
+        xr_obj=xr_obj,
     )
     # Infer x and y
     x, y = infer_xy_labels(xr_obj, x=x, y=y, rgb=plot_kwargs.get("rgb"))

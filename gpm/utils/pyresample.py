@@ -28,6 +28,7 @@
 
 import warnings
 
+import cartopy.crs as ccrs
 import numpy as np
 import xarray as xr
 
@@ -161,3 +162,22 @@ def get_pyresample_area(xr_obj):
         xr_obj = xr_obj.transpose("cross_track", "along_track", ...)
     # Return pyresample area
     return _get_pyresample_area(xr_obj)
+
+
+def _get_proj_str(crs):
+    with warnings.catch_warnings():
+        proj_str = crs.to_dict().get("proj", "")
+    return proj_str
+
+
+def get_cartopy_crs(xr_obj):
+    """Returns the cartopy CRS."""
+    pyresample_area = xr_obj.gpm.pyresample_area
+    # SwathDefinition
+    if not hasattr(pyresample_area, "to_cartopy_crs"):
+        return ccrs.PlateCarree()
+    # AreaDefinition (GRID)
+    crs = pyresample_area.to_cartopy_crs()
+    if _get_proj_str(crs) == "longlat":
+        return ccrs.PlateCarree()
+    return crs

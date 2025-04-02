@@ -162,10 +162,21 @@ class GPM_Base_Accessor:
         return get_pyproj_crs(self._obj)
 
     @property
+    def cartopy_crs(self):
+        from gpm.utils.pyresample import get_cartopy_crs
+
+        return get_cartopy_crs(self._obj)
+
+    @property
     def pyresample_area(self):
         from gpm.utils.pyresample import get_pyresample_area
 
         return get_pyresample_area(self._obj)
+
+    def set_crs(self, crs, grid_mapping_name="spatial_ref", inplace=False):
+        from gpm.dataset.crs import set_dataset_crs
+
+        return set_dataset_crs(self._obj, crs=crs, grid_mapping_name=grid_mapping_name, inplace=inplace)
 
     @property
     def x(self):

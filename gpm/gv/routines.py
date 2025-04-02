@@ -493,6 +493,7 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
             add_gridlines=False,
             add_labels=False,
         )
+    # -------------------------------------------------.
     #### - Plot GR matched data
     axes[1].coastlines()
     _ = plot_gdf_map(
@@ -521,6 +522,7 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
             add_gridlines=False,
             add_labels=False,
         )
+    # -------------------------------------------------.
     #### Plot SR data
     axes[2].coastlines()
     _ = plot_gdf_map(

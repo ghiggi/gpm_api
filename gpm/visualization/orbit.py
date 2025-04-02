@@ -290,6 +290,7 @@ def plot_swath_lines(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=False,
     )
 
     # - Sanitize coordinates
@@ -343,6 +344,7 @@ def plot_swath(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=False,
     )
 
     # Retrieve polygon
@@ -390,6 +392,7 @@ def _plot_orbit_map_cartopy(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=False,
     )
 
     # Sanitize plot_kwargs set by by xarray FacetGrid.map_dataarray
@@ -444,7 +447,7 @@ def _plot_orbit_map_facetgrid(
     """Plot 2D fields with FacetGrid."""
     # Check inputs
     fig_kwargs = preprocess_figure_args(ax=ax, fig_kwargs=fig_kwargs, subplot_kwargs=subplot_kwargs, is_facetgrid=True)
-    subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs)
+    subplot_kwargs = preprocess_subplot_kwargs(subplot_kwargs, infer_crs=False)
 
     # Retrieve GPM-API defaults cmap and cbar kwargs
     variable = da.name
@@ -594,6 +597,7 @@ def plot_orbit_mesh(
         add_background=add_background,
         add_gridlines=add_gridlines,
         add_labels=add_labels,
+        infer_crs=False,
     )
 
     # Define plot_kwargs to display only the mesh

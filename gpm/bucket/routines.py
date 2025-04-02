@@ -106,6 +106,11 @@ def write_granule_bucket(
     # Retrieve dataframe
     df = granule_to_df_func(src_filepath)
 
+    # Do nothing if returns None
+    # - For example when no intersecting AOI
+    if df is None:
+        return
+
     # Add partitioning columns
     df = spatial_partitioning.add_labels(df=df, x=x, y=y)
 

@@ -122,11 +122,11 @@ def _get_proj_coord_unit(crs, dim):
     return None
 
 
-def _get_obj(ds, inplace=False):
-    """Return a dataset copy if inplace=False."""
+def _get_obj(xr_obj, inplace=False):
+    """Return a xarray copy if inplace=False."""
     if inplace:
-        return ds
-    return ds.copy(deep=True)
+        return xr_obj
+    return xr_obj.copy(deep=True)
 
 
 def _get_dataarray_with_spatial_dims(xr_obj):
@@ -471,19 +471,19 @@ def _simplify_grid_mapping_value(grid_mapping_value):
     return grid_mapping_value
 
 
-def simplify_grid_mapping_values(ds):
+def simplify_grid_mapping_values(xr_obj):
     """Simplify grid_mapping value.
 
     GDAL does not support grid_mapping defined as "crs_wgs84: lat lon"
     If only 1 CRS is specified in such format, it returns "crs_wgs84"
     """
-    keys = list(ds.coords) + list(ds.data_vars)
+    keys = list(xr_obj.coords) if isinstance(xr_obj, xr.DataArray) else list(xr_obj.coords) + list(xr_obj.data_vars)
     for key in keys:
-        if "grid_mapping" in ds[key].attrs:
-            ds[key].attrs["grid_mapping"] = _simplify_grid_mapping_value(
-                ds[key].attrs["grid_mapping"],
+        if "grid_mapping" in xr_obj[key].attrs:
+            xr_obj[key].attrs["grid_mapping"] = _simplify_grid_mapping_value(
+                xr_obj[key].attrs["grid_mapping"],
             )
-    return ds
+    return xr_obj
 
 
 def _get_spatial_coordinates(xr_obj):
@@ -502,48 +502,56 @@ def _get_spatial_dims(xr_obj):
     return list(set(list_dims))
 
 
-def _get_variables_with_spatial_dims(ds):
+def _get_variables_with_spatial_dims(xr_obj):
     """Return variables and coordinates depending on spatial dimensions.
 
     A coordinate with dimension (time, y, x) is selected
     The spatial coordinates (y, x) or (latitude, longitude) are not selected.
     """
-    spatial_dims = _get_spatial_dims(ds)  # can be []
+    spatial_dims = _get_spatial_dims(xr_obj)  # can be []
     spatial_dims = set(spatial_dims)
     if len(spatial_dims) == 0:
-        raise ValueError("No spatial dimension identified in the dataset.")
-    variables = list(ds.coords) + list(ds.data_vars)
-    list_spatial_variables = [var for var in variables if set(ds[var].dims).issuperset(spatial_dims)]
+        raise ValueError("No spatial dimension identified.")
+
+    # Get list of coordinates and variables
+    if isinstance(xr_obj, xr.DataArray):
+        variables = list(xr_obj.coords)
+    else:
+        variables = list(xr_obj.coords) + list(xr_obj.data_vars)
+
+    # Get list of spatial coordinates and variables
+    list_spatial_variables = [var for var in variables if set(xr_obj[var].dims).issuperset(spatial_dims)]
+
     # Remove spatial coordinates from the list
-    coords = _get_spatial_coordinates(ds)
+    coords = _get_spatial_coordinates(xr_obj)
     return set(list_spatial_variables).difference(coords)
 
 
-def _add_variables_crs_attrs(ds, crs, grid_mapping_name):
+def _add_variables_crs_attrs(xr_obj, crs, grid_mapping_name):
     """Add 'grid_mapping' and 'coordinates' (for swath only) attributes to the variable.
 
     If a grid_mapping attribute is already existing, add also the new one !
     """
     # Retrieve grid_mapping attributes value
-    grid_mapping_value = _grid_mapping_reference(ds, crs=crs, grid_mapping_name=grid_mapping_name)
+    grid_mapping_value = _grid_mapping_reference(xr_obj, crs=crs, grid_mapping_name=grid_mapping_name)
 
     # Retrieve variables (and coordinates) requiring the crs attribute
-    variables = _get_variables_with_spatial_dims(ds)
+    variables = _get_variables_with_spatial_dims(xr_obj)
 
     for var in variables:
-        grid_mapping = ds[var].attrs.get("grid_mapping", "")
+        grid_mapping = xr_obj[var].attrs.get("grid_mapping", "")
         grid_mapping = grid_mapping_value if grid_mapping == "" else grid_mapping + " " + grid_mapping_value
-        ds[var].attrs["grid_mapping"] = grid_mapping
+        xr_obj[var].attrs["grid_mapping"] = grid_mapping
 
     # Add coordinates attribute if swath data
     # --> If added to attrs, to_netcdf move it to encoding !
-    if has_swath_coords(ds):
-        lon_coord, lat_coord = _get_swath_dim_coords(ds)
+    if has_swath_coords(xr_obj):
+        lon_coord, lat_coord = _get_swath_dim_coords(xr_obj)
         for var in variables:
-            da_coords = ds[var].coords
+            da_coords = xr_obj[var].coords
             if lon_coord in da_coords and lat_coord in da_coords:
-                ds[var].encoding["coordinates"] = f"{lat_coord} {lon_coord}"
-    return ds
+                xr_obj[var].encoding["coordinates"] = f"{lat_coord} {lon_coord}"
+    return xr_obj
 
 
 def _get_name_existing_crs_coords(xr_obj):
@@ -555,17 +563,27 @@ def _get_name_existing_crs_coords(xr_obj):
     ]
 
 
-def remove_existing_crs_info(ds):
+def _remove_crs_info_datarray(da):
+    _ = da.attrs.pop("grid_mapping", None)
+    _ = da.attrs.pop("coordinates", None)
+    _ = da.encoding.pop("coordinates", None)
+    crs_coords = _get_name_existing_crs_coords(da)
+    return da.drop_vars(crs_coords, errors="ignore")
+
+
+def remove_existing_crs_info(xr_obj):
     """Remove existing grid_mapping attributes."""
-    for var in ds.data_vars:
-        _ = ds[var].attrs.pop("grid_mapping", None)
-        _ = ds[var].attrs.pop("coordinates", None)
-        _ = ds[var].encoding.pop("coordinates", None)
-    crs_coords = _get_name_existing_crs_coords(ds)
-    return ds.drop_vars(crs_coords)
+    # DataArray
+    if isinstance(xr_obj, xr.DataArray):
+        return _remove_crs_info_datarray(xr_obj)
+    # Dataset
+    for var in xr_obj.data_vars:
+        xr_obj[var] = _remove_crs_info_datarray(xr_obj[var])
+    crs_coords = _get_name_existing_crs_coords(xr_obj)
+    return xr_obj.drop_vars(crs_coords)
 
 
-def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
+def set_dataset_single_crs(xr_obj, crs, grid_mapping_name="spatial_ref", inplace=False):
     """Add CF-compliant CRS information to an xarray.Dataset.
 
     It assumes all dataset variables have same CRS !
@@ -589,23 +607,23 @@ def set_dataset_single_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=Fal
 
     """
     # Get xarray object copy if inplace=False
-    ds = _get_obj(ds=ds, inplace=inplace)
+    xr_obj = _get_obj(xr_obj, inplace=inplace)
 
     # Add coordinate with CRS information
-    ds = _add_crs_coord(ds, crs=crs, grid_mapping_name=grid_mapping_name)
+    xr_obj = _add_crs_coord(xr_obj, crs=crs, grid_mapping_name=grid_mapping_name)
 
     # Add CF attributes to CRS coordinates
-    ds = _add_coords_crs_attrs(ds, crs=crs)
+    xr_obj = _add_coords_crs_attrs(xr_obj, crs=crs)
 
     # Add CF attributes 'grid_mapping' (and 'coordinates' for swath)
     # - To relevant variables and coordinates
-    return _add_variables_crs_attrs(ds=ds, crs=crs, grid_mapping_name=grid_mapping_name)
+    return _add_variables_crs_attrs(xr_obj, crs=crs, grid_mapping_name=grid_mapping_name)
 
 
 def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
-    """Add CF-compliant CRS information to an xarray.Dataset.
+    """Add CF-compliant CRS information to an xarray DataArray or Dataset.
 
-    It assumes all dataset variables have same CRS !
+    If a xarray Dataset, it assumes all dataset variables have same CRS !
     For projected CRS, it expects that the CRS dimension coordinates are specified.
     For swath dataset, it expects that the geographic coordinates are specified.
 
@@ -614,7 +632,7 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 
     Parameters
     ----------
-    ds : xarray.Dataset
+    ds : xarray.Dataset or xarray.DataArray
     crs : pyproj.crs.CRS
         CRS information to be added to the xarray.Dataset
     grid_mapping_name : str
@@ -624,15 +642,15 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
 
     Returns
     -------
-    ds : xarray.Dataset
-        Dataset with CF-compliant CRS information.
+    ds : xarray.Dataset or xarray.DataArray
+        Dataset or DataArray with CF-compliant CRS information.
 
     """
     import pyproj
 
     ds = remove_existing_crs_info(ds)
     ds = set_dataset_single_crs(
-        ds=ds,
+        ds,
         crs=crs,
         grid_mapping_name=grid_mapping_name,
         inplace=inplace,
@@ -641,7 +659,7 @@ def set_dataset_crs(ds, crs, grid_mapping_name="spatial_ref", inplace=False):
     if crs.is_projected and has_swath_coords(ds):
         crs_wgs84 = pyproj.CRS(proj="longlat", ellps="WGS84")
         ds = set_dataset_single_crs(
-            ds=ds,
+            ds,
             crs=crs_wgs84,
             grid_mapping_name="crsWGS84",
             inplace=inplace,
@@ -754,12 +772,14 @@ def get_pyresample_swath(xr_obj):
     return SwathDefinition(da_lons, da_lats, crs=pyproj_crs)
 
 
-def _compute_extent(x_coords, y_coords):
-    """Compute the extent (x_min, x_max, y_min, y_max) from the pixel centroids in x and y coordinates.
+def compute_extent(x_coords, y_coords):
+    """Compute the extent (x_min, x_max, y_min, y_max) from pixel centroids.
 
     This function assumes that the spacing between each pixel is uniform.
-    It also assumes that the origin is top left (numpy convention).
-    It therefore assumes that y values are decreasing.
+    It takes into account the decreasing/increasing order of the coordinates.
+
+    The output extent format is the one expected by matplotlib and cartopy.
+    Please note that the pyresample area_extent is [x_min, ymin, y_max, y_max]
     """
     # Calculate the pixel size assuming uniform spacing between pixels
     pixel_size_x = (x_coords[-1] - x_coords[0]) / (len(x_coords) - 1)
@@ -775,8 +795,10 @@ def _compute_extent(x_coords, y_coords):
 
     # Define centroids close to lower-left and upper left corners
     # --> Assume origin is top left (numpy convention)
-    x_min, y_min = x_coords[0], y_coords[-1]
-    x_max, y_max = x_coords[-1], y_coords[0]
+    x_min = min(x_coords[[0, -1]])
+    x_max = max(x_coords[[0, -1]])
+    y_min = min(y_coords[[0, -1]])
+    y_max = max(y_coords[[0, -1]])
 
     # Define extent as lower-left and upper left corners
     x_min -= x_sign * 0.5 * pixel_size_x
@@ -784,13 +806,14 @@ def _compute_extent(x_coords, y_coords):
     y_max += y_sign * 0.5 * pixel_size_y
     y_min -= y_sign * 0.5 * pixel_size_y
 
-    # # Adjust min and max to get the corners of the outer pixels
-    # x_min, x_max = x_coords[0] - pixel_size_x / 2, x_coords[-1] + pixel_size_x / 2
-    # y_min, y_max = y_coords[0] - pixel_size_y / 2, y_coords[-1] + pixel_size_y / 2
-    #
-    # matplotlib extent: [x_min, x_max, y_min, y_max]
-    # pyresample extent: [x_min, ymin, y_max, y_max]
-    return [x_min, y_min, x_max, y_max]
+    return [float(x_min), float(x_max), float(y_min), float(y_max)]
+
+
+def compute_pyresample_area_extent(x_coords, y_coords):
+    """Compute the pyresamnple area extent [x_min, ymin, y_max, y_max] from pixel centroids."""
+    extent = compute_extent(x_coords, y_coords)  # (x_min, x_max, y_min, y_max)
+    area_extent = [extent[i] for i in [0, 2, 1, 3]]  # [x_min, ymin, y_max, y_max]
+    return area_extent
 
 
 def get_pyresample_projection(xr_obj):
@@ -827,7 +850,7 @@ def get_pyresample_projection(xr_obj):
     shape = (y_coords.shape[0], x_coords.shape[0])
 
     # Derive extent
-    extent = _compute_extent(x_coords=x_coords, y_coords=y_coords)
+    area_extent = compute_pyresample_area_extent(x_coords=x_coords, y_coords=y_coords)
 
     # Define SwathDefinition
     # area_def = AreaDefinition(crs=pyproj_crs, shape=shape, area_extent=extent)
@@ -838,7 +861,7 @@ def get_pyresample_projection(xr_obj):
         pyproj_crs,
         width=shape[1],
         height=shape[0],
-        area_extent=extent,
+        area_extent=area_extent,
     )
 
 
