@@ -166,6 +166,7 @@ def get_pyresample_area(xr_obj):
 
 def _get_proj_str(crs):
     with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
         proj_str = crs.to_dict().get("proj", "")
     return proj_str
 

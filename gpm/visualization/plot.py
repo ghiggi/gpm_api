@@ -430,6 +430,7 @@ def infer_map_xy_coords(da, x=None, y=None):
 
 def _get_proj_str(crs):
     with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
         proj_str = crs.to_dict().get("proj", "")
     return proj_str
 
@@ -529,6 +530,18 @@ def _sanitize_cartopy_plot_kwargs(plot_kwargs):
     return plot_kwargs
 
 
+def is_same_crs(crs1, crs2):
+    """Check if same CRS."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        crs1_dict = crs1.to_dict()
+        crs2_dict = crs2.to_dict()
+    keys = ["proj", "lat_0", "lon_0", "x_0", "y_0", "units", "type", "lon_wrap", "over", "pm"]
+    dict1 = {key: crs1_dict.get(key) for key in keys}
+    dict2 = {key: crs2_dict.get(key) for key in keys}
+    return dict1 == dict2
+
+
 def plot_cartopy_imshow(
     ax,
     da,
@@ -564,22 +577,22 @@ def plot_cartopy_imshow(
 
     # Infer CRS of data, extent and cartopy projection
     try:
-        area_def = da.gpm.pyresample_area
-        crs = area_def.to_cartopy_crs()
+        crs = da.gpm.cartopy_crs
     except Exception:
-        # Assume lon/lat CRS
+        # Try assuming lon/lat CRS
         crs = ccrs.PlateCarree()
 
-    # - Determine origin based on the orientation of da[y] values
-    # - On the map, the y coordinates should grow from bottom to top
-    # -->  If y coordinate is increasing, set origin="lower"
-    # -->  If y coordinate is decreasing, set origin="upper"
+    # Determine image origin based on the orientation of da[y] values
+    # - Cartopy assume origin is lower
+    # - If y coordinate is increasing, set origin="lower"
+    # - If y coordinate is decreasing, set origin="upper"
+    #   --> Means that the image array is [::-1, :] reversed within cartopy
     y_increasing = y_coords[1] > y_coords[0]
     origin = "lower" if y_increasing else "upper"  # OLD CODE
 
     # Deal with decreasing y
-    if not y_increasing:  # decreasing y coordinates
-        extent = [extent[i] for i in [0, 1, 3, 2]]
+    # if not y_increasing:  # decreasing y coordinates
+    # extent = [extent[i] for i in [0, 1, 3, 2]]
 
     # Deal with out of limits x
     # - PlateeCarree coordinates out of bounds when  lons are defined as 0-360)
@@ -589,13 +602,17 @@ def plot_cartopy_imshow(
     if extent[1] > crs.x_limits[1] or extent[0] < crs.x_limits[0]:
         set_extent = False
 
-    # - Add variable field with cartopy
-    # --> TODO: specify transform argument only if data CRS different from cartopy CRS
+    # Check if specify transform
+    # - Specify transform argument only if data CRS is different from axes CRS
+    # - If same crs, specifying transform is slower and might cuts away half of first and last row pixels
     # --> GPM-API automatically create the Cartopy GeoAxes with correct CRS
+    transform = None if is_same_crs(crs, ax.projection) else crs
+
+    # - Add variable field with cartopy
     rgb = plot_kwargs.pop("rgb", False)
     p = ax.imshow(
         arr,
-        # transform=crs, # if uncommented,  cuts away half of first and last row pixels
+        transform=transform,
         extent=extent,
         origin=origin,
         interpolation=interpolation,

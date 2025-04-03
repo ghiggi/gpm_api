@@ -125,4 +125,4 @@ def get_retrieval_variable(ds, name, *args, **kwargs):
         module_name = "gpm.retrievals.retrieval_1b_c_pmw"
         check_retrieval_validity(ds, name)
         return _get_retrieval_function(module_name, name)(ds, *args, **kwargs)
-    return None
+    raise NotImplementedError(f"No retrieval available for product {product}.")
