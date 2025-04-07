@@ -109,7 +109,7 @@ def define_configs(
 
     """
     from gpm.io.checks import check_base_dir
-    
+
     # Define path to .config_gpm_api.yaml file
     filepath = _define_config_filepath()
 
@@ -123,7 +123,7 @@ def define_configs(
 
     # Add GPM-API Base directory
     if base_dir is not None:
-        base_dir = check_base_dir(base_dir) # return a string
+        base_dir = check_base_dir(base_dir)  # return a string
         os.makedirs(base_dir, exist_ok=True)
         config_dict["base_dir"] = base_dir
 

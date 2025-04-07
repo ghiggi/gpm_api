@@ -351,7 +351,7 @@ def check_object_format(da, plot_kwargs, check_function, **function_kwargs):
         if dim not in da.dims:
             raise ValueError(f"The DataArray does not have a {key}='{dim}' dimension.")
     # Subset DataArray to check if complies with specific check function
-    isel_dict = {dim: 0 for dim in dims_dict.values()}
+    isel_dict = dict.fromkeys(dims_dict.values(), 0)
     check_function(da.isel(isel_dict), **function_kwargs)
     return da
 

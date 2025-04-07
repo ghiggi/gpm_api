@@ -43,8 +43,8 @@ Create the GPM-API configuration file
 
 The GPM-API configuration file stores the credentials to access the PPS and GES DISC servers
 as well as other parameters such as the default base directory on your local machine where to
-save the GPM datasets of interest. 
-Please note that the software expects that the base directory path ends with a folder named `GPM`. 
+save the GPM datasets of interest.
+Please note that the software expects that the base directory path ends with a folder named ``GPM``.
 
 To facilitate the creation of the configuration file, you can adapt and run the following script in Python.
 The configuration file will be created in the user's home directory under the name ``.config_gpm_api.yaml``.
