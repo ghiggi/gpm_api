@@ -66,7 +66,8 @@ def check_base_dir(base_dir):
     dir_name = os.path.basename(base_dir)
     # If ends with GPM, take the parent directory path
     if dir_name != "GPM":
-        raise ValueError("The GPM-API base directory must be called GPM.")
+        msg = "The GPM-API base directory path must ends with the directory name GPM."
+        raise ValueError(msg)
     return base_dir
 
 

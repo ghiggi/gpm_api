@@ -108,6 +108,8 @@ def define_configs(
     used for authentication when making GPM-API requests.
 
     """
+    from gpm.io.checks import check_base_dir
+    
     # Define path to .config_gpm_api.yaml file
     filepath = _define_config_filepath()
 
@@ -121,7 +123,9 @@ def define_configs(
 
     # Add GPM-API Base directory
     if base_dir is not None:
-        config_dict["base_dir"] = str(base_dir)  # deal with Pathlib
+        base_dir = check_base_dir(base_dir) # return a string
+        os.makedirs(base_dir, exist_ok=True)
+        config_dict["base_dir"] = base_dir
 
     # Define PPS authentication parameters
     if isinstance(username_pps, str) and isinstance(password_pps, str):
