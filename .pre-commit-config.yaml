@@ -12,7 +12,7 @@ repos:
       - id: check-ast
       - id: check-added-large-files
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.2
+    rev: v0.12.0
     hooks:
       - id: ruff
         args: [--fix]
@@ -22,7 +22,7 @@ repos:
       - id: black
         language_version: python3
   - repo: https://github.com/keewis/blackdoc
-    rev: v0.3.9
+    rev: v0.4.0
     hooks:
       - id: blackdoc
         additional_dependencies: ["black[jupyter]"]
@@ -38,7 +38,7 @@ repos:
         types_or: [python, markdown, rst]
         additional_dependencies: [tomli]
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.20.0
     hooks:
       - id: pyupgrade
   - repo: https://github.com/MarcoGorelli/madforhooks
