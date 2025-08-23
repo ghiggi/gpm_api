@@ -231,7 +231,7 @@ def _get_scan_mode_dataset(
     return ds
 
 
-def get_scan_modes_datasets(filepath, scan_modes, groups, variables, decode_cf, chunks, prefix_group, **kwargs):
+def get_scan_modes_datasets(filepath, groups, variables, decode_cf, chunks, prefix_group, scan_modes=None, **kwargs):
     """Return a dictionary with a dataset for each scan mode."""
     from gpm.dataset.datatree import open_raw_datatree
     from gpm.dataset.granule import _get_scan_mode_dataset
@@ -240,17 +240,31 @@ def get_scan_modes_datasets(filepath, scan_modes, groups, variables, decode_cf, 
     dt = open_raw_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True, **kwargs)
     dt_closer = dt._close
 
+    # List scan modes if not specified
+    if scan_modes is None:
+        nodes = list(dt)
+        invalid_nodes = [
+            "gmi1aHeader",
+            "tmi1aHeader",
+            "DiagGroup",
+            "AlgorithmRuntimeInfo",
+            "GprofDHeadr",
+        ]
+        scan_modes = set(nodes) - set(invalid_nodes)
+
     # Retrieve scan mode dataset (without cf decoding)
-    dict_scan_modes = {
-        scan_mode: _get_scan_mode_dataset(
-            dt=dt,
-            scan_mode=scan_mode,
-            groups=groups,
-            variables=variables,
-            prefix_group=prefix_group,
-        )
-        for scan_mode in scan_modes
-    }
+    dict_scan_modes = {}
+    for scan_mode in scan_modes:
+        try:
+            dict_scan_modes[scan_mode] = _get_scan_mode_dataset(
+                dt=dt,
+                scan_mode=scan_mode,
+                groups=groups,
+                variables=variables,
+                prefix_group=prefix_group,
+            )
+        except Exception as e:
+            print(f"Skipping scan mode {scan_mode}: {e}")
 
     return dict_scan_modes, dt_closer
 

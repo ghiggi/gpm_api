@@ -162,7 +162,7 @@ def check_transfer_tool(transfer_tool):
     return transfer_tool
 
 
-def check_product(product, product_type):
+def check_product(product, product_type=None):
     """Check product validity."""
     from gpm.io.products import available_products
 

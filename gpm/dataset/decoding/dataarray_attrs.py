@@ -94,7 +94,7 @@ def _sanitize_attributes(attrs):
     return attrs
 
 
-def _format_dataarray_attrs(da, product=None):
+def _format_dataarray_attrs(da):
     attrs = da.attrs
 
     # Ensure fill values are numbers
@@ -116,20 +116,16 @@ def _format_dataarray_attrs(da, product=None):
     if "source_dtype" not in attrs and "dtype" in da.encoding:
         attrs["source_dtype"] = da.encoding["dtype"]
 
-    # Add gpm_api product name
-    if product is not None:
-        attrs["gpm_api_product"] = product
-
     # Attach attributes
     da.attrs = attrs
 
     return da
 
 
-def standardize_dataarrays_attrs(ds, product):
+def standardize_dataarrays_attrs(ds):
     # Sanitize variable attributes
     for var, da in ds.items():
-        ds[var] = _format_dataarray_attrs(da, product)
+        ds[var] = _format_dataarray_attrs(da)
 
     # Drop attributes from bounds coordinates
     # - https://github.com/pydata/xarray/issues/8368

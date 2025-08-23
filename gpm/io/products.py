@@ -95,6 +95,15 @@ def get_info_dict():
     return read_yaml(filepath)
 
 
+@functools.cache
+def get_products_attributes_dict():
+    """Get products attributes dictionary."""
+    from gpm import _root_path
+
+    filepath = os.path.join(_root_path, "gpm", "etc", "products_attributes.yaml")
+    return read_yaml(filepath)
+
+
 def get_info_dict_subset(
     sensors=None,
     satellites=None,

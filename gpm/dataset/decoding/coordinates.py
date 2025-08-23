@@ -246,23 +246,25 @@ def set_coordinates(ds, product, scan_mode):
         ds = _parse_sun_local_time(ds)
         ds = ds.set_coords("sunLocalTime")
 
-    #### PMW
-    # - 1B and 1C products
-    if product.startswith("1C") or product.startswith("1B"):
-        ds = _add_pmw_coordinates(ds, product, scan_mode)
-    # - Deal with incidenceAngleIndex in PMW 1C products
-    if product.startswith("1C"):
-        ds = _deal_with_pmw_incidence_angle_index(ds)
-    #### RADAR
-    if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR", "2A-ENV-DPR", "2A-ENV-PR", "2A-ENV-Ka", "2A-ENV-Ku"]:
-        ds = _add_radar_coordinates(ds, product, scan_mode)
+    # Add specific coordinates depending on product
+    if product is not None:
+        #### PMW
+        # - 1B and 1C products
+        if product.startswith("1C") or product.startswith("1B"):
+            ds = _add_pmw_coordinates(ds, product, scan_mode)
+        # - Deal with incidenceAngleIndex in PMW 1C products
+        if product.startswith("1C"):
+            ds = _deal_with_pmw_incidence_angle_index(ds)
+        #### RADAR
+        if product in ["2A-DPR", "2A-Ku", "2A-Ka", "2A-PR", "2A-ENV-DPR", "2A-ENV-PR", "2A-ENV-Ka", "2A-ENV-Ku"]:
+            ds = _add_radar_coordinates(ds, product, scan_mode)
 
-    #### CMB
-    if product in ["2B-GPM-CORRA", "2B-TRMM-CORRA"]:
-        ds = _add_cmb_coordinates(ds, product, scan_mode)
+        #### CMB
+        if product in ["2B-GPM-CORRA", "2B-TRMM-CORRA"]:
+            ds = _add_cmb_coordinates(ds, product, scan_mode)
 
-    #### SLH and CSH products
-    if product in ["2A-GPM-SLH", "2B-GPM-CSH"] and "range" in list(ds.dims):
-        ds = add_lh_height(ds)
+        #### SLH and CSH products
+        if product in ["2A-GPM-SLH", "2B-GPM-CSH"] and "range" in list(ds.dims):
+            ds = add_lh_height(ds)
 
     return ds

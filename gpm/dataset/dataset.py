@@ -105,6 +105,9 @@ def _get_scan_modes_datasets_and_closers(filepaths, parallel, scan_modes, decode
     if parallel:
         list_info = dask.compute(*list_info)
 
+    # Retrieve scan modes list
+    scan_modes = list(list_info[0][0])
+
     # ----------------------------------------------------.
     # Retrieve datatree closers
     list_dt_closers = [dt_closer for _, dt_closer in list_info]
@@ -487,4 +490,88 @@ def open_datatree(
         warnings.warn(msg, GPM_Warning, stacklevel=1)
 
     ##------------------------------------------------------------------------.
+    return dt
+
+
+def _infer_product_name(ds) -> str | None:
+    """Infer product name from GPM Dataset attributes."""
+    from gpm.io.products import get_products_attributes_dict
+
+    products_dict = get_products_attributes_dict()
+    for product, attrs in products_dict.items():
+        if (
+            attrs["AlgorithmID"] == ds.attrs["AlgorithmID"]
+            and attrs["SatelliteName"] == ds.attrs["SatelliteName"]
+            and attrs["InstrumentName"] == ds.attrs["InstrumentName"]
+        ):
+            return product
+    return None
+
+
+def open_files(
+    filepaths,
+    parallel=False,
+    scan_modes=None,
+    groups=None,
+    variables=None,
+    prefix_group=False,
+    start_time=None,
+    end_time=None,
+    chunks=-1,
+    decode_cf=True,
+    **kwargs,
+):
+
+    ##------------------------------------------------------------------------.
+    # Ensure filepaths is a list
+    if isinstance(filepaths, str):
+        filepaths = [filepaths]
+
+    ##------------------------------------------------------------------------.
+    dict_scan_modes, list_dt_closers = _get_scan_modes_datasets_and_closers(
+        filepaths=filepaths,
+        parallel=parallel,
+        scan_modes=scan_modes,
+        decode_cf=False,
+        # Custom options
+        variables=variables,
+        groups=groups,
+        prefix_group=prefix_group,
+        chunks=chunks,
+        **kwargs,
+    )
+
+    # Retrieve scan_modes from dictionary
+    scan_modes = sorted(dict_scan_modes)
+
+    # Infer product from file
+    product = _infer_product_name(dict_scan_modes[scan_modes[0]])
+
+    # Warn if product is unknown
+    if product is None:
+        msg = "GPM-API didn't apply specialized variables decoding because product is unknown !"
+        warnings.warn(msg, GPM_Warning, stacklevel=2)
+
+    # Finalize datatree
+    dict_scan_modes = {
+        scan_mode: finalize_dataset(
+            ds=ds,
+            product=product,
+            scan_mode=scan_mode,
+            decode_cf=decode_cf,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        for scan_mode, ds in dict_scan_modes.items()
+    }
+
+    # Create datatree
+    dt = xr.DataTree.from_dict(dict_scan_modes)
+
+    # Specify scan modes closers
+    for scan_mode, ds in dict_scan_modes.items():
+        dt[scan_mode].set_close(ds._close)
+
+    # Specify files closers
+    dt.set_close(partial(_multi_file_closer, list_dt_closers))
     return dt

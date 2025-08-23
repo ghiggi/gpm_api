@@ -124,6 +124,15 @@ def reshape_dataset(ds):
     return ds
 
 
+def add_gpm_api_product(ds, product):
+    """Add gpm_api_product attribute to Dataset and DataArray variables."""
+    product = "UNDEFINED" if product is None else product
+    ds.attrs["gpm_api_product"] = product
+    for var in ds.data_vars:
+        ds[var].attrs["gpm_api_product"] = product
+    return ds
+
+
 def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_time=None):
     """Finalize GPM xarray.Dataset object."""
     import pyproj
@@ -141,9 +150,7 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     # - Units --> units
     # - Remove DimensionNames
     # - Sanitize LongName --> description
-
-    # - Add <gpm_api_product> : <product> key : value
-    ds = standardize_dataarrays_attrs(ds, product)
+    ds = standardize_dataarrays_attrs(ds)
 
     ##------------------------------------------------------------------------.
     # Decode dataset
@@ -154,11 +161,6 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     if "time_bnds" in ds:
         ds["time_bnds"] = ds["time_bnds"].astype("M8[ns]").compute()
 
-    ##------------------------------------------------------------------------.
-    # Set relevant coordinates
-    # - Add range id, radar and pmw frequencies ...
-    ds = set_coordinates(ds, product, scan_mode)
-
     ###-----------------------------------------------------------------------.
     ## Check swath time coordinate
     # --> Ensure validity of the time dimension
@@ -167,9 +169,19 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
     ds = ensure_time_validity(ds, limit=10)
 
     ##------------------------------------------------------------------------.
+    # Set relevant coordinates
+    # - Add range id, radar and pmw frequencies ...
+    ds = set_coordinates(ds, product=product, scan_mode=scan_mode)
+
+    ##------------------------------------------------------------------------.
+    # Add gpm_api product name to Dataset and DataArrays  attributes
+    # - This is required in decode_variables for some products !
+    ds = add_gpm_api_product(ds, product)
+
+    ##------------------------------------------------------------------------.
     # Decode variables
-    if config.get("decode_variables"):
-        ds = decode_variables(ds, product)
+    if config.get("decode_variables") and product is not None:
+        ds = decode_variables(ds, product=product)
 
     ##------------------------------------------------------------------------.
     # Add CF-compliant coordinates attributes and encoding
@@ -201,9 +213,8 @@ def finalize_dataset(ds, product, decode_cf, scan_mode, start_time=None, end_tim
         warnings.warn(msg, GPM_Warning, stacklevel=2)
 
     ##------------------------------------------------------------------------.
-    # Add GPM-API global attributes
+    # Add history into dataset attributes
     ds = add_history(ds)
-    ds.attrs["gpm_api_product"] = product
 
     ##------------------------------------------------------------------------.
     # Subset dataset for start_time and end_time
