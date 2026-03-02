@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -12,17 +12,17 @@ repos:
       - id: check-ast
       - id: check-added-large-files
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.2
+    rev: v0.15.4
     hooks:
       - id: ruff
         args: [--fix]
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 26.1.0
     hooks:
       - id: black
         language_version: python3
   - repo: https://github.com/keewis/blackdoc
-    rev: v0.3.9
+    rev: v0.4.6
     hooks:
       - id: blackdoc
         additional_dependencies: ["black[jupyter]"]
@@ -38,7 +38,7 @@ repos:
         types_or: [python, markdown, rst]
         additional_dependencies: [tomli]
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.21.2
     hooks:
       - id: pyupgrade
   - repo: https://github.com/MarcoGorelli/madforhooks
@@ -47,13 +47,13 @@ repos:
       # - id: conda-env-sorter # conflicts with prettier
       - id: check-execution-order
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.22
+    rev: 1.0.0
     hooks:
       - id: mdformat
         additional_dependencies: [mdformat-gfm, mdformat-black]
         exclude: ^.github/ # this avoid the hook to wrongly reformats md issue template files
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.8.1
+    rev: 0.9.1
     hooks:
       - id: nbstripout
         args: [--keep-output]
