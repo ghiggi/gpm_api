@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to visualize cross-sections."""
+
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np

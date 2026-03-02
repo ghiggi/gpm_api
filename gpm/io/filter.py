@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to filter files according to user specifics."""
+
 import datetime
 import re
 

@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """Check GPM-API configuration files."""
+
 import os  # noqa
 
 import pytest

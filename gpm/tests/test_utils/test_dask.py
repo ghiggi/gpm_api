@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the dask utilities."""
+
 import pytest
 from dask.distributed import Client, LocalCluster
 

@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the Apache Arrow Partitioned Dataset Writers."""
+
 import os
 
 import dask.dataframe as dd
