@@ -191,7 +191,7 @@ def plot_boxplot(
 
     # Create the boxplot with bxp
     if ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots()  # noqa: RUF059
     bplot = ax.bxp(
         box_data,
         positions=positions,

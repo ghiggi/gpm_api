@@ -117,7 +117,6 @@ def remap(src_ds, dst_ds, radius_of_influence=20000, fill_value=np.nan):
         ds = ds.drop_vars("crs")
 
     # Revert to original spatial dimensions (of destination dataset)
-    x_dim, y_dim = get_spatial_dimensions(dst_ds)
     ds = ds.swap_dims({"y": dst_y_dim, "x": dst_x_dim})
 
     # Add spatial coordinates

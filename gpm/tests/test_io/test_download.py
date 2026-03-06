@@ -409,10 +409,10 @@ def test__download_daily_data(
     mocker.patch.object(dl, "find_daily_filepaths", autospec=True, return_value=([], versions))
 
     # Mocking empty responses will cause a DownloadWarning. Test that it is raised
-    with pytest.warns(GPMDownloadWarning):
-        for version in versions:
-            for product_type in product_types:
-                for product in available_products(product_types=product_type):
+    for version in versions:
+        for product_type in product_types:
+            for product in available_products(product_types=product_type):
+                with pytest.warns(GPMDownloadWarning):
                     dl._download_daily_data(
                         storage=storage,
                         date=datetime.datetime(2022, 9, 7, 12, 0, 0),

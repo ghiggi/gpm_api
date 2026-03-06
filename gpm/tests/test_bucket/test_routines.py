@@ -408,7 +408,7 @@ class TestMergeGranuleBucketsErrors:
         dst_bucket = tmp_path / "dst_bucket"
         src_bucket.mkdir()
         dst_bucket.mkdir()
-        with pytest.raises(NotImplementedError, match="update=True.*metadata"):
+        with pytest.raises(NotImplementedError, match="update=True.*metadata"):  # noqa: RUF043
             merge_granule_buckets(
                 src_bucket_dir=str(src_bucket),
                 dst_bucket_dir=str(dst_bucket),

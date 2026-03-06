@@ -524,7 +524,7 @@ def regrid_pmw_l1(dt, scan_mode_reference="S1", radius_of_influence=20_000):
             list_ds.append(output_ds)
 
         # Concatenate dataset
-        ds = xr.concat(list_ds, dim="along_track")
+        ds = xr.concat(list_ds, dim="along_track", coords="minimal", compat="override")
     # If i.e. TCPRIMED product, remap full datatree directly
     else:
         ds = _remap_pmw_datatree(

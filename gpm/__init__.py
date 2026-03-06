@@ -32,6 +32,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 # os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 import pycolorbar
+import xarray as xr
 from pycolorbar import get_plot_kwargs  # noqa
 
 import gpm.accessor  # noqa
@@ -90,6 +91,7 @@ if not _colorbar_registered:
 colormaps = pycolorbar.colormaps
 colorbars = pycolorbar.colorbars
 
+xr.set_options(use_new_combine_kwarg_defaults=True)
 
 # Get version
 with contextlib.suppress(PackageNotFoundError):

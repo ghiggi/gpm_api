@@ -532,7 +532,7 @@ def retrieve_s_band_cao2013(ds, reflectivity="zFactorFinal", bb_ratio=None, prec
         precip_type = ds.gpm.retrieve("flagPrecipitationType", method="major_rain_type")
 
     if bb_ratio is None:
-        bb_ratio, bb_mask = ds.gpm.retrieve("bright_band_ratio", return_bb_mask=True)
+        bb_ratio, bb_mask = ds.gpm.retrieve("bright_band_ratio", return_bb_mask=True)  # noqa: RUF059
         # bb_ratio = bb_ratio.where(bb_mask)
 
     # Retrieve Ku reflectivity

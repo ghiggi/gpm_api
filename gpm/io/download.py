@@ -240,7 +240,7 @@ def _get_list_status_commands(dict_futures, pbar=None):
     for future in as_completed(dict_futures.keys()):
         if pbar:
             pbar.update(1)  # Update the progress bar
-        index, cmd = dict_futures[future]
+        index, cmd = dict_futures[future]  # noqa: RUF059
         if future.exception() is not None:
             status[index] = 0
     return status

@@ -332,7 +332,7 @@ def plot_transect_line(
         g = pyproj.Geod(ellps="WGS84")
         fwd_az, back_az, dist = g.inv(*start_lonlat, *end_lonlat, radians=False)
         lon_r, lat_r, _ = g.fwd(*start_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
-        fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)
+        fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)  # noqa: RUF059
         lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
         ax.text(lon_r, lat_r, "S", **text_kwargs, **common_kwargs)
         ax.text(lon_l, lat_l, "E", **text_kwargs, **common_kwargs)

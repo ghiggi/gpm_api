@@ -857,7 +857,7 @@ def volume_matching(
     x_sr, y_sr, z_sr = retrieve_gates_projection_coordinates(ds_sr, dst_crs=crs_gr)
 
     #### - Retrieve SR (range, azimuth, elevation) coordinates
-    range_sr, azimuth_sr, elevation_sr = xyz_to_antenna_coordinates(
+    range_sr, azimuth_sr, elevation_sr = xyz_to_antenna_coordinates(  # noqa: RUF059
         x=x_sr,
         y=y_sr,
         z=z_sr,
@@ -892,7 +892,7 @@ def volume_matching(
     ####-----------------------------------------------------------------------------.
     #### Retrieve custom SR variables
     #### - Retrieve Bright Band (BB) Ratio
-    da_bb_ratio, da_bb_mask = ds_sr.gpm.retrieve("bright_band_ratio", return_bb_mask=True)
+    da_bb_ratio, da_bb_mask = ds_sr.gpm.retrieve("bright_band_ratio", return_bb_mask=True)  # noqa: RUF059
 
     #### - Retrieve Precipitation and Hydrometeors Types
     ds_sr["flagPrecipitationType"] = ds_sr.gpm.retrieve("flagPrecipitationType", method="major_rain_type")

@@ -274,6 +274,126 @@ def retrieve_PESCA(ds, t2m="t2m"):
     return da_pesca
 
 
+def retrieve_mwcc_hail_probability(ds):
+    """Compute MWCC-H hail probability from GMI, SSMIS, ATMS and MHS sensors.
+
+    This function implements the MWCC-H (Microwave Cloud Classification - Hail) method
+    to estimate the probability of hail from microwave radiometer observations.
+
+    For GMI, ATMS, and SSMIS, the native channel brightness temperatures are first
+     mapped to an *equivalent* MHS 157 GHz V-polarization brightness temperature
+    (TB_157V,eq) using a linear intercalibration plus a piecewise correction factor.
+    For MHS, the native 157V channel is used directly.
+    The hail probability is then computed as a function of TB_157V,eq following the references below.
+
+    Returns
+    -------
+    xarray.DataArray
+       Hail probability as a unitless field in the range [0, 1]
+
+    Notes
+    -----
+    The algorithm uses:
+
+    - alpha = 104
+    - K = alpha / TB_157V,eq
+    - P_hail = 0.9844 * ln(K) + 0.9072
+
+    References
+    ----------
+    Laviola, S., Levizzani, V., Ferraro, R. R., & Beauchamp, J. 2020.
+    Hailstorm Detection by Satellite Microwave Radiometers.
+    Remote Sensing 12(4), 621.
+    https://doi.org/10.3390/rs12040621
+
+    Laviola, S., Monte, G., Levizzani, V., Ferraro, R. R., & Beauchamp, J. 2020.
+    A New Method for Hail Detection from the GPM Constellation: A Prospect for a Global Hailstorm Climatology.
+    Remote Sensing, 12(21), 3553.
+    https://doi.org/10.3390/rs12213553
+
+    """
+    from gpm.utils.pmw import get_pmw_channel
+
+    # Check input
+    valid_sensors = ["GMI", "SSMIS", "ATMS", "MHS"]
+    instrument = ds.attrs.get("InstrumentName", None)
+    if instrument not in ["GMI", "SSMIS", "ATMS", "MHS"]:
+        raise ValueError(f"MWCC Hail Probability method only available for {valid_sensors}")
+
+    # ------------------------------------------------------.
+    # Map to equivalent MHS 157V TB (K)
+    # - GMI
+    if instrument == "GMI":
+        tb = get_pmw_channel(ds, name="165V")
+        mask = np.isnan(tb)
+        correction_factor = xr.where(
+            tb > 188,
+            -0.9975,
+            xr.where(
+                (tb >= 163) & (tb <= 188),
+                5.4268,
+                xr.where((tb >= 149) & (tb < 163), -3.8086, xr.where((tb >= 122) & (tb < 149), 4.3922, -3.9719)),
+            ),
+        )  # tb < 122
+        tb_157_mhs = (tb + 3.2588) / 0.9612 + correction_factor
+
+    # - ATMS
+    if instrument == "ATMS":
+        tb = get_pmw_channel(ds, name="165.5QH")
+        mask = np.isnan(tb)
+        correction_factor = xr.where(
+            tb > 234,
+            1.7449,
+            xr.where(
+                (tb >= 216) & (tb <= 234),
+                -1.0071,
+                xr.where((tb >= 195) & (tb < 216), -0.8656, xr.where((tb >= 174) & (tb < 195), 0.2584, -3.4761)),
+            ),
+        )  # tb < 174
+        tb_157_mhs = (tb + 3.9855) / 1.0178 + correction_factor
+
+    # - SSMIS
+    if instrument == "SSMIS":
+        tb = get_pmw_channel(ds, name="150H")
+        mask = np.isnan(tb)
+        correction_factor = xr.where(
+            tb > 240,
+            -5.3656,
+            xr.where(
+                (tb >= 195) & (tb <= 240),
+                3.6134,
+                xr.where((tb >= 180) & (tb < 195), 1.6910, xr.where((tb >= 154) & (tb < 180), -0.4578, -7.3520)),
+            ),
+        )  # tb < 154
+        tb_157_mhs = (tb + 49.923) / 1.1530 + correction_factor
+
+    # - MHS
+    if instrument == "MHS":
+        tb_157_mhs = get_pmw_channel(ds, name="157V")
+        mask = np.isnan(tb_157_mhs)
+
+    # ------------------------------------------------------.
+    # Compute hail probability
+    alpha = 104
+    Kx = alpha / tb_157_mhs  # x = Tb157 of MHS
+    Hx = 0.9844 * np.log(Kx) + 0.9072
+    Hx = Hx.where(~mask)  # set to NaN where Bt input was NaN
+
+    # ------------------------------------------------------.
+    # Add attributes
+    Hx.name = "MWCC-H"
+    Hx.attrs = {
+        "description": "Probability of hail using MWCC-H algorithm",
+        "standard_name": "probability_of_hail",
+        "long_name": "MWCC-H probability of hail",
+        "units": "1",
+        "valid_range": [0.0, 1.0],
+        "algorithm": "MWCC-H (Microwave Cloud Classification - Hail)",
+        "instrument": instrument,
+    }
+    return Hx
+
+
 @check_software_availability(software="sklearn", conda_package="scikit-learn")
 @check_software_availability(software="umap", conda_package="umap-learn")
 def retrieve_UMAP_RGB(ds, scaler=None, n_neighbors=10, min_dist=0.01, random_state=None, **kwargs):

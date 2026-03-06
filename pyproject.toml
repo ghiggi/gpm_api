@@ -201,9 +201,8 @@ ignore = [
     "B006", # {} defaults in function arguments
     "PT011", # pytest raised error must be checked if match the expected error msg
     "PERF203",
-    "UP038",
+    "PLC0415", # import should be at the top-level of a file
     # "PD011", # suggest values --> to_numpy
-    "PD901",
     "PD013", # suggest melt instead of stack
     "PLW2901",
     "PLW0603",
