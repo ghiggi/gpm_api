@@ -11,12 +11,12 @@ readme = "README.md"
 authors = [
 	{ name = "Gionata Ghiggi", email = "gionata.ghiggi@epfl.ch" },
 ]
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Education",
-    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Operating System :: Unix",
