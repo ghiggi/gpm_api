@@ -165,7 +165,14 @@ class TestOpenGranuleMethods:
 
     @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH, GRID_EXAMPLE_FILEPATH])
     def test_open_files(self, filepath):
-        """Test open file with open_files."""
+        """Test open single file with open_files."""
         dt = gpm.open_files(filepath, cache=False, lock=False, decode_cf=True)
+        assert isinstance(dt, xr.DataTree)
+        dt.close()
+
+    @pytest.mark.parametrize("filepath", [ORBIT_EXAMPLE_FILEPATH, GRID_EXAMPLE_FILEPATH])
+    def test_open_multiple_files(self, filepath):
+        """Test open multiple files with open_files."""
+        dt = gpm.open_files([filepath, filepath], cache=False, lock=False, decode_cf=True)
         assert isinstance(dt, xr.DataTree)
         dt.close()

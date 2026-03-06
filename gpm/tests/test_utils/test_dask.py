@@ -25,10 +25,19 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the dask utilities."""
+import logging
+import os
+
 import pytest
 from dask.distributed import Client, LocalCluster
 
-from gpm.utils.dask import clean_memory, get_client, trim_memory
+from gpm.utils.dask import (
+    clean_memory,
+    close_dask_cluster,
+    get_client,
+    initialize_dask_cluster,
+    trim_memory,
+)
 
 
 @pytest.fixture(scope="module")
@@ -58,3 +67,46 @@ def test_get_client(dask_client):
     """Test get_client returns the current Dask client."""
     # Within the context of this test, the dask_client fixture is the active client
     assert get_client() == dask_client
+
+
+@pytest.fixture(autouse=True)
+def reset_dask_scheduler():
+    """Force all tests to run with scheduler=None."""
+    import dask
+
+    with dask.config.set(scheduler=None):
+        yield
+
+
+class TestInitializeDaskCluster:
+    """Test initialize_dask_cluster."""
+
+    def test_initialize_and_close_cluster(self, reset_dask_scheduler):
+        """Test basic initialization and closing of dask cluster."""
+        cluster, client = initialize_dask_cluster()
+        try:
+            # Basic checks
+            assert cluster.scheduler_address
+            assert client.status == "running"
+            assert os.environ.get("HDF5_USE_FILE_LOCKING") == "FALSE"
+        finally:
+            close_dask_cluster(cluster, client)
+            # After closing, the client should not be running
+            assert client.status != "running"
+
+    def test_initialize_with_memory_constraint(self, reset_dask_scheduler):
+        """Test setting an excessive memory enforce 1 worker."""
+        # Request a huge memory requirement → should fallback to at least 1 worker
+        cluster, client = initialize_dask_cluster(minimum_memory="10TB")
+        try:
+            assert len(cluster.workers) == 1
+        finally:
+            close_dask_cluster(cluster, client)
+
+    def test_close_dask_cluster_restores_log_level(self, reset_dask_scheduler):
+        """Test that closing dask cluster restores original log level."""
+        cluster, client = initialize_dask_cluster()
+        logger = logging.getLogger()
+        original_level = logger.level
+        close_dask_cluster(cluster, client)
+        assert logger.level == original_level

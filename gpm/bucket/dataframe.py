@@ -31,8 +31,6 @@ import pandas as pd
 import polars as pl
 import pyarrow as pa
 
-pd.options.mode.copy_on_write = True
-
 
 def pl_cut(values, bounds, include_lowest=True, right=True):
     """Polars equivalent functionality of pd.cut.

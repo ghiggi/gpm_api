@@ -545,7 +545,7 @@ def merge_granule_buckets(
     write_metadata=False,
     write_statistics=False,
     # Computing options
-    max_open_files=0,
+    max_open_files=999_999,  # 0 raise segfault in new pyarrow versions !
     use_threads=True,
     # Scanner options
     batch_size=131_072,

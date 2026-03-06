@@ -36,7 +36,7 @@ from gpm.utils.xarray import ensure_unique_chunking
 
 def get_df_object_columns(df):
     """Get the dataframe columns which have 'object' type."""
-    return list(df.select_dtypes(include="object").columns)
+    return list(df.select_dtypes(include=["object", "string"]).columns)
 
 
 def ensure_pyarrow_string_columns(df):
@@ -80,6 +80,10 @@ def to_dask_dataframe(ds):
 
     # Check dataset uniform chunking
     ds = ensure_unique_chunking(ds)
+
+    # Reset multindex if any (dask.dataframe does not support them)
+    multiindex_dims = [dim for dim, idx in ds.indexes.items() if isinstance(idx, pd.MultiIndex)]
+    ds = ds.reset_index(multiindex_dims)
 
     # Convert to to dask dataframe
     # - strings are converted to object !

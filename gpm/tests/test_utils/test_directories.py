@@ -30,13 +30,187 @@ import os
 import pytest
 
 from gpm.utils.directories import (
+    check_glob_pattern,
+    check_glob_patterns,
     get_filepaths_by_path,
     get_filepaths_within_paths,
     get_subdirectories,
     list_files,
+    list_paths,
     search_leaf_directories,
     search_leaf_files,
 )
+
+
+class TestCheckGlobPattern:
+    def test_non_string_input(self):
+        """Should raise TypeError when pattern is not a string."""
+        with pytest.raises(TypeError, match="Expect pattern as a string."):  # noqa: RUF043
+            check_glob_pattern(1)
+
+    def test_pattern_starts_with_slash(self):
+        """Should raise ValueError when pattern starts with a slash."""
+        with pytest.raises(ValueError, match="glob_pattern should not start with /"):
+            check_glob_pattern("/1")
+
+    def test_duplicate_separators(self):
+        """Should raise ValueError on duplicate path separators '//'."""
+        with pytest.raises(ValueError, match="glob_pattern expects path with single separators: /, not //"):
+            check_glob_pattern("path//with//duplicate//separators")
+
+    def test_pattern_with_single_backslash(self):
+        """Should raise ValueError when pattern uses single backslashes as separators."""
+        with pytest.raises(ValueError, match="glob_pattern expects path separators to be /, not"):
+            check_glob_pattern(r"path\window\style\*")
+
+    def test_pattern_with_escaped_backslashes(self):
+        """Should raise ValueError when pattern uses escaped backslashes as separators."""
+        with pytest.raises(ValueError, match="glob_pattern expects path separators to be /, not "):
+            check_glob_pattern(r"path\\window\\style\\*")
+
+    def test_valid_pattern(self):
+        """Should return the pattern unchanged when valid."""
+        assert check_glob_pattern("*") == "*"
+
+
+class TestCheckGlobPatterns:
+    def test_non_list_or_string(self):
+        """Should raise ValueError when patterns is neither str nor list."""
+        with pytest.raises(ValueError, match="'glob_patterns' must be a str or list of strings."):  # noqa: RUF043
+            check_glob_patterns(123)
+
+    def test_single_string_input(self):
+        """Should wrap single string into a list and validate its pattern."""
+        assert check_glob_patterns("*") == ["*"]
+
+    def test_list_of_strings(self):
+        """Should return list of validated patterns when given a list of strings."""
+        input_patterns = ["*", "data/*.csv"]
+        assert check_glob_patterns(input_patterns) == ["*", "data/*.csv"]
+
+    def test_list_with_invalid_pattern(self):
+        """Should raise ValueError if any pattern in the list is invalid."""
+        with pytest.raises(ValueError):
+            check_glob_patterns(["valid", "/invalid"])
+
+
+# import pathlib
+# tmp_path = pathlib.Path("/tmp/8")
+# tmp_path.mkdir()
+
+
+class TestListPaths:
+
+    def test_list_paths_non_recursive(self, tmp_path):
+        """Should return file paths for single-string glob pattern."""
+        f1 = tmp_path / "a.csv"
+        f2 = tmp_path / "b.csv"
+        f1.write_text("")
+        f2.write_text("")
+        # Files to ignore
+        nested = tmp_path / "a"
+        nested.mkdir(parents=True)
+        f3 = nested / "c.csv"
+        f3.write_text("")
+        # Test results
+        result = list_paths(tmp_path, glob_pattern="*.csv", recursive=False)
+        assert set(result) == {str(f1), str(f2)}
+
+    def test_list_paths_multiple_patterns(self, tmp_path):
+        """Should return combined paths for multiple glob patterns."""
+        f1 = tmp_path / "a.txt"
+        f2 = tmp_path / "b.csv"
+        f1.write_text("")
+        f2.write_text("")
+        result = list_paths(tmp_path, glob_pattern=["*.txt", "*.csv"], recursive=False)
+        assert set(result) == {str(f1), str(f2)}
+
+    def test_list_paths_recursive(self, tmp_path):
+        """Should list matches in all subdirectories (when pattern has no slash)."""
+        nested = tmp_path / "sub"
+        nested.mkdir(parents=True)
+        f1 = tmp_path / "file1.csv"
+        f2 = nested / "file2.csv"
+        f1.write_text("")
+        f2.write_text("")
+        # Test results
+        result = list_paths(tmp_path, glob_pattern="*.csv", recursive=True)
+        assert set(result) == {str(f1), str(f2)}
+
+    def test_list_paths_disable_recursive_on_slash(self, tmp_path):
+        """Should disable recursive search when pattern contains slash."""
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        f1 = sub / "file1.csv"
+        f1.write_text("")
+        # Files to ignore
+        nested = sub / "nested"
+        nested.mkdir()
+        f2 = nested / "file2.csv"
+        f2.write_text("")
+        # Test results
+        result = list_paths(tmp_path, glob_pattern="sub/*.csv", recursive=True)
+        assert result == [str(f1)]
+
+    @pytest.mark.parametrize("recursive", [True, False])
+    def test_list_paths_single_level_pattern(self, tmp_path, recursive):
+        """Should list files in multiple subdirectories with a single-level pattern.
+
+        Recursive is set to False with such type of glob pattern.
+        """
+        sub1 = tmp_path / "sub1"
+        sub2 = tmp_path / "sub2"
+        sub1.mkdir()
+        sub2.mkdir()
+        f1 = sub1 / "file1.csv"
+        f2 = sub2 / "file2.csv"
+        f1.write_text("")
+        f2.write_text("")
+        # File to ignore
+        nested = tmp_path / "a" / "b"
+        nested.mkdir(parents=True)
+        f3 = nested / "file3.csv"
+        f3.write_text("")
+        # Test results
+        result = list_paths(tmp_path, "*/*.csv", recursive=recursive)
+        assert set(result) == {str(f1), str(f2)}
+
+    @pytest.mark.parametrize("recursive", [True, False])
+    def test_list_paths_two_level_pattern(self, tmp_path, recursive):
+        """Should list files in multiple subdirectories with two-level pattern.
+
+        Recursive is set to False with such type of glob pattern.
+        """
+        sub1 = tmp_path / "sub1" / "a"
+        sub2 = tmp_path / "sub2" / "b"
+        sub1.mkdir(parents=True)
+        sub2.mkdir(parents=True)
+        f1 = sub1 / "file1.csv"
+        f2 = sub2 / "file2.csv"
+        f1.write_text("")
+        f2.write_text("")
+        # File to ignore
+        nested = tmp_path / "sub1" / "c" / "other"
+        nested.mkdir(parents=True)
+        f3 = nested / "file3.csv"
+        f3.write_text("")
+        f4 = tmp_path / "file4.csv"
+        f4.write_text("")
+        # Test results
+        result = list_paths(tmp_path, "*/*/*.csv", recursive=recursive)
+        assert set(result) == {str(f1), str(f2)}
+
+    def test_list_paths_in_nested_dirs_with_wildcard_pattern(self, tmp_path):
+        """Should find files matching pattern recursively in all subdirectoriess with wildcards."""
+        base_path = tmp_path / "data"
+        nested = base_path / "a" / "b"
+        nested.mkdir(parents=True)
+        f1 = base_path / "file1.txt"
+        f2 = nested / "file2.txt"
+        f1.write_text("")
+        f2.write_text("")
+        result = list_paths(tmp_path, glob_pattern="data/**/*.txt", recursive=True)
+        assert set(result) == {str(f1), str(f2)}
 
 
 def test_list_files(tmp_path):
@@ -104,8 +278,9 @@ def test_list_files(tmp_path):
 
     # Search for all files (with specific pattern) in all the subdirectories (from the sub directory)
     # --> file7 is not included because of different pattern
+    # --> file6 is not included because within subdirectory 07
     glob_pattern = os.path.join("*", f"*.{ext}")
-    expected_files = [file4, file6]
+    expected_files = [file4]
     assert set(list_files(tmp_path, glob_pattern, recursive=True)) == set(map(str, expected_files))
 
 

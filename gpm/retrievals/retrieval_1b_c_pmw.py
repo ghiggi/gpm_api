@@ -70,10 +70,7 @@ def retrieve_rgb_composites(ds):
         except Exception as e:
             print(f"RGB Composite {name} not available: {e!s}")
 
-    ds_rgb = xr.merge(
-        list_ds_rgb,
-        compat="override",
-    )  # deal with incompatible coords across scanModes (i.e. sunLocalTime)
+    ds_rgb = xr.merge(list_ds_rgb, compat="override", join="outer", combine_attrs="override")
     return ds_rgb
 
 
@@ -122,7 +119,7 @@ def retrieve_polarization_difference(xr_obj, variable=None):
 
     # Create PDs dataset
     dict_pd = {name: get_pd(da, name=name).rename(name) for name in pd_features}
-    ds_pd = xr.merge(dict_pd.values(), compat="minimal")
+    ds_pd = xr.merge(dict_pd.values(), compat="minimal", join="outer", combine_attrs="override")
     return ds_pd
 
 
@@ -144,7 +141,7 @@ def retrieve_polarization_ratio(xr_obj, variable=None):
 
     # Create PDs dataset
     dict_pr = {name: get_pr(da, name=name).rename(name) for name in pr_features}
-    ds_pr = xr.merge(dict_pr.values(), compat="minimal")
+    ds_pr = xr.merge(dict_pr.values(), compat="minimal", join="outer", combine_attrs="override")
     return ds_pr
 
 
@@ -378,6 +375,7 @@ def retrieve_mwcc_hail_probability(ds):
     Kx = alpha / tb_157_mhs  # x = Tb157 of MHS
     Hx = 0.9844 * np.log(Kx) + 0.9072
     Hx = Hx.where(~mask)  # set to NaN where Bt input was NaN
+    Hx = Hx.clip(min=0, max=1)  # limit to [0, 1]
 
     # ------------------------------------------------------.
     # Add attributes

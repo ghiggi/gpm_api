@@ -142,7 +142,8 @@ def _get_flattened_scan_mode_dataset(dt, scan_mode, groups, variables=None, pref
             ds = dt[scan_mode][group].to_dataset()
         ds = _process_group_dataset(ds, group, variables, prefix_group=prefix_group)
         list_ds.append(ds)
-    ds = xr.merge(list_ds)
+    with xr.set_options(use_new_combine_kwarg_defaults=True):
+        ds = xr.merge(list_ds, compat="override", join="outer", combine_attrs="override")
     ds.set_close(partial(_multi_file_closer, closers))
     return ds
 
@@ -175,13 +176,27 @@ def remove_unused_var_dims(ds):
     """
     if len(ds.data_vars) >= 1:
         unused_dims = unused_var_dims(ds)
-        unused_dims = [dim for dim in unused_dims if dim not in ["latv", "lonv", "nv"]]
+        unused_dims = [dim for dim in unused_dims if dim not in ["latv", "lonv", "nv", "time", "time_bnds"]]
         ds = ds.drop_dims(unused_dims)
     return ds
 
 
 ####----------------------------------------------------------------------------.
 #### Build dataset
+
+
+def _prepend_time_chunks(enc):
+    enc = enc.copy()
+
+    if "chunksizes" in enc:
+        enc["chunksizes"] = (1, *enc["chunksizes"])
+    elif "chunksize" in enc:
+        old = enc.pop("chunksize")
+        enc["chunksizes"] = (1, *old) if isinstance(old, (tuple, list)) else (1, old)
+
+    pref = enc.get("preferred_chunks", {})
+    enc["preferred_chunks"] = {"time": 1, **pref} if isinstance(pref, dict) else {"time": 1}
+    return enc
 
 
 def _get_scan_mode_dataset(
@@ -210,6 +225,17 @@ def _get_scan_mode_dataset(
     )
     closer = ds._close
 
+    # If GRID, time in coords and not a dimension of ds, add time dimension (L3 products)
+    if "along_track" not in ds.dims and "time" in coords and "time" not in set(ds.dims):
+        vars_to_expand = [
+            name for name, var in ds.data_vars.items() if "time" not in var.dims and not name.endswith("bnds")
+        ]
+        # Add time as first dimension
+        ds[vars_to_expand] = ds[vars_to_expand].expand_dims(time=[0])
+        # Update chunksize and preferred_chunks encoding
+        for name in vars_to_expand:
+            ds[name].encoding = _prepend_time_chunks(ds[name].encoding)
+
     # Assign coords
     # - Silence warning related to datetime precision
     with warnings.catch_warnings():
@@ -219,6 +245,8 @@ def _get_scan_mode_dataset(
             ds = ds.set_coords("lon_bnds")
         if "lat_bnds" in ds:
             ds = ds.set_coords("lat_bnds")
+        if "layer_bnds" in ds:  # L3 PMW
+            ds = ds.set_coords("layer_bnds")
 
     # Assign global attributes
     ds.attrs = attrs
@@ -249,6 +277,9 @@ def get_scan_modes_datasets(filepath, groups, variables, decode_cf, chunks, pref
             "DiagGroup",
             "AlgorithmRuntimeInfo",
             "GprofDHeadr",
+            "InputGenerationDateTimes",
+            "InputAlgorithmVersions",
+            "InputFileNames",
         ]
         scan_modes = set(nodes) - set(invalid_nodes)
 

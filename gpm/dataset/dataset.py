@@ -56,13 +56,16 @@ def _concat_datasets(l_datasets):
     concat_dim = "time" if is_grid else "along_track"
 
     # Concatenate the datasets
-    return xr.concat(
-        l_datasets,
-        dim=concat_dim,
-        coords="minimal",  # "all"
-        compat="override",
-        combine_attrs="override",
-    )
+    with xr.set_options(use_new_combine_kwarg_defaults=True):
+        ds = xr.concat(
+            l_datasets,
+            dim=concat_dim,
+            coords="minimal",  # "all"
+            compat="override",
+            join="outer",
+            combine_attrs="override",
+        )
+    return ds
 
 
 def _try_open_granule(filepath, scan_modes, decode_cf, variables, groups, prefix_group, chunks, **kwargs):
@@ -104,6 +107,10 @@ def _get_scan_modes_datasets_and_closers(filepaths, parallel, scan_modes, decode
     # - The underlying data are stored as dask arrays (and are not computed !)
     if parallel:
         list_info = dask.compute(*list_info)
+
+    # Check that at least one file has been opened successfully
+    if len(list_info) == 0:
+        raise ValueError("No files could be opened with current request.")
 
     # Retrieve scan modes list
     scan_modes = list(list_info[0][0])
@@ -497,12 +504,20 @@ def _infer_product_name(ds) -> str | None:
     """Infer product name from GPM Dataset attributes."""
     from gpm.io.products import get_products_attributes_dict
 
+    # Safely retrieve required attributes; return None if any are missing.
+    algorithm_id = ds.attrs.get("AlgorithmID")
+    satellite_name = ds.attrs.get("SatelliteName")
+    instrument_name = ds.attrs.get("InstrumentName")
+    if algorithm_id is None or satellite_name is None or instrument_name is None:
+        return None
+
+    # Try to identify the product based on the file attributes
     products_dict = get_products_attributes_dict()
     for product, attrs in products_dict.items():
         if (
-            attrs["AlgorithmID"] == ds.attrs["AlgorithmID"]
-            and attrs["SatelliteName"] == ds.attrs["SatelliteName"]
-            and attrs["InstrumentName"] == ds.attrs["InstrumentName"]
+            attrs["AlgorithmID"] == algorithm_id
+            and attrs["SatelliteName"] == satellite_name
+            and attrs["InstrumentName"] == instrument_name
         ):
             return product
     return None
@@ -526,7 +541,8 @@ def open_files(
     # Ensure filepaths is a list
     if isinstance(filepaths, str):
         filepaths = [filepaths]
-
+    if len(filepaths) == 0:
+        raise ValueError("No filepaths provided.")
     ##------------------------------------------------------------------------.
     dict_scan_modes, list_dt_closers = _get_scan_modes_datasets_and_closers(
         filepaths=filepaths,
@@ -540,6 +556,8 @@ def open_files(
         chunks=chunks,
         **kwargs,
     )
+    if len(dict_scan_modes) == 0:
+        raise ValueError("GPM-API couldn't open the file. Open a GitHub issue explaining the problem.")
 
     # Retrieve scan_modes from dictionary
     scan_modes = sorted(dict_scan_modes)
