@@ -78,9 +78,6 @@ changelog = "https://github.com/ghiggi/gpm_api/blob/main/CHANGELOG.md"
 [tool.setuptools_scm]
 write_to = "gpm/_version.py"
 
-[tool.setuptools]
-license-files = ["LICENSE"]
-
 [tool.setuptools.packages.find]
 include = ["gpm*"]
 
