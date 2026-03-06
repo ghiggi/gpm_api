@@ -32,6 +32,7 @@ import platform
 import re
 import shlex
 import subprocess
+import sys
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -203,6 +204,8 @@ def _get_commands_futures(executor, commands):
             subprocess.check_call,
             shlex.split(cmd),
             shell=False,
+            text=True,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         ): (i, cmd)
@@ -246,6 +249,24 @@ def _get_list_status_commands(dict_futures, pbar=None):
     return status
 
 
+def run_cmd_and_stream_output(cmd):
+    proc = subprocess.Popen(
+        shlex.split(cmd),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,
+    )
+
+    # wget progress is usually on stderr
+    for line in proc.stderr:
+        print(line, end="")
+        sys.stdout.flush()
+
+    proc.wait()
+    return proc
+
+
 def run(commands, n_threads=10, progress_bar=True, verbose=True):
     """Run bash commands in parallel using multithreading.
 
@@ -276,7 +297,7 @@ def run(commands, n_threads=10, progress_bar=True, verbose=True):
 
     # Run without progress bar
     elif (n_threads == 1) and (verbose is True):
-        results = [subprocess.run(shlex.split(cmd), shell=False, check=False) for cmd in commands]
+        results = [run_cmd_and_stream_output(cmd) for cmd in commands]
         status = [result.returncode == 0 for result in results]
     else:
         with ThreadPoolExecutor(max_workers=n_threads) as executor:
@@ -312,7 +333,8 @@ def curl_pps_cmd(remote_filepath, local_filepath, username, password):
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"  # --verbose
     # - Define command
-    return f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
+    return cmd
 
 
 def curl_ges_disc_cmd(remote_filepath, local_filepath, username="dummy", password="dummy"):  # noqa
@@ -324,7 +346,8 @@ def curl_ges_disc_cmd(remote_filepath, local_filepath, username="dummy", passwor
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"
     # - Define command
-    return f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
+    cmd = f"curl {auth} {options} --url {remote_filepath} -o '{local_filepath}'"
+    return cmd
 
 
 def wget_pps_cmd(remote_filepath, local_filepath, username, password):
@@ -341,7 +364,8 @@ def wget_pps_cmd(remote_filepath, local_filepath, username, password):
     # - Define options
     options = "-np -R .html,.tmp -nH -c --read-timeout=10 --tries=5"
     # - Define command
-    return f"wget {auth} {options} -O '{local_filepath}' {remote_filepath}"
+    cmd = f"wget {auth} {options} -O '{local_filepath}' {remote_filepath}"
+    return cmd
 
 
 def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password="dummy"):  # noqa
@@ -973,6 +997,17 @@ def download_archive(
     product_type = check_product_type(product_type=product_type)
     product = check_product(product=product, product_type=product_type)
     version = check_product_version(version, product)
+
+    # V8 warnings
+    if product_type == "RS" and version == 8:  # Temporary warning
+        msg = (
+            "GPM Data Archive is currently being reprocessed for version 8."
+            + f"If {product} data are not available, specify version=7."
+        )
+        warnings.warn(msg, GPMDownloadWarning, stacklevel=2)
+    if storage != "PPS" and version == 8:  # Temporary warning
+        raise ValueError("GPM V8 data can currently be downloaded only using storage=PPS.")
+
     transfer_tool = check_transfer_tool(transfer_tool)
     start_time, end_time = check_start_end_time(start_time, end_time)
     start_time, end_time = check_valid_time_request(start_time, end_time, product)
