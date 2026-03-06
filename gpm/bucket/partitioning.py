@@ -54,8 +54,6 @@ from gpm.utils.geospatial import (
     get_geographic_extent_around_point,
 )
 
-pd.options.mode.copy_on_write = True
-
 # Future methods:
 # to_spherically (geographic)
 # to_geopandas [lat_bin, lon_bin, geometry]

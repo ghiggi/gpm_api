@@ -1,0 +1,312 @@
+1A-GMI:
+  AlgorithmID: 1AGMI
+  SatelliteName: GPM
+  InstrumentName: GMI
+1A-TMI:
+  AlgorithmID: 1ATMI
+  SatelliteName: TRMM
+  InstrumentName: TMI
+1B-GMI:
+  AlgorithmID: 1BGMI
+  SatelliteName: GPM
+  InstrumentName: GMI
+1B-Ka:
+  AlgorithmID: 1BKa
+  SatelliteName: GPM
+  InstrumentName: DPR
+1B-Ku:
+  AlgorithmID: 1BKu
+  SatelliteName: GPM
+  InstrumentName: DPR
+1B-PR:
+  AlgorithmID: 1BPR
+  SatelliteName: TRMM
+  InstrumentName: PR
+1B-TMI:
+  AlgorithmID: 1BTMI
+  SatelliteName: TRMM
+  InstrumentName: TMI
+1C-AMSR2-GCOMW1:
+  AlgorithmID: 1CAMSR2
+  SatelliteName: GCOMW1
+  InstrumentName: AMSR2
+1C-AMSRE-AQUA:
+  AlgorithmID: 1CAMSRE
+  SatelliteName: AQUA
+  InstrumentName: AMSRE
+1C-AMSUB-NOAA15:
+  AlgorithmID: 1CAMSUB
+  SatelliteName: NOAA15
+  InstrumentName: AMSUB
+1C-AMSUB-NOAA16:
+  AlgorithmID: 1CAMSUB
+  SatelliteName: NOAA16
+  InstrumentName: AMSUB
+1C-AMSUB-NOAA17:
+  AlgorithmID: 1CAMSUB
+  SatelliteName: NOAA17
+  InstrumentName: AMSUB
+1C-ATMS-NOAA20:
+  AlgorithmID: 1CATMS
+  SatelliteName: NOAA20
+  InstrumentName: ATMS
+1C-ATMS-NOAA21:
+  AlgorithmID: 1CATMS
+  SatelliteName: NOAA21
+  InstrumentName: ATMS
+1C-ATMS-NPP:
+  AlgorithmID: 1CATMS
+  SatelliteName: NPP
+  InstrumentName: ATMS
+1C-GMI-R:
+  AlgorithmID: 1CGMI
+  SatelliteName: GPM
+  InstrumentName: GMI
+1C-GMI:
+  AlgorithmID: 1CGMI
+  SatelliteName: GPM
+  InstrumentName: GMI
+1C-MHS-METOPA:
+  AlgorithmID: 1CMHS
+  SatelliteName: METOPA
+  InstrumentName: MHS
+1C-MHS-METOPB:
+  AlgorithmID: 1CMHS
+  SatelliteName: METOPB
+  InstrumentName: MHS
+1C-MHS-METOPC:
+  AlgorithmID: 1CMHS
+  SatelliteName: METOPC
+  InstrumentName: MHS
+1C-MHS-NOAA18:
+  AlgorithmID: 1CMHS
+  SatelliteName: NOAA18
+  InstrumentName: MHS
+1C-MHS-NOAA19:
+  AlgorithmID: 1CMHS
+  SatelliteName: NOAA19
+  InstrumentName: MHS
+1C-SAPHIR-MT1:
+  AlgorithmID: 1CSAPHIR
+  SatelliteName: MT1
+  InstrumentName: SAPHIR
+1C-SSMI-F08:
+  AlgorithmID: 1CSSMI
+  SatelliteName: F08
+  InstrumentName: SSMI
+1C-SSMI-F10:
+  AlgorithmID: 1CSSMI
+  SatelliteName: F10
+  InstrumentName: SSMI
+1C-SSMI-F11:
+  AlgorithmID: 1CSSMI
+  SatelliteName: F11
+  InstrumentName: SSMI
+1C-SSMI-F13:
+  AlgorithmID: 1CSSMI
+  SatelliteName: F13
+  InstrumentName: SSMI
+1C-SSMI-F14:
+  AlgorithmID: 1CSSMI
+  SatelliteName: F14
+  InstrumentName: SSMI
+1C-SSMI-F15:
+  AlgorithmID: 1CSSMI
+  SatelliteName: F15
+  InstrumentName: SSMI
+1C-SSMIS-F16:
+  AlgorithmID: 1CSSMIS
+  SatelliteName: F16
+  InstrumentName: SSMIS
+1C-SSMIS-F17:
+  AlgorithmID: 1CSSMIS
+  SatelliteName: F17
+  InstrumentName: SSMIS
+1C-SSMIS-F18:
+  AlgorithmID: 1CSSMIS
+  SatelliteName: F18
+  InstrumentName: SSMIS
+1C-SSMIS-F19:
+  AlgorithmID: 1CSSMIS
+  SatelliteName: F19
+  InstrumentName: SSMIS
+1C-TMI:
+  AlgorithmID: 1CTMI
+  SatelliteName: TRMM
+  InstrumentName: TMI
+2A-AMSR2-GCOMW1-CLIM:
+  AlgorithmID: 2AGPROFAMSR2
+  SatelliteName: GCOMW1
+  InstrumentName: AMSR2
+2A-AMSRE-AQUA-CLIM:
+  AlgorithmID: 2AGPROFAMSRE
+  SatelliteName: AQUA
+  InstrumentName: AMSRE
+2A-AMSUB-NOAA15-CLIM:
+  AlgorithmID: 2AGPROFAMSUB
+  SatelliteName: NOAA15
+  InstrumentName: AMSUB
+2A-AMSUB-NOAA16-CLIM:
+  AlgorithmID: 2AGPROFAMSUB
+  SatelliteName: NOAA16
+  InstrumentName: AMSUB
+2A-AMSUB-NOAA17-CLIM:
+  AlgorithmID: 2AGPROFAMSUB
+  SatelliteName: NOAA17
+  InstrumentName: AMSUB
+2A-ATMS-NOAA20-CLIM:
+  AlgorithmID: 2AGPROFATMS
+  SatelliteName: NOAA20
+  InstrumentName: ATMS
+2A-ATMS-NOAA21-CLIM:
+  AlgorithmID: 2AGPROFATMS
+  SatelliteName: NOAA21
+  InstrumentName: ATMS
+2A-ATMS-NOAA21:
+  AlgorithmID: 2AGPROFATMS
+  SatelliteName: NOAA21
+  InstrumentName: ATMS
+2A-ATMS-NPP-CLIM:
+  AlgorithmID: 2AGPROFATMS
+  SatelliteName: NPP
+  InstrumentName: ATMS
+2A-DPR:
+  AlgorithmID: 2ADPR
+  SatelliteName: GPM
+  InstrumentName: DPR
+2A-ENV-DPR:
+  AlgorithmID: 2ADPRENV
+  SatelliteName: GPM
+  InstrumentName: DPR
+2A-ENV-Ka:
+  AlgorithmID: 2AKaENV
+  SatelliteName: GPM
+  InstrumentName: DPR
+2A-ENV-Ku:
+  AlgorithmID: 2AKuENV
+  SatelliteName: GPM
+  InstrumentName: DPR
+2A-ENV-PR:
+  AlgorithmID: 2APRENV
+  SatelliteName: TRMM
+  InstrumentName: PR
+2A-GMI-CLIM:
+  AlgorithmID: 2AGPROFGMI
+  SatelliteName: GPM
+  InstrumentName: GMI
+2A-GMI:
+  AlgorithmID: 2AGPROFGMI
+  SatelliteName: GPM
+  InstrumentName: GMI
+2A-GPM-SLH:
+  AlgorithmID: 2HSLH
+  SatelliteName: GPM
+  InstrumentName: DPR
+2A-Ka:
+  AlgorithmID: 2AKa
+  SatelliteName: GPM
+  InstrumentName: DPR
+2A-Ku:
+  AlgorithmID: 2AKu
+  SatelliteName: GPM
+  InstrumentName: DPR
+2A-MHS-METOPA-CLIM:
+  AlgorithmID: 2AGPROFMHS
+  SatelliteName: METOPA
+  InstrumentName: MHS
+2A-MHS-METOPB-CLIM:
+  AlgorithmID: 2AGPROFMHS
+  SatelliteName: METOPB
+  InstrumentName: MHS
+2A-MHS-METOPC-CLIM:
+  AlgorithmID: 2AGPROFMHS
+  SatelliteName: METOPC
+  InstrumentName: MHS
+2A-MHS-NOAA18-CLIM:
+  AlgorithmID: 2AGPROFMHS
+  SatelliteName: NOAA18
+  InstrumentName: MHS
+2A-MHS-NOAA19-CLIM:
+  AlgorithmID: 2AGPROFMHS
+  SatelliteName: NOAA19
+  InstrumentName: MHS
+2A-PR:
+  AlgorithmID: 2APR
+  SatelliteName: TRMM
+  InstrumentName: PR
+2A-SAPHIR-MT1-CLIM:
+  AlgorithmID: 2APRPSSAPHIR
+  SatelliteName: MT1
+  InstrumentName: SAPHIR
+2A-SAPHIR-MT1:
+  AlgorithmID: 2APRPSSAPHIR
+  SatelliteName: MT1
+  InstrumentName: SAPHIR
+2A-SSMI-F08-CLIM:
+  AlgorithmID: 2AGPROFSSMI
+  SatelliteName: F08
+  InstrumentName: SSMI
+2A-SSMI-F10-CLIM:
+  AlgorithmID: 2AGPROFSSMI
+  SatelliteName: F10
+  InstrumentName: SSMI
+2A-SSMI-F11-CLIM:
+  AlgorithmID: 2AGPROFSSMI
+  SatelliteName: F11
+  InstrumentName: SSMI
+2A-SSMI-F13-CLIM:
+  AlgorithmID: 2AGPROFSSMI
+  SatelliteName: F13
+  InstrumentName: SSMI
+2A-SSMI-F14-CLIM:
+  AlgorithmID: 2AGPROFSSMI
+  SatelliteName: F14
+  InstrumentName: SSMI
+2A-SSMI-F15-CLIM:
+  AlgorithmID: 2AGPROFSSMI
+  SatelliteName: F15
+  InstrumentName: SSMI
+2A-SSMIS-F16-CLIM:
+  AlgorithmID: 2AGPROFSSMIS
+  SatelliteName: F16
+  InstrumentName: SSMIS
+2A-SSMIS-F17-CLIM:
+  AlgorithmID: 2AGPROFSSMIS
+  SatelliteName: F17
+  InstrumentName: SSMIS
+2A-SSMIS-F18-CLIM:
+  AlgorithmID: 2AGPROFSSMIS
+  SatelliteName: F18
+  InstrumentName: SSMIS
+2A-SSMIS-F19-CLIM:
+  AlgorithmID: 2AGPROFSSMIS
+  SatelliteName: F19
+  InstrumentName: SSMIS
+2A-TMI-CLIM:
+  AlgorithmID: 2AGPROFTMI
+  SatelliteName: TRMM
+  InstrumentName: TMI
+2A-TRMM-SLH:
+  AlgorithmID: 2HSLHT
+  SatelliteName: TRMM
+  InstrumentName: PR
+2B-GPM-CORRA:
+  AlgorithmID: 2BCMB
+  SatelliteName: GPM
+  InstrumentName: DPRGMI
+2B-GPM-CSH:
+  AlgorithmID: 2HCSH
+  SatelliteName: GPM
+  InstrumentName: DPRGMI
+2B-TRMM-CORRA:
+  AlgorithmID: 2BCMBT
+  SatelliteName: TRMM
+  InstrumentName: PRTMI
+2B-TRMM-CSH:
+  AlgorithmID: 2HCSHT
+  SatelliteName: TRMM
+  InstrumentName: PRTMI
+IMERG-FR:
+  AlgorithmID: 3IMERGHH
+  SatelliteName: MULTI
+  InstrumentName: MERGED

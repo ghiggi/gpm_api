@@ -35,28 +35,99 @@ import re
 from gpm.utils.list import flatten_list
 
 
+def check_glob_pattern(pattern: str) -> None:
+    """Check if glob pattern is a string and is a valid pattern.
+
+    Parameters
+    ----------
+    pattern : str
+        String to be checked.
+    """
+    if not isinstance(pattern, str):
+        raise TypeError("Expect pattern as a string.")
+    if pattern[0] == "/":
+        raise ValueError("glob_pattern should not start with /")
+    if "//" in pattern:
+        raise ValueError("glob_pattern expects path with single separators: /, not //")
+    if "\\" in pattern:
+        raise ValueError("glob_pattern expects path separators to be /, not \\")
+    return pattern
+
+
+def check_glob_patterns(patterns: str | list) -> list:
+    """Check if glob patterns are valids."""
+    if not isinstance(patterns, (str, list)):
+        raise ValueError("'glob_patterns' must be a str or list of strings.")
+    if isinstance(patterns, str):
+        patterns = [patterns]
+    patterns = [check_glob_pattern(pattern) for pattern in patterns]
+    return patterns
+
+
 def _recursive_glob(dir_path, glob_pattern):
+    # ** search for in zero or all subdirectories recursively
+
     dir_path = pathlib.Path(dir_path)
     return [str(path) for path in dir_path.rglob(glob_pattern)]
 
 
-def list_paths(dir_path, glob_pattern, recursive=False):
-    """Return a list of filepaths and directory paths."""
+def _is_hidden(path):
+    """Return True if any component of path is hidden."""
+    return any(part.startswith(".") for part in path.split(os.sep))
+
+
+def _list_paths(dir_path, glob_pattern, recursive=False, skip_hidden=True):
+    """Return a list of filepaths and directory paths based on a single glob pattern."""
+    # If glob pattern has separators, disable recursive option
+    if "/" in glob_pattern and "**" not in glob_pattern:
+        recursive = False
+    # Search paths
     if not recursive:
-        return glob.glob(os.path.join(dir_path, glob_pattern))
-    return _recursive_glob(dir_path, glob_pattern)
+        matches = glob.glob(os.path.join(dir_path, glob_pattern))
+    else:
+        matches = _recursive_glob(dir_path, glob_pattern)
+
+    # Filter out anything with a hidden component
+    if skip_hidden:
+        matches = [p for p in matches if not _is_hidden(os.path.relpath(p, dir_path))]
+    return matches
 
 
-def list_files(dir_path, glob_pattern, recursive=False):
+def list_paths(dir_path, glob_pattern, recursive=False, skip_hidden=True):
+    """Return a list of filepaths and directory paths.
+
+    This function accept also a list of glob patterns !
+    """
+    # Check validity of glob pattern(s)
+    glob_patterns = check_glob_patterns(glob_pattern)
+    # Search path for specified glob patterns
+    paths = flatten_list(
+        [
+            _list_paths(dir_path=dir_path, glob_pattern=glob_pattern, recursive=recursive, skip_hidden=skip_hidden)
+            for glob_pattern in glob_patterns
+        ],
+    )
+    return paths
+
+
+def list_files(dir_path, glob_pattern="*", recursive=False, skip_hidden=True, return_paths=True):
     """Return a list of filepaths (exclude directory paths)."""
-    paths = list_paths(dir_path, glob_pattern, recursive=recursive)
-    return [f for f in paths if os.path.isfile(f)]
+    paths = list_paths(dir_path, glob_pattern, recursive=recursive, skip_hidden=skip_hidden)
+    filepaths = [f for f in paths if os.path.isfile(f)]
+    # If return_paths is False, return only files names
+    if not return_paths:
+        filepaths = [os.path.basename(f) for f in filepaths]
+    return filepaths
 
 
-def list_directories(dir_path, glob_pattern, recursive=False):
-    """Return a list of filepaths (exclude directory paths)."""
-    paths = list_paths(dir_path, glob_pattern, recursive=recursive)
-    return [f for f in paths if os.path.isdir(f)]
+def list_directories(dir_path, glob_pattern="*", recursive=False, skip_hidden=True, return_paths=True):
+    """Return a list of directory paths (exclude file paths)."""
+    paths = list_paths(dir_path, glob_pattern, recursive=recursive, skip_hidden=skip_hidden)
+    dir_paths = [f for f in paths if os.path.isdir(f)]
+    # If return_paths is False, return only directory names
+    if not return_paths:
+        dir_paths = [os.path.basename(f) for f in dir_paths]
+    return dir_paths
 
 
 ###########################

@@ -1,11 +1,16 @@
 ---
-name: Tests
-on: [push, pull_request, workflow_dispatch]
+name: Tests Windows
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'  # Run at 00:00 UTC on the 1st day of every month
+
 jobs:
   tests:
     name:
-      Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ' with
-      latest dependencies' || '' }}
+      Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}${{ matrix.experimental && ' with latest dependencies' || '' }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -14,10 +19,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
         experimental: [false]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up micromamba and install package dependencies

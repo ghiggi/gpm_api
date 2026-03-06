@@ -74,7 +74,6 @@ def test_to_pandas_dataframe():
 
     # Test stacked orbit
     ds_beam = ds.stack(dim={"beam": ["cross_track", "along_track"]})
-    # Write to pandas
     df = to_pandas_dataframe(ds_beam)
     # Check results
     assert sorted(df.columns) == expected_columns
@@ -127,7 +126,6 @@ def test_to_dask_dataframe():
 
     # Test stacked orbit
     ds_beam = ds.stack(dim={"beam": ["cross_track", "along_track"]})
-    # Write to pandas
     df = to_dask_dataframe(ds_beam)
     # Check results
     assert sorted(df.columns) == expected_columns

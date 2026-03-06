@@ -239,10 +239,23 @@ def _remap_pmw_datatree(dt_expanded, scan_modes, scan_mode_reference, radius_of_
         ds[[var for var in ds.data_vars if not np.isin(["scan_mode", "pmw_frequency"], ds[var].dims).any()]]
         for ds in list_remapped
     ]
-    ds_unique = xr.merge(list_unique)
-    ds_pmw = xr.concat(list_pmw_freq, dim="pmw_frequency", coords="minimal", compat="override")
-    ds_scan_mode = xr.concat(list_scan_mode, dim="scan_mode", coords="minimal", compat="override")
-    ds = xr.merge([ds_pmw, ds_scan_mode, ds_unique], compat="override")
+    with xr.set_options(use_new_combine_kwarg_defaults=True):
+        ds_unique = xr.merge(list_unique, compat="no_conflicts", join="outer", combine_attrs="override")
+        ds_pmw = xr.concat(
+            list_pmw_freq,
+            dim="pmw_frequency",
+            coords="minimal",
+            compat="override",
+            combine_attrs="override",
+        )
+        ds_scan_mode = xr.concat(
+            list_scan_mode,
+            dim="scan_mode",
+            coords="minimal",
+            compat="override",
+            combine_attrs="override",
+        )
+        ds = xr.merge([ds_pmw, ds_scan_mode, ds_unique], compat="override", join="outer", combine_attrs="override")
 
     # Add back missing variables of dt[scan_mode_reference]
     # TODO: SClatitude, SClongitude, SCaltitude, FractionalGranuleNumber
@@ -524,7 +537,7 @@ def regrid_pmw_l1(dt, scan_mode_reference="S1", radius_of_influence=20_000):
             list_ds.append(output_ds)
 
         # Concatenate dataset
-        ds = xr.concat(list_ds, dim="along_track")
+        ds = xr.concat(list_ds, dim="along_track", coords="minimal", compat="override")
     # If i.e. TCPRIMED product, remap full datatree directly
     else:
         ds = _remap_pmw_datatree(

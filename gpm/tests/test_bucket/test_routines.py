@@ -42,6 +42,7 @@ from gpm.bucket.routines import (
 )
 from gpm.io.info import get_key_from_filepath
 from gpm.tests.utils.fake_datasets import get_orbit_dataarray
+from gpm.utils.dask import close_dask_cluster, initialize_dask_cluster
 
 
 def create_granule_dataframe(df_type="pandas"):
@@ -71,7 +72,7 @@ def granule_to_df_toy_func(filepath):
 #### Test public routines
 # # TO DEBUG
 # import pathlib
-# tmp_path = pathlib.Path("/tmp/bucket01")
+# tmp_path = pathlib.Path("/tmp/bucket03")
 
 DF_TYPES = ["pandas", "dask"]
 
@@ -215,8 +216,6 @@ def test_write_granules_bucket_capture_error(tmp_path, capsys):
 
 def test_write_granules_bucket_parallel(tmp_path):
     """Test write_granules_bucket routine with dask distributed client."""
-    from dask.distributed import Client, LocalCluster
-
     # Define bucket dir
     bucket_dir = tmp_path
 
@@ -230,18 +229,13 @@ def test_write_granules_bucket_parallel(tmp_path):
     # Define parallel options
     parallel = True
     max_concurrent_tasks = None
-    max_dask_total_tasks = 2
+    max_dask_total_tasks = 2  # to force restarting for testing purpose
 
     # Define spatial partitioning
     spatial_partitioning = LonLatPartitioning(size=(10, 10))
 
     # Create Dask Distributed LocalCluster
-    cluster = LocalCluster(
-        n_workers=2,
-        threads_per_worker=1,
-        processes=True,
-    )
-    client = Client(cluster)
+    cluster, client = initialize_dask_cluster()
 
     # Run processing
     write_granules_bucket(
@@ -257,7 +251,7 @@ def test_write_granules_bucket_parallel(tmp_path):
     )
 
     # Close Dask Distributed client
-    client.close()
+    close_dask_cluster(cluster, client)
 
     # Check directories with wished partitioning format created
     expected_directories = [
@@ -267,6 +261,10 @@ def test_write_granules_bucket_parallel(tmp_path):
         "lon_bin=5.0",
     ]
     assert expected_directories == sorted(os.listdir(bucket_dir))
+
+
+# import pathlib
+# tmp_path = pathlib.Path("/tmp/bucket06")
 
 
 def test_merge_granule_buckets(tmp_path):
@@ -347,6 +345,7 @@ def test_merge_granule_buckets_update(tmp_path):
         src_bucket_dir=src_bucket_dir,
         dst_bucket_dir=dst_bucket_dir,
         write_metadata=False,
+        use_threads=False,
     )
 
     # Check file naming
@@ -388,7 +387,7 @@ class TestMergeGranuleBucketsErrors:
         """Test that OSError is raised when destination bucket directory does not exist in update mode."""
         # Create a temporary source directory.
         src_bucket = tmp_path / "src_bucket"
-        src_bucket.mkdir()
+        src_bucket.mkdir(parents=True)
 
         # Use a non-existent destination directory.
         dst_bucket = tmp_path / "nonexistent_bucket"
@@ -406,9 +405,9 @@ class TestMergeGranuleBucketsErrors:
         # Create both source and destination directories.
         src_bucket = tmp_path / "src_bucket"
         dst_bucket = tmp_path / "dst_bucket"
-        src_bucket.mkdir()
-        dst_bucket.mkdir()
-        with pytest.raises(NotImplementedError, match="update=True.*metadata"):
+        src_bucket.mkdir(parents=True)
+        dst_bucket.mkdir(parents=True)
+        with pytest.raises(NotImplementedError, match="update=True.*metadata"):  # noqa: RUF043
             merge_granule_buckets(
                 src_bucket_dir=str(src_bucket),
                 dst_bucket_dir=str(dst_bucket),

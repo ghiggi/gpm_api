@@ -40,7 +40,7 @@ from gpm.configs import (  # noqa
     define_configs,
     read_configs,
 )
-from gpm.dataset.dataset import open_dataset, open_datatree  # noqa
+from gpm.dataset.dataset import open_dataset, open_datatree, open_files  # noqa
 from gpm.dataset.datatree import open_raw_datatree  # noqa
 from gpm.dataset.granule import open_granule, open_granule_dataset, open_granule_datatree  # noqa
 from gpm.dataset.tcprimed import open_granule_tcprimed  # noqa

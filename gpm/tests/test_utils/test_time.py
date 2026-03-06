@@ -49,8 +49,6 @@ from gpm.utils.time import (
     subset_by_time_slice,
 )
 
-N = float("nan")
-
 
 class TestSubsetByTime:
     """Test subset_by_time."""
@@ -199,10 +197,11 @@ def test_interpolate_nat():
     np.testing.assert_equal(time, returned_time)
 
     # Test arrays too small to interpolate
+    N = float("nan")
     for hour_list in ([], [N], [1, N]):
-        time = create_fake_datetime_array_from_hours_list(hour_list)
-        returned_time = interpolate_nat(time, **kwargs)
-        np.testing.assert_equal(time, returned_time)
+        timesteps = create_fake_datetime_array_from_hours_list(hour_list)
+        returned_time = interpolate_nat(timesteps, **kwargs)
+        np.testing.assert_equal(timesteps, returned_time)
 
     # Test with outside NaNs (not extrapolated)
     time = create_fake_datetime_array_from_hours_list([N, 1, 2, 3, N])
@@ -226,6 +225,8 @@ def test_interpolate_nat():
 
 def test_infill_timesteps():
     """Test infill_timesteps."""
+    N = float("nan")
+
     # Test with no NaNs
     time = create_fake_datetime_array_from_hours_list(np.arange(0, 10))
     returned_time = infill_timesteps(time, limit=5)
@@ -267,6 +268,7 @@ def test_infill_timesteps():
 class TestEnsureTimeValidity:
     """Test ensure_time_validity."""
 
+    N = float("nan")
     time = create_fake_datetime_array_from_hours_list([1, 2, N, N, N, 6, 7])
     expected_time = create_fake_datetime_array_from_hours_list([1, 2, 3, 4, 5, 6, 7])
 

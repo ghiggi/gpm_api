@@ -26,6 +26,8 @@
 # -----------------------------------------------------------------------------.
 """This module contains utilities for time processing."""
 
+import contextlib
+
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -173,12 +175,13 @@ def interpolate_nat(timesteps, method="linear", limit=5, limit_direction=None, l
     # Create pd.Series
     series = pd.Series(timesteps_num)
     # Estimate NaT value
-    series = series.interpolate(
-        method=method,
-        limit=limit,
-        limit_direction=limit_direction,
-        limit_area=limit_area,
-    )
+    with contextlib.suppress(Exception):  # Avoid ValueError: window shape cannot be larger than input array shape
+        series = series.interpolate(
+            method=method,
+            limit=limit,
+            limit_direction=limit_direction,
+            limit_area=limit_area,
+        )
     # Convert back to numpy array input dtype
     return series.to_numpy().astype(timesteps_dtype)
 

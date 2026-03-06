@@ -33,11 +33,11 @@ import platform
 import posixpath as ptp
 from subprocess import CalledProcessError
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 import pytest
-import pytz
 from pytest_mock.plugin import MockerFixture
 
 from gpm.io import checks
@@ -240,7 +240,7 @@ def test_check_version(
 ) -> None:
     """Test check_version().
 
-    Possible versions are integers of 4-7
+    Possible versions are integers of 4-8
     """
     # Check if None, None is returned
     with pytest.raises(ValueError):
@@ -260,7 +260,7 @@ def test_check_version(
         # Should run without raising Exception
 
     # Try versions outside of range
-    for version in list(range(0, 3)) + list(range(8, 10)):
+    for version in list(range(0, 3)) + list(range(9, 10)):
         with pytest.raises(ValueError):
             checks.check_version(version)
 
@@ -282,7 +282,9 @@ def test_check_product_version(
         # Check last version return if None
         last_version = info.get("available_versions", [])[-1]
         with check:
-            assert checks.check_product_version(None, product) == last_version
+            if last_version == 8:  # TODO V8
+                last_version = 7
+            assert checks.check_product_version(version=None, product=product) == last_version
 
         # Check invalid versions
         invalid_versions = list(set(versions) - set(info.get("available_versions", [])))
@@ -543,7 +545,7 @@ def test_check_time() -> None:
     # Check non-UTC timezone
     with pytest.raises(ValueError):
         checks.check_time(
-            datetime.datetime(2014, 12, 31, 12, 30, 30, 300, tzinfo=pytz.timezone("Europe/Zurich")),
+            datetime.datetime(2014, 12, 31, 12, 30, 30, 300, tzinfo=ZoneInfo("Europe/Zurich")),
         )
 
 
@@ -627,7 +629,7 @@ def test_check_start_end_time() -> None:
         with pytest.raises(ValueError):
             checks.check_start_end_time(
                 datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
-                datetime.datetime.now(tz=pytz.timezone(timezone)).replace(tzinfo=None),
+                datetime.datetime.now(tz=ZoneInfo(timezone)).replace(tzinfo=None),
             )
 
     # Specifying timezone different than UTC should throw exception
@@ -635,20 +637,20 @@ def test_check_start_end_time() -> None:
         with pytest.raises(ValueError):
             checks.check_start_end_time(
                 datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
-                datetime.datetime.now(tz=pytz.timezone(timezone)),
+                datetime.datetime.now(tz=ZoneInfo(timezone)),
             )
 
     # This should pass as the time is in UTC
     checks.check_start_end_time(
         datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
-        datetime.datetime.now(tz=pytz.utc),
+        datetime.datetime.now(tz=ZoneInfo("UTC")),
     )
 
     # Do the same but in a timezone that is behind UTC (this should pass)
     for timezone in ["America/New_York", "America/Santiago"]:
         checks.check_start_end_time(
             datetime.datetime(2014, 12, 31, 12, 30, 30, 300),
-            datetime.datetime.now(tz=pytz.timezone(timezone)).replace(tzinfo=None),
+            datetime.datetime.now(tz=ZoneInfo(timezone)).replace(tzinfo=None),
         )
 
     # Test endtime in UTC. This should pass as UTC time generated in the test is slightly

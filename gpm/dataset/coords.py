@@ -51,29 +51,45 @@ def _get_orbit_scan_time(dt, scan_mode):
 
 def get_orbit_coords(dt, scan_mode):
     """Get coordinates from Orbit objects."""
+    # Decode FileHeader string
     attrs = decode_string(dt.attrs["FileHeader"])
+    # Retrieve Granule ID
     granule_id = attrs["GranuleNumber"]
 
+    # Retrieve time and lat/lon coordinates
     ds = dt[scan_mode]
     time = _get_orbit_scan_time(dt, scan_mode)
-
     lon = ds["Longitude"].data
     lat = ds["Latitude"].data
-    n_along_track, n_cross_track = lon.shape
+
+    # Define other coordinates
+    shape = lon.shape
+    if len(shape) == 2:
+        n_along_track, n_cross_track = shape
+        geolocation_dims = ["along_track", "cross_track"]
+    else:  # 1 (along-track only, e.g GMI-1A S3)
+        n_along_track = shape[0]
+        n_cross_track = 0
+        geolocation_dims = ["along_track"]
+
     granule_id = np.repeat(granule_id, n_along_track)
     along_track_id = np.arange(n_along_track)
     cross_track_id = np.arange(n_cross_track)
     gpm_id = [str(g) + "-" + str(z) for g, z in zip(granule_id, along_track_id, strict=False)]
 
-    return {
-        "lon": xr.DataArray(lon, dims=["along_track", "cross_track"]),
-        "lat": xr.DataArray(lat, dims=["along_track", "cross_track"]),
+    # Define dictionary with DataArray coordinates
+    dict_coords = {
+        "lon": xr.DataArray(lon, dims=geolocation_dims),
+        "lat": xr.DataArray(lat, dims=geolocation_dims),
         "time": xr.DataArray(time, dims="along_track"),
         "gpm_id": xr.DataArray(gpm_id, dims="along_track"),
         "gpm_granule_id": xr.DataArray(granule_id, dims="along_track"),
         "gpm_cross_track_id": xr.DataArray(cross_track_id, dims="cross_track"),
         "gpm_along_track_id": xr.DataArray(along_track_id, dims="along_track"),
     }
+    if n_cross_track == 0:
+        _ = dict_coords.pop("gpm_cross_track_id")
+    return dict_coords
 
 
 def get_time_delta_from_time_interval(time_interval):
@@ -123,7 +139,7 @@ def get_grid_coords(dt, scan_mode):
 
 def get_coords(dt, scan_mode):
     """Get coordinates from GPM objects."""
-    return get_grid_coords(dt, scan_mode) if scan_mode == "Grid" else get_orbit_coords(dt, scan_mode)
+    return get_grid_coords(dt, scan_mode) if scan_mode in ["Grid"] else get_orbit_coords(dt, scan_mode)
 
 
 def _subset_dict_by_dataset(ds, dictionary):

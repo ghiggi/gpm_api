@@ -95,6 +95,15 @@ def get_info_dict():
     return read_yaml(filepath)
 
 
+@functools.cache
+def get_products_attributes_dict():
+    """Get products attributes dictionary."""
+    from gpm import _root_path
+
+    filepath = os.path.join(_root_path, "gpm", "etc", "products_attributes.yaml")
+    return read_yaml(filepath)
+
+
 def get_info_dict_subset(
     sensors=None,
     satellites=None,
@@ -343,7 +352,7 @@ def _get_sensor_satellite_names(info_dict, key="sensor", combine_with=None):
 
 def get_available_versions():
     """Get the list of available versions."""
-    return [4, 5, 6, 7]
+    return [4, 5, 6, 7, 8]
 
 
 @functools.cache

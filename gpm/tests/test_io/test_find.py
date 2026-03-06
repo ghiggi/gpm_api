@@ -143,7 +143,7 @@ class TestGetDailyFilepaths:
         mocker.patch("gpm.io.pps._try_get_pps_file_list", side_effect=mocked_get_pps_file_list)
 
     @pytest.mark.usefixtures("_mock_get_pps_file_list")
-    def test_pps_rs_version_7(
+    def test_pps_rs_last_version(
         self,
         check,  # For non-failing asserts
         product_info: dict[str, dict],
@@ -151,7 +151,7 @@ class TestGetDailyFilepaths:
         """Test _get_all_daily_filepaths for "PPS" storage with RS version 7 products."""
         storage = "PPS"
         product_type = "RS"
-        version = 7
+        version = 8
 
         for product in available_products(product_types=product_type, versions=version):
             info = product_info[product]
@@ -185,7 +185,7 @@ class TestGetDailyFilepaths:
             pps_dir = info["pps_rs_dir"]
 
             for version in info["available_versions"]:
-                if version == 7:
+                if version == 8:
                     continue
 
                 returned_filepaths = _get_all_daily_filepaths(

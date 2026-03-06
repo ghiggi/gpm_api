@@ -98,12 +98,18 @@ class TestSel:
         # Test subsetting with time unordered (as string)
         time_subset = ["2000-01-01T00:00:06", "2000-01-01T00:00:04"]
         da_subset = da.gpm.sel(time=["2000-01-01T00:00:06", "2000-01-01T00:00:04"])
-        np.testing.assert_allclose(da_subset["time"].data.tolist(), np.array(time_subset, dtype="M8[ns]").tolist())
+        np.testing.assert_array_equal(
+            da_subset["time"].to_numpy().astype("datetime64[s]"),
+            np.array(time_subset, dtype="datetime64[s]"),
+        )
         np.testing.assert_allclose(da_subset.isel(cross_track=0).data, [6, 4])
 
         # Test subsetting with time as np.datetime 64
         da_subset = da.gpm.sel(time=np.array(time_subset, dtype="M8[ns]"))
-        np.testing.assert_allclose(da_subset["time"].data.tolist(), np.array(time_subset, dtype="M8[ns]").tolist())
+        np.testing.assert_array_equal(
+            da_subset["time"].to_numpy().astype("datetime64[s]"),
+            np.array(time_subset, dtype="datetime64[s]"),
+        )
         np.testing.assert_allclose(da_subset.isel(cross_track=0).data, [6, 4])
 
         # Test subsetting by time DataArray

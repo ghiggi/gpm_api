@@ -123,7 +123,7 @@ def _get_pps_rs_product_dir(product, date, version):
     folder_name = _get_pps_rs_product_folder_name(product)
 
     # Specify the directory tree for current RS version
-    if version == 7:
+    if version == 8:
         directory_tree = "/".join(
             [
                 "gpmdata",

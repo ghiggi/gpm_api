@@ -1,7 +1,7 @@
 name: gpm_api
 channels: [conda-forge]
 dependencies:
-  - cartopy>=0.22.0
+  - cartopy
   - click
   - dask
   - deepdiff
@@ -9,9 +9,9 @@ dependencies:
   - donfig
   - h5py
   - jupyter
-  - matplotlib>=3.8.3
+  - matplotlib
   - netcdf4
-  - numpy<=1.26.4
+  - numpy
   - polars
   - pyarrow
   - pycolorbar
@@ -31,6 +31,6 @@ dependencies:
   - trame-vtk
   - trame-vuetify
   - trollsift
-  - xarray>=2025.01.0
+  - xarray
   - xoak
   - ximage
