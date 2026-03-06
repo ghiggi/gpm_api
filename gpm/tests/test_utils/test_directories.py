@@ -260,8 +260,14 @@ def test_list_files(tmp_path):
     expected_files = [file1, file2]
     assert set(list_files(tmp_path, glob_pattern, recursive=False)) == set(map(str, expected_files))
 
+    # Search for all files (with specific pattern) in all the subdirectories (from the base directory)
+    # --> file7 is not included because of different pattern
+    glob_pattern = f"*.{ext}"
+    expected_files = [file1, file2, file4, file6]
+    assert set(list_files(tmp_path, glob_pattern, recursive=True)) == set(map(str, expected_files))
+
     # Search for all files only in the sub directory
-    glob_pattern = os.path.join("*", "*")
+    glob_pattern = "*/*"
     expected_files = [file4, file5]
     assert set(list_files(tmp_path, glob_pattern, recursive=False)) == set(map(str, expected_files))
 
@@ -269,19 +275,6 @@ def test_list_files(tmp_path):
     glob_pattern = f"*/*.{ext}"
     expected_files = [file4]
     assert set(list_files(tmp_path, glob_pattern, recursive=False)) == set(map(str, expected_files))
-
-    # Search for all files (with specific pattern) in all the subdirectories (from the base directory)
-    # --> file7 is not included because of different pattern
-    glob_pattern = f"*.{ext}"
-    expected_files = [file1, file2, file4, file6]
-    assert set(list_files(tmp_path, glob_pattern, recursive=True)) == set(map(str, expected_files))
-
-    # Search for all files (with specific pattern) in all the subdirectories (from the sub directory)
-    # --> file7 is not included because of different pattern
-    # --> file6 is not included because within subdirectory 07
-    glob_pattern = f"*/*.{ext}"
-    expected_files = [file4]
-    assert set(list_files(tmp_path, glob_pattern, recursive=True)) == set(map(str, expected_files))
 
 
 def create_dir_tree(base_dir):

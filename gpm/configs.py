@@ -108,6 +108,7 @@ def define_configs(
     used for authentication when making GPM-API requests.
 
     """
+    import gpm
     from gpm.io.checks import check_base_dir
 
     # Define path to .config_gpm_api.yaml file
@@ -143,6 +144,11 @@ def define_configs(
     write_yaml(config_dict, filepath, sort_keys=False)
 
     print(f"The GPM-API config file has been {action_msg} successfully!")
+
+    # Now read the config file and set it as the active configuration
+    # - This avoid the need to restart a python session to take effect !
+    config_dict = read_configs()
+    gpm.config.update(config_dict)
 
 
 def read_configs() -> dict[str, str]:

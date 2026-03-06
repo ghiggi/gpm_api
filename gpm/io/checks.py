@@ -175,10 +175,17 @@ def check_product(product, product_type=None):
 
 def check_product_version(version, product):
     """Check valid version for the specified product."""
+    import warnings
+
     from gpm.io.products import available_product_versions, get_last_product_version
+    from gpm.utils.warnings import GPM_Warning
 
     if version is None:
         version = get_last_product_version(product)
+        if version == 8:
+            version = 7
+            msg = "If you wish GPM V8, specify version=8. Currently default to version=7 if not specified."  # TODO V8
+            warnings.warn(msg, GPM_Warning, stacklevel=1)
     version = check_version(version)
     # Check valid version for such product
     valid_versions = available_product_versions(product)

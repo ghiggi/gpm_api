@@ -996,18 +996,16 @@ def download_archive(
     storage = check_remote_storage(storage)
     product_type = check_product_type(product_type=product_type)
     product = check_product(product=product, product_type=product_type)
-    version = check_product_version(version, product)
-
     # V8 warnings
-    if product_type == "RS" and version == 8:  # Temporary warning
+    if product_type == "RS" and version == 8:  # TODO V8
         msg = (
             "GPM Data Archive is currently being reprocessed for version 8."
             + f"If {product} data are not available, specify version=7."
         )
         warnings.warn(msg, GPMDownloadWarning, stacklevel=2)
-    if storage != "PPS" and version == 8:  # Temporary warning
+    version = check_product_version(version, product)
+    if storage != "PPS" and version == 8:  # TODO V8
         raise ValueError("GPM V8 data can currently be downloaded only using storage=PPS.")
-
     transfer_tool = check_transfer_tool(transfer_tool)
     start_time, end_time = check_start_end_time(start_time, end_time)
     start_time, end_time = check_valid_time_request(start_time, end_time, product)

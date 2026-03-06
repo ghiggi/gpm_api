@@ -352,7 +352,7 @@ def _get_sensor_satellite_names(info_dict, key="sensor", combine_with=None):
 
 def get_available_versions():
     """Get the list of available versions."""
-    return [4, 5, 6, 7]
+    return [4, 5, 6, 7, 8]
 
 
 @functools.cache

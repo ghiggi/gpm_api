@@ -251,12 +251,21 @@ class TestGetFilepathsFromFilenames:
                 ),
             ]
 
-    def test_pps(self) -> None:
+    def test_pps_old_version(self) -> None:
+        filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V07A.HDF5"
         assert dl.get_filepaths_from_filenames(
-            filepaths=[self.filename],
+            filepaths=[filename],
             storage="PPS",
             product_type="RS",
-        ) == [f"ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/{self.filename}"]
+        ) == [f"ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmallversions/V07/2020/07/05/radar/{filename}"]
+
+    def test_pps_last_version(self) -> None:
+        filename = "2A.GPM.DPR.V9-20211125.20200705-S170044-E183317.036092.V08A.HDF5"
+        assert dl.get_filepaths_from_filenames(
+            filepaths=[filename],
+            storage="PPS",
+            product_type="RS",
+        ) == [f"ftps://arthurhouftps.pps.eosdis.nasa.gov/gpmdata/2020/07/05/radar/{filename}"]
 
     def test_ges_disc(self) -> None:
         assert dl.get_filepaths_from_filenames(

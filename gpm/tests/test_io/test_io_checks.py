@@ -240,7 +240,7 @@ def test_check_version(
 ) -> None:
     """Test check_version().
 
-    Possible versions are integers of 4-7
+    Possible versions are integers of 4-8
     """
     # Check if None, None is returned
     with pytest.raises(ValueError):
@@ -260,7 +260,7 @@ def test_check_version(
         # Should run without raising Exception
 
     # Try versions outside of range
-    for version in list(range(0, 3)) + list(range(8, 10)):
+    for version in list(range(0, 3)) + list(range(9, 10)):
         with pytest.raises(ValueError):
             checks.check_version(version)
 
@@ -282,7 +282,9 @@ def test_check_product_version(
         # Check last version return if None
         last_version = info.get("available_versions", [])[-1]
         with check:
-            assert checks.check_product_version(None, product) == last_version
+            if last_version == 8:  # TODO V8
+                last_version = 7
+            assert checks.check_product_version(version=None, product=product) == last_version
 
         # Check invalid versions
         invalid_versions = list(set(versions) - set(info.get("available_versions", [])))
