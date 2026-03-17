@@ -115,6 +115,37 @@ precipitation_rate:
     label: Precipitation intensity [$mm \ hr^{-1}$]
   auxiliary:
     category: [pysteps, precipitation]
+rainfall_rate:
+  cmap:
+    name: STEPS-MCH
+    over_color: darkred
+    under_color: none
+  norm:
+    name: BoundaryNorm
+    boundaries:
+      - 0.01
+      - 0.16
+      - 0.25
+      - 0.4
+      - 0.63
+      - 1
+      - 1.6
+      - 2.5
+      - 4
+      - 6.3
+      - 10
+      - 16
+      - 25
+      - 40
+      - 63
+      - 100
+      - 160
+  cbar:
+    extend: max
+    extendrect: false
+    label: Rainfall intensity [$mm \ hr^{-1}$]
+  auxiliary:
+    category: [pysteps, rainfall]
 reflectivity_pysteps:
   cmap:
     name: STEPS-MCH

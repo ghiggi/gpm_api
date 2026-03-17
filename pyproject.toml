@@ -37,7 +37,7 @@ classifiers = [
 ]
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
-    "xarray>=2025.01.0",
+    "xarray>=2026.01.0", # update xr.concat options
     "xoak",
     "netcdf4",
     "dask",
@@ -48,14 +48,14 @@ dependencies = [
     "donfig",
     "trollsift",
     "matplotlib>=3.8.3", # introduce pcolormesh rgb
-    "cartopy>=0.22.0",
+    "cartopy>=0.25.0",   # update gridliners
     "pyproj",
-    "numpy",
-    "pandas",
+    "numpy>=2.4.0",
+    "pandas>=2.3.3",
     "scipy",
     "pycolorbar>=0.1.2",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dynamic = ["version"]
 
 [project.optional-dependencies]

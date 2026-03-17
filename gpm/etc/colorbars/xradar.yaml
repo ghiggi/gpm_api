@@ -34,12 +34,25 @@ differential_phase:
     name: twilight_shifted
     bad_color: none
   norm:
-    name: Norm
-    vmin: -180
-    vmax: 180
+    name: Norm # -180, 180 if unwraped, 0 to unbounded if unwrapped
+    vmin: 0
+    vmax: 180 #
   cbar:
     extend: neither
-    label: Differential Phase ($\phi_{dp}$)  [$°$]
+    label: Total Differential Phase ($\phi_{dp}$)  [$°$]
+  auxiliary:
+    category: [phase, radar]
+propagation_differential_phase:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 360 # can be more ... unbounded
+  cbar:
+    extend: neither
+    label: Propagation Differential Phase ($\psi_{dp}$)  [$°$]
   auxiliary:
     category: [phase, radar]
 specific_differential_phase:
@@ -90,13 +103,53 @@ specific_attenuation:
     name: Spectral_r
     bad_color: none
   norm:
-    name: Norm
-    vmin: 0
-    vmax: 10
+    name: LogNorm
+    vmin: 0.001
   cbar:
     extend: max
     extendfrac: 0.05
     label: Specific_attenuation [$dB/km$]
+  auxiliary:
+    category: [radar]
+specific_differential_attenuation:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: LogNorm
+    vmin: 0.001
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Specific Differential Attenuation ($A_{dp}$) [$dB/km$]
+  auxiliary:
+    category: [radar]
+path_integrated_attenuation:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 8
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Path Integrated Attenuation ($PIA$) [$dB$]
+  auxiliary:
+    category: [radar]
+path_integrated_differential_attenuation:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 2
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: Path Integrated Differential Attenuation ($PIDA$) [$dB$]
   auxiliary:
     category: [radar]
 linear_depolarization_ratio:
@@ -154,9 +207,25 @@ DBZV_c:
   reference: reflectivity
 ZDR:
   reference: differential_reflectivity
+ZDR_c:
+  reference: differential_reflectivity
 PHIDP:
   reference: differential_phase
+PSIDP:
+  reference: propagation_differential_phase
+PSIDP_vulpiani:
+  reference: propagation_differential_phase
+PSIDP_schneebeli:
+  reference: propagation_differential_phase
+PSIDP_maesaka:
+  reference: propagation_differential_phase
 KDP:
+  reference: specific_differential_phase
+KDP_vulpiani:
+  reference: specific_differential_phase
+KDP_schneebeli:
+  reference: specific_differential_phase
+KDP_maesaka:
   reference: specific_differential_phase
 RHOHV:
   reference: cross_correlation_ratio
@@ -174,3 +243,17 @@ SQIH:
   reference: normalized_coherent_power
 SQIV:
   reference: normalized_coherent_power
+PIA:
+  reference: path_integrated_attenuation
+PIDA:
+  reference: path_integrated_differential_attenuation
+ADP:
+  reference: specific_differential_attenuation
+AH:
+  reference: specific_attenuation
+AV:
+  reference: specific_attenuation
+PIAH:
+  reference: PIA
+PIAV:
+  reference: PIA
