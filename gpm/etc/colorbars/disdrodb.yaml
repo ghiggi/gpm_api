@@ -1,14 +1,15 @@
 ---
 Nw:
   cmap:
-    name: plasma
+    name: dusk
   norm:
     name: LogNorm
     vmin: 100
+    vmax: 100000
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Normalized Intercept Parameter ($N_w$) [$mm^{-1} \ m^{-3}$]
+    label: $N_w$ [$mm^{-1} \ m^{-3}$]
   auxiliary:
     category: [disdrodb, dsd]
 R:
@@ -25,7 +26,7 @@ Dm:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Mean Volume Diameter ($D_m$) [$mm$]
+    label: $D_m$ [$mm$]
   auxiliary:
     category: [disdrodb, dsd]
 D50:
@@ -38,7 +39,7 @@ D50:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Median Volume Drop Diameter ($D_{50}$) [$mm$]
+    label: $D_{50}$ [$mm$]
   auxiliary:
     category: [disdrodb, dsd]
 LWC:
@@ -50,7 +51,7 @@ LWC:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Liquid Water Content ($LWC$) [$g \ m^{-3}$]
+    label: $LWC$ [$g \ m^{-3}$]
   auxiliary:
     category: [disdrodb, dsd]
 Nt:
@@ -62,7 +63,7 @@ Nt:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Total Number Concentration ($N_t$) [$m^{-3}$]
+    label: $N_t$ [$m^{-3}$]
   auxiliary:
     category: [disdrodb, dsd]
 sigma_m:
@@ -87,7 +88,7 @@ M2:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Second Moment of the DSD ($M_2$) [$m^{-3} \ mm^2$]
+    label: $M_2$ [$m^{-3} \ mm^2$]
   auxiliary:
     category: [disdrodb, dsd, moment]
 M3:
@@ -99,7 +100,7 @@ M3:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Third Moment of the DSD ($M_3$) [$m^{-3} \ mm^3$]
+    label: $M_3$ [$m^{-3} \ mm^3$]
   auxiliary:
     category: [disdrodb, dsd, moment]
 M4:
@@ -111,7 +112,19 @@ M4:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Fourth Moment of the DSD ($M_4$) [$m^{-3} \ mm^4$]
+    label: $M_4$ [$m^{-3} \ mm^4$]
+  auxiliary:
+    category: [disdrodb, dsd, moment]
+M5:
+  cmap:
+    name: magma
+  norm:
+    name: LogNorm
+    vmin: 0.01
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $M_5$ [$m^{-3} \ mm^5$]
   auxiliary:
     category: [disdrodb, dsd, moment]
 M6:
@@ -123,6 +136,6 @@ M6:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Sixth Moment of the DSD ($M_6$) [$m^{-3} \ mm^6$]
+    label: $M_6$ [$m^{-3} \ mm^6$]
   auxiliary:
     category: [disdrodb, dsd, moment]
