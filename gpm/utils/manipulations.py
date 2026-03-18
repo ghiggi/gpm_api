@@ -192,9 +192,9 @@ def crop_around_valid_data(xr_obj, variable=None):
         valid_along_dim = valid_mask.any(dim=other_dims)
         # Find first and last True index
         # - argmax() gives the first True index from the start
-        start_idx = int(np.argmax(valid_along_dim.data))
+        start_idx = int(np.nanargmax(valid_along_dim.data))
         # To get the last True, reverse the array and use argmax again
-        end_idx = len(valid_along_dim) - int(np.argmax(valid_along_dim.data[::-1]))
+        end_idx = len(valid_along_dim) - int(np.nanargmax(valid_along_dim.data[::-1]))
         # Construct the slice
         isel_dict[dim] = slice(start_idx, end_idx)
 
@@ -214,14 +214,15 @@ def get_bin_dataarray(xr_obj, bins, mask_first_bin=False, mask_last_bin=False, f
     da_bin = _get_bin_dataarray(xr_obj, bins=bins)
 
     # Check bin DataArray dimensions validity (only spatial dimensions)
-    if "range" in da_bin.dims:
-        raise ValueError("The bin DataArray must not have the 'range' dimension.")
-    if "radar_frequency" in da_bin.dims:
-        raise ValueError(
-            "The bin DataArray must not have the 'radar_frequency' dimension. Please first subset the dataset.",
-        )
-    if not has_spatial_dim(da_bin, strict=True, squeeze=True):
-        raise ValueError("The bin DataArray is allowed to only have spatial dimensions.")
+    if da_bin.dims != ():  # scalar must pass !
+        if "range" in da_bin.dims:
+            raise ValueError("The bin DataArray must not have the 'range' dimension.")
+        if "radar_frequency" in da_bin.dims:
+            raise ValueError(
+                "The bin DataArray must not have the 'radar_frequency' dimension. Please first subset the dataset.",
+            )
+        if not has_spatial_dim(da_bin, strict=True, squeeze=True):
+            raise ValueError("The bin DataArray is allowed to only have spatial dimensions.")
 
     # Ensure bin value validity
     da_bin, da_mask = _get_valid_da_bin(
@@ -1504,6 +1505,9 @@ def _infill_datarray(da, da_bin, potential_infill_mask, valid_mask):
     with xr.set_options(keep_attrs=True):
         result = xr.where(infill_mask, values_broadcast, result)
         result.name = da.name
+
+    # Keep coordinates (e.g. height)
+    result = result.assign_coords(da.coords)
     return result
 
 
@@ -1548,7 +1552,12 @@ def infill_below_bin(xr_obj, bins):
     idx_int = xr.where(valid_mask, da_bin, 1).astype(int) - 1
 
     # Create a template for our mask along the z dimension
-    z_indices = xr.DataArray(np.arange(len(xr_obj[z_dim])), dims=[z_dim], coords={z_dim: xr_obj[z_dim]})
+    z_start = xr_obj[z_dim][0] - 1
+    z_indices = xr.DataArray(
+        np.arange(z_start, z_start + len(xr_obj[z_dim])),
+        dims=[z_dim],
+        coords={z_dim: xr_obj[z_dim]},
+    )
 
     # Define potential infilling mask
     potential_infill_mask = z_indices <= idx_int if is_increasing else z_indices >= idx_int
@@ -1570,8 +1579,6 @@ def infill_below_bin(xr_obj, bins):
                 valid_mask=valid_mask,
             )
 
-    # Re-assign height back (because current heights inherited form valid_values_mask)
-    xr_obj = xr_obj.assign_coords({"height": da_height})
     return xr_obj
 
 
