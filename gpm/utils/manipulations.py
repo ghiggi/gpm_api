@@ -387,6 +387,82 @@ def get_range_index_at_max(da):
     return idx, mask_all_nan
 
 
+def get_last_valid_range_index(da):
+    """Retrieve last index the range dimension where the xarray.DataArray has valid values."""
+    # Retrieve vertical dimension
+    vertical_dim = _get_vertical_dim(da)
+
+    # Put DataArray in memory
+    da = da.compute()
+
+    # Boolean mask of valid values
+    valid = da.notnull()
+
+    # Identify pixels that are entirely NaN along vertical_dim
+    mask_all_nan = ~valid.any(dim=vertical_dim)
+
+    # Reverse along vertical dimension, then find first valid
+    rev = valid.isel({vertical_dim: slice(None, None, -1)})
+    last_from_end = rev.argmax(dim=vertical_dim)
+
+    # Convert reversed index back to original index
+    last_idx = da.sizes[vertical_dim] - 1 - last_from_end
+
+    return last_idx, mask_all_nan
+
+
+def get_first_valid_range_index(da):
+    """Retrieve first index the range dimension where the xarray.DataArray has valid value."""
+    vertical_dim = _get_vertical_dim(da)
+
+    # Boolean mask of valid values
+    valid = da.notnull()
+
+    # Pixels that are entirely NaN along vertical_dim
+    mask_all_nan = ~valid.any(dim=vertical_dim)
+
+    # First True along vertical_dim
+    first_idx = valid.argmax(dim=vertical_dim)
+
+    return first_idx, mask_all_nan
+
+
+def get_bin_near_surface(xr_obj, variable):
+    """Get the bin value near the surface where the variable have last valid values."""
+    da = get_xarray_variable(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
+    idx, mask_all_nan = get_last_valid_range_index(da=da)
+    da_bin = xr_obj["range"].isel({vertical_dim: idx})
+    return da_bin.where(~mask_all_nan)
+
+
+def get_bin_top(xr_obj, variable):
+    """Get the bin value at the top where the variable start to have last valid values."""
+    da = get_xarray_variable(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
+    idx, mask_all_nan = get_first_valid_range_index(da=da)
+    da_bin = xr_obj["range"].isel({vertical_dim: idx})
+    return da_bin.where(~mask_all_nan)
+
+
+def slice_range_at_top(xr_obj, variable=None):
+    """Slice the 3D arrays where the variable start to have valid values."""
+    da = get_xarray_variable(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
+    idx, mask_all_nan = get_first_valid_range_index(da=da)
+    xr_obj_sliced = xr_obj.isel({vertical_dim: idx})
+    return xr_obj_sliced.where(~mask_all_nan)
+
+
+def slice_range_at_near_surface(xr_obj, variable=None):
+    """Slice the 3D arrays near the surface where the variable have last valid values."""
+    da = get_xarray_variable(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
+    idx, mask_all_nan = get_last_valid_range_index(da=da)
+    xr_obj_sliced = xr_obj.isel({vertical_dim: idx})
+    return xr_obj_sliced.where(~mask_all_nan)
+
+
 def slice_range_at_value(xr_obj, value, variable=None):
     """Slice the 3D arrays where the variable values are close to value."""
     da = get_xarray_variable(xr_obj, variable=variable)
