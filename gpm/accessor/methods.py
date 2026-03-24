@@ -423,10 +423,10 @@ class GPM_Base_Accessor:
         return subset_range_where_values(self._obj, variable=variable, vmin=vmin, vmax=vmax)
 
     @auto_wrap_docstring
-    def subset_range_by_height(self, vmin=-np.inf, vmax=np.inf):
-        from gpm.utils.manipulations import subset_range_where_values
+    def subset_range_by_height(self, vmin=None, vmax=None):
+        from gpm.utils.manipulations import subset_range_by_height
 
-        return subset_range_where_values(self._obj, variable="height", vmin=vmin, vmax=vmax)
+        return subset_range_by_height(self._obj, vmin=vmin, vmax=vmax)
 
     @auto_wrap_docstring
     def slice_range_at_height(self, value):

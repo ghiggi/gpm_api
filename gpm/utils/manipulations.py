@@ -428,7 +428,7 @@ def get_first_valid_range_index(da):
     return first_idx, mask_all_nan
 
 
-def get_bin_near_surface(xr_obj, variable):
+def get_bin_near_surface(xr_obj, variable=None):
     """Get the bin value near the surface where the variable have last valid values."""
     da = get_xarray_variable(xr_obj, variable=variable)
     vertical_dim = _get_vertical_dim(da)
@@ -437,7 +437,7 @@ def get_bin_near_surface(xr_obj, variable):
     return da_bin.where(~mask_all_nan)
 
 
-def get_bin_top(xr_obj, variable):
+def get_bin_top(xr_obj, variable=None):
     """Get the bin value at the top where the variable start to have last valid values."""
     da = get_xarray_variable(xr_obj, variable=variable)
     vertical_dim = _get_vertical_dim(da)
@@ -573,6 +573,13 @@ def subset_range_where_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.inf):
     """Select the 'range' interval where values are within the [vmin, vmax] interval."""
     isel_dict = get_range_slices_within_values(xr_obj, variable=variable, vmin=vmin, vmax=vmax)
     return xr_obj.isel(isel_dict)
+
+
+def subset_range_by_height(xr_obj, vmin=None, vmax=None):
+    """Select the 'range' interval where height is within [vmin, vmax]."""
+    vmin = -np.inf if vmin is None else vmin
+    vmax = np.inf if vmax is None else vmax
+    return subset_range_where_values(xr_obj, variable="height", vmin=vmin, vmax=vmax)
 
 
 ####-------------------------------------------------------------------------------------------------------------------.
