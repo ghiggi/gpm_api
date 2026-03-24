@@ -56,6 +56,8 @@ STATIC_GLOBAL_ATTRS = (
     "Sensor",
     # DPRKuInfo, DPRKaInfo,
     "eqvWavelength",
+    # IMERG
+    # "title",
 )
 
 
@@ -183,7 +185,11 @@ def get_granule_attrs(dt):
     # Flatten attributes (without group)
     if _has_nested_dictionary(nested_attrs):
         attrs = {}
-        _ = [attrs.update(group_attrs) for group, group_attrs in nested_attrs.items()]
+        for k, v in nested_attrs.items():
+            if isinstance(v, dict):
+                attrs.update(v)
+            else:
+                attrs[k] = v
     else:
         attrs = nested_attrs
     # Subset only required attributes

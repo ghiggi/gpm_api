@@ -225,6 +225,8 @@ def _get_scan_mode_dataset(
     )
     closer = ds._close
 
+    # L3 DPR: GridTime
+
     # If GRID, time in coords and not a dimension of ds, add time dimension (L3 products)
     if "along_track" not in ds.dims and "time" in coords and "time" not in set(ds.dims):
         vars_to_expand = [
@@ -282,6 +284,9 @@ def get_scan_modes_datasets(filepath, groups, variables, decode_cf, chunks, pref
             "InputFileNames",
         ]
         scan_modes = set(nodes) - set(invalid_nodes)
+
+    if dt.depth == 0:  # IMERG L3 DAILY
+        scan_modes = [""]
 
     # Retrieve scan mode dataset (without cf decoding)
     dict_scan_modes = {}

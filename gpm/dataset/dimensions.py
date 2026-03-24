@@ -93,6 +93,14 @@ DIM_DICT = {
     "npixelht": "cross_track",
     "npixelcs": "cross_track",
     "npixelfr": "cross_track",  # S4 mode
+    # L3 CSH, SLH
+    "nlon": "lon",
+    "nlat": "lat",
+    # L3 DPR
+    "ltL": "lat",
+    "lnL": "lon",
+    "ltH": "lat",
+    "lnH": "lon",
 }
 
 SPATIAL_DIMS = [

@@ -565,6 +565,8 @@ def open_files(
     # Infer product from file
     product = _infer_product_name(dict_scan_modes[scan_modes[0]])
 
+    # TODO: Specialized sanitizer for L3 SLH, CSH, ...
+
     # Warn if product is unknown
     if product is None:
         msg = "GPM-API didn't apply specialized variables decoding because product is unknown !"
