@@ -429,7 +429,7 @@ def get_first_valid_range_index(da):
 
 
 def get_bin_near_surface(xr_obj, variable=None):
-    """Get the bin value near the surface where the variable have last valid values."""
+    """Get the range bin value near the surface where the variable have last valid values."""
     da = get_xarray_variable(xr_obj, variable=variable)
     vertical_dim = _get_vertical_dim(da)
     idx, mask_all_nan = get_last_valid_range_index(da=da)
@@ -438,7 +438,7 @@ def get_bin_near_surface(xr_obj, variable=None):
 
 
 def get_bin_top(xr_obj, variable=None):
-    """Get the bin value at the top where the variable start to have last valid values."""
+    """Get the range bin value at the top where the variable start to have last valid values."""
     da = get_xarray_variable(xr_obj, variable=variable)
     vertical_dim = _get_vertical_dim(da)
     idx, mask_all_nan = get_first_valid_range_index(da=da)

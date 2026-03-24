@@ -34,7 +34,7 @@ differential_phase:
     name: twilight_shifted
     bad_color: none
   norm:
-    name: Norm # -180, 180 if unwraped, 0 to unbounded if unwrapped
+    name: Norm # -180, 180 if unwrapped, 0 to unbounded if unwrapped
     vmin: 0
     vmax: 180 #
   cbar:

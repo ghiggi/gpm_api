@@ -291,6 +291,7 @@ def _xradar_get_crs(xr_obj):
 
 
 def _add_lon_lat_coords(xr_obj):
+    """Add longitude and latitude coordinates to the xradar dataset."""
     # Georeference the data on a azimuthal_equidistant projection centered on the radar
     xr_obj = xr_obj.xradar.georeference()
 
