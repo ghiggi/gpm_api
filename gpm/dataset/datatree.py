@@ -88,7 +88,7 @@ def check_non_empty_granule(dt, filepath):
     """Check that the datatree (or dataset) is not empty."""
     attrs = dt.attrs
     attrs = decode_string(attrs["FileHeader"])
-    is_empty_granule = attrs["EmptyGranule"] != "NOT_EMPTY"
+    is_empty_granule = attrs.get("EmptyGranule", "NOT_EMPTY") != "NOT_EMPTY"
     if is_empty_granule:
         raise ValueError(f"{filepath} is an EMPTY granule !")
 

@@ -110,11 +110,19 @@ def get_grid_coords(dt, scan_mode):
     """
     attrs = decode_string(dt.attrs["FileHeader"])
     start_time = attrs["StartGranuleDateTime"][:-1]  # 2016-03-09T10:30:00.000Z
-    # end_time = attrs["StopGranuleDateTime"][:-1]    # 2003-05-01T23:59:59.999Z
-    time_interval = attrs["TimeInterval"]
-    time_delta = get_time_delta_from_time_interval(time_interval)
-    start_time = np.array([start_time]).astype("M8[ns]")
-    end_time = start_time + time_delta
+    end_time = attrs.get("StopGranuleDateTime", "")[:-1]  # 2003-05-01T23:59:59.999Z
+    time_interval = attrs.get("TimeInterval", "")
+    if time_interval in {"ORBIT", ""}:
+        start_time = np.array([start_time]).astype("M8[ns]")
+        end_time = np.array([end_time]).astype("M8[ns]")
+    elif time_interval == "MONTH":
+        end_time = pd.to_datetime(start_time) + pd.DateOffset(months=1)
+        start_time = np.array([start_time]).astype("M8[ns]")
+        end_time = np.array([end_time]).astype("M8[ns]")
+    else:
+        time_delta = get_time_delta_from_time_interval(time_interval)
+        start_time = np.array([start_time]).astype("M8[ns]")
+        end_time = start_time + time_delta
 
     # Define time coordinate
     time = xr.DataArray(end_time, dims="time")
@@ -128,18 +136,24 @@ def get_grid_coords(dt, scan_mode):
     time_bnds = np.concatenate((start_time, end_time)).reshape(1, 2)
     time_bnds = xr.DataArray(time_bnds, dims=("time", "nv"))
 
+    # Retrieve coordinates
+    lon = dt[scan_mode].get("lon")
+    lat = dt[scan_mode].get("lat")
+
     # Define dictionary with coordinates (DataArray)
-    return {
+    coords_dict = {
         "time": time,
-        "lon": dt[scan_mode]["lon"],
-        "lat": dt[scan_mode]["lat"],
+        "lon": lon,
+        "lat": lat,
         "time_bnds": time_bnds,
     }
+    coords_dict = {k: v for k, v in coords_dict.items() if v is not None}
+    return coords_dict
 
 
 def get_coords(dt, scan_mode):
     """Get coordinates from GPM objects."""
-    return get_grid_coords(dt, scan_mode) if scan_mode in ["Grid"] else get_orbit_coords(dt, scan_mode)
+    return get_grid_coords(dt, scan_mode) if scan_mode in ["Grid", "GRID", ""] else get_orbit_coords(dt, scan_mode)
 
 
 def _subset_dict_by_dataset(ds, dictionary):
