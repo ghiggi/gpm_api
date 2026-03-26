@@ -28,7 +28,7 @@
 
 import numpy as np
 import xarray as xr
-import xoak  # noqa (accessor)
+from xoak import SklearnGeoBallTreeAdapter
 
 from gpm.checks import (
     check_has_vertical_dim,
@@ -1287,13 +1287,18 @@ def extract_at_points(xr_obj, points, method="nearest", new_dim="points"):
     # Orbit case
     # - Use sklearn_geo_balltree to exploit haversine distance (kdtree does not support haversine distance)
     # - Not tested for cases at the antimeridian !
-    xr_obj.xoak.set_index([y, x], index_type="sklearn_geo_balltree")
-
-    xr_obj_slice = xr_obj.xoak.sel(
+    # 2026.03.26: deprecated xr_obj.xoak.set_index([y, x], index_type="sklearn_geo_balltree")
+    xr_obj = xr_obj.set_xindex(
+        [y, x],
+        xr.indexes.NDPointIndex,
+        tree_adapter_cls=SklearnGeoBallTreeAdapter,
+    )
+    xr_obj_slice = xr_obj.sel(
         {
             x: xr.DataArray(points[:, 0], dims=new_dim),
             y: xr.DataArray(points[:, 1], dims=new_dim),
         },
+        method="nearest",
     )
     return xr_obj_slice
 

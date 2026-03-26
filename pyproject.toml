@@ -37,7 +37,7 @@ classifiers = [
 ]
 keywords = ["GPM", "Precipitation", "API", "DPR", "PMW", "IMERG"]
 dependencies = [
-    "xarray>=2026.01.0", # update xr.concat options
+    "xarray>=2026.01.0", # update xr.concat options and add xr.NDPointIndex
     "xoak",
     "netcdf4",
     "dask",
