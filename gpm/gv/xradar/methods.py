@@ -283,14 +283,6 @@ def plot_range_distance(
     return p
 
 
-def _xradar_georeference(xr_obj):
-    # FIXME: in xradar for DataArray ! Use 'crs_wkt' in ds.coords
-    if isinstance(xr_obj, xr.DataArray):
-        name = xr_obj.name
-        return xr_obj.to_dataset(name=name).xradar.georeference()[name]
-    return xr_obj.xradar.georeference()
-
-
 def _xradar_get_crs(xr_obj):
     # FIXME: in xradar for DataArray ! Use 'crs_wkt' in ds.coords
     if isinstance(xr_obj, xr.DataArray):
@@ -299,8 +291,9 @@ def _xradar_get_crs(xr_obj):
 
 
 def _add_lon_lat_coords(xr_obj):
+    """Add longitude and latitude coordinates to the xradar dataset."""
     # Georeference the data on a azimuthal_equidistant projection centered on the radar
-    xr_obj = _xradar_georeference(xr_obj)
+    xr_obj = xr_obj.xradar.georeference()
 
     # Get the GR CRS
     crs_gr = xr_obj.xradar_dev.pyproj_crs
@@ -329,6 +322,7 @@ def plot_map(
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
+    extent=None,
     **plot_kwargs,
 ):
     import gpm
@@ -375,5 +369,7 @@ def plot_map(
     # Add colorbar
     if add_colorbar:
         _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
-
+    # Set extent
+    if extent is not None:
+        ax.set_extent(extent)
     return p

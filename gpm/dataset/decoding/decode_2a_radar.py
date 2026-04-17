@@ -253,6 +253,12 @@ def decode_flagGraupelHail(da):
     return da
 
 
+def decode_precipWater(da):
+    """Decode the 2A-<RADAR> variable precipWater."""
+    da.attrs["units"] = "g/m^3"
+    return da
+
+
 def decode_widthBB(da):
     """Decode the 2A-<RADAR> variable widthBB."""
     return da.where(da >= 0)  # -1111.1 is set to np.nan
@@ -295,6 +301,7 @@ def decode_product(ds):
         "snowIceCover",
         "attenuationNP",
         "zFactorMeasured",
+        "precipWater",
     ]
     # Decode such variables if present in the xarray object
     for variable in variables:

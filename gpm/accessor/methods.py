@@ -423,6 +423,12 @@ class GPM_Base_Accessor:
         return subset_range_where_values(self._obj, variable=variable, vmin=vmin, vmax=vmax)
 
     @auto_wrap_docstring
+    def subset_range_by_height(self, vmin=None, vmax=None):
+        from gpm.utils.manipulations import subset_range_by_height
+
+        return subset_range_by_height(self._obj, vmin=vmin, vmax=vmax)
+
+    @auto_wrap_docstring
     def slice_range_at_height(self, value):
         from gpm.utils.manipulations import slice_range_at_height
 
@@ -445,6 +451,30 @@ class GPM_Base_Accessor:
         from gpm.utils.manipulations import slice_range_at_min_value
 
         return slice_range_at_min_value(self._obj, variable=variable)
+
+    @auto_wrap_docstring
+    def slice_range_at_top(self, variable=None):
+        from gpm.utils.manipulations import slice_range_at_top
+
+        return slice_range_at_top(self._obj, variable=variable)
+
+    @auto_wrap_docstring
+    def slice_range_at_near_surface(self, variable=None):
+        from gpm.utils.manipulations import slice_range_at_near_surface
+
+        return slice_range_at_near_surface(self._obj, variable=variable)
+
+    @auto_wrap_docstring
+    def bin_near_surface(self, variable=None):
+        from gpm.utils.manipulations import get_bin_near_surface
+
+        return get_bin_near_surface(self._obj, variable=variable)
+
+    @auto_wrap_docstring
+    def bin_top(self, variable=None):
+        from gpm.utils.manipulations import get_bin_top
+
+        return get_bin_top(self._obj, variable=variable)
 
     #### Masking utility
     @auto_wrap_docstring
