@@ -61,10 +61,10 @@ specific_differential_phase:
     bad_color: none
   norm:
     name: Norm
-    vmin: -2
+    vmin: 0
     vmax: 5
   cbar:
-    extend: both
+    extend: max
     extendfrac: 0.05
     label: Specific Differential Phase ($K_{dp}$) [$°/km$]
   auxiliary:

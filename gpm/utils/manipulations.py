@@ -1491,6 +1491,74 @@ def extract_transect_along_dimension(xr_obj, point, dim):
     return xr_obj.isel(transect_isel_dict)
 
 
+####--------------------------------------------------------------------------.
+#### Extract pixels within distance from one point
+
+
+def extract_within_point_distance(
+    ds,
+    point,
+    radius=5.0,
+    lat_name="lat",
+    lon_name="lon",
+):
+    """Select pixels within radius from specified point using BallTree.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset with 2D lat/lon coordinates.
+    point : tuple
+        (lon, lat) in degrees.
+    radius : float
+        Search radius in meter.
+    lat_name, lon_name : str
+        Names of latitude/longitude coordinates in ds_radar.
+
+    Returns
+    -------
+    xarray.Dataset
+        Stacked dataset with dimension 'points' containing all selected pixels.
+    """
+    from sklearn.neighbors import BallTree
+
+    lon0, lat0 = point
+    
+    lat = ds[lat_name].to_numpy()
+    lon = ds[lon_name].to_numpy()
+
+    # Keep track of original spatial dims
+    spatial_dims = ds[lat_name].dims
+
+    # Flatten coordinates
+    lat_flat = lat.ravel()
+    lon_flat = lon.ravel()
+
+    valid = np.isfinite(lat_flat) & np.isfinite(lon_flat)
+    lat_valid = lat_flat[valid]
+    lon_valid = lon_flat[valid]
+
+    # BallTree with haversine expects (lat, lon) in radians
+    coords_rad = np.deg2rad(np.column_stack([lat_valid, lon_valid]))
+    tree = BallTree(coords_rad, metric="haversine")
+
+    query_point = np.deg2rad([[lat0, lon0]])
+
+    # Earth radius in m
+    earth_radius = 6371.0*1000
+    radius_rad = radius / earth_radius
+
+    ind = tree.query_radius(query_point, r=radius_rad)[0]
+
+    # Map back to flattened full-grid indices
+    flat_indices = np.flatnonzero(valid)[ind]
+
+    # Stack spatial dims, then select matching points
+    ds_points = ds.stack(points=spatial_dims)
+    ds_near = ds_points.isel(points=flat_indices)
+    return ds_near
+
+
 ####------------------------------------------------------------------------------------------------------------------.
 ####################
 #### Infilling  ####

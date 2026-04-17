@@ -1,7 +1,7 @@
 ---
 Nw:
   cmap:
-    name: dusk
+    name: lavender_r
   norm:
     name: LogNorm
     vmin: 100
@@ -18,7 +18,7 @@ Rm:
   reference: rainfall_rate
 Dm:
   cmap:
-    name: plasma
+    name: ember_r
   norm:
     name: Norm
     vmin: 0.5
@@ -66,9 +66,22 @@ Nt:
     label: $N_t$ [$m^{-3}$]
   auxiliary:
     category: [disdrodb, dsd]
-sigma_m:
+N_0p5_1p0:
   cmap:
     name: cividis
+  norm:
+    name: LogNorm
+    vmin: 10
+    vmax: 2000
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $N_{t,0.5-1.0} \,\, [m^{-3}]$
+  auxiliary:
+    category: [disdrodb, dsd]
+sigma_m:
+  cmap:
+    name: ember_r
   norm:
     name: Norm
     vmin: 0.2
