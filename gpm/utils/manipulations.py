@@ -1523,7 +1523,7 @@ def extract_within_point_distance(
     from sklearn.neighbors import BallTree
 
     lon0, lat0 = point
-    
+
     lat = ds[lat_name].to_numpy()
     lon = ds[lon_name].to_numpy()
 
@@ -1545,7 +1545,7 @@ def extract_within_point_distance(
     query_point = np.deg2rad([[lat0, lon0]])
 
     # Earth radius in m
-    earth_radius = 6371.0*1000
+    earth_radius = 6371.0 * 1000
     radius_rad = radius / earth_radius
 
     ind = tree.query_radius(query_point, r=radius_rad)[0]
