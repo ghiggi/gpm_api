@@ -637,7 +637,7 @@ def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
         version=version,
         start_time=start_time,
         end_time=end_time,
-        chunks={},  # only read the data needed around GR instead of full granule
+        chunks=-1,  # only read the data needed around GR instead of full granule
     )
 
     # - 1B product
@@ -648,7 +648,7 @@ def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
         version=version,
         start_time=start_time,
         end_time=end_time,
-        chunks={},  # only read the data needed around GR instead of full granule
+        chunks=-1,  # only read the data needed around GR instead of full granule
     )
 
     # Crop SR datasets to region of interest
@@ -676,6 +676,7 @@ def volume_matching(
     radar_band,
     ds_sr=None,
     z_variable_gr="DBZH",
+    zdr_variable_gr="ZDR",  # ADDED BY ME
     beamwidth_gr: float = 1.0,
     z_min_threshold_gr=0,
     z_min_threshold_sr=10,
@@ -857,7 +858,7 @@ def volume_matching(
     x_sr, y_sr, z_sr = retrieve_gates_projection_coordinates(ds_sr, dst_crs=crs_gr)
 
     #### - Retrieve SR (range, azimuth, elevation) coordinates
-    range_sr, azimuth_sr, elevation_sr = xyz_to_antenna_coordinates(  # noqa: RUF059
+    range_sr, azimuth_sr, elevation_sr = xyz_to_antenna_coordinates(
         x=x_sr,
         y=y_sr,
         z=z_sr,
@@ -892,7 +893,7 @@ def volume_matching(
     ####-----------------------------------------------------------------------------.
     #### Retrieve custom SR variables
     #### - Retrieve Bright Band (BB) Ratio
-    da_bb_ratio, da_bb_mask = ds_sr.gpm.retrieve("bright_band_ratio", return_bb_mask=True)  # noqa: RUF059
+    da_bb_ratio, da_bb_mask = ds_sr.gpm.retrieve("bright_band_ratio", return_bb_mask=True)
 
     #### - Retrieve Precipitation and Hydrometeors Types
     ds_sr["flagPrecipitationType"] = ds_sr.gpm.retrieve("flagPrecipitationType", method="major_rain_type")
@@ -1221,7 +1222,90 @@ def volume_matching(
 
     ####-----------------------------------------------------------------------------.
     #### Aggregate GR data on SR footprints
+    # CHANGED BLOCK FROM HERE==================
     # Define PolyAggregator
+    aggregator = PolyAggregator(source_polygons=gr_poly, target_polygons=sr_poly, parallel=False)
+
+    # Helper function to calculate statistics for any given variable
+    def _calculate_stats(var_name, is_reflectivity=False):
+        stats = {}
+        if var_name in gdf_gr.columns:
+            if is_reflectivity:
+                stats["mean"] = wrl.trafo.decibel(aggregator.average(values=wrl.trafo.idecibel(gdf_gr[var_name])))
+            else:
+                stats["mean"] = aggregator.average(values=gdf_gr[var_name])
+            stats["std"] = aggregator.std(values=gdf_gr[var_name])
+            stats["max"] = aggregator.max(values=gdf_gr[var_name])
+            stats["min"] = aggregator.min(values=gdf_gr[var_name])
+            stats["range"] = stats["max"] - stats["min"]
+            stats["cov"] = stats["std"] / stats["mean"]
+        else:
+            nan_series = pd.Series(np.nan, index=gdf_sr.index)
+            stats = dict.fromkeys(["mean", "std", "max", "min", "range", "cov"], nan_series)
+        return stats
+
+    # List of all variables to aggregate
+    variables_to_aggregate = {
+        "Z": {"name": z_variable_gr, "is_reflectivity": True},
+        "ZDR": {"name": zdr_variable_gr, "is_reflectivity": True},
+        "AH": {"name": "AH", "is_reflectivity": False},
+        "PIA": {"name": "PIA", "is_reflectivity": False},
+        "DBZH_COR_AH": {"name": "DBZH_COR_AH", "is_reflectivity": True},
+        "ADP": {"name": "ADP", "is_reflectivity": False},
+        "PIDA": {"name": "PIDA", "is_reflectivity": False},
+        "KDP_COR_ADP": {"name": "KDP_COR_ADP", "is_reflectivity": True},
+        "RHOHV": {"name": "RHOHV", "is_reflectivity": False},
+        "KDP": {"name": "KDP", "is_reflectivity": False},
+        "WRADH": {"name": "WRADH", "is_reflectivity": False},
+        "VRADH": {"name": "VRADH", "is_reflectivity": False},
+        "ZHCLUT": {"name": "ZHCLUT", "is_reflectivity": True},
+        "ZVV": {"name": "ZVV", "is_reflectivity": True},
+        "SNR": {"name": "SNR", "is_reflectivity": False},
+    }
+
+    # Dictionary to hold all the final data for the DataFrame
+    df_data = {}
+
+    # Loop through the list, calculate stats, and add to the dictionary
+    for prefix, var_info in variables_to_aggregate.items():
+        stats = _calculate_stats(var_info["name"], is_reflectivity=var_info["is_reflectivity"])
+        for stat_name, stat_series in stats.items():
+            df_data[f"GR_{prefix}_{stat_name}"] = stat_series
+
+    # Add other general statistics
+    df_data["GR_time"] = aggregator.first(values=gdf_gr["time"])
+    df_data["GR_gate_volume_sum"] = aggregator.sum(values=gdf_gr["gate_volume"])
+    df_data["GR_fraction_covered_area"] = aggregator.fraction_covered_area()
+    df_data["GR_counts"] = aggregator.counts()
+    counts = aggregator.counts()
+    df_data["GR_counts_valid"] = aggregator.apply(lambda x, weights: np.sum(~np.isnan(x)), values=gdf_gr[z_variable_gr])
+
+    # Calculate fraction above sensitivity thresholds
+    counts_series = df_data["GR_counts"]
+    for thr in sr_sensitivity_thresholds:
+        counts_above_thr = aggregator.apply(lambda x, weights: np.sum(x > thr), values=gdf_gr[z_variable_gr])
+
+        # --- START OF CORRECTION ---
+        # Perform safe division with NumPy to avoid division-by-zero warnings
+        fraction = np.zeros_like(counts_above_thr, dtype=float)
+        # Only divide where the total count is not zero; otherwise, the fraction remains 0
+        np.divide(counts_above_thr, counts_series, out=fraction, where=counts_series != 0)
+        # --- END OF CORRECTION ---
+
+        df_data[f"GR_Z_fraction_above_{thr}dBZ"] = fraction
+
+    # Add scalar GR attributes
+    # if "sweep_number" in ds_gr:
+    #    df_data["GR_sweep_number"] = ds_gr["sweep_number"].item()
+    if "sweep_fixed_angle" in ds_gr:
+        df_data["GR_elevation_angle"] = ds_gr["sweep_fixed_angle"].item()
+
+    # Create the final DataFrame
+    df = pd.DataFrame(df_data, index=gdf_sr.index)
+    gdf_gr_match = gpd.GeoDataFrame(df, crs=crs_gr, geometry=aggregator.target_polygons)
+    # CHANGED BLOCK UNTIL HERE==================
+
+    """# Define PolyAggregator
     aggregator = PolyAggregator(source_polygons=gr_poly, target_polygons=sr_poly, parallel=False)
 
     # Aggregate GR reflecitvities and compute statistics
@@ -1249,6 +1333,61 @@ def volume_matching(
     z_range = z_max - z_min
     z_cov = z_std / z_mean  # coefficient of variation
 
+    # --- ADDED BY ME: Calculate statistics for ZDR ---
+    if zdr_variable_gr in gdf_gr.columns:
+        # Calculate ZDR mean in linear space
+        zdr_mean = wrl.trafo.decibel(aggregator.average(values=wrl.trafo.idecibel(gdf_gr[zdr_variable_gr])))
+        # Calculate other ZDR stats directly in decibels
+        zdr_std = aggregator.std(values=gdf_gr[zdr_variable_gr])
+        zdr_max = aggregator.max(values=gdf_gr[zdr_variable_gr])
+        zdr_min = aggregator.min(values=gdf_gr[zdr_variable_gr])
+        zdr_range = zdr_max - zdr_min
+        zdr_cov = zdr_std / zdr_mean
+    else:
+        # If ZDR column doesn't exist, create NaNs for all stats
+        nan_series = pd.Series(np.nan, index=gdf_sr.index)
+        zdr_mean, zdr_std, zdr_max, zdr_min, zdr_range, zdr_cov = (nan_series,) * 6
+    # --- END MODIFICATION ---
+
+    # --- ADDED BY ME: Calculate statistics for PIA_H (Path Integrated Attenuation) ---
+    if "PIA_H" in gdf_gr.columns:
+        pia_mean = aggregator.average(values=gdf_gr["PIA_H"])
+        pia_std = aggregator.std(values=gdf_gr["PIA_H"])
+        pia_max = aggregator.max(values=gdf_gr["PIA_H"])
+        pia_min = aggregator.min(values=gdf_gr["PIA_H"])
+        pia_range = pia_max - pia_min
+        pia_cov = pia_std / pia_mean
+    else:
+        nan_series = pd.Series(np.nan, index=gdf_sr.index)
+        pia_mean, pia_std, pia_max, pia_min, pia_range, pia_cov = (nan_series,) * 6
+
+    # --- ADDED BY ME: Calculate statistics for AH (Specific Attenuation) ---
+    if "AH" in gdf_gr.columns:
+        att_mean = aggregator.average(values=gdf_gr["AH"])
+        #att_std = aggregator.std(values=gdf_gr["AH"])
+        #att_max = aggregator.max(values=gdf_gr["AH"])
+        #att_min = aggregator.min(values=gdf_gr["AH"])
+        #att_range = att_max - att_min
+        #att_cov = att_std / att_mean
+    else:
+        nan_series = pd.Series(np.nan, index=gdf_sr.index)
+        att_mean, att_std, att_max, att_min, att_range, att_cov = (nan_series,) * 6
+        att_mean = nan_series
+    # --- END MODIFICATION ---
+
+    # --- ADDED BY ME: Calculate statistics for DBZH_COR_AH (Corrected Reflectivity) ---
+    if "DBZH_COR_AH" in gdf_gr.columns:
+        dbzh_cor_ah_mean = wrl.trafo.decibel(aggregator.average(values=wrl.trafo.idecibel(gdf_gr["DBZH_COR_AH"])))
+        dbzh_cor_ah_std = aggregator.std(values=gdf_gr["DBZH_COR_AH"])
+        dbzh_cor_ah_max = aggregator.max(values=gdf_gr["DBZH_COR_AH"])
+        dbzh_cor_ah_min = aggregator.min(values=gdf_gr["DBZH_COR_AH"])
+        dbzh_cor_ah_range = dbzh_cor_ah_max - dbzh_cor_ah_min
+        dbzh_cor_ah_cov = dbzh_cor_ah_std / dbzh_cor_ah_mean
+    else:
+        nan_series = pd.Series(np.nan, index=gdf_sr.index)
+        dbzh_cor_ah_mean, dbzh_cor_ah_std, dbzh_cor_ah_max, dbzh_cor_ah_min, dbzh_cor_ah_range, dbzh_cor_ah_cov = (nan_series,) * 6
+# --- END MODIFICATION ---
+
     # Create DataFrame with GR matched statistics
     df = pd.DataFrame(
         {
@@ -1258,6 +1397,41 @@ def volume_matching(
             "GR_Z_min": z_min,
             "GR_Z_range": z_range,
             "GR_Z_cov": z_cov,
+
+            # --- ADDED BY ME ---
+            # ZDR Statistics
+            "GR_ZDR_mean": zdr_mean,
+            "GR_ZDR_std": zdr_std,
+            "GR_ZDR_max": zdr_max,
+            "GR_ZDR_min": zdr_min,
+            "GR_ZDR_range": zdr_range,
+            "GR_ZDR_cov": zdr_cov,
+
+            # PIAH Statistics
+            "GR_PIAH_mean": pia_mean,
+            "GR_PIAH_std": pia_std,
+            "GR_PIAH_max": pia_max,
+            "GR_PIAH_min": pia_min,
+            "GR_PIAH_range": pia_range,
+            "GR_PIAH_cov": pia_cov,
+
+            # AH Statistics
+            "GR_AH_mean": att_mean,
+            #"GR_AH_std": att_std,
+            #"GR_AH_max": att_max,
+            #"GR_AH_min": att_min,
+            #"GR_AH_range": att_range,
+            #"GR_AH_cov": att_cov,
+
+            # DBZH_COR_AH Statistics
+            "GR_DBZH_COR_AH_mean": dbzh_cor_ah_mean,
+            "GR_DBZH_COR_AH_std": dbzh_cor_ah_std,
+            "GR_DBZH_COR_AH_max": dbzh_cor_ah_max,
+            "GR_DBZH_COR_AH_min": dbzh_cor_ah_min,
+            "GR_DBZH_COR_AH_range": dbzh_cor_ah_range,
+            "GR_DBZH_COR_AH_cov": dbzh_cor_ah_cov,
+            # --- ADDED BY ME ---
+
             "GR_time": time_gr,
             "GR_gate_volume_sum": sum_vol,
             "GR_fraction_covered_area": fraction_covered_area,
@@ -1267,7 +1441,7 @@ def volume_matching(
         index=gdf_sr.index,
     )
     gdf_gr_match = gpd.GeoDataFrame(df, crs=crs_gr, geometry=aggregator.target_polygons)
-    gdf_gr_match.head()
+    gdf_gr_match.head()"""
 
     # Add GR range statistics
     gdf_gr_match["GR_range_max"] = aggregator.max(values=gdf_gr["range"])
@@ -1277,6 +1451,9 @@ def volume_matching(
     # Add GR azimuth and elevation
     gdf_gr_match["GR_azimuth"] = aggregator.first(values=gdf_gr["azimuth"])
     gdf_gr_match["GR_elevation"] = aggregator.first(values=gdf_gr["elevation"])
+
+    # if "sweep_number" in ds_gr:
+    #     gdf_gr_match["sweep_number"] = ds_gr["sweep_number"].item()
 
     # Fraction above sensitivity thresholds
     for thr in sr_sensitivity_thresholds:
