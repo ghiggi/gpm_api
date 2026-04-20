@@ -676,7 +676,7 @@ def volume_matching(
     radar_band,
     ds_sr=None,
     z_variable_gr="DBZH",
-    zdr_variable_gr="ZDR",     # ADDED BY ME
+    zdr_variable_gr="ZDR",  # ADDED BY ME
     beamwidth_gr: float = 1.0,
     z_min_threshold_gr=0,
     z_min_threshold_sr=10,
@@ -1043,7 +1043,7 @@ def volume_matching(
         "y",
         "z",
     ]
-    
+
     # Initialize Dataset where to add aggregated SR gates
     ds_sr_match_ppi = xr.Dataset()
 
@@ -1231,34 +1231,34 @@ def volume_matching(
         stats = {}
         if var_name in gdf_gr.columns:
             if is_reflectivity:
-                stats['mean'] = wrl.trafo.decibel(aggregator.average(values=wrl.trafo.idecibel(gdf_gr[var_name])))
+                stats["mean"] = wrl.trafo.decibel(aggregator.average(values=wrl.trafo.idecibel(gdf_gr[var_name])))
             else:
-                stats['mean'] = aggregator.average(values=gdf_gr[var_name])
-            stats['std'] = aggregator.std(values=gdf_gr[var_name])
-            stats['max'] = aggregator.max(values=gdf_gr[var_name])
-            stats['min'] = aggregator.min(values=gdf_gr[var_name])
-            stats['range'] = stats['max'] - stats['min']
-            stats['cov'] = stats['std'] / stats['mean']
+                stats["mean"] = aggregator.average(values=gdf_gr[var_name])
+            stats["std"] = aggregator.std(values=gdf_gr[var_name])
+            stats["max"] = aggregator.max(values=gdf_gr[var_name])
+            stats["min"] = aggregator.min(values=gdf_gr[var_name])
+            stats["range"] = stats["max"] - stats["min"]
+            stats["cov"] = stats["std"] / stats["mean"]
         else:
             nan_series = pd.Series(np.nan, index=gdf_sr.index)
-            stats = {k: nan_series for k in ['mean', 'std', 'max', 'min', 'range', 'cov']}
+            stats = dict.fromkeys(["mean", "std", "max", "min", "range", "cov"], nan_series)
         return stats
 
     # List of all variables to aggregate
     variables_to_aggregate = {
-        "Z": {"name": z_variable_gr, "is_reflectivity": True}, 
+        "Z": {"name": z_variable_gr, "is_reflectivity": True},
         "ZDR": {"name": zdr_variable_gr, "is_reflectivity": True},
-        "AH": {"name": "AH", "is_reflectivity": False}, 
+        "AH": {"name": "AH", "is_reflectivity": False},
         "PIA": {"name": "PIA", "is_reflectivity": False},
-        "DBZH_COR_AH": {"name": "DBZH_COR_AH", "is_reflectivity": True}, 
+        "DBZH_COR_AH": {"name": "DBZH_COR_AH", "is_reflectivity": True},
         "ADP": {"name": "ADP", "is_reflectivity": False},
-        "PIDA": {"name": "PIDA", "is_reflectivity": False}, 
+        "PIDA": {"name": "PIDA", "is_reflectivity": False},
         "KDP_COR_ADP": {"name": "KDP_COR_ADP", "is_reflectivity": True},
-        "RHOHV": {"name": "RHOHV", "is_reflectivity": False}, 
+        "RHOHV": {"name": "RHOHV", "is_reflectivity": False},
         "KDP": {"name": "KDP", "is_reflectivity": False},
-        "WRADH": {"name": "WRADH", "is_reflectivity": False}, 
+        "WRADH": {"name": "WRADH", "is_reflectivity": False},
         "VRADH": {"name": "VRADH", "is_reflectivity": False},
-        "ZHCLUT": {"name": "ZHCLUT", "is_reflectivity": True}, 
+        "ZHCLUT": {"name": "ZHCLUT", "is_reflectivity": True},
         "ZVV": {"name": "ZVV", "is_reflectivity": True},
         "SNR": {"name": "SNR", "is_reflectivity": False},
     }
@@ -1271,7 +1271,7 @@ def volume_matching(
         stats = _calculate_stats(var_info["name"], is_reflectivity=var_info["is_reflectivity"])
         for stat_name, stat_series in stats.items():
             df_data[f"GR_{prefix}_{stat_name}"] = stat_series
-            
+
     # Add other general statistics
     df_data["GR_time"] = aggregator.first(values=gdf_gr["time"])
     df_data["GR_gate_volume_sum"] = aggregator.sum(values=gdf_gr["gate_volume"])
@@ -1284,7 +1284,7 @@ def volume_matching(
     counts_series = df_data["GR_counts"]
     for thr in sr_sensitivity_thresholds:
         counts_above_thr = aggregator.apply(lambda x, weights: np.sum(x > thr), values=gdf_gr[z_variable_gr])
-        
+
         # --- START OF CORRECTION ---
         # Perform safe division with NumPy to avoid division-by-zero warnings
         fraction = np.zeros_like(counts_above_thr, dtype=float)
@@ -1295,7 +1295,7 @@ def volume_matching(
         df_data[f"GR_Z_fraction_above_{thr}dBZ"] = fraction
 
     # Add scalar GR attributes
-    #if "sweep_number" in ds_gr:
+    # if "sweep_number" in ds_gr:
     #    df_data["GR_sweep_number"] = ds_gr["sweep_number"].item()
     if "sweep_fixed_angle" in ds_gr:
         df_data["GR_elevation_angle"] = ds_gr["sweep_fixed_angle"].item()
@@ -1305,7 +1305,7 @@ def volume_matching(
     gdf_gr_match = gpd.GeoDataFrame(df, crs=crs_gr, geometry=aggregator.target_polygons)
     # CHANGED BLOCK UNTIL HERE==================
 
-    '''# Define PolyAggregator
+    """# Define PolyAggregator
     aggregator = PolyAggregator(source_polygons=gr_poly, target_polygons=sr_poly, parallel=False)
 
     # Aggregate GR reflecitvities and compute statistics
@@ -1397,7 +1397,7 @@ def volume_matching(
             "GR_Z_min": z_min,
             "GR_Z_range": z_range,
             "GR_Z_cov": z_cov,
-            
+
             # --- ADDED BY ME ---
             # ZDR Statistics
             "GR_ZDR_mean": zdr_mean,
@@ -1408,11 +1408,11 @@ def volume_matching(
             "GR_ZDR_cov": zdr_cov,
 
             # PIAH Statistics
-            "GR_PIAH_mean": pia_mean, 
-            "GR_PIAH_std": pia_std, 
-            "GR_PIAH_max": pia_max, 
-            "GR_PIAH_min": pia_min, 
-            "GR_PIAH_range": pia_range, 
+            "GR_PIAH_mean": pia_mean,
+            "GR_PIAH_std": pia_std,
+            "GR_PIAH_max": pia_max,
+            "GR_PIAH_min": pia_min,
+            "GR_PIAH_range": pia_range,
             "GR_PIAH_cov": pia_cov,
 
             # AH Statistics
@@ -1441,7 +1441,7 @@ def volume_matching(
         index=gdf_sr.index,
     )
     gdf_gr_match = gpd.GeoDataFrame(df, crs=crs_gr, geometry=aggregator.target_polygons)
-    gdf_gr_match.head()'''
+    gdf_gr_match.head()"""
 
     # Add GR range statistics
     gdf_gr_match["GR_range_max"] = aggregator.max(values=gdf_gr["range"])
