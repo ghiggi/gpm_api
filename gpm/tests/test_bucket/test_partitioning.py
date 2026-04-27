@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the Spatial Partitioning classes."""
+
 import os
 
 import dask.dataframe as dd

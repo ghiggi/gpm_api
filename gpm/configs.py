@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """GPM-API configurations settings."""
+
 import os
 import platform
 from subprocess import Popen

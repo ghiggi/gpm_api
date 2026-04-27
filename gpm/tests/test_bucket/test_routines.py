@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the bucket routines."""
+
 import os
 
 import pandas as pd
