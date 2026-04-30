@@ -11,7 +11,7 @@ reflectivity:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Reflectivity [$dBZ$]
+    label: Reflectivity [dBZ]
   auxiliary:
     category: [reflectivity, radar]
 differential_reflectivity:
@@ -21,12 +21,12 @@ differential_reflectivity:
     bad_color: none
   norm:
     name: Norm
-    vmin: -1
-    vmax: 8
+    vmin: -0.4
+    vmax: 4
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Differential Reflectivity [$dB$]
+    label: $Z_{\mathrm{DR}}$ [dB]
   auxiliary:
     category: [reflectivity, radar]
 differential_phase:
@@ -39,7 +39,7 @@ differential_phase:
     vmax: 180 #
   cbar:
     extend: neither
-    label: Total Differential Phase ($\phi_{dp}$)  [$°$]
+    label: $\phi_{\mathrm{DP}}$  [°] # Total Differential Phase
   auxiliary:
     category: [phase, radar]
 propagation_differential_phase:
@@ -52,7 +52,7 @@ propagation_differential_phase:
     vmax: 360 # can be more ... unbounded
   cbar:
     extend: neither
-    label: Propagation Differential Phase ($\psi_{dp}$)  [$°$]
+    label: $\psi_{\mathrm{DP}}$ [°] # Propagation Differential Phase
   auxiliary:
     category: [phase, radar]
 specific_differential_phase:
@@ -66,7 +66,7 @@ specific_differential_phase:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Specific Differential Phase ($K_{dp}$) [$°/km$]
+    label: $K_{\mathrm{DP}}$ [° km$^{-1}$]
   auxiliary:
     category: [phase, radar]
 cross_correlation_ratio:
@@ -79,7 +79,7 @@ cross_correlation_ratio:
     vmax: 1
   cbar:
     extend: neither
-    label: Correlation between $Z_{H}$ and $Z_{V}$ ($\rho_{hv}$)
+    label:  $\rho_{\mathrm{HV}}$ [-]
   auxiliary:
     category: [radar]
 clutter_correction:
@@ -108,7 +108,7 @@ specific_attenuation:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Specific_attenuation [$dB/km$]
+    label: k [$dB/km$]
   auxiliary:
     category: [radar]
 specific_differential_attenuation:
@@ -121,7 +121,7 @@ specific_differential_attenuation:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Specific Differential Attenuation ($A_{dp}$) [$dB/km$]
+    label: $A_{\mathrm{DP}}$ [dB km$^{-1}$]
   auxiliary:
     category: [radar]
 path_integrated_attenuation:
@@ -135,7 +135,7 @@ path_integrated_attenuation:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Path Integrated Attenuation ($PIA$) [$dB$]
+    label: PIA [dB]
   auxiliary:
     category: [radar]
 path_integrated_differential_attenuation:
@@ -149,7 +149,7 @@ path_integrated_differential_attenuation:
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Path Integrated Differential Attenuation ($PIDA$) [$dB$]
+    label: $\delta$PIA [dB]
   auxiliary:
     category: [radar]
 linear_depolarization_ratio:
@@ -163,7 +163,7 @@ linear_depolarization_ratio:
   cbar:
     extend: min
     extendfrac: 0.05
-    label: Depolarization Ratio [$dB$]
+    label: Depolarization Ratio [dB]
   auxiliary:
     category: [radar]
 normalized_coherent_power:
@@ -190,7 +190,7 @@ signal_to_noise_ratio:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Signal to Noise Ratio [$dB$]
+    label: Signal to Noise Ratio [dB]
   auxiliary:
     category: [radar]
 TH:

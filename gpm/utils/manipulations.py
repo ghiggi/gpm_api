@@ -1548,7 +1548,14 @@ def extract_within_point_distance(
     earth_radius = 6371.0 * 1000
     radius_rad = radius / earth_radius
 
-    ind = tree.query_radius(query_point, r=radius_rad)[0]
+    # Retrieve indices and distance
+    ind, dist = tree.query_radius(query_point, r=radius_rad, return_distance=True)
+
+    ind = ind[0]
+    dist = dist[0]  # in radians
+
+    # Convert to meters
+    dist_m = dist * earth_radius
 
     # Map back to flattened full-grid indices
     flat_indices = np.flatnonzero(valid)[ind]
@@ -1556,6 +1563,12 @@ def extract_within_point_distance(
     # Stack spatial dims, then select matching points
     ds_points = ds.stack(points=spatial_dims)
     ds_near = ds_points.isel(points=flat_indices)
+
+    # Add distance as coordinate
+    ds_near = ds_near.assign_coords(
+        distance=("points", dist_m),
+    )
+
     return ds_near
 
 

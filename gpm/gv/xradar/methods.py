@@ -319,6 +319,7 @@ def plot_map(
     add_background=True,
     add_gridlines=True,
     add_labels=True,
+    rasterized=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
@@ -360,6 +361,7 @@ def plot_map(
         x=x,
         y=y,
         add_colorbar=False,
+        rasterized=rasterized,
         # cbar_kwargs=cbar_kwargs,
         **plot_kwargs,
     )
@@ -371,5 +373,5 @@ def plot_map(
         _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
     # Set extent
     if extent is not None:
-        ax.set_extent(extent)
+        ax.set_extent(extent, crs=ccrs.PlateCarree())
     return p
