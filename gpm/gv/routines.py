@@ -26,6 +26,7 @@
 # -----------------------------------------------------------------------------.
 """This module contains the routine for SR/GR validation."""
 import warnings
+from collections.abc import Iterable
 
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -37,6 +38,7 @@ from shapely import Point
 
 import gpm
 from gpm.gv.plots import calibration_summary, plot_gdf_map
+from gpm.io.checks import check_start_end_time, check_time
 from gpm.utils.manipulations import (
     conversion_factors_degree_to_meter,
 )
@@ -403,38 +405,24 @@ def convert_s_to_ku_band(ds_gr, bright_band_height, z_variable="DBZH"):
     return da_ku
 
 
-def add_radar_info(ax, ds_gr, radar_size):
+def add_radar_info(ax, ds_gr, radar_size, distances=[15_000, 100_000, 150_000], **plot_kwargs):
+    """Add radar information (location, distance circles)."""
     # - Add radar location
     ax.scatter(0, 0, c="black", marker="X", s=radar_size)
     ax.scatter(0, 0, c="black", marker="X", s=radar_size)
 
-    ds_gr.xradar_dev.plot_range_distance(
-        distance=15_000,
-        ax=ax,
-        add_background=False,
-        add_gridlines=False,
-        add_labels=False,
-        linestyle="dashed",
-        edgecolor="black",
-    )
-    ds_gr.xradar_dev.plot_range_distance(
-        distance=100_000,
-        ax=ax,
-        add_background=False,
-        add_gridlines=False,
-        add_labels=False,
-        linestyle="dashed",
-        edgecolor="black",
-    )
-    ds_gr.xradar_dev.plot_range_distance(
-        distance=150_000,
-        ax=ax,
-        add_background=False,
-        add_gridlines=False,
-        add_labels=False,
-        linestyle="dashed",
-        edgecolor="black",
-    )
+    # Add distance circles
+    for distance in distances:
+        ds_gr.xradar_dev.plot_range_distance(
+            distance=distance,
+            ax=ax,
+            add_background=False,
+            add_gridlines=False,
+            add_labels=False,
+            linestyle="dashed",
+            edgecolor="black",
+            **plot_kwargs,
+        )
 
 
 def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", ds_sr=None):
@@ -587,21 +575,20 @@ L2_VARIABLES = [
 ]
 
 
-def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
+def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False, all_l2_variables=False):
     # Define GPM settings
     product_type = "RS"
     version = 7
     storage = "GES_DISC"
     scan_mode = "FS"
 
+    # Check time
+    start_time, end_time = check_start_end_time(start_time, end_time)
+
     # Define products
     # - Use TRMM PR before '2014-03-08'
     # - Use GPM DPR after '2014-03-08'
-    if start_time >= np.array("2014-03-08 22:09:50", dtype="M8[s]"):
-        products = ["2A-DPR", "1B-Ku"]
-
-    else:
-        products = ["2A-PR", "1B-PR"]
+    products = ["2A-DPR", "1B-Ku"] if start_time >= check_time("2014-03-08 22:09:50") else ["2A-PR", "1B-PR"]
 
     # Download SR data (if asked)
     if download_sr:
@@ -626,6 +613,8 @@ def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
         # vertical variable to not drop the range dimension
         "echoCount",
     ]
+    # Define l2 variables to load
+    l2_variables = None if all_l2_variables else L2_VARIABLES
 
     # Open datasets
     # - 2A product
@@ -633,7 +622,7 @@ def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
         product=products[0],
         product_type=product_type,
         scan_mode=scan_mode,
-        variables=L2_VARIABLES,
+        variables=l2_variables,
         version=version,
         start_time=start_time,
         end_time=end_time,
@@ -670,6 +659,23 @@ def retrieve_ds_sr(start_time, end_time, extent_gr, download_sr=False):
     return ds_sr
 
 
+def ensure_list(x):
+    """Normalize input to a list.
+
+    - None → []
+    - str → [str]
+    - iterable → list(iterable)
+    - scalar → [scalar]
+    """
+    if x is None:
+        return []
+    if isinstance(x, str):
+        return [x]
+    if isinstance(x, Iterable):
+        return list(x)
+    raise NotImplementedError
+
+
 @print_task_elapsed_time(prefix="SR/GR Matching")
 def volume_matching(
     ds_gr,
@@ -683,7 +689,15 @@ def volume_matching(
     max_gr_range=150_000,
     gr_sensitivity_thresholds=None,
     sr_sensitivity_thresholds=None,
+    # Optional SR variables to aggregate
+    sr_vars=None,
+    sr_vars_db=None,
+    # Optional GR variables to aggregate
+    gr_vars=None,
+    gr_vars_db=None,
+    # Download option
     download_sr=True,
+    # Quicklook and stats option
     display_quicklook=True,
     display_calibration_summary=False,
     quicklook_fpath=None,
@@ -734,6 +748,12 @@ def volume_matching(
     import wradlib as wrl
 
     warnings.filterwarnings("ignore")
+
+    # Check variables to aggregate
+    sr_vars = ensure_list(sr_vars)
+    sr_vars_db = ensure_list(sr_vars_db)
+    gr_vars = ensure_list(gr_vars)
+    gr_vars_db = ensure_list(gr_vars_db)
 
     # Check input datasets
     if not isinstance(ds_gr, xr.Dataset):
@@ -982,11 +1002,12 @@ def volume_matching(
 
     ####-----------------------------------------------------------------------------.
     #### Aggregate SR radar gates
-    # Add variables to SR dataset
+    # Add relevant variables to SR dataset
     ds_sr["zFactorMeasured_Ku"] = ds_sr["zFactorMeasured"]
     ds_sr["zFactorFinal_Ku"] = ds_sr["zFactorFinal"]
     ds_sr[f"zFactorFinal_{radar_band}"] = da_z_final
     ds_sr[f"zFactorMeasured_{radar_band}"] = da_z_measured
+    ds_sr["PIA_Ku"] = ds_sr["zFactorCorrection"]
     ds_sr["zFactorCorrection_Ku"] = ds_sr["zFactorCorrection"]
     ds_sr[f"zFactorCorrection_{radar_band}"] = da_z_correction
     ds_sr["hres"] = h_res_sr
@@ -1024,9 +1045,13 @@ def volume_matching(
         f"zFactorFinal_{radar_band}",
         "zFactorMeasured_Ku",
         f"zFactorMeasured_{radar_band}",
+        *sr_vars_db,
     ]
+    z_variables = np.unique(z_variables)
+
     sr_variables = [
         *z_variables,
+        "PIA_Ku",
         "zFactorCorrection_Ku",
         f"zFactorCorrection_{radar_band}",
         "precipRate",
@@ -1041,47 +1066,72 @@ def volume_matching(
         "x",
         "y",
         "z",
+        # Add optional here below
+        *sr_vars,
     ]
+    sr_variables = np.unique(sr_variables)
 
     # Initialize Dataset where to add aggregated SR gates
     ds_sr_match_ppi = xr.Dataset()
 
     # Mask SR beams not matching the GR PPI and not rainy
+    sr_variables = [var for var in sr_variables if var in ds_sr]
     ds_sr_ppi = ds_sr[sr_variables].where(mask_matched_ppi_3d)
 
-    # Compute aggregation statistics
-    ds_sr_ppi_min = ds_sr_ppi.min("range")
-    ds_sr_ppi_max = ds_sr_ppi.max("range")
-    ds_sr_ppi_sum = ds_sr_ppi.sum(dim="range", skipna=True)
-    ds_sr_ppi_mean = ds_sr_ppi.mean("range")
-    ds_sr_ppi_std = ds_sr_ppi.std("range")
+    # Compute counts
+    ds_sr_match_ppi["SR_counts"] = mask_matched_ppi_3d.sum(dim="range")
+    ds_sr_match_ppi["SR_counts_valid"] = (~np.isnan(ds_sr_ppi["zFactorFinal_Ku"])).sum(dim="range")
 
-    # Aggregate reflectivities (in mm6/mm3)
-    # Z_std computed in dbZ
+    # Compute fractions above sensitivity thresholds
     for var in z_variables:
-        ds_sr_ppi_mean[var] = ds_sr_ppi[var].gpm.idecibel.mean("range").gpm.decibel
+        for thr in sr_sensitivity_thresholds:
+            fraction = (ds_sr_ppi[var] >= thr).sum(dim="range") / ds_sr_match_ppi["SR_counts"]
+            ds_sr_match_ppi[f"SR_{var}_fraction_above_{thr}dBZ"] = fraction
+
+    # -------------------------------------------------------------------------.
+    # Compute aggregation statistics
+    dict_stats = {
+        "mean": ds_sr_ppi.mean(dim="range"),
+        "std": ds_sr_ppi.std(dim="range"),
+        "sum": ds_sr_ppi.sum(dim="range", skipna=True),
+        "max": ds_sr_ppi.max(dim="range"),
+        "min": ds_sr_ppi.min(dim="range"),
+    }
+
+    # Aggregate reflectivities in linear unit (in mm6/mm3)
+    # --> Z_std computed in dbZ
+    for var in z_variables:
+        dict_stats["mean"][var][var] = ds_sr_ppi[var].gpm.idecibel.mean("range").gpm.decibel
 
         # # If only 1 value, std=0, log transform become -inf --> Set to 0
         # ds_sr_ppi_std[var] = ds_sr_ppi[var].gpm.idecibel.std("range").gpm.decibel
         # is_inf = np.isinf(ds_sr_ppi_std[var])
         # ds_sr_ppi_std[var] = ds_sr_ppi_std[var].where(~is_inf, 0)
 
-    # Compute counts and fractions above sensitivity thresholds
-    ds_sr_match_ppi["SR_counts"] = mask_matched_ppi_3d.sum(dim="range")
-    ds_sr_match_ppi["SR_counts_valid"] = (~np.isnan(ds_sr_ppi["zFactorFinal_Ku"])).sum(dim="range")
-    for var in z_variables:
-        for thr in sr_sensitivity_thresholds:
-            fraction = (ds_sr_ppi[var] >= thr).sum(dim="range") / ds_sr_match_ppi["SR_counts"]
-            ds_sr_match_ppi[f"SR_{var}_fraction_above_{thr}dBZ"] = fraction
+    # Add range and cov
+    dict_stats["range"] = dict_stats["max"] - dict_stats["min"]
+    dict_stats["range"] = dict_stats["std"] / dict_stats["mean"]
 
-    # Compute fraction of hydrometeor types
+    # Add all statistics to output dataset
+    ds_sr_match_ppi = ds_sr_match_ppi.assign(
+        {
+            f"SR_{var}_{stat_name}": ds_stats[var]
+            for stat_name, ds_stats in dict_stats.items()
+            for var in ds_stats.data_vars
+        },
+    )
+
+    # -------------------------------------------------------------------------.
+    # Compute fraction of hydrometeor types, clutter and precipitation regime
     da_hydro_class = ds_sr["flagHydroClass"].where(mask_matched_ppi_3d)
     ds_sr_match_ppi["SR_fraction_no_precip"] = (da_hydro_class == 0).sum(dim="range") / ds_sr_match_ppi["SR_counts"]
     ds_sr_match_ppi["SR_fraction_rain"] = (da_hydro_class == 1).sum(dim="range") / ds_sr_match_ppi["SR_counts"]
     ds_sr_match_ppi["SR_fraction_snow"] = (da_hydro_class == 2).sum(dim="range") / ds_sr_match_ppi["SR_counts"]
     ds_sr_match_ppi["SR_fraction_hail"] = (da_hydro_class == 3).sum(dim="range") / ds_sr_match_ppi["SR_counts"]
     ds_sr_match_ppi["SR_fraction_melting_layer"] = (da_hydro_class == 4).sum(dim="range") / ds_sr_match_ppi["SR_counts"]
+
     ds_sr_match_ppi["SR_fraction_clutter"] = (da_hydro_class == 5).sum(dim="range") / ds_sr_match_ppi["SR_counts"]
+
     ds_sr_match_ppi["SR_fraction_below_isotherm"] = (ds_sr_ppi["airTemperature"] >= 273.15).sum(
         dim="range",
     ) / ds_sr_match_ppi["SR_counts"]
@@ -1089,24 +1139,7 @@ def volume_matching(
         dim="range",
     ) / ds_sr_match_ppi["SR_counts"]
 
-    # Add aggregation statistics
-    for var in ds_sr_ppi_mean.data_vars:
-        ds_sr_match_ppi[f"SR_{var}_mean"] = ds_sr_ppi_mean[var]
-    for var in ds_sr_ppi_std.data_vars:
-        ds_sr_match_ppi[f"SR_{var}_std"] = ds_sr_ppi_std[var]
-    for var in ds_sr_ppi_sum.data_vars:
-        ds_sr_match_ppi[f"SR_{var}_sum"] = ds_sr_ppi_sum[var]
-    for var in ds_sr_ppi_max.data_vars:
-        ds_sr_match_ppi[f"SR_{var}_max"] = ds_sr_ppi_max[var]
-    for var in ds_sr_ppi_min.data_vars:
-        ds_sr_match_ppi[f"SR_{var}_min"] = ds_sr_ppi_min[var]
-    for var in ds_sr_ppi_min.data_vars:
-        ds_sr_match_ppi[f"SR_{var}_range"] = ds_sr_ppi_max[var] - ds_sr_ppi_min[var]
-
-    # Compute coefficient of variation
-    for var in z_variables:
-        ds_sr_match_ppi[f"SR_{var}_cov"] = ds_sr_match_ppi[f"SR_{var}_std"] / ds_sr_match_ppi[f"SR_{var}_mean"]
-
+    # -------------------------------------------------------------------------.
     # Add SR L2 variables (useful for final filtering and analysis)
     var_l2 = [
         "flagPrecip",
@@ -1128,6 +1161,9 @@ def volume_matching(
     # Add SR time
     ds_sr_match_ppi["SR_time"] = ds_sr_match_ppi["time"]
     ds_sr_match_ppi = ds_sr_match_ppi.drop("time")
+
+    # -------------------------------------------------------------------------.
+    # Finalize SR content
 
     # Mask SR beams not matching the GR PPI
     ds_sr_match_ppi = ds_sr_match_ppi.where(mask_matched_ppi_2d)
@@ -1187,17 +1223,18 @@ def volume_matching(
     # Extract radar gate polygon on the range-azimuth axis
     sr_poly = np.array(gdf_sr.geometry)
 
-    ####-----------------------------------------------------------------------------.
-    #### Retrieve the GR gates polygons
-    # Add variables to GR dataset
+    ####----------------------------------------------------------------------.
+    #### Prepare GR dataset
     ds_gr["gate_volume"] = vol_gr
     ds_gr["vres"] = v_res_gr
     ds_gr["hres"] = h_res_gr
 
-    # Add path_integrated_reflectivities
+    # Compute path-integrated reflectivities
     ds_gr["Z_cumsum"] = ds_gr[z_variable_gr].gpm.idecibel.cumsum("range").gpm.decibel
     ds_gr["Z_cumsum"] = ds_gr["Z_cumsum"].where(np.isfinite(ds_gr["Z_cumsum"]))
 
+    ####----------------------------------------------------------------------.
+    #### Retrieve GR gates polygons
     # Mask reflectivites above minimum GR Z threshold
     mask_gr = ds_gr[z_variable_gr] > z_min_threshold_gr  # important !
 
@@ -1224,40 +1261,24 @@ def volume_matching(
     # Define PolyAggregator
     aggregator = PolyAggregator(source_polygons=gr_poly, target_polygons=sr_poly, parallel=False)
 
-    # Aggregate GR reflecitvities and compute statistics
+    # Compute basic statistics
     # - Timestep of acquisition
     # - NaT where no intersection with SR footprints !
     time_gr = aggregator.first(values=gdf_gr["time"])
 
-    # - Total number of gates aggregated
+    # - Compute total number of gates aggregated
     counts = aggregator.counts()
     counts_valid = aggregator.apply(lambda x, weights: np.sum(~np.isnan(x)), values=gdf_gr[z_variable_gr])  # noqa
 
-    # - Total gate volume
+    # - Compute total gate volume
     sum_vol = aggregator.sum(values=gdf_gr["gate_volume"])
 
-    # - Fraction of SR area covered
+    # - Compute fraction of SR area covered
     fraction_covered_area = aggregator.fraction_covered_area()
 
-    # - Reflectivity statistics
-    z_mean = wrl.trafo.decibel(aggregator.average(values=wrl.trafo.idecibel(gdf_gr[z_variable_gr])))
-    z_std = aggregator.std(values=gdf_gr[z_variable_gr])
-    # z_std = wrl.trafo.decibel(aggregator.std(values=wrl.trafo.idecibel(gdf_gr[z_variable_gr])))
-    # z_std[np.isinf(z_std)] = 0  # If only 1 value, std=0, log transform become -inf --> Set to 0
-    z_max = aggregator.max(values=gdf_gr[z_variable_gr])
-    z_min = aggregator.min(values=gdf_gr[z_variable_gr])
-    z_range = z_max - z_min
-    z_cov = z_std / z_mean  # coefficient of variation
-
     # Create DataFrame with GR matched statistics
-    df = pd.DataFrame(
+    df_gr_match = pd.DataFrame(
         {
-            "GR_Z_mean": z_mean,
-            "GR_Z_std": z_std,
-            "GR_Z_max": z_max,
-            "GR_Z_min": z_min,
-            "GR_Z_range": z_range,
-            "GR_Z_cov": z_cov,
             "GR_time": time_gr,
             "GR_gate_volume_sum": sum_vol,
             "GR_fraction_covered_area": fraction_covered_area,
@@ -1266,33 +1287,24 @@ def volume_matching(
         },
         index=gdf_sr.index,
     )
-    gdf_gr_match = gpd.GeoDataFrame(df, crs=crs_gr, geometry=aggregator.target_polygons)
+    gdf_gr_match = gpd.GeoDataFrame(df_gr_match, crs=crs_gr, geometry=aggregator.target_polygons)
     gdf_gr_match.head()
 
-    # Add GR range statistics
+    # Compute range statistics
     gdf_gr_match["GR_range_max"] = aggregator.max(values=gdf_gr["range"])
     gdf_gr_match["GR_range_mean"] = aggregator.mean(values=gdf_gr["range"])
     gdf_gr_match["GR_range_min"] = aggregator.min(values=gdf_gr["range"])
 
-    # Add GR azimuth and elevation
+    # Compute azimuth and elevation
     gdf_gr_match["GR_azimuth"] = aggregator.first(values=gdf_gr["azimuth"])
     gdf_gr_match["GR_elevation"] = aggregator.first(values=gdf_gr["elevation"])
 
-    # Fraction above sensitivity thresholds
+    # Compute fraction above sensitivity thresholds
     for thr in sr_sensitivity_thresholds:
         fraction = aggregator.apply(lambda x, weights: np.sum(x > thr), values=gdf_gr[z_variable_gr]) / counts  # noqa
         gdf_gr_match[f"GR_Z_fraction_above_{thr}dBZ"] = fraction
 
-    # Compute further aggregation statistics
-    stats_var = ["vres", "hres", "x", "y", "z", "Z_cumsum", "gate_volume"]
-    for var in stats_var:
-        gdf_gr_match[f"GR_{var}_mean"] = aggregator.average(values=gdf_gr[var])
-        gdf_gr_match[f"GR_{var}_min"] = aggregator.min(values=gdf_gr[var])
-        gdf_gr_match[f"GR_{var}_max"] = aggregator.max(values=gdf_gr[var])
-        gdf_gr_match[f"GR_{var}_std"] = aggregator.std(values=gdf_gr[var])
-        gdf_gr_match[f"GR_{var}_range"] = gdf_gr_match[f"GR_{var}_max"] - gdf_gr_match[f"GR_{var}_min"]
-
-    # Compute horizontal distance between centroids
+    # Compute statistics of horizontal distance between centroids
     func_dict = {"min": np.min, "mean": np.mean, "max": np.max}
     for suffix, func in func_dict.items():
         arr = np.zeros(aggregator.n_target_polygons) * np.nan
@@ -1300,6 +1312,38 @@ def volume_matching(
             [func(dist) for i, dist in aggregator.dict_distances.items()],
         )
         gdf_gr_match[f"distance_horizontal_{suffix}"] = arr
+
+    # Aggregates standard variables
+    stats_vars = ["vres", "hres", "x", "y", "z", "Z_cumsum", "gate_volume", *gr_vars]
+    stats_vars = np.unique(stats_vars).tolist()
+    stats_vars = [var for var in stats_vars if var in gdf_gr]
+    for var in stats_vars:
+        gdf_gr_match[f"GR_{var}_mean"] = aggregator.average(values=gdf_gr[var])
+        gdf_gr_match[f"GR_{var}_min"] = aggregator.min(values=gdf_gr[var])
+        gdf_gr_match[f"GR_{var}_max"] = aggregator.max(values=gdf_gr[var])
+        gdf_gr_match[f"GR_{var}_std"] = aggregator.std(values=gdf_gr[var])
+        gdf_gr_match[f"GR_{var}_range"] = gdf_gr_match[f"GR_{var}_max"] - gdf_gr_match[f"GR_{var}_min"]
+        gdf_gr_match[f"GR_{var}_cov"] = gdf_gr_match[f"GR_{var}_std"] - gdf_gr_match[f"GR_{var}_mean"]
+
+    # Aggregates reflectivity and dB variables
+    # - mean: dB -> linear -> mean -> dB
+    # - std/min/max/range remain in dB units
+    db_vars = [z_variable_gr, *gr_vars_db]
+    db_vars = np.unique(db_vars).tolist()
+    db_vars = [var for var in db_vars if var in gdf_gr]
+    for var in db_vars:
+        gdf_gr_match[f"GR_{var}_mean"] = wrl.trafo.decibel(
+            aggregator.average(values=wrl.trafo.idecibel(gdf_gr[var])),
+        )
+        gdf_gr_match[f"GR_{var}_min"] = aggregator.min(values=gdf_gr[var])
+        gdf_gr_match[f"GR_{var}_max"] = aggregator.max(values=gdf_gr[var])
+        gdf_gr_match[f"GR_{var}_std"] = aggregator.std(values=gdf_gr[var])
+        gdf_gr_match[f"GR_{var}_range"] = gdf_gr_match[f"GR_{var}_max"] - gdf_gr_match[f"GR_{var}_min"]
+        gdf_gr_match[f"GR_{var}_cov"] = gdf_gr_match[f"GR_{var}_std"] - gdf_gr_match[f"GR_{var}_mean"]
+
+    # Backcompatibility
+    for suffix in ["mean", "std", "max", "min", "range", "cov"]:
+        gdf_gr_match[f"GR_Z_{suffix}"] = gdf_gr_match[f"GR_{z_variable_gr}_{suffix}"]
 
     ####-----------------------------------------------------------------------------.
     #### Create the SR/GR Database

@@ -56,7 +56,7 @@ LWC:
     category: [disdrodb, dsd]
 Nt:
   cmap:
-    name: cividis
+    name: mako_r
   norm:
     name: LogNorm
     vmin: 10
@@ -68,7 +68,7 @@ Nt:
     category: [disdrodb, dsd]
 N_0p5_1p0:
   cmap:
-    name: cividis
+    name: mako_r
   norm:
     name: LogNorm
     vmin: 10
