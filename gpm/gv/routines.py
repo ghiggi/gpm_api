@@ -1007,9 +1007,11 @@ def volume_matching(
     ds_sr["zFactorFinal_Ku"] = ds_sr["zFactorFinal"]
     ds_sr[f"zFactorFinal_{radar_band}"] = da_z_final
     ds_sr[f"zFactorMeasured_{radar_band}"] = da_z_measured
-    ds_sr["PIA_Ku"] = ds_sr["zFactorCorrection"]
+
     ds_sr["zFactorCorrection_Ku"] = ds_sr["zFactorCorrection"]
     ds_sr[f"zFactorCorrection_{radar_band}"] = da_z_correction
+    ds_sr["PIA_Ku"] = ds_sr["zFactorCorrection"]
+
     ds_sr["hres"] = h_res_sr
     ds_sr["vres"] = v_res_sr
     ds_sr["gate_volume"] = vol_sr

@@ -57,8 +57,11 @@ from gpm.utils.manipulations import (
     get_range_axis,
     get_solid_phase_mask,
     integrate_profile_concentration,
+    locate_largest_values,
     locate_max_value,
     locate_min_value,
+    locate_smallest_values,
+    locate_values,
     mask_above_bin,
     mask_below_bin,
     mask_between_bins,
@@ -1191,6 +1194,129 @@ def test_locate_max_value():
     # If more than 1, always return first point
     da.data[1, 1:3] = 1
     assert locate_max_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+
+
+def test_locate_values():
+    """Test locate_values."""
+    # Grid
+    da = get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+    da.data[:] = 20
+    da.data[1, 1] = 4.9
+    da.data[2, 2] = 5.2
+
+    expected_points = [
+        (da["lon"].data[1], da["lat"].data[1]),
+        (da["lon"].data[2], da["lat"].data[2]),
+    ]
+    assert locate_values(da, value=5) == expected_points[0]
+    assert locate_values(da, value=5, n=2) == expected_points
+
+    isel_dict = locate_values(da, value=5, return_isel_dict=True)
+    assert da.isel(isel_dict).item() == 4.9
+
+    # Orbit
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+    da.data[:] = 20
+    da.data[1, 1] = 4.9
+    da.data[2, 2] = 5.2
+    expected_points = [
+        (da["lon"].data[1, 1], da["lat"].data[1, 1]),
+        (da["lon"].data[2, 2], da["lat"].data[2, 2]),
+    ]
+    assert locate_values(da, value=5, n=2) == expected_points
+
+
+def test_locate_largest_values():
+    """Test locate_largest_values."""
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+    da.data[:] = 0
+    da.data[0, 0] = 11
+    da.data[1, 1] = 10
+    da.data[2, 2] = 9
+
+    assert locate_largest_values(da) == (da["lon"].data[0, 0], da["lat"].data[0, 0])
+    assert locate_largest_values(da, below_thr=10, n=2) == [
+        (da["lon"].data[1, 1], da["lat"].data[1, 1]),
+        (da["lon"].data[2, 2], da["lat"].data[2, 2]),
+    ]
+
+    isel_dicts = locate_largest_values(da, below_thr=10, n=2, return_isel_dict=True)
+    assert [da.isel(isel_dict).item() for isel_dict in isel_dicts] == [10, 9]
+
+    # If more than 1, keep the first point first
+    da.data[1, 1:3] = 10
+    assert locate_largest_values(da, below_thr=10) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+
+
+def test_locate_smallest_values():
+    """Test locate_smallest_values."""
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+    da.data[:] = 20
+    da.data[0, 0] = -1
+    da.data[1, 1] = 0
+    da.data[2, 2] = 1
+
+    # locate_smallest_values defaults to return_isel_dict=True
+    isel_dict = locate_smallest_values(da)
+    assert da.isel(isel_dict).item() == -1
+
+    assert locate_smallest_values(da, above_thr=0, n=2, return_isel_dict=False) == [
+        (da["lon"].data[1, 1], da["lat"].data[1, 1]),
+        (da["lon"].data[2, 2], da["lat"].data[2, 2]),
+    ]
+
+    isel_dicts = locate_smallest_values(da, above_thr=0, n=2)
+    assert [da.isel(isel_dict).item() for isel_dict in isel_dicts] == [0, 1]
+
+
+def test_locate_values_errors():
+    """Test locate values error handling."""
+    da = get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+    da.data[:] = np.nan
+    with pytest.raises(ValueError, match="No valid values"):
+        locate_largest_values(da)
+    with pytest.raises(ValueError, match="positive integer"):
+        locate_values(da, value=5, n=0)
+    with pytest.raises(TypeError, match="'n' must be an integer"):
+        locate_smallest_values(da, n=1.5)
 
 
 def test_extract_transect_at_points():

@@ -1182,6 +1182,24 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         return locate_min_value(self._obj, return_isel_dict=return_isel_dict)
 
     @auto_wrap_docstring
+    def locate_values(self, value, n=1, return_isel_dict=False):
+        from gpm.utils.manipulations import locate_values
+
+        return locate_values(self._obj, value=value, n=n, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
+    def locate_largest_values(self, below_thr=None, n=1, return_isel_dict=False):
+        from gpm.utils.manipulations import locate_largest_values
+
+        return locate_largest_values(self._obj, below_thr=below_thr, n=n, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
+    def locate_smallest_values(self, above_thr=None, n=1, return_isel_dict=True):
+        from gpm.utils.manipulations import locate_smallest_values
+
+        return locate_smallest_values(self._obj, above_thr=above_thr, n=n, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
     def title(
         self,
         prefix_product=True,

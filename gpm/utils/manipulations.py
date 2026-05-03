@@ -1739,6 +1739,137 @@ def locate_min_value(da, return_isel_dict=False):
     return point
 
 
+def locate_values(da, value, n=1, return_isel_dict=False):
+    """Find the geographic points where values are closest to the specified value.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+    value : int or float
+        Value to search for.
+    n : int, optional
+        Number of closest values to locate. The default is 1.
+    return_isel_dict: bool, optional
+        If True, returns dictionaries with the spatial dimension indices corresponding to the closest values.
+        If False (the default), returns (lon, lat) tuples of the points where the closest values occur.
+
+    Returns
+    -------
+    tuple, dict or list
+        If n=1, returns a single (lon, lat) tuple or isel dictionary.
+        If n>1, returns a list of (lon, lat) tuples or isel dictionaries.
+    """
+    da_distance = np.abs(da - value)
+    isel_dicts = _get_ranked_spatial_isel_dicts(da_distance, n=n, rank="smallest")
+    return _format_location_result(da, isel_dicts=isel_dicts, n=n, return_isel_dict=return_isel_dict)
+
+
+def locate_largest_values(da, below_thr=None, n=1, return_isel_dict=False):
+    """Find the geographic points where the largest values occur in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+    below_thr : int or float, optional
+        If specified, only values below or equal to this threshold are considered.
+    n : int, optional
+        Number of largest values to locate. The default is 1.
+    return_isel_dict: bool, optional
+        If True, returns dictionaries with the spatial dimension indices corresponding to the largest values.
+        If False (the default), returns (lon, lat) tuples of the points where the largest values occur.
+
+    Returns
+    -------
+    tuple, dict or list
+        If n=1, returns a single (lon, lat) tuple or isel dictionary.
+        If n>1, returns a list of (lon, lat) tuples or isel dictionaries.
+    """
+    da_rank = da if below_thr is None else da.where(da <= below_thr)
+    isel_dicts = _get_ranked_spatial_isel_dicts(da_rank, n=n, rank="largest")
+    return _format_location_result(da, isel_dicts=isel_dicts, n=n, return_isel_dict=return_isel_dict)
+
+
+def locate_smallest_values(da, above_thr=None, n=1, return_isel_dict=True):
+    """Find the geographic points where the smallest values occur in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+    above_thr : int or float, optional
+        If specified, only values above or equal to this threshold are considered.
+    n : int, optional
+        Number of smallest values to locate. The default is 1.
+    return_isel_dict: bool, optional
+        If True (the default), returns dictionaries with the spatial dimension indices corresponding to the
+        smallest values. If False, returns (lon, lat) tuples of the points where the smallest values occur.
+
+    Returns
+    -------
+    tuple, dict or list
+        If n=1, returns a single (lon, lat) tuple or isel dictionary.
+        If n>1, returns a list of (lon, lat) tuples or isel dictionaries.
+    """
+    da_rank = da if above_thr is None else da.where(da >= above_thr)
+    isel_dicts = _get_ranked_spatial_isel_dicts(da_rank, n=n, rank="smallest")
+    return _format_location_result(da, isel_dicts=isel_dicts, n=n, return_isel_dict=return_isel_dict)
+
+
+def _check_n(n):
+    """Check the validity of n."""
+    if not isinstance(n, (int, np.integer)):
+        raise TypeError("'n' must be an integer.")
+    if n < 1:
+        raise ValueError("'n' must be a positive integer.")
+    return int(n)
+
+
+def _get_ranked_spatial_isel_dicts(da, n=1, rank="largest"):
+    """Return spatial isel dictionaries for the ranked valid values."""
+    n = _check_n(n)
+    da = da.compute()
+
+    values = np.asarray(da.data)
+    valid_mask = np.asarray(da.notnull().data).ravel()
+    valid_flat_indices = np.flatnonzero(valid_mask)
+    if len(valid_flat_indices) == 0:
+        raise ValueError("No valid values available to locate.")
+
+    valid_values = values.ravel()[valid_flat_indices]
+    if rank == "largest":
+        order = np.lexsort((valid_flat_indices, -valid_values.astype(float)))
+    elif rank == "smallest":
+        order = np.lexsort((valid_flat_indices, valid_values.astype(float)))
+    else:
+        raise ValueError("'rank' must be either 'largest' or 'smallest'.")
+
+    flat_indices = valid_flat_indices[order[:n]]
+    indices = np.unravel_index(flat_indices, da.shape)
+    isel_dicts = [dict(zip(da.dims, [int(i) for i in idx], strict=False)) for idx in zip(*indices, strict=False)]
+
+    spatial_dims = da.gpm.spatial_dimensions
+    isel_dicts = [{dim: isel_dict[dim] for dim in spatial_dims} for isel_dict in isel_dicts]
+    return isel_dicts
+
+
+def _format_location_result(da, isel_dicts, n=1, return_isel_dict=False):
+    """Format spatial isel dictionaries as requested by the public location utilities."""
+    n = _check_n(n)
+    if return_isel_dict:
+        results = isel_dicts
+    else:
+        results = [_get_point_at_isel_dict(da, isel_dict=isel_dict) for isel_dict in isel_dicts]
+    return results[0] if n == 1 else results
+
+
+def _get_point_at_isel_dict(da, isel_dict):
+    """Return the (lon, lat) tuple at the specified spatial isel dictionary."""
+    da_point = da.isel(isel_dict)
+    return (da_point[da.gpm.x].values.item(), da_point[da.gpm.y].values.item())
+
+
 def _get_max_value_isel_dict(da):
     """Find the dimension indices where the maximum value occur in the data array..
 
