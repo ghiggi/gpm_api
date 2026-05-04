@@ -12,6 +12,8 @@ Nw:
     label: $N_w$ [$mm^{-1} \ m^{-3}$]
   auxiliary:
     category: [disdrodb, dsd]
+Z:
+  reference: reflectivity_gpm
 R:
   reference: rainfall_rate
 Rm:
