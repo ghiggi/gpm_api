@@ -209,7 +209,12 @@ def crop_around_valid_data(xr_obj, variable=None):
 
 
 def get_bin_dataarray(xr_obj, bins, mask_first_bin=False, mask_last_bin=False, fillvalue=None):
-    """Get bin xarray.DataArray."""
+    """Get bin and mask xarray.DataArray.
+
+    The nan or invalid bin index values of the input bin DataArray are replaced with fillvalue.
+    The output bin DataArray does not have NaN or invalid values anymore !.
+    The output mask DataArray has True values where input bin values were NaN or invalid.
+    """
     # Retrieve bins DataArray
     da_bin = _get_bin_dataarray(xr_obj, bins=bins)
 
@@ -272,17 +277,20 @@ def _get_valid_da_bin(xr_obj, da_bin, mask_first_bin=False, mask_last_bin=False,
     # Identify bin values outside of available range gates
     da_invalid = np.logical_or(da_bin < vmin, da_bin > vmax)
     # Raise error if all bin index are nan
-    if np.all(da_is_nan.data):
-        raise ValueError("All range bin indices are NaN !")
+    # if np.all(da_is_nan.data):
+    #     raise ValueError("All range bin indices are NaN !")
     # Raise error if all bin index are outside the available range bins
     if np.all(da_invalid.data):
         raise ValueError(f"All range bin indices are outside of the available range gates [{vmin}, {vmax}] !")
+    # Raise error if any bin index is outside the available range bins
+    if np.any(da_invalid.data):
+        raise ValueError(f"Some range bin indices are outside of the available range gates [{vmin}, {vmax}] !")
     # Define mask with invalid bins
     # --> This address np.nan, 0, and out of range values
     da_mask = np.logical_or(da_is_nan, da_invalid)
     # Raise error if all bin index are outside the available range bins
-    if np.all(da_mask.data):
-        raise ValueError("All range bin indices are invalid !")
+    # if np.all(da_mask.data):
+    #     raise ValueError("All range bin indices are invalid !")
     # Set invalid/ nan range bin indices to a fillvalue to enable selection with .sel
     # --> With the function defaults, the last range value vmax
     # --> The gates with invalid range bin indices will be masked out with da_mask
@@ -621,6 +629,12 @@ def get_height_at_bin(xr_obj, bins):
     da_height = get_height_dataarray(xr_obj)
     # Retrieve bins DataArray
     da_bins = _get_bin_dataarray(xr_obj, bins)
+    # da_bins, da_mask = get_bin_dataarray(xr_obj, bins)
+
+    # Return NaN field if all NaN
+    # - Useful when analyzing single profile and a bin variable is NaN
+    if np.isnan(da_bins).all():
+        return xr.ones_like(da_bins).rename("height") * np.nan
     # Return height
     return slice_range_at_bin(xr_obj=da_height, bins=da_bins)
 

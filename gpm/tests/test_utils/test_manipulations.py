@@ -409,8 +409,12 @@ def test_extract_dataset_below_bin() -> None:
     expected_data = np.array([np.nan, np.nan, np.nan, np.nan, 16])
     np.testing.assert_allclose(ds_out[var].isel(cross_track=0).data.squeeze(), expected_data)
     # - With strict=True, it fails if all bins are the last range gate
-    with pytest.raises(ValueError):
-        extract_dataset_below_bin(ds, bins=bins, strict=True)
+    # with pytest.raises(ValueError):
+    #     extract_dataset_below_bin(ds, bins=bins, strict=True)
+    ds_out = extract_dataset_below_bin(ds, bins=bins, strict=True)
+    expected_data = np.array([np.nan, np.nan, np.nan, np.nan, np.nan])
+    np.testing.assert_allclose(ds_out[var].isel(cross_track=0).data.squeeze(), expected_data)
+
     # - With strict=True and some valid bins (at cross_track_idx=0), it works
     ds[bins].data[0] = bin_value
     ds_out = extract_dataset_below_bin(ds, bins=bins, strict=True)
@@ -572,8 +576,12 @@ def test_extract_dataset_above_bin() -> None:
     expected_data = np.array([0, np.nan, np.nan, np.nan, np.nan])
     np.testing.assert_allclose(ds_out[var].isel(cross_track=0).data.squeeze(), expected_data)
     # - With strict=True, it fails if all bins are the first range gate
-    with pytest.raises(ValueError):
-        extract_dataset_above_bin(ds, bins=bins, strict=True)
+    # with pytest.raises(ValueError):
+    #     extract_dataset_above_bin(ds, bins=bins, strict=True)
+    ds_out = extract_dataset_above_bin(ds, bins=bins, strict=True)
+    expected_data = np.array([np.nan, np.nan, np.nan, np.nan, np.nan])
+    np.testing.assert_allclose(ds_out[var].isel(cross_track=0).data.squeeze(), expected_data)
+
     # - With strict=True and some valid bins (at cross_track_idx=0), it works
     ds[bins].data[0] = bin_value
     ds_out = extract_dataset_above_bin(ds, bins=bins, strict=True)
@@ -672,15 +680,19 @@ def test_get_bin_dataarray() -> None:
         cross_track_size=cross_track_size,
         along_track_size=along_track_size,
     )
-    with pytest.raises(ValueError) as excinfo:
-        get_bin_dataarray(ds, bins="nan_bins")
-    assert "All range bin indices are NaN" in str(excinfo.value)
+    da_bin, da_mask = get_bin_dataarray(ds, bins="nan_bins")
+    assert (da_bin == 5).all().item()
+    assert da_mask.all().item()  # mask is all True
+
+    # with pytest.raises(ValueError) as excinfo:
+    #     get_bin_dataarray(ds, bins="nan_bins")
+    # assert "All range bin indices are NaN" in str(excinfo.value)
 
     # Test mixture of invalid values
     ds["nan_bins"].data[0] = range_size + 1
     with pytest.raises(ValueError) as excinfo:
         get_bin_dataarray(ds, bins="nan_bins")
-    assert "All range bin indices are invalid" in str(excinfo.value)
+    assert "Some range bin indices are outside" in str(excinfo.value)
 
 
 def test_get_height_dataarray():
