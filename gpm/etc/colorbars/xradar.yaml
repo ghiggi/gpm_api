@@ -14,6 +14,36 @@ reflectivity:
     label: Reflectivity [dBZ]
   auxiliary:
     category: [reflectivity, radar]
+DBZH:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 1
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -10
+    vmax: 65
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{\mathrm{H}}$ [dBZ]
+  auxiliary:
+    category: [reflectivity, radar]
+DBZV:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 1
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -10
+    vmax: 65
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{\mathrm{V}}$ [dBZ]
+  auxiliary:
+    category: [reflectivity, radar]
 differential_reflectivity:
   cmap:
     name: Spectral_r
@@ -71,7 +101,7 @@ specific_differential_phase:
     category: [phase, radar]
 cross_correlation_ratio:
   cmap:
-    name: Spectral_r
+    name: cividis
     bad_color: none
   norm:
     name: Norm
@@ -111,6 +141,32 @@ specific_attenuation:
     label: k [$dB/km$]
   auxiliary:
     category: [radar]
+AH:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  norm:
+    name: LogNorm
+    vmin: 0.001
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $k_{\mathrm{H}}$ [$dB/km$]
+  auxiliary:
+    category: [radar]
+AV:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  norm:
+    name: LogNorm
+    vmin: 0.001
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $k_{\mathrm{V}}$ [$dB/km$]
+  auxiliary:
+    category: [radar]
 specific_differential_attenuation:
   cmap:
     name: RdPu
@@ -138,6 +194,35 @@ path_integrated_attenuation:
     label: PIA [dB]
   auxiliary:
     category: [radar]
+PIAH:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 8
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $\mathrm{PIA}_{\mathrm{H}}$ [dB]
+  auxiliary:
+    category: [radar] 
+PIAV:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 8
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $\mathrm{PIA}_{\mathrm{V}}$ [dB]
+  auxiliary:
+    category: [radar]  
+    
 path_integrated_differential_attenuation:
   cmap:
     name: RdPu
@@ -193,21 +278,44 @@ signal_to_noise_ratio:
     label: Signal to Noise Ratio [dB]
   auxiliary:
     category: [radar]
+HCLASS:
+  cmap:
+    name: HCLASS_FMI
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: No signal
+      1: Non-hydro
+      2: Rain
+      3: Wet snow
+      4: Dry snow
+      5: Graupel
+      6: Hail
+  cbar:
+    label: "Hydrometeor class"    
+  auxiliary:
+    category: [radar, fmi, odim]
 TH:
   reference: reflectivity
 TV:
   reference: reflectivity
-DBZH:
-  reference: reflectivity
 DBZH_c:
-  reference: reflectivity
-DBZV:
-  reference: reflectivity
+  reference: DBZH
 DBZV_c:
-  reference: reflectivity
+  reference: DBZV
+DBZH_c_smooth:
+  reference: DBZH
+DBZV_c_smooth:
+  reference: DBZV
 ZDR:
   reference: differential_reflectivity
 ZDR_c:
+  reference: differential_reflectivity
+ZDR_c_smooth:
   reference: differential_reflectivity
 PHIDP:
   reference: differential_phase
@@ -249,11 +357,3 @@ PIDA:
   reference: path_integrated_differential_attenuation
 ADP:
   reference: specific_differential_attenuation
-AH:
-  reference: specific_attenuation
-AV:
-  reference: specific_attenuation
-PIAH:
-  reference: PIA
-PIAV:
-  reference: PIA

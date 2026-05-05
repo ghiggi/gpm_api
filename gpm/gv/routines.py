@@ -405,13 +405,11 @@ def convert_s_to_ku_band(ds_gr, bright_band_height, z_variable="DBZH"):
     return da_ku
 
 
-def add_radar_info(ax, ds_gr, radar_size, distances=[15_000, 100_000, 150_000], **plot_kwargs):
-    """Add radar information (location, distance circles)."""
-    # - Add radar location
-    ax.scatter(0, 0, c="black", marker="X", s=radar_size)
-    ax.scatter(0, 0, c="black", marker="X", s=radar_size)
+def add_radar_distances(ax, ds_gr, distances=[15_000, 100_000, 150_000], **plot_kwargs):
+    """Add circles at specific radar distances."""
+    if np.isscalar(distances):
+       distances = [distances]
 
-    # Add distance circles
     for distance in distances:
         ds_gr.xradar_dev.plot_range_distance(
             distance=distance,
@@ -423,6 +421,16 @@ def add_radar_info(ax, ds_gr, radar_size, distances=[15_000, 100_000, 150_000], 
             edgecolor="black",
             **plot_kwargs,
         )
+
+        
+def add_radar_info(ax, ds_gr, radar_size, distances=[15_000, 100_000, 150_000], **plot_kwargs):
+    """Add radar information (location, distance circles)."""
+    # - Add radar location
+    ax.scatter(0, 0, c="black", marker="X", s=radar_size)
+    ax.scatter(0, 0, c="black", marker="X", s=radar_size)
+
+    # Add distance circles
+    add_radar_distances(ax=ax, ds_gr=ds_gr, distances=distances, **plot_kwargs)
 
 
 def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", ds_sr=None):
