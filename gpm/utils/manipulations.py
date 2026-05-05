@@ -28,7 +28,7 @@
 
 import numpy as np
 import xarray as xr
-import xoak  # noqa (accessor)
+from xoak import SklearnGeoBallTreeAdapter
 
 from gpm.checks import (
     check_has_vertical_dim,
@@ -192,9 +192,9 @@ def crop_around_valid_data(xr_obj, variable=None):
         valid_along_dim = valid_mask.any(dim=other_dims)
         # Find first and last True index
         # - argmax() gives the first True index from the start
-        start_idx = int(np.argmax(valid_along_dim.data))
+        start_idx = int(np.nanargmax(valid_along_dim.data))
         # To get the last True, reverse the array and use argmax again
-        end_idx = len(valid_along_dim) - int(np.argmax(valid_along_dim.data[::-1]))
+        end_idx = len(valid_along_dim) - int(np.nanargmax(valid_along_dim.data[::-1]))
         # Construct the slice
         isel_dict[dim] = slice(start_idx, end_idx)
 
@@ -209,19 +209,25 @@ def crop_around_valid_data(xr_obj, variable=None):
 
 
 def get_bin_dataarray(xr_obj, bins, mask_first_bin=False, mask_last_bin=False, fillvalue=None):
-    """Get bin xarray.DataArray."""
+    """Get bin and mask xarray.DataArray.
+
+    The nan or invalid bin index values of the input bin DataArray are replaced with fillvalue.
+    The output bin DataArray does not have NaN or invalid values anymore !.
+    The output mask DataArray has True values where input bin values were NaN or invalid.
+    """
     # Retrieve bins DataArray
     da_bin = _get_bin_dataarray(xr_obj, bins=bins)
 
     # Check bin DataArray dimensions validity (only spatial dimensions)
-    if "range" in da_bin.dims:
-        raise ValueError("The bin DataArray must not have the 'range' dimension.")
-    if "radar_frequency" in da_bin.dims:
-        raise ValueError(
-            "The bin DataArray must not have the 'radar_frequency' dimension. Please first subset the dataset.",
-        )
-    if not has_spatial_dim(da_bin, strict=True, squeeze=True):
-        raise ValueError("The bin DataArray is allowed to only have spatial dimensions.")
+    if da_bin.dims != ():  # scalar must pass !
+        if "range" in da_bin.dims:
+            raise ValueError("The bin DataArray must not have the 'range' dimension.")
+        if "radar_frequency" in da_bin.dims:
+            raise ValueError(
+                "The bin DataArray must not have the 'radar_frequency' dimension. Please first subset the dataset.",
+            )
+        if not has_spatial_dim(da_bin, strict=True, squeeze=True):
+            raise ValueError("The bin DataArray is allowed to only have spatial dimensions.")
 
     # Ensure bin value validity
     da_bin, da_mask = _get_valid_da_bin(
@@ -271,17 +277,20 @@ def _get_valid_da_bin(xr_obj, da_bin, mask_first_bin=False, mask_last_bin=False,
     # Identify bin values outside of available range gates
     da_invalid = np.logical_or(da_bin < vmin, da_bin > vmax)
     # Raise error if all bin index are nan
-    if np.all(da_is_nan.data):
-        raise ValueError("All range bin indices are NaN !")
+    # if np.all(da_is_nan.data):
+    #     raise ValueError("All range bin indices are NaN !")
     # Raise error if all bin index are outside the available range bins
     if np.all(da_invalid.data):
         raise ValueError(f"All range bin indices are outside of the available range gates [{vmin}, {vmax}] !")
+    # Raise error if any bin index is outside the available range bins
+    if np.any(da_invalid.data):
+        raise ValueError(f"Some range bin indices are outside of the available range gates [{vmin}, {vmax}] !")
     # Define mask with invalid bins
     # --> This address np.nan, 0, and out of range values
     da_mask = np.logical_or(da_is_nan, da_invalid)
     # Raise error if all bin index are outside the available range bins
-    if np.all(da_mask.data):
-        raise ValueError("All range bin indices are invalid !")
+    # if np.all(da_mask.data):
+    #     raise ValueError("All range bin indices are invalid !")
     # Set invalid/ nan range bin indices to a fillvalue to enable selection with .sel
     # --> With the function defaults, the last range value vmax
     # --> The gates with invalid range bin indices will be masked out with da_mask
@@ -385,6 +394,82 @@ def get_range_index_at_max(da):
     # Retrieve range index
     idx = da.argmax(dim=vertical_dim)
     return idx, mask_all_nan
+
+
+def get_last_valid_range_index(da):
+    """Retrieve last index the range dimension where the xarray.DataArray has valid values."""
+    # Retrieve vertical dimension
+    vertical_dim = _get_vertical_dim(da)
+
+    # Put DataArray in memory
+    da = da.compute()
+
+    # Boolean mask of valid values
+    valid = da.notnull()
+
+    # Identify pixels that are entirely NaN along vertical_dim
+    mask_all_nan = ~valid.any(dim=vertical_dim)
+
+    # Reverse along vertical dimension, then find first valid
+    rev = valid.isel({vertical_dim: slice(None, None, -1)})
+    last_from_end = rev.argmax(dim=vertical_dim)
+
+    # Convert reversed index back to original index
+    last_idx = da.sizes[vertical_dim] - 1 - last_from_end
+
+    return last_idx, mask_all_nan
+
+
+def get_first_valid_range_index(da):
+    """Retrieve first index the range dimension where the xarray.DataArray has valid value."""
+    vertical_dim = _get_vertical_dim(da)
+
+    # Boolean mask of valid values
+    valid = da.notnull()
+
+    # Pixels that are entirely NaN along vertical_dim
+    mask_all_nan = ~valid.any(dim=vertical_dim)
+
+    # First True along vertical_dim
+    first_idx = valid.argmax(dim=vertical_dim)
+
+    return first_idx, mask_all_nan
+
+
+def get_bin_near_surface(xr_obj, variable=None):
+    """Get the range bin value near the surface where the variable have last valid values."""
+    da = get_xarray_variable(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
+    idx, mask_all_nan = get_last_valid_range_index(da=da)
+    da_bin = xr_obj["range"].isel({vertical_dim: idx})
+    return da_bin.where(~mask_all_nan)
+
+
+def get_bin_top(xr_obj, variable=None):
+    """Get the range bin value at the top where the variable start to have last valid values."""
+    da = get_xarray_variable(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
+    idx, mask_all_nan = get_first_valid_range_index(da=da)
+    da_bin = xr_obj["range"].isel({vertical_dim: idx})
+    return da_bin.where(~mask_all_nan)
+
+
+def slice_range_at_top(xr_obj, variable=None):
+    """Slice the 3D arrays where the variable start to have valid values."""
+    da = get_xarray_variable(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
+    idx, mask_all_nan = get_first_valid_range_index(da=da)
+    xr_obj_sliced = xr_obj.isel({vertical_dim: idx})
+    return xr_obj_sliced.where(~mask_all_nan)
+
+
+def slice_range_at_near_surface(xr_obj, variable=None):
+    """Slice the 3D arrays near the surface where the variable have last valid values."""
+    da = get_xarray_variable(xr_obj, variable=variable)
+    vertical_dim = _get_vertical_dim(da)
+    idx, mask_all_nan = get_last_valid_range_index(da=da)
+    xr_obj_sliced = xr_obj.isel({vertical_dim: idx})
+    return xr_obj_sliced.where(~mask_all_nan)
 
 
 def slice_range_at_value(xr_obj, value, variable=None):
@@ -498,6 +583,13 @@ def subset_range_where_values(xr_obj, variable=None, vmin=-np.inf, vmax=np.inf):
     return xr_obj.isel(isel_dict)
 
 
+def subset_range_by_height(xr_obj, vmin=None, vmax=None):
+    """Select the 'range' interval where height is within [vmin, vmax]."""
+    vmin = -np.inf if vmin is None else vmin
+    vmax = np.inf if vmax is None else vmax
+    return subset_range_where_values(xr_obj, variable="height", vmin=vmin, vmax=vmax)
+
+
 ####-------------------------------------------------------------------------------------------------------------------.
 ##########################
 #### Height utilities ####
@@ -537,6 +629,12 @@ def get_height_at_bin(xr_obj, bins):
     da_height = get_height_dataarray(xr_obj)
     # Retrieve bins DataArray
     da_bins = _get_bin_dataarray(xr_obj, bins)
+    # da_bins, da_mask = get_bin_dataarray(xr_obj, bins)
+
+    # Return NaN field if all NaN
+    # - Useful when analyzing single profile and a bin variable is NaN
+    if np.isnan(da_bins).all():
+        return xr.ones_like(da_bins).rename("height") * np.nan
     # Return height
     return slice_range_at_bin(xr_obj=da_height, bins=da_bins)
 
@@ -1203,13 +1301,18 @@ def extract_at_points(xr_obj, points, method="nearest", new_dim="points"):
     # Orbit case
     # - Use sklearn_geo_balltree to exploit haversine distance (kdtree does not support haversine distance)
     # - Not tested for cases at the antimeridian !
-    xr_obj.xoak.set_index([y, x], index_type="sklearn_geo_balltree")
-
-    xr_obj_slice = xr_obj.xoak.sel(
+    # 2026.03.26: deprecated xr_obj.xoak.set_index([y, x], index_type="sklearn_geo_balltree")
+    xr_obj = xr_obj.set_xindex(
+        [y, x],
+        xr.indexes.NDPointIndex,
+        tree_adapter_cls=SklearnGeoBallTreeAdapter,
+    )
+    xr_obj_slice = xr_obj.sel(
         {
             x: xr.DataArray(points[:, 0], dims=new_dim),
             y: xr.DataArray(points[:, 1], dims=new_dim),
         },
+        method="nearest",
     )
     return xr_obj_slice
 
@@ -1402,6 +1505,87 @@ def extract_transect_along_dimension(xr_obj, point, dim):
     return xr_obj.isel(transect_isel_dict)
 
 
+####--------------------------------------------------------------------------.
+#### Extract pixels within distance from one point
+
+
+def extract_within_point_distance(
+    ds,
+    point,
+    radius=5.0,
+    lat_name="lat",
+    lon_name="lon",
+):
+    """Select pixels within radius from specified point using BallTree.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset with 2D lat/lon coordinates.
+    point : tuple
+        (lon, lat) in degrees.
+    radius : float
+        Search radius in meter.
+    lat_name, lon_name : str
+        Names of latitude/longitude coordinates in ds_radar.
+
+    Returns
+    -------
+    xarray.Dataset
+        Stacked dataset with dimension 'points' containing all selected pixels.
+    """
+    from sklearn.neighbors import BallTree
+
+    lon0, lat0 = point
+
+    lat = ds[lat_name].to_numpy()
+    lon = ds[lon_name].to_numpy()
+
+    # Keep track of original spatial dims
+    spatial_dims = ds[lat_name].dims
+
+    # Flatten coordinates
+    lat_flat = lat.ravel()
+    lon_flat = lon.ravel()
+
+    valid = np.isfinite(lat_flat) & np.isfinite(lon_flat)
+    lat_valid = lat_flat[valid]
+    lon_valid = lon_flat[valid]
+
+    # BallTree with haversine expects (lat, lon) in radians
+    coords_rad = np.deg2rad(np.column_stack([lat_valid, lon_valid]))
+    tree = BallTree(coords_rad, metric="haversine")
+
+    query_point = np.deg2rad([[lat0, lon0]])
+
+    # Earth radius in m
+    earth_radius = 6371.0 * 1000
+    radius_rad = radius / earth_radius
+
+    # Retrieve indices and distance
+    ind, dist = tree.query_radius(query_point, r=radius_rad, return_distance=True)
+
+    ind = ind[0]
+    dist = dist[0]  # in radians
+
+    # Convert to meters
+    dist_m = dist * earth_radius
+
+    # Map back to flattened full-grid indices
+    flat_indices = np.flatnonzero(valid)[ind]
+
+    # Stack spatial dims, then select matching points
+    ds_points = ds.stack(points=spatial_dims)
+    ds_near = ds_points.isel(points=flat_indices)
+
+    # Add distance as coordinate
+    ds_near = ds_near.assign_coords(
+        distance=("points", dist_m),
+    )
+
+    return ds_near
+
+
 ####------------------------------------------------------------------------------------------------------------------.
 ####################
 #### Infilling  ####
@@ -1428,6 +1612,9 @@ def _infill_datarray(da, da_bin, potential_infill_mask, valid_mask):
     with xr.set_options(keep_attrs=True):
         result = xr.where(infill_mask, values_broadcast, result)
         result.name = da.name
+
+    # Keep coordinates (e.g. height)
+    result = result.assign_coords(da.coords)
     return result
 
 
@@ -1472,7 +1659,12 @@ def infill_below_bin(xr_obj, bins):
     idx_int = xr.where(valid_mask, da_bin, 1).astype(int) - 1
 
     # Create a template for our mask along the z dimension
-    z_indices = xr.DataArray(np.arange(len(xr_obj[z_dim])), dims=[z_dim], coords={z_dim: xr_obj[z_dim]})
+    z_start = xr_obj[z_dim][0] - 1
+    z_indices = xr.DataArray(
+        np.arange(z_start, z_start + len(xr_obj[z_dim])),
+        dims=[z_dim],
+        coords={z_dim: xr_obj[z_dim]},
+    )
 
     # Define potential infilling mask
     potential_infill_mask = z_indices <= idx_int if is_increasing else z_indices >= idx_int
@@ -1494,8 +1686,6 @@ def infill_below_bin(xr_obj, bins):
                 valid_mask=valid_mask,
             )
 
-    # Re-assign height back (because current heights inherited form valid_values_mask)
-    xr_obj = xr_obj.assign_coords({"height": da_height})
     return xr_obj
 
 
@@ -1561,6 +1751,137 @@ def locate_min_value(da, return_isel_dict=False):
     da_point = da.isel(isel_dict)
     point = (da_point[da.gpm.x].values.item(), da_point[da.gpm.y].values.item())
     return point
+
+
+def locate_values(da, value, n=1, return_isel_dict=False):
+    """Find the geographic points where values are closest to the specified value.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+    value : int or float
+        Value to search for.
+    n : int, optional
+        Number of closest values to locate. The default is 1.
+    return_isel_dict: bool, optional
+        If True, returns dictionaries with the spatial dimension indices corresponding to the closest values.
+        If False (the default), returns (lon, lat) tuples of the points where the closest values occur.
+
+    Returns
+    -------
+    tuple, dict or list
+        If n=1, returns a single (lon, lat) tuple or isel dictionary.
+        If n>1, returns a list of (lon, lat) tuples or isel dictionaries.
+    """
+    da_distance = np.abs(da - value)
+    isel_dicts = _get_ranked_spatial_isel_dicts(da_distance, n=n, rank="smallest")
+    return _format_location_result(da, isel_dicts=isel_dicts, n=n, return_isel_dict=return_isel_dict)
+
+
+def locate_largest_values(da, below_thr=None, n=1, return_isel_dict=False):
+    """Find the geographic points where the largest values occur in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+    below_thr : int or float, optional
+        If specified, only values below or equal to this threshold are considered.
+    n : int, optional
+        Number of largest values to locate. The default is 1.
+    return_isel_dict: bool, optional
+        If True, returns dictionaries with the spatial dimension indices corresponding to the largest values.
+        If False (the default), returns (lon, lat) tuples of the points where the largest values occur.
+
+    Returns
+    -------
+    tuple, dict or list
+        If n=1, returns a single (lon, lat) tuple or isel dictionary.
+        If n>1, returns a list of (lon, lat) tuples or isel dictionaries.
+    """
+    da_rank = da if below_thr is None else da.where(da <= below_thr)
+    isel_dicts = _get_ranked_spatial_isel_dicts(da_rank, n=n, rank="largest")
+    return _format_location_result(da, isel_dicts=isel_dicts, n=n, return_isel_dict=return_isel_dict)
+
+
+def locate_smallest_values(da, above_thr=None, n=1, return_isel_dict=True):
+    """Find the geographic points where the smallest values occur in the data array.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The data array to analyze.
+    above_thr : int or float, optional
+        If specified, only values above or equal to this threshold are considered.
+    n : int, optional
+        Number of smallest values to locate. The default is 1.
+    return_isel_dict: bool, optional
+        If True (the default), returns dictionaries with the spatial dimension indices corresponding to the
+        smallest values. If False, returns (lon, lat) tuples of the points where the smallest values occur.
+
+    Returns
+    -------
+    tuple, dict or list
+        If n=1, returns a single (lon, lat) tuple or isel dictionary.
+        If n>1, returns a list of (lon, lat) tuples or isel dictionaries.
+    """
+    da_rank = da if above_thr is None else da.where(da >= above_thr)
+    isel_dicts = _get_ranked_spatial_isel_dicts(da_rank, n=n, rank="smallest")
+    return _format_location_result(da, isel_dicts=isel_dicts, n=n, return_isel_dict=return_isel_dict)
+
+
+def _check_n(n):
+    """Check the validity of n."""
+    if not isinstance(n, (int, np.integer)):
+        raise TypeError("'n' must be an integer.")
+    if n < 1:
+        raise ValueError("'n' must be a positive integer.")
+    return int(n)
+
+
+def _get_ranked_spatial_isel_dicts(da, n=1, rank="largest"):
+    """Return spatial isel dictionaries for the ranked valid values."""
+    n = _check_n(n)
+    da = da.compute()
+
+    values = np.asarray(da.data)
+    valid_mask = np.asarray(da.notnull().data).ravel()
+    valid_flat_indices = np.flatnonzero(valid_mask)
+    if len(valid_flat_indices) == 0:
+        raise ValueError("No valid values available to locate.")
+
+    valid_values = values.ravel()[valid_flat_indices]
+    if rank == "largest":
+        order = np.lexsort((valid_flat_indices, -valid_values.astype(float)))
+    elif rank == "smallest":
+        order = np.lexsort((valid_flat_indices, valid_values.astype(float)))
+    else:
+        raise ValueError("'rank' must be either 'largest' or 'smallest'.")
+
+    flat_indices = valid_flat_indices[order[:n]]
+    indices = np.unravel_index(flat_indices, da.shape)
+    isel_dicts = [dict(zip(da.dims, [int(i) for i in idx], strict=False)) for idx in zip(*indices, strict=False)]
+
+    spatial_dims = da.gpm.spatial_dimensions
+    isel_dicts = [{dim: isel_dict[dim] for dim in spatial_dims} for isel_dict in isel_dicts]
+    return isel_dicts
+
+
+def _format_location_result(da, isel_dicts, n=1, return_isel_dict=False):
+    """Format spatial isel dictionaries as requested by the public location utilities."""
+    n = _check_n(n)
+    if return_isel_dict:
+        results = isel_dicts
+    else:
+        results = [_get_point_at_isel_dict(da, isel_dict=isel_dict) for isel_dict in isel_dicts]
+    return results[0] if n == 1 else results
+
+
+def _get_point_at_isel_dict(da, isel_dict):
+    """Return the (lon, lat) tuple at the specified spatial isel dictionary."""
+    da_point = da.isel(isel_dict)
+    return (da_point[da.gpm.x].values.item(), da_point[da.gpm.y].values.item())
 
 
 def _get_max_value_isel_dict(da):

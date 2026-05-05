@@ -222,19 +222,6 @@ VILD:
     extend: both
     extendfrac: 0.05
     label: VIL Density [$g \ m^{-3}$]
-Dm:
-  cmap:
-    name: plasma
-    bad_alpha: 0.5
-    bad_color: gray
-  norm:
-    name: Norm
-    vmin: 0.5
-    vmax: 3
-  cbar:
-    extend: both
-    extendfrac: 0.05
-    label: $D_m$ [$mm$]
 LogNw:
   cmap:
     name: plasma
@@ -261,18 +248,6 @@ dBNw:
     extend: both
     extendfrac: 0.05
     label: $N_w$ [10$\log{(mm^{-1} \ m^{-3})}$]
-Nw:
-  cmap:
-    name: plasma
-    bad_alpha: 0.5
-    bad_color: gray
-  norm:
-    name: LogNorm
-    vmin: 1
-  cbar:
-    extend: max
-    extendfrac: 0.05
-    label: $N_w$ [$mm^{-1} \ m^{-3}$]
 flagPrecipitationType:
   cmap:
     name: tab20c

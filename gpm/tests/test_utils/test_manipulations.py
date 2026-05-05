@@ -47,6 +47,8 @@ from gpm.utils.manipulations import (
     extract_transect_at_points,
     extract_transect_between_points,
     get_bin_dataarray,
+    get_bin_near_surface,
+    get_bin_top,
     get_bright_band_mask,
     get_height_at_bin,
     get_height_at_temperature,
@@ -55,8 +57,11 @@ from gpm.utils.manipulations import (
     get_range_axis,
     get_solid_phase_mask,
     integrate_profile_concentration,
+    locate_largest_values,
     locate_max_value,
     locate_min_value,
+    locate_smallest_values,
+    locate_values,
     mask_above_bin,
     mask_below_bin,
     mask_between_bins,
@@ -70,7 +75,9 @@ from gpm.utils.manipulations import (
     slice_range_at_height,
     slice_range_at_max_value,
     slice_range_at_min_value,
+    slice_range_at_near_surface,
     slice_range_at_temperature,
+    slice_range_at_top,
     slice_range_at_value,
     subset_range_where_values,
     subset_range_with_valid_data,
@@ -122,6 +129,57 @@ def dataarray_3d() -> xr.DataArray:
     return da
 
 
+@pytest.fixture
+def mixed_valid_range_dataset() -> xr.Dataset:
+    """Create a dataset with mixed valid profiles along range."""
+    target = create_3d_dataarray(cross_track_size=2, along_track_size=3, range_size=5).copy()
+    valid_mask = np.array(
+        [
+            [[False, False, True, True, False], [True, True, True, True, True], [False, True, False, True, True]],
+            [
+                [False, False, False, True, False],
+                [False, False, False, False, False],
+                [True, False, False, False, True],
+            ],
+        ],
+        dtype=bool,
+    )
+    target.data[~valid_mask] = np.nan
+
+    other_3d = create_3d_dataarray(cross_track_size=2, along_track_size=3, range_size=5) + 100
+    other_2d = xr.DataArray(
+        np.arange(6, dtype=float).reshape(2, 3),
+        dims=["cross_track", "along_track"],
+    )
+    return xr.Dataset(
+        {
+            "target": target,
+            "other_3d": other_3d,
+            "other_2d": other_2d,
+        },
+    )
+
+
+@pytest.fixture
+def all_nan_range_dataset() -> xr.Dataset:
+    """Create a dataset with all values missing along range."""
+    target = create_3d_dataarray(cross_track_size=2, along_track_size=3, range_size=5).copy()
+    target.data[:] = np.nan
+
+    other_3d = create_3d_dataarray(cross_track_size=2, along_track_size=3, range_size=5) + 100
+    other_2d = xr.DataArray(
+        np.arange(6, dtype=float).reshape(2, 3),
+        dims=["cross_track", "along_track"],
+    )
+    return xr.Dataset(
+        {
+            "target": target,
+            "other_3d": other_3d,
+            "other_2d": other_2d,
+        },
+    )
+
+
 # Public functions #############################################################
 
 
@@ -130,6 +188,7 @@ class TestDecibelConversion:
     """Test conversion from/to decibels."""
 
     def test_convert_from_decibel(self):
+        """Test conversion from decibels to linear units."""
         data = xr.DataArray([-10, 0, 10, 20, 30], dims="test_dim")
         expected_output = xr.DataArray([0.1, 1, 10, 100, 1000], dims="test_dim")
         result = convert_from_decibel(data)
@@ -139,6 +198,7 @@ class TestDecibelConversion:
         xr.testing.assert_allclose(result, expected_output, rtol=1e-5)
 
     def test_convert_to_decibel(self):
+        """Test conversion from linear units to decibels."""
         data = xr.DataArray([-1, 0, 1, 10, 100, 1000], dims="test_dim")
         expected_output = xr.DataArray([np.nan, -np.inf, 0, 10, 20, 30], dims="test_dim")
         with warnings.catch_warnings():
@@ -152,6 +212,7 @@ class TestDecibelConversion:
         xr.testing.assert_allclose(result, expected_output, rtol=1e-5)
 
     def test_round_trip_conversion(self):
+        """Test that decibel conversions round-trip on valid inputs."""
         data = xr.DataArray([0, 10, 20, 30], dims="test_dim")
         result = convert_to_decibel(convert_from_decibel(data))
         xr.testing.assert_allclose(result, data, rtol=1e-5)
@@ -348,8 +409,12 @@ def test_extract_dataset_below_bin() -> None:
     expected_data = np.array([np.nan, np.nan, np.nan, np.nan, 16])
     np.testing.assert_allclose(ds_out[var].isel(cross_track=0).data.squeeze(), expected_data)
     # - With strict=True, it fails if all bins are the last range gate
-    with pytest.raises(ValueError):
-        extract_dataset_below_bin(ds, bins=bins, strict=True)
+    # with pytest.raises(ValueError):
+    #     extract_dataset_below_bin(ds, bins=bins, strict=True)
+    ds_out = extract_dataset_below_bin(ds, bins=bins, strict=True)
+    expected_data = np.array([np.nan, np.nan, np.nan, np.nan, np.nan])
+    np.testing.assert_allclose(ds_out[var].isel(cross_track=0).data.squeeze(), expected_data)
+
     # - With strict=True and some valid bins (at cross_track_idx=0), it works
     ds[bins].data[0] = bin_value
     ds_out = extract_dataset_below_bin(ds, bins=bins, strict=True)
@@ -511,8 +576,12 @@ def test_extract_dataset_above_bin() -> None:
     expected_data = np.array([0, np.nan, np.nan, np.nan, np.nan])
     np.testing.assert_allclose(ds_out[var].isel(cross_track=0).data.squeeze(), expected_data)
     # - With strict=True, it fails if all bins are the first range gate
-    with pytest.raises(ValueError):
-        extract_dataset_above_bin(ds, bins=bins, strict=True)
+    # with pytest.raises(ValueError):
+    #     extract_dataset_above_bin(ds, bins=bins, strict=True)
+    ds_out = extract_dataset_above_bin(ds, bins=bins, strict=True)
+    expected_data = np.array([np.nan, np.nan, np.nan, np.nan, np.nan])
+    np.testing.assert_allclose(ds_out[var].isel(cross_track=0).data.squeeze(), expected_data)
+
     # - With strict=True and some valid bins (at cross_track_idx=0), it works
     ds[bins].data[0] = bin_value
     ds_out = extract_dataset_above_bin(ds, bins=bins, strict=True)
@@ -611,15 +680,19 @@ def test_get_bin_dataarray() -> None:
         cross_track_size=cross_track_size,
         along_track_size=along_track_size,
     )
-    with pytest.raises(ValueError) as excinfo:
-        get_bin_dataarray(ds, bins="nan_bins")
-    assert "All range bin indices are NaN" in str(excinfo.value)
+    da_bin, da_mask = get_bin_dataarray(ds, bins="nan_bins")
+    assert (da_bin == 5).all().item()
+    assert da_mask.all().item()  # mask is all True
+
+    # with pytest.raises(ValueError) as excinfo:
+    #     get_bin_dataarray(ds, bins="nan_bins")
+    # assert "All range bin indices are NaN" in str(excinfo.value)
 
     # Test mixture of invalid values
     ds["nan_bins"].data[0] = range_size + 1
     with pytest.raises(ValueError) as excinfo:
         get_bin_dataarray(ds, bins="nan_bins")
-    assert "All range bin indices are invalid" in str(excinfo.value)
+    assert "Some range bin indices are outside" in str(excinfo.value)
 
 
 def test_get_height_dataarray():
@@ -674,6 +747,138 @@ def test_get_height_at_bin() -> None:
     ds[bins_name] = da_bins
     returned_da = get_height_at_bin(ds, bins=bins_name)
     np.testing.assert_allclose(returned_da.to_numpy(), expected_sliced_data)
+
+
+class TestGetBinTop:
+    """Test get_bin_top function."""
+
+    def test_dataarray_returns_first_valid_bin(
+        self,
+        mixed_valid_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test get_bin_top on a DataArray with mixed valid profiles."""
+        returned_da = get_bin_top(mixed_valid_range_dataset["target"], variable=None)
+        expected_data = np.array([[3.0, 1.0, 2.0], [4.0, np.nan, 1.0]])
+        np.testing.assert_allclose(returned_da.data, expected_data)
+
+    def test_dataset_uses_selected_variable(
+        self,
+        mixed_valid_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test get_bin_top on a Dataset using the selected variable."""
+        returned_da = get_bin_top(mixed_valid_range_dataset, variable="target")
+        expected_data = np.array([[3.0, 1.0, 2.0], [4.0, np.nan, 1.0]])
+        np.testing.assert_allclose(returned_da.data, expected_data)
+
+    def test_all_nan_values_return_nan_bins(
+        self,
+        all_nan_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test get_bin_top returns NaN bins when all values are missing."""
+        returned_da = get_bin_top(all_nan_range_dataset, variable="target")
+        assert np.isnan(returned_da.data).all()
+
+
+class TestGetBinNearSurface:
+    """Test get_bin_near_surface function."""
+
+    def test_dataarray_returns_last_valid_bin(
+        self,
+        mixed_valid_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test get_bin_near_surface on a DataArray with mixed valid profiles."""
+        returned_da = get_bin_near_surface(mixed_valid_range_dataset["target"], variable=None)
+        expected_data = np.array([[4.0, 5.0, 5.0], [4.0, np.nan, 5.0]])
+        np.testing.assert_allclose(returned_da.data, expected_data)
+
+    def test_dataset_uses_selected_variable(
+        self,
+        mixed_valid_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test get_bin_near_surface on a Dataset using the selected variable."""
+        returned_da = get_bin_near_surface(mixed_valid_range_dataset, variable="target")
+        expected_data = np.array([[4.0, 5.0, 5.0], [4.0, np.nan, 5.0]])
+        np.testing.assert_allclose(returned_da.data, expected_data)
+
+    def test_all_nan_values_return_nan_bins(
+        self,
+        all_nan_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test get_bin_near_surface returns NaN bins when all values are missing."""
+        returned_da = get_bin_near_surface(all_nan_range_dataset, variable="target")
+        assert np.isnan(returned_da.data).all()
+
+
+class TestSliceRangeAtTop:
+    """Test slice_range_at_top function."""
+
+    def test_dataarray_returns_first_valid_values(
+        self,
+        mixed_valid_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test slice_range_at_top on a DataArray with mixed valid profiles."""
+        returned_da = slice_range_at_top(mixed_valid_range_dataset["target"])
+        expected_data = np.array([[12.0, 1.0, 8.0], [21.0, np.nan, 5.0]])
+        np.testing.assert_allclose(returned_da.data, expected_data)
+
+    def test_dataset_slices_all_variables_using_target(
+        self,
+        mixed_valid_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test slice_range_at_top on a Dataset using the selected variable."""
+        returned_ds = slice_range_at_top(mixed_valid_range_dataset, variable="target")
+        expected_target = np.array([[12.0, 1.0, 8.0], [21.0, np.nan, 5.0]])
+        expected_other_3d = expected_target + 100
+        expected_other_2d = np.array([[0.0, 1.0, 2.0], [3.0, np.nan, 5.0]])
+        np.testing.assert_allclose(returned_ds["target"].data, expected_target)
+        np.testing.assert_allclose(returned_ds["other_3d"].data, expected_other_3d)
+        np.testing.assert_allclose(returned_ds["other_2d"].data, expected_other_2d)
+
+    def test_all_nan_values_return_nan_slices(
+        self,
+        all_nan_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test slice_range_at_top returns NaN values when all values are missing."""
+        returned_ds = slice_range_at_top(all_nan_range_dataset, variable="target")
+        assert np.isnan(returned_ds["target"].data).all()
+        assert np.isnan(returned_ds["other_3d"].data).all()
+        assert np.isnan(returned_ds["other_2d"].data).all()
+
+
+class TestSliceRangeAtNearSurface:
+    """Test slice_range_at_near_surface function."""
+
+    def test_dataarray_returns_last_valid_values(
+        self,
+        mixed_valid_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test slice_range_at_near_surface on a DataArray with mixed valid profiles."""
+        returned_da = slice_range_at_near_surface(mixed_valid_range_dataset["target"])
+        expected_data = np.array([[18.0, 25.0, 26.0], [21.0, np.nan, 29.0]])
+        np.testing.assert_allclose(returned_da.data, expected_data)
+
+    def test_dataset_slices_all_variables_using_target(
+        self,
+        mixed_valid_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test slice_range_at_near_surface on a Dataset using the selected variable."""
+        returned_ds = slice_range_at_near_surface(mixed_valid_range_dataset, variable="target")
+        expected_target = np.array([[18.0, 25.0, 26.0], [21.0, np.nan, 29.0]])
+        expected_other_3d = expected_target + 100
+        expected_other_2d = np.array([[0.0, 1.0, 2.0], [3.0, np.nan, 5.0]])
+        np.testing.assert_allclose(returned_ds["target"].data, expected_target)
+        np.testing.assert_allclose(returned_ds["other_3d"].data, expected_other_3d)
+        np.testing.assert_allclose(returned_ds["other_2d"].data, expected_other_2d)
+
+    def test_all_nan_values_return_nan_slices(
+        self,
+        all_nan_range_dataset: xr.Dataset,
+    ) -> None:
+        """Test slice_range_at_near_surface returns NaN values when all values are missing."""
+        returned_ds = slice_range_at_near_surface(all_nan_range_dataset, variable="target")
+        assert np.isnan(returned_ds["target"].data).all()
+        assert np.isnan(returned_ds["other_3d"].data).all()
+        assert np.isnan(returned_ds["other_2d"].data).all()
 
 
 class TestCropAroundValidData:
@@ -1001,6 +1206,129 @@ def test_locate_max_value():
     # If more than 1, always return first point
     da.data[1, 1:3] = 1
     assert locate_max_value(da) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+
+
+def test_locate_values():
+    """Test locate_values."""
+    # Grid
+    da = get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+    da.data[:] = 20
+    da.data[1, 1] = 4.9
+    da.data[2, 2] = 5.2
+
+    expected_points = [
+        (da["lon"].data[1], da["lat"].data[1]),
+        (da["lon"].data[2], da["lat"].data[2]),
+    ]
+    assert locate_values(da, value=5) == expected_points[0]
+    assert locate_values(da, value=5, n=2) == expected_points
+
+    isel_dict = locate_values(da, value=5, return_isel_dict=True)
+    assert da.isel(isel_dict).item() == 4.9
+
+    # Orbit
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+    da.data[:] = 20
+    da.data[1, 1] = 4.9
+    da.data[2, 2] = 5.2
+    expected_points = [
+        (da["lon"].data[1, 1], da["lat"].data[1, 1]),
+        (da["lon"].data[2, 2], da["lat"].data[2, 2]),
+    ]
+    assert locate_values(da, value=5, n=2) == expected_points
+
+
+def test_locate_largest_values():
+    """Test locate_largest_values."""
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+    da.data[:] = 0
+    da.data[0, 0] = 11
+    da.data[1, 1] = 10
+    da.data[2, 2] = 9
+
+    assert locate_largest_values(da) == (da["lon"].data[0, 0], da["lat"].data[0, 0])
+    assert locate_largest_values(da, below_thr=10, n=2) == [
+        (da["lon"].data[1, 1], da["lat"].data[1, 1]),
+        (da["lon"].data[2, 2], da["lat"].data[2, 2]),
+    ]
+
+    isel_dicts = locate_largest_values(da, below_thr=10, n=2, return_isel_dict=True)
+    assert [da.isel(isel_dict).item() for isel_dict in isel_dicts] == [10, 9]
+
+    # If more than 1, keep the first point first
+    da.data[1, 1:3] = 10
+    assert locate_largest_values(da, below_thr=10) == (da["lon"].data[1, 1], da["lat"].data[1, 1])
+
+
+def test_locate_smallest_values():
+    """Test locate_smallest_values."""
+    da = get_orbit_dataarray(
+        start_lon=0,
+        start_lat=0,
+        end_lon=20,
+        end_lat=15,
+        width=1e6,
+        n_along_track=20,
+        n_cross_track=5,
+    )
+    da.data[:] = 20
+    da.data[0, 0] = -1
+    da.data[1, 1] = 0
+    da.data[2, 2] = 1
+
+    # locate_smallest_values defaults to return_isel_dict=True
+    isel_dict = locate_smallest_values(da)
+    assert da.isel(isel_dict).item() == -1
+
+    assert locate_smallest_values(da, above_thr=0, n=2, return_isel_dict=False) == [
+        (da["lon"].data[1, 1], da["lat"].data[1, 1]),
+        (da["lon"].data[2, 2], da["lat"].data[2, 2]),
+    ]
+
+    isel_dicts = locate_smallest_values(da, above_thr=0, n=2)
+    assert [da.isel(isel_dict).item() for isel_dict in isel_dicts] == [0, 1]
+
+
+def test_locate_values_errors():
+    """Test locate values error handling."""
+    da = get_grid_dataarray(
+        start_lon=-5,
+        start_lat=-5,
+        end_lon=20,
+        end_lat=15,
+        n_lon=20,
+        n_lat=15,
+    )
+    da.data[:] = np.nan
+    with pytest.raises(ValueError, match="No valid values"):
+        locate_largest_values(da)
+    with pytest.raises(ValueError, match="positive integer"):
+        locate_values(da, value=5, n=0)
+    with pytest.raises(TypeError, match="'n' must be an integer"):
+        locate_smallest_values(da, n=1.5)
 
 
 def test_extract_transect_at_points():

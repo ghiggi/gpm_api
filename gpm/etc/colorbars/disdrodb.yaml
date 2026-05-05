@@ -1,0 +1,156 @@
+---
+Nw:
+  cmap:
+    name: lavender_r
+  norm:
+    name: LogNorm
+    vmin: 100
+    vmax: 100000
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $N_w$ [$mm^{-1} \ m^{-3}$]
+  auxiliary:
+    category: [disdrodb, dsd]
+Z:
+  reference: reflectivity_gpm
+R:
+  reference: rainfall_rate
+Rm:
+  reference: rainfall_rate
+Dm:
+  cmap:
+    name: ember_r
+  norm:
+    name: Norm
+    vmin: 0.5
+    vmax: 3
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $D_m$ [$mm$]
+  auxiliary:
+    category: [disdrodb, dsd]
+D50:
+  cmap:
+    name: plasma
+  norm:
+    name: Norm
+    vmin: 0.5
+    vmax: 3
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $D_{50}$ [$mm$]
+  auxiliary:
+    category: [disdrodb, dsd]
+LWC:
+  cmap:
+    name: YlGnBu
+  norm:
+    name: LogNorm
+    vmin: 0.01
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $LWC$ [$g \ m^{-3}$]
+  auxiliary:
+    category: [disdrodb, dsd]
+Nt:
+  cmap:
+    name: mako_r
+  norm:
+    name: LogNorm
+    vmin: 10
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $N_t$ [$m^{-3}$]
+  auxiliary:
+    category: [disdrodb, dsd]
+N_0p5_1p0:
+  cmap:
+    name: mako_r
+  norm:
+    name: LogNorm
+    vmin: 10
+    vmax: 2000
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $N_{t,0.5-1.0} \,\, [m^{-3}]$
+  auxiliary:
+    category: [disdrodb, dsd]
+sigma_m:
+  cmap:
+    name: ember_r
+  norm:
+    name: Norm
+    vmin: 0.2
+    vmax: 2
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $\sigma_m$ [$mm$]
+  auxiliary:
+    category: [disdrodb, dsd]
+M2:
+  cmap:
+    name: magma
+  norm:
+    name: LogNorm
+    vmin: 0.01
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $M_2$ [$m^{-3} \ mm^2$]
+  auxiliary:
+    category: [disdrodb, dsd, moment]
+M3:
+  cmap:
+    name: magma
+  norm:
+    name: LogNorm
+    vmin: 0.01
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $M_3$ [$m^{-3} \ mm^3$]
+  auxiliary:
+    category: [disdrodb, dsd, moment]
+M4:
+  cmap:
+    name: magma
+  norm:
+    name: LogNorm
+    vmin: 0.01
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $M_4$ [$m^{-3} \ mm^4$]
+  auxiliary:
+    category: [disdrodb, dsd, moment]
+M5:
+  cmap:
+    name: magma
+  norm:
+    name: LogNorm
+    vmin: 0.01
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $M_5$ [$m^{-3} \ mm^5$]
+  auxiliary:
+    category: [disdrodb, dsd, moment]
+M6:
+  cmap:
+    name: magma
+  norm:
+    name: LogNorm
+    vmin: 0.01
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $M_6$ [$m^{-3} \ mm^6$]
+  auxiliary:
+    category: [disdrodb, dsd, moment]
