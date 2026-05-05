@@ -207,7 +207,7 @@ PIAH:
     extendfrac: 0.05
     label: $\mathrm{PIA}_{\mathrm{H}}$ [dB]
   auxiliary:
-    category: [radar] 
+    category: [radar]
 PIAV:
   cmap:
     name: RdPu
@@ -221,8 +221,8 @@ PIAV:
     extendfrac: 0.05
     label: $\mathrm{PIA}_{\mathrm{V}}$ [dB]
   auxiliary:
-    category: [radar]  
-    
+    category: [radar]
+
 path_integrated_differential_attenuation:
   cmap:
     name: RdPu
@@ -296,7 +296,7 @@ HCLASS:
       5: Graupel
       6: Hail
   cbar:
-    label: "Hydrometeor class"    
+    label: "Hydrometeor class"
   auxiliary:
     category: [radar, fmi, odim]
 TH:

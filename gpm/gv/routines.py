@@ -408,7 +408,7 @@ def convert_s_to_ku_band(ds_gr, bright_band_height, z_variable="DBZH"):
 def add_radar_distances(ax, ds_gr, distances=[15_000, 100_000, 150_000], **plot_kwargs):
     """Add circles at specific radar distances."""
     if np.isscalar(distances):
-       distances = [distances]
+        distances = [distances]
 
     for distance in distances:
         ds_gr.xradar_dev.plot_range_distance(
@@ -422,7 +422,7 @@ def add_radar_distances(ax, ds_gr, distances=[15_000, 100_000, 150_000], **plot_
             **plot_kwargs,
         )
 
-        
+
 def add_radar_info(ax, ds_gr, radar_size, distances=[15_000, 100_000, 150_000], **plot_kwargs):
     """Add radar information (location, distance circles)."""
     # - Add radar location
