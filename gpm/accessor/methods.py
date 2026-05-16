@@ -702,6 +702,7 @@ class GPM_Base_Accessor:
         subplot_kwargs=None,
         text_kwargs=None,
         line_kwargs=None,
+        distance_label=50_000,
         **common_kwargs,
     ):
         from gpm.visualization.cross_section import plot_transect_line
@@ -717,6 +718,7 @@ class GPM_Base_Accessor:
             subplot_kwargs=subplot_kwargs,
             text_kwargs=text_kwargs,
             line_kwargs=line_kwargs,
+            distance_label=distance_label,
             **common_kwargs,
         )
 
@@ -1085,6 +1087,18 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
             temperature=temperature,
             variable_temperature=variable_temperature,
         )
+
+    @auto_wrap_docstring
+    def slice_range_at_surface(self):
+        from gpm.utils.manipulations import slice_range_at_surface
+
+        return slice_range_at_surface(self._obj)
+
+    @auto_wrap_docstring
+    def slice_range_at_cfb(self, tolerance=0):
+        from gpm.utils.manipulations import slice_range_at_cfb
+
+        return slice_range_at_cfb(self._obj, tolerance=tolerance)
 
     @auto_wrap_docstring
     def extract_dataset_above_bin(self, bins, new_range_size=None, strict=False, reverse=False):

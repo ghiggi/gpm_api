@@ -296,6 +296,7 @@ def plot_transect_line(
     subplot_kwargs=None,
     text_kwargs=None,
     line_kwargs=None,
+    distance_label=50_000,
     **common_kwargs,
 ):
     # - Check is transect
@@ -331,9 +332,9 @@ def plot_transect_line(
     if add_direction:
         g = pyproj.Geod(ellps="WGS84")
         fwd_az, back_az, dist = g.inv(*start_lonlat, *end_lonlat, radians=False)
-        lon_r, lat_r, _ = g.fwd(*start_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
+        lon_r, lat_r, _ = g.fwd(*start_lonlat, az=fwd_az, dist=dist + distance_label)  # dist in m
         fwd_az, back_az, dist = g.inv(*end_lonlat, *start_lonlat, radians=False)  # noqa: RUF059
-        lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + 50000)  # dist in m
+        lon_l, lat_l, _ = g.fwd(*end_lonlat, az=fwd_az, dist=dist + distance_label)  # dist in m
         ax.text(lon_r, lat_r, "S", **text_kwargs, **common_kwargs)
         ax.text(lon_l, lat_l, "E", **text_kwargs, **common_kwargs)
 

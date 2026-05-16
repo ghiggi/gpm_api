@@ -305,6 +305,28 @@ def _select_range_slice(da, da_bin, da_mask):
     return da_slice.where(~da_mask)
 
 
+def _slice_range_at_bin(xr_obj, da_bin):
+    da_bin, da_mask = get_bin_dataarray(xr_obj, bins=da_bin)
+
+    # Slice along the 'range' dimension
+    is_dataset_input = isinstance(xr_obj, xr.Dataset)
+    if is_dataset_input:
+        vertical_variables = xr_obj.gpm.vertical_variables
+        non_vertical_variables = set(xr_obj.data_vars) - set(vertical_variables)
+        # Copy non vertical variables
+        xr_out = xr_obj[non_vertical_variables].copy()
+        # Slice vertical variables
+        for var in vertical_variables:
+            xr_out[var] = _select_range_slice(da=xr_obj[var], da_bin=da_bin, da_mask=da_mask)
+    else:
+        xr_out = _select_range_slice(
+            da=xr_obj,
+            da_bin=da_bin,
+            da_mask=da_mask,
+        )
+    return xr_out
+
+
 def slice_range_at_bin(xr_obj, bins):
     """Extract values at the range bins specified by ``bin_variable``.
 
@@ -332,25 +354,95 @@ def slice_range_at_bin(xr_obj, bins):
     check_has_vertical_dim(xr_obj)
 
     # Get the bin DataArray
-    da_bin, da_mask = get_bin_dataarray(xr_obj, bins=bins)
+    da_bin = _get_bin_dataarray(xr_obj, bins=bins)
 
-    # Slice along the 'range' dimension
-    is_dataset_input = isinstance(xr_obj, xr.Dataset)
-    if is_dataset_input:
-        vertical_variables = xr_obj.gpm.vertical_variables
-        non_vertical_variables = set(xr_obj.data_vars) - set(vertical_variables)
-        # Copy non vertical variables
-        xr_out = xr_obj[non_vertical_variables].copy()
-        # Slice vertical variables
-        for var in vertical_variables:
-            xr_out[var] = _select_range_slice(da=xr_obj[var], da_bin=da_bin, da_mask=da_mask)
-    else:
-        xr_out = _select_range_slice(
-            da=xr_obj,
-            da_bin=da_bin,
-            da_mask=da_mask,
+    # Bin without frequency
+    if "radar_frequency" not in da_bin.dims:
+        da_bin = da_bin.drop_vars("radar_frequency", errors="ignore")
+        return _slice_range_at_bin(xr_obj, da_bin)
+
+    # If this is a DataArray, the simple case is enough
+    if isinstance(xr_obj, xr.DataArray):
+        list_da = []
+
+        for radar_frequency in da_bin["radar_frequency"].to_numpy():
+            da_f = xr_obj.sel(radar_frequency=radar_frequency)
+            da_bin_f = da_bin.sel(radar_frequency=radar_frequency)
+
+            da_f = _slice_range_at_bin(da_f, da_bin_f)
+            da_f = da_f.expand_dims(radar_frequency=[radar_frequency])
+
+            list_da.append(da_f)
+
+        return xr.concat(list_da, dim="radar_frequency")
+
+    # Dataset case
+    frequency_variables = xr_obj.gpm.frequency_variables
+    non_frequency_variables = set(xr_obj.data_vars) - set(frequency_variables)
+
+    # Slice variables having radar_frequency frequency-by-frequency
+    ds_freq = xr_obj[frequency_variables]
+    list_ds = []
+    for radar_frequency in da_bin["radar_frequency"].to_numpy():
+        ds_f = ds_freq.sel(radar_frequency=radar_frequency)
+        da_bin_f = da_bin.sel(radar_frequency=radar_frequency)
+
+        ds_f = _slice_range_at_bin(ds_f, da_bin_f)
+        ds_f = ds_f.expand_dims(radar_frequency=[radar_frequency])
+        list_ds.append(ds_f)
+
+    ds_freq_sliced = xr.concat(list_ds, dim="radar_frequency", coords="different", compat="equals")
+
+    # Slice variables without radar_frequency only once.
+    # --> Selecting the first frequency bin.
+    first_frequency = da_bin["radar_frequency"].to_numpy()[0]
+    da_bin_ref = da_bin.sel(radar_frequency=first_frequency)
+    ds_non_freq = xr.Dataset()
+    if len(non_frequency_variables) > 0:
+        ds_non_freq = _slice_range_at_bin(
+            xr_obj[non_frequency_variables],
+            da_bin_ref,
         )
-    return xr_out
+
+    return xr.merge([ds_freq_sliced, ds_non_freq], compat="override")
+
+    # # Get the bin DataArray
+    # da_bin, da_mask = get_bin_dataarray(xr_obj, bins=bins)
+
+    # # Slice along the 'range' dimension
+    # is_dataset_input = isinstance(xr_obj, xr.Dataset)
+    # if is_dataset_input:
+    #     vertical_variables = xr_obj.gpm.vertical_variables
+    #     non_vertical_variables = set(xr_obj.data_vars) - set(vertical_variables)
+    #     # Copy non vertical variables
+    #     xr_out = xr_obj[non_vertical_variables].copy()
+    #     # Slice vertical variables
+    #     for var in vertical_variables:
+    #         xr_out[var] = _select_range_slice(da=xr_obj[var], da_bin=da_bin, da_mask=da_mask)
+    # else:
+    #     xr_out = _select_range_slice(
+    #         da=xr_obj,
+    #         da_bin=da_bin,
+    #         da_mask=da_mask,
+    #     )
+    # return xr_out
+
+
+def slice_range_at_cfb(xr_obj, tolerance=0):
+    """Slice the 3D arrays at the surface given by binRealSurface.
+
+    If tolerance is positive, slice tolerance n_gates below CFB (within the blind zone).
+    If tolerance is negative, slice tolerance n_gates above CFB.
+    """
+    da_bins_cfb = get_xarray_variable(xr_obj, variable="binClutterFreeBottom")
+    da_bins_cfb = da_bins_cfb + tolerance
+    return slice_range_at_bin(xr_obj, bins=da_bins_cfb)
+
+
+def slice_range_at_surface(xr_obj):
+    """Slice the 3D arrays at the surface given by binRealSurface."""
+    da_bins_surface = get_xarray_variable(xr_obj, variable="binRealSurface") - 1
+    return slice_range_at_bin(xr_obj, bins=da_bins_surface)
 
 
 ####------------------------------------------------------------------------------------------------------------------.
