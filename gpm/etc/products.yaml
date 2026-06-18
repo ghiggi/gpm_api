@@ -386,7 +386,7 @@
   pps_rs_dir: 1C
   ges_disc_dir: GPM_L1C/GPM_1CNOAA19MHS
   start_time: 2009-02-12 11:37:53
-  end_time: null
+  end_time: 2025-06-16 23:21:15
   available_versions: [5, 7, 8]
   scan_modes:
     V5: [S1]
@@ -786,7 +786,7 @@
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA19MHS
   start_time: 2014-01-31 22:42:30
-  end_time: null
+  end_time: 2025-06-16 23:21:15
   available_versions: [5, 7, 8]
   scan_modes:
     V5: [S1]
@@ -1125,7 +1125,7 @@
   pps_rs_dir: gprof
   ges_disc_dir: GPM_L2/GPM_2AGPROFNOAA19MHS_CLIM
   start_time: 2009-02-12 13:20:00
-  end_time: null
+  end_time: 2025-06-16 23:21:15
   available_versions: [5, 7, 8]
   scan_modes:
     V5: [S1]
