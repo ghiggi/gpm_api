@@ -656,6 +656,7 @@ def plot_cartopy_pcolormesh(
     y,
     add_colorbar=True,
     add_swath_lines=True,
+    rasterized=True,
     plot_kwargs=None,
     cbar_kwargs=None,
 ):
@@ -713,6 +714,7 @@ def plot_cartopy_pcolormesh(
         lat,
         arr,
         transform=ccrs.PlateCarree(),
+        rasterized=rasterized,
         **plot_kwargs,
     )
     # Add swath lines

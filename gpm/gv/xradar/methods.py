@@ -11,6 +11,7 @@ from gpm.utils.area import (
 )
 from gpm.utils.geospatial import merge_extents
 from gpm.utils.remapping import reproject_coords
+from gpm.visualization.plot import plot_cartopy_pcolormesh
 
 
 def resolution_at_range(xr_obj, azimuth_beamwidth, elevation_beamwidth):
@@ -328,7 +329,7 @@ def plot_map(
 ):
     import gpm
     from gpm.visualization.facetgrid import sanitize_facetgrid_plot_kwargs
-    from gpm.visualization.plot import initialize_cartopy_plot, plot_colorbar
+    from gpm.visualization.plot import initialize_cartopy_plot  # plot_colorbar
 
     # Compute geographic coordinates on-the-fly if not provided
     if "lon" not in list(da.coords):
@@ -356,21 +357,34 @@ def plot_map(
         user_cbar_kwargs=cbar_kwargs,
     )
     # Display variable with cartopy
-    p = da.plot(
+    # - This allow RGB !
+    p = plot_cartopy_pcolormesh(
         ax=ax,
+        da=da,
         x=x,
         y=y,
-        add_colorbar=False,
         rasterized=rasterized,
-        # cbar_kwargs=cbar_kwargs,
-        **plot_kwargs,
+        add_colorbar=add_colorbar,
+        add_swath_lines=False,
+        plot_kwargs=plot_kwargs,
+        cbar_kwargs=cbar_kwargs,
     )
+    # p = da.plot(
+    #     ax=ax,
+    #     x=x,
+    #     y=y,
+    #     add_colorbar=False,
+    #     rasterized=rasterized,
+    #     # cbar_kwargs=cbar_kwargs,
+    #     **plot_kwargs,
+    # )
+    # # Add colorbar
+    # if add_colorbar:
+    #     _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
+
     # Remove title
     ax.set_title("")
 
-    # Add colorbar
-    if add_colorbar:
-        _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
     # Set extent
     if extent is not None:
         ax.set_extent(extent, crs=ccrs.PlateCarree())
