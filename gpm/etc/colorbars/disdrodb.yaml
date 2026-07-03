@@ -94,6 +94,19 @@ N_0p5_1p0:
     label: $N_{t,0.5-1.0} \,\, [m^{-3}]$
   auxiliary:
     category: [disdrodb, dsd]
+N_2p0_2p5:
+  cmap:
+    name: mako_r
+  norm:
+    name: LogNorm
+    vmin: 0.1
+    vmax: 100
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $N_{t,2.0-2.5} \,\, [m^{-3}]$
+  auxiliary:
+    category: [disdrodb, dsd]
 sigma_m:
   cmap:
     name: ember_r
