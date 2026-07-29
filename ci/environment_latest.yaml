@@ -9,7 +9,7 @@ dependencies:
   - donfig
   - h5py
   - jupyter
-  - matplotlib
+  - matplotlib>=3.10.0,<3.11.0
   - netcdf4
   - polars
   - pyarrow

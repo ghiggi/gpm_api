@@ -544,7 +544,7 @@ def _sanitize_cartopy_plot_kwargs(plot_kwargs):
     if cmap is not None:
         bad = cmap.get_bad()
         bad[3] = 0  # enforce to 0 (transparent)
-        cmap.set_bad(bad)
+        cmap.set_extremes(bad=bad)
         plot_kwargs["cmap"] = cmap
     return plot_kwargs
 

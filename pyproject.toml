@@ -47,7 +47,8 @@ dependencies = [
     "pyyaml",
     "donfig",
     "trollsift",
-    "matplotlib>=3.8.3", # introduce pcolormesh rgb
+    # "matplotlib>=3.8.3", # introduce pcolormesh rgb
+    "matplotlib>=3.10.0,<3.11.0", # 3.11 currently not compatible with cartopy latest
     "cartopy>=0.25.0",   # update gridliners
     "pyproj",
     "numpy>=2.4.0",
