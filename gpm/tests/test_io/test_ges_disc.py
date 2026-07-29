@@ -33,35 +33,53 @@ from pytest_mock.plugin import MockerFixture
 from gpm.io import ges_disc
 
 
-def test_get_ges_disc_list_path():
-    """Test _get_ges_disc_list_path."""
-    # Empty directory
-    url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/AUXILIARY/GPM_IMERG_LandSeaMask.2/"
-    with pytest.raises(ValueError) as excinfo:
+class TestGetGesDiscListPath:
+    """Tests for _get_ges_disc_list_path."""
+
+    def test_empty_directory(self):
+        """Test an empty directory."""
+        url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/" "AUXILIARY/GPM_IMERG_LandSeaMask.2/"
+
+        with pytest.raises(ValueError) as excinfo:
+            ges_disc._get_ges_disc_list_path(url)
+
+        assert "directory is empty" in str(excinfo.value)
+
+    def test_year_directory(self):
+        """Test a directory containing year folders."""
+        url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/" "GPM_L2/GPM_2ADPR.07/"
+
         list_path = ges_disc._get_ges_disc_list_path(url)
-    assert "directory is empty" in str(excinfo.value)
 
-    # Year directory
-    url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L2/GPM_2ADPR.07/"
-    list_path = ges_disc._get_ges_disc_list_path(url)
-    assert len(list_path) > 0
+        assert len(list_path) > 0
 
-    # File directory
-    url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L2/GPM_2ADPR.07/2019/006/"
-    list_path = ges_disc._get_ges_disc_list_path(url)
-    assert len(list_path) > 0
+    def test_file_directory(self):
+        """Test a directory containing files."""
+        url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/" "GPM_L2/GPM_2ADPR.07/2019/006/"
 
-    # Wrong URL
-    url = "BAD_URL"
-    with pytest.raises(ValueError) as excinfo:
         list_path = ges_disc._get_ges_disc_list_path(url)
-    assert f"The requested url {url} was not found on the GES DISC server." == str(excinfo.value)
 
-    # Unexisting directory
-    url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.07/20020"
-    with pytest.raises(ValueError) as excinfo:
-        list_path = ges_disc._get_ges_disc_list_path(url)
-    assert f"The requested url {url} was not found on the GES DISC server." == str(excinfo.value)
+        assert len(list_path) > 0
+
+    def test_wrong_url(self):
+        """Test an invalid URL."""
+        url = "BAD_URL"
+
+        with pytest.raises(ValueError) as excinfo:
+            ges_disc._get_ges_disc_list_path(url)
+
+        expected = f"The requested url {url} was not found on the GES DISC server."
+        assert str(excinfo.value) == expected
+
+    def test_nonexistent_directory(self):
+        """Test a nonexistent directory."""
+        url = "https://gpm2.gesdisc.eosdis.nasa.gov/data/" "GPM_L3/GPM_3IMERGHHE.07/20020"
+
+        with pytest.raises(ValueError) as excinfo:
+            ges_disc._get_ges_disc_list_path(url)
+
+        expected = f"The requested url {url} was not found on the GES DISC server."
+        assert str(excinfo.value) == expected
 
 
 def test_define_ges_disc_filepath():

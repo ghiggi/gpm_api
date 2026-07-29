@@ -460,7 +460,7 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
 
     #### - Plot GR sweep data
     axes[0].coastlines()
-    p = (
+    _ = (
         ds_gr[z_variable_gr]
         .where(ds_gr[z_variable_gr] > 0)
         .xradar_dev.plot_map(
@@ -472,12 +472,13 @@ def plot_quicklook(ds_gr, gdf, sr_z_column, gr_z_column, z_variable_gr="DBZH", d
             add_labels=False,
             add_colorbar=False,
             cbar_kwargs=cbar_kwargs,
+            use_xarray_plot=True,
             **plot_kwargs,
         )
     )
-    p.axes.set_xlim(extent_xy[0:2])
-    p.axes.set_ylim(extent_xy[2:4])
-    p.axes.set_title("GR PPI")
+    axes[0].set_xlim(extent_xy[0:2])
+    axes[0].set_ylim(extent_xy[2:4])
+    axes[0].set_title("GR PPI")
     add_radar_info(ax=axes[0], ds_gr=ds_gr, radar_size=radar_size)
     # - Add SR swath lines
     if ds_sr is not None:
@@ -823,6 +824,14 @@ def volume_matching(
     ds_gr["lon"] = lon_gr
     ds_gr["lat"] = lat_gr
     ds_gr = ds_gr.set_coords(["lon", "lat"])
+
+    #### Ensure sweep elevation angle is a scalar
+    elevation_angles, counts = np.unique(ds_gr["sweep_fixed_angle"], return_counts=True)
+    mask_valid = ~np.isnan(elevation_angles)
+    elevation_angles = elevation_angles[mask_valid]
+    counts = counts[mask_valid]
+    elevation_angle = elevation_angles[np.argmax(counts)]
+    ds_gr = ds_gr.assign_coords({"sweep_fixed_angle": elevation_angle})
 
     #### - Set GR gates with Z < 0 to NaN
     # - Following Morris and Schwaller 2011 recommendation

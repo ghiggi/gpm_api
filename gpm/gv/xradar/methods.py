@@ -219,7 +219,7 @@ def get_maximum_horizontal_distance(xr_obj):
     """Return the horizontal distance from the last gate."""
     # TODO: currently distance to last gate centroid.
     ds_georeferenced = xr_obj.isel(range=slice(-2, None)).xradar.georeference()
-    return np.maximum(ds_georeferenced["x"].max(), ds_georeferenced["y"].max()).item()
+    return np.maximum(ds_georeferenced["x"].max().to_numpy(), ds_georeferenced["y"].max()).to_numpy()
 
 
 def get_maximum_range_distance(xr_obj):
@@ -325,11 +325,12 @@ def plot_map(
     subplot_kwargs=None,
     cbar_kwargs=None,
     extent=None,
+    use_xarray_plot=False,
     **plot_kwargs,
 ):
     import gpm
     from gpm.visualization.facetgrid import sanitize_facetgrid_plot_kwargs
-    from gpm.visualization.plot import initialize_cartopy_plot  # plot_colorbar
+    from gpm.visualization.plot import initialize_cartopy_plot, plot_colorbar
 
     # Compute geographic coordinates on-the-fly if not provided
     if "lon" not in list(da.coords):
@@ -358,29 +359,32 @@ def plot_map(
     )
     # Display variable with cartopy
     # - This allow RGB !
-    p = plot_cartopy_pcolormesh(
-        ax=ax,
-        da=da,
-        x=x,
-        y=y,
-        rasterized=rasterized,
-        add_colorbar=add_colorbar,
-        add_swath_lines=False,
-        plot_kwargs=plot_kwargs,
-        cbar_kwargs=cbar_kwargs,
-    )
-    # p = da.plot(
-    #     ax=ax,
-    #     x=x,
-    #     y=y,
-    #     add_colorbar=False,
-    #     rasterized=rasterized,
-    #     # cbar_kwargs=cbar_kwargs,
-    #     **plot_kwargs,
-    # )
-    # # Add colorbar
-    # if add_colorbar:
-    #     _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
+    # --> Except x and y to be lon and lat values
+    if not use_xarray_plot:
+        p = plot_cartopy_pcolormesh(
+            ax=ax,
+            da=da,
+            x=x,
+            y=y,
+            rasterized=rasterized,
+            add_colorbar=add_colorbar,
+            add_swath_lines=False,
+            plot_kwargs=plot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+        )
+    else:  # For when x and y are not longitudes and latitudes
+        p = da.plot(
+            ax=ax,
+            x=x,
+            y=y,
+            add_colorbar=False,
+            rasterized=rasterized,
+            # cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+        # Add colorbar
+        if add_colorbar:
+            _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
 
     # Remove title
     ax.set_title("")
