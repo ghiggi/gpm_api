@@ -1,0 +1,15 @@
+---
+colormap_type: ListedColormap
+color_space: hex
+color_palette:
+  [
+    "#d9d9d9",  # 0
+    "#8c510a",  # 1
+    "#2166ac",  # 2
+    "#66c2a5",  # 3
+    "#d9f0ff",  # 4
+    "#fdae61",  # 5
+    "#d7191c",  # 6
+  ]
+auxiliary:
+  category: [surfaceTypeIndex]

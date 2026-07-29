@@ -11,6 +11,7 @@ dependencies:
   - jupyter
   - matplotlib
   - netcdf4
+  - numpy
   - polars
   - pyarrow
   - pycolorbar

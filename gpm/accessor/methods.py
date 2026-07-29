@@ -423,6 +423,12 @@ class GPM_Base_Accessor:
         return subset_range_where_values(self._obj, variable=variable, vmin=vmin, vmax=vmax)
 
     @auto_wrap_docstring
+    def subset_range_by_height(self, vmin=None, vmax=None):
+        from gpm.utils.manipulations import subset_range_by_height
+
+        return subset_range_by_height(self._obj, vmin=vmin, vmax=vmax)
+
+    @auto_wrap_docstring
     def slice_range_at_height(self, value):
         from gpm.utils.manipulations import slice_range_at_height
 
@@ -445,6 +451,30 @@ class GPM_Base_Accessor:
         from gpm.utils.manipulations import slice_range_at_min_value
 
         return slice_range_at_min_value(self._obj, variable=variable)
+
+    @auto_wrap_docstring
+    def slice_range_at_top(self, variable=None):
+        from gpm.utils.manipulations import slice_range_at_top
+
+        return slice_range_at_top(self._obj, variable=variable)
+
+    @auto_wrap_docstring
+    def slice_range_at_near_surface(self, variable=None):
+        from gpm.utils.manipulations import slice_range_at_near_surface
+
+        return slice_range_at_near_surface(self._obj, variable=variable)
+
+    @auto_wrap_docstring
+    def bin_near_surface(self, variable=None):
+        from gpm.utils.manipulations import get_bin_near_surface
+
+        return get_bin_near_surface(self._obj, variable=variable)
+
+    @auto_wrap_docstring
+    def bin_top(self, variable=None):
+        from gpm.utils.manipulations import get_bin_top
+
+        return get_bin_top(self._obj, variable=variable)
 
     #### Masking utility
     @auto_wrap_docstring
@@ -508,9 +538,9 @@ class GPM_Base_Accessor:
         from gpm.io.checks import check_time
 
         if "time" in self._obj.coords:
-            start_time = self._obj["time"].to_numpy()[0]
+            start_time = self._obj["time"].to_numpy().flat[0]
         elif "gpm_time" in self._obj.coords:
-            start_time = self._obj["gpm_time"].to_numpy()[0]
+            start_time = self._obj["gpm_time"].to_numpy().flat[0]
         else:
             raise ValueError("Time coordinate not found")
         return check_time(start_time)
@@ -520,9 +550,9 @@ class GPM_Base_Accessor:
         from gpm.io.checks import check_time
 
         if "time" in self._obj.coords:
-            end_time = self._obj["time"].to_numpy()[-1]
+            end_time = self._obj["time"].to_numpy().flat[-1]
         elif "gpm_time" in self._obj.coords:
-            end_time = self._obj["gpm_time"].to_numpy()[-1]
+            end_time = self._obj["gpm_time"].to_numpy().flat[-1]
         else:
             raise ValueError("Time coordinate not found")
         return check_time(end_time)
@@ -672,6 +702,7 @@ class GPM_Base_Accessor:
         subplot_kwargs=None,
         text_kwargs=None,
         line_kwargs=None,
+        distance_label=50_000,
         **common_kwargs,
     ):
         from gpm.visualization.cross_section import plot_transect_line
@@ -687,6 +718,7 @@ class GPM_Base_Accessor:
             subplot_kwargs=subplot_kwargs,
             text_kwargs=text_kwargs,
             line_kwargs=line_kwargs,
+            distance_label=distance_label,
             **common_kwargs,
         )
 
@@ -1057,6 +1089,18 @@ class GPM_Dataset_Accessor(GPM_Base_Accessor):
         )
 
     @auto_wrap_docstring
+    def slice_range_at_surface(self):
+        from gpm.utils.manipulations import slice_range_at_surface
+
+        return slice_range_at_surface(self._obj)
+
+    @auto_wrap_docstring
+    def slice_range_at_cfb(self, tolerance=0):
+        from gpm.utils.manipulations import slice_range_at_cfb
+
+        return slice_range_at_cfb(self._obj, tolerance=tolerance)
+
+    @auto_wrap_docstring
     def extract_dataset_above_bin(self, bins, new_range_size=None, strict=False, reverse=False):
         from gpm.utils.manipulations import extract_dataset_above_bin
 
@@ -1150,6 +1194,24 @@ class GPM_DataArray_Accessor(GPM_Base_Accessor):
         from gpm.utils.manipulations import locate_min_value
 
         return locate_min_value(self._obj, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
+    def locate_values(self, value, n=1, return_isel_dict=False):
+        from gpm.utils.manipulations import locate_values
+
+        return locate_values(self._obj, value=value, n=n, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
+    def locate_largest_values(self, below_thr=None, n=1, return_isel_dict=False):
+        from gpm.utils.manipulations import locate_largest_values
+
+        return locate_largest_values(self._obj, below_thr=below_thr, n=n, return_isel_dict=return_isel_dict)
+
+    @auto_wrap_docstring
+    def locate_smallest_values(self, above_thr=None, n=1, return_isel_dict=True):
+        from gpm.utils.manipulations import locate_smallest_values
+
+        return locate_smallest_values(self._obj, above_thr=above_thr, n=n, return_isel_dict=return_isel_dict)
 
     @auto_wrap_docstring
     def title(

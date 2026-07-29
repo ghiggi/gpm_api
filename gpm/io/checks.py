@@ -28,15 +28,12 @@
 import datetime
 import os
 import subprocess
-import sys
 
 import numpy as np
 
 
 def get_current_utc_time():
-    if sys.version_info >= (3, 11):
-        return datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
-    return datetime.datetime.utcnow()
+    return datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
 
 
 def check_base_dir(base_dir):

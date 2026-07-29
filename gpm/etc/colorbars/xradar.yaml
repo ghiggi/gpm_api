@@ -11,7 +11,37 @@ reflectivity:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Reflectivity [$dBZ$]
+    label: Reflectivity [dBZ]
+  auxiliary:
+    category: [reflectivity, radar]
+DBZH:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 1
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -10
+    vmax: 65
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{\mathrm{H}}$ [dBZ]
+  auxiliary:
+    category: [reflectivity, radar]
+DBZV:
+  cmap:
+    name: Spectral_r
+    bad_alpha: 1
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: -10
+    vmax: 65
+  cbar:
+    extend: both
+    extendfrac: 0.05
+    label: $Z_{\mathrm{V}}$ [dBZ]
   auxiliary:
     category: [reflectivity, radar]
 differential_reflectivity:
@@ -21,12 +51,12 @@ differential_reflectivity:
     bad_color: none
   norm:
     name: Norm
-    vmin: -1
-    vmax: 8
+    vmin: -0.4
+    vmax: 4
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Differential Reflectivity [$dB$]
+    label: $Z_{\mathrm{DR}}$ [dB]
   auxiliary:
     category: [reflectivity, radar]
 differential_phase:
@@ -34,12 +64,25 @@ differential_phase:
     name: twilight_shifted
     bad_color: none
   norm:
-    name: Norm
-    vmin: -180
-    vmax: 180
+    name: Norm # -180, 180 if unwrapped, 0 to unbounded if unwrapped
+    vmin: 0
+    vmax: 180 #
   cbar:
     extend: neither
-    label: Differential Phase ($\phi_{dp}$)  [$°$]
+    label: $\phi_{\mathrm{DP}}$  [°] # Total Differential Phase
+  auxiliary:
+    category: [phase, radar]
+propagation_differential_phase:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 360 # can be more ... unbounded
+  cbar:
+    extend: neither
+    label: $\psi_{\mathrm{DP}}$ [°] # Propagation Differential Phase
   auxiliary:
     category: [phase, radar]
 specific_differential_phase:
@@ -48,17 +91,17 @@ specific_differential_phase:
     bad_color: none
   norm:
     name: Norm
-    vmin: -2
+    vmin: 0
     vmax: 5
   cbar:
-    extend: both
+    extend: max
     extendfrac: 0.05
-    label: Specific Differential Phase ($K_{dp}$) [$°/km$]
+    label: $K_{\mathrm{DP}}$ [° km$^{-1}$]
   auxiliary:
     category: [phase, radar]
 cross_correlation_ratio:
   cmap:
-    name: Spectral_r
+    name: cividis
     bad_color: none
   norm:
     name: Norm
@@ -66,7 +109,7 @@ cross_correlation_ratio:
     vmax: 1
   cbar:
     extend: neither
-    label: Correlation between $Z_{H}$ and $Z_{V}$ ($\rho_{hv}$)
+    label:  $\rho_{\mathrm{HV}}$ [-]
   auxiliary:
     category: [radar]
 clutter_correction:
@@ -90,13 +133,108 @@ specific_attenuation:
     name: Spectral_r
     bad_color: none
   norm:
-    name: Norm
-    vmin: 0
-    vmax: 10
+    name: LogNorm
+    vmin: 0.001
   cbar:
     extend: max
     extendfrac: 0.05
-    label: Specific_attenuation [$dB/km$]
+    label: k [$dB/km$]
+  auxiliary:
+    category: [radar]
+AH:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  norm:
+    name: LogNorm
+    vmin: 0.001
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $k_{\mathrm{H}}$ [$dB/km$]
+  auxiliary:
+    category: [radar]
+AV:
+  cmap:
+    name: Spectral_r
+    bad_color: none
+  norm:
+    name: LogNorm
+    vmin: 0.001
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $k_{\mathrm{V}}$ [$dB/km$]
+  auxiliary:
+    category: [radar]
+specific_differential_attenuation:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: LogNorm
+    vmin: 0.001
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $A_{\mathrm{DP}}$ [dB km$^{-1}$]
+  auxiliary:
+    category: [radar]
+path_integrated_attenuation:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 8
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: PIA [dB]
+  auxiliary:
+    category: [radar]
+PIAH:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 8
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $\mathrm{PIA}_{\mathrm{H}}$ [dB]
+  auxiliary:
+    category: [radar]
+PIAV:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 8
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $\mathrm{PIA}_{\mathrm{V}}$ [dB]
+  auxiliary:
+    category: [radar]
+
+path_integrated_differential_attenuation:
+  cmap:
+    name: RdPu
+    bad_color: none
+  norm:
+    name: Norm
+    vmin: 0
+    vmax: 2
+  cbar:
+    extend: max
+    extendfrac: 0.05
+    label: $\delta$PIA [dB]
   auxiliary:
     category: [radar]
 linear_depolarization_ratio:
@@ -110,7 +248,7 @@ linear_depolarization_ratio:
   cbar:
     extend: min
     extendfrac: 0.05
-    label: Depolarization Ratio [$dB$]
+    label: Depolarization Ratio [dB]
   auxiliary:
     category: [radar]
 normalized_coherent_power:
@@ -137,26 +275,65 @@ signal_to_noise_ratio:
   cbar:
     extend: both
     extendfrac: 0.05
-    label: Signal to Noise Ratio [$dB$]
+    label: Signal to Noise Ratio [dB]
   auxiliary:
     category: [radar]
+HCLASS:
+  cmap:
+    name: HCLASS_FMI
+    bad_alpha: 1
+    bad_color: none
+    over_color: none
+    under_color: none
+  norm:
+    name: CategoryNorm
+    categories:
+      0: No signal
+      1: Non-hydro
+      2: Rain
+      3: Wet snow
+      4: Dry snow
+      5: Graupel
+      6: Hail
+  cbar:
+    label: "Hydrometeor class"
+  auxiliary:
+    category: [radar, fmi, odim]
 TH:
   reference: reflectivity
 TV:
   reference: reflectivity
-DBZH:
-  reference: reflectivity
 DBZH_c:
-  reference: reflectivity
-DBZV:
-  reference: reflectivity
+  reference: DBZH
 DBZV_c:
-  reference: reflectivity
+  reference: DBZV
+DBZH_c_smooth:
+  reference: DBZH
+DBZV_c_smooth:
+  reference: DBZV
 ZDR:
+  reference: differential_reflectivity
+ZDR_c:
+  reference: differential_reflectivity
+ZDR_c_smooth:
   reference: differential_reflectivity
 PHIDP:
   reference: differential_phase
+PSIDP:
+  reference: propagation_differential_phase
+PSIDP_vulpiani:
+  reference: propagation_differential_phase
+PSIDP_schneebeli:
+  reference: propagation_differential_phase
+PSIDP_maesaka:
+  reference: propagation_differential_phase
 KDP:
+  reference: specific_differential_phase
+KDP_vulpiani:
+  reference: specific_differential_phase
+KDP_schneebeli:
+  reference: specific_differential_phase
+KDP_maesaka:
   reference: specific_differential_phase
 RHOHV:
   reference: cross_correlation_ratio
@@ -174,3 +351,9 @@ SQIH:
   reference: normalized_coherent_power
 SQIV:
   reference: normalized_coherent_power
+PIA:
+  reference: path_integrated_attenuation
+PIDA:
+  reference: path_integrated_differential_attenuation
+ADP:
+  reference: specific_differential_attenuation

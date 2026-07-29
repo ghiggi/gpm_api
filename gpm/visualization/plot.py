@@ -34,6 +34,7 @@ import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from cartopy.mpl.gridliner import Gridliner
 from pycolorbar import plot_colorbar, set_colorbar_fully_transparent
 from pycolorbar.utils.mpl_legend import get_inset_bounds
 from scipy.interpolate import griddata
@@ -324,6 +325,24 @@ def get_antimeridian_mask(lons):
 
 
 ####--------------------------------------------------------------------------.
+###########################
+#### Cartopy utilities ####
+###########################
+
+
+def remove_bottom_gridlabels(ax):
+    gridliners = [a for a in ax.artists if isinstance(a, Gridliner)]
+    for gl in gridliners:
+        gl.bottom_labels = False
+
+
+def remove_left_gridlabels(ax):
+    gridliners = [a for a in ax.artists if isinstance(a, Gridliner)]
+    for gl in gridliners:
+        gl.left_labels = False
+
+
+####--------------------------------------------------------------------------.
 ########################
 #### Plot utilities ####
 ########################
@@ -525,7 +544,7 @@ def _sanitize_cartopy_plot_kwargs(plot_kwargs):
     if cmap is not None:
         bad = cmap.get_bad()
         bad[3] = 0  # enforce to 0 (transparent)
-        cmap.set_bad(bad)
+        cmap.set_extremes(bad=bad)
         plot_kwargs["cmap"] = cmap
     return plot_kwargs
 
@@ -637,6 +656,7 @@ def plot_cartopy_pcolormesh(
     y,
     add_colorbar=True,
     add_swath_lines=True,
+    rasterized=True,
     plot_kwargs=None,
     cbar_kwargs=None,
 ):
@@ -694,6 +714,7 @@ def plot_cartopy_pcolormesh(
         lat,
         arr,
         transform=ccrs.PlateCarree(),
+        rasterized=rasterized,
         **plot_kwargs,
     )
     # Add swath lines

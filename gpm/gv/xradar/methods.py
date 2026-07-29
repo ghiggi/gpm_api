@@ -11,6 +11,7 @@ from gpm.utils.area import (
 )
 from gpm.utils.geospatial import merge_extents
 from gpm.utils.remapping import reproject_coords
+from gpm.visualization.plot import plot_cartopy_pcolormesh
 
 
 def resolution_at_range(xr_obj, azimuth_beamwidth, elevation_beamwidth):
@@ -218,7 +219,7 @@ def get_maximum_horizontal_distance(xr_obj):
     """Return the horizontal distance from the last gate."""
     # TODO: currently distance to last gate centroid.
     ds_georeferenced = xr_obj.isel(range=slice(-2, None)).xradar.georeference()
-    return np.maximum(ds_georeferenced["x"].max(), ds_georeferenced["y"].max()).item()
+    return np.maximum(ds_georeferenced["x"].max().to_numpy(), ds_georeferenced["y"].max()).to_numpy()
 
 
 def get_maximum_range_distance(xr_obj):
@@ -283,14 +284,6 @@ def plot_range_distance(
     return p
 
 
-def _xradar_georeference(xr_obj):
-    # FIXME: in xradar for DataArray ! Use 'crs_wkt' in ds.coords
-    if isinstance(xr_obj, xr.DataArray):
-        name = xr_obj.name
-        return xr_obj.to_dataset(name=name).xradar.georeference()[name]
-    return xr_obj.xradar.georeference()
-
-
 def _xradar_get_crs(xr_obj):
     # FIXME: in xradar for DataArray ! Use 'crs_wkt' in ds.coords
     if isinstance(xr_obj, xr.DataArray):
@@ -299,8 +292,9 @@ def _xradar_get_crs(xr_obj):
 
 
 def _add_lon_lat_coords(xr_obj):
+    """Add longitude and latitude coordinates to the xradar dataset."""
     # Georeference the data on a azimuthal_equidistant projection centered on the radar
-    xr_obj = _xradar_georeference(xr_obj)
+    xr_obj = xr_obj.xradar.georeference()
 
     # Get the GR CRS
     crs_gr = xr_obj.xradar_dev.pyproj_crs
@@ -326,9 +320,12 @@ def plot_map(
     add_background=True,
     add_gridlines=True,
     add_labels=True,
+    rasterized=True,
     fig_kwargs=None,
     subplot_kwargs=None,
     cbar_kwargs=None,
+    extent=None,
+    use_xarray_plot=False,
     **plot_kwargs,
 ):
     import gpm
@@ -361,19 +358,38 @@ def plot_map(
         user_cbar_kwargs=cbar_kwargs,
     )
     # Display variable with cartopy
-    p = da.plot(
-        ax=ax,
-        x=x,
-        y=y,
-        add_colorbar=False,
-        # cbar_kwargs=cbar_kwargs,
-        **plot_kwargs,
-    )
+    # - This allow RGB !
+    # --> Except x and y to be lon and lat values
+    if not use_xarray_plot:
+        p = plot_cartopy_pcolormesh(
+            ax=ax,
+            da=da,
+            x=x,
+            y=y,
+            rasterized=rasterized,
+            add_colorbar=add_colorbar,
+            add_swath_lines=False,
+            plot_kwargs=plot_kwargs,
+            cbar_kwargs=cbar_kwargs,
+        )
+    else:  # For when x and y are not longitudes and latitudes
+        p = da.plot(
+            ax=ax,
+            x=x,
+            y=y,
+            add_colorbar=False,
+            rasterized=rasterized,
+            # cbar_kwargs=cbar_kwargs,
+            **plot_kwargs,
+        )
+        # Add colorbar
+        if add_colorbar:
+            _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
+
     # Remove title
     ax.set_title("")
 
-    # Add colorbar
-    if add_colorbar:
-        _ = plot_colorbar(p=p, ax=ax, **cbar_kwargs)
-
+    # Set extent
+    if extent is not None:
+        ax.set_extent(extent, crs=ccrs.PlateCarree())
     return p
