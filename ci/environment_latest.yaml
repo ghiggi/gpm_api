@@ -9,8 +9,9 @@ dependencies:
   - donfig
   - h5py
   - jupyter
-  - matplotlib>=3.10.0,<3.11.0
+  - matplotlib
   - netcdf4
+  - numpy
   - polars
   - pyarrow
   - pycolorbar
