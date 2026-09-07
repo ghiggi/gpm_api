@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains the routine for SR/GR validation."""
+
 import warnings
 from collections.abc import Iterable
 

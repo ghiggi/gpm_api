@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains tools for quadmesh/footprints computations."""
+
 # -----------------------------------------------------------------.
 # API
 # get_quadmesh_centroids # gpm.quadmesh_centroids(crs=None)

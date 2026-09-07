@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to read a GPM granule into a DataTree object."""
+
 import os
 
 import xarray as xr

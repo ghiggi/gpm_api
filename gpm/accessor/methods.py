@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module defines GPM-API xarray accessors."""
+
 import functools
 import importlib
 import inspect

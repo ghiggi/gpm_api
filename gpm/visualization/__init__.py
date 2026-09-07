@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This directory contains the GPM-API data visualization tools."""
+
 from pycolorbar import plot_colorbar
 
 from gpm.visualization.plot import (
