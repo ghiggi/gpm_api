@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the bucket I/O utilities."""
+
 import os
 
 from gpm.bucket.io import (
