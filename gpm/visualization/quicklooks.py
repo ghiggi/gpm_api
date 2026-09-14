@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains utility for generating quicklooks."""
+
 import numpy as np
 import xarray as xr
 

@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains basic functions for GPM-API data visualization."""
+
 import inspect
 import warnings
 

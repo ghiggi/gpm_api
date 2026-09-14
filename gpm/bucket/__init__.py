@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This directory defines the GPM-API geographic binning toolbox."""
+
 import importlib
 
 if not importlib.util.find_spec("pyarrow"):
