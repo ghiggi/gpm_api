@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module provides PMW utilities."""
+
 import functools
 import os
 import re

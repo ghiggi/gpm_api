@@ -26,7 +26,6 @@
 # -----------------------------------------------------------------------------.
 """This module test the product info routines."""
 
-
 import pytest
 
 from gpm.io.products import (

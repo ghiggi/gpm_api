@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to search files and directories into the local machine."""
+
 import concurrent
 import fnmatch
 import glob
