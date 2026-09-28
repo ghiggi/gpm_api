@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions for geospatial processing."""
+
 import difflib
 import os
 from collections import namedtuple

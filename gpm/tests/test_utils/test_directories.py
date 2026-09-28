@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the directories/files utilities."""
+
 import os
 
 import pytest
