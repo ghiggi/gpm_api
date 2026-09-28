@@ -26,7 +26,6 @@
 # -----------------------------------------------------------------------------.
 """This module provide utility functions used in the unit tests."""
 
-
 import numpy as np
 import xarray as xr
 

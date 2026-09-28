@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to apply the products decoding routines."""
+
 import importlib
 
 from gpm.io.products import available_products
