@@ -321,4 +321,3 @@ class TestGESDISCDownload:
                 storage="GES_DISC",
                 transfer_tool="WGET",
             )
-

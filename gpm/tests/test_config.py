@@ -162,4 +162,3 @@ def test_get_earthdata_bearer_token(monkeypatch):
     monkeypatch.delenv("EARTH_DATA_BEARER_TOKEN", raising=False)
     with gpm.config.set({"earthdata_bearer_token": "config_token"}):  # nosec
         assert get_earthdata_bearer_token() == "config_token"  # nosec
-

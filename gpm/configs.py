@@ -238,4 +238,3 @@ def get_earthdata_bearer_token():
         except Exception:
             token = None
     return token
-
