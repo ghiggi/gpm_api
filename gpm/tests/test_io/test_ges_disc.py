@@ -26,10 +26,14 @@
 # -----------------------------------------------------------------------------.
 """This module test the GES DISC file search routines."""
 import datetime
+import os
+import platform
 
 import pytest
 from pytest_mock.plugin import MockerFixture
 
+import gpm
+from gpm.io import download as dl
 from gpm.io import ges_disc
 
 
@@ -182,3 +186,139 @@ class TestGESDISCFileList:
 
         captured = capsys.readouterr()
         assert captured.out == "", "No output expected when verbose is False"
+
+
+class TestGESDISCDownload:
+    """Test GES DISC download command constructors and bearer token logic."""
+
+    def test_construct_curl_ges_disc_cmd(
+        self,
+        tmp_path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test curl GES DISC command constructor with and without Bearer token."""
+        urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
+        remote_filepath = "https://gpm1.gesdisc.eosdis.nasa.gov/data/test.HDF5"
+        local_filepath = str(tmp_path / "test.HDF5")
+
+        # 1. Test without BEARER token
+        monkeypatch.delenv("EARTH_DATA_BEARER_TOKEN", raising=False)
+        with gpm.config.set({"earthdata_bearer_token": None}):  # nosec
+            cmd = dl.curl_ges_disc_cmd(remote_filepath=remote_filepath, local_filepath=local_filepath)
+            expected = (
+                f"curl -n -c '{urs_cookies_path}' -b '{urs_cookies_path}' -L "
+                f"--connect-timeout 20 --retry 5 --retry-delay 10 --url {remote_filepath} -o '{local_filepath}'"
+            )
+            assert cmd == expected  # nosec
+
+        # 2. Test with BEARER token
+        monkeypatch.setenv("EARTH_DATA_BEARER_TOKEN", "test_bearer_token")
+        cmd = dl.curl_ges_disc_cmd(remote_filepath=remote_filepath, local_filepath=local_filepath)
+        expected = (
+            f"curl --header 'Authorization: Bearer test_bearer_token' -c '{urs_cookies_path}' "
+            f"-b '{urs_cookies_path}' -L --connect-timeout 20 --retry 5 --retry-delay 10 "
+            f"--url {remote_filepath} -o '{local_filepath}'"
+        )
+        assert cmd == expected  # nosec
+
+    def test_construct_wget_ges_disc_cmd(
+        self,
+        tmp_path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test wget GES DISC command constructor with and without Bearer token."""
+        urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
+        remote_filepath = "https://gpm1.gesdisc.eosdis.nasa.gov/data/test.HDF5"
+        local_filepath = str(tmp_path / "test.HDF5")
+
+        # 1. Test without BEARER token
+        monkeypatch.delenv("EARTH_DATA_BEARER_TOKEN", raising=False)
+        with gpm.config.set({"earthdata_bearer_token": None}):  # nosec
+            cmd = dl.wget_ges_disc_cmd(
+                remote_filepath=remote_filepath,
+                local_filepath=local_filepath,
+                username="test_username_earthdata",
+            )
+            if platform.system() == "Windows":
+                expected = (
+                    f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
+                    f"--keep-session-cookies -c --read-timeout=10 --tries=5 -nH -np --content-disposition "
+                    f"--user='test_username_earthdata' --ask-password {remote_filepath} -O '{local_filepath}'"
+                )
+            else:
+                expected = (
+                    f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
+                    f"--keep-session-cookies -c --read-timeout=10 --tries=5 -nH -np --content-disposition "
+                    f"{remote_filepath} -O '{local_filepath}'"
+                )
+            assert cmd == expected  # nosec
+
+        # 2. Test with BEARER token
+        monkeypatch.setenv("EARTH_DATA_BEARER_TOKEN", "test_bearer_token")
+        cmd = dl.wget_ges_disc_cmd(
+            remote_filepath=remote_filepath,
+            local_filepath=local_filepath,
+            username="test_username_earthdata",
+        )
+        expected = (
+            f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
+            f"--keep-session-cookies --header='Authorization: Bearer test_bearer_token' "
+            f"-c --read-timeout=10 --tries=5 -nH -np --content-disposition "
+            f"{remote_filepath} -O '{local_filepath}'"
+        )
+        assert cmd == expected  # nosec
+
+    def test_get_ges_disc_url_content_bearer_token(
+        self,
+        mocker: MockerFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test _get_ges_disc_url_content with and without EARTH_DATA_BEARER_TOKEN."""
+        mock_popen = mocker.patch("subprocess.Popen")
+        mock_process = mocker.MagicMock()
+        mock_process.communicate.return_value = (b"some html content", b"")
+        mock_popen.return_value = mock_process
+
+        # 1. Without token
+        monkeypatch.delenv("EARTH_DATA_BEARER_TOKEN", raising=False)
+        with gpm.config.set({"earthdata_bearer_token": None}):  # nosec
+            ges_disc._get_ges_disc_url_content("https://example.com/data")
+            assert mock_popen.call_args[0][0] == ["curl", "-L", "https://example.com/data"]  # nosec
+
+        # 2. With token
+        monkeypatch.setenv("EARTH_DATA_BEARER_TOKEN", "my_token")
+        ges_disc._get_ges_disc_url_content("https://example.com/data")
+        assert mock_popen.call_args[0][0] == [  # nosec
+            "curl",
+            "--header",
+            "Authorization: Bearer my_token",
+            "-L",
+            "https://example.com/data",
+        ]
+
+    def test_download_files_with_bearer_token(
+        self,
+        tmp_path,
+        mocker: MockerFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test _download_files with GES_DISC using BEARER token without username/password."""
+        mocker.patch.object(dl, "run", autospec=True, return_value=None)
+        monkeypatch.setenv("EARTH_DATA_BEARER_TOKEN", "test_bearer_token")
+
+        remote_filepath = "https://gpm1.gesdisc.eosdis.nasa.gov/data/test.HDF5"
+        local_filepath = str(tmp_path / "test.HDF5")
+        with gpm.config.set({"username_earthdata": None, "password_earthdata": None}):  # nosec
+            dl._download_files(
+                remote_filepaths=[remote_filepath],
+                local_filepaths=[local_filepath],
+                storage="GES_DISC",
+                transfer_tool="CURL",
+            )
+            dl._download_files(
+                remote_filepaths=[remote_filepath],
+                local_filepaths=[local_filepath],
+                storage="GES_DISC",
+                transfer_tool="WGET",
+            )
+
