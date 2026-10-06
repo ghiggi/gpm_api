@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests quadmesh computations."""
+
 import dask
 import dask.array as da
 import numpy as np

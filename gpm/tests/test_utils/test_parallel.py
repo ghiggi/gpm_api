@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the parallel utilities."""
+
 import dask
 import numpy as np
 import pytest

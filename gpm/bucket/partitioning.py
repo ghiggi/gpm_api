@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module implements Spatial Partitioning classes."""
+
 import os
 from functools import reduce, wraps
 
