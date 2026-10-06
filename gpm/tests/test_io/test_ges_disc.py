@@ -231,42 +231,53 @@ class TestGESDISCDownload:
         remote_filepath = "https://gpm1.gesdisc.eosdis.nasa.gov/data/test.HDF5"
         local_filepath = str(tmp_path / "test.HDF5")
 
-        # 1. Test without BEARER token
+        # 1. Test without BEARER token on Linux
         monkeypatch.delenv("EARTH_DATA_BEARER_TOKEN", raising=False)
+        monkeypatch.setattr(platform, "system", lambda: "Linux")
         with gpm.config.set({"earthdata_bearer_token": None}):  # nosec
             cmd = dl.wget_ges_disc_cmd(
                 remote_filepath=remote_filepath,
                 local_filepath=local_filepath,
                 username="test_username_earthdata",
             )
-            if platform.system() == "Windows":
-                expected = (
-                    f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
-                    f"--keep-session-cookies -c --read-timeout=10 --tries=5 -nH -np --content-disposition "
-                    f"--user='test_username_earthdata' --ask-password {remote_filepath} -O '{local_filepath}'"
-                )
-            else:
-                expected = (
-                    f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
-                    f"--keep-session-cookies -c --read-timeout=10 --tries=5 -nH -np --content-disposition "
-                    f"{remote_filepath} -O '{local_filepath}'"
-                )
+            expected = (
+                f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
+                f"--keep-session-cookies -c --read-timeout=10 --tries=5 -nH -np --content-disposition "
+                f"{remote_filepath} -O '{local_filepath}'"
+            )
             assert cmd == expected  # nosec
 
-        # 2. Test with BEARER token
+        # 1b. Test without BEARER token on Windows
+        monkeypatch.setattr(platform, "system", lambda: "Windows")
+        with gpm.config.set({"earthdata_bearer_token": None}):  # nosec
+            cmd = dl.wget_ges_disc_cmd(
+                remote_filepath=remote_filepath,
+                local_filepath=local_filepath,
+                username="test_username_earthdata",
+            )
+            expected = (
+                f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
+                f"--keep-session-cookies -c --read-timeout=10 --tries=5 -nH -np --content-disposition "
+                f"--user='test_username_earthdata' --ask-password {remote_filepath} -O '{local_filepath}'"
+            )
+            assert cmd == expected  # nosec
+
+        # 2. Test with BEARER token (on both Linux and Windows)
         monkeypatch.setenv("EARTH_DATA_BEARER_TOKEN", "test_bearer_token")
-        cmd = dl.wget_ges_disc_cmd(
-            remote_filepath=remote_filepath,
-            local_filepath=local_filepath,
-            username="test_username_earthdata",
-        )
-        expected = (
-            f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
-            f"--keep-session-cookies --header='Authorization: Bearer test_bearer_token' "
-            f"-c --read-timeout=10 --tries=5 -nH -np --content-disposition "
-            f"{remote_filepath} -O '{local_filepath}'"
-        )
-        assert cmd == expected  # nosec
+        for os_name in ["Linux", "Windows"]:
+            monkeypatch.setattr(platform, "system", lambda name=os_name: name)
+            cmd = dl.wget_ges_disc_cmd(
+                remote_filepath=remote_filepath,
+                local_filepath=local_filepath,
+                username="test_username_earthdata",
+            )
+            expected = (
+                f"wget --load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' "
+                f"--keep-session-cookies --header='Authorization: Bearer test_bearer_token' "
+                f"-c --read-timeout=10 --tries=5 -nH -np --content-disposition "
+                f"{remote_filepath} -O '{local_filepath}'"
+            )
+            assert cmd == expected  # nosec
 
     def test_get_ges_disc_url_content_bearer_token(
         self,
