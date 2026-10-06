@@ -225,3 +225,13 @@ def get_username_earthdata():
 def get_password_earthdata():
     """Return the GPM-API EarthData password."""
     return _get_config_key(key="password_earthdata")
+
+
+def get_earthdata_bearer_token():
+    """Return the GPM-API EarthData Bearer Token."""
+    token = os.environ.get("EARTH_DATA_BEARER_TOKEN", None)
+    if not token:
+        import gpm
+
+        token = gpm.config.get("earthdata_bearer_token", None)
+    return token

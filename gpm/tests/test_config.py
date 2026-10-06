@@ -142,3 +142,23 @@ def test_get_argument_value(key_value):
     # Check returns the value specified in the donfig file
     gpm.config.set({key: value})
     assert function() == value
+
+
+def test_get_earthdata_bearer_token(monkeypatch):
+    """Test get_earthdata_bearer_token function."""
+    import gpm
+    from gpm.configs import get_earthdata_bearer_token
+
+    # 1. When not set, returns None
+    monkeypatch.delenv("EARTH_DATA_BEARER_TOKEN", raising=False)
+    with gpm.config.set({"earthdata_bearer_token": None}):  # nosec
+        assert get_earthdata_bearer_token() is None  # nosec
+
+    # 2. When set via environment variable
+    monkeypatch.setenv("EARTH_DATA_BEARER_TOKEN", "env_token")
+    assert get_earthdata_bearer_token() == "env_token"  # nosec
+
+    # 3. When set via gpm.config
+    monkeypatch.delenv("EARTH_DATA_BEARER_TOKEN", raising=False)
+    with gpm.config.set({"earthdata_bearer_token": "config_token"}):  # nosec
+        assert get_earthdata_bearer_token() == "config_token"  # nosec
