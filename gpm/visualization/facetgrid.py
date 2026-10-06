@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains the FacetGrid classes."""
+
 import itertools
 import warnings
 from abc import ABC, abstractmethod

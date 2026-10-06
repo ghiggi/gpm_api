@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module tests the dataframe utilities functions."""
+
 import numpy as np
 import pytest
 
