@@ -42,6 +42,7 @@ from dateutil.relativedelta import relativedelta
 from packaging.version import Version
 
 from gpm.configs import (
+    get_earthdata_bearer_token,
     get_password_earthdata,
     get_password_pps,
     get_username_earthdata,
@@ -337,12 +338,18 @@ def curl_pps_cmd(remote_filepath, local_filepath, username, password):
     return cmd
 
 
-def curl_ges_disc_cmd(remote_filepath, local_filepath, username="dummy", password="dummy"):  # noqa
+def curl_ges_disc_cmd(remote_filepath, local_filepath, username="", password=None):  # noqa # nosec B107
     """CURL command to download data from GES DISC."""
     urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
 
     # - Define authentication settings
-    auth = f"-n -c '{urs_cookies_path}' -b '{urs_cookies_path}' -L"
+    token = get_earthdata_bearer_token()
+    if token:
+        # Use Bearer Token Authorization header if provided (#60)
+        auth = f"--header 'Authorization: Bearer {token}' -c '{urs_cookies_path}' -b '{urs_cookies_path}' -L"
+    else:
+        # Rely on ~/.netrc credentials
+        auth = f"-n -c '{urs_cookies_path}' -b '{urs_cookies_path}' -L"
     # - Define options
     options = "--connect-timeout 20 --retry 5 --retry-delay 10"
     # - Define command
@@ -368,13 +375,25 @@ def wget_pps_cmd(remote_filepath, local_filepath, username, password):
     return cmd
 
 
-def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password="dummy"):  # noqa
+def wget_ges_disc_cmd(remote_filepath, local_filepath, username="", password=None):  # noqa # nosec B107
     """WGET command to download data from GES DISC."""
     # Define path to EarthData urs_cookies
     urs_cookies_path = os.path.join(os.path.expanduser("~"), ".urs_cookies")
 
+    token = get_earthdata_bearer_token()
+
     # Define authentication settings
-    auth = f"--load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' --keep-session-cookies"
+    if token:
+        # Use Bearer Token Authorization header if provided (#60)
+        auth = (
+            f"--load-cookies '{urs_cookies_path}' "
+            f"--save-cookies '{urs_cookies_path}' "
+            f"--keep-session-cookies "
+            f"--header='Authorization: Bearer {token}'"
+        )
+    else:
+        # Rely on ~/.netrc credentials
+        auth = f"--load-cookies '{urs_cookies_path}' --save-cookies '{urs_cookies_path}' --keep-session-cookies"
 
     # Define wget options
     options = "-c --read-timeout=10 --tries=5 -nH -np --content-disposition"
@@ -383,7 +402,8 @@ def wget_ges_disc_cmd(remote_filepath, local_filepath, username, password="dummy
     os_name = platform.system()
 
     # Define command
-    if os_name == "Windows":
+    # On Windows, omit --ask-password if bearer token is used (#60)
+    if os_name == "Windows" and not token:
         window_options = f"--user='{username}' --ask-password"
         cmd = f"wget {auth} {options} {window_options} {remote_filepath} -O '{local_filepath}'"
     else:  # os_name in ["Linux", "Darwin"]:  # Darwin is MacOS
@@ -411,6 +431,9 @@ def _get_storage_username_password(storage):
         username = get_username_pps()
         password = get_password_pps()
     else:
+        # For GES DISC, if an EarthData Bearer Token is available, username and password are not required (#60)
+        if get_earthdata_bearer_token():
+            return "dummy", "dummy"
         username = get_username_earthdata()
         password = get_password_earthdata()
     return username, password

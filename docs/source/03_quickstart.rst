@@ -21,6 +21,9 @@ instructions available at the following `link <https://disc.gsfc.nasa.gov/earthd
     refrain from including single quotes ('), double quotes ("), blank spaces, or backslashes (\\)
     in both username and password.
 
+    Alternatively, you can provide an EarthData Bearer Token via the ``EARTH_DATA_BEARER_TOKEN``
+    environment variable instead of using username and password.
+
 
 Register to the NASA PPS
 ---------------------------

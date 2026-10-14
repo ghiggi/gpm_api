@@ -31,6 +31,7 @@ import re
 import shlex
 import subprocess
 
+from gpm.configs import get_earthdata_bearer_token
 from gpm.io.products import get_product_info, is_trmm_product
 
 ###---------------------------------------------------------------------------.
@@ -41,7 +42,8 @@ from gpm.io.products import get_product_info, is_trmm_product
 
 def _get_ges_disc_url_content(url):
     # cmd = f"wget -O - {url}"
-    cmd = f"curl -L {url}"
+    token = get_earthdata_bearer_token()
+    cmd = f"curl --header 'Authorization: Bearer {token}' -L {url}" if token else f"curl -L {url}"
     list_cmd = shlex.split(cmd)
     process = subprocess.Popen(list_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = process.communicate()[0].decode()
