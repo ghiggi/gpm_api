@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the data integrity checks."""
+
 import datetime
 import os
 

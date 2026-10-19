@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to check the GPM-API arguments."""
+
 import datetime
 import os
 import subprocess
