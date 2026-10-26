@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to parse GPM granule attributes."""
+
 import ast
 
 import numpy as np
