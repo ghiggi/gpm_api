@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the PMW utilities."""
+
 import numpy as np
 import pytest
 
