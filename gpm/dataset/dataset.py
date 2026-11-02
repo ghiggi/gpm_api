@@ -43,6 +43,7 @@ from gpm.io.checks import (
     check_variables,
 )
 from gpm.io.find import find_filepaths
+from gpm.io.info import _ensure_list_of_filepaths
 from gpm.utils.checks import has_missing_granules
 from gpm.utils.warnings import GPM_Warning
 
@@ -89,7 +90,14 @@ def _try_open_granule(filepath, scan_modes, decode_cf, variables, groups, prefix
     return dict_ds_scan_modes, dt_closer
 
 
-def _get_scan_modes_datasets_and_closers(filepaths, parallel, scan_modes, decode_cf=False, **open_kwargs):
+def _get_scan_modes_datasets_and_closers(
+    filepaths,
+    parallel,
+    scan_modes,
+    decode_cf=False,
+    preprocess=None,
+    **open_kwargs,
+):
     """Open the granule in parallel with dask delayed."""
     # Define functions to open files
     if parallel:
@@ -134,6 +142,11 @@ def _get_scan_modes_datasets_and_closers(filepaths, parallel, scan_modes, decode
     dict_scan_modes_datasets = {
         scan_mode: [dict_scan_modes[scan_mode] for dict_scan_modes in list_dict_scan_modes] for scan_mode in scan_modes
     }
+    if preprocess is not None:
+        dict_scan_modes_datasets = {
+            scan_mode: [preprocess(ds) for ds in list_datasets]
+            for scan_mode, list_datasets in dict_scan_modes_datasets.items()
+        }
     # Define list of closers for each scan_mode
     dict_scan_modes_closers = {
         scan_mode: [dict_scan_modes[scan_mode]._close for dict_scan_modes in list_dict_scan_modes]
@@ -167,6 +180,7 @@ def open_dataset(
     prefix_group=False,
     verbose=False,
     base_dir=None,
+    preprocess=None,
     **kwargs,
 ):
     """Lazily map HDF5 data into xarray.Dataset with relevant GPM data and attributes.
@@ -236,6 +250,8 @@ def open_dataset(
         If ``parallel=True``, ``'chunks'`` can not be ``None``.
         The underlying data must be :py:class:`dask.array.Array`.
         The default is ``False``.
+    preprocess : callable, optional
+        Function applied to each dataset before concatenation.
     **kwargs : dict
         Additional keyword arguments passed to :py:func:`~xarray.open_dataset` for each group.
 
@@ -291,6 +307,7 @@ def open_dataset(
         groups=groups,
         prefix_group=prefix_group,
         chunks=chunks,
+        preprocess=preprocess,
         **kwargs,
     )
     ds = dict_scan_modes[scan_mode]
@@ -342,6 +359,7 @@ def open_datatree(
     prefix_group=False,
     verbose=False,
     base_dir=None,
+    preprocess=None,
     **kwargs,
 ):
     """Lazily map HDF5 data into xarray.DataTree objects with relevant GPM data and attributes.
@@ -412,6 +430,8 @@ def open_datatree(
         If ``parallel=True``, ``'chunks'`` can not be ``None``.
         The underlying data must be :py:class:`dask.array.Array`.
         The default is ``False``.
+    preprocess : callable, optional
+        Function applied to each dataset before concatenation.
     **kwargs : dict
         Additional keyword arguments passed to :py:func:`~xarray.open_datatree` for each group.
 
@@ -464,6 +484,7 @@ def open_datatree(
         groups=groups,
         prefix_group=prefix_group,
         chunks=chunks,
+        preprocess=preprocess,
         **kwargs,
     )
 
@@ -534,15 +555,28 @@ def open_files(
     end_time=None,
     chunks=-1,
     decode_cf=True,
+    engine="netcdf4",
+    preprocess=None,
     **kwargs,
 ):
+    """Open and concatenate GPM files from paths or streaming file-like objects.
 
+    File-like objects, such as those returned by ``earthaccess.open``, remain
+    open until the returned DataTree is closed. Streaming inputs cannot be
+    opened with ``parallel=True``.
+
+    ``engine`` is passed to :func:`xarray.open_datatree`; the default is
+    ``"netcdf4"``.
+
+    ``preprocess`` is applied to each dataset before concatenation.
+    """
     ##------------------------------------------------------------------------.
     # Ensure filepaths is a list
-    if isinstance(filepaths, str):
-        filepaths = [filepaths]
+    filepaths = _ensure_list_of_filepaths(filepaths)
     if len(filepaths) == 0:
         raise ValueError("No filepaths provided.")
+    if parallel and any(hasattr(filepath, "read") for filepath in filepaths):
+        raise ValueError("parallel=True is not supported with streaming file-like inputs.")
 
     ##------------------------------------------------------------------------.
     dict_scan_modes, list_dt_closers = _get_scan_modes_datasets_and_closers(
@@ -555,6 +589,8 @@ def open_files(
         groups=groups,
         prefix_group=prefix_group,
         chunks=chunks,
+        engine=engine,
+        preprocess=preprocess,
         **kwargs,
     )
     if len(dict_scan_modes) == 0:

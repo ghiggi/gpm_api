@@ -34,9 +34,9 @@ from collections import defaultdict
 import numpy as np
 
 ####---------------------------------------------------------------------------
-########################
+###########################
 #### filename PATTERNS ####
-########################
+###########################
 # General pattern for all GPM products
 NASA_RS_filename_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{granule_id}.{version}.{data_format}"  # noqa
 NASA_NRT_filename_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorithm:s}.{start_date:%Y%m%d}-S{start_time:%H%M%S}-E{end_time:%H%M%S}.{version}.{data_format}"  # noqa
@@ -44,6 +44,17 @@ NASA_NRT_filename_PATTERN = "{product_level:s}.{satellite:s}.{sensor:s}.{algorit
 # General pattern for all JAXA products
 # - Pattern for 1B-Ku and 1B-Ka
 JAXA_filename_PATTERN = "{mission_id}_{sensor:s}_{start_date_time:%y%m%d%H%M}_{end_time:%H%M}_{granule_id}_{product_level:2s}{product_type}_{algorithm:s}_{version}.{data_format}"  # noqa
+
+
+def _get_filepath_identifier(filepath):
+    """Return a string identifier for a path-like or file-like source."""
+    if isinstance(filepath, (str, os.PathLike)):
+        return os.fspath(filepath)
+    for attribute in ("name", "url", "path"):
+        identifier = getattr(filepath, attribute, None)
+        if isinstance(identifier, (str, os.PathLike)):
+            return os.fspath(identifier)
+    raise TypeError("The file source must be a path-like or file-like object with a name, url, or path.")
 
 
 ####---------------------------------------------------------------------------.
@@ -151,8 +162,7 @@ def _get_info_from_filename(filename):
 
 def get_info_from_filepath(filepath):
     """Retrieve file information dictionary from filepath."""
-    if not isinstance(filepath, str):
-        raise TypeError("'filepath' must be a string.")
+    filepath = _get_filepath_identifier(filepath)
     filename = os.path.basename(filepath)
     return _get_info_from_filename(filename)
 
@@ -163,10 +173,16 @@ def get_key_from_filepath(filepath, key):
 
 
 def get_key_from_filepaths(filepaths, key):
-    """Extract specific key information from a list of filepaths."""
-    if isinstance(filepaths, str):
-        filepaths = [filepaths]
+    """Extract specific key information from a list of filepaths or file-like sources."""
+    filepaths = _ensure_list_of_filepaths(filepaths)
     return [get_key_from_filepath(filepath, key=key) for filepath in filepaths]
+
+
+def _ensure_list_of_filepaths(filepaths):
+    """Ensure that the input is a list of filepaths."""
+    if isinstance(filepaths, (str, os.PathLike)) or hasattr(filepaths, "read"):
+        filepaths = [filepaths]
+    return filepaths
 
 
 ####--------------------------------------------------------------------------.
@@ -179,6 +195,7 @@ def get_product_from_filepath(filepath):
     """Infer granules ``product`` from file path."""
     from gpm.io.products import get_products_pattern_dict
 
+    filepath = _get_filepath_identifier(filepath)
     patterns_dict = get_products_pattern_dict()
     for product, pattern in patterns_dict.items():
         if re.search(pattern, filepath):
@@ -188,8 +205,7 @@ def get_product_from_filepath(filepath):
 
 def get_product_from_filepaths(filepaths):
     """Infer granules ``product`` from file paths."""
-    if isinstance(filepaths, str):
-        filepaths = [filepaths]
+    filepaths = _ensure_list_of_filepaths(filepaths)
     return [get_product_from_filepath(filepath) for filepath in filepaths]
 
 
@@ -203,8 +219,7 @@ def get_version_from_filepath(filepath, integer=True):
 
 def get_version_from_filepaths(filepaths, integer=True):
     """Infer granules ``version`` from file paths."""
-    if isinstance(filepaths, str):
-        filepaths = [filepaths]
+    filepaths = _ensure_list_of_filepaths(filepaths)
     return [get_version_from_filepath(filepath, integer=integer) for filepath in filepaths]
 
 

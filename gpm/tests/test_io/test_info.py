@@ -142,6 +142,17 @@ def test_invalid_filepaths():
         get_info_from_filepath(123)
 
 
+def test_file_like_filepath():
+    """Test extracting information from a file-like source."""
+
+    class FileLike:
+        name = "https://data.gesdisc.earthdata.nasa.gov/data/GPM_L3/GPM_3IMERGHH.07/2017/001/3B-HHR.MS.MRG.3IMERG.20170101-S100000-E102959.0600.V07B.HDF5"
+
+    info = get_info_from_filepath(FileLike())
+    assert info["product"] == "IMERG-FR"
+    assert info["version"] == "V07B"
+
+
 def test_check_groups():
     """Test check_groups function."""
     valid_groups = ["product_level", "satellite", "sensor", "year"]

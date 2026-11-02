@@ -26,6 +26,7 @@
 # -----------------------------------------------------------------------------.
 """This module contains functions to read a GPM granule into a DataTree object."""
 import os
+from urllib.parse import urlparse
 
 import xarray as xr
 
@@ -34,7 +35,16 @@ from gpm.dataset.attrs import decode_string
 from gpm.dataset.dimensions import rename_datatree_dimensions
 
 
-def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True, **kwargs):
+def _is_local_filepath(filepath):
+    """Return whether a source is a local filesystem path."""
+    if not isinstance(filepath, (str, os.PathLike)):
+        return False
+    filepath = os.fspath(filepath)
+    parsed = urlparse(filepath)
+    return not parsed.scheme and not parsed.netloc
+
+
+def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=True, engine="netcdf4", **kwargs):
     """Open a GPM HDF5 file into a xarray.DataTree object with intuitive dimensions names.
 
     Parameters
@@ -54,6 +64,8 @@ def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=Tru
         entirely into memory by invoking ``ds.compute()``.
     decode_cf: bool, optional
         Whether to decode the dataset. The default is ``False``.
+    engine : str, optional
+        Xarray backend engine used to open the file. The default is ``"netcdf4"``.
     **kwargs : dict
         Additional keyword arguments passed to :py:func:`~xarray.open_dataset` for each group.
 
@@ -62,10 +74,13 @@ def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=Tru
     xarray.DataTree
 
     """
+    if not _is_local_filepath(filepath):
+        engine = "h5netcdf"
+
     try:
         dt = xr.open_datatree(
             filepath,
-            engine="netcdf4",
+            engine=engine,
             chunks=chunks,
             decode_cf=decode_cf,
             decode_times=False,
@@ -74,7 +89,8 @@ def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=Tru
         closer = dt._close
         check_non_empty_granule(dt, filepath)
     except Exception as e:
-        check_valid_granule(filepath)
+        if isinstance(filepath, (str, os.PathLike)):
+            check_valid_granule(filepath)
         raise ValueError(e)
 
     # Assign dimension names

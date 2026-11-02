@@ -33,7 +33,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from gpm.dataset import conventions, datatree, granule
+from gpm.dataset import conventions, dataset, datatree, granule
 from gpm.dataset.conventions import finalize_dataset
 from gpm.utils.time import ensure_time_validity
 
@@ -123,6 +123,60 @@ def test_open_granule_dataset(monkeypatch):
     assert isinstance(returned_dataset, xr.Dataset)
     assert list(returned_dataset.attrs) == expected_attribute_keys
     assert list(returned_dataset.coords) == expected_coordinate_keys
+
+
+def test_open_raw_datatree_selects_h5netcdf_for_non_local_sources(monkeypatch):
+    """Test that non-local sources use the h5netcdf backend."""
+    captured = {}
+
+    class FileLike:
+        name = "remote-file.HDF5"
+
+    class DataTree:
+        def _close(self):
+            pass
+
+        def set_close(self, closer):
+            self.closer = closer
+
+    def fake_open_datatree(filepath, **kwargs):
+        captured.update(kwargs)
+        return DataTree()
+
+    monkeypatch.setattr(datatree.xr, "open_datatree", fake_open_datatree)
+    monkeypatch.setattr(datatree, "check_non_empty_granule", lambda *args: None)
+    monkeypatch.setattr(datatree, "rename_datatree_dimensions", lambda dt, **kwargs: dt)
+
+    datatree.open_raw_datatree(FileLike(), engine="netcdf4")
+    assert captured["engine"] == "h5netcdf"
+
+
+def test_preprocess_is_applied_before_concatenation(monkeypatch):
+    """Test that preprocess is applied to every input dataset."""
+    datasets = [
+        xr.Dataset({"value": ("along_track", [0])}),
+        xr.Dataset({"value": ("along_track", [1])}),
+    ]
+
+    def fake_open_granule(filepath, **kwargs):
+        return {"scan": datasets[int(filepath)]}, None
+
+    processed = []
+
+    def preprocess(ds):
+        processed.append(ds["value"].item())
+        return ds.assign(value=ds["value"] + 10)
+
+    monkeypatch.setattr(dataset, "_try_open_granule", fake_open_granule)
+    returned, _ = dataset._get_scan_modes_datasets_and_closers(
+        filepaths=[0, 1],
+        parallel=False,
+        scan_modes=["scan"],
+        preprocess=preprocess,
+    )
+
+    assert processed == [0, 1]
+    assert returned["scan"]["value"].to_numpy().tolist() == [10, 11]
 
 
 # Tests for internal functions #################################################
