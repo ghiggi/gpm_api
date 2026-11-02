@@ -38,6 +38,7 @@ filenames = [
     "tutorial_03_SR_GR_Matching.ipynb",
     "tutorial_03_SR_GR_Calibration.ipynb",
     "tutorial_TCPRIMED.ipynb",
+    "tutorial_earthaccess.ipynb",
 ]
 for filename in filenames:
     in_path = os.path.join(root_path, "tutorials", filename)
