@@ -8,6 +8,7 @@ dependencies:
   - distributed
   - donfig
   - h5py
+  - h5netcdf
   - jupyter
   - matplotlib>=3.10.0,<3.11.0
   - netcdf4

@@ -149,6 +149,7 @@ def test_open_raw_datatree_selects_h5netcdf_for_non_local_sources(monkeypatch):
 
     datatree.open_raw_datatree(FileLike(), engine="netcdf4")
     assert captured["engine"] == "h5netcdf"
+    assert captured["phony_dims"] == "access"
 
 
 def test_preprocess_is_applied_before_concatenation(monkeypatch):
@@ -177,6 +178,33 @@ def test_preprocess_is_applied_before_concatenation(monkeypatch):
 
     assert processed == [0, 1]
     assert returned["scan"]["value"].to_numpy().tolist() == [10, 11]
+
+
+def test_try_open_granule_subsets_time_before_concatenation(monkeypatch):
+    """Test that the requested time range is delegated to the granule reader."""
+    captured = {}
+
+    def fake_get_scan_modes_datasets(**kwargs):
+        captured.update(kwargs)
+        return {}, None
+
+    monkeypatch.setattr(dataset, "get_scan_modes_datasets", fake_get_scan_modes_datasets)
+
+    returned, _ = dataset._try_open_granule(
+        filepath="file",
+        scan_modes=["scan"],
+        decode_cf=False,
+        variables=None,
+        groups=None,
+        prefix_group=False,
+        chunks=-1,
+        start_time=None,
+        end_time=None,
+    )
+
+    assert returned == {}
+    assert captured["start_time"] is None
+    assert captured["end_time"] is None
 
 
 # Tests for internal functions #################################################

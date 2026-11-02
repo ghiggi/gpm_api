@@ -69,7 +69,18 @@ def _concat_datasets(l_datasets):
     return ds
 
 
-def _try_open_granule(filepath, scan_modes, decode_cf, variables, groups, prefix_group, chunks, **kwargs):
+def _try_open_granule(
+    filepath,
+    scan_modes,
+    decode_cf,
+    variables,
+    groups,
+    prefix_group,
+    chunks,
+    start_time=None,
+    end_time=None,
+    **kwargs,
+):
     """Try open a granule."""
     try:
         dict_ds_scan_modes, dt_closer = get_scan_modes_datasets(
@@ -80,6 +91,8 @@ def _try_open_granule(filepath, scan_modes, decode_cf, variables, groups, prefix
             decode_cf=decode_cf,
             chunks=chunks,
             prefix_group=prefix_group,
+            start_time=start_time,
+            end_time=end_time,
             **kwargs,
         )
     except Exception as e:
@@ -307,6 +320,8 @@ def open_dataset(
         groups=groups,
         prefix_group=prefix_group,
         chunks=chunks,
+        start_time=start_time,
+        end_time=end_time,
         preprocess=preprocess,
         **kwargs,
     )
@@ -484,6 +499,8 @@ def open_datatree(
         groups=groups,
         prefix_group=prefix_group,
         chunks=chunks,
+        start_time=start_time,
+        end_time=end_time,
         preprocess=preprocess,
         **kwargs,
     )
@@ -589,6 +606,8 @@ def open_files(
         groups=groups,
         prefix_group=prefix_group,
         chunks=chunks,
+        start_time=start_time,
+        end_time=end_time,
         engine=engine,
         preprocess=preprocess,
         **kwargs,

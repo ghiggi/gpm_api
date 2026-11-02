@@ -76,6 +76,8 @@ def open_raw_datatree(filepath, chunks={}, decode_cf=False, use_api_defaults=Tru
     """
     if not _is_local_filepath(filepath):
         engine = "h5netcdf"
+    if engine == "h5netcdf":
+        kwargs["phony_dims"] = "access"  # faster than "sort" ("sort equivalent to netcdf4 behaviour)
 
     try:
         dt = xr.open_datatree(

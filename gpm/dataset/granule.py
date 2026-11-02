@@ -261,10 +261,22 @@ def _get_scan_mode_dataset(
     return ds
 
 
-def get_scan_modes_datasets(filepath, groups, variables, decode_cf, chunks, prefix_group, scan_modes=None, **kwargs):
+def get_scan_modes_datasets(
+    filepath,
+    groups,
+    variables,
+    decode_cf,
+    chunks,
+    prefix_group,
+    scan_modes=None,
+    start_time=None,
+    end_time=None,
+    **kwargs,
+):
     """Return a dictionary with a dataset for each scan mode."""
     from gpm.dataset.datatree import open_raw_datatree
     from gpm.dataset.granule import _get_scan_mode_dataset
+    from gpm.utils.time import subset_by_time
 
     # Open datatree
     dt = open_raw_datatree(filepath=filepath, chunks=chunks, decode_cf=decode_cf, use_api_defaults=True, **kwargs)
@@ -299,6 +311,14 @@ def get_scan_modes_datasets(filepath, groups, variables, decode_cf, chunks, pref
                 variables=variables,
                 prefix_group=prefix_group,
             )
+            if "time_bnds" not in dict_scan_modes[scan_mode] and (start_time is not None or end_time is not None):
+                closer = dict_scan_modes[scan_mode]._close
+                dict_scan_modes[scan_mode] = subset_by_time(
+                    dict_scan_modes[scan_mode],
+                    start_time=start_time,
+                    end_time=end_time,
+                )
+                dict_scan_modes[scan_mode].set_close(closer)
         except Exception as e:
             print(f"Skipping scan mode {scan_mode}: {e}")
 
@@ -326,6 +346,8 @@ def open_granule_dataset(
     decode_cf=True,
     chunks={},
     prefix_group=False,
+    start_time=None,
+    end_time=None,
     **kwargs,
 ):
     """Create a lazy xarray.Dataset with relevant GPM data and attributes for a specific granule.
@@ -396,6 +418,8 @@ def open_granule_dataset(
         decode_cf=False,
         chunks=chunks,
         prefix_group=prefix_group,
+        start_time=start_time,
+        end_time=end_time,
         **kwargs,
     )
     ds = dict_scan_modes[scan_mode]
@@ -424,6 +448,8 @@ def open_granule_datatree(
     decode_cf=True,
     chunks={},
     prefix_group=False,
+    start_time=None,
+    end_time=None,
     **kwargs,
 ):
     """Create a lazy xarray.Dataset with relevant GPM data and attributes for a specific granule.
@@ -494,6 +520,8 @@ def open_granule_datatree(
         decode_cf=False,
         chunks=chunks,
         prefix_group=prefix_group,
+        start_time=start_time,
+        end_time=end_time,
         **kwargs,
     )
 
