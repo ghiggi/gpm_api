@@ -59,6 +59,7 @@ from gpm.io.products import (  # noqa
     available_scan_modes,
     available_sensors,
     available_versions,
+    get_nasa_collection_shortname,
     get_product_end_time,
     get_product_start_time,
 )

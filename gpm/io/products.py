@@ -260,6 +260,11 @@ def get_product_category(product):
     return product_category
 
 
+def get_nasa_collection_shortname(product):
+    """Get the NASA collection short name of a GPM product."""
+    return get_product_info(product).get("short_name", None)
+
+
 def get_product_level(product, full=False):
     """Get the ``product_level`` of a GPM product."""
     # TODO: Add L3 products: i.e  3B-HH3, 3B-DAY
@@ -405,6 +410,7 @@ def get_available_sensors(suffix_with_satellite=False):
 
 
 def available_versions(
+    *,
     satellites=None,
     sensors=None,
     product_types=None,
@@ -458,6 +464,7 @@ def available_versions(
 
 
 def available_products(
+    *,
     satellites=None,
     sensors=None,
     product_categories=None,
@@ -535,6 +542,7 @@ def available_products(
 
 
 def available_product_levels(
+    *,
     satellites=None,
     sensors=None,
     product_categories=None,
@@ -592,6 +600,7 @@ def available_product_levels(
 
 
 def available_product_categories(
+    *,
     satellites=None,
     sensors=None,
     product_types=None,
@@ -645,6 +654,7 @@ def available_product_categories(
 
 
 def available_satellites(
+    *,
     sensors=None,
     product_categories=None,
     product_types=None,
@@ -726,6 +736,7 @@ def available_satellites(
 
 
 def available_sensors(
+    *,
     satellites=None,
     product_categories=None,
     product_types=None,

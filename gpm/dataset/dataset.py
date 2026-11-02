@@ -543,6 +543,7 @@ def open_files(
         filepaths = [filepaths]
     if len(filepaths) == 0:
         raise ValueError("No filepaths provided.")
+
     ##------------------------------------------------------------------------.
     dict_scan_modes, list_dt_closers = _get_scan_modes_datasets_and_closers(
         filepaths=filepaths,

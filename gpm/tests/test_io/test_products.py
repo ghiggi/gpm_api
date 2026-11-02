@@ -39,6 +39,7 @@ from gpm.io.products import (
     available_versions,
     get_info_dict,
     get_info_dict_subset,
+    get_nasa_collection_shortname,
     get_product_category,
     get_product_info,
     get_product_level,
@@ -75,6 +76,17 @@ def test_get_product_info():
 
     # Test return the info dictionary
     assert isinstance(get_product_info("2A-DPR"), dict)
+
+
+def test_get_nasa_collection_shortname():
+    """Test get_nasa_collection_shortname."""
+    assert get_nasa_collection_shortname("2A-DPR") == "GPM_2ADPR"
+    assert get_nasa_collection_shortname("2B-GPM-CSAT") is None
+
+    with pytest.raises(TypeError):
+        get_nasa_collection_shortname(123)
+    with pytest.raises(ValueError):
+        get_nasa_collection_shortname("invalid_product")
 
 
 @pytest.mark.parametrize("full", [True, False])

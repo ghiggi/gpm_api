@@ -132,6 +132,18 @@ class GPM_Base_Accessor:
         return crop_around_valid_data(self._obj, variable=variable)
 
     @auto_wrap_docstring
+    def get_slices_granules(self):
+        from gpm.utils.manipulations import get_slices_granules
+
+        return get_slices_granules(self._obj)
+
+    @auto_wrap_docstring
+    def iter_granules(self):
+        from gpm.utils.manipulations import iter_granules
+
+        return iter_granules(self._obj)
+
+    @auto_wrap_docstring
     def get_crop_slices_by_extent(self, extent):
         from gpm.utils.geospatial import get_crop_slices_by_extent
 

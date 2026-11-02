@@ -26,6 +26,8 @@
 # -----------------------------------------------------------------------------.
 """This module contains functions for manipulating GPM-API Datasets."""
 
+import itertools
+
 import numpy as np
 import xarray as xr
 from xoak import SklearnGeoBallTreeAdapter
@@ -200,6 +202,38 @@ def crop_around_valid_data(xr_obj, variable=None):
 
     # Apply the slice to the original object (Dataset or DataArray)
     return xr_obj.isel(isel_dict, drop=False)
+
+
+def get_slices_granules(xr_obj):
+    """Return slices selecting one granule at a time."""
+    if is_grid(xr_obj):
+        granule_coordinate = "time"
+        granule_dimension = "time"
+    else:
+        granule_coordinate = "gpm_granule_id"
+        granule_dimension = "along_track"
+
+    if granule_coordinate not in xr_obj.coords:
+        raise KeyError(f"The xarray object must contain a '{granule_coordinate}' coordinate.")
+    if granule_dimension not in xr_obj.dims:
+        raise ValueError(f"The xarray object must contain a '{granule_dimension}' dimension.")
+
+    granule_ids = np.asarray(xr_obj[granule_coordinate].values)
+    if granule_ids.ndim != 1 or xr_obj[granule_coordinate].dims != (granule_dimension,):
+        raise ValueError(f"'{granule_coordinate}' must be a one-dimensional '{granule_dimension}' coordinate.")
+    if granule_ids.size == 0:
+        return []
+
+    start_indices = np.flatnonzero(granule_ids[1:] != granule_ids[:-1]) + 1
+    boundaries = np.concatenate(([0], start_indices, [granule_ids.size]))
+    return [slice(start, stop) for start, stop in itertools.pairwise(boundaries)]
+
+
+def iter_granules(xr_obj):
+    """Iterate over xarray object slices containing one granule each."""
+    dimension = "time" if is_grid(xr_obj) else "along_track"
+    for granule_slice in get_slices_granules(xr_obj):
+        yield xr_obj.isel({dimension: granule_slice})
 
 
 ####---------------------------------------------------------------------------.

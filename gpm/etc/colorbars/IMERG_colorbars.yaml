@@ -162,7 +162,7 @@ MWobservationTime:
     vmax: 29
   cbar:
     extend: neither
-    label: PMW observation time lag [$minutes$]
+    label: PMW observation time lag [$min$]
   auxiliary:
     category: [probability, IMERG]
 IMERG_Solid:

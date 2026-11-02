@@ -1,5 +1,6 @@
 ---
 1A-GMI:
+  short_name: GPM_1AGMI
   pattern: 1A.GPM.GMI.*
   sensor: GMI
   satellite: GPM
@@ -18,6 +19,7 @@
   product_level: 1A
   full_product_level: 1A
 1A-TMI:
+  short_name: GPM_1ATMI
   pattern: 1A.TRMM.TMI.*
   sensor: TMI
   satellite: TRMM
@@ -36,6 +38,7 @@
   product_level: 1A
   full_product_level: 1A
 1B-GMI:
+  short_name: GPM_1BGMI
   pattern: 1B.GPM.GMI.*
   sensor: GMI
   satellite: GPM
@@ -54,6 +57,7 @@
   product_level: 1B
   full_product_level: 1B
 1B-Ka:
+  short_name: GPM_PRL1KA
   pattern: GPMCOR_KAR*
   sensor: DPR
   satellite: GPM
@@ -72,6 +76,7 @@
   product_level: 1B
   full_product_level: 1B
 1B-Ku:
+  short_name: GPM_PRL1KU
   pattern: GPMCOR_KUR*
   sensor: DPR
   satellite: GPM
@@ -90,6 +95,7 @@
   product_level: 1B
   full_product_level: 1B
 1B-PR:
+  short_name: GPM_1BPR
   pattern: 1B.TRMM.PR*
   sensor: PR
   satellite: TRMM
@@ -108,6 +114,7 @@
   product_level: 1B
   full_product_level: 1B
 1B-TMI:
+  short_name: GPM_1BTMI
   pattern: 1B.TRMM.TMI.*
   sensor: TMI
   satellite: TRMM
@@ -126,6 +133,7 @@
   product_level: 1B
   full_product_level: 1B
 1C-AMSR2-GCOMW1:
+  short_name: GPM_1CGCOMW1AMSR2
   pattern: 1C.GCOMW1.AMSR2.*
   sensor: AMSR2
   satellite: GCOMW1
@@ -144,6 +152,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-AMSRE-AQUA:
+  short_name: GPM_1CAQUAAMSRE
   pattern: 1C.AQUA.AMSRE.*
   sensor: AMSRE
   satellite: AQUA
@@ -162,6 +171,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-AMSUB-NOAA15:
+  short_name: GPM_1CNOAA15AMSUB
   pattern: 1C.NOAA15.AMSUB.*
   sensor: AMSUB
   satellite: NOAA15
@@ -180,6 +190,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-AMSUB-NOAA16:
+  short_name: GPM_1CNOAA16AMSUB
   pattern: 1C.NOAA16.AMSUB.*
   sensor: AMSUB
   satellite: NOAA16
@@ -198,6 +209,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-AMSUB-NOAA17:
+  short_name: GPM_1CNOAA17AMSUB
   pattern: 1C.NOAA17.AMSUB.*
   sensor: AMSUB
   satellite: NOAA17
@@ -216,6 +228,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-ATMS-NOAA20:
+  short_name: GPM_1CNOAA20ATMS
   pattern: 1C.NOAA20.ATMS.*
   sensor: ATMS
   satellite: NOAA20
@@ -234,6 +247,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-ATMS-NOAA21:
+  short_name: GPM_1CNOAA21ATMS
   pattern: 1C.NOAA21.ATMS.*
   sensor: ATMS
   satellite: NOAA21
@@ -251,6 +265,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-ATMS-NPP:
+  short_name: GPM_1CNPPATMS
   pattern: 1C.NPP.ATMS.*
   sensor: ATMS
   satellite: NPP
@@ -269,6 +284,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-GMI:
+  short_name: GPM_1CGPMGMI
   pattern: 1C.GPM.GMI.*
   sensor: GMI
   satellite: GPM
@@ -287,6 +303,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-GMI-R:
+  short_name: GPM_1CGPMGMI_R
   pattern: 1C-R.GPM.GMI.*
   sensor: GMI
   satellite: GPM
@@ -305,6 +322,7 @@
   product_level: 1C
   full_product_level: 1C-R
 1C-MHS-METOPA:
+  short_name: GPM_1CMETOPAMHS
   pattern: 1C.METOPA.MHS.*
   sensor: MHS
   satellite: METOPA
@@ -323,6 +341,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-MHS-METOPB:
+  short_name: GPM_1CMETOPBMHS
   pattern: 1C.METOPB.MHS.*
   sensor: MHS
   satellite: METOPB
@@ -341,6 +360,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-MHS-METOPC:
+  short_name: GPM_1CMETOPCMHS
   pattern: 1C.METOPC.MHS.*
   sensor: MHS
   satellite: METOPC
@@ -359,6 +379,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-MHS-NOAA18:
+  short_name: GPM_1CNOAA18MHS
   pattern: 1C.NOAA18.MHS.*
   sensor: MHS
   satellite: NOAA18
@@ -377,6 +398,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-MHS-NOAA19:
+  short_name: GPM_1CNOAA19MHS
   pattern: 1C.NOAA19.MHS.*
   sensor: MHS
   satellite: NOAA19
@@ -395,6 +417,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SAPHIR-MT1:
+  short_name: GPM_1CMT1SAPHIR
   pattern: 1C.MT1.SAPHIR.*
   sensor: SAPHIR
   satellite: MT1
@@ -412,6 +435,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F08:
+  short_name: GPM_1CF08SSMI
   pattern: 1C.F08.SSMI.*
   sensor: SSMI
   satellite: F08
@@ -431,6 +455,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F10:
+  short_name: GPM_1CF10SSMI
   pattern: 1C.F10.SSMI.*
   sensor: SSMI
   satellite: F10
@@ -450,6 +475,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F11:
+  short_name: GPM_1CF11SSMI
   pattern: 1C.F11.SSMI.*
   sensor: SSMI
   satellite: F11
@@ -469,6 +495,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F13:
+  short_name: GPM_1CF13SSMI
   pattern: 1C.F13.SSMI.*
   sensor: SSMI
   satellite: F13
@@ -488,6 +515,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F14:
+  short_name: GPM_1CF14SSMI
   pattern: 1C.F14.SSMI.*
   sensor: SSMI
   satellite: F14
@@ -507,6 +535,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMI-F15:
+  short_name: GPM_1CF15SSMI
   pattern: 1C.F15.SSMI.*
   sensor: SSMI
   satellite: F15
@@ -526,6 +555,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMIS-F16:
+  short_name: GPM_1CF16SSMIS
   pattern: 1C.F16.SSMIS.*
   sensor: SSMIS
   satellite: F16
@@ -544,6 +574,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMIS-F17:
+  short_name: GPM_1CF17SSMIS
   pattern: 1C.F17.SSMIS.*
   sensor: SSMIS
   satellite: F17
@@ -562,6 +593,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMIS-F18:
+  short_name: GPM_1CF18SSMIS
   pattern: 1C.F18.SSMIS.*
   sensor: SSMIS
   satellite: F18
@@ -580,6 +612,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-SSMIS-F19:
+  short_name: GPM_1CF19SSMIS
   pattern: 1C.F19.SSMIS.*
   sensor: SSMIS
   satellite: F19
@@ -598,6 +631,7 @@
   product_level: 1C
   full_product_level: 1C
 1C-TMI:
+  short_name: GPM_1CTRMMTMI
   pattern: 1C.TRMM.TMI.*
   sensor: TMI
   satellite: TRMM
@@ -616,6 +650,7 @@
   product_level: 1C
   full_product_level: 1C
 2A-AMSR2-GCOMW1:
+  short_name: GPM_2AGPROFGCOMW1AMSR2
   pattern: 2A.GCOMW1.AMSR2.*
   sensor: AMSR2
   satellite: GCOMW1
@@ -634,6 +669,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-ATMS-NOAA20:
+  short_name: GPM_2AGPROFNOAA20ATMS
   pattern: 2A.NOAA20.ATMS.*
   sensor: ATMS
   satellite: NOAA20
@@ -652,6 +688,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-ATMS-NOAA21:
+  short_name: GPM_2AGPROFNOAA21ATMS
   pattern: 2A.NOAA21.ATMS.*
   sensor: ATMS
   satellite: NOAA21
@@ -669,6 +706,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-ATMS-NPP:
+  short_name: GPM_2AGPROFNPPATMS
   pattern: 2A.NPP.ATMS.*
   sensor: ATMS
   satellite: NPP
@@ -687,6 +725,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-GMI:
+  short_name: GPM_2AGPROFGPMGMI
   pattern: 2A.GPM.GMI.*
   sensor: GMI
   satellite: GPM
@@ -705,6 +744,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-MHS-METOPA:
+  short_name: GPM_2AGPROFMETOPAMHS
   pattern: 2A.METOPA.MHS.*
   sensor: MHS
   satellite: METOPA
@@ -723,6 +763,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-MHS-METOPB:
+  short_name: GPM_2AGPROFMETOPBMHS
   pattern: 2A.METOPB.MHS.*
   sensor: MHS
   satellite: METOPB
@@ -741,6 +782,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-MHS-METOPC:
+  short_name: GPM_2AGPROFMETOPCMHS
   pattern: 2A.METOPC.MHS.*
   sensor: MHS
   satellite: METOPC
@@ -759,6 +801,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-MHS-NOAA18:
+  short_name: GPM_2AGPROFNOAA18MHS
   pattern: 2A.NOAA18.MHS.*
   sensor: MHS
   satellite: NOAA18
@@ -777,6 +820,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-MHS-NOAA19:
+  short_name: GPM_2AGPROFNOAA19MHS
   pattern: 2A.NOAA19.MHS.*
   sensor: MHS
   satellite: NOAA19
@@ -795,6 +839,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-SAPHIR-MT1:
+  short_name: GPM_2APRPSMT1SAPHIR
   pattern: 2A.MT1.SAPHIR.*
   sensor: SAPHIR
   satellite: MT1
@@ -811,6 +856,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-SSMIS-F16:
+  short_name: GPM_2AGPROFF16SSMIS
   pattern: 2A.F16.SSMIS.*
   sensor: SSMIS
   satellite: F16
@@ -829,6 +875,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-SSMIS-F17:
+  short_name: GPM_2AGPROFF17SSMIS
   pattern: 2A.F17.SSMIS.*
   sensor: SSMIS
   satellite: F17
@@ -847,6 +894,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-SSMIS-F18:
+  short_name: GPM_2AGPROFF18SSMIS
   pattern: 2A.F18.SSMIS.*
   sensor: SSMIS
   satellite: F18
@@ -865,6 +913,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-SSMIS-F19:
+  short_name: GPM_2AGPROFF19SSMIS
   pattern: 2A.F19.SSMIS.*
   sensor: SSMIS
   satellite: F19
@@ -883,6 +932,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-AMSR2-GCOMW1-CLIM:
+  short_name: GPM_2AGPROFGCOMW1AMSR2_CLIM
   pattern: 2A-CLIM.GCOMW1.AMSR2.*
   sensor: AMSR2
   satellite: GCOMW1
@@ -901,6 +951,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-AMSRE-AQUA-CLIM:
+  short_name: GPM_2AGPROFAQUAAMSRE_CLIM
   pattern: 2A-CLIM.AQUA.AMSRE.*
   sensor: AMSRE
   satellite: AQUA
@@ -919,6 +970,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-AMSUB-NOAA15-CLIM:
+  short_name: GPM_2AGPROFNOAA15AMSUB_CLIM
   pattern: 2A-CLIM.NOAA15.AMSUB.*
   sensor: AMSUB
   satellite: NOAA15
@@ -937,6 +989,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-AMSUB-NOAA16-CLIM:
+  short_name: GPM_2AGPROFNOAA16AMSUB_CLIM
   pattern: 2A-CLIM.NOAA16.AMSUB.*
   sensor: AMSUB
   satellite: NOAA16
@@ -955,6 +1008,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-AMSUB-NOAA17-CLIM:
+  short_name: GPM_2AGPROFNOAA17AMSUB_CLIM
   pattern: 2A-CLIM.NOAA17.AMSUB.*
   sensor: AMSUB
   satellite: NOAA17
@@ -973,6 +1027,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-ATMS-NOAA20-CLIM:
+  short_name: GPM_2AGPROFNOAA20ATMS_CLIM
   pattern: 2A-CLIM.NOAA20.ATMS.*
   sensor: ATMS
   satellite: NOAA20
@@ -991,6 +1046,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-ATMS-NOAA21-CLIM:
+  short_name: GPM_2AGPROFNOAA21ATMS_CLIM
   pattern: 2A-CLIM.NOAA21.ATMS.*
   sensor: ATMS
   satellite: NOAA21
@@ -1008,6 +1064,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-ATMS-NPP-CLIM:
+  short_name: GPM_2AGPROFNPPATMS_CLIM
   pattern: 2A-CLIM.NPP.ATMS.*
   sensor: ATMS
   satellite: NPP
@@ -1026,6 +1083,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-GMI-CLIM:
+  short_name: GPM_2AGPROFGPMGMI_CLIM
   pattern: 2A-CLIM.GPM.GMI.*
   sensor: GMI
   satellite: GPM
@@ -1044,6 +1102,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-METOPA-CLIM:
+  short_name: GPM_2AGPROFMETOPAMHS_CLIM
   pattern: 2A-CLIM.METOPA.MHS.*
   sensor: MHS
   satellite: METOPA
@@ -1062,6 +1121,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-METOPB-CLIM:
+  short_name: GPM_2AGPROFMETOPBMHS_CLIM
   pattern: 2A-CLIM.METOPB.MHS.*
   sensor: MHS
   satellite: METOPB
@@ -1080,6 +1140,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-METOPC-CLIM:
+  short_name: GPM_2AGPROFMETOPCMHS_CLIM
   pattern: 2A-CLIM.METOPC.MHS.*
   sensor: MHS
   satellite: METOPC
@@ -1098,6 +1159,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-NOAA18-CLIM:
+  short_name: GPM_2AGPROFNOAA18MHS_CLIM
   pattern: 2A-CLIM.NOAA18.MHS.*
   sensor: MHS
   satellite: NOAA18
@@ -1116,6 +1178,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-MHS-NOAA19-CLIM:
+  short_name: GPM_2AGPROFNOAA19MHS_CLIM
   pattern: 2A-CLIM.NOAA19.MHS.*
   sensor: MHS
   satellite: NOAA19
@@ -1134,6 +1197,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SAPHIR-MT1-CLIM:
+  short_name: GPM_2APRPSMT1SAPHIR_CLIM
   pattern: 2A-CLIM.MT1.SAPHIR.*
   sensor: SAPHIR
   satellite: MT1
@@ -1150,6 +1214,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F08-CLIM:
+  short_name: GPM_2AGPROFF08SSMI_CLIM
   pattern: 2A-CLIM.F08.SSMI.*
   sensor: SSMI
   satellite: F08
@@ -1168,6 +1233,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F10-CLIM:
+  short_name: GPM_2AGPROFF10SSMI_CLIM
   pattern: 2A-CLIM.F10.SSMI.*
   sensor: SSMI
   satellite: F10
@@ -1186,6 +1252,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F11-CLIM:
+  short_name: GPM_2AGPROFF11SSMI_CLIM
   pattern: 2A-CLIM.F11.SSMI.*
   sensor: SSMI
   satellite: F11
@@ -1204,6 +1271,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F13-CLIM:
+  short_name: GPM_2AGPROFF13SSMI_CLIM
   pattern: 2A-CLIM.F13.SSMI.*
   sensor: SSMI
   satellite: F13
@@ -1222,6 +1290,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F14-CLIM:
+  short_name: GPM_2AGPROFF14SSMI_CLIM
   pattern: 2A-CLIM.F14.SSMI.*
   sensor: SSMI
   satellite: F14
@@ -1240,6 +1309,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMI-F15-CLIM:
+  short_name: GPM_2AGPROFF15SSMI_CLIM
   pattern: 2A-CLIM.F15.SSMI.*
   sensor: SSMI
   satellite: F15
@@ -1258,6 +1328,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMIS-F16-CLIM:
+  short_name: GPM_2AGPROFF16SSMIS_CLIM
   pattern: 2A-CLIM.F16.SSMIS.*
   sensor: SSMIS
   satellite: F16
@@ -1276,6 +1347,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMIS-F17-CLIM:
+  short_name: GPM_2AGPROFF17SSMIS_CLIM
   pattern: 2A-CLIM.F17.SSMIS.*
   sensor: SSMIS
   satellite: F17
@@ -1294,6 +1366,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMIS-F18-CLIM:
+  short_name: GPM_2AGPROFF18SSMIS_CLIM
   pattern: 2A-CLIM.F18.SSMIS.*
   sensor: SSMIS
   satellite: F18
@@ -1312,6 +1385,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-SSMIS-F19-CLIM:
+  short_name: GPM_2AGPROFF19SSMIS_CLIM
   pattern: 2A-CLIM.F19.SSMIS.*
   sensor: SSMIS
   satellite: F19
@@ -1330,6 +1404,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-TMI-CLIM:
+  short_name: GPM_2AGPROFTRMMTMI_CLIM
   pattern: 2A-CLIM.TRMM.TMI.*
   sensor: TMI
   satellite: TRMM
@@ -1348,6 +1423,7 @@
   product_level: 2A
   full_product_level: 2A-CLIM
 2A-DPR:
+  short_name: GPM_2ADPR
   pattern: 2A.GPM.DPR.V\d-*
   sensor: DPR
   satellite: GPM
@@ -1366,6 +1442,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-Ka:
+  short_name: GPM_2AKa
   pattern: 2A.GPM.Ka.V*
   sensor: DPR
   satellite: GPM
@@ -1384,6 +1461,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-Ku:
+  short_name: GPM_2AKu
   pattern: 2A.GPM.Ku.V*
   sensor: DPR
   satellite: GPM
@@ -1402,6 +1480,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-PR:
+  short_name: GPM_2APR
   pattern: 2A.TRMM.PR.V\d-*
   sensor: PR
   satellite: TRMM
@@ -1420,6 +1499,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-ENV-DPR:
+  short_name: GPM_2ADPRENV
   pattern: 2A-ENV.GPM.DPR.V*
   sensor: DPR
   satellite: GPM
@@ -1438,6 +1518,7 @@
   product_level: 2A
   full_product_level: 2A-ENV
 2A-ENV-Ka:
+  short_name: GPM_2AKaENV
   pattern: 2A-ENV.GPM.Ka.V*
   sensor: DPR
   satellite: GPM
@@ -1456,6 +1537,7 @@
   product_level: 2A
   full_product_level: 2A-ENV
 2A-ENV-Ku:
+  short_name: GPM_2AKuENV
   pattern: 2A-ENV.GPM.Ku.V*
   sensor: DPR
   satellite: GPM
@@ -1474,6 +1556,7 @@
   product_level: 2A
   full_product_level: 2A-ENV
 2A-ENV-PR:
+  short_name: GPM_2APRENV
   pattern: 2A-ENV.TRMM.PR.V*
   sensor: PR
   satellite: TRMM
@@ -1492,6 +1575,7 @@
   product_level: 2A
   full_product_level: 2A-ENV
 2A-GPM-SLH:
+  short_name: GPM_2HSLH
   pattern: 2A.GPM.DPR.GPM-SLH*
   sensor: DPR
   satellite: GPM
@@ -1510,6 +1594,7 @@
   product_level: 2A
   full_product_level: 2A
 2A-TRMM-SLH:
+  short_name: GPM_2HSLH_TRMM
   pattern: 2A.TRMM.PR.TRMM-SLH*
   sensor: PR
   satellite: TRMM
@@ -1528,6 +1613,7 @@
   product_level: 2A
   full_product_level: 2A
 2B-GPM-CSAT:
+  short_name: null
   pattern: 2B.CSATGPM.COIN*
   sensor: null
   satellite: GPM
@@ -1544,6 +1630,7 @@
   product_level: 2B
   full_product_level: 2B
 2B-TRMM-CSAT:
+  short_name: null
   pattern: 2B.CSATTRMM.COIN*
   sensor: null
   satellite: TRMM
@@ -1560,6 +1647,7 @@
   product_level: 2B
   full_product_level: 2B
 2B-GPM-CORRA:
+  short_name: GPM_2BCMB
   pattern: 2B.GPM.DPRGMI.CORRA*
   sensor: [DPR, GMI]
   satellite: GPM
@@ -1577,6 +1665,7 @@
   product_level: 2B
   full_product_level: 2B
 2B-TRMM-CORRA:
+  short_name: GPM_2BCMB_TRMM
   pattern: 2B.TRMM.PRTMI.CORRA*
   sensor: [PR, TMI]
   satellite: TRMM
@@ -1594,6 +1683,7 @@
   product_level: 2B
   full_product_level: 2B
 2B-GPM-CSH:
+  short_name: GPM_2HCSH
   pattern: 2B.GPM.DPRGMI.2HCSHv*
   sensor: [DPR, GMI]
   satellite: GPM
@@ -1611,6 +1701,7 @@
   product_level: 2B
   full_product_level: 2B
 2B-TRMM-CSH:
+  short_name: GPM_2HCSH_TRMM
   pattern: 2B.TRMM.PRTMI.2HCSHv*
   sensor: [PR, TMI]
   satellite: TRMM
@@ -1628,6 +1719,7 @@
   product_level: 2B
   full_product_level: 2B
 IMERG-ER:
+  short_name: GPM_3IMERGHHE
   pattern: 3B-HHR-E.MS.MRG*
   product_category: IMERG
   product_types: [NRT]
@@ -1643,6 +1735,7 @@ IMERG-ER:
   product_level: 3B
   full_product_level: 3B-HHR-E
 IMERG-LR:
+  short_name: GPM_3IMERGHHL
   pattern: 3B-HHR-L.MS.MRG*
   product_category: IMERG
   product_types: [NRT]
@@ -1658,6 +1751,7 @@ IMERG-LR:
   product_level: 3B
   full_product_level: 3B-HHR-L
 IMERG-FR:
+  short_name: GPM_3IMERGHH
   pattern: 3B-HHR.MS.MRG.*
   product_category: IMERG
   product_types: [RS]

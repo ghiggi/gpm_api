@@ -55,8 +55,10 @@ from gpm.utils.manipulations import (
     get_height_dataarray,
     get_liquid_phase_mask,
     get_range_axis,
+    get_slices_granules,
     get_solid_phase_mask,
     integrate_profile_concentration,
+    iter_granules,
     locate_largest_values,
     locate_max_value,
     locate_min_value,
@@ -93,6 +95,20 @@ from gpm.utils.manipulations import (
 
 
 THICKNESS = 8
+
+
+def test_get_slices_granules() -> None:
+    """Test granule slices for swath and grid objects."""
+    orbit = get_orbit_dataarray(0, 0, 1, 1, 10, 6, 2)
+    orbit = orbit.assign_coords({"gpm_granule_id": ("along_track", [1, 1, 1, 2, 2, 2])})
+    assert get_slices_granules(orbit) == [slice(0, 3), slice(3, 6)]
+
+    grid = get_grid_dataarray(0, 0, 1, 1, 3, 2).expand_dims(time=3)
+    grid = grid.assign_coords(time=("time", np.arange(3)))
+    assert get_slices_granules(grid) == [slice(0, 1), slice(1, 2), slice(2, 3)]
+
+    assert [item.sizes["along_track"] for item in iter_granules(orbit)] == [3, 3]
+    assert [item.sizes["time"] for item in iter_granules(grid)] == [1, 1, 1]
 
 
 def create_bins_dataarray(value=1, cross_track_size=1, along_track_size=1):
