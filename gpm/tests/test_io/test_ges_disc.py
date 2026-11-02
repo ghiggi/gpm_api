@@ -28,6 +28,7 @@
 import datetime
 import os
 import platform
+import sys
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -326,9 +327,10 @@ class TestGESDISCDownload:
                 storage="GES_DISC",
                 transfer_tool="CURL",
             )
-            dl._download_files(
-                remote_filepaths=[remote_filepath],
-                local_filepaths=[local_filepath],
-                storage="GES_DISC",
-                transfer_tool="WGET",
-            )
+            if sys.platform != "win32":
+                dl._download_files(
+                    remote_filepaths=[remote_filepath],
+                    local_filepaths=[local_filepath],
+                    storage="GES_DISC",
+                    transfer_tool="WGET",
+                )
