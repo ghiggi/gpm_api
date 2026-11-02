@@ -1,6 +1,7 @@
 name: gpm_api
 channels: [conda-forge]
 dependencies:
+  - wget
   - cartopy
   - click
   - dask
