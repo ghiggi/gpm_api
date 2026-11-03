@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to decode GPM DPR, PR, Ka and Ku products."""
+
 import xarray as xr
 
 from gpm.dataset.decoding.utils import (
@@ -184,9 +185,7 @@ def decode_flagHeavyIcePrecip(da):
     da = da.where(da >= 1)  # make 0 nan
     da.attrs["flag_values"] = [4, 8, 12, 16, 24, 32, 40]
     da.attrs["flag_meanings"] = [""] * 6  # TODO
-    da.attrs[
-        "description"
-    ] = """Flag for detection of strong or severe precipitation accompanied
+    da.attrs["description"] = """Flag for detection of strong or severe precipitation accompanied
     by solid ice hydrometeors above the -10 degree C isotherm"""
     return da
 

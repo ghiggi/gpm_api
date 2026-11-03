@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains utilities for the decoding of GPM product variables."""
+
 import dask.array
 import numpy as np
 
