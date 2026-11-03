@@ -1,3 +1,6 @@
+
+name: Keep scheduled workflows alive
+
 on:
   schedule:
     # Check on the 1st, 11th, and 21st at 09:17 UTC
