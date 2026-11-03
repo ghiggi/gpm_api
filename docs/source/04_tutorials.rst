@@ -14,3 +14,4 @@ The tutorials are available in the `tutorials <https://github.com/ghiggi/gpm_api
    tutorials/tutorial_02_PMW_2A
    tutorials/tutorial_02_RADAR_2A
    tutorials/tutorial_02_IMERG
+   tutorials/tutorial_earthaccess
