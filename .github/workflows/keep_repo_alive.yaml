@@ -1,37 +1,81 @@
-name: Keep scheduled workflows alive
-
 on:
   schedule:
-    # Runs monthly on the 1st at 09:00 UTC
-    # - avoiding the 00:00 UTC time when many workflows are scheduled to run
-    - cron: "0 9 1 * *"
+    # Check on the 1st, 11th, and 21st at 09:17 UTC
+    - cron: "17 9 1,11,21 * *"
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   keepalive:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
 
-      - name: Update heartbeat file
+      - name: Check repository inactivity
+        id: inactivity
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir -p .github
-          date -u +"Last keepalive: %Y-%m-%dT%H:%M:%SZ" > .github/keepalive.txt
+          LAST_COMMIT=$(git log -1 --format=%ct)
+          NOW=$(date -u +%s)
+          DAYS=$(( (NOW - LAST_COMMIT) / 86400 ))
 
-      - name: Commit and push if changed
+          echo "Days since last commit: $DAYS"
+
+          # Skip if repository was recently updated.
+          if [ "$DAYS" -lt 40 ]; then
+            echo "Repository is active. Skipping."
+            exit 0
+          fi
+
+          # Skip if a keepalive PR already exists.
+          OPEN_PRS=$(gh pr list \
+            --state open \
+            --limit 100 \
+            --json headRefName \
+            --jq '[.[].headRefName | select(startswith("automation/keepalive-"))] | length')
+
+          if [ "$OPEN_PRS" -gt 0 ]; then
+            echo "Keepalive PR already open. Skipping."
+            exit 0
+          fi
+
+          echo "Repository inactive for 40+ days."
+          echo "create_pr=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create keepalive pull request
+        if: steps.inactivity.outputs.create_pr == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
+          BRANCH="automation/keepalive-${GITHUB_RUN_ID}"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add .github/keepalive.txt
+          # Create a new branch from the default branch.
+          git switch -c "$BRANCH"
 
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: keep scheduled workflows alive"
-            git push
-          fi
+          # Update heartbeat file.
+          mkdir -p .github
+          date -u +"Last keepalive: %Y-%m-%dT%H:%M:%SZ" > .github/keepalive.txt
+
+          # Commit and push to the new branch.
+          git add .github/keepalive.txt
+          git commit -m "chore: keep scheduled workflows alive"
+          git push origin "$BRANCH"
+
+          # Open pull request against the protected branch.
+          gh pr create \
+            --base "$DEFAULT_BRANCH" \
+            --head "$BRANCH" \
+            --title "chore: keep scheduled workflows alive" \
+            --body "Automated heartbeat after 40+ days without commits on the default branch. Merge this PR to update the repository."
