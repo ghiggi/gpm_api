@@ -1,0 +1,37 @@
+name: Keep scheduled workflows alive
+
+on:
+  schedule:
+    # Runs monthly on the 1st at 09:00 UTC
+    # - avoiding the 00:00 UTC time when many workflows are scheduled to run
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update heartbeat file
+        run: |
+          mkdir -p .github
+          date -u +"Last keepalive: %Y-%m-%dT%H:%M:%SZ" > .github/keepalive.txt
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .github/keepalive.txt
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: keep scheduled workflows alive"
+            git push
+          fi
