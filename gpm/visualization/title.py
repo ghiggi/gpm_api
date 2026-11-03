@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains utilities to define plot titles."""
+
 import numpy as np
 
 

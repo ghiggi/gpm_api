@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the dask utilities."""
+
 import logging
 import os
 

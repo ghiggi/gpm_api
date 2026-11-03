@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains tools for zonal statistics computations."""
+
 import numpy as np
 import shapely
 from shapely.strtree import STRtree

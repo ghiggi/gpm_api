@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains tools for creating animations."""
+
 import contextlib
 import os
 import shutil

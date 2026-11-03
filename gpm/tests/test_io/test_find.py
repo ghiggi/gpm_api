@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module test the file search routines."""
+
 import datetime
 import os
 
