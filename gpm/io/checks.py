@@ -105,7 +105,7 @@ def check_storage(storage):
     """Check storage."""
     if not isinstance(storage, str):
         raise TypeError("'storage' must be a string.")
-    valid_storages = ["GES_DISC", "PPS", "LOCAL"]
+    valid_storages = ["GES_DISC", "PPS", "EARTHDATA", "LOCAL"]
     if storage.upper() not in valid_storages:
         raise ValueError(f"{storage} is an invalid 'storage'. Valid values are {valid_storages}.")
     return storage.upper()
@@ -115,7 +115,7 @@ def check_remote_storage(storage):
     """Check storage is remote."""
     if not isinstance(storage, str):
         raise TypeError("'storage' must be a string.")
-    valid_storages = ["GES_DISC", "PPS"]
+    valid_storages = ["GES_DISC", "PPS", "EARTHDATA"]
     if storage.upper() not in valid_storages:
         raise ValueError(
             f"'{storage}' is an invalid remote 'storage'. Valid values are {valid_storages}.",
@@ -182,7 +182,7 @@ def check_product_version(version, product):
         if version == 8:
             version = 7
             msg = "If you wish GPM V8, specify version=8. Currently default to version=7 if not specified."  # TODO V8
-            warnings.warn(msg, GPM_Warning, stacklevel=1)
+            warnings.warn(msg, GPM_Warning, stacklevel=2)
     version = check_version(version)
     # Check valid version for such product
     valid_versions = available_product_versions(product)

@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to find data on local and NASA servers."""
+
 import datetime
 import os
 import warnings
@@ -44,6 +45,7 @@ from gpm.io.checks import (
     check_storage,
     check_valid_time_request,
 )
+from gpm.io.earthdata import get_earthdata_daily_filepaths
 from gpm.io.filter import filter_filepaths
 from gpm.io.ges_disc import get_ges_disc_daily_filepaths
 from gpm.io.info import get_version_from_filepaths, group_filepaths
@@ -56,7 +58,7 @@ from gpm.utils.warnings import GPMDownloadWarning
 VERSION_WARNING = config.get("warn_multiple_product_versions")
 
 
-def _get_all_daily_filepaths(storage, date, product, product_type, version, verbose, base_dir=None):
+def _get_all_daily_filepaths(storage, date, product, product_type, version, verbose, base_dir=None, bounding_box=None):
     """Return the ``find_daily_filepaths_func``.
 
     This functions returns a tuple ``([filepaths],[available_version])``.
@@ -85,6 +87,14 @@ def _get_all_daily_filepaths(storage, date, product, product_type, version, verb
             date=date,
             version=version,
             verbose=verbose,
+        )
+    elif storage == "EARTHDATA":
+        filepaths = get_earthdata_daily_filepaths(
+            product=product,
+            product_type=product_type,
+            date=date,
+            version=version,
+            bounding_box=bounding_box,
         )
     else:
         raise ValueError(f"Invalid storage {storage}.")
@@ -148,6 +158,7 @@ def find_daily_filepaths(
     end_time=None,
     verbose=False,
     base_dir=None,
+    bounding_box=None,
 ):
     """Retrieve GPM data filepaths for a specific day and product.
 
@@ -170,6 +181,8 @@ def find_daily_filepaths(
     base_dir : str
         The base directory where GPM data are stored on local disk.
         It must be specified only if storage="LOCAL".
+    bounding_box : tuple, optional
+        ``(west, south, east, north)`` bounds for ``EARTHDATA`` granule discovery.
 
     Returns
     -------
@@ -180,6 +193,8 @@ def find_daily_filepaths(
 
     """
     # Check base_dir if storage="LOCAL" Retrieve the local GPM base directory
+    if bounding_box is not None and storage != "EARTHDATA":
+        raise ValueError("'bounding_box' is supported only with storage='EARTHDATA'.")
     if storage == "LOCAL":
         base_dir = get_base_dir(base_dir=base_dir)
 
@@ -197,6 +212,7 @@ def find_daily_filepaths(
         version=version,
         verbose=verbose,
         base_dir=base_dir,
+        bounding_box=bounding_box,
     )
     if len(filepaths) == 0:
         if storage == "LOCAL" and verbose:
@@ -261,6 +277,7 @@ def find_filepaths(
     parallel : bool, optional
         Whether to loop over dates in parallel.
         The default is ``True``.
+        Always set to ``False`` for ``storage="EARTHDATA"``.
     groups: list or str, optional
         Whether to group the filepaths in a dictionary by a custom selection of keys.
         Valid group keys are ``product_level``, ``satellite``, ``sensor``, ``algorithm``,
@@ -281,6 +298,8 @@ def find_filepaths(
     # -------------------------------------------------------------------------.
     ## Checks input arguments
     storage = check_storage(storage)
+    if storage == "EARTHDATA":
+        parallel = False
     version = check_product_version(version, product)
     product_type = check_product_type(product_type=product_type)
     product = check_product(product=product, product_type=product_type)

@@ -43,6 +43,7 @@ dependencies = [
     "h5netcdf",
     "dask",
     "distributed",
+    "earthaccess>=0.17.0",
     "tqdm",
     "click",
     "pyyaml",
@@ -92,7 +93,10 @@ download_gpm_files="gpm.scripts.download_gpm_files:download_gpm_files"
 minversion = "7"
 addopts = "-ra --strict-config --strict-markers --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
 xfail_strict = true
-# filterwarnings = ["error"]
+filterwarnings = [
+    "ignore::gpm.utils.warnings.GPMDownloadWarning",
+    "ignore::cartopy.io.DownloadWarning",
+]
 log_cli_level = "info"
 testpaths = [
   "gpm/tests",

@@ -2,18 +2,19 @@
 Quick Start
 ===========
 
-GPM-API allows to download data from the NASA Precipitation Processing System (PPS) and NASA GES DISC Data Archives.
+GPM-API allows to download data from NASA Earthdata Cloud, the Precipitation Processing System (PPS),
+and the GES DISC Data Archive.
 To download the data, it is necessary to first create two accounts and successively create the GPM-API configuration file.
 
 
-Register to the NASA GES DISC
--------------------------------
+Register an account to NASA Earthdata
+-----------------------------------------
 
-To access the GPM data through the GES DISC Data Archive you need to have an *Earthdata Login* account.
+To access the GPM data through the GES DISC Data Archive and Earth Data Cloud you need to have an *Earthdata Login* account.
 If you don't have one, you can register on the `EarthData Portal <https://urs.earthdata.nasa.gov/>`__.
 
 Once you have an EarthData account, to access the GES DISC Data Archive you need to authorize
-the application ``"NASA GESDISC DATA ARCHIVE"`` by following the
+the application ``"NASA GES DISC DATA ARCHIVE"`` by following the
 instructions available at the following `link <https://disc.gsfc.nasa.gov/earthdata-login>`__.
 
 .. note::
@@ -59,8 +60,8 @@ The configuration file will be created in the user's home directory under the na
 
     username_pps = "<your PPS username>"  # likely your mail, all in lowercase
     password_pps = "<your PPS password>"  # likely your mail, all in lowercase
-    username_earthdata = "<your EarthData username>"
-    password_earthdata = "<your EarthData password>"
+    username_earthdata = "<your Earthdata username>"
+    password_earthdata = "<your Earthdata password>"
     base_dir = "<path/to/a/local/directory>/GPM"  # On Windows: "C:\\Users\\<path\\to\\a\directory>\\GPM"
     gpm.define_configs(
         username_pps=username_pps,
@@ -70,7 +71,10 @@ The configuration file will be created in the user's home directory under the na
         base_dir=base_dir,
     )
 
-Now please close and restart the python session to make sure that the configuration file is correctly loaded.
+If you provide the earthdata username and password, the software will automatically create a ``.netrc`` file in your home directory,
+which allows downloading data from the NASA GES DISC and Earthdata Cloud without having to provide your credentials each time.
+
+Now make sure that the configuration file is correctly loaded.
 You can check that the configuration file has been correctly created with:
 
 .. code-block:: python
@@ -169,7 +173,29 @@ Download the data
 
 With the GPM-API you can either download the data from the command line or from Python.
 
-To download the data in Python, you can adapt the following code snippet:
+To download from Earthdata Cloud, select ``storage="EARTHDATA"``:
+
+.. code-block:: python
+
+    import gpm
+
+    gpm.download_archive(
+        product="2A-DPR",
+        version=8,
+        start_time="2024-07-01 00:00:00",
+        end_time="2024-07-02 00:00:00",
+        storage="EARTHDATA",
+        bounding_box=(-10, 40, 10, 50),  # Optional (west, south, east, north).
+        n_threads=4,
+        progress_bar=True,
+    )
+
+GPM-API searches and downloads run in daily batches, including for monthly and yearly requests.
+The optional ``bounding_box`` is passed to each ``earthaccess.search_data`` call and selects
+full intersecting granules without cropping their contents. It is also supported by
+``gpm.download_daily_data`` and ``gpm.download_monthly_data`` when using ``storage="EARTHDATA"``.
+
+To download from the PPS (Precipitation Processing System), you can adapt the following code snippet:
 
 .. code-block:: python
 
@@ -179,7 +205,7 @@ To download the data in Python, you can adapt the following code snippet:
     product = "2A-DPR"
     product_type = "RS"
     version = 7
-    storage = "PPS"  # or "GES_DISC"
+    storage = "PPS"
 
     start_time = datetime.datetime(2020, 7, 22, 1, 10, 11)
     end_time = datetime.datetime(2020, 7, 22, 2, 30, 5)
@@ -265,7 +291,7 @@ The following example shows how to download and open a dataset over a specific t
     product = "2A-DPR"
     product_type = "RS"
     version = 7
-    storage = "PPS"  # or "GES_DISC"
+    storage = "PPS"  # or "EARTHDATA" or "GES_DISC"
 
     start_time = datetime.datetime(2020, 7, 22, 1, 10, 11)
     end_time = datetime.datetime(2020, 7, 22, 2, 30, 5)

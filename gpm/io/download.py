@@ -24,7 +24,8 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""This module contains the routines required to download data from the NASA PPS and GES DISC servers."""
+"""Download data from NASA PPS, GES DISC and Earthdata Cloud."""
+
 import datetime
 import ftplib
 import os
@@ -61,6 +62,10 @@ from gpm.io.checks import (
 from gpm.io.data_integrity import (
     check_archive_integrity,
     check_filepaths_integrity,
+)
+from gpm.io.earthdata import (
+    define_earthdata_filepath,
+    download_earthdata,
 )
 from gpm.io.find import find_daily_filepaths
 from gpm.io.ges_disc import define_ges_disc_filepath
@@ -456,6 +461,13 @@ def _download_files(
 
     This function open a connection to the server for each file to download !.
     """
+    if storage == "EARTHDATA":
+        return download_earthdata(
+            remote_filepaths,
+            local_filepaths,
+            n_threads=n_threads,
+            progress_bar=progress_bar,
+        )
     transfer_tool = check_transfer_tool(transfer_tool)
     _ensure_local_directories_exists(local_filepaths)
 
@@ -521,6 +533,7 @@ def _get_func_filepath_definition(storage):
         "LOCAL": define_local_filepath,
         "PPS": define_pps_filepath,
         "GES_DISC": define_ges_disc_filepath,
+        "EARTHDATA": define_earthdata_filepath,
     }
     return dict_fun[storage]
 
@@ -595,6 +608,7 @@ def download_files(
     progress_bar=False,
     verbose=True,
     retry=1,
+    bounding_box=None,
 ):
     """Download specific GPM files from NASA servers.
 
@@ -607,13 +621,14 @@ def download_files(
         The default is "RS".
     storage : str, optional
         The remote repository from where to download.
-        Either ``pps`` or ``ges_disc``. The default is "PPS".
+        Either ``PPS``, ``GES_DISC`` or ``EARTHDATA``. The default is "PPS".
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
         Whether to display progress. The default is ``True``.
     transfer_tool : str, optional
-        Whether to use ``curl`` or ``wget`` for data download. The default is  ``curl``.
+        Whether to use ``curl`` or ``wget`` for data download. The default is ``curl``.
+        Ignored for ``EARTHDATA``, which uses ``earthaccess`` python library.
     verbose : bool, optional
         Whether to print processing details. The default is ``False``.
     force_download : bool, optional
@@ -623,6 +638,9 @@ def download_files(
        By default is ``True``.
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
+    bounding_box : tuple, optional
+        Spatial bounds forwarded from Earthdata archive retries. Explicit filenames
+        are downloaded in full; spatial selection occurs during archive discovery.
 
     Returns
     -------
@@ -637,6 +655,8 @@ def download_files(
 
     # Check inputs
     storage = check_remote_storage(storage)
+    if bounding_box is not None and storage != "EARTHDATA":
+        raise ValueError("'bounding_box' is supported only with storage='EARTHDATA'.")
     if isinstance(filepaths, type(None)):
         return None
     if isinstance(filepaths, str):
@@ -697,12 +717,15 @@ def download_files(
         l_corrupted = download_files(
             filepaths=l_corrupted,
             product_type=product_type,
-            force_download=force_download,
+            storage=storage,
+            force_download=True,
+            remove_corrupted=remove_corrupted,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
             progress_bar=progress_bar,
             verbose=verbose,
             retry=retry - 1,
+            bounding_box=bounding_box,
         )
     elif verbose:
         print(f"The requested files are now available on disk at {new_local_filepaths}.")
@@ -725,6 +748,7 @@ def _ensure_files_completness(
     retry,
     n_threads,
     progress_bar,
+    storage="PPS",
 ):
     """Check file validity and attempt download if corrupted."""
     l_corrupted = check_filepaths_integrity(
@@ -740,6 +764,7 @@ def _ensure_files_completness(
         l_corrupted = download_files(
             filepaths=l_corrupted,
             product_type=product_type,
+            storage=storage,
             force_download=True,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
@@ -768,6 +793,8 @@ def _ensure_archive_completness(
     retry,
     n_threads,
     progress_bar,
+    storage="PPS",
+    bounding_box=None,
 ):
     """Check the archive completeness over the specified time period."""
     l_corrupted = check_archive_integrity(
@@ -787,12 +814,14 @@ def _ensure_archive_completness(
         l_corrupted = download_files(
             filepaths=l_corrupted,
             product_type=product_type,
+            storage=storage,
             force_download=True,
             n_threads=n_threads,
             transfer_tool=transfer_tool,
             progress_bar=progress_bar,
             verbose=verbose,
             retry=retry - 1,
+            bounding_box=bounding_box,
         )
         if verbose:
             if len(l_corrupted) == 0:
@@ -817,8 +846,9 @@ def _download_daily_data(
     force_download,
     verbose,
     warn_missing_files,
+    bounding_box=None,
 ):
-    """Download GPM data from NASA servers using curl or wget.
+    """Discover and download a daily batch from the selected NASA storage.
 
     Parameters
     ----------
@@ -836,7 +866,7 @@ def _download_daily_data(
         GPM version of the data to retrieve if ``product_type = "RS"``.
     storage : str
         The remote repository from where to download.
-        Either ``pps`` or ``ges_disc``.
+        Either ``PPS``, ``GES_DISC`` or ``EARTHDATA``.
     n_threads : int
         Number of parallel downloads.
     progress_bar : bool
@@ -847,11 +877,15 @@ def _download_daily_data(
         Whether to redownload data if already existing on disk.
     verbose : bool
         Whether to print processing details. T
+    bounding_box : tuple, optional
+        ``(west, south, east, north)`` bounds for ``EARTHDATA`` granule discovery.
 
     Returns
     -------
-    int
-        0 if everything went fine.
+    status : list
+        Download statuses, with ``-1`` indicating files already on disk.
+    available_version : list
+        Versions discovered for the day.
 
     """
     # -------------------------------------------------------------------------.
@@ -860,9 +894,10 @@ def _download_daily_data(
     product_type = check_product_type(product_type=product_type)
     product = check_product(product=product, product_type=product_type)
     storage = check_remote_storage(storage)
-    transfer_tool = check_transfer_tool(transfer_tool)
+    if storage != "EARTHDATA":
+        transfer_tool = check_transfer_tool(transfer_tool)
     # -------------------------------------------------------------------------.
-    ## Retrieve the list of files available on NASA PPS server
+    ## Retrieve the list of files available on NASA server
     remote_filepaths, available_version = find_daily_filepaths(
         storage=storage,
         product=product,
@@ -872,6 +907,7 @@ def _download_daily_data(
         start_time=start_time,
         end_time=end_time,
         verbose=verbose,
+        bounding_box=bounding_box,
     )
     # -------------------------------------------------------------------------.
     ## If no file to retrieve on NASA PPS, return None
@@ -971,8 +1007,12 @@ def download_archive(
     remove_corrupted=True,
     retry=1,
     verbose=True,
+    bounding_box=None,
 ):
-    """Download GPM data from NASA servers (day by day).
+    """Download GPM data from NASA servers.
+
+    Files are discovered and downloaded day by day, including on Earthdata Cloud,
+    to keep individual search requests and temporary downloads bounded.
 
     Parameters
     ----------
@@ -992,13 +1032,14 @@ def download_archive(
         GPM version of the data to retrieve if ``product_type = "RS"``.
     storage : str, optional
         The remote repository from where to download.
-        Either ``pps`` or ``ges_disc``. The default is ``pps``.
+        Either ``PPS``, ``GES_DISC`` or ``EARTHDATA``. The default is ``PPS``.
     n_threads : int, optional
         Number of parallel downloads. The default is set to 10.
     progress_bar : bool, optional
         Whether to display progress. The default is ``True``.
     transfer_tool : str, optional
-        Whether to use ``curl`` or ``wget`` for data download. The default is  ``curl``.
+        Whether to use ``curl`` or ``wget`` for data download. The default is ``curl``.
+        Ignored for ``EARTHDATA``, which uses earthaccess.
     force_download : bool, optional
         Whether to redownload data if already existing on disk. The default is ``False``.
     verbose : bool, optional
@@ -1012,6 +1053,9 @@ def download_archive(
     retry : int, optional,
         The number of attempts to redownload the corrupted files. The default is 1.
         Only applies if ``check_integrity=True``!
+    bounding_box : tuple, optional
+        ``(west, south, east, north)`` bounds for ``EARTHDATA`` granule discovery.
+        Downloads full intersecting granules without cropping their contents.
 
     """
     # -------------------------------------------------------------------------.
@@ -1022,14 +1066,17 @@ def download_archive(
     # V8 warnings
     if product_type == "RS" and version == 8:  # TODO V8
         msg = (
-            "GPM Data Archive is currently being reprocessed for version 8."
+            "GPM Data Archive is currently being reprocessed for version 8. "
             + f"If {product} data are not available, specify version=7."
         )
         warnings.warn(msg, GPMDownloadWarning, stacklevel=2)
     version = check_product_version(version, product)
-    if storage != "PPS" and version == 8:  # TODO V8
-        raise ValueError("GPM V8 data can currently be downloaded only using storage=PPS.")
-    transfer_tool = check_transfer_tool(transfer_tool)
+    if storage == "GES_DISC" and version == 8:  # TODO V8
+        raise ValueError("GPM V8 data can currently be downloaded only using storage=PPS or EARTHDATA.")
+    if storage != "EARTHDATA":
+        transfer_tool = check_transfer_tool(transfer_tool)
+        if bounding_box is not None:
+            raise ValueError("'bounding_box' is supported only with storage='EARTHDATA'.")
     start_time, end_time = check_start_end_time(start_time, end_time)
     start_time, end_time = check_valid_time_request(start_time, end_time, product)
     # -------------------------------------------------------------------------.
@@ -1048,7 +1095,6 @@ def download_archive(
     list_versions = []
     for i, date in enumerate(dates):
         warn_missing_files = not (i == 0 or (i == len(dates) - 1 and date == end_time))
-
         status, available_version = _download_daily_data(
             date=date,
             version=version,
@@ -1063,6 +1109,7 @@ def download_archive(
             force_download=force_download,
             verbose=verbose,
             warn_missing_files=warn_missing_files,
+            bounding_box=bounding_box,
         )
         list_status += status
         list_versions += available_version
@@ -1089,12 +1136,14 @@ def download_archive(
                 end_time=end_time,
                 version=version,
                 product_type=product_type,
+                storage=storage,
                 remove_corrupted=remove_corrupted,
                 verbose=verbose,
                 transfer_tool=transfer_tool,
                 retry=retry,
                 n_threads=n_threads,
                 progress_bar=progress_bar,
+                bounding_box=bounding_box,
             )
             for version in versions
         ]
@@ -1121,6 +1170,7 @@ def download_daily_data(
     remove_corrupted=True,
     verbose=True,
     retry=1,
+    bounding_box=None,
 ):
     from gpm.io.download import download_archive
 
@@ -1142,6 +1192,7 @@ def download_daily_data(
         remove_corrupted=remove_corrupted,
         verbose=verbose,
         retry=retry,
+        bounding_box=bounding_box,
     )
 
 
@@ -1161,6 +1212,7 @@ def download_monthly_data(
     remove_corrupted=True,
     verbose=True,
     retry=1,
+    bounding_box=None,
 ):
     from gpm.io.download import download_archive
 
@@ -1182,6 +1234,7 @@ def download_monthly_data(
         remove_corrupted=remove_corrupted,
         verbose=verbose,
         retry=retry,
+        bounding_box=bounding_box,
     )
 
 

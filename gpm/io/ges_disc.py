@@ -24,7 +24,13 @@
 # SOFTWARE.
 
 # -----------------------------------------------------------------------------.
-"""Routines required to search data on the NASA GES DISC servers."""
+"""Routines required to search data on the NASA GES DISC servers.
+
+Public access to GES DISC is planned to be remove end of 2026.
+More info at:
+
+https://github.com/nasa/gesdisc-tutorials/blob/main/user-guidance/GES_DISC_Migration_to_Earthdata_Website_and_Earthdata_Cloud.md#changes-to-https-data-access
+"""
 
 import datetime
 import re
