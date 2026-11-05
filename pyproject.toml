@@ -93,6 +93,9 @@ download_gpm_files="gpm.scripts.download_gpm_files:download_gpm_files"
 minversion = "7"
 addopts = "-ra --strict-config --strict-markers --cov --cov-report term-missing --cov-report xml --cov-report lcov:lcov.info --check-max-report=10"
 xfail_strict = true
+markers = [
+    "integration: tests using external services and credentials",
+]
 filterwarnings = [
     "ignore::gpm.utils.warnings.GPMDownloadWarning",
     "ignore::cartopy.io.DownloadWarning",

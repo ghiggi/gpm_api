@@ -40,3 +40,8 @@ jobs:
       - name: Test with pytest
         run: |-
           pytest
+        env:
+          EARTHDATA_USERNAME: ${{ secrets.EARTHDATA_USERNAME }}
+          EARTHDATA_PASSWORD: ${{ secrets.EARTHDATA_PASSWORD }}
+          PPS_USERNAME: ${{ secrets.PPS_USERNAME }}
+          PPS_PASSWORD: ${{ secrets.PPS_PASSWORD }}

@@ -213,3 +213,76 @@ The table below summarizes the software tools utilized in our CI pipeline, descr
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
 | `Codacy      <https://www.codacy.com/>`__                                                          | Automated code review and analysis tools                         | `GPM-API <https://app.codacy.com/gh/ghiggi/gpm_api/dashboard>`__                             |
 +----------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
+
+
+Earthdata Cloud integration test
+--------------------------------
+
+``gpm/tests/test_io/test_download_earthdata.py`` downloads a real IMERG-FR V07 granule
+for 2017-01-01 20:00 to 20:30 into a temporary GPM archive. It checks the expected filename,
+opens the HDF5 ``Grid`` group, and reads a grid cell from each variable.
+The test is marked ``integration`` and runs when both Earthdata environment variables are set
+or an Earthaccess credential file exists. This includes the local ``.netrc`` created by
+``gpm.define_configs``. Earthaccess honors ``NETRC`` for a custom path and uses ``_netrc`` on Windows.
+The test skips only when neither credential source is available.
+When credentials are provided, authentication, network, or download failures fail the test.
+
+Configure the GitHub repository secrets as follows:
+
+#. Open the repository's **Settings**.
+#. Select **Secrets and variables**, then **Actions**, and open the **Secrets** tab.
+#. Click **New repository secret** and add ``EARTHDATA_USERNAME`` with your Earthdata Login username.
+#. Add a second repository secret named ``EARTHDATA_PASSWORD`` with your Earthdata Login password.
+
+The Linux and Windows test workflows expose these secrets only to their pytest steps:
+
+.. code-block:: yaml
+
+    env:
+      EARTHDATA_USERNAME: ${{ secrets.EARTHDATA_USERNAME }}
+      EARTHDATA_PASSWORD: ${{ secrets.EARTHDATA_PASSWORD }}
+
+The normal CI test run includes the live download when both secrets are available.
+Fork pull requests and Dependabot runs do not receive repository secrets, so the test skips there.
+See `GitHub's documentation on Actions secrets
+<https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets>`__.
+
+To run the live test locally with an existing ``.netrc``:
+
+.. code-block:: bash
+
+    pytest gpm/tests/test_io/test_download_earthdata.py -m integration
+
+Alternatively, supply credentials through environment variables:
+
+.. code-block:: bash
+
+    export EARTHDATA_USERNAME="your_username"
+    export EARTHDATA_PASSWORD="your_password"
+    pytest gpm/tests/test_io/test_download_earthdata.py -m integration
+
+To exclude live integration tests, use ``pytest -m "not integration"``.
+
+
+PPS integration test
+----------------------
+
+``gpm/tests/test_io/test_download_pps.py`` downloads the same IMERG-FR V07 granule
+from PPS and verifies its archive path and readable ``Grid`` data.
+Credentials are read from ``PPS_USERNAME`` and ``PPS_PASSWORD``, falling back to
+``gpm.config.get("username_pps")`` and ``gpm.config.get("password_pps")``.
+The test skips if either credential is unavailable.
+
+For local use, configure PPS credentials with ``gpm.define_configs`` or export them:
+
+.. code-block:: bash
+
+    export PPS_USERNAME="your_pps_username"
+    export PPS_PASSWORD="your_pps_password"
+    pytest gpm/tests/test_io/test_download_pps.py -m integration
+
+For CI, add the repository secrets ``PPS_USERNAME`` and ``PPS_PASSWORD`` under
+**Settings**, **Secrets and variables**, **Actions**.
+Both Linux and Windows test workflows export these secrets to their pytest steps.
+Use the credentials for your registered PPS account; the usual PPS password is the
+same email address as the username.
