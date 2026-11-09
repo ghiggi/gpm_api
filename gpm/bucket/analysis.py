@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to analysis bucket archives."""
+
 import datetime
 
 import numpy as np

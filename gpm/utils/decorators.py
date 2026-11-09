@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions decorators checking GPM-API object type."""
+
 import functools
 import importlib
 from functools import wraps

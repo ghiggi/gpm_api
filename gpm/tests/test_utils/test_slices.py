@@ -26,7 +26,6 @@
 # -----------------------------------------------------------------------------.
 """This module test the list slices utilities."""
 
-
 import numpy as np
 import pytest
 
