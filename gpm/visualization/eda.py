@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains plotting functions for exploratory data visualization."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
