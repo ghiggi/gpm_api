@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains general utility for xarray objects."""
+
 import functools
 
 import numpy as np

@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to search the GPM-API community-based retrievals."""
+
 import importlib
 
 from gpm.io.products import available_products

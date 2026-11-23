@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains plotting utility for SR/GR validation."""
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np

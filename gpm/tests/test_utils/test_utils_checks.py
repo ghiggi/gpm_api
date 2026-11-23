@@ -26,7 +26,6 @@
 # -----------------------------------------------------------------------------.
 """This module test the granule checks utilities."""
 
-
 import numpy as np
 import pytest
 import xarray as xr

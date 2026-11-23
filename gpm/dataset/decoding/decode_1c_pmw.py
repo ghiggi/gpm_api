@@ -25,6 +25,7 @@
 
 # -----------------------------------------------------------------------------.
 """This module contains functions to decode GPM PMW 1C products."""
+
 import xarray as xr
 
 from gpm.dataset.decoding.utils import (
